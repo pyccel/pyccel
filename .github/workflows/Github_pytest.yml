@@ -28,6 +28,7 @@ jobs:
           python-version: 3.9
       - name: Test assign
         run: |
+          gh pr checkout 6
           gh pr edit --add-assignee @me
         env:
           GH_TOKEN: ${{ github.token }}
