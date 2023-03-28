@@ -141,7 +141,7 @@ if __name__ == '__main__':
                'REF': ''}
 
     if pr_id is not None:
-        status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
+        status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,potentialMergeCommit')
         ref = status['headRefOid']
         mergeCommit = status['potentialMergeCommit']
         outputs['HEAD'] = status['baseRefName']
