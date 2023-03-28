@@ -92,9 +92,9 @@ if __name__ == '__main__':
         command_words = command.split()
 
         if command_words[0] == 'run':
-            url = event['repository']['url']
+            url = event['repository']['html_url']
             run_id = args.run_id
-            comment = f"Running tests, for more details see [here]({url}/actions/run/{run_id})\n"
+            comment = f"Running tests, for more details see [here]({url}/actions/runs/{run_id})\n"
             tests = command_words[1:]
             if tests == ['all']:
                 tests = test_keys
