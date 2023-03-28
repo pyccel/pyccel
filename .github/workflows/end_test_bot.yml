@@ -4,6 +4,7 @@ on:
   workflow_run:
     types:
       - completed
+    workflows: [Pyccel tests]
 
 jobs:
   Bot:
