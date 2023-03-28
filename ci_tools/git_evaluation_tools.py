@@ -189,17 +189,17 @@ def check_previous_comments(pr_id):
         return [], '', None
     else:
         last_messages = {}
-        final_message = my_comments[0].state
+        final_message = my_comments[0].body
         final_date = my_comments[0].date
 
         for c in my_comments:
-            if c.state not in last_messages:
-                last_messages[c.state] = c.date
-            elif last_messages[c.state] < c.date:
-                last_messages[c.state] = c.date
+            if c.body not in last_messages:
+                last_messages[c.body] = c.date
+            elif last_messages[c.body] < c.date:
+                last_messages[c.body] = c.date
 
             if final_date < c.date:
-                final_message = c.state
+                final_message = c.body
                 final_date = c.date
 
         return last_messages, final_message, final_date
