@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-from git_evaluation_tools import leave_comment, get_status_json, update_test_status, github_cli, get_job_information, check_previous_comments
+from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments
 
 #senior_reviewer = ['yguclu', 'ebourne']
 senior_reviewer = ['ebourne']
@@ -65,9 +65,6 @@ def run_tests(pr_id, command_words, outputs, event):
     leave_comment(pr_id, comment)
 
     outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
-
-    update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
-            state='pending', run_url = url, description = 'run '+', '.join(command_words[1:]))
 
 def mark_as_ready(pr_id):
     """
@@ -147,10 +144,7 @@ def update_test_information(pr_id, event):
 
     leave_comment(pr_id, comment, url in last_message)
 
-    state = 'success' if passed else 'failure'
-
-    update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
-            state=state, run_url = url, description = 'run '+', '.join(command_words[1:]))
+    return 'success' if passed else 'failure'
 
 
 if __name__ == '__main__':
@@ -202,7 +196,9 @@ if __name__ == '__main__':
 
         pr_id = event['issue']['number']
 
-        update_test_information(pr_id, event)
+        result = update_test_information(pr_id, event)
+        with open(args.output, encoding="utf-8", mode='a') as out_file:
+            print(f"global_state={result}", file=out_file)
         sys.exit()
 
     elif 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):

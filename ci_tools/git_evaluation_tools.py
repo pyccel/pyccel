@@ -18,7 +18,6 @@ __all__ = ('github_cli',
            'remove_labels',
            'set_draft',
            'set_ready',
-           'update_test_status',
            'get_job_information'
            )
 
@@ -281,7 +280,7 @@ def get_job_information(run_id):
     -------
     bool : Indicates if tests are passed
     """
-    cmd = [github_cli, 'run', 'view', run_id, '--json', 'jobs']
+    cmd = [github_cli, 'run', 'view', str(run_id), '--json', 'jobs']
     print(cmd)
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
@@ -407,37 +406,3 @@ def set_draft(number):
 
     with subprocess.Popen(cmds) as p:
         p.communicate()
-
-def update_test_status(status_url, state, run_url, description):
-    """
-    Update the status of the pull request.
-
-    Use the GitHub CLI and the GitHub API to create a commit status
-    as described in the docs:
-    https://docs.github.com/en/rest/commits/statuses?apiVersion=2022-11-28#create-a-commit-status
-
-    Parameters
-    ----------
-    status_url : str
-        The url where the status should be sent.
-
-    state : str
-        The state to be posted.
-
-    run_url : str
-        The url where the details of the run can be seen.
-
-    description : str
-        The tag of the triggered test.
-    """
-    assert state in ('error', 'failure', 'pending', 'success')
-    cmds = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
-            status_url, '-f', f"state='{state}'", '-f', f"target_url='{run_url}'", '-f',
-            f"description='{description}'", "-f", "context='Tests on Draft'"]
-
-    print(cmds)
-
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-        out, err = p.communicate()
-    print(out)
-    print(err)
