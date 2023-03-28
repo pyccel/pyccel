@@ -295,7 +295,7 @@ def check_passing():
     return passing
 
 
-def leave_comment(number, comment):
+def leave_comment(number, comment, edit = False):
     """
     Leave a comment on the PR.
 
@@ -309,8 +309,15 @@ def leave_comment(number, comment):
 
     comment : str
         The comment which should be left on the PR.
+
+    edit : bool, default: False
+        Indicates whether the bot should edit the last comment
+        or just write a new comment.
     """
     cmds = [github_cli, 'pr', 'comment', str(number), '-b', comment]
+
+    if edit:
+        cmds.append('--edit-last')
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         p.communicate()

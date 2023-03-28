@@ -12,6 +12,54 @@ test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
+def get_run_url(event):
+    """
+    Get the URL of the workflow run.
+
+    Use the event information to calculated the URL
+    where the results of the workflow can be viewed.
+
+    Parameters
+    ----------
+    event : dict
+        The event payload of the GitHub workflow.
+
+    Results
+    -------
+    str : The URL.
+    """
+    url = event['repository']['html_url']
+    run_id = event['run_number']
+    return f"{url}/actions/runs/{run_id}"
+
+def run_tests(pr_id, command_words, output):
+    """
+    Run the requested tests and leave a comment on the PR.
+
+    Update the outputs to ensure that the requested tests are run.
+    Leave a comment on the PR using the GitHub CLI to indicate the relevant
+    commit, action and the test status.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    command_words : list of strs
+        The command issued to the bot.
+
+    output : dict
+        The dictionary containing the output of the bot.
+    """
+    url = get_run_url(events, run_id)
+    comment = f"Running tests, for more details see [here]({url}/actions/runs/{run_id})\n"
+    tests = command_words[1:]
+    if tests == ['all']:
+        tests = test_keys
+    for t in tests:
+        outputs[f'run_{t}'] = True
+    leave_comment(pr_id, comment)
+
 def mark_as_ready(pr_id, outputs):
     """
     Mark the pull request as ready for review.
@@ -31,29 +79,64 @@ def mark_as_ready(pr_id, outputs):
     """
     pass
 
-def print_commands(pr_id):
+def message_from_file(filename):
     """
-    List the available bot commands.
+    Get the message saved in the file.
 
-    Use the GitHub CLI to leave a comment on the pull request listing
-    all the commands which the bot makes available.
+    Reads the contents of the file `filename`, located in the
+    folder ./bot_messages/. The extracted string is returned for
+    use as a comment on a PR.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file to be read
+
+    Results
+    -------
+    str : The message to be printed.
+    """
+    with open(os.path.join(comment_folder, filename)) as msg_file:
+        comment = msg_file.read()
+    return comment
+
+def update_test_information(pr_id, event):
+    """
+    Update the PR with the information about the tests.
+
+    Use the GitHub CLI to check the results of the tests. If the last
+    comment made by the bot was for this set of tests then this comment
+    is updated to include the test results. Otherwise a new comment is
+    added with the results.
 
     Parameters
     ----------
     pr_id : int
         The number of the PR.
+
+    event : dict
+        The event payload of the GitHub workflow.
     """
+    messages, last_message, date = check_previous_comments(pr_id)
 
-    bot_commands = ("This bot reacts to all comments which begin with `/bot`. This phrase can be followed by any of these commands:\n"
-            "- `show tests` : Lists the tests which can be triggered\n"
-            "- `run X` : Triggers the test X (X must be `all` or one of the values listed by `show tests`)\n"
-            "- `mark as ready` : Adds the appropriate review flag and requests reviews. This command should be used when the PR is first ready for review, or when a review has been answered.\n"
-            "- `commands` : Shows this list detailing all the commands which are understood")
+    cmd = [github_cli, 'run', 'view', args.run_id, '--json', 'jobs']
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
+    data = json.loads(result)['jobs']
+    print(data)
 
-    leave_comment(pr_id, bot_commands)
+    url = get_run_url(event)
 
-def welcome(pr_id, event):
-    pass
+    comment = f"Ran tests, for more details see [here]({url}/actions/runs/{run_id})\n"
+    for job in data:
+        conclusion = job['conclusion']
+        if conclusion == 'skipped':
+            continue
+        name = job['name']
+        icon = ':heavy_check_mark:' if conclusion == 'completed' else ':x:'
+        comment += f"- {icon} {name}\n"
+
+    leave_comment(pr_id, comment, url in last_message)
 
 bot_triggers = {'mark as ready': mark_as_ready,
                 'commands' : print_commands}
@@ -70,9 +153,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Parse event payload
     with open(args.gitEvent, encoding="utf-8") as event_file:
         event = json.load(event_file)
 
+    # Save run number with event information
+    event['run_number'] = args.run_id
+
+    # Initialise outputs
     outputs = {'run_linux': False,
                'run_windows': False,
                'run_macosx': False,
@@ -85,6 +173,8 @@ if __name__ == '__main__':
                'REF': ''}
 
     if 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):
+        # If bot called explicitly
+
         pr_id = event['issue']['number']
 
         comment = event['comment']['body']
@@ -92,52 +182,38 @@ if __name__ == '__main__':
         command_words = command.split()
 
         if command_words[0] == 'run':
-            url = event['repository']['html_url']
-            run_id = args.run_id
-            comment = f"Running tests, for more details see [here]({url}/actions/runs/{run_id})\n"
-            tests = command_words[1:]
-            if tests == ['all']:
-                tests = test_keys
-            for t in tests:
-                outputs[f'run_{t}'] = True
-                comment += f"* :hourglass_flowing_sand: {t}"
-            leave_comment(pr_id, comment)
+            run_tests(pr_id, command_words, outputs)
 
         elif command == 'mark as ready':
-            mark_as_ready(pr_id, outputs)
+            run_tests(pr_id, 'run all', outputs)
 
         elif command == 'show tests':
-            with open(os.path.join(comment_folder, 'show_tests.txt')) as msg_file:
-                comment = msg_file.read()
-            leave_comment(pr_id, comment)
+            leave_comment(pr_id, message_from_file('show_tests.txt'))
+
         else:
-            print_commands(pr_id)
-
-    elif 'pull_request' in event and not event['pull_request']['draft']:
-        pr_id = event['number']
-        event_name = 'pull_request'
-
-        for k in test_keys:
-            outputs[f'run_{k}'] = True
-
-        if event['action'] == 'ready_for_review':
-            mark_as_ready(pr_id, outputs)
+            leave_comment(pr_id, message_from_file('bot_commands.txt'))
 
     elif event['action'] == 'opened':
-        new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
-        if new_user:
-            with open(os.path.join(comment_folder, 'welcome_newcomer.txt')) as msg_file:
-                comment = msg_file.read()
-        else:
-            with open(os.path.join(comment_folder, 'welcome_friend.txt')) as msg_file:
-                comment = msg_file.read()
-        with open(os.path.join(comment_folder, 'checklist.txt')) as msg_file:
-            comment += msg_file.read()
+        # If new PR
 
-        leave_comment(pr_id, comment)
+        new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
+        file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
+
+        leave_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
+
+        if not event['pull_request']['draft']:
+            set_draft(pr_id)
+
+    elif 'pull_request' in event and not event['pull_request']['draft']:
+        # If PR is ready for review
+
+        pr_id = event['number']
+        run_tests(pr_id, 'run all', outputs)
 
     elif 'workflow_run' in event and event['action'] == 'completed':
-        cmd = [github_cli, 'run', 'view', args.run_id, '--json', 'jobs']
+        # If tidying up after previous run
+
+        update_test_information(pr_id, event)
 
     else:
         pr_id = None
