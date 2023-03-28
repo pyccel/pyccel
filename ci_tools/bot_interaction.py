@@ -21,7 +21,7 @@ def run_tests(pr_id, event, outputs):
     pr_id : int
         The number of the PR.
     """
-    pass
+    outputs['run_pylint'] = True
     #if new_user:
     #    comments = get_previous_pr_comments(pr_id)
     #    validated = any(c.body == '/bot trust user' and c.author in senior_reviewer for c in comments)
@@ -137,7 +137,7 @@ if __name__ == '__main__':
                'run_pylint': False,
                'run_lint': False,
                'run_spelling': False,
-               'HEAD': ''
+               'HEAD': '',
                'REF': ''}
 
     if pr_id is not None:
