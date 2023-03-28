@@ -1,5 +1,4 @@
-# pylint: disable=missing-module-docstring/
-# pylint: disable=arguments-differ, inconsistent-return-statements
+# pylint: disable=missing-function-docstring, missing-module-docstring/
 import subprocess
 import os
 import pathlib
@@ -17,23 +16,24 @@ def pytest_collect_file(parent, path):
         if NEEDS_FROM_PARENT:
             return CTestFile.from_parent(path=pathlib.Path(path), parent=parent)
         return CTestFile(parent=parent, path=pathlib.Path(path))
+    return None
 
 
 class CTestFile(pytest.File):
     """
-    A custom file handler class for C unit test files.
+    A custom file handler class for CCuda unit test files.
     """
 
     @classmethod
-    def from_parent(cls, **kwargs):
-        return super().from_parent(**kwargs)
+    def from_parent(cls, parent, **kwargs):
+        return super().from_parent(parent=parent, **kwargs)
 
     def collect(self):
         """
         Overridden collect method to collect the results from each
-        C unit test executable.
+        CCuda unit test executable.
         """
-        # Run the exe that corresponds to the .c file and capture the output.
+        # Run the exe that corresponds to the .cu file and capture the output.
         test_exe = os.path.splitext(self.fspath.basename)[0]
         rootdir = self.config.rootdir.strpath
         test_exe = os.path.relpath(test_exe)
@@ -93,8 +93,8 @@ class CTestItem(pytest.Item):
         self.test_result = test_result
 
     @classmethod
-    def from_parent(cls, *, test_result, **kwargs):
-        return super().from_parent(test_result=test_result, **kwargs)
+    def from_parent(cls, parent, **kwargs):
+        return super().from_parent(parent=parent, **kwargs)
 
     def runtest(self):
         """The test has already been run. We just evaluate the result."""
@@ -105,13 +105,14 @@ class CTestItem(pytest.Item):
         """"Called to display header information about the test case."""
         return self.fspath, self.test_result["line_number"], self.name
 
-    def repr_failure(self, exception):
+    def repr_failure(self, excinfo, style=None):
         """
         Called when runtest() raises an exception. The method is used
         to format the output of the failed test result.
         """
-        if isinstance(exception.value, CTestException):
-            return (f"Test failed : {self.test_result['file_name']}:{self.test_result['line_number']} {self.test_result['function_name']} < {self.test_result['DSCR']} >\n INFO : {self.test_result['INFO']}")
+        if isinstance(excinfo.value, CTestException):
+            return f"Test failed : {self.test_result['file_name']}:{self.test_result['line_number']} {self.test_result['function_name']} < {self.test_result['DSCR']} >\n INFO : {self.test_result['INFO']}"
+        return None
 
 
 
