@@ -105,6 +105,6 @@ jobs:
           python-version: 3.9
       - id: run_bot
         run: |
-          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.event.run_id }} ${{ needs.Bot.outputs.cleanup_trigger }}
+          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.run_id }} ${{ needs.Bot.outputs.cleanup_trigger }}
         env:
           GH_TOKEN: ${{ github.token }}
