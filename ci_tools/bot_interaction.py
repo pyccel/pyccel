@@ -93,6 +93,7 @@ if __name__ == '__main__':
 
         if command_words[0] == 'run':
             url = event['repository']['url']
+            run_id = args.run_id
             comment = f"Running tests, for more details see [here]({url}/actions/run/{run_id})\n"
             tests = command_words[1:]
             if tests == ['all']:
