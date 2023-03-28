@@ -143,7 +143,7 @@ if __name__ == '__main__':
     if pr_id is not None:
         status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,potentialMergeCommit')
         ref = status['headRefOid']
-        mergeCommit = status['potentialMergeCommit']
+        merge_commit = status['potentialMergeCommit']
         outputs['HEAD'] = status['baseRefName']
         outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
 
