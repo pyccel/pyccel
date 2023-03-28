@@ -42,7 +42,7 @@ jobs:
 
   Linux:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_linux }} == 'True'
+    if: ${{ needs.Bot.outputs.run_linux == 'True' }}
     uses:
       ./.github/workflows/linux.yml
     with:
@@ -50,7 +50,7 @@ jobs:
 
   Windows:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_windows }} == 'True'
+    if: ${{ needs.Bot.outputs.run_windows == 'True' }}
     uses:
       ./.github/workflows/windows.yml
     with:
@@ -58,7 +58,7 @@ jobs:
 
   MacOSX:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_macosx }} == 'True'
+    if: ${{ needs.Bot.outputs.run_macosx == 'True' }}
     uses:
       ./.github/workflows/macosx.yml
     with:
@@ -66,7 +66,7 @@ jobs:
 
   CoverageChecker:
     needs: [Bot, Linux]
-    if: ${{ needs.Bot.outputs.run_coverage }} == 'True'
+    if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
     uses:
       ./.github/workflows/coverage.yml
     with:
@@ -74,7 +74,7 @@ jobs:
 
   DocumentationChecker:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_docs }} == 'True'
+    if: ${{ needs.Bot.outputs.run_docs == 'True' }}
     uses:
       ./.github/workflows/doc_coverage.yml
     with:
@@ -83,7 +83,7 @@ jobs:
 
   PythonLint:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_pylint }} == 'True'
+    if: ${{ needs.Bot.outputs.run_pylint == 'True' }}
     uses:
       ./.github/workflows/lint.yml
     with:
@@ -91,7 +91,7 @@ jobs:
 
   PyccelLint:
     needs: Bot
-    if: ${{ needs.Bot.outputs.run_lint }} == 'True'
+    if: ${{ needs.Bot.outputs.run_lint == 'True' }}
     uses:
       ./.github/workflows/pyccel_lint.yml
     with:
