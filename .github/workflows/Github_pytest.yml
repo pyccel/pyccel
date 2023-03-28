@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "$GITHUB_OUTPUT"
           echo $GITHUB_OUTPUT
-          echo ${{ github.run_id } ${{ github.run_number }}} ${{ github.run_attempt }}
+          echo "${{ github.run_id }} ${{ github.run_number }}} ${{ github.run_attempt }}"
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
           #echo "run_linux=false" >> "$GITHUB_OUTPUT"
           #echo "run_windows=false" >> "$GITHUB_OUTPUT"
