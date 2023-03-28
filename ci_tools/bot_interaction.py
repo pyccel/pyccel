@@ -128,7 +128,6 @@ if __name__ == '__main__':
         leave_comment(pr_id, comment)
         sys.exit()
 
-    status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
 
     outputs = {'run_linux': False,
                'run_windows': False,
@@ -137,19 +136,23 @@ if __name__ == '__main__':
                'run_docs': False,
                'run_pylint': False,
                'run_lint': False,
-               'run_spelling': False}
+               'run_spelling': False,
+               'HEAD': ''
+               'REF': ''}
 
-    ref = status['headRefOid']
-    mergeCommit = status['potentialMergeCommit']
-    outputs['HEAD'] = status['baseRefName']
-    outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
+    if pr_id is not None:
+        status = get_status_json(pr_id, 'headRefOid,baseRefName,isDraft,comments,reviews,mergeCommit')
+        ref = status['headRefOid']
+        mergeCommit = status['potentialMergeCommit']
+        outputs['HEAD'] = status['baseRefName']
+        outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
+
+        if event_name == 'comment':
+            command = args.command.split('/bot')[1].strip()
+
+            bot_triggers.get(command, print_commands)(args.pr_number, event, outputs)
 
     print(event)
-
-    if event_name == 'comment':
-        command = args.command.split('/bot')[1].strip()
-
-        bot_triggers.get(command, print_commands)(args.pr_number, event, outputs)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
