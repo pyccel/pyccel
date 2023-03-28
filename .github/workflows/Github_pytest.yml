@@ -95,7 +95,7 @@ jobs:
 
   CleanUpBot:
     needs: [ Bot, Linux, Windows, MacOSX, CoverageChecker, DocumentationChecker, PythonLint, PyccelLint ]
-    if: ${{ needs.Bot.outputs.cleanup_trigger != '' }}
+    if: ${{ always() && needs.Bot.outputs.cleanup_trigger != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
