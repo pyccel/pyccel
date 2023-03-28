@@ -30,6 +30,8 @@ jobs:
           python-version: 3.9
       - id: run_bot
         run: |
+          echo "$GITHUB_OUTPUT"
+          echo $GITHUB_OUTPUT
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
           #echo "run_linux=false" >> "$GITHUB_OUTPUT"
           #echo "run_windows=false" >> "$GITHUB_OUTPUT"
@@ -39,6 +41,7 @@ jobs:
           #echo "run_pylint=True" >> "$GITHUB_OUTPUT"
           #echo "run_lint=false" >> "$GITHUB_OUTPUT"
           #echo "run_spelling=false" >> "$GITHUB_OUTPUT"
+          cat "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ github.token }}
 
