@@ -39,7 +39,7 @@ jobs:
         if: ${{ steps.run_bot.outputs.cleanup_trigger == 'update_test_information' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
-            ${{ format(github.event.repository.statuses_url, {sha}, steps.run_bot.outputs.SHA ) }} \
+            ${{ format(github.event.repository.statuses_url, steps.run_bot.outputs.SHA ) }} \
             -f state='pending' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
         env:
@@ -122,7 +122,7 @@ jobs:
         if: ${{ steps.run_bot.outputs.cleanup_trigger == 'update_test_information' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
-            ${{ format(github.event.repository.statuses_url, {sha}, steps.run_bot.outputs.SHA ) }} \
+            ${{ format(github.event.repository.statuses_url, steps.run_bot.outputs.SHA ) }} \
             -f state='error' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
         env:
