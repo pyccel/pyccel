@@ -65,6 +65,8 @@ if __name__ == '__main__':
                         help='File containing the json description of the triggering event')
     parser.add_argument('output', metavar='output', type=str,
                         help='File where the variables should be saved')
+    parser.add_argument('run_id', metavar='output', type=int,
+                        help='The id of the runner (used to identify the action page)')
 
     args = parser.parse_args()
 
@@ -91,7 +93,7 @@ if __name__ == '__main__':
 
         if command_words[0] == 'run':
             url = event['repository']['url']
-            comment = "Running tests at {url}/actions/run/\n"
+            comment = "Running tests at {url}/actions/run/{run_id}\n"
             tests = command_words[1:]
             if tests == ['all']:
                 tests = test_keys

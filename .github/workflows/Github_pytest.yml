@@ -30,19 +30,7 @@ jobs:
           python-version: 3.9
       - id: run_bot
         run: |
-          echo "$GITHUB_OUTPUT"
-          echo $GITHUB_OUTPUT
-          echo "${{ github.run_id }} ${{ github.run_number }}} ${{ github.run_attempt }}"
-          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
-          #echo "run_linux=false" >> "$GITHUB_OUTPUT"
-          #echo "run_windows=false" >> "$GITHUB_OUTPUT"
-          #echo "run_macosx=false" >> "$GITHUB_OUTPUT"
-          #echo "run_coverage=false" >> "$GITHUB_OUTPUT"
-          #echo "run_docs=false" >> "$GITHUB_OUTPUT"
-          #echo "run_pylint=True" >> "$GITHUB_OUTPUT"
-          #echo "run_lint=false" >> "$GITHUB_OUTPUT"
-          #echo "run_spelling=false" >> "$GITHUB_OUTPUT"
-          cat "$GITHUB_OUTPUT"
+          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.run_id }}
         env:
           GH_TOKEN: ${{ github.token }}
 
