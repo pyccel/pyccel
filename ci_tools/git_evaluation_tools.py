@@ -431,7 +431,7 @@ def update_test_status(status_url, state, run_url, description):
         The tag of the triggered test.
     """
     assert state in ('error', 'failure', 'pending', 'success')
-    cmd = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
+    cmds = [github_cli, 'api', '--method', 'POST', "-H", "Accept: application/vnd.github+json",
             status_url, '-f', "state='{state}'", '-f', "target_url='{run_url}'", '-f',
             "description='{description}'", "-f", "Tests on Draft"]
 
