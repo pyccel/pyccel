@@ -26,12 +26,6 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-      - name: Test assign
-        run: |
-          gh pr checkout 6
-          gh pr edit --add-assignee @me
-        env:
-          GH_TOKEN: ${{ github.token }}
       - id: run_bot
         run: |
           python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT
