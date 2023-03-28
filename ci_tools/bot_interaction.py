@@ -102,8 +102,10 @@ if __name__ == '__main__':
                 outputs[f'run_{t}'] = True
                 comment += f"* :hourglass_flowing_sand: {t}"
             leave_comment(pr_id, comment)
+
         elif command == 'mark as ready':
             mark_as_ready(pr_id, outputs)
+
         elif command == 'show tests':
             with open(os.path.join(comment_folder, 'show_tests.txt')) as msg_file:
                 comment = msg_file.read()
@@ -133,6 +135,10 @@ if __name__ == '__main__':
             comment += msg_file.read()
 
         leave_comment(pr_id, comment)
+
+    elif 'workflow_run' in event and event['action'] == 'completed':
+        cmd = [github_cli, 'run', 'view', args.run_id, '--json', 'jobs']
+
     else:
         pr_id = None
 
