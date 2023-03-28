@@ -54,7 +54,7 @@ def run_tests(pr_id, command_words, outputs, event):
     event : dict
         The event payload of the GitHub workflow.
     """
-    ref_sha = outputs['SHA']
+    ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
     comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
     tests = command_words[1:]
@@ -63,6 +63,8 @@ def run_tests(pr_id, command_words, outputs, event):
     for t in tests:
         outputs[f'run_{t}'] = True
     leave_comment(pr_id, comment)
+
+    outputs['SHA'] = ref_sha
 
     update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
             state='pending', run_url = url, description = 'run '+', '.join(command_words[1:]))
@@ -192,7 +194,7 @@ if __name__ == '__main__':
                'additional_trigger': '',
                'HEAD': '',
                'REF': '',
-               'SHA': get_status_json(pr_id, 'headRefOid')}
+               'SHA': ''}
 
     if cleanup_trigger == 'request_review_status':
         mark_as_ready(pr_id)
