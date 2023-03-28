@@ -132,7 +132,7 @@ if __name__ == '__main__':
                'run_spelling': False}
 
     ref = status['headRefOid']
-    mergeCommit = status['mergeCommit']
+    mergeCommit = status['potentialMergeCommit']
     outputs['HEAD'] = status['baseRefName']
     outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
 
