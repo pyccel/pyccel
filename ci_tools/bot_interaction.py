@@ -12,41 +12,7 @@ test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
-def run_tests(pr_id, event, outputs):
-    """
-    Run the tests for the pull request.
-
-    Use the GitHub CLI to trigger the tests using the workflow_dispatch
-    trigger.
-
-    Parameters
-    ----------
-    pr_id : int
-        The number of the PR.
-    """
-    outputs['run_pylint'] = True
-    #if new_user:
-    #    comments = get_previous_pr_comments(pr_id)
-    #    validated = any(c.body == '/bot trust user' and c.author in senior_reviewer for c in comments)
-    #    if not validated:
-    #        tags = ", ".join(f"@{r}" for r in senior_reviewer)
-    #        message = (tags+
-    #                   ", a new user wants to run tests. "
-    #                   "Please could you take a quick look and make sure I'm not going to run anything malicious. "
-    #                   "If all's ok then let me know with `/bot trust user`. Thanks")
-    #        leave_comment(pr_id, message)
-    #        return
-
-    #tests = ['Pyccel tests',
-    #         'Doc Coverage Action',
-    #         'Python Linting',
-    #         'Pyccel Linting',
-    #         'Spellcheck Action']
-    #head_ref = get_head_ref(pr_id)
-    #for t in tests:
-    #    trigger_test(pr_id, t, head_ref)
-
-def mark_as_ready(pr_id, event, outputs):
+def mark_as_ready(pr_id, outputs):
     """
     Mark the pull request as ready for review.
 
@@ -79,7 +45,8 @@ def print_commands(pr_id):
     """
 
     bot_commands = ("This bot reacts to all comments which begin with `/bot`. This phrase can be followed by any of these commands:\n"
-            "- `run tests` : Triggers the tests for a draft pull request\n"
+            "- `show tests` : Lists the tests which can be triggered\n"
+            "- `run X` : Triggers the test X (X must be `all` or one of the values listed by `show tests`)\n"
             "- `mark as ready` : Adds the appropriate review flag and requests reviews. This command should be used when the PR is first ready for review, or when a review has been answered.\n"
             "- `commands` : Shows this list detailing all the commands which are understood")
 
@@ -88,8 +55,7 @@ def print_commands(pr_id):
 def welcome(pr_id, event):
     pass
 
-bot_triggers = {'run tests' : run_tests,
-                'mark as ready': mark_as_ready,
+bot_triggers = {'mark as ready': mark_as_ready,
                 'commands' : print_commands}
 
 
@@ -125,16 +91,16 @@ if __name__ == '__main__':
 
         if command_words[0] == 'run':
             url = event['repository']['url']
-            comment = "Running tests at {url}\n"
+            comment = "Running tests at {url}/actions/run/\n"
             tests = command_words[1:]
-            if tests == ['tests']:
+            if tests == ['all']:
                 tests = test_keys
             for t in tests:
                 outputs[f'run_{t}'] = True
                 comment += f"* :hourglass_flowing_sand: {t}"
             leave_comment(pr_id, comment)
         elif command == 'mark as ready':
-            pass
+            mark_as_ready(pr_id, outputs)
         elif command == 'show tests':
             with open(os.path.join(comment_folder, 'show_tests.txt')) as msg_file:
                 comment = msg_file.read()
@@ -148,6 +114,9 @@ if __name__ == '__main__':
 
         for k in test_keys:
             outputs[f'run_{k}'] = True
+
+        if event['action'] == 'ready_for_review':
+            mark_as_ready(pr_id, outputs)
 
     elif event['action'] == 'opened':
         new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
