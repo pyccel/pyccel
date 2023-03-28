@@ -32,7 +32,7 @@ def get_run_url(event):
     run_id = event['run_number']
     return f"{url}/actions/runs/{run_id}"
 
-def run_tests(pr_id, command_words, output):
+def run_tests(pr_id, command_words, output, event):
     """
     Run the requested tests and leave a comment on the PR.
 
@@ -50,8 +50,11 @@ def run_tests(pr_id, command_words, output):
 
     output : dict
         The dictionary containing the output of the bot.
+
+    event : dict
+        The event payload of the GitHub workflow.
     """
-    url = get_run_url(events, run_id)
+    url = get_run_url(event)
     comment = f"Running tests, for more details see [here]({url}/actions/runs/{run_id})\n"
     tests = command_words[1:]
     if tests == ['all']:
@@ -179,10 +182,10 @@ if __name__ == '__main__':
         command_words = command.split()
 
         if command_words[0] == 'run':
-            run_tests(pr_id, command_words, outputs)
+            run_tests(pr_id, command_words, outputs, event)
 
         elif command == 'mark as ready':
-            run_tests(pr_id, 'run all', outputs)
+            run_tests(pr_id, 'run all', outputs, event)
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
@@ -205,7 +208,7 @@ if __name__ == '__main__':
         # If PR is ready for review
 
         pr_id = event['number']
-        run_tests(pr_id, 'run all', outputs)
+        run_tests(pr_id, 'run all', outputs, event)
 
     elif 'workflow_run' in event and event['action'] == 'completed':
         # If tidying up after previous run
