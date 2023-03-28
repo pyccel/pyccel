@@ -64,7 +64,7 @@ def run_tests(pr_id, command_words, outputs, event):
         outputs[f'run_{t}'] = True
     leave_comment(pr_id, comment)
 
-    outputs['SHA'] = ref_sha
+    outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
 
     update_test_status(event['repository']['statuses_url'].format(sha=ref_sha),
             state='pending', run_url = url, description = 'run '+', '.join(command_words[1:]))
