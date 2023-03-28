@@ -126,10 +126,10 @@ if __name__ == '__main__':
         if command_words[0] == 'run':
             if command_words[1] == 'tests':
                 for k in test_keys:
-                    outputs[k] = True
+                    outputs[f'run_{k}'] = True
             else:
                 for k in command_words[1:]:
-                    outputs[k] = True
+                    outputs[f'run_{k}'] = True
         elif command == 'mark as ready':
             pass
         else:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
         event_name = 'pull_request'
 
         for k in test_keys:
-            outputs[k] = True
+            outputs[f'run_{k}'] = True
 
     elif event['action'] == 'opened':
         new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
@@ -157,7 +157,7 @@ if __name__ == '__main__':
 
     if pr_id is not None:
         status = get_status_json(pr_id, 'baseRefName,potentialMergeCommit')
-        merge_commit = status['potentialMergeCommit']
+        merge_commit = status['potentialMergeCommit']['oid']
         outputs['HEAD'] = status['baseRefName']
         outputs['REF'] = f'+{merge_commit}:refs/remotes/pull/{pr_id}/merge'
 
