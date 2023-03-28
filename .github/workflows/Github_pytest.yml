@@ -22,7 +22,7 @@ jobs:
       run_spelling: ${{ steps.run_bot.outputs.run_spelling }}
       HEAD: ${{ steps.run_bot.outputs.HEAD }}
       REF: ${{ steps.run_bot.outputs.REF }}
-      SHA: ${{ steps.run_bot.outputs.SHA }}
+      status_url: ${{ steps.run_bot.outputs.status_url }}
       cleanup_trigger: ${{ steps.run_bot.outputs.cleanup_trigger }}
     steps:
       - uses: actions/checkout@v3
@@ -39,7 +39,7 @@ jobs:
         if: ${{ steps.run_bot.outputs.cleanup_trigger == 'update_test_information' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
-            ${{ format(github.event.repository.statuses_url, steps.run_bot.outputs.SHA ) }} \
+            ${{ steps.run_bot.outputs.status_url }} \
             -f state='pending' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
         env:
@@ -122,7 +122,7 @@ jobs:
         if: ${{ steps.run_bot.outputs.cleanup_trigger == 'update_test_information' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
-            ${{ format(github.event.repository.statuses_url, steps.run_bot.outputs.SHA ) }} \
+            ${{ needs.Bot.outputs.status_url }} \
             -f state='error' -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
             -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
         env:
