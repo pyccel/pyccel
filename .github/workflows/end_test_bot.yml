@@ -17,6 +17,6 @@ jobs:
           python-version: 3.9
       - id: run_bot
         run: |
-          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.event.workflow_run.run_id }}
+          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.event.workflow_run.run_number }}
         env:
           GH_TOKEN: ${{ github.token }}
