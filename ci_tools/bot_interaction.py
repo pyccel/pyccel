@@ -160,7 +160,7 @@ if __name__ == '__main__':
         merge_commit = status['potentialMergeCommit']['oid']
         outputs['HEAD'] = status['baseRefName']
         #outputs['REF'] = f'refs/pull/{pr_id}/merge'
-        outputs['REF'] = f'pull/{pr_id}/head'
+        outputs['REF'] = f'refs/pull/{pr_id}/head'
 
     print(event)
 
