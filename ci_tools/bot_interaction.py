@@ -159,8 +159,8 @@ if __name__ == '__main__':
         status = get_status_json(pr_id, 'baseRefName,potentialMergeCommit')
         merge_commit = status['potentialMergeCommit']['oid']
         outputs['HEAD'] = status['baseRefName']
-        #outputs['REF'] = f'{merge_commit}:refs/remotes/pull/{pr_id}/merge'
-        outputs['REF'] = f'refs/pull/{pr_id}/merge'
+        #outputs['REF'] = f'refs/pull/{pr_id}/merge'
+        outputs['REF'] = f'pull/{pr_id}/head'
 
     print(event)
 
