@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments, set_ready
+from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments, set_ready, set_draft
 
 #senior_reviewer = ['yguclu', 'EmilyBourne']
 senior_reviewer = ['EmilyBourne']
@@ -246,7 +246,7 @@ def start_review_check(pr_id, event, outputs):
 
     if len(words) < 3:
         leave_comment(pr_id, message_from_file('set_draft_no_description.txt'))
-        set_draft()
+        set_draft(pr_id)
     else:
         outputs['cleanup_trigger'] = 'request_review_status'
         run_tests(pr_id, ['pr_tests'], outputs, event)
