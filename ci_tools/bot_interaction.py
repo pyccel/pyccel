@@ -4,10 +4,11 @@ import os
 import sys
 from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments
 
-#senior_reviewer = ['yguclu', 'ebourne']
-senior_reviewer = ['ebourne']
+#senior_reviewer = ['yguclu', 'EmilyBourne']
+senior_reviewer = ['EmilyBourne']
+trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
              'lint', 'spelling']
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
@@ -32,7 +33,7 @@ def get_run_url(event):
     run_id = event['run_number']
     return f"{url}/actions/runs/{run_id}"
 
-def run_tests(pr_id, command_words, outputs, event):
+def run_tests(pr_id, tests, outputs, event):
     """
     Run the requested tests and leave a comment on the PR.
 
@@ -45,8 +46,8 @@ def run_tests(pr_id, command_words, outputs, event):
     pr_id : int
         The number of the PR.
 
-    command_words : list of strs
-        The command issued to the bot.
+    tests : list of strs
+        The tests requested.
 
     outputs : dict
         The dictionary containing the output of the bot.
@@ -54,15 +55,20 @@ def run_tests(pr_id, command_words, outputs, event):
     event : dict
         The event payload of the GitHub workflow.
     """
+    # Leave a comment to link to the run page
     ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
     comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
-    tests = command_words[1:]
-    if tests == ['all']:
+    leave_comment(pr_id, comment)
+
+    # Modify the flags to trigger the tests
+    if tests == ['pr_tests']:
         tests = test_keys
     for t in tests:
         outputs[f'run_{t}'] = True
-    leave_comment(pr_id, comment)
+
+    if outputs['run_coverage']:
+        outputs['run_linux'] = True
 
     outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
 
@@ -126,7 +132,6 @@ def update_test_information(pr_id, event):
     messages, last_message, date = check_previous_comments(pr_id)
 
     data = get_job_information(event['run_number'])
-    print(data)
 
     ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
@@ -146,7 +151,6 @@ def update_test_information(pr_id, event):
     leave_comment(pr_id, comment, url in last_message)
 
     return 'success' if passed else 'failure'
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
@@ -183,8 +187,14 @@ if __name__ == '__main__':
                'run_pylint': False,
                'run_lint': False,
                'run_spelling': False,
-               'additional_trigger': '',
-               'HEAD': '',
+               'run_pickle': False,
+               'run_editable_pickle': False,
+               'run_pickle_wheel': False,
+               'run_linux_anaconda': False,
+               'run_windows_anaconda': False,
+               'cleanup_trigger': '',
+               'python_version': '',
+               'BASE': '',
                'REF': '',
                'SHA': ''}
 
@@ -207,13 +217,25 @@ if __name__ == '__main__':
 
         pr_id = event['issue']['number']
 
+        trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        if not trusted_user:
+            comments = get_previous_pr_comments(pr_id)
+            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
+
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
         command_words = command.split()
 
         if command_words[0] == 'run':
-            run_tests(pr_id, command_words, outputs, event)
-            outputs['cleanup_trigger'] = 'update_test_information'
+            if trusted_user:
+                run_tests(pr_id, command_words[1:], outputs, event)
+                outputs['cleanup_trigger'] = 'update_test_information'
+
+        elif command_words[0] == 'try':
+            if trusted_user:
+                run_tests(pr_id, command_words[2:], outputs, event)
+                outputs['python_version'] = command_words[1]
+                outputs['cleanup_trigger'] = 'update_test_information'
 
         elif command == 'mark as ready':
             set_ready(pr_id)
@@ -221,31 +243,59 @@ if __name__ == '__main__':
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
 
+        elif command == 'trust user':
+            leave_comment(pr_id, message_from_file('trusting_user.txt'))
+            draft = get_status_json(pr_id, 'isDraft')
+            if not draft:
+                run_tests(pr_id, ['pr_tests'], outputs, event)
+                outputs['cleanup_trigger'] = 'request_review_status'
+
         else:
             leave_comment(pr_id, message_from_file('bot_commands.txt'))
 
     elif event['action'] == 'opened':
         # If new PR
+        pr_id = event['number']
 
-        new_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'FIRST_TIME_CONTRIBUTOR')
+        # Check whether user is new and/or trusted
+        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        if trusted_user:
+            prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['author_association'])
+            new_user = (len(prs) == 0)
+        else:
+            new_user = True
+
+        # Choose appropriate message to welcome author
         file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
         leave_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
 
+        # Ensure PR is draft
         if not event['pull_request']['draft']:
             set_draft(pr_id)
+
+        # If unknown user ask for trust approval
+        if not trusted_user:
+            leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
 
         pr_id = event['number']
-        run_tests(pr_id, 'run all', outputs, event)
+        trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        if not trusted_user:
+            comments = get_previous_pr_comments(pr_id)
+            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
+
+        if trusted_user:
+            run_tests(pr_id, ['pr_tests'], outputs, event)
+            outputs['cleanup_trigger'] = 'request_review_status'
 
     else:
         pr_id = None
 
     if pr_id is not None:
-        outputs['HEAD'] = get_status_json(pr_id, 'baseRefName')
+        outputs['BASE'] = get_status_json(pr_id, 'baseRefName')
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
 
     print(outputs)

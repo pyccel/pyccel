@@ -18,7 +18,8 @@ __all__ = ('github_cli',
            'remove_labels',
            'set_draft',
            'set_ready',
-           'get_job_information'
+           'get_job_information',
+           'check_previous_contributions'
            )
 
 github_cli = shutil.which('gh')
@@ -27,20 +28,12 @@ ReviewComment = namedtuple('ReviewComment', ['state', 'date', 'author'])
 Comment = namedtuple('Comment', ['body', 'date', 'author'])
 
 def get_status_json(pr_id, tags):
-    # Change to PR to have access to relevant status
-    cmds = [github_cli, 'pr', 'checkout', str(pr_id)]
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        p.communicate()
     # Check status of PR
-    cmds = [github_cli, 'pr', 'status', '--json', f'{tags},number']
+    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', f'{tags},number']
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
-    # Return to master branch
-    cmds = ['git', 'checkout', 'master']
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        p.communicate()
 
-    data = json.loads(result)['currentBranch']
+    data = json.loads(result)
     if isinstance(data, list):
         relevant_data = [d for d in data if d['number'] == pr_id][0]
     else:
@@ -406,3 +399,25 @@ def set_draft(number):
 
     with subprocess.Popen(cmds) as p:
         p.communicate()
+
+def check_previous_contributions(repo, author):
+    """
+    Get a list of previous PRs made on this repository by the author.
+
+    Use the GitHub CLI to get a dictionary listing the number and state
+    of all the PRs previously opened by this author on the repository.
+
+    Parameters
+    ----------
+    repo : str
+        The name of the repository (e.g. 'pyccel/pyccel')
+
+    author : str
+        The username of the author
+    """
+    cmds = [github_cli, 'search', 'prs', '--author', author, '--repo', repo, '--json', 'number,state']
+
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        result, _ = p.communicate()
+
+    return json.loads(result)
