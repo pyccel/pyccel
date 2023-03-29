@@ -29,6 +29,7 @@ jobs:
       REF: ${{ steps.run_bot.outputs.REF }}
       status_url: ${{ steps.run_bot.outputs.status_url }}
       cleanup_trigger: ${{ steps.run_bot.outputs.cleanup_trigger }}
+      python_version: ${{ steps.run_bot.outputs.python_version }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ inputs.python_version }}
@@ -56,8 +57,10 @@ jobs:
     uses:
       ./.github/workflows/linux.yml
     with:
-      python_version: 3.7
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
+    defaults:
+      python_version: 3.7
 
   Windows:
     needs: Bot
