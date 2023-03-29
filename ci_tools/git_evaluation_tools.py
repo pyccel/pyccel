@@ -224,7 +224,7 @@ def is_draft():
 
 
 
-def get_review_status():
+def get_review_status(pr_id):
     """
     Get the reviews left on the PR.
 
