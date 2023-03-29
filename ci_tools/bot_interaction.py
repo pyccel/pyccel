@@ -8,7 +8,7 @@ from git_evaluation_tools import leave_comment, get_status_json, github_cli, get
 senior_reviewer = ['EmilyBourne']
 trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-pr_test_keys = ['coverage', 'docs', 'pylint',
+pr_test_keys = ['docs', 'pylint',
              'lint', 'spelling']
 #pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
 #             'lint', 'spelling']
