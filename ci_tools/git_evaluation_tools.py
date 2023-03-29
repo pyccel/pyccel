@@ -30,21 +30,16 @@ Comment = namedtuple('Comment', ['body', 'date', 'author'])
 
 def get_status_json(pr_id, tags):
     # Check status of PR
-    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', f'{tags},number']
+    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', tags]
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
 
     data = json.loads(result)
-    if isinstance(data, list):
-        relevant_data = [d for d in data if d['number'] == pr_id][0]
-    else:
-        assert data['number'] == pr_id
-        relevant_data = data
 
     if ',' in tags:
-        return relevant_data
+        return data
     else:
-        return relevant_data[tags]
+        return data[tags]
 
 def get_diff_as_json(filename):
     """
