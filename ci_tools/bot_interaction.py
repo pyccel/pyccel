@@ -94,16 +94,16 @@ def check_review_stage(pr_id):
     bool : Assuming the PR is not ready to merge, indicates if the PR is
             ready for a review from a senior reviewer.
     """
-    reviews = get_review_status(pr_id)
-    senior_review = [r for r in reviews if r.author in senior_reviewer]
+    reviews, _ = get_review_status(pr_id)
+    senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
 
-    other_review = [r for r in reviews if r.author not in senior_reviewer]
+    other_review = [r for a,r in reviews.items() if a not in senior_reviewer]
 
     ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
 
     ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_reviews)
 
-    requested_changes = [r.author for r in reviews if r.state == 'CHANGES_REQUESTED']
+    requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
 
     return ready_to_merge, ready_for_senior_review
 
