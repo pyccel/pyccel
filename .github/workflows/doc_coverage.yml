@@ -4,7 +4,11 @@ on:
   workflow_call:
     inputs:
       python_version:
-        required: true
+        required: false
+        type: string
+        default: '3.8'
+      ref:
+        required: false
         type: string
       base:
         required: true
@@ -24,6 +28,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: compare
+          ref: ${{ inputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
