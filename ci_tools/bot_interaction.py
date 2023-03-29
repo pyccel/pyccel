@@ -362,7 +362,8 @@ if __name__ == '__main__':
                 run_tests(pr_id, command_words[2:], outputs, event)
 
         elif command == 'mark as ready':
-            set_ready(pr_id)
+            if trusted_user:
+                start_review_check(pr_id, event, outputs)
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
