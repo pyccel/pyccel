@@ -205,7 +205,7 @@ def update_test_information(pr_id, event):
 
     url = get_run_url(event)
     relevant_messages = [m for m in messages if url in m]
-    print(m)
+    print(relevant_messages)
     ref_sha = relevant_messages[0].split()[4]
     comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
     passed = True
