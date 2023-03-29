@@ -63,7 +63,7 @@ def run_tests(pr_id, tests, outputs, event):
 
     # Modify the flags to trigger the tests
     if tests == ['pr_tests']:
-        tests = test_keys
+        tests = pr_test_keys
     for t in tests:
         outputs[f'run_{t}'] = True
 
