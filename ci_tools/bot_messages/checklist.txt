@@ -2,4 +2,5 @@
 - [ ] Add tests to check your code works as expected
 - [ ] Update documentation if necessary
 - [ ] Update Changelog
+- [ ] Ensure any relevant issues are linked
 - [ ] Ensure tests are passing
