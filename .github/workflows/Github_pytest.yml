@@ -174,7 +174,21 @@ jobs:
       ref: ${{ needs.Bot.outputs.REF }}
 
   CleanUpBot:
-    needs: [ Bot, Linux, Windows, MacOSX, CoverageChecker, DocumentationChecker, PythonLint, PyccelLint ]
+    needs:
+      - Bot
+      - Linux
+      - Windows
+      - MacOSX
+      - CoverageChecker
+      - DocumentationChecker
+      - PythonLint
+      - PyccelLint
+      - Spelling
+      - Pickled-installation
+      - Editable-pickled-installation
+      - Wheel-pickled-installation
+      - Anaconda-Linux
+      - Anaconda-Windows
     if: ${{ always() && needs.Bot.outputs.cleanup_trigger != '' }}
     runs-on: ubuntu-latest
     steps:
