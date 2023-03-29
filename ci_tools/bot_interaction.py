@@ -108,12 +108,35 @@ def mark_as_ready(pr_id, job_state):
 
         ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_reviews)
 
+        requested_changes = [r.author for r in reviews if r.state == 'CHANGES_REQUESTED']
+
+        author = get_status_json(pr_id, 'author')['login']
+
         if ready_to_merge:
             add_labels('Ready_to_merge')
         elif ready_for_senior_review:
             add_labels('Ready_for_review')
+            if any(r in requested_changes for r in senior_reviewer):
+                requested = ', '.join(f'@{r}' for r in requested_changes)
+                message = message_from_file('rerequest_review.txt').format(
+                                                reviewers=requested, author=author)
+                leave_comment(pr_id, message)
+            else:
+                names = ', '.join(f'@{r}' for r in senior_reviewer)
+                approved = ', '.join(f'@{r}' for r in reviews if r.state == 'APPROVED')
+                message = message_from_file('senior_review.txt').format(
+                                reviewers=names, author=author, approved=approved)
+                leave_comment(pr_id, message)
         else:
             add_labels('needs_initial_review')
+            if requested_changes:
+                requested = ', '.join(f'@{r}' for r in requested_changes)
+                message = message_from_file('rerequest_review.txt').format(
+                                                reviewers=requested, author=author)
+                leave_comment(pr_id, message)
+            else:
+                message = message_from_file('new_pr.txt').format(author=author)
+                leave_comment(pr_id, message)
 
 def message_from_file(filename):
     """
