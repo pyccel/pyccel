@@ -207,7 +207,7 @@ def update_test_information(pr_id, event):
     relevant_messages = [m for m in messages if url in m]
     print(relevant_messages)
     ref_sha = relevant_messages[0].split()[4]
-    comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
+    comment = f"Ran tests on commit {ref_sha} for more details see [here]({url})\n"
     passed = True
     for job in data:
         conclusion = job['conclusion']
@@ -296,6 +296,10 @@ if __name__ == '__main__':
                'SHA': ''}
 
     if cleanup_trigger == 'request_review_status':
+        if 'number' in event:
+            pr_id = event['number']
+        else:
+            pr_id = event['issue']['number']
         result = update_test_information(pr_id, event)
         with open(args.output, encoding="utf-8", mode='a') as out_file:
             print(f"global_state={result}", file=out_file)
