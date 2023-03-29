@@ -106,7 +106,7 @@ def set_review_stage(pr_id):
     if ready_to_merge:
         add_labels(pr_id, ['Ready_to_merge'])
     elif ready_for_senior_review:
-        add_labels(pr_id, ['Ready_for_review'[)
+        add_labels(pr_id, ['Ready_for_review'])
         if any(r in requested_changes for r in senior_reviewer):
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
