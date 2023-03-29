@@ -55,11 +55,12 @@ def run_tests(pr_id, tests, outputs, event):
     event : dict
         The event payload of the GitHub workflow.
     """
-    # Leave a comment to link to the run page
-    ref_sha = get_status_json(pr_id, 'headRefOid')
-    url = get_run_url(event)
-    comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
-    leave_comment(pr_id, comment)
+    if outputs['cleanup_trigger'] == 'update_test_information':
+        # Leave a comment to link to the run page
+        ref_sha = get_status_json(pr_id, 'headRefOid')
+        url = get_run_url(event)
+        comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
+        leave_comment(pr_id, comment)
 
     # Modify the flags to trigger the tests
     if tests == ['pr_tests']:
@@ -228,14 +229,14 @@ if __name__ == '__main__':
 
         if command_words[0] == 'run':
             if trusted_user:
-                run_tests(pr_id, command_words[1:], outputs, event)
                 outputs['cleanup_trigger'] = 'update_test_information'
+                run_tests(pr_id, command_words[1:], outputs, event)
 
         elif command_words[0] == 'try':
             if trusted_user:
-                run_tests(pr_id, command_words[2:], outputs, event)
                 outputs['python_version'] = command_words[1]
                 outputs['cleanup_trigger'] = 'update_test_information'
+                run_tests(pr_id, command_words[2:], outputs, event)
 
         elif command == 'mark as ready':
             set_ready(pr_id)
@@ -247,8 +248,8 @@ if __name__ == '__main__':
             leave_comment(pr_id, message_from_file('trusting_user.txt'))
             draft = get_status_json(pr_id, 'isDraft')
             if not draft:
-                run_tests(pr_id, ['pr_tests'], outputs, event)
                 outputs['cleanup_trigger'] = 'request_review_status'
+                run_tests(pr_id, ['pr_tests'], outputs, event)
 
         else:
             leave_comment(pr_id, message_from_file('bot_commands.txt'))
@@ -288,8 +289,8 @@ if __name__ == '__main__':
             trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
 
         if trusted_user:
-            run_tests(pr_id, ['pr_tests'], outputs, event)
             outputs['cleanup_trigger'] = 'request_review_status'
+            run_tests(pr_id, ['pr_tests'], outputs, event)
 
     else:
         pr_id = None
