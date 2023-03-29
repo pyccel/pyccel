@@ -10,7 +10,7 @@ on:
         required: false
         type: string
 
-job:
+jobs:
   Wheel-pickled-installation:
     runs-on: ubuntu-latest
 
