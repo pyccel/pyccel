@@ -282,7 +282,7 @@ if __name__ == '__main__':
         # If PR is ready for review
 
         pr_id = event['number']
-        trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
             comments = get_previous_pr_comments(pr_id)
             trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
