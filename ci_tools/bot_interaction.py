@@ -384,8 +384,10 @@ if __name__ == '__main__':
 
         # Check whether user is new and/or trusted
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        print(event['pull_request']['author_association'])
         if trusted_user:
-            prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['author_association'])
+            prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['user']['login'])
+            print(prs)
             new_user = (len(prs) == 0)
         else:
             new_user = True
