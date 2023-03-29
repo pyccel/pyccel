@@ -271,10 +271,6 @@ if __name__ == '__main__':
     # Save run number with event information
     event['run_number'] = args.run_id
 
-    print(event)
-
-    print("FOUND: ",args.cleanup_trigger)
-
     cleanup_trigger = args.cleanup_trigger
 
     # Initialise outputs
@@ -413,8 +409,6 @@ if __name__ == '__main__':
     if pr_id is not None:
         outputs['BASE'] = get_status_json(pr_id, 'baseRefName')
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
-
-    print(outputs)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
