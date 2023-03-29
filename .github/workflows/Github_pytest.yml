@@ -59,8 +59,6 @@ jobs:
     with:
       python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
-    defaults:
-      python_version: 3.7
 
   Windows:
     needs: Bot
@@ -68,7 +66,7 @@ jobs:
     uses:
       ./.github/workflows/windows.yml
     with:
-      python_version: 3.7
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   MacOSX:
@@ -77,7 +75,7 @@ jobs:
     uses:
       ./.github/workflows/macosx.yml
     with:
-      python_version: '3.10'
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   CoverageChecker:
@@ -86,7 +84,7 @@ jobs:
     uses:
       ./.github/workflows/coverage.yml
     with:
-      python_version: 3.7
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   DocumentationChecker:
@@ -95,7 +93,7 @@ jobs:
     uses:
       ./.github/workflows/doc_coverage.yml
     with:
-      python_version: 3.8
+      python_version: ${{ needs.Bot.outputs.python_version }}
       base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -105,7 +103,7 @@ jobs:
     uses:
       ./.github/workflows/lint.yml
     with:
-      python_version: 3.8
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   PyccelLint:
@@ -114,7 +112,7 @@ jobs:
     uses:
       ./.github/workflows/pyccel_lint.yml
     with:
-      python_version: 3.8
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Spelling:
@@ -123,7 +121,7 @@ jobs:
     uses:
       ./.github/workflows/spelling.yml
     with:
-      python_version: 3.8
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Pickled-installation:
@@ -132,7 +130,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: '3.7'
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Editable-pickled-installation:
@@ -141,7 +139,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: '3.7'
+      python_version: ${{ needs.Bot.outputs.python_version }}
       editable_string: '-e'
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -151,7 +149,7 @@ jobs:
     uses:
       ./.github/workflows/pickle_wheel.yml
     with:
-      python_version: '3.7'
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
 
@@ -161,6 +159,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_linux.yml
     with:
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Anaconda-Windows:
@@ -169,7 +168,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_windows.yml
     with:
-      python_version: '3.10'
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   CleanUpBot:

@@ -6,6 +6,7 @@ on:
       python_version:
         required: false
         type: string
+        default: '3.10'
       ref:
         required: false
         type: string
