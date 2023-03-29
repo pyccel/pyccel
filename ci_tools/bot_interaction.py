@@ -203,8 +203,10 @@ def update_test_information(pr_id, event):
 
     data = get_job_information(event['run_number'])
 
-    ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
+    relevant_messages = [m for m in messages if url in m]
+    print(m)
+    ref_sha = relevant_messages[0].split()[4]
     comment = f"Ran tests on commit {ref_sha}, for more details see [here]({url})\n"
     passed = True
     for job in data:
