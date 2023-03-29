@@ -4,9 +4,8 @@ on:
   workflow_call:
     inputs:
       python_version:
-        required: false
+        required: true
         type: string
-        default: '3.8'
       ref:
         required: false
         type: string

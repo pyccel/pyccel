@@ -55,12 +55,11 @@ def run_tests(pr_id, tests, outputs, event):
     event : dict
         The event payload of the GitHub workflow.
     """
-    if outputs['cleanup_trigger'] == 'update_test_information':
-        # Leave a comment to link to the run page
-        ref_sha = get_status_json(pr_id, 'headRefOid')
-        url = get_run_url(event)
-        comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
-        leave_comment(pr_id, comment)
+    # Leave a comment to link to the run page
+    ref_sha = get_status_json(pr_id, 'headRefOid')
+    url = get_run_url(event)
+    comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
+    leave_comment(pr_id, comment)
 
     # Modify the flags to trigger the tests
     if tests == ['pr_tests']:
@@ -73,7 +72,64 @@ def run_tests(pr_id, tests, outputs, event):
 
     outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
 
-def mark_as_ready(pr_id):
+def check_review_stage(pr_id):
+    """
+    """
+    reviews = get_review_status(pr_id)
+    senior_review = [r for r in reviews if r.author in senior_reviewer]
+
+    other_review = [r for r in reviews if r.author not in senior_reviewer]
+
+    ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
+
+    ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_reviews)
+
+    requested_changes = [r.author for r in reviews if r.state == 'CHANGES_REQUESTED']
+
+    return ready_to_merge, ready_for_senior_review
+
+def set_review_stage(pr_id):
+    """
+    Set the flags for the review stage.
+
+    Determine the current stage of the review process from the state
+    of the reviews left on the pull request. Leave the flag indicating
+    that stage and a message encouraging reivews.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+    """
+    ready_to_merge, ready_for_senior_review = check_review_stage()
+    author = get_status_json(pr_id, 'author')['login']
+    if ready_to_merge:
+        add_labels(pr_id, ['Ready_to_merge'])
+    elif ready_for_senior_review:
+        add_labels(pr_id, ['Ready_for_review'])
+        if any(r in requested_changes for r in senior_reviewer):
+            requested = ', '.join(f'@{r}' for r in requested_changes)
+            message = message_from_file('rerequest_review.txt').format(
+                                            reviewers=requested, author=author)
+            leave_comment(pr_id, message)
+        else:
+            names = ', '.join(f'@{r}' for r in senior_reviewer)
+            approved = ', '.join(f'@{r}' for r in reviews if r.state == 'APPROVED')
+            message = message_from_file('senior_review.txt').format(
+                            reviewers=names, author=author, approved=approved)
+            leave_comment(pr_id, message)
+    else:
+        add_labels(pr_id, ['needs_initial_review'])
+        if requested_changes:
+            requested = ', '.join(f'@{r}' for r in requested_changes)
+            message = message_from_file('rerequest_review.txt').format(
+                                            reviewers=requested, author=author)
+            leave_comment(pr_id, message)
+        else:
+            message = message_from_file('new_pr.txt').format(author=author)
+            leave_comment(pr_id, message)
+
+def mark_as_ready(pr_id, job_state):
     """
     Mark the pull request as ready for review.
 
@@ -89,8 +145,21 @@ def mark_as_ready(pr_id):
     ----------
     pr_id : int
         The number of the PR.
+
+    job_state : str
+        The result of the tests [success/failed].
     """
-    pass
+    job_data = get_job_information(event['run_number'])
+
+    if job_state != 'success':
+        set_draft(pr_id)
+        leave_comment(pr_id, message_from_file('set_draft_failing.txt'))
+    else:
+        set_ready(pr_id)
+
+        ready_to_merge, ready_for_senior_review = check_review_stage()
+
+
 
 def message_from_file(filename):
     """
@@ -143,7 +212,6 @@ def update_test_information(pr_id, event):
         name = job['name']
         if conclusion == 'skipped' or name in ('Bot', 'CleanUpBot'):
             continue
-        print(conclusion)
         job_passed = (conclusion == 'success')
         icon = ':heavy_check_mark:' if job_passed else ':x:'
         comment += f"- {icon} {name}\n"
@@ -152,6 +220,36 @@ def update_test_information(pr_id, event):
     leave_comment(pr_id, comment, url in last_message)
 
     return 'success' if passed else 'failure'
+
+def start_review_check(pr_id, event, outputs):
+    """
+    Check if the review is as ready as the author thinks.
+
+    Use the GitHub CLI to check if the PR has a meaningful
+    description (at least 3 words). If this is the case then the
+    tests are triggered to determine the final draft status.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    event : dict
+        The event payload of the GitHub workflow.
+
+    outputs : dict
+        The dictionary containing the output of the bot.
+    """
+
+    description = get_status_json(pr_id, 'body')
+    words = description.split()
+
+    if len(words) < 3:
+        leave_comment(pr_id, message_from_file('set_draft_no_description.txt'))
+        set_draft()
+    else:
+        outputs['cleanup_trigger'] = 'request_review_status'
+        run_tests(pr_id, ['pr_tests'], outputs, event)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
@@ -172,10 +270,6 @@ if __name__ == '__main__':
 
     # Save run number with event information
     event['run_number'] = args.run_id
-
-    print(event)
-
-    print("FOUND: ",args.cleanup_trigger)
 
     cleanup_trigger = args.cleanup_trigger
 
@@ -200,7 +294,10 @@ if __name__ == '__main__':
                'SHA': ''}
 
     if cleanup_trigger == 'request_review_status':
-        mark_as_ready(pr_id)
+        result = update_test_information(pr_id, event)
+        with open(args.output, encoding="utf-8", mode='a') as out_file:
+            print(f"global_state={result}", file=out_file)
+        mark_as_ready(pr_id, result)
         sys.exit()
 
     elif cleanup_trigger == 'update_test_information':
@@ -289,8 +386,22 @@ if __name__ == '__main__':
             trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
 
         if trusted_user:
-            outputs['cleanup_trigger'] = 'request_review_status'
-            run_tests(pr_id, ['pr_tests'], outputs, event)
+            start_review_check(pr_id, event, outputs)
+
+    elif 'pull_request_review' in event:
+        pr_id = event['pull_request_review']['pull_request']['number']
+        state = event['pull_request_review']['review']['state']
+        if state == 'approved':
+            labels = get_status_json(pr_id, 'labels')
+            remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+            set_review_stage(pr_id)
+        elif state == 'changes_requested':
+            labels = get_status_json(pr_id, 'labels')
+            remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+            set_draft(pr_id)
+            author = event['pull_request_review']['pull_request']['author']['login']
+            reviewer = event['pull_request_review']['review']['user']['login']
+            leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
 
     else:
         pr_id = None
@@ -298,8 +409,6 @@ if __name__ == '__main__':
     if pr_id is not None:
         outputs['BASE'] = get_status_json(pr_id, 'baseRefName')
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
-
-    print(outputs)
 
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():

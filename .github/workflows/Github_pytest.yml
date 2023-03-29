@@ -6,6 +6,8 @@ on:
     types: [ opened, ready_for_review, synchronize ]
   issue_comment:
     types: [ created ]
+  pull_request_review:
+    types: [ submitted ]
 
 jobs:
   Bot:
@@ -57,8 +59,8 @@ jobs:
     uses:
       ./.github/workflows/linux.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      ref: ${{ needs.Bot.outputs.REF}}
 
   Windows:
     needs: Bot
@@ -66,7 +68,7 @@ jobs:
     uses:
       ./.github/workflows/windows.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   MacOSX:
@@ -75,7 +77,7 @@ jobs:
     uses:
       ./.github/workflows/macosx.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   CoverageChecker:
@@ -84,7 +86,7 @@ jobs:
     uses:
       ./.github/workflows/coverage.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   DocumentationChecker:
@@ -93,7 +95,7 @@ jobs:
     uses:
       ./.github/workflows/doc_coverage.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -103,7 +105,7 @@ jobs:
     uses:
       ./.github/workflows/lint.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   PyccelLint:
@@ -112,7 +114,7 @@ jobs:
     uses:
       ./.github/workflows/pyccel_lint.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Spelling:
@@ -121,7 +123,7 @@ jobs:
     uses:
       ./.github/workflows/spelling.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Pickled-installation:
@@ -130,7 +132,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Editable-pickled-installation:
@@ -139,7 +141,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       editable_string: '-e'
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -149,7 +151,7 @@ jobs:
     uses:
       ./.github/workflows/pickle_wheel.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
 
@@ -159,7 +161,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_linux.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   Anaconda-Windows:
@@ -168,7 +170,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_windows.yml
     with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   CleanUpBot:
@@ -187,7 +189,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Post status
-        if: ${{ needs.Bot.outputs.cleanup_trigger == 'update_test_information' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
             ${{ needs.Bot.outputs.status_url }} \

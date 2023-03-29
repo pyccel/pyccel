@@ -15,6 +15,7 @@ __all__ = ('github_cli',
            'is_draft',
            'get_review_status',
            'leave_comment',
+           'add_labels',
            'remove_labels',
            'set_draft',
            'set_ready',
@@ -29,21 +30,16 @@ Comment = namedtuple('Comment', ['body', 'date', 'author'])
 
 def get_status_json(pr_id, tags):
     # Check status of PR
-    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', f'{tags},number']
+    cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', tags]
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, _ = p.communicate()
 
     data = json.loads(result)
-    if isinstance(data, list):
-        relevant_data = [d for d in data if d['number'] == pr_id][0]
-    else:
-        assert data['number'] == pr_id
-        relevant_data = data
 
     if ',' in tags:
-        return relevant_data
+        return data
     else:
-        return relevant_data[tags]
+        return data[tags]
 
 def get_diff_as_json(filename):
     """
@@ -340,6 +336,30 @@ def leave_non_repeat_comment(number, comment, allow_duplicate):
     else:
         print("Not duplicating comment:")
         print(comment)
+
+
+def add_labels(number, labels):
+    """
+    Add the specified labels to the PR.
+
+    Use GitHub's command-line interface to add all the specified
+    labels from a PR.
+
+    Parameters
+    ----------
+    number : int
+        The number of the PR.
+
+    labels : list
+        A list of the labels to be added.
+    """
+
+    cmds = [github_cli, 'pr', 'edit', str(number)]
+    for lab in labels:
+        cmds += ['--add-label', lab]
+
+    with subprocess.Popen(cmds) as p:
+        p.communicate()
 
 
 def remove_labels(number, labels):
