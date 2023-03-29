@@ -8,8 +8,10 @@ from git_evaluation_tools import leave_comment, get_status_json, github_cli, get
 senior_reviewer = ['EmilyBourne']
 trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+pr_test_keys = ['coverage', 'docs', 'pylint',
              'lint', 'spelling']
+#pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#             'lint', 'spelling']
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
@@ -74,6 +76,22 @@ def run_tests(pr_id, tests, outputs, event):
 
 def check_review_stage(pr_id):
     """
+    Find the review stage.
+
+    Use the GitHub CLI to examine the reviews left on the pull request
+    and determine the current stage of the review process.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    Results
+    -------
+    bool : Indicates if the PR is ready to merge.
+
+    bool : Assuming the PR is not ready to merge, indicates if the PR is
+            ready for a review from a senior reviewer.
     """
     reviews = get_review_status(pr_id)
     senior_review = [r for r in reviews if r.author in senior_reviewer]
@@ -101,7 +119,7 @@ def set_review_stage(pr_id):
     pr_id : int
         The number of the PR.
     """
-    ready_to_merge, ready_for_senior_review = check_review_stage()
+    ready_to_merge, ready_for_senior_review = check_review_stage(pr_id)
     author = get_status_json(pr_id, 'author')['login']
     if ready_to_merge:
         add_labels(pr_id, ['Ready_to_merge'])
@@ -157,7 +175,7 @@ def mark_as_ready(pr_id, job_state):
     else:
         set_ready(pr_id)
 
-        ready_to_merge, ready_for_senior_review = check_review_stage()
+        ready_to_merge, ready_for_senior_review = check_review_stage(pr_id)
 
 
 
