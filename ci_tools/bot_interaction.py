@@ -2,7 +2,7 @@ import argparse
 import json
 import os
 import sys
-from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments
+from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information, check_previous_comments, set_ready
 
 #senior_reviewer = ['yguclu', 'EmilyBourne']
 senior_reviewer = ['EmilyBourne']
