@@ -6,6 +6,9 @@ on:
       python_version:
         required: true
         type: string
+      ref:
+        required: false
+        type: string
 
 jobs:
   Linux:
@@ -14,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:

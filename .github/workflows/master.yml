@@ -33,116 +33,34 @@ jobs:
 
   Pickled-installation:
 
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install Pyccel
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install .
-        shell: bash
-      - name: Check for existence of pickled files
-        uses: ./.github/actions/check_for_pickled
+    uses:
+      ./.github/workflows/pickle.yml
+    with:
+      python_version: '3.7'
 
   Editable-pickled-installation:
 
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install Pyccel in editable mode
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-        shell: bash
-      - name: Check for existence of pickled files
-        uses: ./.github/actions/check_for_pickled
+    uses:
+      ./.github/workflows/pickle.yml
+    with:
+      python_version: '3.7'
+      editable_string: '-e'
 
   Wheel-pickled-installation:
 
-    runs-on: ubuntu-latest
+    uses:
+      ./.github/workflows/pickle_wheel.yml
+    with:
+      python_version: '3.7'
 
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install Pyccel from wheel
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade build
-          python -m build
-          python -m pip install dist/*.whl
-        shell: bash
-      - name: Check for existence of pickled files
-        uses: ./.github/actions/check_for_pickled
 
   Anaconda-Linux:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          auto-activate-base: true
-      - name: Install python dependencies
-        uses: ./.github/actions/conda_installation
-        with:
-          mpi_type: openmpi
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-        with:
-          shell_cmd: "bash -l {0}"
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-        with:
-          shell_cmd: "bash -l {0}"
-      - name: Parallel tests with pytest
-        uses: ./.github/actions/pytest_parallel
-        with:
-          shell_cmd: "bash -l {0}"
+    uses:
+      ./.github/workflows/anaconda_linux.yml
 
   Anaconda-Windows:
-    runs-on: windows-latest
 
-    steps:
-      - uses: actions/checkout@v3
-      - uses: conda-incubator/setup-miniconda@v2
-        with:
-          auto-update-conda: true
-          activate-environment: test
-          python-version: "3.10"
-      - name: Install dependencies
-        uses: ./.github/actions/windows_install
-      - name: Install python dependencies
-        uses: ./.github/actions/conda_installation
-        with:
-          mpi_type: msmpi
-      - name: Fortran/C tests with pytest
-        uses: ./.github/actions/pytest_run
-        with:
-          shell_cmd: 'bash -l -eo pipefail {0}'
-          pytest_mark: 'and not external'
-      - name: Python tests with pytest
-        uses: ./.github/actions/pytest_run_python
-        with:
-          shell_cmd: 'bash -l -eo pipefail {0}'
+    uses:
+      ./.github/workflows/anaconda_windows.yml
+    with:
+      python_version: '3.10'
