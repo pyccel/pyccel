@@ -93,6 +93,8 @@ def check_review_stage(pr_id):
 
     bool : Assuming the PR is not ready to merge, indicates if the PR is
             ready for a review from a senior reviewer.
+
+    requested_changes : List of authors who requested changes.
     """
     reviews, _ = get_review_status(pr_id)
     senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
@@ -105,7 +107,7 @@ def check_review_stage(pr_id):
 
     requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
 
-    return ready_to_merge, ready_for_senior_review
+    return ready_to_merge, ready_for_senior_review, requested_changes
 
 def set_review_stage(pr_id):
     """
@@ -120,7 +122,7 @@ def set_review_stage(pr_id):
     pr_id : int
         The number of the PR.
     """
-    ready_to_merge, ready_for_senior_review = check_review_stage(pr_id)
+    ready_to_merge, ready_for_senior_review, requested_changes = check_review_stage(pr_id)
     author = get_status_json(pr_id, 'author')['login']
     if ready_to_merge:
         add_labels(pr_id, ['Ready_to_merge'])
@@ -176,9 +178,7 @@ def mark_as_ready(pr_id, job_state):
     else:
         set_ready(pr_id)
 
-        ready_to_merge, ready_for_senior_review = check_review_stage(pr_id)
-
-
+        set_review_stage(pr_id)
 
 def message_from_file(filename):
     """
