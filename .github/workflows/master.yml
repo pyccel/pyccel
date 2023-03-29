@@ -57,6 +57,8 @@ jobs:
   Anaconda-Linux:
     uses:
       ./.github/workflows/anaconda_linux.yml
+    with:
+      python_version: '3.10'
 
   Anaconda-Windows:
 
