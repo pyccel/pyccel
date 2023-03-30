@@ -395,6 +395,7 @@ if __name__ == '__main__':
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
         command_words = command.split()
+        print(command_words)
 
         if command_words[0] == 'run':
             if trusted_user:
@@ -414,7 +415,7 @@ if __name__ == '__main__':
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
 
-        elif command_words[:2] == ('trust', 'user') and len(command_words)==3:
+        elif command_words[:2] == ['trust', 'user'] and len(command_words)==3:
             leave_comment(pr_id, message_from_file('trusting_user.txt').format(user=command_words[2]))
             draft = get_status_json(pr_id, 'isDraft')
             if not draft:
