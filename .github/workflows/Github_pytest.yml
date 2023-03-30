@@ -44,7 +44,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Post status
-        if: ${{ steps.run_bot.outputs.cleanup_trigger == 'update_test_information' }}
+        if: ${{ steps.run_bot.outputs.cleanup_trigger != '' && github.event_name != 'pull_request' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
             ${{ steps.run_bot.outputs.status_url }} \
@@ -203,6 +203,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Post status
+        if: ${{ github.event_name != 'pull_request' }}
         run: |
           gh api --method POST -H "Accept: application/vnd.github+json" \
             ${{ needs.Bot.outputs.status_url }} \
