@@ -414,8 +414,8 @@ if __name__ == '__main__':
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
 
-        elif command == 'trust user':
-            leave_comment(pr_id, message_from_file('trusting_user.txt'))
+        elif command_words[1:3] == ('trust', 'user') and len(command_words)==4:
+            leave_comment(pr_id, message_from_file('trusting_user.txt').format(user=command_words[3]))
             draft = get_status_json(pr_id, 'isDraft')
             if not draft:
                 outputs['cleanup_trigger'] = 'request_review_status'
