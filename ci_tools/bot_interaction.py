@@ -474,7 +474,7 @@ if __name__ == '__main__':
             labels = get_status_json(pr_id, 'labels')
             remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
             set_draft(pr_id)
-            author = event['pull_request']['author']['login']
+            author = get_status_json(pr_id, 'author')['login']
             reviewer = event['review']['user']['login']
             leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
 
