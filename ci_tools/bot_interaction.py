@@ -463,9 +463,9 @@ if __name__ == '__main__':
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
-    elif 'pull_request_review' in event:
-        pr_id = event['pull_request_review']['pull_request']['number']
-        state = event['pull_request_review']['review']['state']
+    elif 'review' in event:
+        pr_id = event['pull_request']['number']
+        state = event['review']['state']
         if state == 'approved':
             labels = get_status_json(pr_id, 'labels')
             remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
@@ -474,8 +474,8 @@ if __name__ == '__main__':
             labels = get_status_json(pr_id, 'labels')
             remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
             set_draft(pr_id)
-            author = event['pull_request_review']['pull_request']['author']['login']
-            reviewer = event['pull_request_review']['review']['user']['login']
+            author = event['pull_request']['author']['login']
+            reviewer = event['review']['user']['login']
             leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
