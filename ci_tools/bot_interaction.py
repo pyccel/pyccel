@@ -177,6 +177,8 @@ def mark_as_ready(pr_id):
     """
     job_data = get_status_json(pr_id, 'statusCheckRollup')
 
+    job_data = [j for j in job_data if j not in ('Bot', 'Tests on Draft', 'CleanUpBot')]
+
     print(job_data)
 
     success = [j['name'] for j in job_data if j['conclusion'] == 'SUCCESS']
