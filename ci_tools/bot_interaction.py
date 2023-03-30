@@ -459,17 +459,6 @@ if __name__ == '__main__':
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
-    elif 'pull_request' in event and not event['pull_request']['draft']:
-        # If PR is ready for review
-
-        pr_id = event['number']
-        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
-        if not trusted_user:
-            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
-
-        if trusted_user:
-            start_review_check(pr_id, event, outputs)
-
     elif 'pull_request_review' in event:
         pr_id = event['pull_request_review']['pull_request']['number']
         state = event['pull_request_review']['review']['state']
@@ -484,6 +473,17 @@ if __name__ == '__main__':
             author = event['pull_request_review']['pull_request']['author']['login']
             reviewer = event['pull_request_review']['review']['user']['login']
             leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
+
+    elif 'pull_request' in event and not event['pull_request']['draft']:
+        # If PR is ready for review
+
+        pr_id = event['number']
+        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        if not trusted_user:
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
+
+        if trusted_user:
+            start_review_check(pr_id, event, outputs)
 
     else:
         pr_id = None
