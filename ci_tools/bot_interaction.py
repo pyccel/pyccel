@@ -99,6 +99,8 @@ def check_review_stage(pr_id):
             ready for a review from a senior reviewer.
 
     requested_changes : List of authors who requested changes.
+
+    reviews : Summary of all reviews left on the PR.
     """
     reviews, _ = get_review_status(pr_id)
     senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
@@ -107,11 +109,11 @@ def check_review_stage(pr_id):
 
     ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
 
-    ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_reviews)
+    ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_review)
 
     requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
 
-    return ready_to_merge, ready_for_senior_review, requested_changes
+    return ready_to_merge, ready_for_senior_review, requested_changes, reviews
 
 def set_review_stage(pr_id):
     """
@@ -126,7 +128,7 @@ def set_review_stage(pr_id):
     pr_id : int
         The number of the PR.
     """
-    ready_to_merge, ready_for_senior_review, requested_changes = check_review_stage(pr_id)
+    ready_to_merge, ready_for_senior_review, requested_changes, reviews = check_review_stage(pr_id)
     author = get_status_json(pr_id, 'author')['login']
     labels = get_labels(pr_id)
     if ready_to_merge:
@@ -178,7 +180,9 @@ def mark_as_ready(pr_id):
     """
     job_data = get_status_json(pr_id, 'statusCheckRollup')
 
-    job_data = [j for j in job_data if j['name'] not in ('Bot', 'CleanUpBot') and j.get('context',None) != 'Tests on Draft']
+    print(job_data)
+
+    job_data = [j for j in job_data if j.get('name', None) not in ('Bot', 'CleanUpBot') and j.get('context',None) != 'Tests on Draft']
 
     print(job_data)
 
@@ -290,6 +294,34 @@ def start_review_check(pr_id, event, outputs):
         outputs['cleanup_trigger'] = 'request_review_status'
         run_tests(pr_id, ['pr_tests'], outputs, event)
 
+def flagged_as_trusted(pr_id, user):
+    """
+    Check if the user has been flagged as trusted.
+
+    Look through the previous comments on the PR to check if a trusted
+    user has flagged this user as trusted using the `/bot trust user X`
+    command.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    user : str
+        The username of the user who may be untrustworthy.
+
+    Results
+    -------
+    bool : True if trustworthy, false otherwise.
+    """
+    trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
+    for c in trusted_comments:
+        words = c.body.strip().split()
+        if words == ('/bot', 'trust', 'user', user):
+            return True
+
+    return False
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
     parser.add_argument('gitEvent', type=str,
@@ -360,12 +392,12 @@ if __name__ == '__main__':
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            comments = get_previous_pr_comments(pr_id)
-            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
 
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
         command_words = command.split()
+        print(command_words)
 
         if command_words[0] == 'run':
             if trusted_user:
@@ -385,10 +417,12 @@ if __name__ == '__main__':
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
 
-        elif command == 'trust user':
-            leave_comment(pr_id, message_from_file('trusting_user.txt'))
+        elif command_words[:2] == ['trust', 'user'] and len(command_words)==3:
+            user = command_words[2]
+            leave_comment(pr_id, message_from_file('trusting_user.txt').format(user=user))
+            pr_author = get_status_json(pr_id, 'author')
             draft = get_status_json(pr_id, 'isDraft')
-            if not draft:
+            if not draft and user == pr_author:
                 outputs['cleanup_trigger'] = 'request_review_status'
                 run_tests(pr_id, ['pr_tests'], outputs, event)
 
@@ -427,18 +461,6 @@ if __name__ == '__main__':
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
-    elif 'pull_request' in event and not event['pull_request']['draft']:
-        # If PR is ready for review
-
-        pr_id = event['number']
-        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
-        if not trusted_user:
-            comments = get_previous_pr_comments(pr_id)
-            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
-
-        if trusted_user:
-            start_review_check(pr_id, event, outputs)
-
     elif 'pull_request_review' in event:
         pr_id = event['pull_request_review']['pull_request']['number']
         state = event['pull_request_review']['review']['state']
@@ -453,6 +475,17 @@ if __name__ == '__main__':
             author = event['pull_request_review']['pull_request']['author']['login']
             reviewer = event['pull_request_review']['review']['user']['login']
             leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
+
+    elif 'pull_request' in event and not event['pull_request']['draft']:
+        # If PR is ready for review
+
+        pr_id = event['number']
+        trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        if not trusted_user:
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
+
+        if trusted_user:
+            start_review_check(pr_id, event, outputs)
 
     else:
         pr_id = None
