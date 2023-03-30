@@ -5,7 +5,6 @@ import sys
 from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information
 from git_evaluation_tools import check_previous_comments, set_ready, set_draft, get_review_status
 from git_evaluation_tools import check_previous_contributions, add_labels, remove_labels, get_labels
-from git_evaluation_tools import leave_non_repeat_comment
 
 #senior_reviewer = ['yguclu', 'EmilyBourne']
 senior_reviewer = ['EmilyBourne']
@@ -132,30 +131,32 @@ def set_review_stage(pr_id):
     if ready_to_merge:
         add_labels(pr_id, ['Ready_to_merge'])
     elif ready_for_senior_review:
-        add_labels(pr_id, ['Ready_for_review'])
-        if any(r in requested_changes for r in senior_reviewer):
-            if all(l not in review_labels for l in labels):
-                requested = ', '.join(f'@{r}' for r in requested_changes)
-                message = message_from_file('rerequest_review.txt').format(
-                                                reviewers=requested, author=author)
-                leave_non_repeat_comment(pr_id, message)
-        else:
-            names = ', '.join(f'@{r}' for r in senior_reviewer)
-            approved = ', '.join(f'@{r}' for r in reviews if r.state == 'APPROVED')
-            message = message_from_file('senior_review.txt').format(
-                            reviewers=names, author=author, approved=approved)
-            leave_non_repeat_comment(pr_id, message)
+        if 'Ready_for_review' not in labels:
+            add_labels(pr_id, ['Ready_for_review'])
+            if any(r in requested_changes for r in senior_reviewer):
+                if all(l not in review_labels for l in labels):
+                    requested = ', '.join(f'@{r}' for r in requested_changes)
+                    message = message_from_file('rerequest_review.txt').format(
+                                                    reviewers=requested, author=author)
+                    leave_comment(pr_id, message)
+            else:
+                names = ', '.join(f'@{r}' for r in senior_reviewer)
+                approved = ', '.join(f'@{r}' for r in reviews if r.state == 'APPROVED')
+                message = message_from_file('senior_review.txt').format(
+                                reviewers=names, author=author, approved=approved)
+                leave_comment(pr_id, message)
     else:
-        add_labels(pr_id, ['needs_initial_review'])
-        if requested_changes:
-            if all(l not in review_labels for l in labels):
-                requested = ', '.join(f'@{r}' for r in requested_changes)
-                message = message_from_file('rerequest_review.txt').format(
-                                                reviewers=requested, author=author)
-                leave_non_repeat_comment(pr_id, message)
-        else:
-            message = message_from_file('new_pr.txt').format(author=author)
-            leave_non_repeat_comment(pr_id, message)
+        if all(l not in review_labels for l in labels):
+            add_labels(pr_id, ['needs_initial_review'])
+            if requested_changes:
+                if all(l not in review_labels for l in labels):
+                    requested = ', '.join(f'@{r}' for r in requested_changes)
+                    message = message_from_file('rerequest_review.txt').format(
+                                                    reviewers=requested, author=author)
+                    leave_comment(pr_id, message)
+            else:
+                message = message_from_file('new_pr.txt').format(author=author)
+                leave_comment(pr_id, message)
 
 def mark_as_ready(pr_id, job_state):
     """
