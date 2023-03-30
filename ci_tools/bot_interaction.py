@@ -158,7 +158,7 @@ def set_review_stage(pr_id):
                 message = message_from_file('new_pr.txt').format(author=author)
                 leave_comment(pr_id, message)
 
-def mark_as_ready(pr_id, job_state):
+def mark_as_ready(pr_id):
     """
     Mark the pull request as ready for review.
 
@@ -174,19 +174,24 @@ def mark_as_ready(pr_id, job_state):
     ----------
     pr_id : int
         The number of the PR.
-
-    job_state : str
-        The result of the tests [success/failed].
     """
-    job_data = get_job_information(event['run_number'])
+    job_data = get_status_json('statusCheckRollup')
 
-    if job_state != 'success':
+    success = [j['name'] for j in job_data if j['conclusion'] == 'SUCCESS']
+    failures = [j['name'] for j in job_data if j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED')]
+
+    if failures:
         set_draft(pr_id)
-        leave_comment(pr_id, message_from_file('set_draft_failing.txt'))
+        message = message_from_file('set_draft_failing.txt')
+        for f in failures:
+            message += f'- {f}\n'
+        leave_comment(pr_id, message)
     else:
         set_ready(pr_id)
 
         set_review_stage(pr_id)
+
+    return 'failure' if failures else 'success'
 
 def message_from_file(filename):
     """
@@ -327,10 +332,10 @@ if __name__ == '__main__':
             pr_id = event['number']
         else:
             pr_id = event['issue']['number']
-        result = update_test_information(pr_id, event)
+        update_test_information(pr_id, event)
+        result = mark_as_ready(pr_id)
         with open(args.output, encoding="utf-8", mode='a') as out_file:
             print(f"global_state={result}", file=out_file)
-        mark_as_ready(pr_id, result)
         sys.exit()
 
     elif cleanup_trigger == 'update_test_information':
