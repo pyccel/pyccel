@@ -290,6 +290,34 @@ def start_review_check(pr_id, event, outputs):
         outputs['cleanup_trigger'] = 'request_review_status'
         run_tests(pr_id, ['pr_tests'], outputs, event)
 
+def flagged_as_trusted(pr_id, user):
+    """
+    Check if the user has been flagged as trusted.
+
+    Look through the previous comments on the PR to check if a trusted
+    user has flagged this user as trusted using the `/bot trust user X`
+    command.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    user : str
+        The username of the user who may be untrustworthy.
+
+    Results
+    -------
+    bool : True if trustworthy, false otherwise.
+    """
+    trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
+    for c in comments:
+        words = c.body.strip().split()
+        if words == ('/bot', 'trust', 'user', author):
+            return True
+
+    return False
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Call the function to activate the bot')
     parser.add_argument('gitEvent', type=str,
@@ -360,8 +388,7 @@ if __name__ == '__main__':
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            comments = get_previous_pr_comments(pr_id)
-            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['author'])
 
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
@@ -433,8 +460,7 @@ if __name__ == '__main__':
         pr_id = event['number']
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            comments = get_previous_pr_comments(pr_id)
-            trusted_user = any(c.body.strip() == '/bot trust user' and c.author in trusted_reviewers for c in comments)
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['author'])
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
