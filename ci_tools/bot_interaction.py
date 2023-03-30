@@ -416,9 +416,11 @@ if __name__ == '__main__':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
 
         elif command_words[:2] == ['trust', 'user'] and len(command_words)==3:
-            leave_comment(pr_id, message_from_file('trusting_user.txt').format(user=command_words[2]))
+            user = command_words[2]
+            leave_comment(pr_id, message_from_file('trusting_user.txt').format(user=user))
+            pr_author = get_status_json(pr_id, 'author')
             draft = get_status_json(pr_id, 'isDraft')
-            if not draft:
+            if not draft and user == pr_author:
                 outputs['cleanup_trigger'] = 'request_review_status'
                 run_tests(pr_id, ['pr_tests'], outputs, event)
 
