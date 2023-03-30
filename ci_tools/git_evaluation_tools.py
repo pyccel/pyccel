@@ -15,6 +15,7 @@ __all__ = ('github_cli',
            'is_draft',
            'get_review_status',
            'leave_comment',
+           'leave_non_repeat_comment',
            'add_labels',
            'remove_labels',
            'set_draft',
@@ -304,7 +305,7 @@ def leave_comment(number, comment, edit = False):
         p.communicate()
 
 
-def leave_non_repeat_comment(number, comment, allow_duplicate):
+def leave_non_repeat_comment(number, comment):
     """
     Leave a comment on the PR.
 
@@ -318,17 +319,10 @@ def leave_non_repeat_comment(number, comment, allow_duplicate):
 
     comment : str
         The comment which should be left on the PR.
-
-    allow_duplicate : bool
-        Allow the bot to post the same message twice in a row.
     """
-    if not allow_duplicate:
-        _, last_comment, _ = check_previous_comments()
-        ok_to_print = last_comment != comment
-    else:
-        ok_to_print = allow_duplicate
+    _, last_comment, _ = check_previous_comments()
 
-    if ok_to_print:
+    if last_comment != comment:
         cmds = [github_cli, 'pr', 'comment', str(number), '-b', comment]
 
         with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
