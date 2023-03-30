@@ -175,7 +175,7 @@ def mark_as_ready(pr_id):
     pr_id : int
         The number of the PR.
     """
-    job_data = get_status_json('statusCheckRollup')
+    job_data = get_status_json(pr_id, 'statusCheckRollup')
 
     success = [j['name'] for j in job_data if j['conclusion'] == 'SUCCESS']
     failures = [j['name'] for j in job_data if j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED')]
@@ -416,6 +416,10 @@ if __name__ == '__main__':
         # If unknown user ask for trust approval
         if not trusted_user:
             leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+
+    elif event['action'] == 'converted_to_draft':
+
+        remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
