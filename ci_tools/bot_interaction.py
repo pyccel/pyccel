@@ -175,7 +175,7 @@ def mark_as_ready(pr_id):
     pr_id : int
         The number of the PR.
     """
-    job_data = get_status_json('statusCheckRollup')
+    job_data = get_status_json(pr_id, 'statusCheckRollup')
 
     success = [j['name'] for j in job_data if j['conclusion'] == 'SUCCESS']
     failures = [j['name'] for j in job_data if j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED')]
