@@ -177,7 +177,7 @@ def mark_as_ready(pr_id):
     """
     job_data = get_status_json(pr_id, 'statusCheckRollup')
 
-    job_data = [j for j in job_data if j not in ('Bot', 'Tests on Draft', 'CleanUpBot')]
+    job_data = [j for j in job_data if j['name'] not in ('Bot', 'CleanUpBot') and j['context'] != 'Tests on Draft']
 
     print(job_data)
 
