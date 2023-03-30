@@ -476,7 +476,7 @@ if __name__ == '__main__':
             set_draft(pr_id)
             author = get_status_json(pr_id, 'author')['login']
             reviewer = event['review']['user']['login']
-            leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
+            leave_comment(pr_id, message_from_file('set_draft_changes.txt')).format(author=author, reviewer=reviewer)
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
