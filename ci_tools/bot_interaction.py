@@ -423,7 +423,7 @@ if __name__ == '__main__':
 
     elif event['action'] == 'converted_to_draft':
 
-        remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+        remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
@@ -442,11 +442,11 @@ if __name__ == '__main__':
         state = event['pull_request_review']['review']['state']
         if state == 'approved':
             labels = get_status_json(pr_id, 'labels')
-            remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+            remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
             set_review_stage(pr_id)
         elif state == 'changes_requested':
             labels = get_status_json(pr_id, 'labels')
-            remove_labels(['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+            remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
             set_draft(pr_id)
             author = event['pull_request_review']['pull_request']['author']['login']
             reviewer = event['pull_request_review']['review']['user']['login']
