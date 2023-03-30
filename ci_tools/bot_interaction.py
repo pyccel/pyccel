@@ -5,6 +5,7 @@ import sys
 from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information
 from git_evaluation_tools import check_previous_comments, set_ready, set_draft, get_review_status
 from git_evaluation_tools import check_previous_contributions, add_labels, remove_labels, get_labels
+from git_evaluation_tools import get_previous_pr_comments
 
 #senior_reviewer = ['yguclu', 'EmilyBourne']
 senior_reviewer = ['EmilyBourne']
