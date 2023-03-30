@@ -99,6 +99,8 @@ def check_review_stage(pr_id):
             ready for a review from a senior reviewer.
 
     requested_changes : List of authors who requested changes.
+
+    reviews : Summary of all reviews left on the PR.
     """
     reviews, _ = get_review_status(pr_id)
     senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
@@ -107,11 +109,11 @@ def check_review_stage(pr_id):
 
     ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
 
-    ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_reviews)
+    ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_review)
 
     requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
 
-    return ready_to_merge, ready_for_senior_review, requested_changes
+    return ready_to_merge, ready_for_senior_review, requested_changes, reviews
 
 def set_review_stage(pr_id):
     """
@@ -126,7 +128,7 @@ def set_review_stage(pr_id):
     pr_id : int
         The number of the PR.
     """
-    ready_to_merge, ready_for_senior_review, requested_changes = check_review_stage(pr_id)
+    ready_to_merge, ready_for_senior_review, requested_changes, reviews = check_review_stage(pr_id)
     author = get_status_json(pr_id, 'author')['login']
     labels = get_labels(pr_id)
     if ready_to_merge:
