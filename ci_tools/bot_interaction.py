@@ -390,7 +390,7 @@ if __name__ == '__main__':
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            trusted_user = flagged_as_trusted(pr_id, event['comment']['author'])
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['author']['login'])
 
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
@@ -465,7 +465,7 @@ if __name__ == '__main__':
         pr_id = event['number']
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            trusted_user = flagged_as_trusted(pr_id, event['comment']['author'])
+            trusted_user = flagged_as_trusted(pr_id, event['comment']['author']['login'])
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
