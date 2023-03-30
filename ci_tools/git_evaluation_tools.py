@@ -252,7 +252,7 @@ def get_review_status(pr_id):
     for a in review_status:
         if a in requested_authors:
             review_status[a] = ReviewComment('REVIEW_REQUESTED', review_status[a].date, a)
-    for a in requests:
+    for a in requested_authors:
         if a not in review_status:
             review_status[a] = ReviewComment('UNRESPONSIVE', None, a)
     return review_status, requested_authors

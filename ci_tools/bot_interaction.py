@@ -315,9 +315,11 @@ def flagged_as_trusted(pr_id, user):
     bool : True if trustworthy, false otherwise.
     """
     trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
+    print(trusted_comments)
     for c in trusted_comments:
         words = c.body.strip().split()
-        if words == ('/bot', 'trust', 'user', user):
+        print(words)
+        if words == ['/bot', 'trust', 'user', user]:
             return True
 
     return False
@@ -461,9 +463,9 @@ if __name__ == '__main__':
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
-    elif 'pull_request_review' in event:
-        pr_id = event['pull_request_review']['pull_request']['number']
-        state = event['pull_request_review']['review']['state']
+    elif 'review' in event:
+        pr_id = event['pull_request']['number']
+        state = event['review']['state']
         if state == 'approved':
             labels = get_status_json(pr_id, 'labels')
             remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
@@ -472,9 +474,9 @@ if __name__ == '__main__':
             labels = get_status_json(pr_id, 'labels')
             remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
             set_draft(pr_id)
-            author = event['pull_request_review']['pull_request']['author']['login']
-            reviewer = event['pull_request_review']['review']['user']['login']
-            leave_comment(pr_id, message_from_file('set_draft_changes.txt'))
+            author = get_status_json(pr_id, 'author')['login']
+            reviewer = event['review']['user']['login']
+            leave_comment(pr_id, message_from_file('set_draft_changes.txt')).format(author=author, reviewer=reviewer)
 
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
