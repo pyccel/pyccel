@@ -422,6 +422,7 @@ if __name__ == '__main__':
             leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
     elif event['action'] == 'converted_to_draft':
+        pr_id = event['number']
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
 
