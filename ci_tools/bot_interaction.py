@@ -315,9 +315,11 @@ def flagged_as_trusted(pr_id, user):
     bool : True if trustworthy, false otherwise.
     """
     trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
+    print(trusted_comments)
     for c in trusted_comments:
         words = c.body.strip().split()
-        if words == ('/bot', 'trust', 'user', user):
+        print(words)
+        if words == ['/bot', 'trust', 'user', user]:
             return True
 
     return False
