@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #1352 : Added a changelog
+-   #1352 : Added a change log.
 
 ### Fixed
 
@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   Improved developer docs (codegen stage).
+-   Improved developer docs (code generation stage).
 
 ### Fixed
 
@@ -57,8 +57,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1309 : Support for `np.sum` in C code.
--   Improved \[developer docs\](./developer_docs) (ordering, syntactic stage, semantic stage).
--   Added \[community guidelines\](./github/CONTRIBUTING.md)).
+-   Improved [developer docs](./developer_docs) (ordering, syntactic stage, semantic stage).
+-   Added [community guidelines](./github/CONTRIBUTING.md).
 
 ### Fixed
 
