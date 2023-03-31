@@ -1,8 +1,11 @@
+"""
+This module contains all function and logic responsible for controlling the bot which reacts to PR creation and progress.
+"""
 import argparse
 import json
 import os
 import sys
-from git_evaluation_tools import leave_comment, get_status_json, github_cli, get_job_information
+from git_evaluation_tools import leave_comment, get_status_json, get_job_information
 from git_evaluation_tools import check_previous_comments, set_ready, set_draft, get_review_status
 from git_evaluation_tools import check_previous_contributions, add_labels, remove_labels, get_labels
 from git_evaluation_tools import get_previous_pr_comments
@@ -180,13 +183,8 @@ def mark_as_ready(pr_id):
     """
     job_data = get_status_json(pr_id, 'statusCheckRollup')
 
-    print(job_data)
-
     job_data = [j for j in job_data if j.get('name', None) not in ('Bot', 'CleanUpBot') and j.get('context',None) != 'Tests on Draft']
 
-    print(job_data)
-
-    success = [j['name'] for j in job_data if j['conclusion'] == 'SUCCESS']
     failures = [j['name'] for j in job_data if j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED')]
 
     if failures:
@@ -219,7 +217,7 @@ def message_from_file(filename):
     -------
     str : The message to be printed.
     """
-    with open(os.path.join(comment_folder, filename)) as msg_file:
+    with open(os.path.join(comment_folder, filename), encoding="utf-8") as msg_file:
         comment = msg_file.read()
     return comment
 
@@ -246,7 +244,6 @@ def update_test_information(pr_id, event):
 
     url = get_run_url(event)
     relevant_messages = [m for m in messages if url in m]
-    print(relevant_messages)
     ref_sha = relevant_messages[0].split()[4]
     comment = f"Ran tests on commit {ref_sha} for more details see [here]({url})\n"
     passed = True
