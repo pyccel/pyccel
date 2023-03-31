@@ -66,24 +66,27 @@ def get_status_json(pr_id, tags):
 
 def get_diff_as_json(filename):
     """
+    Get a dictionary describing the changes.
+
     A function which converts the output of a reduced git diff call
     to a dictionary that can be exported using json.
     The diff call should use the argument `--unified=0`
+    The result is a dictionary whose keys are files which have been
+    changed in this branch and whose values are a dictionary.
+    The dictionary is itself a dictionary with the keys 'addition'
+    and 'deletion' whose values are lists containing the line
+    numbers of lines which have been changed/added (addition) or
+    changed/deleted (deletion).
 
     Parameters
     ----------
     filename : str
-            The file where the diff was printed
+        The file where the diff was printed.
 
     Returns
     -------
     changes : dict
-            A dictionary whose keys are files which have been
-            changed in this branch and whose values are a dictionary.
-            The dictionary is itself a dictionary with the keys 'addition'
-            and 'deletion' whose values are lists containing the line
-            numbers of lines which have been changed/added (addition) or
-            changed/deleted (deletion)
+        Dictionary describing changes to the files.
     """
     with open(filename, encoding="utf-8") as f:
         lines = f.readlines()
