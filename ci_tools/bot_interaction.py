@@ -238,7 +238,7 @@ def update_test_information(pr_id, event):
     event : dict
         The event payload of the GitHub workflow.
     """
-    messages, last_message, date = check_previous_comments(pr_id)
+    messages, last_message, _ = check_previous_comments(pr_id)
 
     data = get_job_information(event['run_number'])
 
