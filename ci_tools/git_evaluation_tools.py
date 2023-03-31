@@ -12,7 +12,6 @@ __all__ = ('github_cli',
            'get_previous_pr_comments',
            'check_previous_comments',
            'get_labels',
-           'is_draft',
            'get_review_status',
            'leave_comment',
            'add_labels',
@@ -29,6 +28,30 @@ ReviewComment = namedtuple('ReviewComment', ['state', 'date', 'author'])
 Comment = namedtuple('Comment', ['body', 'date', 'author'])
 
 def get_status_json(pr_id, tags):
+    """
+    Get the tagged status of a PR in json format.
+
+    Use the GitHub CLI to investigate a certain property,
+    passed as a tag, of a PR. Multiple tags can also be
+    provided. In this case the result is a dictionary with
+    the tags appearing as keys.
+    Otherwise the value is provided directly (but this may itself
+    be a dictionary for certain tags). See the [GitHub CLI docs](https://cli.github.com/manual/gh_pr_view)
+    for more details.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    tags : str
+        The tag of the information we are enquiring about.
+        Multiple tags must be separated by a comma.
+
+    Results
+    -------
+    dict/str : The output of the request.
+    """
     # Check status of PR
     cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', tags]
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
@@ -206,21 +229,6 @@ def get_labels(pr_id):
     label_json = get_status_json(pr_id, 'labels')
     current_labels = [l['name'] for l in label_json]
     return current_labels
-
-
-
-def is_draft():
-    """
-    Get the draft status of the PR.
-
-    Use GitHub's command-line tool to get the draft status for
-    the first PR related to this branch.
-
-    Results
-    -------
-    bool : The draft status of the PR.
-    """
-    return get_status_json(pr_id, 'isDraft')
 
 
 
