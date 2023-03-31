@@ -10,14 +10,11 @@ from git_evaluation_tools import check_previous_comments, set_ready, set_draft, 
 from git_evaluation_tools import check_previous_contributions, add_labels, remove_labels, get_labels
 from git_evaluation_tools import get_previous_pr_comments
 
-#senior_reviewer = ['yguclu', 'EmilyBourne']
-senior_reviewer = ['EmilyBourne']
+senior_reviewer = ['yguclu', 'EmilyBourne']
 trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-pr_test_keys = ['docs', 'pylint',
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
              'lint', 'spelling']
-#pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-#             'lint', 'spelling']
 
 review_labels = ('needs_initial_review', 'Ready_for_review', 'Ready_to_merge')
 
