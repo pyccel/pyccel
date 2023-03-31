@@ -5,11 +5,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+- #1352 : Added a changelog
+
 ### Fixed
 
 ### Changed
 
 - [INTERNALS] Use `FunctionDefArgument` to store all argument specific properties.
+- [INTERNALS] Reduce carbon footprint by avoiding unnecessary CI testing.
+- [INTERNALS] Automatise PR labelling and review progress prompts.
 
 ### Deprecated
 
