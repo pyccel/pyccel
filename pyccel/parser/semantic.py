@@ -798,21 +798,25 @@ class SemanticParser(BasicParser):
 
     def _handle_function(self, expr, func, args, **settings):
         """
+        Create the node representing the function call.
+
         Create a FunctionCall or an instance of a PyccelInternalFunction
-        from the function information and arguments
+        from the function information and arguments.
 
         Parameters
-        ==========
+        ----------
         expr : PyccelAstNode
-               The expression where this call is found (used for error output)
+               The expression where this call is found (used for error output).
+
         func : FunctionDef instance, Interface instance or PyccelInternalFunction type
-               The function being called
+               The function being called.
+
         args : tuple
-               The arguments passed to the function
+               The arguments passed to the function.
 
         Returns
-        =======
-        new_expr : FunctionCall or PyccelInternalFunction
+        -------
+        FunctionCall/PyccelInternalFunction : 
         """
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name
@@ -872,8 +876,10 @@ class SemanticParser(BasicParser):
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
+        Create a new variable.
+
         Create a new variable. In most cases this is just a call to
-        Variable.__init__
+        `Variable.__init__`
         but in the case of a tuple variable it is a recursive call to
         create all elements in the tuple.
         This is done separately to _assign_lhs_variable to ensure that

@@ -714,30 +714,31 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def untranslatable_function(self, wrapper_name, wrapper_args, wrapper_results, error_msg):
         """
+        Create code for a function complaining about an object which cannot be wrapped.
+
         Certain functions are not handled in the wrapper (e.g. private),
         This creates a wrapper function which raises NotImplementedError
-        exception and returns NULL
+        exception and returns NULL.
 
         Parameters
         ----------
-        wrapper_name    : string
-            The name of the C wrapper function
+        wrapper_name : string
+            The name of the C wrapper function.
 
-        wrapper_args    : list of Variables
+        wrapper_args : list of Variables
             List of variables with dtype PyObject which hold the arguments
-            passed to the function
+            passed to the function.
 
         wrapper_results : Variable
             List containing one variable with dtype PyObject which represents
-            the variable which will be returned by the function
+            the variable which will be returned by the function.
 
-        error_msg       : string
-            The message to be raised in the NotImplementedError
+        error_msg : string
+            The message to be raised in the NotImplementedError.
 
         Returns
         -------
-        code : string
-            returns the string containing the printed FunctionDef
+        string : Returns the string containing the printed FunctionDef.
         """
         current_scope = self.scope
         wrapper_func = FunctionDef(
@@ -853,19 +854,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_module_exec_function(self, expr, exec_func_name):
         """
+        Create code which initialises a module.
+
         Create the function which executes any statements which happen
-        when the module is loaded
+        when the module is loaded.
 
         Parameters
         ----------
-        expr           : Module
-                         The module being wrapped
-        exec_func_name : str
-                         The name of the function
+        expr : Module
+            The module being wrapped.
 
-        Result
-        ------
-        str
+        exec_func_name : str
+            The name of the function.
+
+        Returns
+        -------
+        str : The code for a function which initialises a module.
         """
         # Create scope for the module initialisation function
         scope = self.scope.new_child_scope(exec_func_name)

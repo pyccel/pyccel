@@ -399,7 +399,17 @@ class FCodePrinter(CodePrinter):
 
     def _get_external_declarations(self):
         """
-        Look for external functions and declare their result type
+        Find external functions and declare their result type.
+
+        Look for any external functions in the local imports from
+        the scope and use their definitions to create declarations
+        from the results. These declarations are stored in a
+        dictionary whose keys are the result variable which will
+        be declared.
+
+        Returns
+        -------
+        dict : The declarations necessary to use the external function.
         """
         decs = {}
         for key,f in self.scope.imports['functions'].items():

@@ -257,13 +257,20 @@ def array_type_check(py_variable, c_variable, raise_error):
 
 def scalar_type_check(py_variable, c_variable):
     """
-    Create FunctionCall responsible of checking numpy argument data type
+    Create a FunctionCall to check the type of a Python object.
+
+    Create a FunctionCall object representing a call to a function which
+    is responsible for checking if the Python object passed as an argument
+    has a type matching that of the provided C object.
+
     Parameters:
     ----------
     py_variable : Variable
-        The python argument of the check function
+        The python argument of the check function.
+
     c_variable : Variable
-        The variable needed for the generation of the type check
+        The variable needed for the generation of the type check.
+
     Returns
     -------
     FunctionCall : Check type FunctionCall

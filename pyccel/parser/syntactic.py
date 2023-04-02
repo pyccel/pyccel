@@ -105,11 +105,22 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 #==============================================================================
 
 class SyntaxParser(BasicParser):
+    """
+    Class which handles the syntactic stage as described in the developer docs.
 
-    """ Class for a Syntax Parser.
+    This class is described in detail in developer_docs/syntactic_stage.md.
+    It extracts all necessary information from the Python AST in order to create
+    a representation complete enough to provide all necessary information for
+    the semantic stage.
 
-        inputs: str
-            filename or code to parse as a string
+    Parameters
+    ----------
+    inputs : str
+        A string containing code or containing the name of a file whose code
+        should be read.
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser.
     """
 
     def __init__(self, inputs, **kwargs):

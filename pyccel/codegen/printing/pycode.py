@@ -54,7 +54,20 @@ import_source_swap = {
         }
 
 class PythonCodePrinter(CodePrinter):
-    """A printer to convert pyccel expressions to strings of Python code"""
+    """
+    A printer for printing code in Python.
+
+    A printer to convert Pyccel's AST to strings of Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_pycode"
     language = "python"
 
