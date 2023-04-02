@@ -3,77 +3,77 @@
 __global__
 void cuda_array_arange_int8(t_ndarray arr, int start)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int8[i] = (i + start);
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int8[i] = (i + start);
 }
 __global__
 void cuda_array_arange_int32(t_ndarray arr, int start)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int32[i] = (i + start);
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int32[i] = (i + start);
 }
 __global__
 void cuda_array_arange_int64(t_ndarray arr, int start)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int64[i] = (i + start);
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int64[i] = (i + start);
 }
 __global__
 void cuda_array_arange_double(t_ndarray arr, int start)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_double[i] = (i + start);
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_double[i] = (i + start);
 }
 
 __global__
 void cuda_array_fill_int8(int8_t c, t_ndarray arr)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = gridDim.x * blockDim.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int8[i] = c;
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int8[i] = c;
 }
 
 __global__
 void cuda_array_fill_int32(int32_t c, t_ndarray arr)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = gridDim.x * blockDim.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int32[i] = c;
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int32[i] = c;
 }
 
 __global__
 void cuda_array_fill_int64(int64_t c, t_ndarray arr)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = gridDim.x * blockDim.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_int64[i] = c;
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_int64[i] = c;
 }
 __global__
 void cuda_array_fill_double(double c, t_ndarray arr)
 {
-	int index = blockIdx.x * blockDim.x + threadIdx.x;
-	int stride = gridDim.x * blockDim.x;
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
 
-	for(int i = index ; i < arr.length; i+=stride)
-		arr.nd_double[i] = c;
+    for(int i = index ; i < arr.length; i+=stride)
+        arr.nd_double[i] = c;
 }
 
 void    device_memory(void** devPtr, size_t size)
