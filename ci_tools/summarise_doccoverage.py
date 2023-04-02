@@ -29,10 +29,9 @@ for branch_file in [args.base, args.compare]:
     i = 0
     while i < n:
         modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
-        print(modname)
+        i+=1
         if should_ignore(modname):
             continue
-        i+=1
         while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
                 results[branch + '_no_mod'].update([modname])
