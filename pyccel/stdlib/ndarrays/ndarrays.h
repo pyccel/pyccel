@@ -158,8 +158,10 @@ int64_t            numpy_sum_int32(t_ndarray arr);
 int64_t            numpy_sum_int64(t_ndarray arr);
 float              numpy_sum_float32(t_ndarray arr);
 double             numpy_sum_float64(t_ndarray arr);
+#ifndef __NVCC__
 float complex      numpy_sum_complex64(t_ndarray arr);
 double complex     numpy_sum_complex128(t_ndarray arr);
+#endif
 
 #ifdef __cplusplus
 }

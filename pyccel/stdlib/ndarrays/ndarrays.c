@@ -443,5 +443,7 @@ NUMPY_SUM_(int32, int64_t, int32)
 NUMPY_SUM_(int64, int64_t, int64)
 NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
+#ifndef __NVCC__
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
+#endif
