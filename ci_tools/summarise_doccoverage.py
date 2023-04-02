@@ -3,6 +3,8 @@
 import argparse
 import sys
 
+from list_docs_tovalidate import should_ignore
+
 parser = argparse.ArgumentParser(description='Check doc coverage change')
 parser.add_argument('base', metavar='head_cov', type=str,
                         help='File containing the coverage of the head branch')
@@ -27,8 +29,8 @@ for branch_file in [args.base, args.compare]:
     i = 0
     while i < n:
         modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
-        funcname = modname.split('/')[-1]
-        if funcname.startswith('__') and funcname.endswith('__'):
+        print(modname)
+        if should_ignore(modname):
             continue
         i+=1
         while i<n and lines[i].startswith(' - '):
