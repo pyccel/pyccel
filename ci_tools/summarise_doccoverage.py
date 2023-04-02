@@ -37,6 +37,7 @@ for branch_file in [args.base, args.compare]:
             else:
                 objname = lines[i].split()[-1].strip('`')
                 if should_ignore(objname):
+                    i+=1
                     continue
                 results[branch + '_no_obj'].update(['.'.join([modname,objname])])
             i += 1
