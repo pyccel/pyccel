@@ -27,6 +27,9 @@ for branch_file in [args.base, args.compare]:
     i = 0
     while i < n:
         modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
+        funcname = modname.split('/')[-1]
+        if funcname.startswith('__') and funcname.endswith('__'):
+            continue
         i+=1
         while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
