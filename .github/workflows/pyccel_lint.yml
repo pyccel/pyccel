@@ -1,7 +1,7 @@
 name: Pyccel Linting
 on:
   pull_request:
-    branches: [ master, developement]
+    branches: [ master, development]
 
 jobs:
   Pyccel-Linter:
