@@ -897,10 +897,6 @@ class CCodePrinter(CodePrinter):
     def _print_CMacro(self, expr):
         return str(expr.macro)
 
-    def extract_function_call_results(self, expr):
-        tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in expr.funcdef.results]
-        return tmp_list
-
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
         self.add_import(c_imports['inttypes'])
@@ -956,7 +952,7 @@ class CCodePrinter(CodePrinter):
                 f = f.print_string
 
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
-                tmp_list = self.extract_function_call_results(f)
+                tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in expr.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
