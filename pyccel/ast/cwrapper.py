@@ -480,15 +480,20 @@ def set_python_error_message(exception, message):
 
 def generate_datatype_error(variable):
     """
-    Generate TypeError exception from the variable information (datatype, precision)
-    Parameters:
+    Generate TypeError exception from the variable information.
+
+    Generate a TypeError exception indicated that the variable passed
+    as an argument does not have the right datatype/precision.
+
+    Parameters
     ----------
     variable : Variable
+        The variable which indicates the correct datatype/precision.
 
-    Returns:
+    Returns
     -------
-    func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+    FunctionCall
+        Call to PyErr_SetString with TypeError as exception and custom message.
     """
     dtype     = variable.dtype
 
