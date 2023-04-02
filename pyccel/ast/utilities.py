@@ -347,20 +347,23 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     Parameters
     ----------
     block : list of Ast Nodes
-        The expressions to be modified
+        The expressions to be modified.
     indices : list
-        An empty list to be filled with the temporary variables created
+        An empty list to be filled with the temporary variables created.
     new_index : function (class method of a Scope)
         A function which provides a new variable from a base name,
         avoiding name collisions.
     language_has_vectors : bool
         Indicates if the language has support for vector
-        operations of the same shape
+        operations of the same shape.
+    result : list, default: None
+        The list which will be returned. If none is provided, a new list
+        is created.
 
     Returns
     -------
     list of tuples of lists
-        The modified expression
+        The modified expression.
     """
     if result is None:
         result = []
