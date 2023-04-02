@@ -91,7 +91,7 @@ def as_static_function(func, *, mod_scope, name=None):
     assert(isinstance(func, FunctionDef))
 
     args    = list(func.arguments)
-    results = list(func.results)
+    results = [r.var for r in func.results]
     body    = func.body.body
     functions = func.functions
     _results = []
@@ -156,7 +156,7 @@ def as_static_function(func, *, mod_scope, name=None):
             _args += [FunctionDefArgument(a)]
 
     args = _args
-    results = _results
+    results = [FunctionDefResult(r) for r in _results]
     # ...
     return BindCFunctionDef( name, list(args), results, body,
                         is_static = True,
@@ -228,7 +228,7 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
     args = sanitize_arguments(func.arguments)
     # function body
     call    = FunctionCall(func, args)
-    results = func.results
+    results = [r.var for r in func.results]
     results = results[0] if len(results) == 1 else results
     stmt    = call if len(func.results) == 0 else Assign(results, call)
     body    = [stmt]
@@ -346,12 +346,12 @@ def wrap_module_array_var(var, scope, mod):
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])
-    arg_vars = necessary_vars
+    result_vars = [FunctionDefResult(v) for v in necessary_vars]
     import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
     func = BindCFunctionDef(name = func_name,
                   body      = body,
                   arguments = [],
-                  results   = arg_vars,
+                  results   = result_vars,
                   imports   = [import_mod],
                   scope = func_scope,
                   original_function = None)

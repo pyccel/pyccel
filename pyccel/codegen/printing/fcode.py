@@ -404,7 +404,7 @@ class FCodePrinter(CodePrinter):
         decs = {}
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].dtype, name=str(key))
+                i = Variable(f.results[0].var.dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 decs[i] = dec
 
@@ -1792,7 +1792,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
-        results   = list(expr.results)
+        results = [r.var for r in expr.results]
 
         self.set_scope(expr.scope)
         self.scope.functions[expr.name] = expr
@@ -1899,9 +1899,9 @@ class FCodePrinter(CodePrinter):
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1 or expr.results[0].rank > 0:
+        if len(expr.results) != 1 or expr.results[0].var.rank > 0:
             func_type = 'subroutine'
-            out_args = list(expr.results)
+            out_args = [r.var for r in expr.results]
             for result in out_args:
                 if result in argument_vars:
                     dec = Declare(result.dtype, result, intent='inout')
@@ -1914,7 +1914,7 @@ class FCodePrinter(CodePrinter):
         else:
            #todo: if return is a function
             func_type = 'function'
-            result = expr.results[0]
+            result = expr.results[0].var
             functions = expr.functions
 
             func_end = 'result({0})'.format(result.name)
@@ -1997,9 +1997,10 @@ class FCodePrinter(CodePrinter):
         decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
+        results = [a.var for a in expr.results]
         vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
+            if (v not in expr.local_vars) and (v not in results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
@@ -2982,7 +2983,7 @@ class FCodePrinter(CodePrinter):
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args   = expr.args
-        func_results  = func.results
+        func_results  = [r.var for r in func.results]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 

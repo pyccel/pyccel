@@ -297,11 +297,12 @@ class CWrapperCodePrinter(CCodePrinter):
             return self.function_signature(expr)
 
         args = [a.var for a in expr.arguments]
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
-        elif len(expr.results) > 1:
+        results = [r.var for r in expr.results]
+        if len(results) == 1:
+            ret_type = self.get_declare_type(results[0])
+        elif len(results) > 1:
             ret_type = self._print(datatype('int'))
-            args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='alias') for a in results]
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
