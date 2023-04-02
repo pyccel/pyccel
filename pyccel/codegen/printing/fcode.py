@@ -197,7 +197,20 @@ dec_regex = re.compile(end_regex_str)
 errors = Errors()
 
 class FCodePrinter(CodePrinter):
-    """A printer to convert sympy expressions to strings of Fortran code"""
+    """
+    A printer for printing code in Fortran.
+
+    A printer to convert Pyccel's AST to strings of Fortran code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_fcode"
     language = "Fortran"
 
@@ -950,7 +963,7 @@ class FCodePrinter(CodePrinter):
                 cond_template = lhs + ' = merge({stop}, {lhs}, ({cond}))'
         if expr.rank > 1:
             template = '({start} + {index}*{step})'
-            var = Variable('int', str(expr.ind))
+            var = expr.ind
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
             var = self.scope.get_temporary_variable('int', 'linspace_index') 
@@ -1108,9 +1121,7 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = Variable(NativeInteger(), name =  self.scope.get_new_name('i'))
-
-        self.scope.insert_variable(index)
+        index  = self.scope.get_temporary_variable('int')
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -1201,12 +1212,9 @@ class FCodePrinter(CodePrinter):
 
         if (not self._additional_code):
             self._additional_code = ''
-        var_name = self.scope.get_new_name()
-        var = Variable(expr.dtype, var_name, memory_handling = 'stack',
+        var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
                 shape = expr.shape, precision = expr.precision,
                 order = expr.order, rank = expr.rank)
-
-        self.scope.insert_variable(var)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
         return self._print(var)
@@ -1391,7 +1399,7 @@ class FCodePrinter(CodePrinter):
         vstr = self._print(expr.variable.name)
 
         # arrays are 0-based in pyccel, to avoid ambiguity with range
-        s = '0'
+        s = self._print(LiteralInteger(0))
         if not(is_static) and (on_heap or (var.shape is None)):
             s = ''
 
@@ -1786,11 +1794,36 @@ class FCodePrinter(CodePrinter):
         return expr.name
 
     def function_signature(self, expr, name):
+        """
+        Get the different parts of the signature of the function `expr`.
+
+        A helper function to print just the signature of the function
+        including the declarations of the arguments and results.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function whose signature should be printed.
+        name : str
+            The name which should be printed as the name of the function.
+            (May be different from expr.name in the case of interfaces).
+
+        Returns
+        -------
+        dict
+            A dictionary with the keys :
+                sig - The declaration of the function/subroutine with any necessary keywords.
+                arg_code - A string containing a list of the arguments.
+                func_end - Any code to be added to the signature after the arguments (ie result).
+                arg_decs - The code necessary to declare the arguments of the function/subroutine.
+                func_type - Subroutine or function.
+        """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
         out_args = []
         args_decs = OrderedDict()
-        arguments = [a.var for a in expr.arguments]
+        arguments = expr.arguments
+        argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -1798,7 +1831,7 @@ class FCodePrinter(CodePrinter):
             func_type = 'subroutine'
             out_args = list(expr.results)
             for result in out_args:
-                if result in arguments:
+                if result in argument_vars:
                     dec = Declare(result.dtype, result, intent='inout')
                 else:
                     dec = Declare(result.dtype, result, intent='out')
@@ -1818,18 +1851,19 @@ class FCodePrinter(CodePrinter):
             args_decs[result] = dec
         # ...
 
-        for i,arg in enumerate(arguments):
-            if isinstance(arg, Variable):
+        for i, arg in enumerate(arguments):
+            arg_var = arg.var
+            if isinstance(arg_var, Variable):
                 if i == 0 and expr.cls_name:
-                    dec = Declare(arg.dtype, arg, intent='inout', passed_from_dotted = True)
-                elif expr.arguments_inout[i]:
-                    dec = Declare(arg.dtype, arg, intent='inout')
+                    dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                elif arg.inout:
+                    dec = Declare(arg_var.dtype, arg_var, intent='inout')
                 else:
-                    dec = Declare(arg.dtype, arg, intent='in')
-                args_decs[arg] = dec
+                    dec = Declare(arg_var.dtype, arg_var, intent='in')
+                args_decs[arg_var] = dec
 
         #remove parametres intent(inout) from out_args to prevent repetition
-        for i in arguments:
+        for i in argument_vars:
             if i in out_args:
                 out_args.remove(i)
 
@@ -2775,30 +2809,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_IndexedElement(self, expr):
         base = expr.base
-        if isinstance(base, (PyccelInternalFunction, PythonTuple)):
-            indexed_type = base.dtype
-            if isinstance(base, PyccelInternalFunction) and isinstance(indexed_type, PythonTuple):
-                base = self._print_PyccelInternalFunction(expr.base.base)
-            else:
-                if (not self._additional_code):
-                    self._additional_code = ''
-                var_name = self.scope.get_new_name()
-                var = Variable(base.dtype, var_name, memory_handling = 'stack',
-                        shape=base.shape,precision=base.precision,
-                        order=base.order,rank=base.rank)
-
-                self.scope.insert_variable(var)
-
-                self._additional_code = self._additional_code + self._print(Assign(var,base)) + '\n'
-                return self._print(var[expr.indices])
-        elif isinstance(base, InhomogeneousTupleVariable):
-            if len(expr.indices)==1:
-                return self._print(base[expr.indices[0]])
-            else:
-                var = base[expr.indices[0]]
-                return self._print(var[expr.indices[1:]])
-        else:
-            base_code = self._print(base)
+        base_code = self._print(base)
 
         inds = list(expr.indices)
         if expr.base.order == 'C':

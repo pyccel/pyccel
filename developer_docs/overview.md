@@ -8,7 +8,7 @@ Pyccel's development is split into 4 main stages:
 
 -   [Syntactic Stage](#Syntactic-stage) (for more details see [syntactic stage](syntactic_stage.md))
 -   [Semantic Stage](#Semantic-stage) (for more details see [semantic stage](semantic_stage.md))
--   [Code Generation Stage](#Code-generation-stage)
+-   [Code Generation Stage](#Code-generation-stage) (for more details see [codegen stage](codegen_stage.md))
 -   [Wrapping Stage](#Wrapping-stage)
 -   [Compilation Stage](#Compilation-stage)
 
