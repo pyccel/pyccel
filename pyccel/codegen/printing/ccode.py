@@ -952,7 +952,7 @@ class CCodePrinter(CodePrinter):
                 f = f.print_string
 
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
-                tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in expr.funcdef.results]
+                tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
