@@ -74,18 +74,25 @@ def sanitize_arguments(args):
 
 #=======================================================================================
 def as_static_function(func, *, mod_scope, name=None):
-    """ Translate a FunctionDef to a BindCFunctionDef by altering the
-    arguments to allow the function to be called from c.
-    E.g. the size of each dimension of an array is provided
+    """
+    Translate a FunctionDef to a BindCFunctionDef.
+
+    Translate a FunctionDef to a BindCFunctionDef by altering the
+    arguments to allow the function to be called from C.
+    E.g. the size of each dimension of an array is provided.
 
     Parameters
-    ==========
-    func     : FunctionDef
-               The function to be translated
-    mod_scope: Scope
-               The scope of the module which contains func
-    name     : str
-               The new name of the function
+    ----------
+    func : FunctionDef
+        The function to be translated.
+    mod_scope : Scope
+        The scope of the module which contains the function.
+    name : str
+        The new name of the function.
+
+    Returns
+    -------
+    BindCFunctionDef : The function which can be called from C.
     """
 
     assert(isinstance(func, FunctionDef))
@@ -195,22 +202,29 @@ def as_static_module(funcs, original_module):
 
 #=======================================================================================
 def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
-    """ Translate a FunctionDef to a BindCFunctionDef which calls the
+    """
+    Create a BindCFunctionDef which calls the provided FunctionDef.
+
+    Translate a FunctionDef to a BindCFunctionDef which calls the
     original function. A BindCFunctionDef is a FunctionDef where the
     arguments are altered to allow the function to be called from c.
-    E.g. the size of each dimension of an array is provided
+    E.g. the size of each dimension of an array is provided.
 
     Parameters
-    ==========
-    func     : FunctionDef
-               The function to be translated
-    mod      : Module
-               The module which contains func
-    name     : str
-               The new name of the function
-    imports  : list
-               An optional parameter into which any required imports
-               can be collected
+    ----------
+    func : FunctionDef
+        The function to be translated.
+    mod : Module
+        The module which contains the function.
+    name : str
+        The new name of the function.
+    imports : list
+        An optional parameter into which any required imports
+        can be collected.
+
+    Results
+    -------
+    BindCFunctionDef : The function which can be called from C.
     """
 
     assert isinstance(func, FunctionDef)
@@ -326,7 +340,12 @@ def wrap_array(var, scope, persistent):
 #=======================================================================================
 
 def wrap_module_array_var(var, scope, mod):
-    """ Function returning the function necessary to expose an array
+    """
+    Get a function which allows a module variable to be accessed.
+
+    Create a function which exposes a module array variable to C.
+    This allows the module variable to be accessed from the Python
+    code.
 
     Parameters
     ----------

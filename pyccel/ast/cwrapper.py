@@ -45,7 +45,7 @@ __all__ = (
     'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
     'Py_DECREF',
-    'PyErr_SetString',
+    'set_python_error_message',
 #----- CHECK FUNCTIONS ---
     'generate_datatype_error',
     'scalar_object_check',
@@ -335,14 +335,20 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
 
 def Python_to_C(c_object):
     """
-    Create FunctionDef responsible for casting python argument to C
+    Creates a FunctionDef responsible for casting scalar python argument to C.
+
+    Creates a FunctionDef node which contains all the code necessary
+    for casting a PythonObject to a C object whose characteristics
+    match that of the object passed as an argument.
+
     Parameters:
     ----------
-    c_object  : Variable
-        The variable needed for the generation of the cast_function
+    c_object : Variable
+        The variable needed for the generation of the cast_function.
+
     Returns
     -------
-    FunctionDef : cast type FunctionDef
+    FunctionDef : The function which casts the Python object to C.
     """
     dtype = c_object.dtype
     prec  = get_final_precision(c_object)
@@ -371,14 +377,20 @@ py_to_c_registry = {
 
 def C_to_Python(c_object):
     """
-    Create FunctionDef responsible for casting c argument to python
+    Creates a FunctionDef responsible for casting scalar C results to Python.
+
+    Creates a FunctionDef node which contains all the code necessary
+    for casting a C object, whose characteristics match that of the object
+    passed as an argument, to a PythonObject which can be used in Python code.
+
     Parameters:
     ----------
-    c_object  : Variable
-        The variable needed for the generation of the cast_function
+    c_object : Variable
+        The variable needed for the generation of the cast_function.
+
     Returns
     -------
-    FunctionDef : cast type FunctionDef
+    FunctionDef : The function which casts the C object to Python.
     """
     if c_object.rank != 0:
         if c_object.order == 'C':
@@ -427,20 +439,30 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              results   = [FunctionDefResult(Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias'))],
                              body      = [])
 
-def PyErr_SetString(exception, message):
+PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
+              body      = [],
+              arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
+                           FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
+              results   = [])
+
+def set_python_error_message(exception, message):
     """
-    Generate function Call of c/python api PyErr_SetString
+    Generate a function call which sets the Python error.
+
+    Generate a function call of C/Python API PyErr_SetString
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
     with a defined error message used to set the error indicator.
 
     Parameters:
     ----------
-    exception  : str
-        The exception type
-    message    : str
-        Error message
+    exception : str
+        The error exception type.
+    message : str
+        The message which will be shown.
+
     Returns
-    FunctionCall : raise error FunctionCall
+    -------
+    FunctionCall : The FunctionCall which raises the error.
     """
     func = FunctionDef(name = 'PyErr_SetString',
                   body      = [],
@@ -500,18 +522,24 @@ check_type_registry = {
 
 def scalar_object_check(py_object, c_object):
     """
-    Create FunctionCall responsible for checking python argument data type
-    Parameters:
+    Create FunctionCall responsible for checking python argument data type.
+
+    Create a FunctionCall which checks whether the python argument
+    passed as an argument is a scalar with a type which matches the
+    type of the C object.
+
+    Parameters
     ----------
-    py_object  : Variable
-        The python argument of the check function
-    c_object   : Variable
-        The variable needed for the generation of the type check
+    py_object : Variable
+        The python argument of the check function.
+    c_object : Variable
+        The variable needed for the generation of the type check.
     precision_check : Boolean
-        True if checking the exact precision is needed
+        True if checking the exact precision is needed.
+
     Returns
     -------
-    FunctionCall : Check type FunctionCall
+    FunctionCall : Check type FunctionCall.
     """
 
     try :

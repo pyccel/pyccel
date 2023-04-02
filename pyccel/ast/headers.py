@@ -195,25 +195,30 @@ class Template(Header):
 
 #==============================================================================
 class FunctionHeader(Header):
-    """Represents function/subroutine header in the code.
+    """
+    Represents function/subroutine header in the code.
+
+    A node which represents the header for a function/subroutine.
+    It describes all the type information provided in the header
+    so that a typed function can be created.
 
     Parameters
     ----------
-    name: str
-        function/subroutine name
+    name : str
+        Function/subroutine name.
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    dtypes : tuple/list
+        A list of datatypes. An element of this list can be str/DataType of a
+        tuple (str/DataType, attr, allocatable).
 
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    results : tuple/list
+        A list of datatypes. An element of this list can be str/DataType of a
+        tuple (str/DataType, attr, allocatable).
 
-    is_static: bool
-        True if we want to pass arrays in bind(c) mode. every argument of type
+    is_static : bool, default: False
+        True if we want to pass arrays in bind(c) mode. Every argument of type
         array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
+        argument declaration.
 
     Examples
     --------
@@ -262,7 +267,27 @@ class FunctionHeader(Header):
         return self._is_static
 
     def create_definition(self, templates = (), is_external=False):
-        """Returns a FunctionDef with empy body."""
+        """
+        Creates a FunctionDef with the described types.
+
+        Create a FunctionDef with arguments and results whose types
+        are indicated by the information stored in the header. The
+        body of the function is left empty.
+
+        Parameters
+        ----------
+        templates : list/tuple, default: ()
+            A list of all templates defined in the context which can be used
+            to define argument or result types.
+
+        is_external : boolean, default: False
+            Indicates whether the function is an external function which
+            is defined elsewhere in the linked files.
+
+        Results
+        -------
+        list of FunctionDef : A list of all functions described by the header.
+        """
         # TODO factorize what can be factorized
         from itertools import product
 

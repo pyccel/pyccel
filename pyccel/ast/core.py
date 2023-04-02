@@ -1088,36 +1088,34 @@ class Module(ScopedNode):
 
     Parameters
     ----------
-    name: str
-        name of the module
+    name : str
+        Name of the module.
 
-    variables: list
-        list of the variables that appear in the block.
+    variables : list
+        List of the variables that appear in the block.
 
-    funcs: list
-        a list of FunctionDef instances
+    funcs : list
+        A list of FunctionDef instances.
 
-    init_func: FunctionDef
+    init_func : FunctionDef, default: None
         The function which initialises the module (expressions in the
-        python module which are executed on import)
-        Default : None
+        python module which are executed on import).
 
-    free_func: FunctionDef
-        The function which frees any variables allocated in the module
-        Default : None
+    free_func : FunctionDef, default: None
+        The function which frees any variables allocated in the module.
 
-    program: Program/CodeBlock
+    program : Program/CodeBlock
         CodeBlock containing any expressions which are only executed
-        when the module is executed directly
+        when the module is executed directly.
 
-    interfaces: list
-        a list of Interface instances
+    interfaces : list
+        A list of Interface instances
 
-    classes: list
-        a list of ClassDef instances
+    classes : list
+        A list of ClassDef instances
 
-    imports: list, tuple
-        list of needed imports
+    imports : list, tuple
+        List of needed imports
 
     Examples
     --------
@@ -1355,8 +1353,8 @@ class ModuleHeader(Basic):
 
     Parameters
     ----------
-    module: Module
-        the module
+    module : Module
+        The module.
 
     See Also
     --------
@@ -2021,11 +2019,11 @@ class FunctionDefResult(PyccelAstNode):
     var : Variable
         The variable which represents the returned value.
 
-    annotation : str
-        The type annotation describing the argument.
-
     originates_in_arg : bool
         Indicate whether the result is also an argument.
+
+    annotation : str
+        The type annotation describing the argument.
 
     See Also
     --------
@@ -2054,20 +2052,21 @@ class FunctionDefResult(PyccelAstNode):
 
     @property
     def var(self):
-        """ The variable representing the result
-        (available after the semantic treatment).
+        """
+        The variable representing the result (available after the semantic treatment).
         """
         return self._var
 
     def annotation(self):
-        """ The argument annotation providing dtype information
+        """
+        The argument annotation providing dtype information.
         """
         return self._annotation
 
     @property
     def has_default(self):
-        """ Indicates whether the argument has a default value
-        (if not then it must be provided)
+        """
+        Indicates whether the argument has a default value.
         """
         return self._value is not None
 
@@ -2078,8 +2077,22 @@ class FunctionDefResult(PyccelAstNode):
         return str(self.var)
 
 class FunctionCall(PyccelAstNode):
+    """
+    Represents a function call in the code.
 
-    """Represents a function call in the code.
+    A node which holds all information necessary to represent a function
+    call in the code.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function being called.
+
+    args : list of FunctionCallArgument
+        The arguments passed to the function.
+
+    current_function : FunctionDef, default: None
+        The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
                  '_dtype','_precision','_shape','_rank','_order')
@@ -2543,7 +2556,13 @@ class FunctionDef(ScopedNode):
 
     @property
     def local_vars(self):
-        """ List of variables defined in the function """
+        """
+        List of variables defined in the function.
+
+        A list of all variables which are local to the function. This
+        includes arguments, results, and variables defined inside the
+        function.
+        """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
         result_vars = [r.var for r in self.results]

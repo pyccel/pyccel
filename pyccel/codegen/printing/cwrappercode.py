@@ -23,7 +23,7 @@ from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
 from pyccel.ast.cwrapper    import Py_None, Py_DECREF
-from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
+from pyccel.ast.cwrapper    import generate_datatype_error, set_python_error_message
 from pyccel.ast.cwrapper    import scalar_object_check
 from pyccel.ast.cwrapper    import PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
@@ -745,8 +745,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 arguments = [FunctionDefArgument(a) for a in wrapper_args],
                 results   = [FunctionDefResult(r) for r in wrapper_results],
                 body      = [
-                                PyErr_SetString('PyExc_NotImplementedError',
-                                            '"{}"'.format(error_msg)),
+                                set_python_error_message('PyExc_NotImplementedError',
+                                            f'"{error_msg}"'),
                                 AliasAssign(wrapper_results[0], Nil()),
                                 Return(wrapper_results)
                             ],
@@ -1100,7 +1100,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Create the wrapper body with collected informations
         body_tmp = [IfSection(PyccelEq(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
         body_tmp.append(IfSection(LiteralTrue(),
-            [PyErr_SetString('PyExc_TypeError', '"This combination of arguments is not valid"'),
+            [set_python_error_message('PyExc_TypeError', '"This combination of arguments is not valid"'),
             Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
@@ -1228,13 +1228,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 elem = arg_type_check_list[0]
                 var_name = elem[0].name
                 assert elem[2] == 0
-                body.append(IfSection(PyccelNot(elem[1]), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(PyccelNot(elem[1]), [set_python_error_message('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             else:
                 arg_type_check_list.sort(key= lambda x : x[2])
                 for elem in arg_type_check_list:
                     var_name = elem[0].name
                     body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,elem[2])]))
-                body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(LiteralTrue(), [set_python_error_message('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             check_func_body += [If(*body)]
 
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
