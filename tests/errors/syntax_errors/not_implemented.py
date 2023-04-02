@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
-import numpy as np
 
-a = [1, 2, 3.3]
-b = np.array(a)
+b = 3
+a = 2
 
+a @= b
+
+c = all(True for i in range(5))
