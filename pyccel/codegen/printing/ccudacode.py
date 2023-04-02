@@ -346,13 +346,9 @@ class CcudaCodePrinter(CCodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        cuda = ''
-        if expr.variable.on_device or expr.variable.is_managed:
-            cuda = 'cuda_'
-            return ''
         if expr.variable.is_alias:
-            return '{}free_pointer({});\n'.format(cuda, self._print(expr.variable))
-        return '{}free_array({});\n'.format(cuda, self._print(expr.variable))
+            return 'cuda_free_pointer({});\n'.format(self._print(expr.variable))
+        return 'cuda_free_array({});\n'.format(self._print(expr.variable))
 
     def _print_KernelCall(self, expr):
         func = expr.funcdef
