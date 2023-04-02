@@ -883,7 +883,7 @@ class CCodePrinter(CodePrinter):
         return str(expr.macro)
 
     def extract_function_call_results(self, expr):
-        tmp_list = [self.scope.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
+        tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in expr.funcdef.results]
         return tmp_list
 
     def _print_PythonPrint(self, expr):
