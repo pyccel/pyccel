@@ -1109,13 +1109,16 @@ class Module(ScopedNode):
         when the module is executed directly.
 
     interfaces : list
-        A list of Interface instances
+        A list of Interface instances.
 
     classes : list
-        A list of ClassDef instances
+        A list of ClassDef instances.
 
     imports : list, tuple
-        List of needed imports
+        List of needed imports.
+
+    scope : Scope
+        The scope of the module.
 
     Examples
     --------
@@ -1354,11 +1357,11 @@ class ModuleHeader(Basic):
     Parameters
     ----------
     module : Module
-        The module.
+        The module described by the header.
 
     See Also
     --------
-    Module : The module itself
+    Module : The module itself.
 
     Examples
     --------
@@ -2053,22 +2056,21 @@ class FunctionDefResult(PyccelAstNode):
     @property
     def var(self):
         """
-        The variable representing the result (available after the semantic treatment).
+        The variable representing the result.
+
+        The variable which represents the result. This variable is only
+        available after the semantic stage.
         """
         return self._var
 
     def annotation(self):
         """
-        The argument annotation providing dtype information.
+        The result annotation providing dtype information.
+
+        The annotation which provides all information about the data
+        types, precision, etc, necessary to fully define the result.
         """
         return self._annotation
-
-    @property
-    def has_default(self):
-        """
-        Indicates whether the argument has a default value.
-        """
-        return self._value is not None
 
     def __repr__(self):
         return 'FunctionDefResult({})'.format(repr(self.var))

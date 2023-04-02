@@ -814,6 +814,9 @@ class SemanticParser(BasicParser):
         args : tuple
                The arguments passed to the function.
 
+        **settings : dict
+            The settings passed to _visit functions.
+
         Returns
         -------
         FunctionCall/PyccelInternalFunction : 
@@ -883,26 +886,31 @@ class SemanticParser(BasicParser):
         but in the case of a tuple variable it is a recursive call to
         create all elements in the tuple.
         This is done separately to _assign_lhs_variable to ensure that
-        elements of a tuple do not exist in the scope
+        elements of a tuple do not exist in the scope.
 
         Parameters
         ----------
         name : str
-            The name of the new variable
+            The name of the new variable.
 
         dtype : DataType
-            The data type of the new variable
+            The data type of the new variable.
 
         rhs : Variable
             The value assigned to the lhs. This is required to call
-            self._infer_type recursively for tuples
+            self._infer_type recursively for tuples.
 
-        arr_in_multirets : bool
+        d_lhs : dict
+            Dictionary of properties for the new Variable.
+
+        arr_in_multirets : bool, default: False
             If True, the variable that will be created is an array
             in multi-values return, false otherwise.
 
-        d_lhs : dict
-            Dictionary of properties for the new Variable
+        Returns
+        -------
+        Variable
+            The variable that has been created.
         """
         if isinstance(name, PyccelSymbol):
             is_temp = name.is_temp

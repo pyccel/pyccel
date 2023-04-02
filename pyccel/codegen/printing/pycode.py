@@ -65,8 +65,6 @@ class PythonCodePrinter(CodePrinter):
     ----------
     filename : str
             The name of the file being pyccelised.
-    prefix_module : str
-            A prefix to be added to the name of the module.
     """
     printmethod = "_pycode"
     language = "python"

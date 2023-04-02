@@ -263,7 +263,7 @@ def scalar_type_check(py_variable, c_variable):
     is responsible for checking if the Python object passed as an argument
     has a type matching that of the provided C object.
 
-    Parameters:
+    Parameters
     ----------
     py_variable : Variable
         The python argument of the check function.
@@ -273,7 +273,8 @@ def scalar_type_check(py_variable, c_variable):
 
     Returns
     -------
-    FunctionCall : Check type FunctionCall
+    FunctionCall
+        Check type FunctionCall
     """
     try :
         check_numpy_ref = numpy_type_check_registry[(c_variable.dtype, c_variable.precision)]

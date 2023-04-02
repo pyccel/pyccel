@@ -92,7 +92,8 @@ def as_static_function(func, *, mod_scope, name=None):
 
     Returns
     -------
-    BindCFunctionDef : The function which can be called from C.
+    BindCFunctionDef
+        The function which can be called from C.
     """
 
     assert(isinstance(func, FunctionDef))
@@ -214,17 +215,24 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
     ----------
     func : FunctionDef
         The function to be translated.
+
     mod : Module
         The module which contains the function.
+
+    mod_scope : Scope
+        The scope describing the module.
+
     name : str
         The new name of the function.
+
     imports : list
         An optional parameter into which any required imports
         can be collected.
 
-    Results
+    Returns
     -------
-    BindCFunctionDef : The function which can be called from C.
+    BindCFunctionDef
+        The function which can be called from C.
     """
 
     assert isinstance(func, FunctionDef)
@@ -350,16 +358,16 @@ def wrap_module_array_var(var, scope, mod):
     Parameters
     ----------
     var : Variable
-            The array to be exposed
+            The array to be exposed.
     scope : Scope
-            The current scope (used to find valid names for variables)
+            The current scope (used to find valid names for variables).
     mod : Module
-            The module where the variable is defined
+            The module where the variable is defined.
 
-    Results
+    Returns
     -------
     func : FunctionDef
-            A function which wraps an array and can be called from C
+            A function which wraps an array and can be called from C.
     """
     func_name = 'bind_c_'+var.name.lower()
     func_scope = scope.new_child_scope(func_name)

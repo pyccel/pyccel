@@ -268,7 +268,7 @@ class FunctionHeader(Header):
 
     def create_definition(self, templates = (), is_external=False):
         """
-        Creates a FunctionDef with the described types.
+        Create a FunctionDef with the described types.
 
         Create a FunctionDef with arguments and results whose types
         are indicated by the information stored in the header. The
@@ -284,9 +284,10 @@ class FunctionHeader(Header):
             Indicates whether the function is an external function which
             is defined elsewhere in the linked files.
 
-        Results
+        Returns
         -------
-        list of FunctionDef : A list of all functions described by the header.
+        list of FunctionDef
+            A list of all functions described by the header.
         """
         # TODO factorize what can be factorized
         from itertools import product

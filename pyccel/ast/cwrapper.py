@@ -335,20 +335,21 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
 
 def Python_to_C(c_object):
     """
-    Creates a FunctionDef responsible for casting scalar python argument to C.
+    Create a FunctionDef responsible for casting scalar python argument to C.
 
     Creates a FunctionDef node which contains all the code necessary
     for casting a PythonObject to a C object whose characteristics
     match that of the object passed as an argument.
 
-    Parameters:
+    Parameters
     ----------
     c_object : Variable
         The variable needed for the generation of the cast_function.
 
     Returns
     -------
-    FunctionDef : The function which casts the Python object to C.
+    FunctionDef
+        The function which casts the Python object to C.
     """
     dtype = c_object.dtype
     prec  = get_final_precision(c_object)
@@ -377,20 +378,21 @@ py_to_c_registry = {
 
 def C_to_Python(c_object):
     """
-    Creates a FunctionDef responsible for casting scalar C results to Python.
+    Create a FunctionDef responsible for casting scalar C results to Python.
 
     Creates a FunctionDef node which contains all the code necessary
     for casting a C object, whose characteristics match that of the object
     passed as an argument, to a PythonObject which can be used in Python code.
 
-    Parameters:
+    Parameters
     ----------
     c_object : Variable
         The variable needed for the generation of the cast_function.
 
     Returns
     -------
-    FunctionDef : The function which casts the C object to Python.
+    FunctionDef
+        The function which casts the C object to Python.
     """
     if c_object.rank != 0:
         if c_object.order == 'C':
@@ -453,7 +455,7 @@ def set_python_error_message(exception, message):
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
     with a defined error message used to set the error indicator.
 
-    Parameters:
+    Parameters
     ----------
     exception : str
         The error exception type.
@@ -534,12 +536,11 @@ def scalar_object_check(py_object, c_object):
         The python argument of the check function.
     c_object : Variable
         The variable needed for the generation of the type check.
-    precision_check : Boolean
-        True if checking the exact precision is needed.
 
     Returns
     -------
-    FunctionCall : Check type FunctionCall.
+    FunctionCall
+        Check type FunctionCall.
     """
 
     try :

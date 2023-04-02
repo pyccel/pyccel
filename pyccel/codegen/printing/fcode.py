@@ -409,7 +409,8 @@ class FCodePrinter(CodePrinter):
 
         Returns
         -------
-        dict : The declarations necessary to use the external function.
+        dict
+            The declarations necessary to use the external function.
         """
         decs = {}
         for key,f in self.scope.imports['functions'].items():
