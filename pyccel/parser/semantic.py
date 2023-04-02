@@ -3243,7 +3243,7 @@ class SemanticParser(BasicParser):
                     d_var = self._infer_type(ah.var, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, self.scope.get_expected_name(av),
-                            **d_var, is_temp = av)
+                            **d_var, is_temp = av.is_temp)
                     self.scope.insert_variable(a_new, av)
                     new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
 

@@ -459,7 +459,22 @@ class CCodePrinter(CodePrinter):
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
-        """ Print a function call to an inline function
+        """
+        Print a function call to an inline function.
+
+        Use the arguments passed to an inline function to print
+        its body with the passed arguments in place of the function
+        arguments.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The function call which should be printed inline.
+
+        Returns
+        -------
+        str
+            The code for the inline function.
         """
         func = expr.funcdef
         body = func.body
@@ -484,7 +499,7 @@ class CCodePrinter(CodePrinter):
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
-            results = dict(zip(func.results, parent_assign[0].lhs))
+            results = {r.var : l for r,l in zip(func.results, parent_assign[0].lhs)}
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
@@ -1605,12 +1620,12 @@ class CCodePrinter(CodePrinter):
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
-        if len(results) <= 1 :
-            for i in results:
-                if isinstance(i, Variable) and not i.is_temp:
-                    decs += [Declare(i.dtype, i)]
-                elif not isinstance(i, Variable):
-                    decs += [FuncAddressDeclare(i)]
+        if len(results) == 1 :
+            res = results[0]
+            if isinstance(res, Variable) and not res.is_temp:
+                decs += [Declare(res.dtype, res)]
+            elif not isinstance(res, Variable):
+                decs += [FuncAddressDeclare(res)]
         decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
                 if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)

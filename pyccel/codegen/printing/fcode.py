@@ -842,7 +842,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
-            base = expr.lhs.funcdef.results[0]
+            base = expr.lhs.funcdef.results[0].var
             if (not self._additional_code):
                 self._additional_code = ''
             var_name = self.scope.get_new_name()
@@ -3073,7 +3073,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedFunctionCall(self, expr):
         if isinstance(expr.prefix, FunctionCall):
-            base = expr.prefix.funcdef.results[0]
+            base = expr.prefix.funcdef.results[0].var
             if (not self._additional_code):
                 self._additional_code = ''
             var_name = self.scope.get_new_name()
