@@ -26,7 +26,7 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
@@ -45,6 +45,7 @@ from pyccel.ast.utilities import expand_to_loops
 from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import PyccelArraySize, Variable
 from pyccel.ast.variable import DottedName
+from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
@@ -252,7 +253,20 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'numpy_c']}
 
 class CCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of c code"""
+    """
+    A printer for printing code in C.
+
+    A printer to convert Pyccel's AST to strings of c code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+            The name of the file being pyccelised.
+    prefix_module : str
+            A prefix to be added to the name of the module.
+    """
     printmethod = "_ccode"
     language = "C"
 
@@ -302,19 +316,60 @@ class CCodePrinter(CodePrinter):
         else:
             return [irregular_list]
 
+    def is_c_pointer(self, a):
+        """
+        Indicate whether the object is a pointer in C code.
+
+        Some objects are accessed via a C pointer so that they can be modified in
+        their scope and that modification can be retrieved elsewhere. This
+        information cannot be found trivially so this function provides that
+        information while avoiding easily outdated code to be repeated.
+
+        The main reasons for this treatment are:
+        1. It is the actual memory address of an object
+        2. It is a reference to another object (e.g. an alias, an optional argument, or one of multiple return arguments)
+
+        See codegen_stage.md in the developer docs for more details.
+
+        Parameters
+        ----------
+        a : PyccelAstNode
+            The object whose storage we are enquiring about.
+
+        Returns
+        -------
+        bool
+            True if a C pointer, False otherwise.
+        """
+        if isinstance(a, (Nil, ObjectAddress)):
+            return True
+        if isinstance(a, FunctionCall):
+            a = a.funcdef.results[0]
+
+        if not isinstance(a, Variable):
+            return False
+        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
+                any(a is bi for b in self._additional_args for bi in b)
+
     #========================== Numpy Elements ===============================#
     def copy_NumpyArray_Data(self, expr):
-        """ print the assignment of a NdArray or a homogeneous tuple
+        """
+        Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray.
 
-        parameters
+        When data is copied from a homogeneous tuple, the code declares and fills
+        a dummy data_buffer and copies the data from it to a NdArray struct.
+        When data is copied from a Ndarray this is done directly without an intermediate
+        structure.
+
+        Parameters
         ----------
             expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs
-        Return
-        ------
-            String
-                Return a str that contains the declaration of a dummy data_buffer
-                       and a call to an operator which copies it to an NdArray struct
+                The Assign Node used to get the lhs and rhs.
+
+        Returns
+        -------
+        string
+            A string containing the code which copies the data.
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -324,20 +379,22 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
         dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
-        if rhs.rank > 1:
-            # flattening the args to use them in C initialization.
-            arg = self._flatten_list(arg)
+
+        buffer_size = self._print(DottedVariable(NativeVoid(), 'buffer_size', lhs=lhs))
+        lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
 
         self.add_import(c_imports['string'])
         if isinstance(arg, Variable):
-            arg = self._print(arg)
-            cpy_data = "memcpy({0}.{2}, {1}.{2}, {0}.buffer_size);\n".format(lhs, arg, dtype)
-            return '%s' % (cpy_data)
+            arg_data    = self._print(DottedVariable(arg.dtype, dtype, lhs=arg))
+            return f"memcpy({lhs_data}, {arg_data}, {buffer_size});\n"
         else :
+            if arg.rank > 1:
+                # flattening the args to use them in C initialization.
+                arg = self._flatten_list(arg)
             arg = ', '.join(self._print(i) for i in arg)
             dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = "memcpy({0}.{2}, {1}, {0}.buffer_size);\n".format(self._print(lhs), dummy_array_name, dtype)
-            return  '%s%s' % (dummy_array, cpy_data)
+            cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
+            return  dummy_array + cpy_data
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -498,8 +555,16 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
+        elif arg.dtype is NativeInteger() and len(arg) == 2:
+            arg1 = self.scope.get_temporary_variable(NativeInteger())
+            arg2 = self.scope.get_temporary_variable(NativeInteger())
+            assign1 = Assign(arg1, arg[0])
+            assign2 = Assign(arg2, arg[1])
+            self._additional_code += self._print(assign1)
+            self._additional_code += self._print(assign2)
+            return f"({arg1} < {arg2} ? {arg1} : {arg2})"
         else:
-            return errors.report("min in C is only supported for 2 float arguments", symbol=expr,
+            return errors.report("min in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
 
     def _print_PythonMax(self, expr):
@@ -508,8 +573,16 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
+        elif arg.dtype is NativeInteger() and len(arg) == 2:
+            arg1 = self.scope.get_temporary_variable(NativeInteger())
+            arg2 = self.scope.get_temporary_variable(NativeInteger())
+            assign1 = Assign(arg1, arg[0])
+            assign2 = Assign(arg2, arg[1])
+            self._additional_code += self._print(assign1)
+            self._additional_code += self._print(assign2)
+            return f"({arg1} > {arg2} ? {arg1} : {arg2})"
         else:
-            return errors.report("max in C is only supported for 2 float arguments", symbol=expr,
+            return errors.report("max in C is only supported for 2 scalar arguments", symbol=expr,
                     severity='fatal')
 
     def _print_SysExit(self, expr):
@@ -931,6 +1004,41 @@ class CCodePrinter(CodePrinter):
                     severity='fatal')
 
     def get_declare_type(self, expr):
+        """
+        Get the string which describes the type in a declaration.
+
+        This function returns the code which describes the type
+        of the `expr` object such that the declaration can be written as:
+        `f"{self.get_declare_type(expr)} {expr.name}"`
+        The function takes care of reporting errors for unknown types and
+        importing any necessary additional imports (e.g. stdint/ndarrays).
+
+        Parameters
+        ----------
+        expr : Variable
+            The variable whose type should be described.
+
+        Returns
+        -------
+        str
+            The code describing the type.
+
+        Raises
+        ------
+        PyccelCodegenError
+            If the type is not supported in the C code or the rank is too large.
+
+        Examples
+        --------
+        >>> v = Variable('int', 'x')
+        >>> self.get_declare_type(v)
+        'int64_t'
+
+        For an object accessed via a pointer:
+        >>> v = Variable('int', 'x', is_optional=True, rank=1)
+        >>> self.get_declare_type(v)
+        't_ndarray*'
+        """
         dtype = self._print(expr.dtype)
         prec  = expr.precision
         rank  = expr.rank
@@ -946,29 +1054,29 @@ class CCodePrinter(CodePrinter):
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
 
-        if self.stored_in_c_pointer(expr):
-            return '{0} *'.format(dtype)
+        if self.is_c_pointer(expr):
+            return f'{dtype}*'
         else:
-            return '{0} '.format(dtype)
+            return dtype
 
     def _print_FuncAddressDeclare(self, expr):
         args = list(expr.arguments)
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
             # TODO: extract informations needed for printing in case of function argument which itself has a function argument
             arg_code = ', '.join('{}'.format(self._print_FuncAddressDeclare(i))
-                        if isinstance(i, FunctionAddress) else '{0}{1}'.format(self.get_declare_type(i), i)
+                        if isinstance(i, FunctionAddress) else f'{self.get_declare_type(i)} {i}'
                         for i in args)
-        return '{}(*{})({});\n'.format(ret_type, name, arg_code)
+        return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
@@ -979,17 +1087,14 @@ class CCodePrinter(CodePrinter):
 
         if expr.variable.is_stack_array:
             preface, init = self._init_stack_array(expr.variable,)
-        elif declaration_type == 't_ndarray ' and not self._in_header:
+        elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
         else:
             preface = ''
             init    = ''
 
-        declaration = '{dtype}{var}{init};\n'.format(
-                            dtype = declaration_type,
-                            var   = variable,
-                            init  = init)
+        declaration = f'{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1013,22 +1118,29 @@ class CCodePrinter(CodePrinter):
         return 'string'
 
     def function_signature(self, expr, print_arg_names = True):
-        """Extract from function definition all the information
-        (name, input, output) needed to create the signature
+        """
+        Get the C representation of the function signature.
+
+        Extract from the function definition `expr` all the
+        information (name, input, output) needed to create the
+        function signature and return a string describing the
+        function.
+
+        This is not a declaration as the signature does not end
+        with a semi-colon.
 
         Parameters
         ----------
-        expr            : FunctionDef
-            the function defintion
+        expr : FunctionDef
+            The function definition for which a signature is needed.
 
-        print_arg_names : Bool
-            default value True and False when we don't need to print
-            arguments names
+        print_arg_names : bool, default : True
+            Indicates whether argument names should be printed.
 
-        Return
-        ------
-        String
-            Signature of the function
+        Returns
+        -------
+        str
+            Signature of the function.
         """
         if len(expr.results) > 1:
             self._additional_args.append(expr.results)
@@ -1036,17 +1148,17 @@ class CCodePrinter(CodePrinter):
         if len(expr.results) == 1:
             ret_type = self.get_declare_type(expr.results[0])
         elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
+            ret_type = self._print(datatype('int'))
             args += [FunctionDefArgument(a) for a in expr.results]
         else:
-            ret_type = self._print(datatype('void')) + ' '
+            ret_type = self._print(datatype('void'))
         name = expr.name
         if not args:
             arg_code = 'void'
         else:
             def get_var_arg(arg, var):
                 code = "const " * var.is_const
-                code += self.get_declare_type(var)
+                code += self.get_declare_type(var) + ' '
                 code += arg.name * print_arg_names
                 return code
 
@@ -1059,9 +1171,9 @@ class CCodePrinter(CodePrinter):
             self._additional_args.pop()
 
         if isinstance(expr, FunctionAddress):
-            return '{}(*{})({})'.format(ret_type, name, arg_code)
+            return f'{ret_type} (*{name})({arg_code})'
         else:
-            return '{0}{1}({2})'.format(ret_type, name, arg_code)
+            return f'{ret_type} {name}({arg_code})'
 
     def _print_IndexedElement(self, expr):
         base = expr.base
@@ -1091,7 +1203,8 @@ class CCodePrinter(CodePrinter):
                         inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
                             allow_negative_indexes)
                     else:
-                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1))
+                        inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
+                            Slice.Element)
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
             inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
@@ -1126,12 +1239,12 @@ class CCodePrinter(CodePrinter):
         """convert dotted Variable to their C equivalent"""
 
         name_code = self._print(expr.name)
-        if self.stored_in_c_pointer(expr.lhs):
+        if self.is_c_pointer(expr.lhs):
             code = f'{self._print(ObjectAddress(expr.lhs))}->{name_code}'
         else:
             lhs_code = self._print(expr.lhs)
             code = f'{lhs_code}.{name_code}'
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return f'(*{code})'
         else:
             return code
@@ -1189,13 +1302,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_NumpyArraySize(self, expr):
         arg = expr.arg
-        if self.stored_in_c_pointer(arg):
+        if self.is_c_pointer(arg):
             return '{}->length'.format(self._print(ObjectAddress(arg)))
         return '{}.length'.format(self._print(arg))
 
     def _print_PyccelArraySize(self, expr):
         arg    = expr.arg
-        if self.stored_in_c_pointer(arg):
+        if self.is_c_pointer(arg):
             return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))
         return '{}.shape[{}]'.format(self._print(arg), self._print(expr.index))
 
@@ -1203,7 +1316,8 @@ class CCodePrinter(CodePrinter):
         free_code = ''
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            free_code = 'if (%s.shape != NULL)\n' % self._print(expr.variable.name)
+            shape_var = DottedVariable(NativeVoid(), 'shape', lhs=expr.variable)
+            free_code = f'if ({self._print(shape_var)} != NULL)\n'
             free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
         elif  (expr.status == 'allocated'):
             free_code += self._print(Deallocate(expr.variable))
@@ -1230,7 +1344,8 @@ class CCodePrinter(CodePrinter):
         start = self._print(expr.start)
         stop = self._print(expr.stop)
         step = self._print(expr.step)
-        return 'new_slice({}, {}, {})'.format(start, stop, step)
+        slice_type = 'RANGE' if expr.slice_type == Slice.Range else 'ELEMENT'
+        return f'new_slice({start}, {stop}, {step}, {slice_type})'
 
     def _print_NumpyUfuncBase(self, expr):
         """ Convert a Python expression with a Numpy function call to C
@@ -1422,6 +1537,28 @@ class CCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
+    def _print_NumpySum(self, expr):
+        '''
+        Convert a call to numpy.sum to the equivalent function in C.
+        '''
+        if not isinstance(expr.arg, (NumpyArray, Variable, IndexedElement)):
+            raise TypeError(f'Expecting a NumpyArray, given {type(expr.arg)}')
+        dtype, prec, name = (expr.arg.dtype,
+                             expr.arg.precision,
+                             self._print(expr.arg))
+        if prec == -1:
+            prec = default_precision[self._print(dtype)]
+
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_sum_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_sum_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_sum_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_sum_bool({name})'
+        raise NotImplementedError('Sum not implemented for argument')
+
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
@@ -1494,29 +1631,6 @@ class CCodePrinter(CodePrinter):
 
         return ''.join(p for p in parts if p)
 
-    def stored_in_c_pointer(self, a):
-        """
-        Indicates whether the object a needs to be stored in a pointer
-        in c code
-
-        Parameters
-        ----------
-        a : PyccelAstNode
-        """
-        if isinstance(a, (Nil, ObjectAddress)):
-            return True
-        if isinstance(a, FunctionCall):
-            results = a.funcdef.results
-            if len(results)==1:
-                a = a.funcdef.results[0]
-            else:
-                return False
-
-        if not isinstance(a, Variable):
-            return False
-        return (a.is_alias and not a.is_ndarray) or a.is_optional or \
-                any(a is bi for b in self._additional_args for bi in b)
-
     def _print_FunctionCall(self, expr):
         func = expr.funcdef
         if func.is_inline:
@@ -1526,10 +1640,10 @@ class CCodePrinter(CodePrinter):
         for a, f in zip(expr.args, func.arguments):
             a = a.value if a else Nil()
             f = f.var
-            if self.stored_in_c_pointer(f):
+            if self.is_c_pointer(f):
                 if isinstance(a, Variable):
                     args.append(ObjectAddress(a))
-                elif not self.stored_in_c_pointer(a):
+                elif not self.is_c_pointer(a):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
                     assign = Assign(tmp_var, a)
                     self._additional_code += self._print(assign)
@@ -1573,7 +1687,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Return(self, expr):
         code = ''
-        args = [ObjectAddress(a) if isinstance(a, Variable) and self.stored_in_c_pointer(a) else a for a in expr.expr]
+        args = [ObjectAddress(a) if isinstance(a, Variable) and self.is_c_pointer(a) else a for a in expr.expr]
 
         if len(args) == 0:
             return 'return;\n'
@@ -1600,13 +1714,13 @@ class CCodePrinter(CodePrinter):
                 # make sure that stmt contains one assign node.
                 last_assign = last_assign[-1]
                 variables = last_assign.rhs.get_attribute_nodes(Variable)
-                unneeded_var = not any(b in vars_in_deallocate_nodes for b in variables)
+                unneeded_var = not any(b in vars_in_deallocate_nodes or b.is_ndarray for b in variables)
                 if unneeded_var:
                     code = ''.join(self._print(a) for a in expr.stmt.body if a is not last_assign)
                     return code + 'return {};\n'.format(self._print(last_assign.rhs))
                 else:
-                    code = ''+self._print(expr.stmt)
                     last_assign.lhs.is_temp = False
+                    code = self._print(expr.stmt)
 
         return code + 'return {0};\n'.format(self._print(args[0]))
 
@@ -1737,7 +1851,7 @@ class CCodePrinter(CodePrinter):
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if not self.stored_in_c_pointer(lhs_var) and \
+        if not self.is_c_pointer(lhs_var) and \
                 isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
             rhs = self._print(rhs_var)
 
@@ -1915,7 +2029,7 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError("Constant not implemented")
 
     def _print_Variable(self, expr):
-        if self.stored_in_c_pointer(expr):
+        if self.is_c_pointer(expr):
             return '(*{0})'.format(expr.name)
         else:
             return expr.name
@@ -1928,7 +2042,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_ObjectAddress(self, expr):
         obj_code = self._print(expr.obj)
-        if isinstance(expr.obj, ObjectAddress) or not self.stored_in_c_pointer(expr.obj):
+        if isinstance(expr.obj, ObjectAddress) or not self.is_c_pointer(expr.obj):
             return f'&{obj_code}'
         else:
             if obj_code.startswith('(*') and obj_code.endswith(')'):

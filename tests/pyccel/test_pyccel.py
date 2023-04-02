@@ -659,7 +659,7 @@ def test_c_arrays(language):
 #------------------------------------------------------------------------------
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
-            [int] * 6 + [int] * 10
+            [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
@@ -673,6 +673,19 @@ def test_return_numpy_arrays(language):
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
+def test_array_binary_op(language):
+    types = [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 8
+    pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -789,46 +802,8 @@ def test_lapack( test_file ):
 
 #------------------------------------------------------------------------------
 def test_type_print( language ):
-    test_file = 'scripts/runtest_type_print.py'
-
-    test_file = os.path.normpath(test_file)
-
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
-
-    pyccel_commands = "--language="+language
-
-    if language=="python":
-        output_dir = get_abs_path('__pyccel__')
-        pyccel_commands += " --output=" + output_dir
-        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
-    else:
-        output_test_file = test_file
-
-    compile_pyccel(cwd, test_file, pyccel_commands)
-
-    lang_out = get_lang_output(output_test_file, language)
-    lang_out = lang_out.split('\n')
-    assert len(lang_out)>=5
-
-    if language=="python":
-        assert 'int16' in lang_out[0]
-        if sys.platform == "win32":
-            assert 'int' in lang_out[1]
-            assert 'int64' in lang_out[2]
-        else:
-            assert 'int32' in lang_out[1]
-            assert 'int' in lang_out[2]
-        assert 'float32' in lang_out[3]
-        assert 'float' in lang_out[4]
-    else:
-        assert 'int16' in lang_out[0]
-        assert 'int32' in lang_out[1]
-        assert 'int64' in lang_out[2]
-        assert 'float32' in lang_out[3]
-        assert 'float64' in lang_out[4]
+    pyccel_test("scripts/runtest_type_print.py",
+                language = language, output_dtype=str)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
