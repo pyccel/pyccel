@@ -28,6 +28,7 @@ for branch_file in [args.base, args.compare]:
     n = len(lines)
     i = 0
     while i < n:
+        print(lines[i])
         modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(branch, 1)[1][1:]
         i+=1
         if should_ignore(modname):
