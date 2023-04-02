@@ -464,7 +464,8 @@ def set_python_error_message(exception, message):
 
     Returns
     -------
-    FunctionCall : The FunctionCall which raises the error.
+    FunctionCall
+        The FunctionCall which raises the error.
     """
     func = FunctionDef(name = 'PyErr_SetString',
                   body      = [],

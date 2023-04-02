@@ -2063,6 +2063,7 @@ class FunctionDefResult(PyccelAstNode):
         """
         return self._var
 
+    @property
     def annotation(self):
         """
         The result annotation providing dtype information.

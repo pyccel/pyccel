@@ -280,7 +280,7 @@ class FunctionHeader(Header):
             A list of all templates defined in the context which can be used
             to define argument or result types.
 
-        is_external : boolean, default: False
+        is_external : bool, default: False
             Indicates whether the function is an external function which
             is defined elsewhere in the linked files.
 

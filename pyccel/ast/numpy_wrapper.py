@@ -274,7 +274,7 @@ def scalar_type_check(py_variable, c_variable):
     Returns
     -------
     FunctionCall
-        Check type FunctionCall
+        The FunctionCall which checks the type.
     """
     try :
         check_numpy_ref = numpy_type_check_registry[(c_variable.dtype, c_variable.precision)]
