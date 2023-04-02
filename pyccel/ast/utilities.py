@@ -325,13 +325,16 @@ LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'
 #==============================================================================
 def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
+    Collect blocks of code into loops.
+
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
     and the size of the code block.
     So the following:
-    a = a+b
+    `a = a+b`
     for a: int[:,:] and b: int[:]
     Would be returned as:
+    ```
     [
       ([
         ([a[i,j]=a[i,j]+b[j]],a.shape[1])
@@ -339,23 +342,25 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
        , a.shape[0]
       )
     ]
+    ```
 
     Parameters
-    ==========
-    block                 : list of Ast Nodes
-                            The expressions to be modified
-    indices               : list
-                            An empty list to be filled with the temporary variables created
-    new_index             : function (class method of a Scope)
-                            A function which provides a new variable from a base name,
-                            avoiding name collisions.
-    language_has_vectors  : bool
-                            Indicates if the language has support for vector
-                            operations of the same shape
-    Results
-    =======
-    block : list of tuples of lists
-            The modified expression
+    ----------
+    block : list of Ast Nodes
+        The expressions to be modified
+    indices : list
+        An empty list to be filled with the temporary variables created
+    new_index : function (class method of a Scope)
+        A function which provides a new variable from a base name,
+        avoiding name collisions.
+    language_has_vectors : bool
+        Indicates if the language has support for vector
+        operations of the same shape
+
+    Returns
+    -------
+    list of tuples of lists
+        The modified expression
     """
     if result is None:
         result = []
