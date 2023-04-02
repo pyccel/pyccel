@@ -504,7 +504,7 @@ def generate_datatype_error(variable):
     message = '"Argument must be {precision}{dtype}"'.format(
             precision = precision,
             dtype     = variable.dtype)
-    return PyErr_SetString('PyExc_TypeError', message)
+    return set_python_error_message('PyExc_TypeError', message)
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
