@@ -27,13 +27,13 @@ language_extension = {'fortran':'f90', 'c':'c', 'python':'py', 'ccuda':'cu'}
 # map internal libraries to their folders inside pyccel/stdlib and their compile objects
 # The compile object folder will be in the pyccel dirpath
 internal_libs = {
-    "ndarrays"     : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
-    "cuda_ndarrays"     : ("cuda_ndarrays", CompileObj("cuda_ndarrays.cu",folder="cuda_ndarrays")),
-    "pyc_math_f90" : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
-    "pyc_math_c"   : ("math", CompileObj("pyc_math_c.c",folder="math")),
-    "cwrapper"     : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
-    "numpy_f90"    : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
-    "numpy_c"      : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
+    "ndarrays"      : ("ndarrays", CompileObj("ndarrays.c",folder="ndarrays")),
+    "cuda_ndarrays" : ("cuda_ndarrays", CompileObj("cuda_ndarrays.cu",folder="cuda_ndarrays")),
+    "pyc_math_f90"  : ("math", CompileObj("pyc_math_f90.f90",folder="math")),
+    "pyc_math_c"    : ("math", CompileObj("pyc_math_c.c",folder="math")),
+    "cwrapper"      : ("cwrapper", CompileObj("cwrapper.c",folder="cwrapper", accelerators=('python',))),
+    "numpy_f90"     : ("numpy", CompileObj("numpy_f90.f90",folder="numpy")),
+    "numpy_c"       : ("numpy", CompileObj("numpy_c.c",folder="numpy")),
 }
 internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_ndarrays.c",folder="cwrapper_ndarrays",
                                                              accelerators = ('python',),
