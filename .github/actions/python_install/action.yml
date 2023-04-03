@@ -1,0 +1,17 @@
+name: 'Python installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install python
+      run:
+        sudo apt-get -y install python3-dev
+      shell: bash
+    - name: python as python3
+      run:
+        sudo apt-get -y install python-is-python3
+      shell: bash
+    - name: Install Pip
+      run:
+        sudo apt-get -y install python3-pip
+      shell: bash
