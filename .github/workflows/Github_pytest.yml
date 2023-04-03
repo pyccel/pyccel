@@ -2,7 +2,7 @@ name: Pyccel tests
 
 on:
   pull_request:
-    branches: [ master, development]
+    branches: [ master, development ]
 
 jobs:
   Linux:
