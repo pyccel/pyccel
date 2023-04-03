@@ -164,10 +164,6 @@ CudaArrayClass = ClassDef('cuda.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':Shape})])
-# CupyArrayClass = ClassDef('cupy.ndarray',
-#         methods=[
-#             FunctionDef('shape',[],[],body=[],
-#                 decorators={'property':'property', 'numpy_wrapper':Shape})])
 
 #=======================================================================================
 
