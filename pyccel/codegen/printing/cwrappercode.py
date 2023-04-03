@@ -365,7 +365,6 @@ class CWrapperCodePrinter(CCodePrinter):
         prec  = variable.precision
 
         dtype = self.find_in_dtype_registry(dtype, prec)
-        print(variable, variable.dtype, variable.is_ndarray, dtype)
 
         if self.is_c_pointer(variable):
             return '{0}*'.format(dtype)
