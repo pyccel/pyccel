@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #An example of a class
 #$ header class Shape(public)
 #$ header method __init__(Shape, double, double)
