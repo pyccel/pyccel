@@ -42,7 +42,7 @@ We do not enforce docstrings in the tests as it is hard to find a distinct way t
 
 We therefore ask developers to add the following line to the top of every file in the `tests/` folder:
 
-```
+```python
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 ```
 
