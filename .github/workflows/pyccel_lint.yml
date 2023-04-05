@@ -23,4 +23,6 @@ jobs:
       - name: Lint
         run: |
             python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
+            python ci_tools/check_pylint_commands.py . $GITHUB_STEP_SUMMARY
+            cat $GITHUB_STEP_SUMMARY
         shell: bash
