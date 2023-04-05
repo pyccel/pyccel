@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-# pylint: disable=arguments-differ, inconsistent-return-statements, protected-access, abstract-method/
+# pylint: disable=arguments-differ, inconsistent-return-statements, protected-access, abstract-method
 import subprocess
 import os
 import pathlib

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, reimported
 import numpy as np
 from pyccel.decorators import types
 from pyccel.epyccel import epyccel
@@ -84,7 +84,7 @@ def test_scalare_multi_return_stmts(language):
 def test_create_arr(language):
     def create_arr(i : int):
         import numpy as np
-        a = np.ones(i)
+        _ = np.ones(i)
         return True
     epyc_create_arr = epyccel(create_arr, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_create_arr(7) == create_arr(7))
@@ -100,9 +100,9 @@ def test_return_arr_element(language):
 def test_create_multi_arrs(language):
     def create_multi_arrs(i : int):
         import numpy as np
-        a = np.ones(i)
-        b = np.zeros(i)
-        c = np.zeros(i)
+        _ = np.ones(i)
+        _ = np.zeros(i)
+        _ = np.zeros(i)
         return True
     epyc_create_multi_arrs = epyccel(create_multi_arrs, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_create_multi_arrs(7) == create_multi_arrs(7))
@@ -148,11 +148,11 @@ def test_return_nothing(language):
     x_copy = x.copy()
     b = 0.01
     divide_by(x,b)
-    divide_by(x_copy,b)
+    epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
     b = 4
     divide_by(x,b)
-    divide_by(x_copy,b)
+    epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
 
 def test_return_None(language):
@@ -167,11 +167,11 @@ def test_return_None(language):
     x_copy = x.copy()
     b = 0.01
     divide_by(x,b)
-    divide_by(x_copy,b)
+    epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
     b = 4
     divide_by(x,b)
-    divide_by(x_copy,b)
+    epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
 
 def test_arg_arr_element_op(language):
