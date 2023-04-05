@@ -6,7 +6,9 @@ def incr_(x):
     #$ header function decr_(int)
     def decr_(y):
         y = y-1
+        return y
     x = x + 1
+    return x
 
 def helloworld():
     print('hello world')
@@ -14,18 +16,16 @@ def helloworld():
 #$ header function incr(int)
 def incr(x):
     x = x + 1
+    return x
 
 #$ header function decr(int) results(int)
 def decr(x):
     y = x - 1
     return y
 
-# TODO [YG, 30.01.2020] function behavior in Python not correct:
-#      must change to x += 1
-#
 #$ header function incr_array(int [:])
 def incr_array(x):
-    x = x + 1
+    x[:] = x + 1
 
 y_=[1,2,3]
 
@@ -36,12 +36,9 @@ y_=[1,2,3]
 #     t = y_+x
 #     return t
 
-# TODO [YG, 30.01.2020] function behavior in Python not correct:
-#      must change to x -= 1
-#
 #$ header function decr_array(int [:])
 def decr_array(x):
-    x = x - 1
+    x[:] = x - 1
 
 #$ header function f1(int, int, int) results(int)
 def f1(x, n=2, m=3):
@@ -64,9 +61,12 @@ z2 = f2(1, m=0)
 
 helloworld()
 
-print(z1)
-print(z2)
-
 def pass_fun():
     pass
 
+if __name__ == '__main__':
+    print(y_)
+    print(y)
+    print(z)
+    print(z1)
+    print(z2)
