@@ -7,8 +7,6 @@
 See the developer docs for more details
 """
 
-# pylint: disable=missing-function-docstring
-
 from itertools import chain
 
 from sympy.utilities.iterables import iterable as sympy_iterable
