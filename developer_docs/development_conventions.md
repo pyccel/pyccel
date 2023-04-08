@@ -34,7 +34,7 @@ else:
 
 ## Disabling Pylint
 
-During the PR review Pylint is used to ensure that best coding practices are followed. It can occasionally be tempting to disable these errors rather than fixing the problem. However the errors are already curated to ignore errors that we feel are unhelpful (e.g. variable name too long). This should therefore be avoided whenever possible. We allow Pylint errors to be disabled for the following 2 reasons:
+During the PR review Pylint is used to ensure that best coding practices are followed. It can occasionally be tempting to disable these errors rather than fixing the problem. However the Pylint preferences are already curated to ignore errors that we feel are unhelpful (e.g. variable name too long). This should therefore be avoided whenever possible. We allow Pylint errors to be disabled for the following 2 reasons:
 
 ### Disabling docstring checks in the tests
 
