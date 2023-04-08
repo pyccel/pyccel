@@ -9,11 +9,11 @@ Accessing the property of a class has a small associated cost. As Python is an i
 E.g:
 ```python
 prec = self.precision
-dtype = str(self.dtype)
+dtype = self.dtype
 if prec in (None, -1):
     return LiteralString(f"<class '{dtype}'>")
 
-precision = prec * (16 if self.dtype is NativeComplex() else 8)
+precision = prec * (16 if dtype is NativeComplex() else 8)
 if self._obj.rank > 0:
     return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
 else:
