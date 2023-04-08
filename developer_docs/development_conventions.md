@@ -21,15 +21,14 @@ else:
 ```
 should be preferred over:
 ```python
-dtype = str(self.dtype)
 if self.precision in (None, -1):
-    return LiteralString(f"<class '{dtype}'>")
+    return LiteralString(f"<class '{self.dtype}'>")
 
 precision = self.precision * (16 if self.dtype is NativeComplex() else 8)
 if self._obj.rank > 0:
-    return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
+    return LiteralString(f"<class 'numpy.ndarray' ({self.dtype}{precision})>")
 else:
-    return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
+    return LiteralString(f"<class 'numpy.{self.dtype}{precision}'>")
 ```
 
 ## Disabling Pylint
