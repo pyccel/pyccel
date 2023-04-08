@@ -22,8 +22,8 @@ from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
 from .literals  import LiteralString
-from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
-from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot, PyccelDiv
+from .operators import PyccelMinus, PyccelUnarySub, PyccelNot, PyccelPow
 from .variable  import IndexedElement
 
 pyccel_stage = PyccelStage()
@@ -51,6 +51,7 @@ __all__ = (
     'PythonZip',
     'PythonMax',
     'PythonMin',
+    'PythonRound',
     'python_builtin_datatype'
 )
 
@@ -359,6 +360,47 @@ class PythonFloat(PyccelAstNode):
 
     def __str__(self):
         return 'float({0})'.format(str(self.arg))
+
+# ===========================================================================
+class PythonRound(PyccelAstNode):
+    """ Represents a call to Python's native round() function.
+    """
+    __slots__ = ('_arg', '_ndigits', '_dtype', '_precision')
+    name = 'round'
+    _rank = 0
+    _shape = ()
+    _order = None
+    _attribute_nodes  = ('_arg','_ndigits')
+
+    def __init__(self, number, ndigits = None):
+        self._arg = number
+        if ndigits is None:
+            self._dtype = NativeInteger()
+        else:
+            self._dtype = number.dtype
+        self._ndigits = ndigits
+        self._precision = -1
+        super().__init__()
+
+    @property
+    def arg(self):
+        """ Number to be rounded
+        """
+        return self._arg
+
+    @property
+    def ndigits(self):
+        """ Number of digits to which the argument is rounded
+        """
+        return self._ndigits
+
+    def get_round_with_0_digits(self):
+        """ Get expression returning the same value but containing
+        a call to PyccelRound with ndigits=None
+        """
+        assert self.ndigits is not None
+        factor = PyccelPow(LiteralFloat(10), self.ndigits)
+        return PyccelDiv(PythonRound(PyccelMul(self.arg, factor)), factor)
 
 #==============================================================================
 class PythonInt(PyccelAstNode):
@@ -966,4 +1008,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'round'    : PythonRound,
 }

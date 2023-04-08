@@ -549,6 +549,14 @@ class CCodePrinter(CodePrinter):
             func = "labs"
         return "{}({})".format(func, self._print(expr.arg))
 
+    def _print_PythonRound(self, expr):
+        if expr.ndigits is None:
+            self.add_import(c_imports['math'])
+            arg = self._print(expr.arg)
+            return f"lrint({arg})"
+        else:
+            return self._print(expr.get_round_with_0_digits())
+
     def _print_PythonMin(self, expr):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
