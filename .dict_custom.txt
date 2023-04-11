@@ -80,3 +80,4 @@ inhomogeneous
 natively
 PSYDAC
 prepend
+Pylint
