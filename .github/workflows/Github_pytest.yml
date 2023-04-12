@@ -90,6 +90,7 @@ jobs:
       ref: ${{ needs.Bot.outputs.REF }}
 
   DocumentationChecker:
+    name: Documentation Checker
     needs: Bot
     if: ${{ needs.Bot.outputs.run_docs == 'True' }}
     uses:
@@ -101,6 +102,7 @@ jobs:
 
   PythonLint:
     needs: Bot
+    name: Python Linting
     if: ${{ needs.Bot.outputs.run_pylint == 'True' }}
     uses:
       ./.github/workflows/lint.yml
