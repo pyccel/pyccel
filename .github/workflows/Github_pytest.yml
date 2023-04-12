@@ -34,6 +34,7 @@ jobs:
           echo $TMPDIR
           mkdir tmp
           echo "TMPDIR=$(pwd)/tmp" >> $GITHUB_ENV
+          export TMPDIR=$(pwd)/tmp
           du -sh $TMPDIR
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
