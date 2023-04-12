@@ -44,42 +44,51 @@ def check_expected_pylint_disable(file, disabled, flag, outfile):
         if result:
             print(f"Feel free to disable {flag} in {file}", file=outfile)
 
-parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-parser.add_argument('folder', type=str,
-                        help='The folder to be analysed')
-parser.add_argument('output', metavar='output', type=str,
-                        help='File where the markdown output will be printed')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
+    parser.add_argument('folder', type=str,
+                            help='The folder to be analysed')
+    parser.add_argument('diffFile', metavar='diffFile', type=str,
+                            help='File containing the git diff output')
+    parser.add_argument('output', metavar='output', type=str,
+                            help='File where the markdown output will be printed')
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-folder = args.folder
+    diff = get_diff_as_json(args.diffFile)
 
-files = [os.path.join(root,f) for root, dirs, filenames in os.walk(folder) for f in filenames if os.path.splitext(f)[1] == '.py']
+    folder = args.folder
 
-with open(args.output, mode='a', encoding="utf-8") as outfile:
-    for f in files:
-        with open(f, encoding="utf-8") as myfile:
-            lines = [l.replace(' ','') for l in myfile.readlines()]
-        pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
-        disabled = []
-        for l in pylint_lines:
-            disabled.extend(l.split('=')[1].split(','))
-        for r,d in accepted_pylint_commands.items():
-            if r.match(f):
-                for di in d:
+    files = [os.path.join(root,f) for root, dirs, filenames in os.walk(folder) for f in filenames if os.path.splitext(f)[1] == '.py']
+
+    success = True
+
+    with open(args.output, mode='a', encoding="utf-8") as outfile:
+        for f in files:
+            with open(f, encoding="utf-8") as myfile:
+                lines = [l.replace(' ','') for l in myfile.readlines()]
+            pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
+            disabled = []
+            for l in pylint_lines:
+                disabled.extend(l.split('=')[1].split(','))
+            for r,d in accepted_pylint_commands.items():
+                if r.match(f):
+                    for di in d:
+                        try:
+                            disabled.remove(di)
+                        except ValueError:
+                            pass
+            p = pathlib.Path(f)
+            if p.parts[0] == 'tests':
+                check_expected_pylint_disable(f, disabled, 'missing-function-docstring', outfile)
+                check_expected_pylint_disable(f, disabled, 'missing-module-docstring', outfile)
+                check_expected_pylint_disable(f, disabled, 'missing-class-docstring', outfile)
+                if p.parts[1] == 'epyccel':
                     try:
-                        disabled.remove(di)
+                        disabled.remove('reimported')
                     except ValueError:
                         pass
-        p = pathlib.Path(f)
-        if p.parts[0] == 'tests':
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', outfile)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', outfile)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', outfile)
-            if p.parts[1] == 'epyccel':
-                try:
-                    disabled.remove('reimported')
-                except ValueError:
-                    pass
-        if disabled:
-            print(f"Unexpected pylint disables found in {f}:", disabled, file=outfile)
+            if disabled:
+                print(f"Unexpected pylint disables found in {f}:", disabled, file=outfile)
+                print(f, diff)
+                success &= (f in diff)
