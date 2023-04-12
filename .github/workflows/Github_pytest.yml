@@ -176,19 +176,19 @@ jobs:
   CleanUpBot:
     needs:
       - Bot
-      - Linux
-      - Windows
-      - MacOSX
-      - CoverageChecker
-      - DocumentationChecker
-      - PythonLint
-      - PyccelLint
-      - Spelling
-      - Pickled-installation
-      - Editable-pickled-installation
-      - Wheel-pickled-installation
-      - Anaconda-Linux
-      - Anaconda-Windows
+      - linux
+      - windows
+      - macosx
+      - coverage
+      - docs
+      - pylint
+      - lint
+      - spelling
+      - pickle
+      - editable_pickle
+      - pickle_wheel
+      - linux_anaconda
+      - windows_anaconda
     if: ${{ always() && needs.Bot.outputs.cleanup_trigger != '' }}
     runs-on: ubuntu-latest
     steps:
