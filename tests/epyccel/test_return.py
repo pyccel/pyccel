@@ -150,7 +150,7 @@ def test_return_nothing(language):
     divide_by(x,b)
     epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
-    b = 4
+    b = 4.0
     divide_by(x,b)
     epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
@@ -169,7 +169,7 @@ def test_return_None(language):
     divide_by(x,b)
     epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
-    b = 4
+    b = 4.0
     divide_by(x,b)
     epyc_divide_by(x_copy,b)
     assert np.allclose(x, x_copy, rtol=1e-13, atol=1e-14)
