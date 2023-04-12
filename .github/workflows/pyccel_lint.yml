@@ -13,6 +13,7 @@ on:
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
+    name: Best practices
 
     steps:
       - uses: actions/checkout@v3

@@ -13,6 +13,7 @@ on:
 jobs:
   Anaconda-Linux:
     runs-on: ubuntu-latest
+    name: Unit tests
 
     steps:
       - uses: actions/checkout@v3

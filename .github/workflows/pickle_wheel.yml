@@ -13,6 +13,7 @@ on:
 jobs:
   Wheel-pickled-installation:
     runs-on: ubuntu-latest
+    name: Deploy tests
 
     steps:
       - uses: actions/checkout@v3

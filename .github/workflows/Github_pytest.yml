@@ -1,4 +1,4 @@
-name: Pyccel tests
+name: Pull Request
 
 on:
   pull_request:
@@ -53,7 +53,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  Linux:
+  linux:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_linux == 'True' }}
     uses:
@@ -62,7 +62,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF}}
 
-  Windows:
+  windows:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_windows == 'True' }}
     uses:
@@ -71,7 +71,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  MacOSX:
+  macosx:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_macosx == 'True' }}
     uses:
@@ -80,7 +80,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  CoverageChecker:
+  coverage:
     needs: [Bot, Linux]
     if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
     uses:
@@ -89,8 +89,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  DocumentationChecker:
-    name: Documentation Checker
+  docs:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_docs == 'True' }}
     uses:
@@ -100,9 +99,8 @@ jobs:
       base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  PythonLint:
+  pylint:
     needs: Bot
-    name: Python Linting
     if: ${{ needs.Bot.outputs.run_pylint == 'True' }}
     uses:
       ./.github/workflows/lint.yml
@@ -110,7 +108,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  PyccelLint:
+  lint:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_lint == 'True' }}
     uses:
@@ -119,7 +117,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  Spelling:
+  spelling:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_spelling == 'True' }}
     uses:
@@ -128,7 +126,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  Pickled-installation:
+  pickle:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_pickle == 'True' }}
     uses:
@@ -137,7 +135,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  Editable-pickled-installation:
+  editable_pickle:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_editable_pickle == 'True' }}
     uses:
@@ -147,7 +145,7 @@ jobs:
       editable_string: '-e'
       ref: ${{ needs.Bot.outputs.REF }}
 
-  Wheel-pickled-installation:
+  pickle_wheel:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_pickle_wheel == 'True' }}
     uses:
@@ -157,7 +155,7 @@ jobs:
       ref: ${{ needs.Bot.outputs.REF }}
 
 
-  Anaconda-Linux:
+  linux_anaconda:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_linux_anaconda == 'True' }}
     uses:
@@ -166,7 +164,7 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  Anaconda-Windows:
+  windows_anaconda:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_windows_anaconda == 'True' }}
     uses:

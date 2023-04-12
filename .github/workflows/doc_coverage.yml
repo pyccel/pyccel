@@ -18,7 +18,7 @@ jobs:
   DocumentationChecker:
 
     runs-on: ubuntu-latest
-    name: docs
+    name: Documentation Format
 
     steps:
       - uses: actions/checkout@v3

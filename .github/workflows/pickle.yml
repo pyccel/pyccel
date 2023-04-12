@@ -16,6 +16,7 @@ on:
 jobs:
   Pickled-installation:
     runs-on: ubuntu-latest
+    name: Deploy tests
 
     steps:
       - uses: actions/checkout@v3

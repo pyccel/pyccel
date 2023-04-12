@@ -13,6 +13,8 @@ on:
 jobs:
   Spelling:
     runs-on: ubuntu-latest
+    name: Documentation spellcheck
+
     steps:
       - uses: actions/checkout@v3
         with:
