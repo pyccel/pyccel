@@ -15,7 +15,9 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('.*/USELESS_EXPRESSION.py'):['pointless-statement'],
                             re.compile('./tests/errors/known_bugs/dicts.py'):['pointless-statement'],
                             re.compile('.*/syntax/.*'):['pointless-statement','undefined-variable'],
-                            re.compile('./tests/codegen/fcode/scripts/precision.py'):['unused-variable']}
+                            re.compile('./tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
+                            re.compile('./tests/semantic/scripts/expressions.py'):['unused-variable'],
+                            re.compile('./tests/semantic/scripts/calls.py'):['unused-variable']}
 
 def check_expected_pylint_disable(file, disabled, flag, outfile):
     """
