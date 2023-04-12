@@ -12,32 +12,32 @@ runs:
     - name: Test with pytest
       run: |
         which python
-        python -m pytest -n auto -x -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -xv -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -m pytest -n auto -x -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
+            python -m pytest -n auto -xv -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
         fi
         df -h
-        python -m pytest -x -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays
         df -h
         pyccel-clean
         df -h
         pyclean -v .
         df -h
         du -sh *
-        python -m pytest -n auto -x -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" epyccel
+        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" epyccel
         du -sh *
         df -h
         pyccel-clean
         df -h
-        python -m pytest -n auto -x -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --ignore=epyccel
+        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --ignore=epyccel
         df -h
         pyccel-clean
         df -h
         pyclean -v .
-        python -m pytest -x -rXx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays
         df -h
         pyccel-clean
         df -h
