@@ -19,14 +19,14 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('./tests/semantic/scripts/expressions.py'):['unused-variable'],
                             re.compile('./tests/semantic/scripts/calls.py'):['unused-variable']}
 
-def check_expected_pylint_disable(file, disabled, flag, outfile):
+def check_expected_pylint_disable(file, disabled, flag, messages):
     """
     Check for an expected pylint disable flag.
 
     Check for an expected pylint disable flag. If the flag is present
     then it is ignored by removing it from the list. Otherwise if the
-    file raises the error a message is printed to the outfile recommending
-    that the flag be disabled in the file.
+    file raises the error a message is saved recommending that the
+    flag be disabled in the file.
 
     Parameters
     ----------
@@ -36,8 +36,8 @@ def check_expected_pylint_disable(file, disabled, flag, outfile):
         The name of all pylint flags disabled in this file.
     flag : str
         The name of the flag being investigated.
-    outfile : file object
-        The file where any messages should be printed.
+    messages : list
+        The list of messages which should be printed.
     """
     if flag in disabled:
         disabled.remove(flag)
@@ -46,7 +46,7 @@ def check_expected_pylint_disable(file, disabled, flag, outfile):
             r.communicate()
             result = r.returncode
         if result:
-            print(f"Feel free to disable {flag} in {file}", file=outfile)
+            messages.append(f"Feel free to disable `{flag}` in `{file}`")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
@@ -67,38 +67,46 @@ if __name__ == '__main__':
 
     success = True
 
-    with open(args.output, mode='a', encoding="utf-8") as outfile:
-        for f in files:
-            with open(f, encoding="utf-8") as myfile:
-                lines = [l.replace(' ','') for l in myfile.readlines()]
-            pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
-            disabled = []
-            for l in pylint_lines:
-                disabled.extend(l.split('=')[1].split(','))
-            for r,d in accepted_pylint_commands.items():
-                if r.match(f):
-                    for di in d:
-                        try:
-                            disabled.remove(di)
-                        except ValueError:
-                            pass
-            p = pathlib.Path(f)
-            if p.parts[0] == 'tests':
-                check_expected_pylint_disable(f, disabled, 'missing-function-docstring', outfile)
-                check_expected_pylint_disable(f, disabled, 'missing-module-docstring', outfile)
-                check_expected_pylint_disable(f, disabled, 'missing-class-docstring', outfile)
-                if p.parts[1] == 'epyccel':
+    messages = []
+
+    for f in files:
+        with open(f, encoding="utf-8") as myfile:
+            lines = [l.replace(' ','') for l in myfile.readlines()]
+        pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
+        disabled = []
+        for l in pylint_lines:
+            disabled.extend(l.split('=')[1].split(','))
+        for r,d in accepted_pylint_commands.items():
+            if r.match(f):
+                for di in d:
                     try:
-                        disabled.remove('reimported')
+                        disabled.remove(di)
                     except ValueError:
                         pass
-            if disabled:
-                file_changed = f in diff
-                if file_changed:
-                    print(f"[ERROR] New unexpected pylint disables found in {f}:", disabled, file=outfile)
-                else:
-                    print(f"Unexpected pylint disables found in {f}:", disabled, file=outfile)
-                success &= (not file_changed)
+        p = pathlib.Path(f)
+        if p.parts[0] == 'tests':
+            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', messages)
+            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', messages)
+            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', messages)
+            if p.parts[1] == 'epyccel':
+                try:
+                    disabled.remove('reimported')
+                except ValueError:
+                    pass
+        if disabled:
+            file_changed = f in diff
+            disabled_str = ", ".join(f"`{d}`" for d in disabled)
+            if file_changed:
+                messages.append(f"[ERROR] New unexpected pylint disables found in `{f}`: {disabled_str}")
+            else:
+                messages.append(f"New unexpected pylint disables found in `{f}`: {disabled_str}")
+            success &= (not file_changed)
+
+    if messages:
+        with open(args.output, mode='a', encoding="utf-8") as outfile:
+            print("## Pylint Interaction", file=outfile)
+            for m in messages:
+                print(m, file=outfile)
 
     if not success:
         sys.exit(1)
