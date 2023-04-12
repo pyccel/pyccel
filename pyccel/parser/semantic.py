@@ -372,7 +372,8 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        list : A list of variables.
+        list
+            A list of variables.
         """
         # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
@@ -772,7 +773,8 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        list of FunctionCallArgument : The arguments passed to the function.
+        list of FunctionCallArgument
+            The arguments passed to the function.
         """
         args  = []
         for arg in arguments:
