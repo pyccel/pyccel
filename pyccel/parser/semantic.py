@@ -1746,7 +1746,7 @@ class SemanticParser(BasicParser):
         a = FunctionCallArgument(value, expr.keyword)
         if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
             tmp_var = self.scope.get_new_name()
-            assign = self._visit(Assign(tmp_var, arg.value, fst = arg.value.fst))
+            assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
             self._additional_exprs[-1].append(assign)
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
