@@ -32,6 +32,9 @@ jobs:
           df -i
           df -h
           echo $TMPDIR
+          mkdir tmp
+          echo "TMPDIR=$(pwd)/tmp" >> $GITHUB_ENV
+          du -sh $TMPDIR
       - name: Fortran/C tests with pytest
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
