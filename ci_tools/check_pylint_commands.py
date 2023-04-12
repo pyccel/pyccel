@@ -5,6 +5,8 @@ import os
 import pathlib
 import re
 import subprocess
+import sys
+from git_evaluation_tools import get_diff_as_json
 
 accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],
                             re.compile('.*/TOO_FEW_ARGS.py'):['no-value-for-parameter'],
@@ -89,6 +91,12 @@ if __name__ == '__main__':
                     except ValueError:
                         pass
             if disabled:
-                print(f"Unexpected pylint disables found in {f}:", disabled, file=outfile)
-                print(f, diff)
-                success &= (f in diff)
+                file_changed = f in diff
+                if file_changed:
+                    print(f"[ERROR] New unexpected pylint disables found in {f}:", disabled, file=outfile)
+                else:
+                    print(f"Unexpected pylint disables found in {f}:", disabled, file=outfile)
+                success &= (not file_changed)
+
+    if not success:
+        sys.exit(1)
