@@ -4,6 +4,7 @@ import argparse
 import os
 import pathlib
 import re
+import shutil
 import subprocess
 import sys
 from git_evaluation_tools import get_diff_as_json
@@ -42,7 +43,7 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
     if flag in disabled:
         disabled.remove(flag)
     else:
-        with subprocess.Popen(['pylint', file, '--disable=all', f'--enable={flag}']) as r:
+        with subprocess.Popen([shutil.which('pylint'), file, '--disable=all', f'--enable={flag}']) as r:
             r.communicate()
             result = r.returncode
         if result:
