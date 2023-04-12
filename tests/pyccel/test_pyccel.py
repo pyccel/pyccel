@@ -135,8 +135,12 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=None):
 
     if dtype is str:
-        p_list = [e.strip() for e in re.split('\n', p_output)]
-        f_list = [e.strip() for e in re.split('\n', f_output)]
+        p_output_split = re.split('\n', p_output)
+        f_output_split = re.split('\n', f_output)
+        p_list = p_output_split[0].strip()
+        f_list = f_output_split[0].strip()
+        p_output = '\n'.join(p_output_split[1:])
+        f_output = '\n'.join(f_output_split[1:])
         assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
@@ -951,6 +955,12 @@ def test_module_init_collisions( language ):
 def test_function_aliasing():
     pyccel_test("scripts/runtest_function_alias.py",
             language = 'fortran')
+
+#------------------------------------------------------------------------------
+
+def test_function(language):
+    pyccel_test("scripts/functions.py",
+            language = language, output_dtype=[str]+[int]*7 )
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
