@@ -6,7 +6,7 @@
 #xd = ad * bd
 xi = 2
 
-from functions import decr
+from decorators_types import decr
 yi = decr(xi)
 
 from classes import Point
