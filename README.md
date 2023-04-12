@@ -347,4 +347,7 @@ Alternatively you may have docker or podman set the context using `-v $PWD:/data
 -   [Overview](./developer_docs/overview.md)
 -   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
 -   [Review Process](./developer_docs/review_process.md)
+-   [Development Conventions](./developer_docs/development_conventions.md)
 -   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
+-   [Scope](./developer_docs/scope.md)
+-   [Array Ordering](./developer_docs/order_docs.md)
