@@ -121,7 +121,7 @@ def set_review_stage(pr_id):
 
     Determine the current stage of the review process from the state
     of the reviews left on the pull request. Leave the flag indicating
-    that stage and a message encouraging reivews.
+    that stage and a message encouraging reviews.
 
     Parameters
     ----------
