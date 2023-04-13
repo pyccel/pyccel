@@ -89,9 +89,21 @@ jobs:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
 
-  coverage:
+  coverage_collection:
     needs: [Bot, linux, cuda]
+    if: ${{ always() && needs.Bot.outputs.run_coverage == 'True' && needs.Linux.result == 'success' && needs.Cuda.result != 'failure' }}
     if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
+    uses:
+      ./.github/workflows/coverage.yml
+    with:
+      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      ref: ${{ needs.Bot.outputs.REF }}
+      cuda_done: ${{ needs.Cuda.result }}
+
+  coverage:
+    needs: [Bot, linux, cuda, coverage_collection]
+    if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
+    if: ${{ always() && needs.Bot.outputs.run_coverage == 'True' && needs.CoverageCollection.result == 'success' && needs.Cuda.result != 'failure' }}
     uses:
       ./.github/workflows/coverage.yml
     with:

@@ -13,7 +13,7 @@ from git_evaluation_tools import get_previous_pr_comments
 senior_reviewer = ['yguclu', 'EmilyBourne']
 trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+pr_test_keys = ['linux', 'windows', 'macosx', 'cuda', 'coverage', 'docs', 'pylint',
              'lint', 'spelling']
 
 review_labels = ('needs_initial_review', 'Ready_for_review', 'Ready_to_merge')
@@ -76,6 +76,7 @@ def run_tests(pr_id, tests, outputs, event):
 
     if outputs['run_coverage']:
         outputs['run_linux'] = True
+        outputs['run_cuda'] = True
 
     outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
 
@@ -347,6 +348,7 @@ if __name__ == '__main__':
     outputs = {'run_linux': False,
                'run_windows': False,
                'run_macosx': False,
+               'run_cuda': False,
                'run_coverage': False,
                'run_docs': False,
                'run_pylint': False,
