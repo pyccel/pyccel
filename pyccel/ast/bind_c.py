@@ -139,6 +139,16 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         else:
             return 'BindCFunctionDefArgument({})'.format(repr(self.name))
 
+    @property
+    def inout(self):
+        """
+        Indicates whether the argument may be modified by the function.
+
+        True if the argument may be modified in the function. False if
+        the argument remains constant in the function.
+        """
+        return [super().inout, False, False]
+
 # =======================================================================================
 
 
