@@ -76,7 +76,7 @@ if __name__ == '__main__':
         pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
         disabled = set()
         for l in pylint_lines:
-            disabled.add(l.split('=')[1].split(','))
+            disabled.update(l.split('=')[1].split(','))
         for r,d in accepted_pylint_commands.items():
             if r.match(f):
                 for di in d:
