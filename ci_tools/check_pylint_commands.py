@@ -74,26 +74,20 @@ if __name__ == '__main__':
         with open(f, encoding="utf-8") as myfile:
             lines = [l.replace(' ','') for l in myfile.readlines()]
         pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
-        disabled = []
+        disabled = set()
         for l in pylint_lines:
-            disabled.extend(l.split('=')[1].split(','))
+            disabled.add(l.split('=')[1].split(','))
         for r,d in accepted_pylint_commands.items():
             if r.match(f):
                 for di in d:
-                    try:
-                        disabled.remove(di)
-                    except ValueError:
-                        pass
+                    disabled.discard(di)
         p = pathlib.Path(f)
         if p.parts[0] == 'tests':
             check_expected_pylint_disable(f, disabled, 'missing-function-docstring', messages)
             check_expected_pylint_disable(f, disabled, 'missing-module-docstring', messages)
             check_expected_pylint_disable(f, disabled, 'missing-class-docstring', messages)
             if p.parts[1] == 'epyccel':
-                try:
-                    disabled.remove('reimported')
-                except ValueError:
-                    pass
+                disabled.discard('reimported')
         if disabled:
             file_changed = f in diff
             disabled_str = ", ".join(f"`{d}`" for d in disabled)
