@@ -327,15 +327,18 @@ if __name__ == '__main__':
     parser.add_argument('run_id', type=int,
                         help='The id of the runner (used to identify the action page)')
     parser.add_argument('cleanup_trigger', type=str, nargs='?', default='',
-                        help='The id of the runner (used to identify the action page)')
+                        help='A key to be passed when the bot is used to clean up after tests have run [request_review_status,update_test_information]')
 
     args = parser.parse_args()
 
-    # Parse event payload
+    # Parse event payload from $GITHUB_EVENT_PATH variable
+    # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
+    # The contents of this json file depend on the triggering event and are
+    # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
     with open(args.gitEvent, encoding="utf-8") as event_file:
         event = json.load(event_file)
 
-    # Save run number with event information
+    # Save run number into dictionary with event information
     event['run_number'] = args.run_id
 
     cleanup_trigger = args.cleanup_trigger
@@ -361,6 +364,8 @@ if __name__ == '__main__':
                'SHA': ''}
 
     if cleanup_trigger == 'request_review_status':
+        # Collect id from an issue_comment event with a created action
+        # or from a pull_request event with a synchronize action
         if 'number' in event:
             pr_id = event['number']
         else:
@@ -374,6 +379,7 @@ if __name__ == '__main__':
     elif cleanup_trigger == 'update_test_information':
         # If reporting after run
 
+        # Collect id from a comment event
         pr_id = event['issue']['number']
 
         result = update_test_information(pr_id, event)
@@ -382,8 +388,9 @@ if __name__ == '__main__':
         sys.exit()
 
     elif 'comment' in event and 'pull_request' in event['issue'] and event['comment']['body'].startswith('/bot'):
-        # If bot called explicitly
+        # If bot called explicitly (comment event)
 
+        # Collect id from an issue_comment event with a created action
         pr_id = event['issue']['number']
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
@@ -426,7 +433,9 @@ if __name__ == '__main__':
             leave_comment(pr_id, message_from_file('bot_commands.txt'))
 
     elif event['action'] == 'opened':
-        # If new PR
+        # If new PR (opened trigger)
+
+        # Collect id from a pull request event with an opened action
         pr_id = event['number']
 
         # Check whether user is new and/or trusted
@@ -453,6 +462,7 @@ if __name__ == '__main__':
             leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
     elif event['action'] == 'converted_to_draft':
+        # Collect id from a pull_request event with a converted_to_draft action
         pr_id = event['number']
 
         remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
@@ -475,6 +485,7 @@ if __name__ == '__main__':
     elif 'pull_request' in event and not event['pull_request']['draft']:
         # If PR is ready for review
 
+        # Collect id from a pull_request event
         pr_id = event['number']
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
@@ -490,6 +501,8 @@ if __name__ == '__main__':
         outputs['BASE'] = get_status_json(pr_id, 'baseRefName')
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
 
+    # Print the output to the file described by $GITHUB_OUTPUT to create outputs
+    # as described here : https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-output-parameter
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
             print(f"{o}={v}", file=out_file)
