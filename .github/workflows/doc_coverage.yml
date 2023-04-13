@@ -1,27 +1,38 @@
 name: Doc Coverage Action
 
 on:
-  pull_request:
-    branches: [ master, development ]
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      base:
+        required: true
+        type: string
 
 jobs:
 
   DocumentationChecker:
 
     runs-on: ubuntu-latest
+    name: Documentation Format
 
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.pull_request.base.sha }}
+          ref: ${{ inputs.base }}
           path: base
       - uses: actions/checkout@v3
         with:
           path: compare
-      - name: Set up Python 3.8
+          ref: ${{ inputs.ref }}
+      - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ inputs.python_version }}
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -30,19 +41,20 @@ jobs:
         shell: bash
       - name: Show report
         run: |
+          echo "${{ github.event.pull_request.base.sha }}"
           docstr-coverage base/pyccel 2>base_cov || true
           docstr-coverage compare/pyccel 2>compare_cov || true
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
           cd compare
           pip install .
-          BASE_BRANCH=$GITHUB_BASE_REF
-          git fetch &>/dev/null
-          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
+          git fetch
+          git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
           touch objects.txt
           touch report.txt
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           while read line; do    
-            python3 -m numpydoc --validate $line >> report.txt 2>&1 || true 
+            python -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
           cat report.txt
-          python3 ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
+          python ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
+        shell: bash

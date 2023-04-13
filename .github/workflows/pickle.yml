@@ -1,4 +1,4 @@
-name: Pyccel Linting
+name: Pickled-installation
 
 on:
   workflow_call:
@@ -9,28 +9,29 @@ on:
       ref:
         required: false
         type: string
+      editable_string:
+        required: false
+        type: string
 
 jobs:
-  Pyccel-Linter:
+  Pickled-installation:
     runs-on: ubuntu-latest
-    name: Best practices
+    name: Deploy tests
 
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - name: Set up Python ${{ inputs.python_version }}
+      - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
         run: |
-            python -m pip install --upgrade pip
-            python -m pip install .
+          python -m pip install --upgrade pip
+          python -m pip install ${{ inputs.editable_string }} .
         shell: bash
-      - name: Lint
-        run: |
-            python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
-        shell: bash
+      - name: Check for existence of pickled files
+        uses: ./.github/actions/check_for_pickled
