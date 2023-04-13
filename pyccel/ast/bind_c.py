@@ -54,8 +54,6 @@ class BindCFunctionDef(FunctionDef):
         assert self.name == self.name.lower()
         assert all(isinstance(a, BindCFunctionDefArgument) for a in self._arguments)
         assert all(isinstance(a, BindCFunctionDefResult) for a in self._results)
-        arguments_inout = [[ai] + [False]*(2*len(a.sizes)) for ai, a in zip(self._arguments_inout, self._arguments)]
-        self._arguments_inout = [ai for a in arguments_inout for ai in a]
 
     @property
     def original_function(self):
