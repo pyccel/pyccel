@@ -99,7 +99,7 @@ disable=invalid-name,
         redundant-keyword-arg,
         duplicate-code,
         unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
-	isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
+        isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
         
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -546,5 +546,5 @@ valid-metaclass-classmethod-first-arg=cls
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "BaseException, Exception".
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException,
+                       builtins.Exception

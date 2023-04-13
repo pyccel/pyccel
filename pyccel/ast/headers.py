@@ -25,6 +25,7 @@ __all__ = (
     'MacroVariable',
     'MetaVariable',
     'MethodHeader',
+    'Template',
     'VariableHeader',
 )
 

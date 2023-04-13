@@ -1,6 +1,6 @@
 # Welcome to Pyccel
 
- [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade)
+ [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991)
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -16,10 +16,10 @@ The aim of **Pyccel** is to provide a simple way to generate automatically, para
 
 Pyccel comes with a selection of **extensions** allowing you to convert calls to some specific Python packages to Fortran/C. The following packages will be covered (partially):
 
--   numpy
--   scipy
--   mpi4py (not available yet)
--   h5py (not available yet)
+-   `numpy`
+-   `scipy`
+-   `mpi4py` (not available yet)
+-   `h5py` (not available yet)
 
 Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
 The results for the master branch currently show the following performance on python 3.10:
@@ -42,7 +42,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
     -   [Windows](#Windows)
 
 -   [Installation](#Installation)
-    -   [From PyPi](#From-PyPi)
+    -   [From PyPI](#From-PyPI)
     -   [From sources](#From-sources)
     -   [On a read-only system](#On-a-read-only-system)
 
@@ -72,7 +72,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 -   Supported libraries/APIs
     -   [OpenMP](./tutorial/openmp.md)
-    -   [Numpy](./tutorial/numpy-functions.md)
+    -   [NumPy](./tutorial/numpy-functions.md)
 
 ## Pyccel Installation Methods
 
@@ -82,8 +82,8 @@ Some advanced features of Pyccel require additional non-Python libraries to be i
 Alternatively, Pyccel can be deployed through a **Linux Docker image** that contains all dependencies, and which can be setup with any version of Pyccel.
 For more information, please read the section on [Pyccel container images](#Pyccel-Container-Images).
 
-It is possible to use pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
-Support is provided for anaconda on linux/macos.
+It is possible to use Pyccel with anaconda but this is generally not advised as anaconda modifies paths used for finding executables, shared libraries and other objects.
+Support is provided for anaconda on linux/macOS.
 
 On Windows support is limited to examples which do not use external libraries.
 This is because we do not know of a way to reliably avoid [DLL hell](https://en.wikipedia.org/wiki/DLL_Hell).
@@ -208,7 +208,7 @@ msiexec //i msmpisdk.msi
 
 At this point, close and reopen your terminal to refresh all environment variables!
 
-In Administrator git-bash, generate mpi.mod for gfortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
+In Administrator git-bash, generate `mpi.mod` for GFortran according to <https://abhilashreddy.com/writing/3/mpi_instructions.html>:
 
 ```sh
 cd "$MSMPI_INC"
@@ -218,7 +218,7 @@ gfortran -c -D_WIN64 -D INT_PTR_KIND\(\)=8 -fno-range-check mpi.f90
 cd -
 ```
 
-Generate static libmsmpi.a from msmpi.dll:
+Generate static `libmsmpi.a` from `msmpi.dll`:
 
 ```sh
 cd "$MSMPI_LIB64"
@@ -254,7 +254,7 @@ echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tool
 
 On Windows and/or Anaconda Python, use `pip` instead of `pip3` for the Installation of Pyccel below.
 
-### From PyPi
+### From PyPI
 
 Simply run, for a user-specific installation:
 
@@ -288,7 +288,7 @@ for a system-wide installation.
     pip3 install --user -e .[test]
     ```
 
-this will install a _python_ library **pyccel** and a _binary_ called **pyccel**.
+this will install a _python_ library **Pyccel** and a _binary_ called **`pyccel`**.
 Any required Python packages will be installed automatically from PyPI.
 
 ### On a read-only system
@@ -300,7 +300,7 @@ sudo pyccel-init
 
 This step is necessary in order to [pickle header files](./tutorial/header-files.md#Pickling-header-files).
 If this command is not run then Pyccel will still run correctly but may be slower when using [OpenMP](./tutorial/openmp.md) or other supported external packages.
-A warning, reminding the user to execute this command, will be printed to the screen when pyccelizing files which rely on these packages if the pickling step has not been executed.
+A warning, reminding the user to execute this command, will be printed to the screen when pyccelising files which rely on these packages if the pickling step has not been executed.
 
 ## Additional packages
 
@@ -314,19 +314,19 @@ Most of the unit tests can also be run in parallel.
 
 ## Testing
 
-To test your Pyccel installation please run the script _tests/run\_tests\_py3.sh_ (Unix), or _tests/run\_tests.bat_ (Windows).
+To test your Pyccel installation please run the script `tests/run\_tests\_py3.sh` (Unix), or `tests/run\_tests.bat` (Windows).
 
-Continuous testing runs on github actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
+Continuous testing runs on GitHub actions: <https://github.com/pyccel/pyccel/actions?query=branch%3Amaster>
 
 ## Pyccel Container Images
 
-Pyccel container images are available through both Docker Hub (docker.io) and the GitHub Container Registry (ghcr.io).
+Pyccel container images are available through both Docker Hub (<docker.io>) and the GitHub Container Registry (<ghcr.io>).
 
 The images:
 
--   are based on ubuntu:latest
--   use distro packaged python3, gcc, gfortran, blas and openmpi
--   support all pyccel releases except the legacy "0.1"
+-   are based on `ubuntu:latest`
+-   use distro packaged python3, GCC, GFortran, BLAS and OpenMPI
+-   support all Pyccel releases except the legacy "0.1"
 
 Image tags match Pyccel releases.
 
@@ -340,11 +340,14 @@ docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
 ```
 
 If you are using SELinux, you will need to set the right context for your host based volume.
-Alternatively you may have docker or podman set the context using -v $PWD:/data:rwz instead of -v $PWD:/data:rw .
+Alternatively you may have docker or podman set the context using `-v $PWD:/data:rwz` instead of `-v $PWD:/data:rw` .
 
 ## Developer Documentation
 
 -   [Overview](./developer_docs/overview.md)
 -   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
 -   [Review Process](./developer_docs/review_process.md)
+-   [Development Conventions](./developer_docs/development_conventions.md)
 -   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
+-   [Scope](./developer_docs/scope.md)
+-   [Array Ordering](./developer_docs/order_docs.md)
