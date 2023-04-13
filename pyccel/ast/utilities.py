@@ -24,6 +24,7 @@ from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
 from .mathext       import math_mod
+from .sysext        import sys_mod
 
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
@@ -37,6 +38,7 @@ from .c_concepts import ObjectAddress
 errors = Errors()
 
 __all__ = (
+    'LoopCollection',
     'builtin_function',
     'builtin_import',
     'builtin_import_registery',
@@ -86,7 +88,8 @@ builtin_import_registery = Module('__main__',
             Import('scipy', AsName(scipy_mod,'scipy')),
             Import('itertools', AsName(itertools_mod,'itertools')),
             Import('math', AsName(math_mod,'math')),
-            Import('pyccel', AsName(pyccel_mod,'pyccel'))
+            Import('pyccel', AsName(pyccel_mod,'pyccel')),
+            Import('sys', AsName(sys_mod,'sys')),
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
@@ -209,12 +212,12 @@ def compatible_operation(*args, language_has_vectors = True):
     """
     if language_has_vectors:
         # If the shapes don't match then an index must be required
-        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.shape != ()]
+        shapes = [a.shape[::-1] if a.order == 'F' else a.shape for a in args if a.rank != 0]
         shapes = set(tuple(d if d == LiteralInteger(1) else -1 for d in s) for s in shapes)
         order  = set(a.order for a in args if a.order is not None)
         return len(shapes) <= 1 and len(order) <= 1
     else:
-        return all(a.shape==() for a in args)
+        return all(a.rank == 0 for a in args)
 
 #==============================================================================
 def insert_index(expr, pos, index_var):
@@ -244,7 +247,7 @@ def insert_index(expr, pos, index_var):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
     >>> insert_index(expr, 0, i, language_has_vectors = False)
@@ -309,6 +312,9 @@ def insert_index(expr, pos, index_var):
         return type(expr)(insert_index(expr.args[0], pos, index_var),
                           insert_index(expr.args[1], pos, index_var))
 
+    elif hasattr(expr, '__getitem__'):
+        return expr[index_var]
+
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
@@ -356,8 +362,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental
-                                    and not isinstance(f, NumpyTranspose)))
+                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
+                                    and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
         if (isinstance(line, Assign) and
@@ -400,6 +406,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             transposed_vars = [v for v in notable_nodes if isinstance(v, NumpyTranspose)] \
                                 + [v for f in elemental_func_calls \
                                      for v in f.get_attribute_nodes(NumpyTranspose)]
+            indexed_funcs = [v for v in notable_nodes if isinstance(v, PyccelInternalFunction) and hasattr(v, '__getitem__')]
 
             is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
 
@@ -416,7 +423,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelInternalFunction) \
-                                                            and not f.is_elemental) \
+                                                            and not f.is_elemental and not hasattr(f, '__getitem__')) \
                                                             and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
@@ -439,12 +446,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         symbol=line, severity='fatal')
 
             func_results = [f.funcdef.results[0] for f in funcs]
-            func_vars2 = [new_index(r.dtype, r) for r in func_results]
+            func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
             if assigns:
                 # For now we do not handle memory allocation in loop unravelling
-                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_vars1):
+                if any(v.rank > 0 for v in func_vars1) or any(v.rank > 0 for v in func_results):
                     errors.report("Loop unravelling cannot handle extraction of function calls "\
                             "which return arrays as this requires allocation. Please place the function "\
                             "call on its own line",
@@ -457,7 +464,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             rank = line.lhs.rank
             shape = line.lhs.shape
             new_vars = variables
-            new_vars_t = transposed_vars
+            handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
@@ -468,8 +475,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     indices.append(new_index('int','i'))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
-                if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
+                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
+                if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
@@ -477,10 +484,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
-            line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
-            line.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionCall))
+            line.substitute(variables, new_vars,
+                    excluded_nodes = (FunctionCall, PyccelInternalFunction))
+            line.substitute(transposed_vars + indexed_funcs, handled_funcs,
+                    excluded_nodes = (FunctionCall))
             _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]
-            _ = [f.substitute(transposed_vars, new_vars_t) for f in elemental_func_calls]
+            _ = [f.substitute(transposed_vars + indexed_funcs, handled_funcs) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
@@ -684,7 +693,7 @@ def expand_to_loops(block, new_index, scope, language_has_vectors = False):
     >>> a = Variable('int', 'a', shape=(4,), rank=1)
     >>> b = Variable('int', 'b', shape=(4,), rank=1)
     >>> c = Variable('int', 'c', shape=(4,), rank=1)
-    >>> i = Variable('int', 'i', shape=())
+    >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = [Assign(c,d)]
     >>> expand_to_loops(expr, language_has_vectors = False)

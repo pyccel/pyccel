@@ -112,6 +112,8 @@ gcc_info = {'exec' : 'gcc',
 if sys.platform == "darwin":
     gcc_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
     gcc_info['openmp']['libs'] = ('omp',)
+    gcc_info['openmp']['libdirs'] = ('/usr/local/opt/libomp/lib',)
+    gcc_info['openmp']['includes'] = ('/usr/local/opt/libomp/include',)
 elif sys.platform == "win32":
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
@@ -217,7 +219,9 @@ else:
     possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
     # Prefer the static library where possible to avoid unnecessary libdirs
     # which may lead to the wrong libraries being linked
-    if possible_shared_lib == '' and possible_static_lib == '':
+    if possible_static_lib != '':
+        python_info['python']['dependencies'] = (possible_static_lib,)
+    else:
         # If the proposed library does not exist use different config flags
         # to specify the library
         linker_flags = [change_to_lib_flag(l) for l in
@@ -226,10 +230,6 @@ else:
         python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
         python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
                             config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
-    elif possible_static_lib != '':
-        python_info['python']['dependencies'] = (possible_static_lib,)
-    else:
-        python_info['python']['dependencies'] = (possible_shared_lib,)
 
 #------------------------------------------------------------
 gcc_info.update(python_info)

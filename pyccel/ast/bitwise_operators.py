@@ -15,12 +15,14 @@ from .internals    import max_precision
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
-    'PyccelRShift',
-    'PyccelLShift',
-    'PyccelBitXor',
-    'PyccelBitOr',
+    'PyccelBitComparisonOperator',
+    'PyccelBitOperator',
     'PyccelBitAnd',
+    'PyccelBitOr',
+    'PyccelBitXor',
     'PyccelInvert',
+    'PyccelLShift',
+    'PyccelRShift',
 )
 
 #==============================================================================
@@ -67,8 +69,8 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _shape = ()
-    _rank = 0
+    _shape = None
+    _rank  = 0
     _order = None
     __slots__ = ('_dtype','_precision')
 

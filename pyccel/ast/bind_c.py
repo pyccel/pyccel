@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 from pyccel.ast.basic import Basic
-from pyccel.ast.core import FunctionCall, Module
+from pyccel.ast.core import CodeBlock, FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import Assign
@@ -20,9 +20,9 @@ __all__ = (
     'BindCFunctionDef',
     'BindCPointer',
     'CLocFunc',
-    'as_static_module',
     'as_static_function',
     'as_static_function_call',
+    'as_static_module',
     'sanitize_arguments',
     'wrap_array',
     'wrap_module_array_var',
@@ -91,8 +91,7 @@ def as_static_function(func, *, mod_scope, name=None):
 
     args    = list(func.arguments)
     results = list(func.results)
-    body    = func.body
-    arguments_inout = func.arguments_inout
+    body    = func.body.body
     functions = func.functions
     _results = []
     interfaces = func.interfaces
@@ -102,10 +101,17 @@ def as_static_function(func, *, mod_scope, name=None):
     # Convert array results to inout arguments
     for r in results:
         if r.rank > 0 and r not in args:
-            args += [r]
-            arguments_inout += [False]
+            #wrap the array that is returned from the original function
+            array_body, array_vars = wrap_array(r, scope, False)
+            scope.insert_variable(array_vars[-1])
+            scope.insert_variable(r)
+            body = body + tuple(array_body)
+            array_vars.pop(-1)
+            _results += array_vars
         elif r.rank == 0:
             _results += [r]
+
+    body = CodeBlock(body)
 
     if name is None:
         name = 'bind_c_{}'.format(func.name).lower()
@@ -113,7 +119,6 @@ def as_static_function(func, *, mod_scope, name=None):
     # ...
     results_names = [i.name for i in _results]
     _args = []
-    _arguments_inout = []
 
     for i_a, a in enumerate(args):
         a = a.var
@@ -132,7 +137,6 @@ def as_static_function(func, *, mod_scope, name=None):
             # ...
 
             _args += additional_args
-            _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
                               memory_handling = a.memory_handling,
@@ -151,15 +155,11 @@ def as_static_function(func, *, mod_scope, name=None):
         else:
             _args += [a]
 
-        intent = arguments_inout[i_a]
-        _arguments_inout += [intent]
     args = _args
     results = _results
-    arguments_inout = _arguments_inout
     # ...
     return BindCFunctionDef( name, list(args), results, body,
                         is_static = True,
-                        arguments_inout = arguments_inout,
                         functions = functions,
                         interfaces = interfaces,
                         imports = func.imports,
@@ -235,7 +235,6 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
 
     # new function declaration
     new_func = FunctionDef(func.name, func.arguments, func.results, body,
-                       arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
                        imports = local_imports,
@@ -312,8 +311,8 @@ def wrap_array(var, scope, persistent):
     assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
     variables = [bind_var, *sizes]
     if not persistent:
-        ptr_var = Variable(dtype=var.dtype, name=scope.get_new_name(var.name+'_ptr'),
-                memory_handling='alias', rank=var.rank, order=var.order, shape=var.shape)
+        ptr_var = var.clone(scope.get_new_name(var.name+'_ptr'),
+                memory_handling='alias')
         alloc = Allocate(ptr_var, shape=var.shape, order=var.order, status='unallocated')
         copy  = Assign(ptr_var, var)
         c_loc = CLocFunc(ptr_var, bind_var)

@@ -1,10 +1,71 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring/
 import pytest
 import numpy as np
+from numpy import iinfo
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
+
+#==============================================================================
+# TEST: VERIFY ARRAY'S DTYPE CORRESPONDENCE TO THE PASSED ELEMENTS
+#==============================================================================
+
+def test_array_assigned_dtype(language):
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
+    integer8  = randint(low = iinfo('int8').min,  high = iinfo('int8').max,  dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64)
+
+    fl = float(integer)
+    fl32 = np.float32(fl)
+    fl64 = np.float64(fl)
+
+    cmplx64 = np.complex64(fl32)
+    cmplx128 = np.complex128(fl64)
+
+    epyccel_func = epyccel(arrays.array_return_first_element, language=language)
+
+    f_integer_output = epyccel_func(integer, integer)
+    test_int_output  = arrays.array_return_first_element(integer, integer)
+    assert isinstance(f_integer_output, type(test_int_output))
+
+    f_integer8_output = epyccel_func(integer8, integer8)
+    test_int8_output = arrays.array_return_first_element(integer8, integer8)
+    assert isinstance(f_integer8_output, type(test_int8_output))
+
+    f_integer16_output = epyccel_func(integer16, integer16)
+    test_int16_output = arrays.array_return_first_element(integer16, integer16)
+    assert isinstance(f_integer16_output, type(test_int16_output))
+
+    f_integer32_output = epyccel_func(integer32, integer32)
+    test_int32_output = arrays.array_return_first_element(integer32, integer32)
+    assert isinstance(f_integer32_output, type(test_int32_output))
+
+    f_integer64_output = epyccel_func(integer64, integer64)
+    test_int64_output = arrays.array_return_first_element(integer64, integer64)
+    assert isinstance(f_integer64_output, type(test_int64_output))
+
+    f_fl_output = epyccel_func(fl, fl)
+    test_float_output = arrays.array_return_first_element(fl, fl)
+    assert isinstance(f_fl_output, type(test_float_output))
+
+    f_fl32_output = epyccel_func(fl32, fl32)
+    test_float32_output = arrays.array_return_first_element(fl32, fl32)
+    assert isinstance(f_fl32_output, type(test_float32_output))
+
+    f_fl64_output = epyccel_func(fl64, fl64)
+    test_float64_output = arrays.array_return_first_element(fl64, fl64)
+    assert isinstance(f_fl64_output, type(test_float64_output))
+
+    f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
+    test_cmplx64_output = arrays.array_return_first_element(cmplx64, cmplx64)
+    assert isinstance(f_cmplx64_output, type(test_cmplx64_output))
+
+    f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
+    test_cmplx128_output = arrays.array_return_first_element(cmplx128, cmplx128)
+    assert isinstance(f_cmplx128_output, type(test_cmplx128_output))
 
 #==============================================================================
 # TEST: 1D ARRAYS OF INT-32
@@ -164,13 +225,6 @@ def test_array_int32_1d_sub_augassign(language):
 
     assert np.array_equal( x1, x2 )
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_int_1d_initialization_1(language):
 
     f1 = arrays.array_int_1d_initialization_1
@@ -178,13 +232,6 @@ def test_array_int_1d_initialization_1(language):
 
     assert np.array_equal(f1(), f2())
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_int_1d_initialization_2(language):
 
     f1 = arrays.array_int_1d_initialization_2
@@ -192,13 +239,6 @@ def test_array_int_1d_initialization_2(language):
 
     assert np.array_equal(f1(), f2())
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Numpy sum not yet implemented for C language"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_int_1d_initialization_3(language):
 
     f1 = arrays.array_int_1d_initialization_3
@@ -873,6 +913,19 @@ def test_array_real_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_1d_scalar_mod(language):
+    f1 = arrays.array_real_1d_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_1d_scalar_idiv(language):
 
     f1 = arrays.array_real_1d_scalar_idiv
@@ -942,6 +995,20 @@ def test_array_real_1d_div(language):
     f2(x2, a)
 
     assert np.array_equal( x1, x2 )
+
+def test_array_real_1d_mod(language):
+
+    f1 = arrays.array_real_1d_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1.,2.,3.] )
+    x2 = np.copy(x1)
+    a  = np.array( [1.,2.,3.] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2)
 
 def test_array_real_1d_idiv(language):
 
@@ -1017,6 +1084,20 @@ def test_array_real_2d_C_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_C_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_C_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_C_add(language):
 
     f1 = arrays.array_real_2d_C_add
@@ -1062,6 +1143,20 @@ def test_array_real_2d_C_mul(language):
 def test_array_real_2d_C_div(language):
 
     f1 = arrays.array_real_2d_C_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]] )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_C_mod(language):
+
+    f1 = arrays.array_real_2d_C_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]] )
@@ -1206,6 +1301,20 @@ def test_array_real_2d_F_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_real_2d_F_scalar_mod(language):
+
+    f1 = arrays.array_real_2d_F_scalar_mod
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a = 5.
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_real_2d_F_add(language):
 
     f1 = arrays.array_real_2d_F_add
@@ -1251,6 +1360,20 @@ def test_array_real_2d_F_mul(language):
 def test_array_real_2d_F_div(language):
 
     f1 = arrays.array_real_2d_F_div
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
+    x2 = np.copy(x1)
+    a  = np.array( [[-1.,-2.,-3.], [-4.,-5.,-6.]], order='F' )
+
+    f1(x1, a)
+    f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_real_2d_F_mod(language):
+
+    f1 = arrays.array_real_2d_F_mod
     f2 = epyccel( f1 , language = language)
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
@@ -1751,25 +1874,11 @@ def test_array_real_loopdiff(language):
 #==============================================================================
 # TEST: keyword arguments
 #==============================================================================
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_kwargs_full(language):
     f1 = arrays.array_kwargs_full
     f2 = epyccel( f1 , language = language)
     assert f1() == f2()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_kwargs_ones(language):
     f1 = arrays.array_kwargs_ones
     f2 = epyccel( f1 , language = language)
@@ -1886,13 +1995,6 @@ def test_array_variable_size(language):
 # TEST : 1d array slices
 #==============================================================================
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_1(language):
     a = arrays.a_1d
 
@@ -1901,13 +2003,6 @@ def test_array_1d_slice_1(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_2(language):
     a = arrays.a_1d
 
@@ -1916,13 +2011,6 @@ def test_array_1d_slice_2(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_3(language):
     a = arrays.a_1d
 
@@ -1931,13 +2019,6 @@ def test_array_1d_slice_3(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_4(language):
     a = arrays.a_1d
 
@@ -1946,13 +2027,6 @@ def test_array_1d_slice_4(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_5(language):
     a = arrays.a_1d
 
@@ -1961,13 +2035,6 @@ def test_array_1d_slice_5(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_6(language):
     a = arrays.a_1d
 
@@ -1976,13 +2043,6 @@ def test_array_1d_slice_6(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_7(language):
     a = arrays.a_1d
 
@@ -1991,13 +2051,6 @@ def test_array_1d_slice_7(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_8(language):
     a = arrays.a_1d
 
@@ -2006,13 +2059,6 @@ def test_array_1d_slice_8(language):
 
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_9(language):
     a = arrays.a_1d
 
@@ -2023,7 +2069,7 @@ def test_array_1d_slice_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2038,7 +2084,7 @@ def test_array_1d_slice_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2053,7 +2099,7 @@ def test_array_1d_slice_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2070,13 +2116,6 @@ def test_array_1d_slice_12(language):
 # TEST : 2d array slices order F
 #==============================================================================
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_1(language):
     a = arrays.a_2d_f
 
@@ -2084,13 +2123,6 @@ def test_array_2d_F_slice_1(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_2(language):
     a = arrays.a_2d_f
 
@@ -2098,13 +2130,6 @@ def test_array_2d_F_slice_2(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_3(language):
     a = arrays.a_2d_f
 
@@ -2112,13 +2137,6 @@ def test_array_2d_F_slice_3(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_4(language):
     a = arrays.a_2d_f
 
@@ -2126,13 +2144,6 @@ def test_array_2d_F_slice_4(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_5(language):
     a = arrays.a_2d_f
 
@@ -2140,13 +2151,6 @@ def test_array_2d_F_slice_5(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_6(language):
     a = arrays.a_2d_f
 
@@ -2154,13 +2158,6 @@ def test_array_2d_F_slice_6(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_7(language):
     a = arrays.a_2d_f
 
@@ -2168,13 +2165,6 @@ def test_array_2d_F_slice_7(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_8(language):
     a = arrays.a_2d_f
 
@@ -2182,13 +2172,6 @@ def test_array_2d_F_slice_8(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_9(language):
     a = arrays.a_2d_f
 
@@ -2196,13 +2179,6 @@ def test_array_2d_F_slice_9(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_10(language):
     a = arrays.a_2d_f
 
@@ -2210,13 +2186,6 @@ def test_array_2d_F_slice_10(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_11(language):
     a = arrays.a_2d_f
 
@@ -2224,13 +2193,6 @@ def test_array_2d_F_slice_11(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_12(language):
     a = arrays.a_2d_f
 
@@ -2238,13 +2200,6 @@ def test_array_2d_F_slice_12(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_13(language):
     a = arrays.a_2d_f
 
@@ -2252,13 +2207,6 @@ def test_array_2d_F_slice_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_14(language):
     a = arrays.a_2d_f
 
@@ -2266,13 +2214,6 @@ def test_array_2d_F_slice_14(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_15(language):
     a = arrays.a_2d_f
 
@@ -2280,13 +2221,6 @@ def test_array_2d_F_slice_15(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_16(language):
     a = arrays.a_2d_f
 
@@ -2294,13 +2228,6 @@ def test_array_2d_F_slice_16(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_17(language):
     a = arrays.a_2d_f
 
@@ -2308,13 +2235,6 @@ def test_array_2d_F_slice_17(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_18(language):
     a = arrays.a_2d_f
 
@@ -2322,13 +2242,6 @@ def test_array_2d_F_slice_18(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_19(language):
     a = arrays.a_2d_f
 
@@ -2336,13 +2249,6 @@ def test_array_2d_F_slice_19(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_20(language):
     a = arrays.a_2d_f
 
@@ -2352,7 +2258,7 @@ def test_array_2d_F_slice_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2366,7 +2272,7 @@ def test_array_2d_F_slice_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2380,7 +2286,7 @@ def test_array_2d_F_slice_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2397,13 +2303,6 @@ def test_array_2d_F_slice_23(language):
 #==============================================================================
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_1(language):
     a = arrays.a_2d_c
 
@@ -2411,13 +2310,6 @@ def test_array_2d_C_slice_1(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_2(language):
     a = arrays.a_2d_c
 
@@ -2425,13 +2317,6 @@ def test_array_2d_C_slice_2(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_3(language):
     a = arrays.a_2d_c
 
@@ -2439,13 +2324,6 @@ def test_array_2d_C_slice_3(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_4(language):
     a = arrays.a_2d_c
 
@@ -2453,13 +2331,6 @@ def test_array_2d_C_slice_4(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_5(language):
     a = arrays.a_2d_c
 
@@ -2467,13 +2338,6 @@ def test_array_2d_C_slice_5(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_6(language):
     a = arrays.a_2d_c
 
@@ -2481,13 +2345,6 @@ def test_array_2d_C_slice_6(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_7(language):
     a = arrays.a_2d_c
 
@@ -2496,13 +2353,6 @@ def test_array_2d_C_slice_7(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_8(language):
     a = arrays.a_2d_c
 
@@ -2510,13 +2360,6 @@ def test_array_2d_C_slice_8(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_9(language):
     a = arrays.a_2d_c
 
@@ -2524,13 +2367,6 @@ def test_array_2d_C_slice_9(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_10(language):
     a = arrays.a_2d_c
 
@@ -2538,13 +2374,6 @@ def test_array_2d_C_slice_10(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_11(language):
     a = arrays.a_2d_c
 
@@ -2552,13 +2381,6 @@ def test_array_2d_C_slice_11(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_12(language):
     a = arrays.a_2d_c
 
@@ -2566,13 +2388,6 @@ def test_array_2d_C_slice_12(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_13(language):
     a = arrays.a_2d_c
 
@@ -2580,13 +2395,6 @@ def test_array_2d_C_slice_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_14(language):
     a = arrays.a_2d_c
 
@@ -2594,13 +2402,6 @@ def test_array_2d_C_slice_14(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_15(language):
     a = arrays.a_2d_c
 
@@ -2608,13 +2409,6 @@ def test_array_2d_C_slice_15(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_16(language):
     a = arrays.a_2d_c
 
@@ -2622,13 +2416,6 @@ def test_array_2d_C_slice_16(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_17(language):
     a = arrays.a_2d_c
 
@@ -2636,13 +2423,6 @@ def test_array_2d_C_slice_17(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_18(language):
     a = arrays.a_2d_c
 
@@ -2650,13 +2430,6 @@ def test_array_2d_C_slice_18(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_19(language):
     a = arrays.a_2d_c
 
@@ -2664,13 +2437,6 @@ def test_array_2d_C_slice_19(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_20(language):
     a = arrays.a_2d_c
 
@@ -2680,7 +2446,7 @@ def test_array_2d_C_slice_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2694,7 +2460,7 @@ def test_array_2d_C_slice_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2708,7 +2474,7 @@ def test_array_2d_C_slice_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="array slice does not work with variable in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2724,13 +2490,6 @@ def test_array_2d_C_slice_23(language):
 # TEST : 1d array slices stride
 #==============================================================================
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_1(language):
     a = arrays.a_1d
 
@@ -2741,7 +2500,7 @@ def test_array_1d_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2754,13 +2513,6 @@ def test_array_1d_slice_stride_2(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_3(language):
     a = arrays.a_1d
 
@@ -2769,13 +2521,6 @@ def test_array_1d_slice_stride_3(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_4(language):
     a = arrays.a_1d
 
@@ -2784,13 +2529,6 @@ def test_array_1d_slice_stride_4(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_5(language):
     a = arrays.a_1d
 
@@ -2801,7 +2539,7 @@ def test_array_1d_slice_stride_5(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2814,13 +2552,6 @@ def test_array_1d_slice_stride_6(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_7(language):
     a = arrays.a_1d
 
@@ -2831,7 +2562,7 @@ def test_array_1d_slice_stride_7(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2843,14 +2574,6 @@ def test_array_1d_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_9(language):
     a = arrays.a_1d
 
@@ -2861,7 +2584,7 @@ def test_array_1d_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2873,14 +2596,6 @@ def test_array_1d_slice_stride_10(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_11(language):
     a = arrays.a_1d
 
@@ -2891,7 +2606,7 @@ def test_array_1d_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2903,14 +2618,6 @@ def test_array_1d_slice_stride_12(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_13(language):
     a = arrays.a_1d
 
@@ -2918,10 +2625,9 @@ def test_array_1d_slice_stride_13(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2936,7 +2642,7 @@ def test_array_1d_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2948,14 +2654,6 @@ def test_array_1d_slice_stride_15(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_16(language):
     a = arrays.a_1d
 
@@ -2965,7 +2663,7 @@ def test_array_1d_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2979,7 +2677,7 @@ def test_array_1d_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2991,13 +2689,6 @@ def test_array_1d_slice_stride_18(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_19(language):
     a = arrays.a_1d
 
@@ -3007,7 +2698,7 @@ def test_array_1d_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3021,7 +2712,7 @@ def test_array_1d_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3033,13 +2724,6 @@ def test_array_1d_slice_stride_21(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_22(language):
     a = arrays.a_1d
 
@@ -3047,13 +2731,6 @@ def test_array_1d_slice_stride_22(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_1d_slice_stride_23(language):
     a = arrays.a_1d
 
@@ -3065,13 +2742,6 @@ def test_array_1d_slice_stride_23(language):
 # TEST : 2d array slices stride order F
 #==============================================================================
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_1(language):
     a = arrays.a_2d_f
 
@@ -3081,7 +2751,7 @@ def test_array_2d_F_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3095,7 +2765,7 @@ def test_array_2d_F_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3107,13 +2777,6 @@ def test_array_2d_F_slice_stride_3(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_4(language):
     a = arrays.a_2d_f
 
@@ -3121,13 +2784,6 @@ def test_array_2d_F_slice_stride_4(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_5(language):
     a = arrays.a_2d_f
 
@@ -3135,13 +2791,6 @@ def test_array_2d_F_slice_stride_5(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_6(language):
     a = arrays.a_2d_f
 
@@ -3149,13 +2798,6 @@ def test_array_2d_F_slice_stride_6(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_7(language):
     a = arrays.a_2d_f
 
@@ -3164,13 +2806,6 @@ def test_array_2d_F_slice_stride_7(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_8(language):
     a = arrays.a_2d_f
 
@@ -3178,13 +2813,6 @@ def test_array_2d_F_slice_stride_8(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_F_slice_stride_9(language):
     a = arrays.a_2d_f
 
@@ -3194,7 +2822,7 @@ def test_array_2d_F_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3208,7 +2836,7 @@ def test_array_2d_F_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3222,7 +2850,7 @@ def test_array_2d_F_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3236,7 +2864,7 @@ def test_array_2d_F_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3250,7 +2878,7 @@ def test_array_2d_F_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3264,7 +2892,7 @@ def test_array_2d_F_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3278,7 +2906,7 @@ def test_array_2d_F_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3292,7 +2920,7 @@ def test_array_2d_F_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3306,7 +2934,7 @@ def test_array_2d_F_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3320,7 +2948,7 @@ def test_array_2d_F_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3334,7 +2962,7 @@ def test_array_2d_F_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3349,7 +2977,7 @@ def test_array_2d_F_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3363,7 +2991,7 @@ def test_array_2d_F_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3377,7 +3005,7 @@ def test_array_2d_F_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3393,13 +3021,6 @@ def test_array_2d_F_slice_stride_23(language):
 # TEST : 2d array slices stride order C
 #==============================================================================
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_stride_1(language):
     a = arrays.a_2d_c
 
@@ -3409,7 +3030,7 @@ def test_array_2d_C_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3423,7 +3044,7 @@ def test_array_2d_C_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3435,13 +3056,6 @@ def test_array_2d_C_slice_stride_3(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_stride_4(language):
     a = arrays.a_2d_c
 
@@ -3451,7 +3065,7 @@ def test_array_2d_C_slice_stride_4(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3463,13 +3077,6 @@ def test_array_2d_C_slice_stride_5(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(a), f2(a))
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_stride_6(language):
     a = arrays.a_2d_c
 
@@ -3479,7 +3086,7 @@ def test_array_2d_C_slice_stride_6(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3492,13 +3099,6 @@ def test_array_2d_C_slice_stride_7(language):
     assert np.array_equal(f1(a), f2(a))
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_array_2d_C_slice_stride_8(language):
     a = arrays.a_2d_c
 
@@ -3508,7 +3108,7 @@ def test_array_2d_C_slice_stride_8(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3522,7 +3122,7 @@ def test_array_2d_C_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3536,7 +3136,7 @@ def test_array_2d_C_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3550,7 +3150,7 @@ def test_array_2d_C_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3564,7 +3164,7 @@ def test_array_2d_C_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3578,7 +3178,7 @@ def test_array_2d_C_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3592,7 +3192,7 @@ def test_array_2d_C_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3606,7 +3206,7 @@ def test_array_2d_C_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3620,7 +3220,7 @@ def test_array_2d_C_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3634,7 +3234,7 @@ def test_array_2d_C_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3648,7 +3248,7 @@ def test_array_2d_C_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3662,7 +3262,7 @@ def test_array_2d_C_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3676,7 +3276,7 @@ def test_array_2d_C_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3690,7 +3290,7 @@ def test_array_2d_C_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3704,7 +3304,7 @@ def test_array_2d_C_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum and len not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3752,7 +3352,7 @@ def test_arrs_2d_different_shapes_0(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
+            pytest.mark.skip(reason="eppycel zero gives 0 or +inf randomly"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3760,15 +3360,8 @@ def test_arrs_2d_different_shapes_0(language):
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
-    assert np.array_equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_1d_negative_index_2(language):
     f1 = arrays.arrs_1d_negative_index_2
     f2 = epyccel(f1, language = language)
@@ -3786,7 +3379,7 @@ def test_arrs_1d_int64_index(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3796,13 +3389,6 @@ def test_arrs_1d_negative_index_negative_step(language):
     f2 = epyccel(f1, language = language)
     assert np.array_equal(f1(), f2())
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_1d_negative_step_positive_step(language):
     f1 = arrays.arrs_1d_negative_step_positive_step
     f2 = epyccel(f1, language = language)
@@ -3810,7 +3396,7 @@ def test_arrs_1d_negative_step_positive_step(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented in c"),
+            pytest.mark.skip(reason="negative step does not work in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3823,6 +3409,8 @@ def test_arrs_2d_negative_index(language):
 #==============================================================================
 # TEST : NUMPY ARANGE
 #==============================================================================
+RTOL = 1e-12
+ATOL = 1e-16
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1
@@ -3837,7 +3425,12 @@ def test_numpy_arange_two_arg(language):
 def test_numpy_arange_full_arg(language):
     f1 = arrays.arr_arange_3
     f2 = epyccel(f1, language = language)
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal=9)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
+    assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_with_dtype(language):
     f1 = arrays.arr_arange_4
@@ -3847,18 +3440,63 @@ def test_numpy_arange_with_dtype(language):
 def test_numpy_arange_negative_step(language):
     f1 = arrays.arr_arange_5
     f2 = epyccel(f1, language = language)
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
+    assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_negative_step_2(language):
     f1 = arrays.arr_arange_6
     f2 = epyccel(f1, language = language)
-    np.testing.assert_array_almost_equal(f1(), f2(), decimal = 9)
+
+    r_f1 = f1()
+    r_f2 = f2()
+
+    assert (type(r_f1[1]) is type(r_f2[1]))
+    np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
+
+def test_numpy_arange_into_slice(language):
+    f1 = arrays.arr_arange_7
+    f2 = epyccel(f1, language = language)
+    n = randint(2, 10)
+    m = randint(2, 10)
+    x = np.array(100 * np.random.random((n, m)), dtype=int)
+    x_expected = x.copy()
+    f1(x_expected)
+    f2(x)
+    np.testing.assert_allclose(x, x_expected, rtol=RTOL, atol=ATOL)
 
 def test_iterate_slice(language):
     f1 = arrays.iterate_slice
     f2 = epyccel(f1, language = language)
-    i = randint(2,10)
+    i = randint(2, 10)
     assert f1(i) == f2(i)
+
+#==============================================================================
+# NUMPY SUM
+#==============================================================================
+
+def test_arr_bool_sum(language):
+    f1 = arrays.arr_bool_sum
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()
+    assert isinstance(f1(), type(f2()))
+
+def test_tuple_sum(language):
+    f1 = arrays.tuple_sum
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()
+
+#==============================================================================
+# NUMPY LINSPACE
+#==============================================================================
+
+def test_multiple_np_linspace(language):
+    f1 = arrays.multiple_np_linspace
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

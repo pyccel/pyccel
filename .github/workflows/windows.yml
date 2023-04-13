@@ -1,0 +1,47 @@
+name: Windows unit tests
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  Windows:
+
+    runs-on: windows-latest
+    name: Unit tests
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Setup Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+            # The second most recent version is used as
+            # setup-python installs the most recent patch
+            # which leads to linking problems as there are
+            # 2 versions of python3X.a and the wrong one
+            # is chosen
+            python-version: ${{ inputs.python_version }}
+      # Uncomment to examine DLL requirements with 'objdump -x FILE'
+      #- name: Install mingw tools
+      #  uses: msys2/setup-msys2@v2
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install Pyccel with tests
+        run: |
+            python -m pip install --upgrade pip
+            python -m pip install .[test]
+        shell: bash
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel

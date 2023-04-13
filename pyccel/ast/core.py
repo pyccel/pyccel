@@ -50,29 +50,40 @@ __all__ = (
     'CodeBlock',
     'Comment',
     'CommentBlock',
+    'Concatenate',
     'ConstructorCall',
     'Continue',
     'Deallocate',
     'Declare',
+    'Decorator',
     'Del',
+    'DottedFunctionCall',
     'Duplicate',
     'DoConcurrent',
     'EmptyNode',
+    'ErrorExit',
+    'Exit',
     'For',
     'ForIterator',
+    'FuncAddressDeclare',
+    'FunctionAddress',
     'FunctionCall',
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
     'If',
+    'IfSection',
     'Import',
     'InlineFunctionDef',
     'InProgram',
     'Interface',
+    'Iterable',
     'Module',
     'ModuleHeader',
     'Pass',
     'Program',
+    'PyccelFunctionDef',
+    'Raise',
     'Return',
     'SeparatorComment',
     'StarredArguments',
@@ -85,7 +96,6 @@ __all__ = (
     'create_incremented_string',
     'get_iterable_ranges',
     'inline',
-    'process_shape',
     'subs'
 )
 
@@ -1842,8 +1852,30 @@ class FunctionCallArgument(Basic):
             return '{}'.format(str(self.value))
 
 class FunctionDefArgument(PyccelAstNode):
+    """
+    Node describing the argument of a function.
 
-    """A FunctionDef FunctionDefArgument
+    An object describing the argument of a function described
+    by a FunctionDef. This object stores all the information
+    which describes an argument but is superfluous for a Variable.
+
+    Parameters
+    ----------
+    name : PyccelSymbol, Variable, FunctionAddress
+        The name of the argument.
+
+    value : PyccelAstNode, default: None
+        The default value of the argument.
+
+    kwonly : bool
+        Indicates if the argument must be passed by keyword.
+
+    annotation : str
+        The type annotation describing the argument.
+
+    See Also
+    --------
+    FunctionDef : The class where these objects will be stored.
 
     Examples
     --------
@@ -1852,7 +1884,7 @@ class FunctionDefArgument(PyccelAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
     _attribute_nodes = ('_value','_var')
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
@@ -1867,6 +1899,10 @@ class FunctionDefArgument(PyccelAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+
+        if pyccel_stage != "syntactic":
+            self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
+
         super().__init__()
 
     @property
@@ -1915,6 +1951,25 @@ class FunctionDefArgument(PyccelAstNode):
         (if not then it must be provided)
         """
         return self._value is not None
+
+    @property
+    def inout(self):
+        """
+        Indicates whether the argument may be modified by the function.
+
+        True if the argument may be modified in the function. False if
+        the argument remains constant in the function.
+        """
+        return self._inout
+
+    def make_const(self):
+        """
+        Indicate that the argument does not change in the function.
+
+        Indicate that the argument does not change in the function by
+        modifying the inout flag.
+        """
+        self._inout = False
 
     def __str__(self):
         if self.has_default:
@@ -2142,14 +2197,19 @@ class Return(Basic):
 
 class FunctionDef(ScopedNode):
 
-    """Represents a function definition.
+    """
+    Represents a function definition.
+
+    Node containing all the information necessary to describe a function.
+    This information should provide enough information to print a functionally
+    equivalent function in any target language.
 
     Parameters
     ----------
     name : str
         The name of the function.
 
-    arguments : iterable
+    arguments : iterable of FunctionDefArgument
         The arguments to the function.
 
     results : iterable
@@ -2161,50 +2221,54 @@ class FunctionDef(ScopedNode):
     global_vars : list of Symbols
         Variables which will not be passed into the function.
 
-    cls_name: str
-        Class name if the function is a method of cls_name
+    cls_name : str
+        Class name if the function is a method of cls_name.
 
-    is_static: bool
-        True for static functions. Needed for iso_c_binding interface
+    is_static : bool
+        True for static functions. Needed for iso_c_binding interface.
 
-    imports: list, tuple
-        a list of needed imports
+    imports : list, tuple
+        A list of needed imports.
 
-    decorators: list, tuple
-        a list of properties
+    decorators : list, tuple
+        A list of properties.
 
-    headers: list,tuple
-        a list of headers describing the function
+    headers : list,tuple
+        A list of headers describing the function.
 
-    is_recursive: bool
-        True for a function which calls itself
+    is_recursive : bool
+        True for a function which calls itself.
 
-    is_pure: bool
-        True for a function without side effect
+    is_pure : bool
+        True for a function without side effect.
 
-    is_elemental: bool
-        True for a function that is elemental
+    is_elemental : bool
+        True for a function that is elemental.
 
-    is_private: bool
-        True for a function that is private
+    is_private : bool
+        True for a function that is private.
 
-    is_header: bool
-        True for a function which has no body available
+    is_header : bool
+        True for a function which has no body available.
 
-    is_external: bool
-        True for a function which cannot be explicitly imported or renamed
+    is_external : bool
+        True for a function which cannot be explicitly imported or renamed.
 
-    arguments_inout: list, tuple
-        a list of booleans indicating if each argument is modified by the function
+    functions : list, tuple
+        A list of functions defined within this function.
 
-    functions: list, tuple
-        a list of functions defined within this function
+    interfaces : list, tuple
+        A list of interfaces defined within this function.
 
-    interfaces: list, tuple
-        a list of interfaces defined within this function
+    doc_string : str
+        The doc string of the function.
 
-    doc_string: str
-        The doc string of the function
+    scope : parser.scope.Scope
+        The scope containing all objects scoped to the inside of this function.
+
+    See Also
+    --------
+    FunctionDefArgument : The type used to store the arguments.
 
     Examples
     --------
@@ -2235,7 +2299,7 @@ class FunctionDef(ScopedNode):
     __slots__ = ('_name','_arguments','_results','_body',
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
-                 '_is_elemental','_is_private','_is_header','_arguments_inout',
+                 '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_doc_string', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
@@ -2258,7 +2322,6 @@ class FunctionDef(ScopedNode):
         is_private=False,
         is_header=False,
         is_external=False,
-        arguments_inout=(),
         functions=(),
         interfaces=(),
         doc_string=None,
@@ -2335,17 +2398,6 @@ class FunctionDef(ScopedNode):
         else:
             is_external = is_external and is_header and ( len(results) == 1 )
 
-        if arguments_inout:
-            if not isinstance(arguments_inout, (list, tuple)):
-                raise TypeError('Expecting a list or tuple ')
-
-            if not all([isinstance(i, bool) for i in arguments_inout]):
-                raise ValueError('Expecting booleans')
-
-        else:
-            arg_vars = [a.var for a in arguments]
-            arguments_inout = [a.rank>0 and not a.is_const if isinstance(a, Variable) else False for a in arg_vars]
-
         if functions:
             for i in functions:
                 if not isinstance(i, FunctionDef):
@@ -2367,7 +2419,6 @@ class FunctionDef(ScopedNode):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
-        self._arguments_inout = arguments_inout
         self._functions       = functions
         self._interfaces      = interfaces
         self._doc_string      = doc_string
@@ -2494,11 +2545,6 @@ class FunctionDef(ScopedNode):
         return False
 
     @property
-    def arguments_inout(self):
-        """ List of variables which are the modifiable function arguments """
-        return self._arguments_inout
-
-    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
@@ -2570,7 +2616,6 @@ class FunctionDef(ScopedNode):
         'is_elemental':self._is_elemental,
         'is_private':self._is_private,
         'is_header':self._is_header,
-        'arguments_inout':self._arguments_inout,
         'functions':self._functions,
         'is_external':self._is_external,
         'interfaces':self._interfaces,
@@ -2736,6 +2781,7 @@ class PyccelFunctionDef(FunctionDef):
                  The class which should be instantiated upon a FunctionCall
                  to this FunctionDef object
     """
+    __slots__ = ()
     def __init__(self, name, func_class):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
@@ -3971,7 +4017,7 @@ class InProgram(PyccelAstNode):
     _dtype = NativeBool()
     _precision = -1
     _rank  = 0
-    _shape = ()
+    _shape = None
     _order = None
     _attribute_nodes = ()
     __slots__ = ()
@@ -3988,6 +4034,7 @@ class Decorator(Basic):
             The name of the decorator
     """
     __slots__ = ('_name',)
+    _attribute_nodes = ()
 
     def __init__(self, name):
         self._name = name
@@ -4215,17 +4262,4 @@ def get_iterable_ranges(it, var_name=None):
     return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 #==============================================================================
-def process_shape(shape):
-    if not hasattr(shape,'__iter__'):
-        shape = [shape]
-
-    new_shape = []
-    for s in shape:
-        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
-            new_shape.append(s)
-        elif isinstance(s, int):
-            new_shape.append(LiteralInteger(s))
-        else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
-    return tuple(new_shape)
 
