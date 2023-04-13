@@ -92,7 +92,6 @@ jobs:
   coverage_collection:
     needs: [Bot, linux, cuda]
     if: ${{ always() && needs.Bot.outputs.run_coverage == 'True' && needs.Linux.result == 'success' && needs.Cuda.result != 'failure' }}
-    if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
     uses:
       ./.github/workflows/coverage.yml
     with:
@@ -102,7 +101,6 @@ jobs:
 
   coverage:
     needs: [Bot, linux, cuda, coverage_collection]
-    if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
     if: ${{ always() && needs.Bot.outputs.run_coverage == 'True' && needs.CoverageCollection.result == 'success' && needs.Cuda.result != 'failure' }}
     uses:
       ./.github/workflows/coverage.yml
