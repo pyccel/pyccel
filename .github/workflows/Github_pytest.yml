@@ -93,7 +93,7 @@ jobs:
     needs: [Bot, linux, cuda]
     if: ${{ always() && needs.Bot.outputs.run_coverage == 'True' && needs.Linux.result == 'success' && needs.Cuda.result != 'failure' }}
     uses:
-      ./.github/workflows/coverage.yml
+      ./.github/workflows/coverage_collect.yml
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
