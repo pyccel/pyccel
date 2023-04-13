@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 import numpy as np
 import modules.augassign as mod
