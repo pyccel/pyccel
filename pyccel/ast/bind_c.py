@@ -8,7 +8,7 @@ from pyccel.ast.basic import Basic
 from pyccel.ast.core import CodeBlock, FunctionCall, Module
 from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import FunctionDef
-from pyccel.ast.core import FunctionDefArgument
+from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import Assign
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
@@ -196,24 +196,32 @@ def sanitize_arguments(args):
 
 
 def as_static_function(func, *, mod_scope, name=None):
-    """ Translate a FunctionDef to a BindCFunctionDef by altering the
-    arguments to allow the function to be called from c.
-    E.g. the size of each dimension of an array is provided
+    """
+    Translate a FunctionDef to a BindCFunctionDef.
+
+    Translate a FunctionDef to a BindCFunctionDef by altering the
+    arguments to allow the function to be called from C.
+    E.g. the size of each dimension of an array is provided.
 
     Parameters
-    ==========
-    func     : FunctionDef
-               The function to be translated
-    mod_scope: Scope
-               The scope of the module which contains func
-    name     : str
-               The new name of the function
+    ----------
+    func : FunctionDef
+        The function to be translated.
+    mod_scope : Scope
+        The scope of the module which contains the function.
+    name : str
+        The new name of the function.
+
+    Returns
+    -------
+    BindCFunctionDef
+        The function which can be called from C.
     """
 
     assert (isinstance(func, FunctionDef))
 
-    args = list(func.arguments)
-    results = list(func.results)
+    args    = list(func.arguments)
+    results = [r.var for r in func.results]
     body    = func.body.body
     functions = func.functions
     _results = []
@@ -260,7 +268,7 @@ def as_static_function(func, *, mod_scope, name=None):
             shape_new = tuple(additional_args)
             # ...
 
-            _args += additional_args
+            _args += [FunctionDefArgument(a) for a in additional_args]
 
             a_new = Variable(a.dtype, a.name,
                              memory_handling=a.memory_handling,
@@ -271,16 +279,16 @@ def as_static_function(func, *, mod_scope, name=None):
                              precision=a.precision)
 
             if not (a.name in results_names):
-                _args += [a_new]
+                _args += [FunctionDefArgument(a_new)]
 
-            else:
-                _results += [a_new]
+            if a.name in results_names:
+                _results += [FunctionDefResult(a_new, originates_in_arg = True)]
 
         else:
-            _args += [a]
+            _args += [FunctionDefArgument(a)]
 
     args = _args
-    results = _results
+    results = [FunctionDefResult(r) for r in _results]
     # ...
     return BindCFunctionDef(name, list(args), results, body,
                             is_static=True,
@@ -321,26 +329,38 @@ def as_static_module(funcs, original_module):
         name = scope.get_new_name('bind_c_{}'.format(original_module.name))
     return Module(name, (), bind_c_funcs+bind_c_arrays, imports=imports, scope=scope)
 
-# =======================================================================================
+#=======================================================================================
+def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
+    """
+    Create a BindCFunctionDef which calls the provided FunctionDef.
 
-
-def as_static_function_call(func, mod, mod_scope, name=None, imports=None):
-    """ Translate a FunctionDef to a BindCFunctionDef which calls the
+    Translate a FunctionDef to a BindCFunctionDef which calls the
     original function. A BindCFunctionDef is a FunctionDef where the
     arguments are altered to allow the function to be called from c.
-    E.g. the size of each dimension of an array is provided
+    E.g. the size of each dimension of an array is provided.
 
     Parameters
-    ==========
-    func     : FunctionDef
-               The function to be translated
-    mod      : Module
-               The module which contains func
-    name     : str
-               The new name of the function
-    imports  : list
-               An optional parameter into which any required imports
-               can be collected
+    ----------
+    func : FunctionDef
+        The function to be translated.
+
+    mod : Module
+        The module which contains the function.
+
+    mod_scope : Scope
+        The scope describing the module.
+
+    name : str
+        The new name of the function.
+
+    imports : list
+        An optional parameter into which any required imports
+        can be collected.
+
+    Returns
+    -------
+    BindCFunctionDef
+        The function which can be called from C.
     """
 
     assert isinstance(func, FunctionDef)
@@ -359,8 +379,8 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports=None):
     # function arguments
     args = sanitize_arguments(func.arguments)
     # function body
-    call = FunctionCall(func, args)
-    results = func.results
+    call    = FunctionCall(func, args)
+    results = [r.var for r in func.results]
     results = results[0] if len(results) == 1 else results
     stmt = call if len(func.results) == 0 else Assign(results, call)
     body = [stmt]
@@ -490,33 +510,39 @@ def wrap_array(var, scope, persistent):
 
 
 def wrap_module_array_var(var, scope, mod):
-    """ Function returning the function necessary to expose an array
+    """
+    Get a function which allows a module variable to be accessed.
+
+    Create a function which exposes a module array variable to C.
+    This allows the module variable to be accessed from the Python
+    code.
 
     Parameters
     ----------
     var : Variable
-            The array to be exposed
+            The array to be exposed.
     scope : Scope
-            The current scope (used to find valid names for variables)
+            The current scope (used to find valid names for variables).
     mod : Module
-            The module where the variable is defined
+            The module where the variable is defined.
 
-    Results
+    Returns
     -------
-    func : FunctionDef
-            A function which wraps an array and can be called from C
+    FunctionDef
+        A function which wraps an array and can be called from C.
     """
     func_name = 'bind_c_'+var.name.lower()
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])
     arg_vars = necessary_vars
-    import_mod = Import(mod.name, AsName(var, var.name), mod=mod)
-    func = BindCFunctionDef(name=func_name,
-                            body=body,
-                            arguments=[],
-                            results=arg_vars,
-                            imports=[import_mod],
-                            scope=func_scope,
-                            original_function=None)
+    result_vars = [FunctionDefResult(v) for v in necessary_vars]
+    import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
+    func = BindCFunctionDef(name = func_name,
+                  body      = body,
+                  arguments = [],
+                  results   = result_vars,
+                  imports   = [import_mod],
+                  scope = func_scope,
+                  original_function = None)
     return func

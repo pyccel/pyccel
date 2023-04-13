@@ -20,11 +20,12 @@ from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
 from pyccel.ast.core import SeparatorComment, Allocate
 from pyccel.ast.core import Import, Module, Declare
 from pyccel.ast.core import AugAssign, CodeBlock
+from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 
 from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
 from pyccel.ast.cwrapper    import PyArgKeywords
 from pyccel.ast.cwrapper    import Py_None, Py_DECREF
-from pyccel.ast.cwrapper    import generate_datatype_error, PyErr_SetString
+from pyccel.ast.cwrapper    import generate_datatype_error, set_python_error_message
 from pyccel.ast.cwrapper    import scalar_object_check
 from pyccel.ast.cwrapper    import PyccelPyObject
 from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
@@ -306,11 +307,12 @@ class CWrapperCodePrinter(CCodePrinter):
             return self.function_signature(expr)
 
         args = [a.var for a in expr.arguments]
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
-        elif len(expr.results) > 1:
+        results = [r.var for r in expr.results]
+        if len(results) == 1:
+            ret_type = self.get_declare_type(results[0])
+        elif len(results) > 1:
             ret_type = self._print(datatype('int'))
-            args += [a.clone(name = a.name, memory_handling='alias') for a in expr.results]
+            args += [a.clone(name = a.name, memory_handling='alias') for a in results]
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
@@ -728,39 +730,41 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def untranslatable_function(self, wrapper_name, wrapper_args, wrapper_results, error_msg):
         """
+        Create code for a function complaining about an object which cannot be wrapped.
+
         Certain functions are not handled in the wrapper (e.g. private),
         This creates a wrapper function which raises NotImplementedError
-        exception and returns NULL
+        exception and returns NULL.
 
         Parameters
         ----------
-        wrapper_name    : string
-            The name of the C wrapper function
+        wrapper_name : str
+            The name of the C wrapper function.
 
-        wrapper_args    : list of Variables
+        wrapper_args : list of Variables
             List of variables with dtype PyObject which hold the arguments
-            passed to the function
+            passed to the function.
 
         wrapper_results : Variable
             List containing one variable with dtype PyObject which represents
-            the variable which will be returned by the function
+            the variable which will be returned by the function.
 
-        error_msg       : string
-            The message to be raised in the NotImplementedError
+        error_msg : str
+            The message to be raised in the NotImplementedError.
 
         Returns
         -------
-        code : string
-            returns the string containing the printed FunctionDef
+        str
+            Returns the string containing the printed FunctionDef.
         """
         current_scope = self.scope
         wrapper_func = FunctionDef(
                 name      = wrapper_name,
-                arguments = wrapper_args,
-                results   = wrapper_results,
+                arguments = [FunctionDefArgument(a) for a in wrapper_args],
+                results   = [FunctionDefResult(r) for r in wrapper_results],
                 body      = [
-                                PyErr_SetString('PyExc_NotImplementedError',
-                                            '"{}"'.format(error_msg)),
+                                set_python_error_message('PyExc_NotImplementedError',
+                                            f'"{error_msg}"'),
                                 AliasAssign(wrapper_results[0], Nil()),
                                 Return(wrapper_results)
                             ],
@@ -867,19 +871,23 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_module_exec_function(self, expr, exec_func_name):
         """
+        Create code which initialises a module.
+
         Create the function which executes any statements which happen
-        when the module is loaded
+        when the module is loaded.
 
         Parameters
         ----------
-        expr           : Module
-                         The module being wrapped
-        exec_func_name : str
-                         The name of the function
+        expr : Module
+            The module being wrapped.
 
-        Result
-        ------
+        exec_func_name : str
+            The name of the function.
+
+        Returns
+        -------
         str
+            The code for a function which initialises a module.
         """
         # Create scope for the module initialisation function
         scope = self.scope.new_child_scope(exec_func_name)
@@ -959,9 +967,9 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         func = FunctionDef(name = exec_func_name,
-            arguments = (mod_var,),
-            results = (scope.get_temporary_variable(NativeInteger(),
-                precision = 4),),
+            arguments = (FunctionDefArgument(mod_var),),
+            results = (FunctionDefResult(scope.get_temporary_variable(NativeInteger(),
+                precision = 4)),),
             body = CodeBlock(body),
             scope = scope)
         func_code = super()._print_FunctionDef(func).split('\n')
@@ -1049,12 +1057,13 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                         for a in func.arguments}
+            result_vars = [r.var for r in func.results]
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
             for a in local_arg_vars:
                 mini_scope.insert_variable(a)
-            for r in func.results:
+            for r in result_vars:
                 mini_scope.insert_variable(r)
 
             # Loop for all args in every functions and create the corresponding condition and body
@@ -1083,11 +1092,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
-            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, func.results))
+            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, result_vars))
 
 
             # Loop for all res in every functions and create the corresponding body and cast
-            for r in func.results :
+            for r in result_vars :
                 collect_var, cast_func = self.get_PyBuildValue(r)
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
@@ -1108,8 +1117,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
             # Building Mini wrapper function
             mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
-                arguments = parse_args,
-                results = wrapper_results,
+                arguments = [FunctionDefArgument(a) for a in parse_args],
+                results = [FunctionDefResult(r) for r in wrapper_results],
                 body = mini_wrapper_func_body,
                 scope = mini_scope)
             funcs_def.append(mini_wrapper_func_def)
@@ -1126,7 +1135,7 @@ class CWrapperCodePrinter(CCodePrinter):
         # Create the wrapper body with collected informations
         body_tmp = [IfSection(PyccelEq(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
         body_tmp.append(IfSection(LiteralTrue(),
-            [PyErr_SetString('PyExc_TypeError', '"This combination of arguments is not valid"'),
+            [set_python_error_message('PyExc_TypeError', '"This combination of arguments is not valid"'),
             Return([Nil()])]))
         wrapper_body_translations = [If(*body_tmp)]
 
@@ -1145,8 +1154,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Create FunctionDef
         funcs_def.append(FunctionDef(name = wrapper_name,
-            arguments = wrapper_args,
-            results = wrapper_results,
+            arguments = [FunctionDefArgument(a) for a in wrapper_args],
+            results = [FunctionDefResult(r) for r in wrapper_results],
             body = wrapper_body,
             scope = scope))
 
@@ -1254,13 +1263,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 elem = arg_type_check_list[0]
                 var_name = elem[0].name
                 assert elem[2] == 0
-                body.append(IfSection(PyccelNot(elem[1]), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(PyccelNot(elem[1]), [set_python_error_message('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             else:
                 arg_type_check_list.sort(key= lambda x : x[2])
                 for elem in arg_type_check_list:
                     var_name = elem[0].name
                     body.append(IfSection(elem[1], [AugAssign(check_var, '+' ,elem[2])]))
-                body.append(IfSection(LiteralTrue(), [PyErr_SetString('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
+                body.append(IfSection(LiteralTrue(), [set_python_error_message('PyExc_TypeError', f'"{var_name} must be {error}"'), Return([PyccelUnarySub(LiteralInteger(1))])]))
             check_func_body += [If(*body)]
 
         check_func_body = [Assign(check_var, LiteralInteger(0))] + check_func_body
@@ -1268,8 +1277,8 @@ class CWrapperCodePrinter(CCodePrinter):
         # Creating check function definition
         check_func_name = self.scope.parent_scope.get_new_name(f'type_check_{func_name}')
         check_func_def = FunctionDef(name = check_func_name,
-            arguments = parse_args,
-            results = [check_var],
+            arguments = [FunctionDefArgument(a) for a in parse_args],
+            results = [FunctionDefResult(check_var)],
             body = check_func_body,
             scope = self.scope.new_child_scope(check_func_name))
         return check_func_def
@@ -1343,7 +1352,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 self.scope.functions[v.name] = v
                 local_arg_vars[v] = a
 
-        result_vars = [v.clone(self.scope.get_new_name(v.name)) for v in expr.results]
+        result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in expr.results]
         for v in result_vars:
             self.scope.insert_variable(v)
         # update ndarray and optional local variables properties
@@ -1430,8 +1439,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Create FunctionDef and write using classic method
         wrapper_func = FunctionDef(name = wrapper_name,
-            arguments = wrapper_args,
-            results = wrapper_results,
+            arguments = [FunctionDefArgument(a) for a in wrapper_args],
+            results = [FunctionDefResult(r) for r in wrapper_results],
             body = wrapper_body,
             scope = self.scope)
 

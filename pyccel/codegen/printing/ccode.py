@@ -344,7 +344,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(a, (Nil, ObjectAddress)):
             return True
         if isinstance(a, FunctionCall):
-            a = a.funcdef.results[0]
+            a = a.funcdef.results[0].var
 
         if not isinstance(a, Variable):
             return False
@@ -459,7 +459,22 @@ class CCodePrinter(CodePrinter):
         return buffer_array, array_init
 
     def _handle_inline_func_call(self, expr):
-        """ Print a function call to an inline function
+        """
+        Print a function call to an inline function.
+
+        Use the arguments passed to an inline function to print
+        its body with the passed arguments in place of the function
+        arguments.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The function call which should be printed inline.
+
+        Returns
+        -------
+        str
+            The code for the inline function.
         """
         func = expr.funcdef
         body = func.body
@@ -484,7 +499,7 @@ class CCodePrinter(CodePrinter):
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
-            results = dict(zip(func.results, parent_assign[0].lhs))
+            results = {r.var : l for r,l in zip(func.results, parent_assign[0].lhs)}
             orig_res_vars = list(results.keys())
             new_res_vars  = self._temporary_args
             new_res_vars = [a.obj if isinstance(a, ObjectAddress) else a for a in new_res_vars]
@@ -882,10 +897,6 @@ class CCodePrinter(CodePrinter):
     def _print_CMacro(self, expr):
         return str(expr.macro)
 
-    def extract_function_call_results(self, expr):
-        tmp_list = [self.scope.get_temporary_variable(a.dtype) for a in expr.funcdef.results]
-        return tmp_list
-
     def _print_PythonPrint(self, expr):
         self.add_import(c_imports['stdio'])
         self.add_import(c_imports['inttypes'])
@@ -941,7 +952,7 @@ class CCodePrinter(CodePrinter):
                 f = f.print_string
 
             if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
-                tmp_list = self.extract_function_call_results(f)
+                tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
                     arg_format, arg = self.get_print_format_and_arg(a)
@@ -1143,13 +1154,13 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         if len(expr.results) > 1:
-            self._additional_args.append(expr.results)
+            self._additional_args.append([r.var for r in expr.results])
         args = list(expr.arguments)
         if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
+            ret_type = self.get_declare_type(expr.results[0].var)
         elif len(expr.results) > 1:
             ret_type = self._print(datatype('int'))
-            args += [FunctionDefArgument(a) for a in expr.results]
+            args += [FunctionDefArgument(a.var) for a in expr.results]
         else:
             ret_type = self._print(datatype('void'))
         name = expr.name
@@ -1597,19 +1608,22 @@ class CCodePrinter(CodePrinter):
             return ''
         self.set_scope(expr.scope)
 
+        arguments = [a.var for a in expr.arguments]
+        results = [r.var for r in expr.results]
         if len(expr.results) > 1:
-            self._additional_args.append(expr.results)
+            self._additional_args.append(results)
+
         body  = self._print(expr.body)
         decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
-        if len(expr.results) <= 1 :
-            for i in expr.results:
-                if isinstance(i, Variable) and not i.is_temp:
-                    decs += [Declare(i.dtype, i)]
-                elif not isinstance(i, Variable):
-                    decs += [FuncAddressDeclare(i)]
-        arguments = [a.var for a in expr.arguments]
+
+        if len(results) == 1 :
+            res = results[0]
+            if isinstance(res, Variable) and not res.is_temp:
+                decs += [Declare(res.dtype, res)]
+            elif not isinstance(res, Variable):
+                decs += [FuncAddressDeclare(res)]
         decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, expr.results, arguments)]
+                if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
