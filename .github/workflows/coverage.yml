@@ -9,6 +9,9 @@ on:
       ref:
         required: false
         type: string
+      base:
+        required: true
+        type: string
 
 jobs:
   CoverageChecker:
@@ -35,9 +38,8 @@ jobs:
           name: coverage-artifact
       - name: Collect diff information
         run: |
-          BASE_BRANCH=$GITHUB_BASE_REF
           git fetch
-          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           ls
         shell: bash
       - name: Check coverage

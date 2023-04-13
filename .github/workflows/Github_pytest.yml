@@ -88,6 +88,7 @@ jobs:
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
+      base: ${{ github.base_ref }}
 
   docs:
     needs: Bot
