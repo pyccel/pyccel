@@ -1,26 +1,45 @@
 name: Pyccel Linting
+
 on:
-  pull_request:
-    branches: [ master2 ]
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
 
 jobs:
   Pyccel-Linter:
     runs-on: ubuntu-latest
+    name: Best practices
 
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.7
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: ${{ inputs.python_version }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
         run: |
-            python -m pip install --upgrade pip
-            python -m pip install .
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pylint
+        shell: bash
+      - name: Collect diff information
+        run: |
+          BASE_BRANCH=$GITHUB_BASE_REF
+          git fetch
+          git diff origin/${BASE_BRANCH}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
         run: |
-            python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
+          python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
+          python ci_tools/check_pylint_commands.py . pull_diff.txt $GITHUB_STEP_SUMMARY
+          cat $GITHUB_STEP_SUMMARY
         shell: bash
