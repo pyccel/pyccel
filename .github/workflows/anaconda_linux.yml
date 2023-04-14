@@ -25,7 +25,14 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
+          python-version: '3.10'
+        if: inputs.python_version == ''
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
           python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
       - name: Install python dependencies
         uses: ./.github/actions/conda_installation
         with:

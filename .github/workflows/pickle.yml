@@ -19,18 +19,27 @@ jobs:
     name: Deploy tests
 
     steps:
+      - run: |
+          echo "${{ inputs.python-version }}"
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: 3.7
+        if: inputs.python_version == ''
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
         run: |
           python -m pip install --upgrade pip
+          echo "python -m pip install ${{ inputs.editable_string }} ."
           python -m pip install ${{ inputs.editable_string }} .
         shell: bash
       - name: Check for existence of pickled files
