@@ -22,7 +22,7 @@ untested, file_contents = cov.get_untested_lines(args.coverageFile)
 
 new_untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
 
-cov.print_markdown_summary(new_untested, file_contents, commit, args.output)
+cov.print_markdown_summary(new_untested, file_contents, args.commit, args.output)
 
 cov.show_results(new_untested)
 
