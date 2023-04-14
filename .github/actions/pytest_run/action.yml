@@ -28,8 +28,6 @@ runs:
         df -h
         pyccel-clean
         df -h
-        pyclean -v .
-        df -h
         du -sh *
         python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays epyccel
         du -sh *
@@ -41,16 +39,13 @@ runs:
         df -h
         pyccel-clean
         df -h
-        pyclean -v .
         python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
         df -h
         pyccel-clean
         df -h
-        pyclean -v .
         python -m pytest ndarrays/ -rXx
         df -h
         pyccel-clean
         df -h
-        pyclean -v .
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
