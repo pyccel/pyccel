@@ -4,7 +4,7 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types
 
 RTOL = 2e-14
@@ -16,7 +16,7 @@ def test_func_no_args_1(language):
         gift = 10
         return gift
 
-    c_gift = epyccel(free_gift, language=language)
+    c_gift = run_epyccel(free_gift, language=language)
     assert c_gift() == free_gift()
     assert isinstance(c_gift(), type(free_gift()))
     unexpected_arg = 0
@@ -29,7 +29,7 @@ def test_func_no_args_2(language):
         lose = -10
         return lose
 
-    c_lose = epyccel(p_lose, language=language)
+    c_lose = run_epyccel(p_lose, language=language)
     assert c_lose() == p_lose()
     assert isinstance(c_lose(), type(p_lose()))
     unexpected_arg = 0
@@ -42,7 +42,7 @@ def test_func_no_return_1(language):
     def p_func(x):
         x *= 2
 
-    c_func = epyccel(p_func, language=language)
+    c_func = run_epyccel(p_func, language=language)
     x = np.random.randint(100)
     assert c_func(x) == p_func(x)
     # Test type return sould be NoneType
@@ -55,7 +55,7 @@ def test_func_no_return_2(language):
         x = 2
         x *= 2
 
-    c_func = epyccel(p_func, language=language)
+    c_func = run_epyccel(p_func, language=language)
     assert c_func() == p_func()
     assert isinstance(c_func(), type(p_func()))
     unexpected_arg = 0
@@ -68,7 +68,7 @@ def test_func_no_args_f1(language):
         value = (2*pi)**(3/2)
         return value
 
-    f = epyccel(f1, language=language)
+    f = run_epyccel(f1, language=language)
     assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
 def test_func_return_constant(language):
@@ -76,7 +76,7 @@ def test_func_return_constant(language):
         from numpy import pi
         return pi
 
-    f = epyccel(f1, language=language)
+    f = run_epyccel(f1, language=language)
     assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
 
 #------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ def test_decorator_f1(language):
         y = x - 1
         return y
 
-    f = epyccel(f1, language=language)
+    f = run_epyccel(f1, language=language)
 
     # ...
     assert f(3) == f1(3)
@@ -99,7 +99,7 @@ def test_decorator_f2(language):
         y = x[0] - 1
         return y
 
-    f = epyccel(f2, language=language)
+    f = run_epyccel(f2, language=language)
 
     # ...
     x = np.array([3, 4, 5, 6], dtype=int)
@@ -120,7 +120,7 @@ def test_decorator_f3(language):
         y[:] = x - 1
         return y
 
-    f = epyccel(f3, language=language)
+    f = run_epyccel(f3, language=language)
     x = np.array([3, 4, 5, 6], dtype=int)
     assert np.all(f(x) == f3(x))
 
@@ -133,7 +133,7 @@ def test_decorator_f4(language):
         y[:] = x - 1.0
         return y
 
-    f = epyccel(f4, language=language)
+    f = run_epyccel(f4, language=language)
     x = np.array([[3, 4, 5, 6],[3, 4, 5, 6]], dtype=float)
     assert np.all(f(x) == f4(x))
 
@@ -145,7 +145,7 @@ def test_decorator_f5(language):
         for i in range(0, m1):
             x[i] = i * 1.
 
-    f = epyccel(f5, language=language)
+    f = run_epyccel(f5, language=language)
 
     # ...
     m1 = 3
@@ -168,7 +168,7 @@ def test_decorator_f6(language):
             for j in range(0, m2):
                 x[i,j] = (2*i+j) * 1.
 
-    f = epyccel(f6_1, language=language)
+    f = run_epyccel(f6_1, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -194,7 +194,7 @@ def test_decorator_f7(language):
             for j in range(0, m2):
                 x[i,j] = (2*i+j) * 1.
 
-    f = epyccel(f7, language=language)
+    f = run_epyccel(f7, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -214,7 +214,7 @@ def test_decorator_f8(language):
         a = x if b else 2
         return a
 
-    f = epyccel(f8, language=language)
+    f = run_epyccel(f8, language=language)
 
     # ...
     assert f(3,True)  == f8(3,True)
@@ -227,7 +227,7 @@ def test_arguments_f9(language):
     def f9(x):
         x += 1
 
-    f = epyccel(f9, language = language)
+    f = run_epyccel(f9, language = language)
 
     x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
@@ -241,7 +241,7 @@ def test_arguments_f10(language):
     def f10(x):
         x[:] += 1
 
-    f = epyccel(f10, language = language)
+    f = run_epyccel(f10, language = language)
 
     x = np.zeros(10, dtype='int64')
     x_expected = x.copy()
@@ -260,7 +260,7 @@ def test_multiple_returns_f11(language):
         else:
             return ackermann(m - 1, ackermann(m, n - 1))
 
-    f = epyccel(ackermann, language=language)
+    f = run_epyccel(ackermann, language=language)
     assert f(2,3) == ackermann(2,3)
 
 def test_multiple_returns_f12(language):
@@ -271,7 +271,7 @@ def test_multiple_returns_f12(language):
         else:
             return True
 
-    f = epyccel(non_negative, language=language)
+    f = run_epyccel(non_negative, language=language)
     assert f(2) == non_negative(2)
     assert f(-1) == non_negative(-1)
 
@@ -283,7 +283,7 @@ def test_multiple_returns_f13(language):
         else:
             return b
 
-    f = epyccel(get_min, language=language)
+    f = run_epyccel(get_min, language=language)
     assert f(2,3) == get_min(2,3)
 
 def test_multiple_returns_f14(language):
@@ -291,7 +291,7 @@ def test_multiple_returns_f14(language):
     def g(x, y):
         return x,y,y,y,x
 
-    f = epyccel(g, language=language)
+    f = run_epyccel(g, language=language)
     assert f(2,1) == g(2,1)
 
 
@@ -304,7 +304,7 @@ def test_decorator_f15(language):
         else:
             return d + e
 
-    f = epyccel(f15, language=language)
+    f = run_epyccel(f15, language=language)
     assert f(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
            f15(True, np.int8(1), np.int16(2), np.int32(3), np.int64(4))
     assert f(False, np.int8(1), np.int16(2), np.int32(3), np.int64(4)) == \
@@ -316,7 +316,7 @@ def test_decorator_f16(language):
     def f16(a):
         b = a
         return b
-    f = epyccel(f16, language=language)
+    f = run_epyccel(f16, language=language)
     assert f(np.int16(17)) == f16(np.int16(17))
 
 def test_decorator_f17(language):
@@ -324,7 +324,7 @@ def test_decorator_f17(language):
     def f17(a):
         b = a
         return b
-    f = epyccel(f17, language=language)
+    f = run_epyccel(f17, language=language)
     assert f(np.int8(2)) == f17(np.int8(2))
 
 def test_decorator_f18(language):
@@ -332,7 +332,7 @@ def test_decorator_f18(language):
     def f18(a):
         b = a
         return b
-    f = epyccel(f18, language=language)
+    f = run_epyccel(f18, language=language)
     assert f(np.int32(5)) == f18(np.int32(5))
 
 def test_decorator_f19(language):
@@ -340,7 +340,7 @@ def test_decorator_f19(language):
     def f19(a):
         b = a
         return b
-    f = epyccel(f19, language=language)
+    f = run_epyccel(f19, language=language)
     assert f(np.int64(1)) == f19(np.int64(1))
 
 def test_decorator_f20(language):
@@ -348,7 +348,7 @@ def test_decorator_f20(language):
     def f20(a):
         b = a
         return b
-    f = epyccel(f20, language=language)
+    f = run_epyccel(f20, language=language)
     assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
 def test_decorator_f21(language):
@@ -356,7 +356,7 @@ def test_decorator_f21(language):
     def f21(a):
         b = a
         return b
-    f = epyccel(f21, language=language)
+    f = run_epyccel(f21, language=language)
     assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
 def test_decorator_f22(language):
@@ -364,12 +364,12 @@ def test_decorator_f22(language):
     def f22(a):
         b = a
         return b
-    f = epyccel(f22, language=language)
+    f = run_epyccel(f22, language=language)
     assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================
-#
-#def teardown_module():
-#    clean_test()
+
+def teardown_module(module):
+    clean_test()
