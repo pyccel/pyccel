@@ -54,14 +54,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  test:
-    needs: Bot
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-          echo "${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}"
-          echo "${{ needs.Bot.outputs.python_version == '' }}"
-
   linux:
     needs: Bot
     if: ${{ needs.Bot.outputs.run_linux == 'True' }}

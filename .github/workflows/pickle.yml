@@ -19,6 +19,8 @@ jobs:
     name: Deploy tests
 
     steps:
+      - run: |
+          echo "${{ inputs.python-version }}"
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
