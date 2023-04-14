@@ -29,6 +29,7 @@ jobs:
       run_windows_anaconda: ${{ steps.run_bot.outputs.run_windows_anaconda }}
       BASE: ${{ steps.run_bot.outputs.BASE }}
       REF: ${{ steps.run_bot.outputs.REF }}
+      SHA: ${{ steps.run_bot.outputs.SHA }}
       status_url: ${{ steps.run_bot.outputs.status_url }}
       cleanup_trigger: ${{ steps.run_bot.outputs.cleanup_trigger }}
       python_version: ${{ steps.run_bot.outputs.python_version }}
@@ -87,8 +88,9 @@ jobs:
       ./.github/workflows/coverage.yml
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
-      base: ${{ github.base_ref }}
+      sha: ${{ needs.Bot.outputs.SHA }}
 
   docs:
     needs: Bot
