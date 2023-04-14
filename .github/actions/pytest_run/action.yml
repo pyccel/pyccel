@@ -16,7 +16,9 @@ runs:
     - name: Test with pytest
       run: |
         which python
+        df -h
         python -m pytest -n auto -xv -rXx -v -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
