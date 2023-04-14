@@ -29,6 +29,7 @@ jobs:
       run_windows_anaconda: ${{ steps.run_bot.outputs.run_windows_anaconda }}
       BASE: ${{ steps.run_bot.outputs.BASE }}
       REF: ${{ steps.run_bot.outputs.REF }}
+      SHA: ${{ steps.run_bot.outputs.SHA }}
       status_url: ${{ steps.run_bot.outputs.status_url }}
       cleanup_trigger: ${{ steps.run_bot.outputs.cleanup_trigger }}
       python_version: ${{ steps.run_bot.outputs.python_version }}
@@ -59,8 +60,8 @@ jobs:
     uses:
       ./.github/workflows/linux.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
-      ref: ${{ needs.Bot.outputs.REF}}
+      python_version: ${{ needs.Bot.outputs.python_version }}
+      ref: ${{ needs.Bot.outputs.REF }}
 
   windows:
     needs: Bot
@@ -68,7 +69,7 @@ jobs:
     uses:
       ./.github/workflows/windows.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   macosx:
@@ -77,17 +78,19 @@ jobs:
     uses:
       ./.github/workflows/macosx.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   coverage:
-    needs: [Bot, Linux]
+    needs: [Bot, linux]
     if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
     uses:
       ./.github/workflows/coverage.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
+      base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
+      sha: ${{ needs.Bot.outputs.SHA }}
 
   docs:
     needs: Bot
@@ -95,7 +98,7 @@ jobs:
     uses:
       ./.github/workflows/doc_coverage.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -105,7 +108,7 @@ jobs:
     uses:
       ./.github/workflows/lint.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   lint:
@@ -114,7 +117,7 @@ jobs:
     uses:
       ./.github/workflows/pyccel_lint.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   spelling:
@@ -123,7 +126,7 @@ jobs:
     uses:
       ./.github/workflows/spelling.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.8' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   pickle:
@@ -132,7 +135,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   editable_pickle:
@@ -141,7 +144,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       editable_string: '-e'
       ref: ${{ needs.Bot.outputs.REF }}
 
@@ -151,7 +154,7 @@ jobs:
     uses:
       ./.github/workflows/pickle_wheel.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
 
@@ -161,7 +164,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_linux.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   windows_anaconda:
@@ -170,7 +173,7 @@ jobs:
     uses:
       ./.github/workflows/anaconda_windows.yml
     with:
-      python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.10' || needs.Bot.outputs.python_version  }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   CleanUpBot:
