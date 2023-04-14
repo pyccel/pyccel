@@ -6,7 +6,7 @@ from numpy import isclose, iinfo, finfo
 import numpy as np
 
 from pyccel.decorators import types, template
-from ..pytest_teardown_tools import run_epyccel, clean_test
+from pytest_teardown_tools import run_epyccel, clean_test
 
 min_int8 = iinfo('int8').min
 max_int8 = iinfo('int8').max

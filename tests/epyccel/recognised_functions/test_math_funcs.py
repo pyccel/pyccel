@@ -4,7 +4,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
-from ..pytest_teardown_tools import run_epyccel, clean_test
+from pytest_teardown_tools import run_epyccel, clean_test
 
 import sys
 

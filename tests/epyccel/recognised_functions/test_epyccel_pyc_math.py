@@ -5,7 +5,7 @@ from numpy.random import randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
-from ..pytest_teardown_tools import run_epyccel, clean_test
+from pytest_teardown_tools import run_epyccel, clean_test
 
 RTOL = 2e-14
 ATOL = 1e-15
