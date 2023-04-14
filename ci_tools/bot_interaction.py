@@ -392,6 +392,7 @@ if __name__ == '__main__':
         pr_id = event['issue']['number']
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        print("Trust level : ", event['comment']['author_association'])
         if not trusted_user:
             trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
 
@@ -403,16 +404,22 @@ if __name__ == '__main__':
             if trusted_user:
                 outputs['cleanup_trigger'] = 'update_test_information'
                 run_tests(pr_id, command_words[1:], outputs, event)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command_words[0] == 'try':
             if trusted_user:
                 outputs['python_version'] = command_words[1]
                 outputs['cleanup_trigger'] = 'update_test_information'
                 run_tests(pr_id, command_words[2:], outputs, event)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command == 'mark as ready':
             if trusted_user:
                 start_review_check(pr_id, event, outputs)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
@@ -488,6 +495,8 @@ if __name__ == '__main__':
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
+        else:
+            leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
     else:
         pr_id = None
@@ -503,3 +512,4 @@ if __name__ == '__main__':
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
             print(f"{o}={v}", file=out_file)
+            print(f"{o}={v}")
