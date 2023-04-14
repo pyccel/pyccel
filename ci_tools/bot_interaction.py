@@ -394,6 +394,7 @@ if __name__ == '__main__':
         pr_id = event['issue']['number']
 
         trusted_user = event['comment']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        print("Trust level : ", event['comment']['author_association'])
         if not trusted_user:
             trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
 
