@@ -498,8 +498,10 @@ if __name__ == '__main__':
         pr_id = None
 
     if pr_id is not None:
-        outputs['BASE'] = get_status_json(pr_id, 'baseRefName')
+        status = get_status_json(pr_id, 'baseRefName,headRefOid')
+        outputs['BASE'] = status['baseRefName']
         outputs['REF'] = f'refs/pull/{pr_id}/merge'
+        outputs['SHA'] = status['headRefOid']
 
     # Print the output to the file described by $GITHUB_OUTPUT to create outputs
     # as described here : https://docs.github.com/en/actions/using-workflows/workflow-commands-for-github-actions#setting-an-output-parameter
