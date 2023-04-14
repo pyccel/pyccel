@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #from expressions import ai
 #xi = ai + 1
 #
@@ -6,7 +6,7 @@
 #xd = ad * bd
 xi = 2
 
-from functions import decr
+from decorators_types import decr
 yi = decr(xi)
 
 from classes import Point

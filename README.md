@@ -1,6 +1,6 @@
 # Welcome to Pyccel
 
- [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade)
+ [![master_tests](https://github.com/pyccel/pyccel/actions/workflows/master.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/master.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991)
 
 **Pyccel** stands for Python extension language using accelerators.
 
@@ -347,4 +347,7 @@ Alternatively you may have docker or podman set the context using `-v $PWD:/data
 -   [Overview](./developer_docs/overview.md)
 -   [How to solve an issue](./developer_docs/how_to_solve_an_issue.md)
 -   [Review Process](./developer_docs/review_process.md)
+-   [Development Conventions](./developer_docs/development_conventions.md)
 -   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
+-   [Scope](./developer_docs/scope.md)
+-   [Array Ordering](./developer_docs/order_docs.md)

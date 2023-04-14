@@ -99,8 +99,7 @@ disable=invalid-name,
         redundant-keyword-arg,
         duplicate-code,
         unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
-        isinstance-second-argument-not-valid-type, # prevents doing isinstance(a, acceptable_iterable_types)
-        django-not-configured
+        isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
         
 
 # Enable the message, report, category or checker with the given id(s). You can
@@ -406,7 +405,7 @@ name-group=
 
 # Regular expression which should only match function or class names that do
 # not require a docstring.
-no-docstring-rgx=^_
+no-docstring-rgx=^(_visit_)|(_print_)
 
 # List of decorators that produce properties, such as abc.abstractproperty. Add
 # to this list to register other decorators that produce valid properties.
@@ -547,5 +546,5 @@ valid-metaclass-classmethod-first-arg=cls
 
 # Exceptions that will emit a warning when being caught. Defaults to
 # "BaseException, Exception".
-overgeneral-exceptions=BaseException,
-                       Exception
+overgeneral-exceptions=builtins.BaseException,
+                       builtins.Exception

@@ -1,0 +1,44 @@
+name: Anaconda-Linux
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  Anaconda-Linux:
+    runs-on: ubuntu-latest
+    name: Unit tests
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
+          python-version: ${{ inputs.python_version }}
+      - name: Install python dependencies
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: openmpi
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
+        with:
+          shell_cmd: "bash -l {0}"
+      - name: Python tests with pytest
+        uses: ./.github/actions/pytest_run_python
+        with:
+          shell_cmd: "bash -l {0}"
+      - name: Parallel tests with pytest
+        uses: ./.github/actions/pytest_parallel
+        with:
+          shell_cmd: "bash -l {0}"

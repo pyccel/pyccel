@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 def array_int32_1d_scalar_add( x:'int32[:]', a:'int32' ):
     x[:] += a

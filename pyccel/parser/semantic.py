@@ -7,8 +7,6 @@
 See the developer docs for more details
 """
 
-# pylint: disable=missing-function-docstring
-
 from itertools import chain
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -170,16 +168,36 @@ def _get_name(var):
 #==============================================================================
 
 class SemanticParser(BasicParser):
+    """
+    Class which handles the semantic stage as described in the developer docs.
 
-    """ Class for a Semantic Parser.
-    It takes a syntactic parser as input for the moment"""
+    This class is described in detail in developer_docs/semantic_stage.md.
+    It determines all semantic information which must be deduced in order to
+    print a representation of the AST resulting from the syntactic stage in one
+    of the target languages.
 
-    def __init__(self, inputs, **kwargs):
+    Parameters
+    ----------
+    inputs : SyntaxParser
+        A syntactic parser which has been used to generate a representation of
+        the input code using Pyccel nodes.
+
+    parents : list
+        A list of parsers describing the files which import this file.
+
+    d_parsers : list
+        A list of parsers describing files imported by this file.
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser.
+    """
+
+    def __init__(self, inputs, *, parents = (), d_parsers = (), **kwargs):
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._parents = kwargs.pop('parents', [])
-        self._d_parsers = kwargs.pop('d_parsers', {})
+        self._parents = list(parents)
+        self._d_parsers = dict(d_parsers)
 
         # ...
         if not isinstance(inputs, SyntaxParser):
@@ -234,6 +252,18 @@ class SemanticParser(BasicParser):
 
     @property
     def program_namespace(self):
+        """
+        Get the namespace relevant to the program.
+
+        Get the namespace which describes the section of
+        code which is executed as a program. In other words
+        the code inside an `if __name__ == '__main__':`
+        block.
+
+        Returns
+        -------
+        Scope : The program namespace.
+        """
         return self._program_namespace
 
     #================================================================
@@ -275,11 +305,26 @@ class SemanticParser(BasicParser):
     #================================================================
 
     def change_to_program_scope(self):
+        """
+        Switch the focus to the program scope.
+
+        Update the namespace variable so that it points at the
+        program namespace (which describes the scope inside
+        a `if __name__ == '__main__':` block). It is assumed that
+        the current namespace is the module namespace.
+        """
         self._allocs.append([])
         self._module_namespace = self.scope
         self.scope = self._program_namespace
 
     def change_to_module_scope(self):
+        """
+        Switch the focus to the module scope.
+
+        Update the namespace variable so that it points
+        at the module namespace. It is assumed that the
+        current namespace is the program namespace.
+        """
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
@@ -315,6 +360,21 @@ class SemanticParser(BasicParser):
         return var
 
     def get_variables(self, container):
+        """
+        Get all variables in the scope of interest.
+
+        Get a list of all variables which are
+
+        Parameters
+        ----------
+        container : Scope
+            The object describing the relevant scope.
+
+        Returns
+        -------
+        list
+            A list of variables.
+        """
         # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
         variables = []
@@ -694,17 +754,34 @@ class SemanticParser(BasicParser):
                 return PythonTuple(*(val.args*length))
 
     def _handle_function_args(self, arguments, **settings):
+        """
+        Get a list of all function arguments.
+
+        Get a list of all the function arguments which are passed
+        to a function. This is done by visiting the syntactic
+        FunctionCallArguments. If this argument contains a
+        starred arguments object then the contents of this object
+        are extracted into the final list.
+
+        Parameters
+        ----------
+        arguments : list of FunctionCallArgument
+            The arguments which were passed to the function.
+
+        **settings : dict
+            Any settings to be passed to the `_visit` function.
+
+        Returns
+        -------
+        list of FunctionCallArgument
+            The arguments passed to the function.
+        """
         args  = []
         for arg in arguments:
             a = self._visit(arg, **settings)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
-                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
-                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
-                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
-                    self._additional_exprs[-1].append(assign)
-                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
@@ -1666,7 +1743,13 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCallArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
-        return FunctionCallArgument(value, expr.keyword)
+        a = FunctionCallArgument(value, expr.keyword)
+        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+            tmp_var = self.scope.get_new_name()
+            assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
+            self._additional_exprs[-1].append(assign)
+            a = FunctionCallArgument(self._visit(tmp_var))
+        return a
 
     def _visit_FunctionDefArgument(self, expr, **settings):
         var   = self._visit(expr.var, **settings)
@@ -3127,6 +3210,7 @@ class SemanticParser(BasicParser):
 
         for i, m in enumerate(interfaces):
             args           = []
+            arg_vars       = []
             results        = []
             global_vars    = []
             imports        = []
@@ -3151,7 +3235,6 @@ class SemanticParser(BasicParser):
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
-                    additional_args = []
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
@@ -3192,10 +3275,8 @@ class SemanticParser(BasicParser):
                                 kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
-                    if additional_args:
-                        args += additional_args
-
                     args.append(arg_new)
+                    arg_vars.append(a_new)
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
@@ -3264,9 +3345,6 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            # ... computing inout arguments
-            args_inout = [False] * len(args)
-
             results_names = [i.name for i in results]
 
             # Find all nodes which can modify variables
@@ -3275,50 +3353,23 @@ class SemanticParser(BasicParser):
 
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [func_arg for f in calls
-                                for func_arg, inout in zip(f.args,f.funcdef.arguments_inout) if inout]
+            modified_args = [call_arg.value for f in calls
+                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
-            permanent_assign = [a.name for a in all_assigned if a.rank > 0]
-            local_assign     = [i.name for i in all_assigned]
-
-            apps = [i for i in calls if (i.funcdef.name
-                    not in sub_funcs)]
-
-            d_apps = {a: [] for a in args}
-            for f in apps:
-                a_args = set(f.args) & set(args)
-                for a in a_args:
-                    d_apps[a].append(f)
-
-            for i, a in enumerate(args):
-                if a.name in chain(results_names, permanent_assign, ['self']):
-                    args_inout[i] = True
-
-                if d_apps[a] and not( args_inout[i] ):
-                    intent = False
-                    n_fa = len(d_apps[a])
-                    i_fa = 0
-                    while not(intent) and i_fa < n_fa:
-                        fa = d_apps[a][i_fa]
-                        f_name = fa.funcdef.name
-                        func = self.scope.find(f_name, 'functions')
-
-                        j = list(fa.args).index(a)
-                        intent = func.arguments_inout[j]
-                        if intent:
-                            args_inout[i] = True
-
-                        i_fa += 1
-                if isinstance(a.var, Variable):
+            # ... computing inout arguments
+            for a in args:
+                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
                     v = a.var
-                    if v.is_const and (args_inout[i] or (v.name in local_assign)):
+                    if isinstance(v, Variable) and v.is_const:
                         msg = f"Cannot modify 'const' argument ({v})"
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal')
+                else:
+                    a.make_const()
             # ...
 
             # Raise an error if one of the return arguments is an alias.
@@ -3337,7 +3388,6 @@ class SemanticParser(BasicParser):
                     'imports':imports,
                     'decorators':decorators,
                     'is_recursive':is_recursive,
-                    'arguments_inout':args_inout,
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
                     'doc_string': doc_string,

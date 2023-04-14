@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
 from numpy.random import randint
@@ -90,14 +90,6 @@ def test_complex_conjugate64(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.c,
-        pytest.mark.xfail(reason="sum not implemented in c")]
-    ),
-    pytest.param("python", marks = pytest.mark.python)
-))
 def test_ndarray_var_from_expr(language):
     def f(x : 'int[:]', y : 'int[:]'):
         z = x + y
@@ -114,14 +106,6 @@ def test_ndarray_var_from_expr(language):
 
     assert r == epyc_r
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.c,
-        pytest.mark.xfail(reason="sum not implemented in c")]
-    ),
-    pytest.param("python", marks = pytest.mark.python)
-))
 def test_ndarray_var_from_slice(language):
     def f(x : 'int[:]'):
         z = x[1:]

@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types, pure
 
 __all__ = [
@@ -58,6 +58,7 @@ __all__ = [
         'tuple_variable_slice',
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
+        'tuple_index',
         ]
 
 def homogenous_tuple_int():
@@ -383,3 +384,7 @@ def tuple_negative_slice():
 def inhomogeneous_tuple_negative_slice():
     a,b = (1,False,3)[:-1]
     return a,b
+
+def tuple_index():
+    a = (1,2,3,False)[2]
+    return a
