@@ -309,10 +309,8 @@ def flagged_as_trusted(pr_id, user):
     bool : True if trustworthy, false otherwise.
     """
     trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
-    print(trusted_comments)
     for c in trusted_comments:
         words = c.body.strip().split()
-        print(words)
         if words == ['/bot', 'trust', 'user', user]:
             return True
 
@@ -400,7 +398,6 @@ if __name__ == '__main__':
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
         command_words = command.split()
-        print(command_words)
 
         if command_words[0] == 'run':
             if trusted_user:
@@ -440,10 +437,8 @@ if __name__ == '__main__':
 
         # Check whether user is new and/or trusted
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
-        print(event['pull_request']['author_association'])
         if trusted_user:
             prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['user']['login'])
-            print(prs)
             new_user = (len(prs) == 0)
         else:
             new_user = True
