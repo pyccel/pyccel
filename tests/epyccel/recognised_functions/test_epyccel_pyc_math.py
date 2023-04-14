@@ -4,8 +4,8 @@ import pytest
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from ..pytest_teardown_tools import run_epyccel, clean_test
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -18,7 +18,7 @@ def test_call_gcd(language):
         from math import gcd
         return gcd(x, y)
 
-    f = epyccel(call_gcd, language=language)
+    f = run_epyccel(call_gcd, language=language)
     x = randint(1e9)
     y = randint(1e9)
 
@@ -32,7 +32,7 @@ def test_call_factorial(language):
         from math import factorial
         return factorial(x)
 
-    f = epyccel(call_factorial, language=language)
+    f = run_epyccel(call_factorial, language=language)
     x = randint(10)
 
     assert(f(x) == call_factorial(x))
@@ -47,7 +47,7 @@ def test_call_lcm(language):
         from math import lcm
         return lcm(x, y)
 
-    f = epyccel(call_lcm, language=language)
+    f = run_epyccel(call_lcm, language=language)
     x = randint(1e4)
     y = randint(1e5)
 
@@ -61,7 +61,7 @@ def test_call_radians(language):
         from math import radians
         return radians(x)
 
-    f = epyccel(call_radians, language=language)
+    f = run_epyccel(call_radians, language=language)
     x = uniform(low=0.0, high=1e6)
 
     assert isclose(f(x), call_radians(x), rtol=RTOL, atol=ATOL)
@@ -75,7 +75,7 @@ def test_call_degrees(language):
         from math import degrees
         return degrees(x)
 
-    f = epyccel(call_degrees, language=language)
+    f = run_epyccel(call_degrees, language=language)
     x = uniform(low=0.0, high=1e6)
 
     assert isclose(f(x), call_degrees(x), rtol=RTOL, atol=ATOL)
@@ -88,10 +88,17 @@ def test_call_degrees_i(language):
         from math import degrees
         return degrees(x)
 
-    f = epyccel(call_degrees_i, language=language)
+    f = run_epyccel(call_degrees_i, language=language)
     x = randint(1e6)
 
     assert isclose(f(x), call_degrees_i(x), rtol=RTOL, atol=ATOL)
     assert isclose(f(-x), call_degrees_i(-x), rtol=RTOL, atol=ATOL)
 
 # -----------------------------------------------------------------------------
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

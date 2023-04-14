@@ -4,7 +4,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.decorators import types
-from pyccel.epyccel import epyccel
+from ..pytest_teardown_tools import run_epyccel, clean_test
 
 import sys
 
@@ -20,7 +20,7 @@ def test_fabs_call(language):
         from math import fabs
         return fabs(x)
 
-    f1 = epyccel(fabs_call, language = language)
+    f1 = run_epyccel(fabs_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  fabs_call(x), rtol=RTOL, atol=ATOL))
 
@@ -31,7 +31,7 @@ def test_fabs_phrase(language):
         a = fabs(x)*fabs(y)
         return a
 
-    f2 = epyccel(fabs_phrase, language = language)
+    f2 = run_epyccel(fabs_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -43,7 +43,7 @@ def test_fabs_return_type(language):
         a = fabs(x)
         return a
 
-    f1 = epyccel(fabs_return_type, language = language)
+    f1 = run_epyccel(fabs_return_type, language = language)
     x = randint(100)
     assert(isclose(f1(x) ,  fabs_return_type(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x))  == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
@@ -54,7 +54,7 @@ def test_sqrt_call(language):
         from math import sqrt
         return sqrt(x)
 
-    f1 = epyccel(sqrt_call, language = language)
+    f1 = run_epyccel(sqrt_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL))
 
@@ -65,7 +65,7 @@ def test_sqrt_phrase(language):
         a = sqrt(x)*sqrt(y)
         return a
 
-    f2 = epyccel(sqrt_phrase, language = language)
+    f2 = run_epyccel(sqrt_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  sqrt_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -77,7 +77,7 @@ def test_sqrt_return_type(language):
         a = sqrt(x)
         return a
 
-    f1 = epyccel(sqrt_return_type_real, language = language)
+    f1 = run_epyccel(sqrt_return_type_real, language = language)
     x = rand()
     assert(isclose(f1(x) ,  sqrt_return_type_real(x), rtol=RTOL, atol=ATOL))
     assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
@@ -88,7 +88,7 @@ def test_sin_call(language):
         from math import sin
         return sin(x)
 
-    f1 = epyccel(sin_call, language = language)
+    f1 = run_epyccel(sin_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  sin_call(x), rtol=RTOL, atol=ATOL))
 
@@ -99,7 +99,7 @@ def test_sin_phrase(language):
         a = sin(x)+sin(y)
         return a
 
-    f2 = epyccel(sin_phrase, language = language)
+    f2 = run_epyccel(sin_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  sin_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -110,7 +110,7 @@ def test_cos_call(language):
         from math import cos
         return cos(x)
 
-    f1 = epyccel(cos_call, language = language)
+    f1 = run_epyccel(cos_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  cos_call(x), rtol=RTOL, atol=ATOL))
 
@@ -121,7 +121,7 @@ def test_cos_phrase(language):
         a = cos(x)+cos(y)
         return a
 
-    f2 = epyccel(cos_phrase, language = language)
+    f2 = run_epyccel(cos_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  cos_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -133,7 +133,7 @@ def test_tan_call(language):
         from math import tan
         return tan(x)
 
-    f1 = epyccel(tan_call, language = language)
+    f1 = run_epyccel(tan_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  tan_call(x), rtol=RTOL, atol=ATOL))
 
@@ -145,7 +145,7 @@ def test_tan_phrase(language):
         a = tan(x)+tan(y)
         return a
 
-    f2 = epyccel(tan_phrase, language = language)
+    f2 = run_epyccel(tan_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  tan_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -156,7 +156,7 @@ def test_exp_call(language):
         from math import exp
         return exp(x)
 
-    f1 = epyccel(exp_call, language = language)
+    f1 = run_epyccel(exp_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  exp_call(x), rtol=RTOL, atol=ATOL))
 
@@ -167,7 +167,7 @@ def test_exp_phrase(language):
         a = exp(x)+exp(y)
         return a
 
-    f2 = epyccel(exp_phrase, language = language)
+    f2 = run_epyccel(exp_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  exp_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -178,7 +178,7 @@ def test_log_call(language):
         from math import log
         return log(x)
 
-    f1 = epyccel(log_call, language = language)
+    f1 = run_epyccel(log_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  log_call(x), rtol=RTOL, atol=ATOL))
 
@@ -189,7 +189,7 @@ def test_log_phrase(language):
         a = log(x)+log(y)
         return a
 
-    f2 = epyccel(log_phrase, language = language)
+    f2 = run_epyccel(log_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  log_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -200,7 +200,7 @@ def test_asin_call(language):
         from math import asin
         return asin(x)
 
-    f1 = epyccel(asin_call, language = language)
+    f1 = run_epyccel(asin_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  asin_call(x), rtol=RTOL, atol=ATOL))
 
@@ -211,7 +211,7 @@ def test_asin_phrase(language):
         a = asin(x)+asin(y)
         return a
 
-    f2 = epyccel(asin_phrase, language = language)
+    f2 = run_epyccel(asin_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  asin_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -222,7 +222,7 @@ def test_acos_call(language):
         from math import acos
         return acos(x)
 
-    f1 = epyccel(acos_call, language = language)
+    f1 = run_epyccel(acos_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  acos_call(x), rtol=RTOL, atol=ATOL))
 
@@ -233,7 +233,7 @@ def test_acos_phrase(language):
         a = acos(x)+acos(y)
         return a
 
-    f2 = epyccel(acos_phrase, language = language)
+    f2 = run_epyccel(acos_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  acos_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -244,7 +244,7 @@ def test_atan_call(language):
         from math import atan
         return atan(x)
 
-    f1 = epyccel(atan_call, language = language)
+    f1 = run_epyccel(atan_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  atan_call(x), rtol=RTOL, atol=ATOL))
 
@@ -255,7 +255,7 @@ def test_atan_phrase(language):
         a = atan(x)+atan(y)
         return a
 
-    f2 = epyccel(atan_phrase, language = language)
+    f2 = run_epyccel(atan_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  atan_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -266,7 +266,7 @@ def test_sinh_call(language):
         from math import sinh
         return sinh(x)
 
-    f1 = epyccel(sinh_call, language = language)
+    f1 = run_epyccel(sinh_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  sinh_call(x), rtol=RTOL, atol=ATOL))
 
@@ -277,7 +277,7 @@ def test_sinh_phrase(language):
         a = sinh(x)+sinh(y)
         return a
 
-    f2 = epyccel(sinh_phrase, language = language)
+    f2 = run_epyccel(sinh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  sinh_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -288,7 +288,7 @@ def test_cosh_call(language):
         from math import cosh
         return cosh(x)
 
-    f1 = epyccel(cosh_call, language = language)
+    f1 = run_epyccel(cosh_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  cosh_call(x), rtol=RTOL, atol=ATOL))
 
@@ -299,7 +299,7 @@ def test_cosh_phrase(language):
         a = cosh(x)+cosh(y)
         return a
 
-    f2 = epyccel(cosh_phrase, language = language)
+    f2 = run_epyccel(cosh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  cosh_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -310,7 +310,7 @@ def test_tanh_call(language):
         from math import tanh
         return tanh(x)
 
-    f1 = epyccel(tanh_call, language = language)
+    f1 = run_epyccel(tanh_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  tanh_call(x), rtol=RTOL, atol=ATOL))
 
@@ -321,7 +321,7 @@ def test_tanh_phrase(language):
         a = tanh(x)+tanh(y)
         return a
 
-    f2 = epyccel(tanh_phrase, language = language)
+    f2 = run_epyccel(tanh_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -332,7 +332,7 @@ def test_atan2_call(language):
         from math import atan2
         return atan2(x, y)
 
-    f1 = epyccel(atan2_call, language = language)
+    f1 = run_epyccel(atan2_call, language = language)
     x = rand()
     y = rand()
     assert(isclose(f1(x, y), atan2_call(x, y), rtol=RTOL, atol=ATOL))
@@ -344,7 +344,7 @@ def test_atan2_phrase(language):
         a = atan2(x, y)+atan2(y, z)
         return a
 
-    f2 = epyccel(atan2_phrase, language = language)
+    f2 = run_epyccel(atan2_phrase, language = language)
     x = rand()
     y = rand()
     z = rand()
@@ -358,7 +358,7 @@ def test_floor_call(language):
         return floor(x)
 
     fflags = "-Werror -Wconversion"
-    f1 = epyccel(floor_call, language = language, fflags=fflags)
+    f1 = run_epyccel(floor_call, language = language, fflags=fflags)
     x = rand()
     assert(isclose(f1(x) ,  floor_call(x), rtol=RTOL, atol=ATOL))
     assert(isclose(f1(-x) ,  floor_call(-x), rtol=RTOL, atol=ATOL))
@@ -371,7 +371,7 @@ def test_floor_phrase(language):
         return a
 
     fflags = "-Werror -Wconversion"
-    f2 = epyccel(floor_phrase, language = language, fflags=fflags)
+    f2 = run_epyccel(floor_phrase, language = language, fflags=fflags)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  floor_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -393,7 +393,7 @@ def test_floor_return_type(language):
         return a
 
     fflags = "-Werror -Wconversion"
-    f1 = epyccel(floor_return_type_int, language = language, fflags=fflags)
+    f1 = run_epyccel(floor_return_type_int, language = language, fflags=fflags)
 
     x = randint(100)
     assert(isclose(f1(x) ,  floor_return_type_int(x), rtol=RTOL, atol=ATOL))
@@ -401,7 +401,7 @@ def test_floor_return_type(language):
     assert(type(f1(x))  == type(floor_return_type_int(x))) # pylint: disable=unidiomatic-typecheck
 
     fflags = "-Werror -Wconversion"
-    f1 = epyccel(floor_return_type_real, language = language, fflags=fflags)
+    f1 = run_epyccel(floor_return_type_real, language = language, fflags=fflags)
 
     x = uniform(100)
     assert(isclose(f1(x) ,  floor_return_type_real(x), rtol=RTOL, atol=ATOL))
@@ -416,7 +416,7 @@ def test_ceil_call_r(language):
         return ceil(x)
 
     fflags = "-Werror -Wconversion"
-    f1 = epyccel(ceil_call, language = language, fflags=fflags)
+    f1 = run_epyccel(ceil_call, language = language, fflags=fflags)
 
     x = rand()
     assert(ceil_call(x) == f1(x))
@@ -431,7 +431,7 @@ def test_ceil_call_i(language):
         return ceil(x)
 
     fflags = "-Werror -Wconversion"
-    f1 = epyccel(ceil_call, language = language, fflags=fflags)
+    f1 = run_epyccel(ceil_call, language = language, fflags=fflags)
 
     x = randint(10)
     assert(ceil_call(x) == f1(x))
@@ -447,7 +447,7 @@ def test_ceil_phrase(language):
         return a
 
     fflags = "-Werror -Wconversion"
-    f2 = epyccel(ceil_phrase, language = language, fflags=fflags)
+    f2 = run_epyccel(ceil_phrase, language = language, fflags=fflags)
 
     x = rand()
     y = rand()
@@ -463,7 +463,7 @@ def test_copysign_call(language):
         from math import copysign
         return copysign(x, y)
 
-    f1 = epyccel(copysign_call, language = language)
+    f1 = run_epyccel(copysign_call, language = language)
     x = rand()
     y = rand()
     # Same sign
@@ -482,7 +482,7 @@ def test_copysign_call_zero_case(language):
         from math import copysign
         return copysign(x, y)
 
-    f1 = epyccel(copysign_zero_case, language = language)
+    f1 = run_epyccel(copysign_zero_case, language = language)
     x = 0
     y = 0
     # Same sign
@@ -500,7 +500,7 @@ def test_copysign_return_type_1(language): # copysign
         a = copysign(x, y)
         return a
 
-    f1 = epyccel(copysign_return_type, language = language)
+    f1 = run_epyccel(copysign_return_type, language = language)
     x = rand() # real
     y = rand() # real
 
@@ -519,7 +519,7 @@ def test_copysign_return_type_2(language): # copysign
         a = copysign(x, y)
         return a
 
-    f1 = epyccel(copysign_return_type, language = language)
+    f1 = run_epyccel(copysign_return_type, language = language)
     high = 10000000
     x = randint(high)   # int
     y = randint(high)   # int
@@ -539,7 +539,7 @@ def test_copysign_return_type_3(language): # copysign
         a = copysign(x, y)
         return a
 
-    f1 = epyccel(copysign_return_type, language = language)
+    f1 = run_epyccel(copysign_return_type, language = language)
     high = 10000000
     x = randint(high)   # int
     y = rand()          # real
@@ -559,7 +559,7 @@ def test_copysign_return_type_4(language): # copysign
         a = copysign(x, y)
         return a
 
-    f1 = epyccel(copysign_return_type, language = language)
+    f1 = run_epyccel(copysign_return_type, language = language)
     high = 10000000
     x = rand()          # real
     y = randint(high)   # int
@@ -587,7 +587,7 @@ def test_isfinite_call(language): # isfinite
         from math import isfinite
         return isfinite(x)
 
-    f1 = epyccel(isfinite_call, language = language)
+    f1 = run_epyccel(isfinite_call, language = language)
     x = rand()
 
     assert(isfinite_call(x) == f1(x))
@@ -615,7 +615,7 @@ def test_isinf_call(language): # isinf
         from math import isinf
         return isinf(x)
 
-    f1 = epyccel(isinf_call, language = language)
+    f1 = run_epyccel(isinf_call, language = language)
     x = rand()
 
     assert(isinf_call(x) == f1(x))
@@ -636,7 +636,7 @@ def test_isnan_call(language): # isnan
         from math import isnan
         return isnan(x)
 
-    f1 = epyccel(isnan_call, language = language)
+    f1 = run_epyccel(isnan_call, language = language)
     x = rand()
 
     assert(isnan_call(x) == f1(x))
@@ -664,7 +664,7 @@ def test_ldexp_call(language): # ldexp
         from math import ldexp
         return ldexp(x, exp)
 
-    f1 = epyccel(ldexp_call, language = language)
+    f1 = run_epyccel(ldexp_call, language = language)
     high = 100
     x = rand()
     exp = randint(high)
@@ -691,7 +691,7 @@ def test_ldexp_return_type(language): # ldexp
         from math import ldexp
         return ldexp(x, exp)
 
-    f1 = epyccel(ldexp_type, language = language)
+    f1 = run_epyccel(ldexp_type, language = language)
     high = 100
     x = rand()
     exp = randint(high)
@@ -721,7 +721,7 @@ def test_remainder_call(language): # remainder
         from math import remainder
         return remainder(x, y)
 
-    f1 = epyccel(remainder_call, language = language)
+    f1 = run_epyccel(remainder_call, language = language)
     x = rand()
     y = rand() + 1
     # Same sign
@@ -747,7 +747,7 @@ def test_remainder_return_type(language): # remainder
         from math import remainder
         return remainder(x, y)
 
-    f1 = epyccel(remainder_type, language = language)
+    f1 = run_epyccel(remainder_type, language = language)
     x = rand()
     y = rand()
 
@@ -767,7 +767,7 @@ def test_trunc_call(language): # trunc
         from math import trunc
         return trunc(x)
 
-    f1 = epyccel(trunc_call, language = language)
+    f1 = run_epyccel(trunc_call, language = language)
     x = uniform(high = 10000.0)
 
     # positive number
@@ -781,7 +781,7 @@ def test_trunc_call_int(language): # trunc
         from math import trunc
         return trunc((x))
 
-    f1 = epyccel(trunc_call, language = language)
+    f1 = run_epyccel(trunc_call, language = language)
     high = 10000
     x = randint(high)
 
@@ -796,7 +796,7 @@ def test_trunc_return_type(language): # trunc
         from math import trunc
         return trunc(x)
 
-    f1 = epyccel(trunc_type, language = language)
+    f1 = run_epyccel(trunc_type, language = language)
     x = uniform(high = 10000.0)
 
     assert(type(trunc_type((x))) == type(f1((x))))
@@ -817,7 +817,7 @@ def test_expm1_call(language): # expm1
         from math import expm1
         return expm1(x)
 
-    f1 = epyccel(expm1_call, language = language)
+    f1 = run_epyccel(expm1_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  expm1_call(x), rtol=RTOL, atol=ATOL))
 
@@ -836,7 +836,7 @@ def test_expm1_call_special_case(language): # expm1
         return expm1(x)
     # should give result accurate to full precision better than exp()
     x = 1e-5
-    f1 = epyccel(expm1_call, language = language)
+    f1 = run_epyccel(expm1_call, language = language)
     assert(isclose(f1(x), expm1_call(x), rtol=RTOL, atol=ATOL))
 
 @pytest.mark.parametrize( 'language', (
@@ -854,7 +854,7 @@ def test_expm1_phrase(language): # expm1
         a = expm1(x)+expm1(y)
         return a
 
-    f2 = epyccel(expm1_phrase, language = language)
+    f2 = run_epyccel(expm1_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  expm1_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -873,7 +873,7 @@ def test_expm1_return_type(language): # expm1 # expm1
         from math import expm1
         return expm1(x)
 
-    f1 = epyccel(expm1_type, language = language)
+    f1 = run_epyccel(expm1_type, language = language)
     x = uniform(high = 700.0)
 
     assert(type(expm1_type(x)) == type(f1(x)))
@@ -895,7 +895,7 @@ def test_log1p_call(language):
         from math import log1p
         return log1p(x)
 
-    f1 = epyccel(log1p_call, language = language)
+    f1 = run_epyccel(log1p_call, language = language)
     x = rand()
     assert(isclose(f1(x) ,  log1p_call(x), rtol=RTOL, atol=ATOL))
     assert isinstance(f1(x), type(log1p_call(x)))
@@ -915,7 +915,7 @@ def test_log1p_phrase(language):
         a = log1p(x)+log1p(y)
         return a
 
-    f2 = epyccel(log1p_phrase, language = language)
+    f2 = run_epyccel(log1p_phrase, language = language)
     x = rand()
     y = rand()
     assert(isclose(f2(x,y) ,  log1p_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -935,7 +935,7 @@ def test_log2_call(language):
         from math import log2
         return log2(x)
 
-    f1 = epyccel(log2_call, language = language)
+    f1 = run_epyccel(log2_call, language = language)
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
@@ -957,7 +957,7 @@ def test_log2_phrase(language):
         a = log2(x)+log2(y)
         return a
 
-    f2 = epyccel(log2_phrase, language = language)
+    f2 = run_epyccel(log2_phrase, language = language)
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
@@ -972,7 +972,7 @@ def test_log10_call(language):
         from math import log10
         return log10(x)
 
-    f1 = epyccel(log10_call, language = language)
+    f1 = run_epyccel(log10_call, language = language)
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
@@ -986,7 +986,7 @@ def test_log10_phrase(language):
         a = log10(x)+log10(y)
         return a
 
-    f2 = epyccel(log10_phrase, language = language)
+    f2 = run_epyccel(log10_phrase, language = language)
     low = min_float
     high = max_float
     x = uniform(low=low, high=high)
@@ -1002,7 +1002,7 @@ def test_pow_call(language):
         from math import pow as my_pow
         return my_pow(x, y)
 
-    f1 = epyccel(pow_call, language = language)
+    f1 = run_epyccel(pow_call, language = language)
     high = 10
     # case 1: x > 0
     x = uniform(low=min_float)
@@ -1028,7 +1028,7 @@ def test_hypot_call(language):
         from math import hypot
         return hypot(x, y)
 
-    f1 = epyccel(hypot_call, language = language)
+    f1 = run_epyccel(hypot_call, language = language)
     high = 10
     x = uniform(low=-high, high=high)
     y = uniform(low=-high, high=high)
@@ -1043,7 +1043,7 @@ def test_acosh_call(language):
         from math import acosh
         return acosh(x)
 
-    f1 = epyccel(acosh_call, language = language)
+    f1 = run_epyccel(acosh_call, language = language)
 
     x = uniform(low=1, high=max_float)
     assert(isclose(f1(x) ,  acosh_call(x), rtol=RTOL, atol=ATOL))
@@ -1056,7 +1056,7 @@ def test_acosh_phrase(language):
         a = acosh(x) + acosh(y)
         return a
 
-    f2 = epyccel(acosh_phrase, language = language)
+    f2 = run_epyccel(acosh_phrase, language = language)
 
     x = uniform(low=1, high=max_float)
     y = uniform(low=1, high=max_float)
@@ -1071,7 +1071,7 @@ def test_asinh_call(language):
         from math import asinh
         return asinh(x)
 
-    f1 = epyccel(asinh_call, language = language)
+    f1 = run_epyccel(asinh_call, language = language)
 
     x = uniform(high=max_float)
     assert(isclose(f1(x) , asinh_call(x), rtol=RTOL, atol=ATOL))
@@ -1087,7 +1087,7 @@ def test_asinh_phrase(language):
         a = asinh(x)+ asinh(y)
         return a
 
-    f2 = epyccel(asinh_phrase, language = language)
+    f2 = run_epyccel(asinh_phrase, language = language)
     x = uniform(high=max_float)
     y = uniform(high=max_float)
     assert(isclose(f2(x,y), asinh_phrase(x,y), rtol=RTOL, atol=ATOL))
@@ -1102,7 +1102,7 @@ def test_atanh_call(language):
         from math import atanh
         return atanh(x)
 
-    f1 = epyccel(atanh_call, language = language)
+    f1 = run_epyccel(atanh_call, language = language)
     low = -1 + min_float
     high = 1 - min_float
     x = uniform(low=low, high=high)
@@ -1116,7 +1116,7 @@ def test_atanh_phrase(language):
         a = atanh(x)+ atanh(y)
         return a
 
-    f2 = epyccel(atanh_phrase, language = language)
+    f2 = run_epyccel(atanh_phrase, language = language)
 
     # Domain ]-1, 1[
     low = -1 + min_float
@@ -1133,7 +1133,7 @@ def test_erf_call(language):
         from math import erf
         return erf(x)
 
-    f1 = epyccel(erf_call, language = language)
+    f1 = run_epyccel(erf_call, language = language)
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
@@ -1148,7 +1148,7 @@ def test_erf_phrase(language):
         a = erf(x)+ erf(y)
         return a
 
-    f2 = epyccel(erf_phrase, language = language)
+    f2 = run_epyccel(erf_phrase, language = language)
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
@@ -1164,7 +1164,7 @@ def test_erfc_call(language):
         from math import erfc
         return erfc(x)
 
-    f1 = epyccel(erfc_call, language = language)
+    f1 = run_epyccel(erfc_call, language = language)
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
@@ -1179,7 +1179,7 @@ def test_erfc_phrase(language):
         a = erfc(x)+ erfc(y)
         return a
 
-    f2 = epyccel(erfc_phrase, language = language)
+    f2 = run_epyccel(erfc_phrase, language = language)
 
     # Domain ]-inf, +inf[
     x = uniform(high=max_float)
@@ -1195,7 +1195,7 @@ def test_gamma_call(language):
         from math import gamma
         return gamma(x)
 
-    f1 = epyccel(gamma_call, language = language)
+    f1 = run_epyccel(gamma_call, language = language)
 
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
@@ -1215,7 +1215,7 @@ def test_gamma_phrase(language):
         a = gamma(x)+ gamma(y)
         return a
 
-    f2 = epyccel(gamma_phrase, language = language)
+    f2 = run_epyccel(gamma_phrase, language = language)
 
     # Domain ]0, +inf[ || (x < 0 and fractional part of x not null)
     x = uniform(low=min_float)
@@ -1230,7 +1230,7 @@ def test_lgamma_call(language):
         from math import lgamma
         return lgamma(x)
 
-    f1 = epyccel(lgamma_call, language = language)
+    f1 = run_epyccel(lgamma_call, language = language)
 
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
@@ -1250,9 +1250,16 @@ def test_lgamma_phrase(language):
         a = lgamma(x)+ lgamma(y)
         return a
 
-    f2 = epyccel(lgamma_phrase, language = language)
+    f2 = run_epyccel(lgamma_phrase, language = language)
 
     # Domain ]0, +inf[ || (x < 0 and fractional part of x not null)
     x = uniform(low=min_float)
     y = uniform(low=min_float)
     assert(isclose(f2(x, y), lgamma_phrase(x, y), rtol=RTOL, atol=ATOL))
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()
