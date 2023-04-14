@@ -358,7 +358,7 @@ if __name__ == '__main__':
                'run_linux_anaconda': False,
                'run_windows_anaconda': False,
                'cleanup_trigger': '',
-               'python_version': '',
+               'python_version': "''",
                'BASE': '',
                'REF': '',
                'SHA': ''}
