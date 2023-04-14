@@ -87,8 +87,8 @@ jobs:
       ./.github/workflows/coverage.yml
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
+      base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
-      base: ${{ github.base_ref }}
 
   docs:
     needs: Bot
