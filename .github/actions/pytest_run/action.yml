@@ -32,11 +32,14 @@ runs:
         ls __epyccel__
         ls __epyccel__/__pyccel__
         pyccel-clean
-        ls
-        ls __epyccel__
-        ls __epyccel__/__pyccel__
         df -h
         python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays epyccel
+        df -h
+        ls
+        df -h
+        ls __epyccel__
+        df -h
+        ls __epyccel__/__pyccel__
         df -h
         pyccel-clean
         df -h
