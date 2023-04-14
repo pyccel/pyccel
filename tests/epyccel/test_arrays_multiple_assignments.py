@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import stack_array, types
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
@@ -27,7 +27,7 @@ def test_no_reallocation(language):
         return x.sum() + y.sum()
 
     # TODO: check that we don't get any Pyccel warnings
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -45,7 +45,7 @@ def test_reallocation_heap(language):
     errors = Errors()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -72,9 +72,9 @@ def test_reallocation_stack(language):
     # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
+    # run_epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        run_epyccel(f, language=language)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
@@ -98,7 +98,7 @@ def test_creation_in_loop_heap(language):
     errors = Errors()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -125,9 +125,9 @@ def test_creation_in_loop_stack(language):
     # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
+    # run_epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        run_epyccel(f, language=language)
 
     # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
@@ -155,7 +155,7 @@ def test_creation_in_if_heap(language):
         return x.sum()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     # Check result of pyccelized function
     import numpy as np
@@ -175,9 +175,9 @@ def test_Reassign_to_Target():
      # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
+    # run_epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        run_epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -203,9 +203,9 @@ def test_Assign_Between_Allocatables():
      # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
+    # run_epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        run_epyccel(f)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -234,8 +234,8 @@ def test_Assign_after_If():
      # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
-    f2 = epyccel(f)
+    # run_epyccel should raise an Exception
+    f2 = run_epyccel(f)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
@@ -262,7 +262,7 @@ def test_stack_array_if(language):
         return x[0]
 
     # Initialize singleton that stores Pyccel errors
-    f2 = epyccel(f, language=language)
+    f2 = run_epyccel(f, language=language)
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
@@ -291,8 +291,8 @@ def test_Assign_between_nested_If(lang):
      # Initialize singleton that stores Pyccel errors
     errors = Errors()
 
-    # epyccel should raise an Exception
-    f2 = epyccel(f, language=lang)
+    # run_epyccel should raise an Exception
+    f2 = run_epyccel(f, language=lang)
 
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()
@@ -300,6 +300,13 @@ def test_Assign_between_nested_If(lang):
     assert f(True,True) == f2(True,True)
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()
 
 #==============================================================================
 

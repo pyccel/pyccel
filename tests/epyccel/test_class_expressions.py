@@ -2,14 +2,14 @@
 import numpy as np
 import pytest
 from numpy.random import randint
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_complex_imag(language):
     def f():
         a = 1+2j
         return a.imag
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     r = f()
     epyc_r = epyc_f()
@@ -21,7 +21,7 @@ def test_complex_imag_expr(language):
     def f(a : 'complex', b : 'complex'):
         return (a+b).imag
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     a = randint(20)+1j*randint(20)
     b = randint(20)+1j*randint(20)
@@ -37,7 +37,7 @@ def test_complex_real(language):
         a = 1+2j
         return a.real
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     r = f()
     epyc_r = epyc_f()
@@ -49,7 +49,7 @@ def test_complex_real_expr(language):
     def f(a : 'complex', b : 'complex'):
         return (a+b).real
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     a = randint(20)+1j*randint(20)
     b = randint(20)+1j*randint(20)
@@ -64,7 +64,7 @@ def test_complex_conjugate(language):
     def f(a : 'complex', b : 'complex'):
         return (a+b).conjugate()
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     a = randint(20)+1j*randint(20)
     b = randint(20)+1j*randint(20)
@@ -79,7 +79,7 @@ def test_complex_conjugate64(language):
     def f(a : 'complex64', b : 'complex64'):
         return (a+b).conj()
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     a = np.complex64(randint(20)+1j*randint(20))
     b = np.complex64(randint(20)+1j*randint(20))
@@ -96,7 +96,7 @@ def test_ndarray_var_from_expr(language):
         a = z.sum()
         return a
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     a = np.ones(6, dtype=int)
     b = np.ones(6, dtype=int)
@@ -114,8 +114,15 @@ def test_ndarray_var_from_slice(language):
 
     a = np.ones(6, dtype=int)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     r = f(a)
     epyc_r = epyc_f(a)
     assert r == epyc_r
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

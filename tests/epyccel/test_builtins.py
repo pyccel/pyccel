@@ -4,7 +4,7 @@ from numpy.random import randint, uniform
 from numpy import iinfo, finfo
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types, template
 
 ATOL = 1e-15
@@ -22,7 +22,7 @@ def test_abs_i(language):
     def f1(x):
         return abs(x)
 
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     negative_test = randint(min_int, 0)
     positive_test = randint(0, max_int)
@@ -36,7 +36,7 @@ def test_abs_r(language):
     def f1(x):
         return abs(x)
 
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     negative_test = uniform(min_float, 0.0)
     positive_test = uniform(0.0, max_float)
@@ -52,7 +52,7 @@ def test_abs_c(language):
     def f1(x):
         return abs(x)
 
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     max_compl_abs = np.sqrt(max_float / 2)
     min_compl_abs = np.sqrt(-min_float / 2)
@@ -77,7 +77,7 @@ def test_min_2_args_i(language):
     def f(x, y):
         return min(x, y)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
 
@@ -87,7 +87,7 @@ def test_min_2_args_i_adhoc(language):
     def f(x:int):
         return min(x, 0)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_arg = randint(min_int, max_int)
 
@@ -97,7 +97,7 @@ def test_min_2_args_f_adhoc(language):
     def f(x:float):
         return min(x, 0.0)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     float_arg = uniform(min_float /2, max_float/2)
 
@@ -108,7 +108,7 @@ def test_min_2_args_f(language):
     def f(x, y):
         return min(x, y)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
 
@@ -129,7 +129,7 @@ def test_min_3_args(language):
     def f(x, y, z):
         return min(x, y, z)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -152,7 +152,7 @@ def test_min_list(language):
     def f(x, y, z):
         return min([x, y, z])
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -175,7 +175,7 @@ def test_min_tuple(language):
     def f(x, y, z):
         return min((x, y, z))
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -188,7 +188,7 @@ def test_max_2_args_i(language):
     def f(x, y):
         return max(x, y)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(2)]
 
@@ -199,7 +199,7 @@ def test_max_2_args_f(language):
     def f(x, y):
         return max(x, y)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
 
@@ -220,7 +220,7 @@ def test_max_3_args(language):
     def f(x, y, z):
         return min(x, y, z)
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -243,7 +243,7 @@ def test_max_list(language):
     def f(x, y, z):
         return max([x, y, z])
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -266,7 +266,7 @@ def test_max_tuple(language):
     def f(x, y, z):
         return max((x, y, z))
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int, max_int) for _ in range(3)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(3)]
@@ -289,7 +289,7 @@ def test_sum_matching_types(language):
     def f(x, y):
         return sum([x, y])
 
-    epyc_f = epyccel(f, language=language)
+    epyc_f = run_epyccel(f, language=language)
 
     int_args = [randint(min_int/2, max_int/2) for _ in range(2)]
     float_args = [uniform(min_float/2, max_float/2) for _ in range(2)]
@@ -299,3 +299,10 @@ def test_sum_matching_types(language):
     assert epyc_f(*int_args) == f(*int_args)
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
     assert np.isclose(epyc_f(*complex_args), f(*complex_args), rtol=RTOL, atol=ATOL)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

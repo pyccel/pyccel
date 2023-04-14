@@ -3,6 +3,7 @@ import pytest
 
 from modules import base
 from utilities import epyccel_test
+from pytest_teardown_tools import clean_test
 
 
 def test_is_false(language):
@@ -190,3 +191,10 @@ def test_none_none_equality(language):
 def test_none_literal_equality(language):
     test = epyccel_test(base.none_literal_equality, lang=language)
     test.compare_epyccel()
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

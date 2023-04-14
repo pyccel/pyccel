@@ -28,16 +28,19 @@ runs:
         df -h
         python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
         df -h
+        ls
+        ls __epyccel__
+        ls __epyccel__/__pyccel__
         pyccel-clean
+        ls
+        ls __epyccel__
+        ls __epyccel__/__pyccel__
         df -h
-        du -sh *
         python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays epyccel
-        du -sh *
         df -h
         pyccel-clean
         df -h
         python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays --ignore=epyccel
-        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays --ignore=epyccel
         df -h
         pyccel-clean
         df -h

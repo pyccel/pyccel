@@ -6,7 +6,7 @@ in the function arguments.
 import numpy as np
 from numpy.random import randint, uniform
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types
 
 int_types = ['int8', 'int16', 'int32', 'int64']
@@ -21,7 +21,7 @@ def test_array_int_1d_scalar_add(language):
         for i in range(x_len):
             x[i] += a
     f1 = array_int_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in int_types:
         size = randint(1, 30)
@@ -41,7 +41,7 @@ def test_array_real_1d_scalar_add(language):
         for i in range(x_len):
             x[i] += a
     f1 = array_real_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in float_types:
         size = randint(1, 30)
@@ -61,7 +61,7 @@ def test_array_complex_1d_scalar_add(language):
         for i in range(x_len):
             x[i] += a
     f1 = array_complex_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in float_types:
         size = randint(1, 30)
@@ -86,7 +86,7 @@ def test_array_int_2d_scalar_add(language):
             for j in range(d2):
                 x[i, j] += a
     f1 = array_int_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in int_types:
         d1 = randint(1, 15)
@@ -108,7 +108,7 @@ def test_array_real_2d_scalar_add(language):
             for j in range(d2):
                 x[i, j] += a
     f1 = array_real_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in float_types:
         d1 = randint(1, 15)
@@ -130,7 +130,7 @@ def test_array_complex_2d_scalar_add(language):
             for j in range(d2):
                 x[i, j] += a
     f1 = array_complex_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
 
     for t in float_types:
         d1 = randint(1, 15)
@@ -145,3 +145,10 @@ def test_array_complex_2d_scalar_add(language):
         f2(x2, a, d1, d2)
 
         assert np.array_equal( x1, x2 )
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()
