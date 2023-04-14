@@ -517,3 +517,4 @@ if __name__ == '__main__':
     with open(args.output, encoding="utf-8", mode='a') as out_file:
         for o,v in outputs.items():
             print(f"{o}={v}", file=out_file)
+            print(f"{o}={v}")
