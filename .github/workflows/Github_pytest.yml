@@ -60,7 +60,7 @@ jobs:
       ./.github/workflows/linux.yml
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
-      ref: ${{ needs.Bot.outputs.REF}}
+      ref: ${{ needs.Bot.outputs.REF }}
 
   windows:
     needs: Bot
