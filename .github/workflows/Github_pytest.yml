@@ -144,7 +144,7 @@ jobs:
     uses:
       ./.github/workflows/pickle.yml
     with:
-      python_version: '3.7'
+      python_version: needs.Bot.outputs.python_version
       editable_string: '-e'
       ref: ${{ needs.Bot.outputs.REF }}
 
