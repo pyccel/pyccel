@@ -406,16 +406,22 @@ if __name__ == '__main__':
             if trusted_user:
                 outputs['cleanup_trigger'] = 'update_test_information'
                 run_tests(pr_id, command_words[1:], outputs, event)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command_words[0] == 'try':
             if trusted_user:
                 outputs['python_version'] = command_words[1]
                 outputs['cleanup_trigger'] = 'update_test_information'
                 run_tests(pr_id, command_words[2:], outputs, event)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command == 'mark as ready':
             if trusted_user:
                 start_review_check(pr_id, event, outputs)
+            else:
+                leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command == 'show tests':
             leave_comment(pr_id, message_from_file('show_tests.txt'))
@@ -493,6 +499,8 @@ if __name__ == '__main__':
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
+        else:
+            leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
     else:
         pr_id = None
