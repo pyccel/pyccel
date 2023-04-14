@@ -154,7 +154,7 @@ jobs:
     uses:
       ./.github/workflows/pickle_wheel.yml
     with:
-      python_version: $${{ needs.Bot.outputs.python_version }}
+      python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
 
 
