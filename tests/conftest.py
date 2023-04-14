@@ -6,8 +6,8 @@ from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
 
 # Uncomment to debug  pytest-xdist errors
-#import sys
-#sys.stdout = sys.stderr
+import sys
+sys.stdout = sys.stderr
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),

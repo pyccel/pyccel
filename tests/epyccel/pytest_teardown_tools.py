@@ -29,6 +29,7 @@ def run_epyccel(func_or_mod, **kwargs):
     """
     f = epyccel(func_or_mod, **kwargs)
     mod_name = getattr(f, '__module__', f.__name__)
+    print(mod_name)
     generated_file_stems.append(mod_name)
     return f
 
@@ -46,6 +47,7 @@ def clean_test():
     files_e = [(folder_e,f) for f in os.listdir(folder_e) if not os.path.isdir(f)]
     files_p = [(folder_p,f) for f in os.listdir(folder_p) if not os.path.isdir(f)]
     to_remove = []
+    print(len(generated_file_stems), len(set(generated_file_stems)))
     for (folder, filename) in chain(files_e, files_p):
         stem = filename.split('.')[0]
         if stem in generated_file_stems:
@@ -54,5 +56,5 @@ def clean_test():
         elif stem.endswith('_wrapper') and stem[:-8] in generated_file_stems:
             os.remove(os.path.join(folder, filename))
 
-    for r in to_remove:
+    for r in set(to_remove):
         generated_file_stems.remove(r)
