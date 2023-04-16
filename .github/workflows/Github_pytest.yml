@@ -98,7 +98,7 @@ jobs:
     with:
       python_version: ${{ (needs.Bot.outputs.python_version == '') && '3.7' || needs.Bot.outputs.python_version  }}
       ref: ${{ needs.Bot.outputs.REF }}
-      cuda_done: ${{ needs.Cuda.result }}
+      cuda_result: ${{ needs.Cuda.result }}
 
   coverage:
     needs: [Bot, linux, cuda, coverage_collection]
