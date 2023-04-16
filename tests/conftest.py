@@ -4,6 +4,7 @@ import shutil
 import pytest
 from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
+from pytest_teardown_tools import clean_test
 
 # Uncomment to debug  pytest-xdist errors
 import sys
@@ -43,6 +44,8 @@ def pytest_runtest_teardown(item, nextitem):
             if comm.rank == 0:
                 pyccel_clean(path_dir, remove_shared_libs = True)
             comm.Barrier()
+    else:
+        clean_test()
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")

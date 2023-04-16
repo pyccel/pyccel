@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -8,7 +8,7 @@ ATOL = 1e-15
 def test_module_1(language):
     import modules.Module_1 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     from numpy import zeros
 
@@ -28,7 +28,7 @@ def test_module_1(language):
 def test_local_module_1(language):
     import Module_1 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     from numpy import zeros
 
@@ -48,7 +48,7 @@ def test_local_module_1(language):
 def test_module_2(language):
     import modules.Module_2 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -65,7 +65,7 @@ def test_module_2(language):
 def test_module_3(language):
     import modules.call_user_defined_funcs as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     r = 4.5
     x_expected = mod.circle_volume(r)
@@ -86,7 +86,7 @@ def test_module_3(language):
 def test_module_4(language):
     import modules.Module_6 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     n_x = np.random.randint(4,20)
     n_y = np.random.randint(4,20)
@@ -106,7 +106,7 @@ def test_module_4(language):
 def test_module_5(language):
     import modules.Module_7 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     max_pyt = mod.get_sum()
     max_pyc = modnew.get_sum()
@@ -119,7 +119,7 @@ def test_module_5(language):
 def test_module_6(language):
     import modules.consts as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     atts = ('g', 'R0', 'rMin', 'rMax', 'skip_centre',
             'method', 'compl', 'tiny')
@@ -132,7 +132,7 @@ def test_module_6(language):
 def test_module_7(language):
     import modules.array_consts as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     atts = ('a', 'b', 'c', 'd', 'e')
     for att in atts:
@@ -174,7 +174,7 @@ def test_module_7(language):
 def test_awkward_names(language):
     import modules.awkward_names as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     assert mod.awkward_names == modnew.awkward_names
     assert mod.a == modnew.a
@@ -182,3 +182,10 @@ def test_awkward_names(language):
     assert mod.function() == modnew.function()
     assert mod.pure() == modnew.pure()
     assert mod.allocate(1) == modnew.allocate(1)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

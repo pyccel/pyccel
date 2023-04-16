@@ -3,7 +3,7 @@
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types
 
 #------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ def test_f1(language):
         y = x - 1
         return y
 
-    f = epyccel(f1, language = language)
+    f = run_epyccel(f1, language = language)
 
     # ...
     assert f(2) == f1(2)
@@ -27,7 +27,7 @@ def test_f2(language):
         for i in range(0, m1):
             x[i] = i * 1.
 
-    f = epyccel(f5, language=language)
+    f = run_epyccel(f5, language=language)
 
     # ...
     m1 = 3
@@ -54,7 +54,7 @@ def test_f3(language):
     def f3(x = 1.5, y = 2.5):
         return x+y
 
-    f = epyccel(f3, language=language)
+    f = run_epyccel(f3, language=language)
 
     # ...
     assert f(19.2,6.7) == f3(19.2,6.7)
@@ -72,7 +72,7 @@ def test_f4(language):
         else:
             return 2
 
-    f = epyccel(f4, language = language)
+    f = run_epyccel(f4, language = language)
 
     # ...
     assert f(True)  == f4(True)
@@ -87,7 +87,7 @@ def test_f5(language):
         y = x - 1
         return y
 
-    f = epyccel(f5, language = language)
+    f = run_epyccel(f5, language = language)
 
     # ...
     assert f(2.9+3j) == f5(2.9+3j)
@@ -98,7 +98,14 @@ def test_f5(language):
 def test_changed_precision_arguments(language):
     import modules.Module_8 as mod
 
-    modnew = epyccel(mod, language=language)
+    modnew = run_epyccel(mod, language=language)
 
     assert mod.get_f() == modnew.get_f()
     assert mod.get_g() == modnew.get_g()
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

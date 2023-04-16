@@ -6,8 +6,8 @@ import pytest
 from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
-from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+from pytest_teardown_tools import run_epyccel, clean_test
 
 
 def test_single_return(language):
@@ -44,7 +44,7 @@ def test_single_return(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = run_epyccel(return_array, language=language)
 
     f_bl_true_output = epyccel_func(True, True)
     test_bool_true_output = return_array(True, True)
@@ -154,7 +154,7 @@ def test_multi_returns(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = run_epyccel(return_array, language=language)
 
     f_bl_true_output = epyccel_func(True, True)
     test_bool_true_output = return_array(True, True)
@@ -263,7 +263,7 @@ def test_return_array_array_op(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = run_epyccel(return_array, language=language)
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = return_array(integer, integer)
@@ -360,7 +360,7 @@ def test_return_multi_array_array_op(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_array, language=language)
+    epyccel_func = run_epyccel(return_array, language=language)
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = return_array(integer, integer)
@@ -456,7 +456,7 @@ def test_return_array_scalar_op(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_array_scalar_op, language=language)
+    epyccel_func = run_epyccel(return_array_scalar_op, language=language)
 
     f_integer_output = epyccel_func(integer)
     test_int_output  = return_array_scalar_op(integer)
@@ -553,7 +553,7 @@ def test_multi_return_array_scalar_op(language):
     cmplx64 = np.complex64(cmplx128_from_float32)
     cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
 
-    epyccel_func = epyccel(return_multi_array_scalar_op, language=language)
+    epyccel_func = run_epyccel(return_multi_array_scalar_op, language=language)
 
     f_integer_output = epyccel_func(integer)
     test_int_output  = return_multi_array_scalar_op(integer)
@@ -647,7 +647,7 @@ def test_multi_return_array_array_op(language):
     cmplx64 = np.ones(7, dtype=np.float32) + np.ones(7, dtype=np.float32) * 1j
     cmplx128 = np.ones(7, dtype=np.float64) + np.ones(7, dtype=np.float64) * 1j
 
-    epyccel_func = epyccel(return_array_arg_array_op, language=language)
+    epyccel_func = run_epyccel(return_array_arg_array_op, language=language)
 
     f_integer_output = epyccel_func(arr_integer)
     test_int_output  = return_array_arg_array_op(arr_integer)
@@ -727,7 +727,7 @@ def test_return_arrays_in_expression(language):
 
         return b
 
-    epyccel_function = epyccel(return_arrays_in_expression, language=language)
+    epyccel_function = run_epyccel(return_arrays_in_expression, language=language)
 
     epyccel_function_output = epyccel_function()
     return_arrays_in_expression_output = return_arrays_in_expression()
@@ -753,7 +753,7 @@ def test_return_arrays_in_expression2(language):
 
         return b
 
-    epyccel_function = epyccel(return_arrays_in_expression2, language=language)
+    epyccel_function = run_epyccel(return_arrays_in_expression2, language=language)
 
     n = randint(5)
 
@@ -762,3 +762,10 @@ def test_return_arrays_in_expression2(language):
 
     assert np.array_equal(epyccel_function_output, return_arrays_in_expression2_output)
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

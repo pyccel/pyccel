@@ -3,7 +3,7 @@
 
 import pytest
 import numpy as np
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import private, inline
 
 @pytest.mark.parametrize( 'lang', (
@@ -16,7 +16,7 @@ def test_private(lang):
     def f():
         print("hidden")
 
-    g = epyccel(f, language=lang)
+    g = run_epyccel(f, language=lang)
 
     with pytest.raises(NotImplementedError):
         g()
@@ -32,7 +32,7 @@ def test_inline_1_out(language):
         d = cube(a)
         return a,b,c,d
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
 
@@ -44,7 +44,7 @@ def test_inline_0_out(language):
         set_3(x, 0)
         set_3(x, 1)
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     x = np.ones(4, dtype=int)
     y = np.ones(4, dtype=int)
@@ -67,7 +67,7 @@ def test_inline_local(language):
         d = power_4(g)
         return a,b,c,d
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
 
@@ -84,7 +84,7 @@ def test_inline_local_name_clash(language):
         d = power_4(x)
         return a,b,c,d,x
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
 
@@ -107,7 +107,7 @@ def test_inline_optional(language):
         d = get_val(y=0)
         return a,b,c,d
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
 
@@ -122,7 +122,7 @@ def test_inline_array(language):
         fill_array(arr)
         return arr[0], arr[-1]
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
 
@@ -143,6 +143,13 @@ def test_nested_inline_call(language):
         a = get_val(get_val(2)+3,7)
         return a
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     assert f() == g()
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

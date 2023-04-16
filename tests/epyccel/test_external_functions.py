@@ -4,13 +4,13 @@ import pytest
 import numpy as np
 import scipy.linalg.blas as sp_blas
 import modules.external_functions as mod
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 # ==============================================================================
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_dnrm2_1():
-    blas_dnrm2 = epyccel( mod.blas_dnrm2, language = 'fortran' )
+    blas_dnrm2 = run_epyccel( mod.blas_dnrm2, language = 'fortran' )
 
     np.random.seed(2021)
 
@@ -27,7 +27,7 @@ def test_dnrm2_1():
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_dasum_1():
-    blas_dasum = epyccel( mod.blas_dasum, language = 'fortran' )
+    blas_dasum = run_epyccel( mod.blas_dasum, language = 'fortran' )
 
     np.random.seed(2021)
 
@@ -44,7 +44,7 @@ def test_dasum_1():
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_ddot_1():
-    blas_ddot = epyccel( mod.blas_ddot, language = 'fortran' )
+    blas_ddot = run_epyccel( mod.blas_ddot, language = 'fortran' )
 
     np.random.seed(2021)
 
@@ -62,7 +62,7 @@ def test_ddot_1():
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_ddot_2():
-    blas_ddot = epyccel( mod.blas_ddot_in_func, language = 'fortran' )
+    blas_ddot = run_epyccel( mod.blas_ddot_in_func, language = 'fortran' )
 
     np.random.seed(2021)
 
@@ -80,7 +80,7 @@ def test_ddot_2():
 @pytest.mark.fortran
 @pytest.mark.skipif( sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_idamax_1():
-    blas_idamax = epyccel( mod.blas_idamax, language = 'fortran' )
+    blas_idamax = run_epyccel( mod.blas_idamax, language = 'fortran' )
 
     np.random.seed(2021)
 
@@ -92,3 +92,10 @@ def test_idamax_1():
     result   = blas_idamax (x)
     assert(result == expected)
     # ...
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

@@ -2,7 +2,7 @@
 from numpy.random import randint, uniform
 from numpy import isclose
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types
 
 RTOL = 2e-14
@@ -15,7 +15,7 @@ def test_call_div_i_i(language):
     def div_i_i(x, y):
         return x / y
 
-    f = epyccel(div_i_i, language=language)
+    f = run_epyccel(div_i_i, language=language)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
 
@@ -29,7 +29,7 @@ def test_call_div_i_r(language):
     def div_i_r(x, y):
         return x / y
 
-    f = epyccel(div_i_r, language=language)
+    f = run_epyccel(div_i_r, language=language)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert isclose(f(x, y), div_i_r(x, y), rtol=RTOL, atol=ATOL)
@@ -42,7 +42,7 @@ def test_call_div_r_i(language):
     def div_r_i(x, y):
         return x / y
 
-    f = epyccel(div_r_i, language=language)
+    f = run_epyccel(div_r_i, language=language)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert isclose(f(x, y), div_r_i(x, y), rtol=RTOL, atol=ATOL)
@@ -55,7 +55,7 @@ def test_call_div_r_r(language):
     def div_r_r(x, y):
         return x / y
 
-    f = epyccel(div_r_r, language=language)
+    f = run_epyccel(div_r_r, language=language)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert isclose(f(x, y), div_r_r(x, y), rtol=RTOL, atol=ATOL)
@@ -70,7 +70,7 @@ def test_call_div_c_c(language):
     def div_c_c(x, y):
         return x / y
 
-    f = epyccel(div_c_c, language=language)
+    f = run_epyccel(div_c_c, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_c_c(x, y), rtol=RTOL, atol=ATOL)
@@ -83,7 +83,7 @@ def test_call_div_i_c(language):
     def div_i_c(x, y):
         return x / y
 
-    f = epyccel(div_i_c, language=language)
+    f = run_epyccel(div_i_c, language=language)
     x = randint(1e5)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_i_c(x, y), rtol=RTOL, atol=ATOL)
@@ -96,7 +96,7 @@ def test_call_div_c_i(language):
     def div_c_i(x, y):
         return x / y
 
-    f = epyccel(div_c_i, language=language)
+    f = run_epyccel(div_c_i, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = randint(low=1, high= 1e2)
     assert isclose(f(x, y), div_c_i(x, y), rtol=RTOL, atol=ATOL)
@@ -109,7 +109,7 @@ def test_call_div_r_c(language):
     def div_r_c(x, y):
         return x / y
 
-    f = epyccel(div_r_c, language=language)
+    f = run_epyccel(div_r_c, language=language)
     x = uniform(high=1e9)
     y = complex(uniform(low=1, high= 1e2), uniform(low=1, high= 1e2))
     assert isclose(f(x, y), div_r_c(x, y), rtol=RTOL, atol=ATOL)
@@ -122,7 +122,7 @@ def test_call_div_c_r(language):
     def div_c_r(x, y):
         return x / y
 
-    f = epyccel(div_c_r, language=language)
+    f = run_epyccel(div_c_r, language=language)
     x = complex(uniform(high= 1e5), uniform(high= 1e5))
     y = uniform(low=1e-14, high= 1e3)
     assert isclose(f(x, y), div_c_r(x, y), rtol=RTOL, atol=ATOL)
@@ -139,7 +139,7 @@ def test_call_fdiv_i_i_8(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(120, dtype='int8')
     y = randint(low=1, high= 100, dtype='int8')
 
@@ -153,7 +153,7 @@ def test_call_fdiv_i_i_16(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(32000, dtype='int16')
     y = randint(low=1, high= 30000, dtype='int16')
 
@@ -170,7 +170,7 @@ def test_call_fdiv_i_i_32(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_i_i, language=language, fflags=fflags)
     x = randint(1e4, dtype='int32')
     y = randint(low=1, high= 1e2, dtype='int32')
 
@@ -187,7 +187,7 @@ def test_call_fdiv_i_i_i(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_i_i, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_i_i_i, language=language, fflags=fflags)
     x = randint(1e9)
     y = randint(low=1, high= 1e3)
     z = randint(low=1, high= 1e2)
@@ -205,7 +205,7 @@ def test_call_fdiv_i_r(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_i_r, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_i_r, language=language, fflags=fflags)
     x = randint(1e9)
     y = uniform(low=1, high= 1e3)
     assert (f(x, y) == fdiv_i_r(x, y))
@@ -221,7 +221,7 @@ def test_call_fdiv_r_i(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_i, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_r_i, language=language, fflags=fflags)
     x = uniform(high=1e9)
     y = randint(low=1, high= 1e3)
     assert (f(x, y) == fdiv_r_i(x, y))
@@ -237,7 +237,7 @@ def test_call_fdiv_r_r(language):
 
     fflags = "-Werror -Wconversion"
 
-    f = epyccel(fdiv_r_r, language=language, fflags=fflags)
+    f = run_epyccel(fdiv_r_r, language=language, fflags=fflags)
     x = uniform(high=1e9)
     y = uniform(low=1e-14, high= 1e3)
     assert (f(x, y) == fdiv_r_r(x, y))
@@ -245,3 +245,10 @@ def test_call_fdiv_r_r(language):
     assert (f(x, -y) == fdiv_r_r(x, -y))
     assert (f(-x, -y) == fdiv_r_r(-x, -y))
     assert isinstance(f(x, y), type(fdiv_r_r(x, y)))
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

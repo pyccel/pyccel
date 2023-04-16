@@ -2,11 +2,11 @@
 from numpy.random import randint
 from numpy import equal
 
-from pyccel.epyccel import epyccel
 from modules import functionals
+from pyccel.run_epyccel import run_epyccel
 
 def compare_epyccel(f, language, *args):
-    f2 = epyccel(f, language=language)
+    f2 = run_epyccel(f, language=language)
     out1 = f(*args)
     out2 = f2(*args)
     assert equal(out1, out2).all()
@@ -55,3 +55,10 @@ def test_functional_for_2d_array_range_const(language):
 
 def test_functional_for_3d_range(language):
     compare_epyccel(functionals.functional_for_3d_range, language)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

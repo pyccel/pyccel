@@ -3,7 +3,7 @@
 import numpy as np
 import modules.numpy_sign as mod
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_sign_complex(language):
     f_nul = mod.complex_nul
@@ -11,11 +11,11 @@ def test_sign_complex(language):
     f_neg = mod.complex_neg
     f_pos_neg = mod.complex_pos_neg
     f_neg_pos = mod.complex_neg_pos
-    f_nul_epyc = epyccel(f_nul, language = language)
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_pos_neg_epyc = run_epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = run_epyccel(f_neg_pos, language = language)
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -35,11 +35,11 @@ def test_sign_complex64(language):
     f_neg = mod.complex64_neg
     f_pos_neg = mod.complex64_pos_neg
     f_neg_pos = mod.complex64_neg_pos
-    f_nul_epyc = epyccel(f_nul, language = language)
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_pos_neg_epyc = run_epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = run_epyccel(f_neg_pos, language = language)
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -59,11 +59,11 @@ def test_sign_complex128(language):
     f_neg = mod.complex128_neg
     f_pos_neg = mod.complex128_pos_neg
     f_neg_pos = mod.complex128_neg_pos
-    f_nul_epyc = epyccel(f_nul, language = language)
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_pos_neg_epyc = epyccel(f_pos_neg, language = language)
-    f_neg_pos_epyc = epyccel(f_neg_pos, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_pos_neg_epyc = run_epyccel(f_pos_neg, language = language)
+    f_neg_pos_epyc = run_epyccel(f_neg_pos, language = language)
 
     x1_nul, x2_nul = f_nul(), f_nul_epyc()
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
@@ -80,8 +80,8 @@ def test_sign_complex128(language):
 def test_sign_int16(language):
     f_pos = mod.int16_pos
     f_neg = mod.int16_neg
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -92,8 +92,8 @@ def test_sign_int16(language):
 def test_sign_int32(language):
     f_pos = mod.int32_pos
     f_neg = mod.int32_neg
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -104,8 +104,8 @@ def test_sign_int32(language):
 def test_sign_int64(language):
     f_pos = mod.int64_pos
     f_neg = mod.int64_neg
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -117,9 +117,9 @@ def test_sign_float(language):
     f_pos = mod.float_pos
     f_neg = mod.float_neg
     f_nul = mod.float_nul
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_nul_epyc = epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -132,8 +132,8 @@ def test_sign_float(language):
 def test_sign_float64(language):
     f_pos = mod.float64_pos
     f_neg = mod.float64_neg
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -147,11 +147,11 @@ def test_sign_literal_complex(language):
     f_nul      = mod.literal_complex_nul_nul
     f_nul_imag = mod.literal_complex_nul_imag
     f_real_nul = mod.literal_complex_real_nul
-    f_pos_epyc      = epyccel(f_pos, language = language)
-    f_neg_epyc      = epyccel(f_neg, language = language)
-    f_nul_epyc      = epyccel(f_nul, language = language)
-    f_nul_imag_epyc = epyccel(f_nul_imag, language = language)
-    f_real_nul_epyc = epyccel(f_real_nul, language = language)
+    f_pos_epyc      = run_epyccel(f_pos, language = language)
+    f_neg_epyc      = run_epyccel(f_neg, language = language)
+    f_nul_epyc      = run_epyccel(f_nul, language = language)
+    f_nul_imag_epyc = run_epyccel(f_nul_imag, language = language)
+    f_real_nul_epyc = run_epyccel(f_real_nul, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -169,9 +169,9 @@ def test_sign_literal_int(language):
     f_pos = mod.literal_int_pos
     f_neg = mod.literal_int_neg
     f_nul = mod.literal_int_nul
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_nul_epyc = epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -185,9 +185,9 @@ def test_sign_literal_float(language):
     f_pos = mod.literal_float_pos
     f_neg = mod.literal_float_neg
     f_nul = mod.literal_float_nul
-    f_pos_epyc = epyccel(f_pos, language = language)
-    f_neg_epyc = epyccel(f_neg, language = language)
-    f_nul_epyc = epyccel(f_nul, language = language)
+    f_pos_epyc = run_epyccel(f_pos, language = language)
+    f_neg_epyc = run_epyccel(f_neg, language = language)
+    f_nul_epyc = run_epyccel(f_nul, language = language)
 
     x1_pos, x2_pos = f_pos(), f_pos_epyc()
     x1_neg, x2_neg = f_neg(), f_neg_epyc()
@@ -204,10 +204,10 @@ def test_sign_array_1d_int(language):
     f_int16 = mod.array_1d_int16
     f_int32 = mod.array_1d_int32
     f_int64 = mod.array_1d_int64
-    f_int8_epyc  = epyccel(f_int8, language = language)
-    f_int16_epyc = epyccel(f_int16, language = language)
-    f_int32_epyc = epyccel(f_int32, language = language)
-    f_int64_epyc = epyccel(f_int64, language = language)
+    f_int8_epyc  = run_epyccel(f_int8, language = language)
+    f_int16_epyc = run_epyccel(f_int16, language = language)
+    f_int32_epyc = run_epyccel(f_int32, language = language)
+    f_int64_epyc = run_epyccel(f_int64, language = language)
 
     arr8  = np.array([2, 0, -0, -13, 37, 42], dtype=np.int8)
     arr16 = np.array([2, 0, -0, -13, 37, 42], dtype=np.int16)
@@ -229,10 +229,10 @@ def test_sign_array_2d_int(language):
     f_int16 = mod.array_2d_int16
     f_int32 = mod.array_2d_int32
     f_int64 = mod.array_2d_int64
-    f_int8_epyc  = epyccel(f_int8, language = language)
-    f_int16_epyc = epyccel(f_int16, language = language)
-    f_int32_epyc = epyccel(f_int32, language = language)
-    f_int64_epyc = epyccel(f_int64, language = language)
+    f_int8_epyc  = run_epyccel(f_int8, language = language)
+    f_int16_epyc = run_epyccel(f_int16, language = language)
+    f_int32_epyc = run_epyccel(f_int32, language = language)
+    f_int64_epyc = run_epyccel(f_int64, language = language)
 
     arr8  = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int8)
     arr16 = np.array([[2, 0], [-0, -13], [37, 42]], dtype=np.int16)
@@ -252,8 +252,8 @@ def test_sign_array_2d_int(language):
 def test_sign_array_1d_float(language):
     f_float32 = mod.array_1d_float32
     f_float64 = mod.array_1d_float64
-    f_float32_epyc = epyccel(f_float32, language = language)
-    f_float64_epyc = epyccel(f_float64, language = language)
+    f_float32_epyc = run_epyccel(f_float32, language = language)
+    f_float64_epyc = run_epyccel(f_float64, language = language)
 
     arr32 = np.array([2., 0., -0., -1.3, 3.7, .42], dtype=np.float32)
     arr64 = np.array([2., 0., -0., -1.3, 3.7, .42], dtype=np.float64)
@@ -267,8 +267,8 @@ def test_sign_array_1d_float(language):
 def test_sign_array_2d_float(language):
     f_float32 = mod.array_2d_float32
     f_float64 = mod.array_2d_float64
-    f_float32_epyc = epyccel(f_float32, language = language)
-    f_float64_epyc = epyccel(f_float64, language = language)
+    f_float32_epyc = run_epyccel(f_float32, language = language)
+    f_float64_epyc = run_epyccel(f_float64, language = language)
 
     arr32 = np.array([[2., 0.], [-0., -1.3], [3.7, .42]], dtype=np.float32)
     arr64 = np.array([[2., 0.], [-0., -1.3], [3.7, .42]], dtype=np.float64)
@@ -282,8 +282,8 @@ def test_sign_array_2d_float(language):
 def test_sign_array_1d_complex(language):
     f_complex64 = mod.array_1d_complex64
     f_complex128 = mod.array_1d_complex128
-    f_complex64_epyc = epyccel(f_complex64, language = language)
-    f_complex128_epyc = epyccel(f_complex128, language = language)
+    f_complex64_epyc = run_epyccel(f_complex64, language = language)
+    f_complex128_epyc = run_epyccel(f_complex128, language = language)
 
     arr64 = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex64)
     arr128 = np.array([0.+0j, 0.j, 1.+2.j, -1.+2.j, 1.-2.j, -1.-2.j, 2.j, -2.j], dtype=np.complex128)
@@ -297,8 +297,8 @@ def test_sign_array_1d_complex(language):
 def test_sign_array_2d_complex(language):
     f_complex64 = mod.array_2d_complex64
     f_complex128 = mod.array_2d_complex128
-    f_complex64_epyc = epyccel(f_complex64, language = language)
-    f_complex128_epyc = epyccel(f_complex128, language = language)
+    f_complex64_epyc = run_epyccel(f_complex64, language = language)
+    f_complex128_epyc = run_epyccel(f_complex128, language = language)
 
     arr64 = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex64)
     arr128 = np.array([[0.+0j, 0.j], [1.+2.j, -1.+2.j], [1.-2.j, -1.-2.j], [2.j, -2.j]], dtype=np.complex128)
@@ -308,3 +308,10 @@ def test_sign_array_2d_complex(language):
 
     assert np.array_equal(x_complex64, y_complex64) and x_complex64.dtype == y_complex64.dtype
     assert np.array_equal(x_complex128, y_complex128) and x_complex128.dtype == y_complex128.dtype
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import platform
 from pyccel.decorators import types
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_or_boolean(language):
     @types('bool', 'bool')
@@ -12,7 +12,7 @@ def test_or_boolean(language):
         if (b):
             c = True
         return c
-    epyc_or_bool = epyccel(or_bool, language=language)
+    epyc_or_bool = run_epyccel(or_bool, language=language)
 
     assert(epyc_or_bool(True,True)==or_bool(True,True))
     assert(epyc_or_bool(True,False)==or_bool(True,False))
@@ -26,7 +26,7 @@ def test_real_greater_bool(language):
             greater = True
         return greater
 
-    epyc_real_greater_bool = epyccel(real_greater_bool, language=language)
+    epyc_real_greater_bool = run_epyccel(real_greater_bool, language=language)
 
     assert(real_greater_bool(1.0,2.0)==epyc_real_greater_bool(1.0,2.0))
     assert(real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2))
@@ -42,7 +42,7 @@ def test_input_output_matching_types(language):
         fflags=fflags+"-extra"
     if platform.system() == 'Darwin' and language=='c': # If macosx
         fflags=fflags+" -Wno-error=unused-command-line-argument"
-    epyc_add_real = epyccel(add_real, fflags=fflags, language=language)
+    epyc_add_real = run_epyccel(add_real, fflags=fflags, language=language)
 
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
 
@@ -52,7 +52,7 @@ def test_output_types_1(language):
         b = int(a)
         return b
 
-    f = epyccel(cast_to_int, language = language)
+    f = run_epyccel(cast_to_int, language = language)
     assert(type(cast_to_int(5.2)) == type(f(5.2))) # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_2(language):
@@ -61,7 +61,7 @@ def test_output_types_2(language):
         b = float(a)
         return b
 
-    f = epyccel(cast_to_float,language= language)
+    f = run_epyccel(cast_to_float,language= language)
     assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_3(language):
@@ -70,6 +70,13 @@ def test_output_types_3(language):
         b = bool(a)
         return b
 
-    f = epyccel(cast_to_bool, language=language)
+    f = run_epyccel(cast_to_bool, language=language)
     assert(cast_to_bool(1) == f(1))
 
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

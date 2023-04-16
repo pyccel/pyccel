@@ -1,12 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_1_line_docstring(language):
     def f():
         """ short doc string """
         return 1
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
     assert(f.__doc__ == g.__doc__)
 
 def test_multiline_line_docstring(language):
@@ -24,7 +24,7 @@ def test_multiline_line_docstring(language):
         """
         return 1
 
-    g = epyccel(f, language=language)
+    g = run_epyccel(f, language=language)
 
     # Remove empty lines as ast does not preserve them
     python_doc = [p for p in f.__doc__.split('\n') if p.strip()]
@@ -44,3 +44,10 @@ def test_multiline_line_docstring(language):
 
 
 
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

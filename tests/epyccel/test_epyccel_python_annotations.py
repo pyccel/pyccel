@@ -2,13 +2,13 @@
 import numpy as np
 from numpy.random import randint
 
-from pyccel.epyccel import epyccel
 from modules import python_annotations
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_array_int32_1d_scalar_add(language):
 
     f1 = python_annotations.array_int32_1d_scalar_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -22,7 +22,7 @@ def test_array_int32_1d_scalar_add(language):
 def test_array_int32_2d_C_scalar_add(language):
 
     f1 = python_annotations.array_int32_2d_C_scalar_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -36,7 +36,7 @@ def test_array_int32_2d_C_scalar_add(language):
 def test_array_int32_2d_F_add(language):
 
     f1 = python_annotations.array_int32_2d_F_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -50,7 +50,7 @@ def test_array_int32_2d_F_add(language):
 def test_array_int_1d_scalar_add(language):
 
     f1 = python_annotations.array_int_1d_scalar_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [1,2,3] )
     x2 = np.copy(x1)
@@ -64,7 +64,7 @@ def test_array_int_1d_scalar_add(language):
 def test_array_real_1d_scalar_add(language):
 
     f1 = python_annotations.array_real_1d_scalar_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -79,7 +79,7 @@ def test_array_real_1d_scalar_add(language):
 def test_array_real_2d_F_scalar_add(language):
 
     f1 = python_annotations.array_real_2d_F_scalar_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -93,7 +93,7 @@ def test_array_real_2d_F_scalar_add(language):
 def test_array_real_2d_F_add(language):
 
     f1 = python_annotations.array_real_2d_F_add
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [[1.,2.,3.], [4.,5.,6.]], order='F' )
     x2 = np.copy(x1)
@@ -107,7 +107,7 @@ def test_array_real_2d_F_add(language):
 def test_array_int32_2d_F_complex_3d_expr(language):
 
     f1 = python_annotations.array_int32_2d_F_complex_3d_expr
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32, order='F' )
     x2 = np.copy(x1)
@@ -121,7 +121,7 @@ def test_array_int32_2d_F_complex_3d_expr(language):
 def test_array_real_1d_complex_3d_expr(language):
 
     f1 = python_annotations.array_real_1d_complex_3d_expr
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array( [1.,2.,3.] )
     x2 = np.copy(x1)
@@ -134,6 +134,13 @@ def test_array_real_1d_complex_3d_expr(language):
 
 def test_fib(language):
     f1 = python_annotations.fib
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
     assert f1(10) == f2(10)
 
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

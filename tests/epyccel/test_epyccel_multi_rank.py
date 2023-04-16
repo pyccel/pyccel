@@ -4,7 +4,7 @@ import numpy as np
 from numpy.random import rand, randint
 
 from modules        import multi_rank
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 @pytest.mark.parametrize('f1',[multi_rank.add_mixed_order,
     multi_rank.mul_mixed_order,
@@ -15,7 +15,7 @@ from pyccel.epyccel import epyccel
     multi_rank.augsub_mixed_order,
     multi_rank.augdiv_mixed_order])
 def test_add_mixed_order(f1, language):
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(np.int64(rand(4,5))*100, dtype=float)
     x2 = np.copy(x1)
@@ -30,7 +30,7 @@ def test_add_mixed_order(f1, language):
 
 def test_mul_by_vector_C(language):
     f1 = multi_rank.mul_by_vector_C
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -45,7 +45,7 @@ def test_mul_by_vector_C(language):
 
 def test_mul_by_vector_F(language):
     f1 = multi_rank.mul_by_vector_F
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(4,5)*10, dtype=int, order='F')
     x2 = np.copy(x1)
@@ -60,7 +60,7 @@ def test_mul_by_vector_F(language):
 
 def test_mul_by_vector_dim_1_C_C(language):
     f1 = multi_rank.mul_by_vector_dim_1_C_C
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(3,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -72,7 +72,7 @@ def test_mul_by_vector_dim_1_C_C(language):
 
 def test_mul_by_vector_dim_1_C_F(language):
     f1 = multi_rank.mul_by_vector_dim_1_C_F
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(3,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -84,7 +84,7 @@ def test_mul_by_vector_dim_1_C_F(language):
 
 def test_mul_by_vector_dim_1_F_C(language):
     f1 = multi_rank.mul_by_vector_dim_1_F_C
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(3,5)*10, dtype=int, order='F')
     x2 = np.copy(x1)
@@ -96,7 +96,7 @@ def test_mul_by_vector_dim_1_F_C(language):
 
 def test_mul_by_vector_dim_1_F_F(language):
     f1 = multi_rank.mul_by_vector_dim_1_F_F
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     x1 = np.array(rand(3,5)*10, dtype=int, order='F')
     x2 = np.copy(x1)
@@ -108,7 +108,7 @@ def test_mul_by_vector_dim_1_F_F(language):
 
 def test_multi_dim_sum(language):
     f1 = multi_rank.multi_dim_sum
-    f2 = epyccel( f1, language = language )
+    f2 = run_epyccel( f1, language = language )
 
     dims = [randint(1,10) for _ in range(3)]
     x1 = np.array(rand(*dims)*10, dtype=int)
@@ -132,7 +132,7 @@ def test_multi_dim_sum(language):
 
 def test_multi_dim_sum_ones():
     f1 = multi_rank.multi_dim_sum_ones
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     dims = [randint(1, 10) for _ in range(3)]
     x1 = np.array(rand(*dims)*10, dtype=int)
@@ -148,7 +148,7 @@ def test_multi_dim_sum_ones():
 
 def test_multi_expression_assign():
     f1 = multi_rank.multi_expression_assign
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -163,7 +163,7 @@ def test_multi_expression_assign():
 
 def test_multi_expression_augassign():
     f1 = multi_rank.multi_expression_augassign
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -178,7 +178,7 @@ def test_multi_expression_augassign():
 
 def test_grouped_expressions():
     f1 = multi_rank.grouped_expressions
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int, order='F')
     x2 = np.copy(x1)
@@ -196,7 +196,7 @@ def test_grouped_expressions():
 
 def test_grouped_expressions2():
     f1 = multi_rank.grouped_expressions2
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(3,4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -214,7 +214,7 @@ def test_grouped_expressions2():
 
 def test_dependencies():
     f1 = multi_rank.dependencies
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -229,7 +229,7 @@ def test_dependencies():
 
 def test_auto_dependencies():
     f1 = multi_rank.auto_dependencies
-    f2 = epyccel( f1 )
+    f2 = run_epyccel( f1 )
 
     x1 = np.array(rand(4,5)*10, dtype=int)
     x2 = np.copy(x1)
@@ -241,3 +241,10 @@ def test_auto_dependencies():
     f2(x2, y2)
 
     assert np.array_equal( x1, x2 )
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

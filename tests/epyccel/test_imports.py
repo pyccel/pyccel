@@ -3,18 +3,8 @@
 import pytest
 from numpy import ones
 
-from pyccel.epyccel import epyccel
 from pyccel.decorators import types
-
-#------------------------------------------------------------------------------
-@pytest.fixture(params=[
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-)
-def language(request):
-    return request.param
+from pytest_teardown_tools import run_epyccel, clean_test
 
 #==============================================================================
 
@@ -25,7 +15,7 @@ def test_import(language):
         s = numpy.shape(x)[0]
         return s
 
-    f = epyccel(f1, language = language)
+    f = run_epyccel(f1, language = language)
     x = ones(10, dtype=int)
     assert f(x) == f1(x)
 
@@ -37,7 +27,7 @@ def test_import_from(language):
         return s
 
 
-    f = epyccel(f2, language = language)
+    f = run_epyccel(f2, language = language)
     x = ones(10, dtype=int)
     assert f(x) == f2(x)
 
@@ -48,7 +38,7 @@ def test_import_as(language):
         s = np.shape(x)[0]
         return s
 
-    f = epyccel(f3, language = language)
+    f = run_epyccel(f3, language = language)
     x = ones(10, dtype=int)
     assert f(x) == f3(x)
 
@@ -63,7 +53,7 @@ def test_import_collision(language):
         add_one = mod.add_one(x)
         return add_one
 
-    f = epyccel(f4, language = language)
+    f = run_epyccel(f4, language = language)
     assert f(5) == f4(5)
 
 def test_import_method(language):
@@ -72,6 +62,13 @@ def test_import_method(language):
         s = x.shape[0]
         return s
 
-    f = epyccel(f5, language = language)
+    f = run_epyccel(f5, language = language)
     x = ones(10, dtype=int)
     assert f(x) == f5(x)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

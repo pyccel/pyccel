@@ -4,11 +4,11 @@ import numpy as np
 from numpy.random import randint, uniform
 
 from modules import types
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_int_default(language):
     f1 = types.test_int_default
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = randint(low = -1e9, high = 0, dtype = int) # negative
     b = randint(low = 0, high = 1e9, dtype = int) # positive
@@ -19,7 +19,7 @@ def test_int_default(language):
 
 def test_int64(language):
     f1 = types.test_int64
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = randint(low = -1e9, high = 0, dtype = np.int64) # negative
     b = randint(low = 0, high = 1e9, dtype = np.int64) # positive
@@ -29,7 +29,7 @@ def test_int64(language):
 
 def test_int32(language):
     f1 = types.test_int32
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = randint(low = -1e9, high = 0, dtype = np.int32) # negative
     b = randint(low = 0, high = 1e9, dtype = np.int32) # positive
@@ -39,7 +39,7 @@ def test_int32(language):
 
 def test_int16(language):
     f1 = types.test_int16
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = randint(low = -32768, high = 0, dtype = np.int16) # negative
     b = randint(low = 0, high = 32767, dtype = np.int16) # positive
@@ -49,7 +49,7 @@ def test_int16(language):
 
 def test_int8(language):
     f1 = types.test_int8
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = randint(low = -128, high = 0, dtype = np.int8) # negative
     b = randint(low = 0, high = 127, dtype = np.int8) # positive
@@ -59,7 +59,7 @@ def test_int8(language):
 
 def test_real_defaultl(language):
     f1 = types.test_real_default
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = uniform() * 1e9 # negative
     b = uniform() * -1e9 # positive
@@ -69,7 +69,7 @@ def test_real_defaultl(language):
 
 def test_float32(language):
     f1 = types.test_float32
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = np.float32(uniform() * 1e9) # negative
     b = np.float32(uniform() * -1e9) # positive
@@ -79,7 +79,7 @@ def test_float32(language):
 
 def test_float64(language):
     f1 = types.test_float64
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = np.float64(uniform() * 1e9) # negative
     b = np.float64(uniform() * -1e9) # positive
@@ -89,7 +89,7 @@ def test_float64(language):
 
 def test_complex_default(language):
     f1 = types.test_complex_default
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = complex(uniform() * -1e9, uniform() * 1e9)
     b = complex(uniform() * 1e9, uniform() * -1e9)
@@ -99,7 +99,7 @@ def test_complex_default(language):
 
 def test_complex64(language):
     f1 = types.test_complex64
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = complex(uniform() * -1e9, uniform() * 1e9)
     b = complex(uniform() * 1e9, uniform() * -1e9)
@@ -112,7 +112,7 @@ def test_complex64(language):
 
 def test_complex128(language):
     f1 = types.test_complex128
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     a = complex(uniform() * -1e9, uniform() * 1e9)
     b = complex(uniform() * 1e9, uniform() * -1e9)
@@ -125,7 +125,14 @@ def test_complex128(language):
 
 def test_bool(language):
     f1 = types.test_bool
-    f2 = epyccel(f1, language = language)
+    f2 = run_epyccel(f1, language = language)
 
     assert f1(True) == f2(True)
     assert f1(False) == f2(False)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

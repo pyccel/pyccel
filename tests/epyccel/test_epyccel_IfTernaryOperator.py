@@ -2,7 +2,7 @@
 
 import pytest
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 from pyccel.decorators import types
 # wp suffix means With Parentheses
 #------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ def test_f1(language):
         a = 5 if x < 5 else x
         return a
 
-    f = epyccel(f1, language = language)
+    f = run_epyccel(f1, language = language)
 
     # ...
     assert f(6) == f1(6)
@@ -26,7 +26,7 @@ def test_f2(language):
         a = 5.5 if x < 5 else x
         return a
 
-    f = epyccel(f2, language = language)
+    f = run_epyccel(f2, language = language)
 
     # ...
     assert f(6) == f2(6)
@@ -44,8 +44,8 @@ def test_f3(language):
         a = (x if x < 5 else 5) + 2
         return a
 
-    f = epyccel(f3, language = language)
-    fwp = epyccel(f3wp, language = language)
+    f = run_epyccel(f3, language = language)
+    fwp = run_epyccel(f3wp, language = language)
 
     # ...
     assert f(6) == f3(6)
@@ -67,8 +67,8 @@ def test_f4(language):
         a = (x if x < 5 else 5) >> 2
         return a
 
-    f = epyccel(f4, language = language)
-    fwp = epyccel(f4wp, language = language)
+    f = run_epyccel(f4, language = language)
+    fwp = run_epyccel(f4wp, language = language)
 
     # ...
     assert f(6) == f4(6)
@@ -89,8 +89,8 @@ def test_f5(language):
         a = x if x < 5 else (5 if x == 5 else 5.5)
         return a
 
-    f = epyccel(f5, language = language)
-    fwp = epyccel(f5wp, language = language)
+    f = run_epyccel(f5, language = language)
+    fwp = run_epyccel(f5wp, language = language)
 
     # ...
     assert f(6) == f5(6)
@@ -114,8 +114,8 @@ def test_f6(language):
         a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         return a
 
-    f = epyccel(f6, language = language)
-    fwp = epyccel(f6wp, language = language)
+    f = run_epyccel(f6, language = language)
+    fwp = run_epyccel(f6wp, language = language)
 
     # ...
     assert f(6) == f6(6)
@@ -139,8 +139,8 @@ def test_f7(language):
         a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
         return a[0]
 
-    f = epyccel(f7, language = language)
-    fwp = epyccel(f7wp, language = language)
+    f = run_epyccel(f7, language = language)
+    fwp = run_epyccel(f7wp, language = language)
 
     # ...
     assert f(6) == f7(6)
@@ -162,8 +162,8 @@ def test_f8(language):
         a = (1+0j, 2+0j) if x < 5 else ((complex(5, 1), complex(2, 2)) if x > 5 else (complex(7, 2), complex(3, 3)) )
         return a[0]
 
-    f = epyccel(f8, language = language)
-    fwp = epyccel(f8wp, language = language)
+    f = run_epyccel(f8, language = language)
+    fwp = run_epyccel(f8wp, language = language)
 
     # ...
     assert f(6) == f8(6)
@@ -190,9 +190,9 @@ def test_f9(language):
         a = (1 + 2) if x < 5 else 3
         return a
 
-    f = epyccel(f9, language = language)
-    fwp1 = epyccel(f9wp1, language = language)
-    fwp2 = epyccel(f9wp2, language = language)
+    f = run_epyccel(f9, language = language)
+    fwp1 = run_epyccel(f9wp1, language = language)
+    fwp2 = run_epyccel(f9wp2, language = language)
     # ...
     assert f(6) == f9(6)
     assert f(4) == f9(4)
@@ -221,9 +221,9 @@ def test_f10(language):
         a = 2 if x < 5 else (3 + 1)
         return a
 
-    f = epyccel(f10, language = language)
-    fwp1 = epyccel(f10wp1, language = language)
-    fwp2 = epyccel(f10wp2, language = language)
+    f = run_epyccel(f10, language = language)
+    fwp1 = run_epyccel(f10wp1, language = language)
+    fwp2 = run_epyccel(f10wp2, language = language)
     # ...
     assert f(6) == f10(6)
     assert f(4) == f10(4)
@@ -242,7 +242,7 @@ def test_f11(language):
         a = 2 if (x + 2)*5 < 5 else 3
         return a
 
-    f = epyccel(f11, language = language)
+    f = run_epyccel(f11, language = language)
     # ...
     assert f(6) == f11(6)
     assert f(-4) == f11(-4)
@@ -260,8 +260,8 @@ def test_f12(language):
         a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8,2.9])
         return a[0]
 
-    f = epyccel(f12, language = language)
-    fwp = epyccel(f12wp, language = language)
+    f = run_epyccel(f12, language = language)
+    fwp = run_epyccel(f12wp, language = language)
 
     # ...
     assert f(6) == f12(6)
@@ -293,8 +293,8 @@ def test_f13(language):
         a = 'hello' if b1 else ('world' if b2 else 'hello world')
         return a
 
-    f = epyccel(f13, language = language)
-    fwp = epyccel(f13wp, language = language)
+    f = run_epyccel(f13, language = language)
+    fwp = run_epyccel(f13wp, language = language)
 
     # ...
     assert f(True) == f13(True)
@@ -306,3 +306,10 @@ def test_f13(language):
     assert fwp(False,False) == f13wp(False,False)
     # ...
 #------------------------------------------------------------------------------
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

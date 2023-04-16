@@ -4,7 +4,7 @@ from numpy.random import randint, uniform
 from numpy import allclose
 
 from pyccel.decorators import types
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 # Relative and absolute tolerances for array comparisons in the form
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
@@ -20,7 +20,7 @@ def test_modulo_int_int(language):
     def modulo_i_i(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_i_i, language=language)
+    f = run_epyccel(modulo_i_i, language=language)
     x = randint(0, 1e6)
     y = randint(1, 1e6)
 
@@ -35,7 +35,7 @@ def test_modulo_real_real(language):
     def modulo_r_r(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_r_r, language=language)
+    f = run_epyccel(modulo_r_r, language=language)
     x = uniform(low=0, high=1e6)
     y = uniform(low=1, high=1e2)
 
@@ -49,7 +49,7 @@ def test_modulo_real_int(language):
     def modulo_r_i(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_r_i, language=language)
+    f = run_epyccel(modulo_r_i, language=language)
     x = uniform(low=0, high=1e6)
     y = randint(low=1, high=1e6)
 
@@ -64,7 +64,7 @@ def test_modulo_int_real(language):
     def modulo_i_r(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
-    f = epyccel(modulo_i_r, language=language)
+    f = run_epyccel(modulo_i_r, language=language)
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e2)
 
@@ -80,10 +80,17 @@ def test_modulo_multiple(language):
                x % -y % z, x % -y % -z, x % y % -z, -x % y % -z, \
                    -y % y % y, y % -y % y, y % y % -y
 
-    f = epyccel(modulo_multiple, language=language)
+    f = run_epyccel(modulo_multiple, language=language)
     x = randint(0, 1e6)
     y = uniform(low=1, high=1e4)
     z = randint(low=1, high=1e2)
 
     assert allclose(f(x, y, z), modulo_multiple(x, y, z), rtol=RTOL, atol=ATOL)
     assert isinstance(f(x, y, z), type(modulo_multiple(x, y, z)))
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

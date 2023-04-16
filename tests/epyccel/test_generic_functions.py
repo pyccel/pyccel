@@ -3,11 +3,11 @@ import pytest
 import numpy as np
 import modules.generic_functions as mod
 import modules.generic_functions_2 as mod2
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 @pytest.fixture(scope="module")
 def modnew(language):
-    return epyccel(mod, language = language)
+    return run_epyccel(mod, language = language)
 
 def test_gen_1(modnew):
     x_expected = mod.tst_gen_1()
@@ -46,21 +46,21 @@ def test_gen_7(modnew):
 
 def test_multi_heads_1(language):
 
-    f1 = epyccel(mod2.multi_heads_1, language = language)
+    f1 = run_epyccel(mod2.multi_heads_1, language = language)
     f2 = mod2.multi_heads_1
 
     assert f1(5, 5) == f2(5, 5)
     assert f1(5, 7.3) == f2(5, 7.3)
 
 def test_tmplt_1(language):
-    f1 = epyccel(mod2.tmplt_1, language = language)
+    f1 = run_epyccel(mod2.tmplt_1, language = language)
     f2 = mod2.tmplt_1
 
     assert f1(5, 5) == f2(5, 5)
     assert f1(5.5, 7.3) == f2(5.5, 7.3)
 
 def test_multi_tmplt_1(language):
-    f1 = epyccel(mod2.multi_tmplt_1, language = language)
+    f1 = run_epyccel(mod2.multi_tmplt_1, language = language)
     f2 = mod2.multi_tmplt_1
 
     assert f1(5, 5, 7) == f2(5, 5, 7)
@@ -84,14 +84,14 @@ def test_tmplt_tmplt_1(modnew):
     assert np.array_equal(x, x_expected)
 
 def test_tmplt_2(language):
-    f1 = epyccel(mod2.tmplt_2, language = language)
+    f1 = run_epyccel(mod2.tmplt_2, language = language)
     f2 = mod2.tmplt_2
 
     assert f1(5, 5) == f2(5, 5)
     assert f1(5.5, 7.3) == f2(5.5, 7.3)
 
 def test_multi_tmplt_2(language):
-    f1 = epyccel(mod2.multi_tmplt_2, language = language)
+    f1 = run_epyccel(mod2.multi_tmplt_2, language = language)
     f2 = mod2.multi_tmplt_2
 
     assert f1(5, 5) == f2(5, 5)
@@ -102,7 +102,7 @@ def test_multi_tmplt_2(language):
 #--------------------------------------------------------------------
 
 def test_default_var_1(language):
-    f1 = epyccel(mod2.default_var_1, language = language)
+    f1 = run_epyccel(mod2.default_var_1, language = language)
     f2 = mod2.default_var_1
 
     assert f1(5.3) == f2(5.3)
@@ -112,7 +112,7 @@ def test_default_var_1(language):
 
 
 def test_default_var_2(language):
-    f1 = epyccel(mod2.default_var_2, language = language)
+    f1 = run_epyccel(mod2.default_var_2, language = language)
     f2 = mod2.default_var_2
 
     assert f1(5.3) == f2(5.3)
@@ -122,7 +122,7 @@ def test_default_var_2(language):
 
 
 def test_default_var_3(language):
-    f1 = epyccel(mod2.default_var_3, language = language)
+    f1 = run_epyccel(mod2.default_var_3, language = language)
     f2 = mod2.default_var_3
 
     assert f1(5.3) == f1(5.3)
@@ -131,7 +131,7 @@ def test_default_var_3(language):
     assert f1(5, True) == f2(5, True)
 
 def test_default_var_4(language):
-    f1 = epyccel(mod2.default_var_4 , language = language)
+    f1 = run_epyccel(mod2.default_var_4 , language = language)
     f2 = mod2.default_var_4
 
     assert f1(5, 5) == f2(5, 5)
@@ -144,7 +144,7 @@ def test_default_var_4(language):
 #--------------------------------------------------------------------
 
 def test_optional_var_1(language):
-    f1 = epyccel(mod2.optional_var_1 , language = language)
+    f1 = run_epyccel(mod2.optional_var_1 , language = language)
     f2 = mod2.optional_var_1
 
     assert f1(5.3) == f2(5.3)
@@ -153,7 +153,7 @@ def test_optional_var_1(language):
     assert f1(5, 2) == f2(5, 2)
 
 def test_optional_var_2(language):
-    f1 = epyccel(mod2.optional_var_2 , language = language)
+    f1 = run_epyccel(mod2.optional_var_2 , language = language)
     f2 = mod2.optional_var_2
 
     assert f1(5.3) == f2(5.3)
@@ -162,7 +162,7 @@ def test_optional_var_2(language):
     assert f1(5, complex(1, 4)) == f2(5, complex(1, 4))
 
 def test_optional_var_3(language):
-    f1 = epyccel(mod2.optional_var_3 , language = language)
+    f1 = run_epyccel(mod2.optional_var_3 , language = language)
     f2 = mod2.optional_var_3
 
     assert f1(5, 5.5) == f2(5, 5.5)
@@ -171,7 +171,7 @@ def test_optional_var_3(language):
     assert f1(5.2) == f2(5.2)
 
 def test_optional_var_4(language):
-    f1 = epyccel(mod2.optional_var_4 , language = language)
+    f1 = run_epyccel(mod2.optional_var_4 , language = language)
     f2 = mod2.optional_var_4
 
     assert f1(complex(5, 4), 5) == f2(complex(5, 4), 5)
@@ -183,7 +183,7 @@ def test_optional_var_4(language):
 # TEST DATA TYPES
 #--------------------------------------------------------------------
 def test_int_types(language):
-    f1 = epyccel(mod2.int_types , language = language)
+    f1 = run_epyccel(mod2.int_types , language = language)
     f2 = mod2.int_types
 
     assert f1(10, 5) == f2(10, 5)
@@ -194,7 +194,7 @@ def test_int_types(language):
     assert f1(np.int64(155), np.int64(177)) == f2(np.int64(155), np.int64(177))
 
 def test_float_types(language):
-    f1 = epyccel(mod2.float_types , language = language)
+    f1 = run_epyccel(mod2.float_types , language = language)
     f2 = mod2.float_types
 
     assert f1(10.5, 5.5) == f2(10.5, 5.5)
@@ -202,7 +202,7 @@ def test_float_types(language):
     assert f1(np.float64(166.6), np.float64(255.6)) == f2(np.float64(166.6), np.float64(255.6))
 
 def test_complex_types(language):
-    f1 = epyccel(mod2.complex_types , language = language)
+    f1 = run_epyccel(mod2.complex_types , language = language)
     f2 = mod2.complex_types
 
     assert f1(complex(1, 2.2), complex(1, 2.2)) == f2(complex(1, 2.2), complex(1, 2.2))
@@ -210,7 +210,7 @@ def test_complex_types(language):
     assert f1(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j)) == f2(np.complex64(15.5 + 2.0j) , np.complex64(10.5 + 3.4j))
 
 def test_mix_types_1(language):
-    f1 = epyccel(mod2.mix_types_1 , language = language)
+    f1 = run_epyccel(mod2.mix_types_1 , language = language)
     f2 = mod2.mix_types_1
 
     assert f1(complex(1, 2), 15, np.int16(5)) == f2(complex(1, 2), 15, np.int16(5))
@@ -224,7 +224,7 @@ def test_mix_types_1(language):
 
 
 def test_mix_types_2(language):
-    f1 = epyccel(mod2.mix_types_2 , language = language)
+    f1 = run_epyccel(mod2.mix_types_2 , language = language)
     f2 = mod2.mix_types_2
 
     assert f1(np.int32(-1), np.int32(-1)) == f2(np.int32(-1), np.int32(-1))
@@ -235,7 +235,7 @@ def test_mix_types_2(language):
     assert f1(np.float32(16), np.float32(16)) == f2(np.float32(16), np.float32(16))
 
 def test_mix_types_3(language):
-    f1 = epyccel(mod2.mix_types_3 , language = language)
+    f1 = run_epyccel(mod2.mix_types_3 , language = language)
     f2 = mod2.mix_types_3
 
     assert f1(-1, -1) == f2(-1, -1)
@@ -246,7 +246,7 @@ def test_mix_types_3(language):
 #--------------------------------------------------------------------
 
 def test_mix_array_1(language):
-    f1 = epyccel(mod2.mix_array_1, language = language)
+    f1 = run_epyccel(mod2.mix_array_1, language = language)
     f2 = mod2.mix_array_1
 
     a = 5
@@ -269,7 +269,7 @@ def test_mix_array_1(language):
     assert np.array_equal( x1, x2)
 
 def test_mix_array_2(language):
-    f1 = epyccel(mod2.mix_array_2, language = language)
+    f1 = run_epyccel(mod2.mix_array_2, language = language)
     f2 = mod2.mix_array_2
 
     a = 5
@@ -294,7 +294,7 @@ def test_mix_array_2(language):
     assert np.array_equal(y1, y2)
 
 def test_mix_int_array(language):
-    f1 = epyccel(mod2.mix_int_array_1, language = language)
+    f1 = run_epyccel(mod2.mix_int_array_1, language = language)
     f2 = mod2.mix_int_array_1
 
     a = 5
@@ -323,7 +323,7 @@ def test_mix_int_array(language):
     assert np.array_equal( x1, x2 )
 
 def test_mix_int_array_2(language):
-    f1 = epyccel(mod2.mix_int_array_2, language = language)
+    f1 = run_epyccel(mod2.mix_int_array_2, language = language)
     f2 = mod2.mix_int_array_2
 
     a = 5
@@ -346,7 +346,7 @@ def test_mix_int_array_2(language):
     assert np.array_equal( x1, x2 )
 
 def test_mix_float_array(language):
-    f1 = epyccel(mod2.mix_float_array_1, language = language)
+    f1 = run_epyccel(mod2.mix_float_array_1, language = language)
     f2 = mod2.mix_float_array_1
 
     a = 5.44
@@ -367,7 +367,7 @@ def test_mix_float_array(language):
     assert np.array_equal(x1, x2)
 
 def test_mix_complex_array(language):
-    f1 = epyccel(mod2.mix_complex_array_1, language = language)
+    f1 = run_epyccel(mod2.mix_complex_array_1, language = language)
     f2 = mod2.mix_complex_array_1
 
     a = 7.5
@@ -388,7 +388,7 @@ def test_mix_complex_array(language):
     assert np.array_equal(x1, x2)
 
 def test_dup_header(language):
-    f1 = epyccel(mod2.dup_header , language = language)
+    f1 = run_epyccel(mod2.dup_header , language = language)
     f2 = mod2.dup_header
 
     assert f1(0.0) == f2(0.0)
@@ -403,7 +403,7 @@ def test_dup_header(language):
     )
 )
 def test_zeros_types(language):
-    f1 = epyccel(mod2.zeros_type , language = language)
+    f1 = run_epyccel(mod2.zeros_type , language = language)
     f2 = mod2.zeros_type
 
     i_1 = f1(0)
@@ -428,7 +428,7 @@ def test_zeros_types(language):
     )
 )
 def test_scalar_or_array(language):
-    f1 = epyccel(mod2.scalar_or_array, language = language)
+    f1 = run_epyccel(mod2.scalar_or_array, language = language)
     f2 = mod2.scalar_or_array
 
     i_1 = f1(0)
@@ -456,7 +456,7 @@ def test_scalar_or_array(language):
     )
 )
 def test_add_scalars_or_arrays(language):
-    f1 = epyccel(mod2.add_scalars_or_arrays, language = language)
+    f1 = run_epyccel(mod2.add_scalars_or_arrays, language = language)
     f2 = mod2.add_scalars_or_arrays
 
     i_1 = f1(0,1)
@@ -484,3 +484,10 @@ def test_add_scalars_or_arrays(language):
     assert isinstance(b_1, type(b_2))
     assert isinstance(b_1[0,0], type(b_2[0,0]))
     assert np.array_equal(b_1, b_2)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

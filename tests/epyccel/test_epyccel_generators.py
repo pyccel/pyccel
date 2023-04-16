@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 from numpy.random import randint, rand
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def test_sum_range(language):
     def f(a0 : 'int[:]'):
@@ -12,7 +12,7 @@ def test_sum_range(language):
     n = randint(1,50)
     x = randint(100,size=n)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -23,7 +23,7 @@ def test_sum_var(language):
     n = randint(1,50)
     x = randint(100,size=n)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -35,7 +35,7 @@ def test_sum_var2(language):
     n2 = randint(1,10)
     x = randint(10,size=(n1,n2))
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -49,7 +49,7 @@ def test_sum_var3(language):
     n3 = randint(1,10)
     x = randint(10,size=(n1,n2,n3))
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -61,7 +61,7 @@ def test_sum_var4(language):
     n = randint(1,50)
     x = randint(100,size=n)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -78,7 +78,7 @@ def test_max(language):
     def f():
         return max(i if i>k else k for i in range(5) for k in range(10))
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f() == f_epyc()
 
@@ -95,7 +95,7 @@ def test_min(language):
     def f():
         return min(k if i>k else 0 if i==k else i for i in range(5) for k in range(10))
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f() == f_epyc()
 
@@ -107,7 +107,7 @@ def test_expression1(language):
     n = randint(1,10)
     x = np.array(randint(100,size=n), dtype=float)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -131,7 +131,7 @@ def test_expression2(language):
     n = randint(1,10)
     x = randint(100,size=n)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -141,7 +141,7 @@ def test_nested_generators1(language):
 
     x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -151,7 +151,7 @@ def test_nested_generators2(language):
 
     x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -161,7 +161,7 @@ def test_nested_generators3(language):
 
     x = randint(0, 10, size=(5,5,5,5)).astype(float)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
 
@@ -171,6 +171,13 @@ def test_nested_generators4(language):
 
     x = randint(0, 10, size=(5,5,5,5)).astype(float)
 
-    f_epyc = epyccel(f, language = language)
+    f_epyc = run_epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

@@ -1,10 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import pure, types
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 #==============================================================================
 def compare_epyccel(f1, *args, language):
-    f2 = epyccel(f1, language=language)
+    f2 = run_epyccel(f1, language=language)
     out1 = f1(*args)
     out2 = f2(*args)
     assert all(r1==r2 for r1, r2 in zip(out1, out2))
@@ -36,3 +36,10 @@ def test_expr_float_int_bool(language):
         return 0.5+n*1j, 2*n, n==3
 
     compare_epyccel(expr_complex_int_bool, 3, language=language)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

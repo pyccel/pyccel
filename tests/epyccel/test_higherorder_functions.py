@@ -2,11 +2,11 @@
 import pytest
 import numpy as np
 import modules.highorder_functions as mod
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 @pytest.fixture(scope="module")
 def modnew(language):
-    return epyccel(mod, language = language)
+    return run_epyccel(mod, language = language)
 
 def test_int_1(modnew):
     x_expected = mod.test_int_1()
@@ -74,3 +74,10 @@ def test_euler(modnew):
     mod.euler_test(t0, t1, y0_p, n)
 
     assert np.allclose(y0_l, y0_p)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()

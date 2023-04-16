@@ -3,7 +3,7 @@ from mpi4py import MPI
 import pytest
 import numpy as np
 
-from pyccel.epyccel import epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -13,7 +13,7 @@ ATOL = 1e-15
 def test_module_1(language):
     import modules.Module_1 as mod
 
-    modnew = epyccel(mod, comm=MPI.COMM_WORLD, language=language)
+    modnew = run_epyccel(mod, comm=MPI.COMM_WORLD, language=language)
 
     # ...
     x_expected = np.zeros(5)
@@ -33,7 +33,7 @@ def test_module_1(language):
 def test_module_2(language):
     import modules.Module_2 as mod
 
-    modnew = epyccel(mod, comm=MPI.COMM_WORLD, language=language)
+    modnew = run_epyccel(mod, comm=MPI.COMM_WORLD, language=language)
 
     # ...
     m1 = 2 ; m2 = 3
@@ -54,9 +54,9 @@ def test_function(language):
 
     comm = MPI.COMM_WORLD
 
-    f_fast = epyccel(f, comm=comm, language=language)
-    g_fast = epyccel(g, comm=comm, language=language)
-    h_fast = epyccel(h, comm=comm, language=language)
+    f_fast = run_epyccel(f, comm=comm, language=language)
+    g_fast = run_epyccel(g, comm=comm, language=language)
+    h_fast = run_epyccel(h, comm=comm, language=language)
 
     assert f_fast is not f
     assert g_fast is not g
@@ -73,3 +73,10 @@ def test_function(language):
     h_fast(x)
 
     assert np.array_equal(x, x_expected)
+
+##==============================================================================
+## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
+##==============================================================================
+
+def teardown_module(module):
+    clean_test()
