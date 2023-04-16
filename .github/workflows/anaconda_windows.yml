@@ -22,8 +22,15 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
-          activate-environment: test
+          auto-activate-base: true
+          python-version: '3.10'
+        if: inputs.python_version == ''
+      - uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: true
           python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies

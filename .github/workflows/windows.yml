@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - name: Setup Python ${{ inputs.python_version }}
+      - name: Set up Python 3.7
         uses: actions/setup-python@v4
         with:
             # The second most recent version is used as
@@ -28,7 +28,13 @@ jobs:
             # which leads to linking problems as there are
             # 2 versions of python3X.a and the wrong one
             # is chosen
-            python-version: ${{ inputs.python_version }}
+          python-version: 3.7
+        if: inputs.python_version == ''
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       #- name: Install mingw tools
       #  uses: msys2/setup-msys2@v2
