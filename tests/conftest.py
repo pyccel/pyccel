@@ -4,7 +4,7 @@ import shutil
 import pytest
 from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
-from pytest_teardown_tools import clean_test
+from epyccel.pytest_teardown_tools import clean_test
 
 # Uncomment to debug  pytest-xdist errors
 import sys
