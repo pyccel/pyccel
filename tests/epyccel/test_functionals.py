@@ -3,7 +3,7 @@ from numpy.random import randint
 from numpy import equal
 
 from modules import functionals
-from pyccel.run_epyccel import run_epyccel
+from pytest_teardown_tools import run_epyccel, clean_test
 
 def compare_epyccel(f, language, *args):
     f2 = run_epyccel(f, language=language)
