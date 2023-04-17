@@ -18,6 +18,7 @@ jobs:
       run_windows: ${{ steps.run_bot.outputs.run_windows }}
       run_macosx: ${{ steps.run_bot.outputs.run_macosx }}
       run_coverage: ${{ steps.run_bot.outputs.run_coverage }}
+      run_cuda: ${{ steps.run_bot.outputs.run_cuda }}
       run_docs: ${{ steps.run_bot.outputs.run_docs }}
       run_pylint: ${{ steps.run_bot.outputs.run_pylint }}
       run_lint: ${{ steps.run_bot.outputs.run_lint }}
