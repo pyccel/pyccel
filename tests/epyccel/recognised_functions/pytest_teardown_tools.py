@@ -27,7 +27,7 @@ def run_epyccel(func_or_mod, **kwargs):
     function or module
         The pyccelised version of func_or_mod.
     """
-    f = epyccel(func_or_mod, **kwargs)
+    f = epyccel(func_or_mod, verbose=True, **kwargs)
     mod_name = getattr(f, '__module__', f.__name__)
     print(mod_name)
     generated_file_stems.append(mod_name)
