@@ -7,8 +7,6 @@
 See the developer docs for more details
 """
 
-# pylint: disable=missing-function-docstring
-
 from itertools import chain
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -257,6 +255,18 @@ class SemanticParser(BasicParser):
 
     @property
     def program_namespace(self):
+        """
+        Get the namespace relevant to the program.
+
+        Get the namespace which describes the section of
+        code which is executed as a program. In other words
+        the code inside an `if __name__ == '__main__':`
+        block.
+
+        Returns
+        -------
+        Scope : The program namespace.
+        """
         return self._program_namespace
 
     #================================================================
@@ -298,11 +308,26 @@ class SemanticParser(BasicParser):
     #================================================================
 
     def change_to_program_scope(self):
+        """
+        Switch the focus to the program scope.
+
+        Update the namespace variable so that it points at the
+        program namespace (which describes the scope inside
+        a `if __name__ == '__main__':` block). It is assumed that
+        the current namespace is the module namespace.
+        """
         self._allocs.append([])
         self._module_namespace = self.scope
         self.scope = self._program_namespace
 
     def change_to_module_scope(self):
+        """
+        Switch the focus to the module scope.
+
+        Update the namespace variable so that it points
+        at the module namespace. It is assumed that the
+        current namespace is the program namespace.
+        """
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
@@ -338,6 +363,21 @@ class SemanticParser(BasicParser):
         return var
 
     def get_variables(self, container):
+        """
+        Get all variables in the scope of interest.
+
+        Get a list of all variables which are
+
+        Parameters
+        ----------
+        container : Scope
+            The object describing the relevant scope.
+
+        Returns
+        -------
+        list
+            A list of variables.
+        """
         # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
         variables = []
@@ -739,17 +779,34 @@ class SemanticParser(BasicParser):
                 return PythonTuple(*(val.args*length))
 
     def _handle_function_args(self, arguments, **settings):
+        """
+        Get a list of all function arguments.
+
+        Get a list of all the function arguments which are passed
+        to a function. This is done by visiting the syntactic
+        FunctionCallArguments. If this argument contains a
+        starred arguments object then the contents of this object
+        are extracted into the final list.
+
+        Parameters
+        ----------
+        arguments : list of FunctionCallArgument
+            The arguments which were passed to the function.
+
+        **settings : dict
+            Any settings to be passed to the `_visit` function.
+
+        Returns
+        -------
+        list of FunctionCallArgument
+            The arguments passed to the function.
+        """
         args  = []
         for arg in arguments:
             a = self._visit(arg, **settings)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
-                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
-                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
-                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
-                    self._additional_exprs[-1].append(assign)
-                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
@@ -1806,7 +1863,13 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCallArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
-        return FunctionCallArgument(value, expr.keyword)
+        a = FunctionCallArgument(value, expr.keyword)
+        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+            tmp_var = self.scope.get_new_name()
+            assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
+            self._additional_exprs[-1].append(assign)
+            a = FunctionCallArgument(self._visit(tmp_var))
+        return a
 
     def _visit_FunctionDefArgument(self, expr, **settings):
         var   = self._visit(expr.var, **settings)
