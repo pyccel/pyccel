@@ -22,13 +22,13 @@ runs:
         df -h
         python -m pytest -n auto -sxv -rXx -m "fortran ${{ inputs.pytest_mark }}" epyccel/recognised_functions
         df -h
-        ls __epyccel__/*.so | head -1 | xargs ldd
+        #ls __epyccel__/*.so | head -1 | xargs ldd
         ls -lh __epyccel__/*.so
         pyccel-clean
         df -h
         python -m pytest -n auto -sxv -rXx -m "c ${{ inputs.pytest_mark }}" epyccel/recognised_functions
         df -h
-        ls __epyccel__/*.so | head -1 | xargs ldd
+        #ls __epyccel__/*.so | head -1 | xargs ldd
         ls -lh __epyccel__/*.so
         pyccel-clean
         df -h
