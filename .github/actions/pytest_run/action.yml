@@ -16,6 +16,8 @@ runs:
     - name: Test with pytest
       run: |
         which python
+        ls /opt/hostedtoolcache/Python/3.9.16/x64/lib/python3.9/config-3.9-x86_64-linux-gnu
+        ls /opt/hostedtoolcache/Python/3.9.16/x64/lib
         df -h
         python -m pytest -n auto -sxv -rXx -m "fortran ${{ inputs.pytest_mark }}" epyccel/recognised_functions
         df -h
