@@ -333,7 +333,10 @@ class Compiler:
         # Get compile options
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
+        if self._info['exec'] in ('nvcc', 'nvc', 'nvfortran'):
+            linker_libdirs_flags = ['-Xcompiler' if l == '-L' else f'"-Wl,-rpath,{l}"' for l in libdirs_flags]
+        else:
+            linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -385,7 +388,10 @@ class Compiler:
         # Collect compile information
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' and self._info['exec'] != 'nvcc' else l for l in libdirs_flags]
+        if self._info['exec'] in ('nvcc', 'nvc', 'nvfortran'):
+            linker_libdirs_flags = ['-Xcompiler' if l == '-L' else f'"-Wl,-rpath,{l}"' for l in libdirs_flags]
+        else:
+            linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         flags.insert(0,"-shared")
 
