@@ -263,6 +263,7 @@ class Compiler:
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
         libs_flags = [s if s.startswith('-l') else '-l{}'.format(s) for s in libs]
+        libs_flags = self._insert_prefix_to_list(libs_flags, '-Wl,-Bdynamic')
         libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
