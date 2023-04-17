@@ -51,9 +51,13 @@ def clean_test():
     for (folder, filename) in chain(files_e, files_p):
         stem = filename.split('.')[0]
         if stem in generated_file_stems:
-            os.remove(os.path.join(folder, filename))
+            full_file = os.path.join(folder, filename)
+            print(os.path.getsize(full_file))
+            os.remove(full_file)
             to_remove.append(stem)
         elif stem.endswith('_wrapper') and stem[:-8] in generated_file_stems:
+            full_file = os.path.join(folder, filename)
+            print(os.path.getsize(full_file))
             os.remove(os.path.join(folder, filename))
 
     for r in set(to_remove):
