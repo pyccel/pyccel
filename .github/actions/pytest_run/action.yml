@@ -17,13 +17,13 @@ runs:
       run: |
         which python
         df -h
-        python -m pytest -n auto -xv -rXx -m "fortran ${{ inputs.pytest_mark }}" epyccel/recognised_functions
+        python -m pytest -n auto -sxv -rXx -m "fortran ${{ inputs.pytest_mark }}" epyccel/recognised_functions
         df -h
         ls -lh __epyccel__
         ls -lh __epyccel__/__pyccel__
         pyccel-clean
         df -h
-        python -m pytest -n auto -xv -rXx -m "c ${{ inputs.pytest_mark }}" epyccel/recognised_functions
+        python -m pytest -n auto -sxv -rXx -m "c ${{ inputs.pytest_mark }}" epyccel/recognised_functions
         df -h
         ls -lh __epyccel__
         ls -lh __epyccel__/__pyccel__
