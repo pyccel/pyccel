@@ -41,20 +41,21 @@ def clean_test():
     run_epyccel command. The names of the stems of these files
     can be found in the module variable generated_file_stems.
     """
-    path_dir = os.getcwd()
-    folder_e = os.path.join(path_dir,"__epyccel__")
-    folder_p = os.path.join(folder_e,"__pyccel__")
-    files_e = [(folder_e,f) for f in os.listdir(folder_e) if not os.path.isdir(f)]
-    files_p = [(folder_p,f) for f in os.listdir(folder_p) if not os.path.isdir(f)]
-    to_remove = []
-    print(len(generated_file_stems), len(set(generated_file_stems)))
-    for (folder, filename) in chain(files_e, files_p):
-        stem = filename.split('.')[0]
-        if stem in generated_file_stems:
-            os.remove(os.path.join(folder, filename))
-            to_remove.append(stem)
-        elif stem.endswith('_wrapper') and stem[:-8] in generated_file_stems:
-            os.remove(os.path.join(folder, filename))
+    pass
+    #path_dir = os.getcwd()
+    #folder_e = os.path.join(path_dir,"__epyccel__")
+    #folder_p = os.path.join(folder_e,"__pyccel__")
+    #files_e = [(folder_e,f) for f in os.listdir(folder_e) if not os.path.isdir(f)]
+    #files_p = [(folder_p,f) for f in os.listdir(folder_p) if not os.path.isdir(f)]
+    #to_remove = []
+    #print(len(generated_file_stems), len(set(generated_file_stems)))
+    #for (folder, filename) in chain(files_e, files_p):
+    #    stem = filename.split('.')[0]
+    #    if stem in generated_file_stems:
+    #        os.remove(os.path.join(folder, filename))
+    #        to_remove.append(stem)
+    #    elif stem.endswith('_wrapper') and stem[:-8] in generated_file_stems:
+    #        os.remove(os.path.join(folder, filename))
 
-    for r in set(to_remove):
-        generated_file_stems.remove(r)
+    #for r in set(to_remove):
+    #    generated_file_stems.remove(r)

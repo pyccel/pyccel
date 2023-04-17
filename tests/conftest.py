@@ -45,7 +45,8 @@ def pytest_runtest_teardown(item, nextitem):
                 pyccel_clean(path_dir, remove_shared_libs = True)
             comm.Barrier()
     else:
-        clean_test()
+        #clean_test()
+        pass
 
 def pytest_addoption(parser):
     parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
