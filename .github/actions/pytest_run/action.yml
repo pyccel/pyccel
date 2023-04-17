@@ -16,19 +16,45 @@ runs:
     - name: Test with pytest
       run: |
         which python
-        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
+        python -m pytest -n auto -xv -rXx -v -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
-            python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
+            python -m pytest -n auto -xv -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py
         fi
-        python -m pytest -rXx -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
+        python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
+        ls
+        ls -l __epyccel__
+        ls -l __epyccel__/__pyccel__
         pyccel-clean
-        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
-        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
+        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays epyccel/recognised_functions
+        df -h
         pyccel-clean
+        df -h
+        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays --ignore=epyccel/recognised_functions epyccel
+        df -h
+        ls -l __epyccel__
+        df -h
+        ls -l __epyccel__/__pyccel__
+        pyccel-clean
+        df -h
+        python -m pytest -n auto -xv -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays --ignore=epyccel
+        df -h
+        pyccel-clean
+        df -h
+        python -m pytest -xv -rXx -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        df -h
+        pyccel-clean
+        df -h
         python -m pytest ndarrays/ -rXx
+        df -h
         pyccel-clean
+        df -h
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
