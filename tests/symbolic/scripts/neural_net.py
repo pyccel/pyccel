@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 #$ header function f(double[:],double[:,:,:],int)
 @sympy
 def g(v,w,i):
