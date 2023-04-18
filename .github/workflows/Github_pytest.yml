@@ -118,6 +118,7 @@ jobs:
       ./.github/workflows/pyccel_lint.yml
     with:
       python_version: ${{ needs.Bot.outputs.python_version }}
+      base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   spelling:
