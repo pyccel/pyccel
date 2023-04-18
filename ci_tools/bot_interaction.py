@@ -216,7 +216,7 @@ def mark_as_ready(pr_id):
     """
     data = get_job_information(event['run_number'])
 
-    job_data = [j for j in job_data if j['name'] not in ('Bot', 'CleanUpBot')]
+    job_data = [j for j in data if j['name'] not in ('Bot', 'CleanUpBot')]
 
     failures = [j['name'] for j in job_data if j['conclusion'] in ('cancelled', 'failed')]
 
