@@ -214,15 +214,16 @@ def mark_as_ready(pr_id):
     pr_id : int
         The number of the PR.
     """
+    running_job_data = get_status_json(pr_id, 'statusCheckRollup')
+
     data = get_job_information(event['run_number'])
 
     job_data = [j for j in data if j['name'] not in ('Bot', 'CleanUpBot')]
 
     failures = [j['name'] for j in job_data if j['conclusion'] in ('cancelled', 'failed')]
 
-    with open(os.path.join(os.path.dirname(__file__), 'codacy.json'), encoding="utf-8") as codacy_results:
-        codacy_results = json.loads(codacy_results.read())
-    print(codacy_results)
+    if any(j['name'] == 'Codacy Static Code Analysis' and j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED') for j in running_job_data):
+        failures.append('Codacy Static Code Analysis')
 
     if failures:
         set_draft(pr_id)
