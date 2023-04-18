@@ -96,19 +96,16 @@ def run_tests(pr_id, tests, outputs, event):
 
     if not running_tests:
         comment = "The requested tests were not recognised. I detected:\n"
-        for u in unrecognised:
-            comment += f'- "{u}"\n'
-        comment += "\n"
+        comment += '\n'.join(f'- "{u}"' for u in unrecognised)
+        comment += "\n\n"
         comment += message_from_file('show_tests.txt')
     else:
         comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
-        for r in running:
-            comment += f'- :hourglass_flowing_sand: {r}\n'
+        comment += '\n'.join(f'- :hourglass_flowing_sand: {r}' for r in running)
         if unrecognised:
-            comment += "The following additional tests were not recognised:\n"
-            for u in unrecognised:
-                comment += f'- "{u}"\n'
-            comment += "\n"
+            comment += "\n\nThe following additional tests were not recognised:\n"
+            comment += '\n'.join(f'- "{u}"' for u in unrecognised)
+            comment += "\n\n"
             comment += "To see a list of all test names, please use `/bot show tests`"
 
     leave_comment(pr_id, comment)
