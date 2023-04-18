@@ -103,7 +103,7 @@ def run_tests(pr_id, tests, outputs, event):
     else:
         comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
         for r in running:
-            comment += f'- :hourglass_flowing_sand: {r}'
+            comment += f'- :hourglass_flowing_sand: {r}\n'
         if unrecognised:
             comment += "The following additional tests were not recognised:\n"
             for u in unrecognised:
