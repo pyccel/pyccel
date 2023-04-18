@@ -61,23 +61,57 @@ def run_tests(pr_id, tests, outputs, event):
 
     event : dict
         The event payload of the GitHub workflow.
+
+    Returns
+    -------
+    bool
+        Indicates if any tests were triggered.
     """
     # Leave a comment to link to the run page
     ref_sha = get_status_json(pr_id, 'headRefOid')
     url = get_run_url(event)
-    comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
-    leave_comment(pr_id, comment)
+
+    unrecognised = []
+    running = set()
 
     # Modify the flags to trigger the tests
     if tests == ['pr_tests']:
         tests = pr_test_keys
+        running = set(pr_test_keys)
     for t in tests:
-        outputs[f'run_{t}'] = True
+        key = f'run_{t}'
+        if key in outputs:
+            outputs[key] = True
+            running.add(t)
+        else:
+            unrecognised.append(t)
 
     if outputs['run_coverage']:
         outputs['run_linux'] = True
+        running.add('linux')
+
+    running_tests = len(unrecognised) != len(tests)
+
+    if running_tests:
+        comment = f"The requested tests were not recognised. I detected:\n"
+        for u in unrecognised:
+            comment += f'- "{u}"\n'
+        comment += message_from_file('show_tests.txt')
+    else:
+        comment = f"Running tests on commit {ref_sha}, for more details see [here]({url})\n"
+        for r in running:
+            comment += f'- :hourglass_flowing_sand: {r}'
+        if unrecognised:
+            comment += "The following additional tests were not recognised:\n"
+            for u in unrecognised:
+                comment += f'- "{u}"\n'
+            comment += "To see a list of all test names, please use `/bot show tests`"
+
+    leave_comment(pr_id, comment)
 
     outputs['status_url'] = event['repository']['statuses_url'].format(sha=ref_sha)
+
+    return running_tests
 
 def check_review_stage(pr_id):
     """
@@ -309,10 +343,8 @@ def flagged_as_trusted(pr_id, user):
     bool : True if trustworthy, false otherwise.
     """
     trusted_comments = [c for c in get_previous_pr_comments(pr_id) if c.author in trusted_reviewers]
-    print(trusted_comments)
     for c in trusted_comments:
         words = c.body.strip().split()
-        print(words)
         if words == ['/bot', 'trust', 'user', user]:
             return True
 
@@ -401,20 +433,19 @@ if __name__ == '__main__':
         comment = event['comment']['body']
         command = comment.split('/bot')[1].strip()
         command_words = command.split()
-        print(command_words)
 
         if command_words[0] == 'run':
             if trusted_user:
-                outputs['cleanup_trigger'] = 'update_test_information'
-                run_tests(pr_id, command_words[1:], outputs, event)
+                if run_tests(pr_id, command_words[1:], outputs, event):
+                    outputs['cleanup_trigger'] = 'update_test_information'
             else:
                 leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
         elif command_words[0] == 'try':
             if trusted_user:
                 outputs['python_version'] = command_words[1]
-                outputs['cleanup_trigger'] = 'update_test_information'
-                run_tests(pr_id, command_words[2:], outputs, event)
+                if run_tests(pr_id, command_words[2:], outputs, event):
+                    outputs['cleanup_trigger'] = 'update_test_information'
             else:
                 leave_comment(pr_id, message_from_file('untrusted_user.txt'))
 
@@ -447,10 +478,8 @@ if __name__ == '__main__':
 
         # Check whether user is new and/or trusted
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
-        print(event['pull_request']['author_association'])
         if trusted_user:
             prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['user']['login'])
-            print(prs)
             new_user = (len(prs) == 0)
         else:
             new_user = True
