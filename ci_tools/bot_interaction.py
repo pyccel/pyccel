@@ -94,7 +94,7 @@ def run_tests(pr_id, tests, outputs, event):
     print(unrecognised)
     print(tests)
 
-    if running_tests:
+    if not running_tests:
         comment = f"The requested tests were not recognised. I detected:\n"
         for u in unrecognised:
             comment += f'- "{u}"\n'
