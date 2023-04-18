@@ -203,9 +203,9 @@ jobs:
           python-version: 3.9
       - name: Check codacy results
         run: |
-          ORG = echo "${{github.repository}}" | cut -f1 -d/
-          REPO = echo "${{github.repository}}" | cut -f1 -d/
-          curl -X GET https://app.codacy.com/api/v3/analysis/organizations/gh/${ORG}/repositories/${REPO}/pull-requests/${{ github.number }}/files   -H 'Accept: application/json'   -H 'api-token: ${{ secrets.CODACY_AUTHENTIFICATION_TOKEN }}' > codacy.json
+          ORG=$(echo "${{github.repository}}" | cut -f1 -d/)
+          REPO=$(echo "${{github.repository}}" | cut -f1 -d/)
+          curl -X GET https://app.codacy.com/api/v3/analysis/organizations/gh/${ORG}/repositories/${REPO}/pull-requests/${{ github.event.number }}/files -H 'Accept: application/json' -H 'api-token: ${{ secrets.CODACY_AUTHENTIFICATION_TOKEN }}' > codacy.json
           cat codacy.json
         if: ${{ github.event_name == 'pull_request' }}
       - id: run_bot
