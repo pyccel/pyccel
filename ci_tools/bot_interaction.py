@@ -91,8 +91,6 @@ def run_tests(pr_id, tests, outputs, event):
         running.add('linux')
 
     running_tests = bool(running)
-    print(unrecognised)
-    print(tests)
 
     if not running_tests:
         comment = "The requested tests were not recognised. I detected:\n"
