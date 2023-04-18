@@ -206,7 +206,7 @@ jobs:
           ORG=$(echo "${{github.repository}}" | cut -f1 -d/)
           REPO=$(echo "${{github.repository}}" | cut -f2 -d/)
           curl -X GET https://app.codacy.com/api/v3/analysis/organizations/gh/${ORG}/repositories/${REPO}/pull-requests/${{ github.event.number }}/files -H 'Accept: application/json' -H 'api-token: ${{ secrets.CODACY_AUTHENTIFICATION_TOKEN }}' > ci_tools/codacy.json
-          cat codacy.json
+          cat ci_tools/codacy.json
         if: ${{ github.event_name == 'pull_request' }}
       - id: run_bot
         run: |
