@@ -39,8 +39,8 @@ jobs:
         shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      #- name: Fortran/C tests with pytest
-      #  uses: ./.github/actions/pytest_run
+      - name: Fortran/C tests with pytest
+        uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
