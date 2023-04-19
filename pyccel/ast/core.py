@@ -2175,17 +2175,9 @@ class KernelCall(FunctionCall):
 
     def __init__(self, func, args, numBlocks, tpblock, current_function=None):
 
-        self._func = func
-        self._args = args
         self._numBlocks = numBlocks
         self._tpblock = tpblock
         super().__init__(func, args, current_function)
-
-    @property
-    def args(self):
-        """ The number of blocks in which the kernel will run
-        """
-        return self._args
 
     @property
     def numBlocks(self):
