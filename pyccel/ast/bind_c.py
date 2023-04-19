@@ -92,7 +92,6 @@ def as_static_function(func, *, mod_scope, name=None):
     args    = list(func.arguments)
     results = list(func.results)
     body    = func.body.body
-    arguments_inout = func.arguments_inout
     functions = func.functions
     _results = []
     interfaces = func.interfaces
@@ -120,7 +119,6 @@ def as_static_function(func, *, mod_scope, name=None):
     # ...
     results_names = [i.name for i in _results]
     _args = []
-    _arguments_inout = []
 
     for i_a, a in enumerate(args):
         a = a.var
@@ -139,7 +137,6 @@ def as_static_function(func, *, mod_scope, name=None):
             # ...
 
             _args += additional_args
-            _arguments_inout += [False] * len(additional_args)
 
             a_new = Variable( a.dtype, a.name,
                               memory_handling = a.memory_handling,
@@ -158,15 +155,11 @@ def as_static_function(func, *, mod_scope, name=None):
         else:
             _args += [a]
 
-        intent = arguments_inout[i_a]
-        _arguments_inout += [intent]
     args = _args
     results = _results
-    arguments_inout = _arguments_inout
     # ...
     return BindCFunctionDef( name, list(args), results, body,
                         is_static = True,
-                        arguments_inout = arguments_inout,
                         functions = functions,
                         interfaces = interfaces,
                         imports = func.imports,
@@ -242,7 +235,6 @@ def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
 
     # new function declaration
     new_func = FunctionDef(func.name, func.arguments, func.results, body,
-                       arguments_inout = func.arguments_inout,
                        functions = func.functions,
                        interfaces = func.interfaces,
                        imports = local_imports,

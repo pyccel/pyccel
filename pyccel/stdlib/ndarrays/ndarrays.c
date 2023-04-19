@@ -235,13 +235,14 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step)
+t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type)
 {
     t_slice slice;
 
     slice.start = start;
     slice.end = end;
     slice.step = step;
+    slice.type = type;
     return (slice);
 }
 
@@ -251,39 +252,30 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     va_list  va;
     t_slice slice;
     int32_t start = 0;
+    int32_t j;
 
     view.nd = n;
     view.type = arr.type;
     view.type_size = arr.type_size;
-    view.shape = malloc(sizeof(int64_t) * arr.nd);
-    view.strides = malloc(sizeof(int64_t) * arr.nd);
-    memcpy(view.strides, arr.strides, sizeof(int64_t) * arr.nd);
+    view.shape = malloc(sizeof(int64_t) * view.nd);
+    view.strides = malloc(sizeof(int64_t) * view.nd);
     view.is_view = true;
+
     va_start(va, n);
-    for (int32_t i = 0; i < arr.nd ; i++)
+    j = 0;
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
-        view.shape[i] = (slice.end - slice.start + (slice.step - 1)) / slice.step; // we need to round up the shape
-        start += slice.start * arr.strides[i];
-        view.strides[i] *= slice.step;
-    }
-    va_end(va);
-    int32_t j = arr.nd - view.nd;
-    if (j)
-    {
-        int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
-        int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
-        for (int32_t i = 0; i < view.nd; i++)
+        if (slice.type == RANGE)
         {
-            tmp_strides[i] = view.strides[j];
-            tmp_shape[i] = view.shape[j];
+            view.shape[j] = (slice.end - slice.start + (slice.step - 1)) / slice.step;
+            view.strides[j] = arr.strides[i] * slice.step;
             j++;
         }
-        free(view.shape);
-        free(view.strides);
-        view.strides = tmp_strides;
-        view.shape = tmp_shape;
+        start += slice.start * arr.strides[i];
     }
+    va_end(va);
+
     view.raw_data = arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
@@ -379,3 +371,79 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
     return nd_shape;
 
 }
+
+/*
+** sum of ndarray
+*/
+
+static int64_t     get_index_from_array(t_ndarray arr, int64_t *nd_indices)
+{
+    /*
+    ** returns the one dimentional index equivalent to
+    ** the indices in each dimension stored in nd_indices
+    */
+    int64_t idx = 0;
+    for (int64_t dim = 0; dim<arr.nd; ++dim)
+    {
+        idx += arr.strides[dim] * (nd_indices[dim]);
+    }
+    return idx;
+}
+
+/*
+** Calculate the sum of a numpy array of bools by
+** looping over the length of the array and computing
+** the n-dimensional indices of each element
+**
+** Example:
+**      For a two dimentional array of shape (2, 3),
+**  nd_indices is initialized to be [0, 0],
+**  the main loop will run for 6 iterations
+**  each iteration increments nd_indices[0] by 1, then
+**  a carry is performed when nd_indices[i] is equal to shape[i]
+**  iteration 0:
+**      nd_indices = [0, 0] -> no carry
+**  iteration 1:
+**      nd_indices = [1, 0] -> no carry
+**  iteration 2:
+**      nd_indices = [2, 0] -> nd_indices[0] == shape[0]
+**                          -> carry -> [0, 1]
+**  iteration 3:
+**      nd_indices = [1, 1] -> no carry
+**  iteration 4:
+**      nd_indices = [2, 1] -> nd_indices[0] == shape[0]
+**                          -> carry -> [0, 2]
+**  iteration 5:
+**      nd_indices = [1, 2] -> no carry
+*/
+#define NUMPY_SUM_(NAME, TYPE, CTYPE) \
+    TYPE numpy_sum_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = 0; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            output += arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
+
+NUMPY_SUM_(bool, int64_t, bool)
+NUMPY_SUM_(int8, int64_t, int8)
+NUMPY_SUM_(int16, int64_t, int16)
+NUMPY_SUM_(int32, int64_t, int32)
+NUMPY_SUM_(int64, int64_t, int64)
+NUMPY_SUM_(float32, float, float)
+NUMPY_SUM_(float64, double, double)
+#ifndef __NVCC__
+NUMPY_SUM_(complex64, float complex, cfloat)
+NUMPY_SUM_(complex128, double complex, cdouble)
+#endif

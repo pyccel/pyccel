@@ -75,3 +75,11 @@ Codacy
 codebase
 backend
 iterable
+performant
+inhomogeneous
+natively
+PSYDAC
+prepend
+uniformise
+incrementation
+Pylint

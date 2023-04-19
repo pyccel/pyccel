@@ -4,6 +4,7 @@ matrix:
   - README.md
   - tutorial/*.md
   - developer_docs/*.md
+  - CHANGELOG.md
   aspell:
     lang: en
     d: en_GB

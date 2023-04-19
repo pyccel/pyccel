@@ -30,7 +30,7 @@ from .mathext        import MathCeil
 from .operators      import PyccelAdd, PyccelLe, PyccelMul, broadcast, PyccelMinus, PyccelDiv
 from .variable       import (Variable, Constant, HomogeneousTupleVariable)
 
-from .numpyext       import process_dtype, process_shape
+from .numpyext       import process_dtype, process_shape, NumpyNewArray
 
 #==============================================================================
 __all__ = (
@@ -48,22 +48,12 @@ __all__ = (
 )
 
 #==============================================================================
-class CudaNewArray(PyccelInternalFunction):
+class CudaNewArray(NumpyNewArray):
     """ Class from which all Cuda functions which imply a call to Allocate
     inherit
     """
     __slots__ = ()
-    #--------------------------------------------------------------------------
-    @staticmethod
-    def _process_order(rank, order):
-
-        if rank < 2:
-            return None
-
-        order = str(order).strip('\'"')
-        if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
-        return order
+    pass
 
 #==============================================================================
 

@@ -229,19 +229,17 @@ else:
     possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
     # Prefer the static library where possible to avoid unnecessary libdirs
     # which may lead to the wrong libraries being linked
-    if possible_shared_lib == '' and possible_static_lib == '':
+    if possible_static_lib != '':
+        python_info['python']['dependencies'] = (possible_static_lib,)
+    else:
         # If the proposed library does not exist use different config flags
         # to specify the library
         linker_flags = [change_to_lib_flag(l) for l in
-                        config_vars.get("LIBRARY","").split() + \
-                        config_vars.get("LDSHARED","").split()[1:]]
+                        config_vars.get("LDSHARED","").split() + \
+                        config_vars.get("LIBRARY","").split()[1:]]
         python_info['python']['libs'] = [l[2:] for l in linker_flags if l.startswith('-l')]
         python_info['python']['libdirs'] = [l[2:] for l in linker_flags if l.startswith('-L')] + \
                             config_vars.get("LIBPL","").split()+config_vars.get("LIBDIR","").split()
-    elif possible_static_lib != '':
-        python_info['python']['dependencies'] = (possible_static_lib,)
-    else:
-        python_info['python']['dependencies'] = (possible_shared_lib,)
 
 #------------------------------------------------------------
 gcc_info.update(python_info)

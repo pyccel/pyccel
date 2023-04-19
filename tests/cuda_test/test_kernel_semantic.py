@@ -40,7 +40,7 @@ def test_stack_array_kernel(language):
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func  == 'stack_array_kernel'
+    assert error_info.symbol.funcdef  == 'stack_array_kernel'
     assert KERNEL_STACK_ARRAY_ARG == error_info.message
 
 @pytest.mark.parametrize( 'language', [
@@ -93,7 +93,7 @@ def test_unvalid_block_number(language):
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func  == 'kernel_call'
+    assert error_info.symbol.funcdef  == 'kernel_call'
     assert INVALID_KERNEL_CALL_BP_GRID == error_info.message
 
 @pytest.mark.parametrize( 'language', [
@@ -120,7 +120,7 @@ def test_unvalid_thread_per_block(language):
 
     # Check that the error is correct
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func  == 'kernel_call'
+    assert error_info.symbol.funcdef  == 'kernel_call'
     assert INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
 
 @pytest.mark.parametrize( 'language', [
@@ -167,7 +167,7 @@ def test_invalid_block_number(language):
     assert errors.num_messages() == 1
 
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func == 'kernel_call'
+    assert error_info.symbol.funcdef == 'kernel_call'
     assert  INVALID_KERNEL_CALL_BP_GRID == error_info.message
 
 @pytest.mark.parametrize( 'language', [
@@ -191,7 +191,7 @@ def test_invalid_thread_per_block(language):
     assert errors.num_messages() == 1
 
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func == 'kernel_call'
+    assert error_info.symbol.funcdef == 'kernel_call'
     assert  INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
 
 
@@ -214,5 +214,5 @@ def test_invalid_function_call(language):
     assert errors.num_messages() == 1
 
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.func == 'non_kernel_func'
+    assert error_info.symbol.funcdef == 'non_kernel_func'
     assert INVALID_FUNCTION_CALL == error_info.message

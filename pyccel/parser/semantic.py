@@ -7,8 +7,6 @@
 See the developer docs for more details
 """
 
-# pylint: disable=missing-function-docstring
-
 from itertools import chain
 
 from sympy.utilities.iterables import iterable as sympy_iterable
@@ -28,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonMap, PythonTuple, Lambda)
+                                 PythonTuple, Lambda)
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -85,7 +83,7 @@ from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyZeros, NumpyMatmul
+from pyccel.ast.numpyext import NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
@@ -174,16 +172,36 @@ def _get_name(var):
 #==============================================================================
 
 class SemanticParser(BasicParser):
+    """
+    Class which handles the semantic stage as described in the developer docs.
 
-    """ Class for a Semantic Parser.
-    It takes a syntactic parser as input for the moment"""
+    This class is described in detail in developer_docs/semantic_stage.md.
+    It determines all semantic information which must be deduced in order to
+    print a representation of the AST resulting from the syntactic stage in one
+    of the target languages.
 
-    def __init__(self, inputs, **kwargs):
+    Parameters
+    ----------
+    inputs : SyntaxParser
+        A syntactic parser which has been used to generate a representation of
+        the input code using Pyccel nodes.
+
+    parents : list
+        A list of parsers describing the files which import this file.
+
+    d_parsers : list
+        A list of parsers describing files imported by this file.
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser.
+    """
+
+    def __init__(self, inputs, *, parents = (), d_parsers = (), **kwargs):
 
         # a Parser can have parents, who are importing it.
         # imports are then its sons.
-        self._parents = kwargs.pop('parents', [])
-        self._d_parsers = kwargs.pop('d_parsers', {})
+        self._parents = list(parents)
+        self._d_parsers = dict(d_parsers)
 
         # ...
         if not isinstance(inputs, SyntaxParser):
@@ -237,6 +255,18 @@ class SemanticParser(BasicParser):
 
     @property
     def program_namespace(self):
+        """
+        Get the namespace relevant to the program.
+
+        Get the namespace which describes the section of
+        code which is executed as a program. In other words
+        the code inside an `if __name__ == '__main__':`
+        block.
+
+        Returns
+        -------
+        Scope : The program namespace.
+        """
         return self._program_namespace
 
     #================================================================
@@ -278,11 +308,26 @@ class SemanticParser(BasicParser):
     #================================================================
 
     def change_to_program_scope(self):
+        """
+        Switch the focus to the program scope.
+
+        Update the namespace variable so that it points at the
+        program namespace (which describes the scope inside
+        a `if __name__ == '__main__':` block). It is assumed that
+        the current namespace is the module namespace.
+        """
         self._allocs.append([])
         self._module_namespace = self.scope
         self.scope = self._program_namespace
 
     def change_to_module_scope(self):
+        """
+        Switch the focus to the module scope.
+
+        Update the namespace variable so that it points
+        at the module namespace. It is assumed that the
+        current namespace is the program namespace.
+        """
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
@@ -318,6 +363,21 @@ class SemanticParser(BasicParser):
         return var
 
     def get_variables(self, container):
+        """
+        Get all variables in the scope of interest.
+
+        Get a list of all variables which are
+
+        Parameters
+        ----------
+        container : Scope
+            The object describing the relevant scope.
+
+        Returns
+        -------
+        list
+            A list of variables.
+        """
         # this only works if called on a function scope
         # TODO needs more tests when we have nested functions
         variables = []
@@ -407,7 +467,7 @@ class SemanticParser(BasicParser):
         self._allocs.pop()
         return deallocs
 
-    def _infere_type(self, expr, **settings):
+    def _infer_type(self, expr, **settings):
         """
         type inference for expressions
         """
@@ -468,7 +528,7 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Duplicate):
-            d = self._infere_type(expr.val, **settings)
+            d = self._infer_type(expr.val, **settings)
 
             # TODO must check that it is consistent with pyccel's rules
             # TODO improve
@@ -540,9 +600,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
-        elif isinstance(expr, IfTernaryOperator):
-            return self._infere_type(expr.args[0][1].body[0])
-
         elif isinstance(expr, PythonRange):
 
             d_var['datatype'   ] = NativeRange()
@@ -575,9 +632,6 @@ class SemanticParser(BasicParser):
 
             d_var['cls_base'      ] = cls
             return d_var
-
-        elif isinstance(expr, GeneratorComprehension):
-            return self._infere_type(expr.lhs)
 
         else:
             type_name = type(expr).__name__
@@ -725,17 +779,34 @@ class SemanticParser(BasicParser):
                 return PythonTuple(*(val.args*length))
 
     def _handle_function_args(self, arguments, **settings):
+        """
+        Get a list of all function arguments.
+
+        Get a list of all the function arguments which are passed
+        to a function. This is done by visiting the syntactic
+        FunctionCallArguments. If this argument contains a
+        starred arguments object then the contents of this object
+        are extracted into the final list.
+
+        Parameters
+        ----------
+        arguments : list of FunctionCallArgument
+            The arguments which were passed to the function.
+
+        **settings : dict
+            Any settings to be passed to the `_visit` function.
+
+        Returns
+        -------
+        list of FunctionCallArgument
+            The arguments passed to the function.
+        """
         args  = []
         for arg in arguments:
             a = self._visit(arg, **settings)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
             else:
-                if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
-                    tmp_var = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
-                    assign = self._visit(Assign(tmp_var, arg.value, fst= arg.value.fst))
-                    self._additional_exprs[-1].append(assign)
-                    a = FunctionCallArgument(self._visit(tmp_var))
                 args.append(a)
         return args
 
@@ -837,12 +908,6 @@ class SemanticParser(BasicParser):
                         severity = 'fatal')
 
             args, kwargs = split_positional_keyword_arguments(*args)
-            for a in args:
-                if getattr(a,'dtype',None) == 'tuple':
-                    self._infere_type(a, **settings)
-            for a in kwargs.values():
-                if getattr(a,'dtype',None) == 'tuple':
-                    self._infere_type(a, **settings)
 
             try:
                 new_expr = func(*args, **kwargs)
@@ -1001,7 +1066,7 @@ class SemanticParser(BasicParser):
 
         rhs : Variable
             The value assigned to the lhs. This is required to call
-            self._infere_type recursively for tuples
+            self._infer_type recursively for tuples
 
         arr_in_multirets : bool
             If True, the variable that will be created is an array
@@ -1026,7 +1091,7 @@ class SemanticParser(BasicParser):
             elem_d_lhs_ref = None
             for i,r in enumerate(iterable):
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
-                elem_d_lhs = self._infere_type( r )
+                elem_d_lhs = self._infer_type( r )
 
                 if not arr_in_multirets:
                     self._ensure_target( r, elem_d_lhs )
@@ -1228,7 +1293,7 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
-                self._ensure_infered_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
+                self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
                 # var.
@@ -1277,7 +1342,7 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _ensure_infered_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
+    def _ensure_inferred_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
         """
         Ensure that the inferred type of the new variable, matches the existing variable (which has the
         same name). If this is not the case then errors are raised preventing pyccel reaching the codegen
@@ -1290,7 +1355,7 @@ class SemanticParser(BasicParser):
         dtype : DataType
                 The inferred DataType
         d_var : dict
-                The inferred information about the variable. Usually created by the _infere_type function
+                The inferred information about the variable. Usually created by the _infer_type function
         var   : Variable
                 The existing variable
         is_augassign : bool
@@ -1513,13 +1578,13 @@ class SemanticParser(BasicParser):
             result = result.body[-1]
 
         # Infer the final dtype of the expression
-        d_var = self._infere_type(result, **settings)
+        d_var = self._infer_type(result, **settings)
         dtype = d_var.pop('datatype')
         d_var['is_temp'] = expr.lhs.is_temp
 
         lhs  = self.check_for_variable(lhs_name)
         if lhs:
-            self._ensure_infered_type_matches_existing(dtype, d_var, lhs, False, new_expr, None)
+            self._ensure_inferred_type_matches_existing(dtype, d_var, lhs, False, new_expr, None)
         else:
             lhs_name = self.scope.get_expected_name(lhs_name)
             lhs = Variable(dtype, lhs_name, **d_var)
@@ -1798,7 +1863,13 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionCallArgument(self, expr, **settings):
         value = self._visit(expr.value, **settings)
-        return FunctionCallArgument(value, expr.keyword)
+        a = FunctionCallArgument(value, expr.keyword)
+        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+            tmp_var = self.scope.get_new_name()
+            assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
+            self._additional_exprs[-1].append(assign)
+            a = FunctionCallArgument(self._visit(tmp_var))
+        return a
 
     def _visit_FunctionDefArgument(self, expr, **settings):
         var   = self._visit(expr.var, **settings)
@@ -2033,7 +2104,7 @@ class SemanticParser(BasicParser):
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
 
-        d_var = self._infere_type(first)
+        d_var = self._infer_type(first)
         if d_var.get('cls_base', None) is None:
             errors.report(f'Attribute {rhs_name} not found',
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
@@ -2133,7 +2204,6 @@ class SemanticParser(BasicParser):
         args = self._handle_function_args(expr.args, **settings)
 
         return self._handle_kernel(expr, func, args, **settings)
-        # return KernelCall(func, expr.args, expr.numBlocks, expr.tpblock)
 
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
@@ -2428,7 +2498,7 @@ class SemanticParser(BasicParser):
                 results_shapes = macro.get_results_shapes(args)
                 for m_result, shape, result in zip(macro.results, results_shapes, lhs):
                     if m_result in d_m_args and not result in args_names:
-                        d_result = self._infere_type(d_m_args[m_result])
+                        d_result = self._infer_type(d_m_args[m_result])
                         d_result['shape'] = shape
                         tmp = self._assign_lhs_variable(result, d_result, None, new_expressions, False, **settings)
                         results.append(tmp)
@@ -2470,7 +2540,7 @@ class SemanticParser(BasicParser):
                 else:
                     # If macro is function, create left-hand side variable
                     if isinstance(master, FunctionDef) and master.results:
-                        d_var = self._infere_type(master.results[0], **settings)
+                        d_var = self._infer_type(master.results[0], **settings)
                         dtype = d_var.pop('datatype')
                         lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
                         var = self.check_for_variable(lhs.name)
@@ -2524,7 +2594,7 @@ class SemanticParser(BasicParser):
             if isinstance(lhs, PyccelSymbol):
                 name = lhs
                 if self.check_for_variable(name) is None:
-                    d_var = self._infere_type(stmt, **settings)
+                    d_var = self._infer_type(stmt, **settings)
                     dtype = d_var.pop('datatype')
                     lhs = Variable(dtype, name , **d_var, is_temp = lhs.is_temp)
                     self.scope.insert_variable(lhs)
@@ -2543,9 +2613,9 @@ class SemanticParser(BasicParser):
                 results = func.results
                 if results:
                     if len(results)==1:
-                        d_var = self._infere_type(results[0], **settings)
+                        d_var = self._infer_type(results[0], **settings)
                     else:
-                        d_var = self._infere_type(PythonTuple(*results), **settings)
+                        d_var = self._infer_type(PythonTuple(*results), **settings)
                 elif expr.lhs.is_temp:
                     return rhs
                 else:
@@ -2572,7 +2642,7 @@ class SemanticParser(BasicParser):
                         d_var['order'          ] = arg.order
 
             elif isinstance(func, Interface):
-                d_var = [self._infere_type(i, **settings) for i in
+                d_var = [self._infer_type(i, **settings) for i in
                          func.functions[0].results]
 
                 # TODO imporve this will not work for
@@ -2580,26 +2650,10 @@ class SemanticParser(BasicParser):
                 d_var[0]['datatype'] = rhs.dtype
 
             else:
-                d_var = self._infere_type(rhs, **settings)
-
-        elif isinstance(rhs, PythonMap):
-
-            name = str(rhs.args[0])
-            func = self.scope.find(name, 'functions')
-
-            if func is None:
-                errors.report(UNDEFINED_FUNCTION, symbol=name,
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='error')
-
-            dvar  = self._infere_type(rhs.args[1], **settings)
-            d_var = [self._infere_type(result, **settings) for result in func.results]
-            for d_var_i in d_var:
-                d_var_i['shape'] = dvar['shape']
-                d_var_i['rank' ]  = dvar['rank']
+                d_var = self._infer_type(rhs, **settings)
 
         elif isinstance(rhs, NumpyTranspose):
-            d_var  = self._infere_type(rhs, **settings)
+            d_var  = self._infer_type(rhs, **settings)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
         elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, NativeVoid):
@@ -2609,7 +2663,7 @@ class SemanticParser(BasicParser):
                 raise NotImplementedError("Cannot assign result of a function without a return")
 
         else:
-            d_var  = self._infere_type(rhs, **settings)
+            d_var  = self._infer_type(rhs, **settings)
             d_list = d_var if isinstance(d_var, list) else [d_var]
 
             for d in d_list:
@@ -2652,13 +2706,13 @@ class SemanticParser(BasicParser):
                     r_iter = rhs
                 new_lhs = []
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
-                    d = self._infere_type(r, **settings)
+                    d = self._infer_type(r, **settings)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ,**settings) )
                 lhs = PythonTuple(*new_lhs)
 
             elif isinstance(rhs, HomogeneousTupleVariable):
                 new_lhs = []
-                d_var = self._infere_type(rhs[0])
+                d_var = self._infer_type(rhs[0])
                 new_rhs = []
                 for i,l in enumerate(lhs):
                     new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
@@ -2683,7 +2737,7 @@ class SemanticParser(BasicParser):
                 new_rhs = []
 
                 for l, r in zip(lhs, rhs):
-                    new_lhs.append( self._assign_lhs_variable(l, self._infere_type(r), r, new_expressions, isinstance(expr, AugAssign), **settings) )
+                    new_lhs.append( self._assign_lhs_variable(l, self._infer_type(r), r, new_expressions, isinstance(expr, AugAssign), **settings) )
                     new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
@@ -2696,27 +2750,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self._visit(lhs, **settings)
 
-        if isinstance(rhs, (PythonMap, PythonZip)):
-            func  = _get_name(rhs.args[0])
-            alloc = Assign(lhs, NumpyZeros(lhs.shape, lhs.dtype))
-            alloc.set_fst(fst)
-            index_name = self.scope.get_new_name(expr)
-            index = Variable('int',index_name, is_temp=True)
-            range_ = FunctionCall('range', (FunctionCall('len', lhs,),))
-            name  = _get_name(lhs)
-            var   = IndexedElement(name, index)
-            args  = rhs.args[1:]
-            args  = [_get_name(arg) for arg in args]
-            args  = [IndexedElement(arg, index) for arg in args]
-            func  = FunctionCall(func, args)
-            body  = [Assign(var, func)]
-            body[0].set_fst(fst)
-            body  = For(index, range_, body)
-            body  = self._visit_For(body, **settings)
-            body  = [alloc , body]
-            return CodeBlock(body)
-
-        elif not isinstance(lhs, (list, tuple)):
+        if not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
             if isinstance(d_var,dict):
                 d_var = [d_var]
@@ -2802,7 +2836,7 @@ class SemanticParser(BasicParser):
         new_expr = []
 
         start = LiteralInteger(0)
-        iterator_d_var = self._infere_type(start)
+        iterator_d_var = self._infer_type(start)
 
         iterator = expr.target
 
@@ -2825,7 +2859,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(iterator, PyccelSymbol):
             iterator_rhs = iterable.get_target_from_range()
-            iterator_d_var = self._infere_type(iterator_rhs)
+            iterator_d_var = self._infer_type(iterator_rhs)
 
             target = self._assign_lhs_variable(iterator, iterator_d_var,
                             rhs=iterator_rhs, new_expressions=new_expr,
@@ -2833,7 +2867,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(iterator, PythonTuple):
             iterator_rhs = iterable.get_target_from_range()
-            target = [self._assign_lhs_variable(it, self._infere_type(rhs),
+            target = [self._assign_lhs_variable(it, self._infer_type(rhs),
                                 rhs=rhs, new_expressions=new_expr,
                                 is_augassign=False, **settings)
                         for it, rhs in zip(iterator, iterator_rhs)]
@@ -2890,12 +2924,12 @@ class SemanticParser(BasicParser):
             a     = self._visit(body.iterable, **settings)
             if isinstance(a, PythonRange):
                 var   = self._create_variable(var, 'int', start, {})
-                dvar  = self._infere_type(var, **settings)
+                dvar  = self._infer_type(var, **settings)
                 stop  = a.stop
                 start = a.start
                 step  = a.step
             elif isinstance(a, (PythonZip, PythonEnumerate)):
-                dvar  = self._infere_type(a.element, **settings)
+                dvar  = self._infer_type(a.element, **settings)
                 dtype = dvar.pop('datatype')
                 if dvar['rank'] > 0:
                     dvar['rank' ] -= 1
@@ -2905,7 +2939,7 @@ class SemanticParser(BasicParser):
                 var  = Variable(dtype, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
-                dvar  = self._infere_type(a, **settings)
+                dvar  = self._infer_type(a, **settings)
                 dtype = dvar.pop('datatype')
                 if dvar['rank'] == 1:
                     dvar['rank']  = 0
@@ -2924,7 +2958,7 @@ class SemanticParser(BasicParser):
                               severity='fatal')
             existing_var = self.scope.find(var.name, 'variables')
             if existing_var:
-                if self._infere_type(existing_var, **settings) != dvar:
+                if self._infer_type(existing_var, **settings) != dvar:
                     errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
             else:
@@ -3009,7 +3043,7 @@ class SemanticParser(BasicParser):
         # we annotate the target to infere the type of the list created
 
         target = self._visit(target, **settings)
-        d_var = self._infere_type(target, **settings)
+        d_var = self._infer_type(target, **settings)
 
         dtype = d_var['datatype']
 
@@ -3307,6 +3341,7 @@ class SemanticParser(BasicParser):
 
         for i, m in enumerate(interfaces):
             args           = []
+            arg_vars       = []
             results        = []
             global_vars    = []
             imports        = []
@@ -3331,7 +3366,6 @@ class SemanticParser(BasicParser):
             if arguments:
                 for (a, ah) in zip(arguments, m.arguments):
                     ah = ah.var
-                    additional_args = []
                     if isinstance(ah, FunctionAddress):
                         d_var = {}
                         d_var['is_argument'] = True
@@ -3343,7 +3377,7 @@ class SemanticParser(BasicParser):
                         a_new = FunctionAddress(self.scope.get_expected_name(a.name),
                                         ah.arguments, ah.results, [], **d_var)
                     else:
-                        d_var = self._infere_type(ah, **settings)
+                        d_var = self._infer_type(ah, **settings)
                         d_var['shape'] = ah.alloc_shape
                         d_var['is_argument'] = True
                         d_var['is_const'] = ah.is_const
@@ -3372,10 +3406,8 @@ class SemanticParser(BasicParser):
                                 kwonly=a.is_kwonly,
                                 annotation=a.annotation)
 
-                    if additional_args:
-                        args += additional_args
-
                     args.append(arg_new)
+                    arg_vars.append(a_new)
                     if isinstance(a_new, FunctionAddress):
                         self.insert_function(a_new)
                     else:
@@ -3385,7 +3417,7 @@ class SemanticParser(BasicParser):
                 new_results = []
 
                 for a, ah in zip(results, header_results):
-                    d_var = self._infere_type(ah, **settings)
+                    d_var = self._infer_type(ah, **settings)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, self.scope.get_expected_name(a),
                             **d_var, is_temp = a.is_temp)
@@ -3444,9 +3476,6 @@ class SemanticParser(BasicParser):
             namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            # ... computing inout arguments
-            args_inout = [False] * len(args)
-
             results_names = [i.name for i in results]
 
             # Find all nodes which can modify variables
@@ -3455,50 +3484,23 @@ class SemanticParser(BasicParser):
 
             # Collect the modified objects
             lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [func_arg for f in calls
-                                for func_arg, inout in zip(f.args,f.funcdef.arguments_inout) if inout]
+            modified_args = [call_arg.value for f in calls
+                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
             # Collect modified variables
             all_assigned = [v for a in (lhs_assigns + modified_args) for v in
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
-            permanent_assign = [a.name for a in all_assigned if a.rank > 0]
-            local_assign     = [i.name for i in all_assigned]
-
-            apps = [i for i in calls if (i.funcdef.name
-                    not in sub_funcs)]
-
-            d_apps = {a: [] for a in args}
-            for f in apps:
-                a_args = set(f.args) & set(args)
-                for a in a_args:
-                    d_apps[a].append(f)
-
-            for i, a in enumerate(args):
-                if a.name in chain(results_names, permanent_assign, ['self']):
-                    args_inout[i] = True
-
-                if d_apps[a] and not( args_inout[i] ):
-                    intent = False
-                    n_fa = len(d_apps[a])
-                    i_fa = 0
-                    while not(intent) and i_fa < n_fa:
-                        fa = d_apps[a][i_fa]
-                        f_name = fa.funcdef.name
-                        func = self.scope.find(f_name, 'functions')
-
-                        j = list(fa.args).index(a)
-                        intent = func.arguments_inout[j]
-                        if intent:
-                            args_inout[i] = True
-
-                        i_fa += 1
-                if isinstance(a.var, Variable):
+            # ... computing inout arguments
+            for a in args:
+                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
                     v = a.var
-                    if v.is_const and (args_inout[i] or (v.name in local_assign)):
+                    if isinstance(v, Variable) and v.is_const:
                         msg = f"Cannot modify 'const' argument ({v})"
                         errors.report(msg, bounding_box=(self._current_fst_node.lineno,
                             self._current_fst_node.col_offset),
                             severity='fatal')
+                else:
+                    a.make_const()
             # ...
 
             # Raise an error if one of the return arguments is an alias.
@@ -3517,7 +3519,6 @@ class SemanticParser(BasicParser):
                     'imports':imports,
                     'decorators':decorators,
                     'is_recursive':is_recursive,
-                    'arguments_inout':args_inout,
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
                     'doc_string': doc_string,

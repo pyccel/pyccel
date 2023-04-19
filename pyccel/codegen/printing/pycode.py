@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
@@ -576,7 +575,7 @@ class PythonCodePrinter(CodePrinter):
 
         lhs_code = self._print(lhs)
         rhs_code = self._print(rhs)
-        if isinstance(rhs, Variable) and lhs.rank>1 and rhs.order != lhs.order:
+        if isinstance(rhs, Variable) and rhs.rank>1 and rhs.order != lhs.order:
             return'{0} = {1}.T\n'.format(lhs_code,rhs_code)
         else:
             return'{0} = {1}\n'.format(lhs_code,rhs_code)

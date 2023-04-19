@@ -1,0 +1,55 @@
+name: Cuda unit tests
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+
+jobs:
+  Cuda:
+
+    runs-on: ubuntu-20.04
+    name: Unit tests
+
+    container: nvidia/cuda:11.7.1-devel-ubuntu20.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Prepare docker
+        run: |
+          apt update && apt install sudo
+          TZ=Europe/France
+          ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+        shell: bash
+      - name: CUDA Version
+        run: nvcc --version # cuda install check
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
+      - name: Install python (setup-python action doesn't work with containers)
+        uses: ./.github/actions/python_install
+      - name: Install Pyccel with tests
+        run: |
+            PATH=${PATH}:$HOME/.local/bin
+            echo "PATH=${PATH}" >> $GITHUB_ENV
+            python -m pip install --upgrade pip
+            python -m pip install --user .[test]
+        shell: bash
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Ccuda tests with pytest
+        uses: ./.github/actions/pytest_run_cuda
+      - name: Collect coverage information
+        continue-on-error: True
+        uses: ./.github/actions/coverage_collection
+      - name: Save code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: cuda-coverage-artifact
+          path: .coverage
+          retention-days: 1
+

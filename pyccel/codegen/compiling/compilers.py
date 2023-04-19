@@ -46,16 +46,21 @@ def get_condaless_search_path():
 #------------------------------------------------------------
 class Compiler:
     """
-    Class which handles all compiler options
+    Class which handles all compiler options.
+
+    This class uses the compiler vendor or a json file to collect
+    all compiler configuration parameters. These are then used to
+    correctly print compiler commands such as shared library
+    compilation commands or executable creation commands.
 
     Parameters
     ----------
-    name  : str
-               Name of the family of compilers
+    vendor : str
+               Name of the family of compilers.
     language : str
-               Language that we are translating to
+               Language that we are translating to.
     debug : bool
-            Indicates whether we are compiling in debug mode
+               Indicates whether we are compiling in debug mode.
     """
     __slots__ = ('_debug','_info')
     _acceptable_bin_paths = get_condaless_search_path()
@@ -63,7 +68,8 @@ class Compiler:
         if language=='python':
             return
         if vendor.endswith('.json') and os.path.exists(vendor):
-            self._info = json.load(open(vendor))
+            with open(vendor, encoding="utf-8") as vendor_file:
+                self._info = json.load(vendor_file)
             if language != self._info['language']:
                 warnings.warn(UserWarning("Language does not match compiler. Using GNU compiler"))
                 self._info = available_compilers[('GNU',language)]
@@ -327,7 +333,10 @@ class Compiler:
         # Get compile options
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
+        if self._info['exec'] in ('nvcc', 'nvc', 'nvfortran'):
+            linker_libdirs_flags = ['-Xcompiler' if l == '-L' else f'"-Wl,-rpath,{l}"' for l in libdirs_flags]
+        else:
+            linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         if self._info['language'] == 'fortran':
             j_code = (self._info['module_output_flag'], output_folder)
@@ -379,7 +388,10 @@ class Compiler:
         # Collect compile information
         exec_cmd, includes, libs_flags, libdirs_flags, m_code = \
                 self._get_compile_components(compile_obj, accelerators)
-        linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' and self._info['exec'] != 'nvcc' else l for l in libdirs_flags]
+        if self._info['exec'] in ('nvcc', 'nvc', 'nvfortran'):
+            linker_libdirs_flags = ['-Xcompiler' if l == '-L' else f'"-Wl,-rpath,{l}"' for l in libdirs_flags]
+        else:
+            linker_libdirs_flags = ['-Wl,-rpath' if l == '-L' else l for l in libdirs_flags]
 
         flags.insert(0,"-shared")
 
@@ -433,8 +445,21 @@ class Compiler:
         return cmd
 
     def export_compiler_info(self, compiler_export_file):
-        """ Print the information describing all compiler options
-        to the specified file in json format
         """
-        print(json.dumps(self._info, indent=4),
-                file=open(compiler_export_file,'w'))
+        Export the compiler configuration to a json file.
+
+        Print the information describing all compiler options to the
+        specified file in json format. This file can be used for
+        debugging purposes or it can be manually modified and fed
+        back to Pyccel to correct compilation problems or request
+        more unusual flags/include directories/etc.
+
+        Parameters
+        ----------
+        compiler_export_file : str
+            The name of the file where the compiler configuration
+            should be printed.
+        """
+        with open(compiler_export_file,'w', encoding="utf-8") as out_file:
+            print(json.dumps(self._info, indent=4),
+                    file=out_file)

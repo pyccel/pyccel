@@ -1,4 +1,4 @@
-""" Script to check that Pyccel coding conventions are correctly followed in the AST
+""" Script to check that Pyccel coding conventions concerning slots are correctly followed in the AST
 """
 import argparse
 import importlib

@@ -270,52 +270,60 @@ class CcudaCodePrinter(CCodePrinter):
         self._optional_partners = {}
 
     def function_signature(self, expr, print_arg_names = True):
-        """Extract from function definition all the information
-        (name, input, output) needed to create the signature
+            """
+            Get the Ccuda representation of the function signature.
+            Extract from the function definition `expr` all the
+            information (name, input, output) needed to create the
+            function signature and return a string describing the
+            function.
+            This is not a declaration as the signature does not end
+            with a semi-colon.
+            Parameters
+            ----------
+            expr : FunctionDef
+                The function definition for which a signature is needed.
+            print_arg_names : bool, default : True
+                Indicates whether argument names should be printed.
+            Returns
+            -------
+            str
+                Signature of the function.
+            """
+            if len(expr.results) > 1:
+                self._additional_args.append(expr.results)
+            args = list(expr.arguments)
+            if len(expr.results) == 1:
+                ret_type = self.get_declare_type(expr.results[0])
+            elif len(expr.results) > 1:
+                ret_type = self._print(datatype('int'))
+                args += [FunctionDefArgument(a) for a in expr.results]
+            else:
+                ret_type = self._print(datatype('void'))
+            name = expr.name
+            if not args:
+                arg_code = 'void'
+            else:
+                def get_var_arg(arg, var):
+                    code = "const " * var.is_const
+                    code += self.get_declare_type(var) + ' '
+                    code += arg.name * print_arg_names
+                    return code
 
-        Parameters
-        ----------
-        expr            : FunctionDef
-            the function defintion
+                var_list = [a.var for a in args]
+                arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
+                                    else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
+                arg_code = ', '.join(arg_code_list)
 
-        print_arg_names : Bool
-            default value True and False when we don't need to print
-            arguments names
+            if self._additional_args :
+                self._additional_args.pop()
 
-        Return
-        ------
-        String
-            Signature of the function
-        """
+            extern_word = 'extern "C"'
+            cuda_deco = "__global__" if 'kernel' in expr.decorators else ''
 
-        args = list(expr.arguments)
-        extern_word = 'extern "C" '
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0])
-        elif len(expr.results) > 1:
-            ret_type = self._print(datatype('int')) + ' '
-            args += [FunctionDefArgument(a.clone(name = a.name, memory_handling ='alias')) for a in expr.results]
-        else:
-            ret_type = self._print(datatype('void')) + ' '
-        name = expr.name
-        if not args:
-            arg_code = 'void'
-        else:
-            def get_var_arg(arg, var):
-                code = "const " * var.is_const
-                code += self.get_declare_type(var)
-                code += arg.name * print_arg_names
-                return code
-
-            var_list = [a.var for a in args]
-            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress) else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
-            arg_code = ', '.join(arg_code_list)
-
-        cuda_deco = "__global__ " if 'kernel' in expr.decorators else ''
-        if isinstance(expr, FunctionAddress):
-            return '{}{}(*{})({})'.format(extern_word, ret_type, name, arg_code)
-        else:
-            return '{}{}{}{}({})'.format(extern_word, cuda_deco, ret_type, name, arg_code)
+            if isinstance(expr, FunctionAddress):
+                return f'{extern_word} {ret_type} (*{name})({arg_code})'
+            else:
+                return f'{extern_word} {cuda_deco} {ret_type} {name}({arg_code})'
 
     def _print_Allocate(self, expr):
         free_code = ''

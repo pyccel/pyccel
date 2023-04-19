@@ -10,7 +10,8 @@ runs:
   steps:
     - name: Ccuda tests with pytest
       run: |
-        python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and ccuda" --ignore=symbolic --ignore=ndarrays
+        # Catch exit 5 (no tests found)
+        sh -c 'python -m pytest -n auto -rx -m "not (parallel or xdist_incompatible) and ccuda" --ignore=symbolic --ignore=ndarrays --ignore=cuda_ndarrays; ret=$?; [ $ret = 5 ] && exit 0 || exit $ret'
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests

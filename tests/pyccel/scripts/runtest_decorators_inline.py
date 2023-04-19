@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 from decorators_inline import power_4, get_powers, f, sin_base_1, fill_pi, positron_charge
 
