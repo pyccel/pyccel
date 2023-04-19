@@ -2182,12 +2182,6 @@ class KernelCall(FunctionCall):
         super().__init__(func, args, current_function)
 
     @property
-    def func(self):
-        """ The number of blocks in which the kernel will run
-        """
-        return self._func
-
-    @property
     def args(self):
         """ The number of blocks in which the kernel will run
         """
