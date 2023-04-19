@@ -2204,7 +2204,6 @@ class SemanticParser(BasicParser):
         args = self._handle_function_args(expr.args, **settings)
 
         return self._handle_kernel(expr, func, args, **settings)
-        # return KernelCall(func, expr.args, expr.numBlocks, expr.tpblock)
 
     def _visit_PyccelOperator(self, expr, **settings):
         args     = [self._visit(a, **settings) for a in expr.args]
