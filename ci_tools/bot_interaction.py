@@ -177,7 +177,7 @@ def set_review_stage(pr_id):
                     leave_comment(pr_id, message)
             else:
                 names = ', '.join(f'@{r}' for r in senior_reviewer)
-                approved = ', '.join(f'@{r}' for r in reviews.values() if r.state == 'APPROVED')
+                approved = ', '.join(f'@{r.author}' for r in reviews.values() if r.state == 'APPROVED')
                 message = message_from_file('senior_review.txt').format(
                                 reviewers=names, author=author, approved=approved)
                 leave_comment(pr_id, message)
