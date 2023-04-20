@@ -41,7 +41,7 @@ __all__ = (
     'LoopCollection',
     'builtin_function',
     'builtin_import',
-    'builtin_import_registery',
+    'builtin_import_registry',
     'split_positional_keyword_arguments',
 )
 
@@ -81,7 +81,7 @@ pyccel_mod = Module('pyccel',(),(),
         imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
-builtin_import_registery = Module('__main__',
+builtin_import_registry = Module('__main__',
         (),(),
         imports = [
             Import('numpy', AsName(numpy_mod,'numpy')),
@@ -96,17 +96,17 @@ if sys.version_info < (3, 10):
 else:
     python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs | builtin_import_registery.keys()
+recognised_libs = python_builtin_libs | builtin_import_registry.keys()
 
 def recognised_source(source_name):
     """ Determine whether the imported source is recognised by pyccel.
     If it is not recognised then it should be imported and translated
     """
     source = str(source_name).split('.')
-    if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
+    if source[0] in python_builtin_libs and source[0] not in builtin_import_registry.keys():
         return True
     else:
-        return source_name in builtin_import_registery
+        return source_name in builtin_import_registry
 
 #==============================================================================
 def collect_relevant_imports(module, targets):
@@ -150,13 +150,13 @@ def builtin_import(expr):
     else:
         source = str(expr.source)
 
-    if source in builtin_import_registery:
+    if source in builtin_import_registry:
         if expr.target:
-            return collect_relevant_imports(builtin_import_registery[source], expr.target)
+            return collect_relevant_imports(builtin_import_registry[source], expr.target)
         elif isinstance(expr.source, AsName):
-            return [(expr.source.target, builtin_import_registery[source])]
+            return [(expr.source.target, builtin_import_registry[source])]
         else:
-            return [(expr.source, builtin_import_registery[source])]
+            return [(expr.source, builtin_import_registry[source])]
 
     return []
 

@@ -72,7 +72,7 @@ from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.errors.errors import Errors
@@ -536,7 +536,7 @@ class FCodePrinter(CodePrinter):
             source = self._print(source)
 
         # importing of pyccel extensions is not printed
-        if source in pyccel_builtin_import_registery:
+        if source in pyccel_builtin_import_registry:
             return ''
 
         if expr.source_module:
