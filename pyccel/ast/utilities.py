@@ -84,12 +84,12 @@ pyccel_mod = Module('pyccel',(),(),
 builtin_import_registry = Module('__main__',
         (),(),
         imports = [
-            Import('numpy', AsName(numpy_mod,'numpy')),
-            Import('scipy', AsName(scipy_mod,'scipy')),
-            Import('itertools', AsName(itertools_mod,'itertools')),
-            Import('math', AsName(math_mod,'math')),
-            Import('pyccel', AsName(pyccel_mod,'pyccel')),
-            Import('sys', AsName(sys_mod,'sys')),
+            Import('numpy', numpy_mod),
+            Import('scipy', scipy_mod),
+            Import('itertools', itertools_mod),
+            Import('math', math_mod),
+            Import('pyccel', pyccel_mod),
+            Import('sys', sys_mod),
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
