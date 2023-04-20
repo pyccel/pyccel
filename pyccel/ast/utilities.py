@@ -99,8 +99,21 @@ else:
 recognised_libs = python_builtin_libs | builtin_import_registry.keys()
 
 def recognised_source(source_name):
-    """ Determine whether the imported source is recognised by pyccel.
-    If it is not recognised then it should be imported and translated
+    """
+    Determine whether the imported source is recognised by pyccel.
+
+    Determine whether the imported source is recognised by pyccel.
+    If it is not recognised then it will need to be imported and translated.
+
+    Parameters
+    ----------
+    source_name : str
+        The name of the imported module.
+
+    Returns
+    -------
+    bool
+        True if the source is recognised, False otherwise.
     """
     source = str(source_name).split('.')
     if source[0] in python_builtin_libs and source[0] not in builtin_import_registry.keys():
@@ -140,7 +153,24 @@ def collect_relevant_imports(module, targets):
     return imports
 
 def builtin_import(expr):
-    """Returns a builtin pyccel-extension function/object from an import."""
+    """
+    Return a Pyccel-extension function/object from an import of a recognised module.
+
+    Examine an Import object which imports something which is recognised by
+    Pyccel internally. The object(s) imported are then returned for use in the
+    code.
+
+    Parameters
+    ----------
+    expr : Import
+        The expression which imports the module.
+
+    Returns
+    -------
+    list
+        A list of 2-tuples. The first element is the name of the imported object,
+        the second element is the object itself.
+    """
 
     if not isinstance(expr, Import):
         raise TypeError('Expecting an Import expression')
