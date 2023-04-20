@@ -104,7 +104,7 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
 from pyccel.ast.utilities import recognised_source
 
@@ -3615,7 +3615,7 @@ class SemanticParser(BasicParser):
             source        = str(expr.source)
             source_target = source
 
-        if source in pyccel_builtin_import_registery:
+        if source in pyccel_builtin_import_registry:
             imports = pyccel_builtin_import(expr)
 
             def _insert_obj(location, target, obj):
@@ -3634,7 +3634,7 @@ class SemanticParser(BasicParser):
             if expr.target:
                 for t in expr.target:
                     t_name = t.name if isinstance(t, AsName) else t
-                    if t_name not in pyccel_builtin_import_registery[source]:
+                    if t_name not in pyccel_builtin_import_registry[source]:
                         errors.report(f"Function '{t}' from module '{source}' is not currently supported by pyccel",
                                 symbol=expr,
                                 severity='error')
