@@ -158,9 +158,6 @@ def as_static_function(func, *, mod_scope, name=None):
 
             _args += [FunctionDefArgument(a_new)]
 
-            if a.name in results_names:
-                _results += [FunctionDefResult(a_new)]
-
         else:
             _args += [FunctionDefArgument(a)]
 
