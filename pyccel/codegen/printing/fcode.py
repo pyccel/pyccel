@@ -1924,6 +1924,7 @@ class FCodePrinter(CodePrinter):
             func_end = 'result({0})'.format(result.name)
 
             args_decs[result] = Declare(result.dtype, result)
+            out_args = []
         # ...
 
         for i, arg in enumerate(arguments):
