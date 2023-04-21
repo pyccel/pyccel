@@ -69,6 +69,9 @@ class Variable(PyccelAstNode):
     is_optional : bool, default: False
         Indicates if object is an optional argument of a function.
 
+    is_private : bool, default: False
+        Indicates if object is private within a Module.
+
     shape : tuple, default: None
         The shape of the array. A tuple whose elements indicate the number of elements along
         each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
@@ -85,9 +88,6 @@ class Variable(PyccelAstNode):
 
     is_argument : bool, default: False
         Indicates if object is the argument of a function.
-
-    is_private : bool, default: False
-        Indicates if object is private within a Module.
 
     is_temp : bool, default: False
         Indicates if this symbol represents a temporary variable created by Pyccel,
