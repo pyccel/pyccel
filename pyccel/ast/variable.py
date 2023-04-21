@@ -36,8 +36,11 @@ __all__ = (
 )
 
 class Variable(PyccelAstNode):
+    """
+    Represents a typed variable.
 
-    """Represents a typed variable.
+    Represents a variable in the code and stores all useful properties which allow
+    for easy usage of this variable.
 
     Parameters
     ----------
@@ -49,48 +52,46 @@ class Variable(PyccelAstNode):
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
-    rank : int
-        used for arrays. [Default value: 0]
+    rank : int, default: 0
+        The number of dimensions for an array.
 
-    memory_handling: str
-        'heap' is used for arrays, if we need to allocate memory on the heap
-        'stack' if memory should be allocated on the stack, represents stack arrays and scalars
-        'alias' if object allows access to memory stored in another variable
-        [Default value: 'stack']
+    memory_handling : str, default: 'stack'
+        'heap' is used for arrays, if we need to allocate memory on the heap.
+        'stack' if memory should be allocated on the stack, represents stack arrays and scalars.
+        'alias' if object allows access to memory stored in another variable.
 
-    is_target: bool
-        if object is pointed to by another variable [Default value: False]
+    is_const : bool, default: False
+        Indicates if object is a const argument of a function.
 
-    is_optional: bool
-        if object is an optional argument of a function [Default value: False]
+    is_target : bool, default: False
+        Indicates if object is pointed to by another variable.
 
-    shape: int or list
-        shape of the array. [Default value: None]
+    is_optional : bool, default: False
+        Indicates if object is an optional argument of a function.
 
-    cls_base: class
-        class base if variable is an object or an object member [Default value: None]
+    shape : tuple, default: None
+        The shape of the array. A tuple whose elements indicate the number of elements along
+        each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
 
-    order : str
-        used for arrays. Indicates whether the data is stored in C or Fortran format in memory [Default value: 'C']
+    cls_base : class, default: None
+        Class base if variable is an object or an object member.
 
-    precision : str
-        Precision of the data type [Default value: depends on the datatype]
+    order : str, default: 'C'
+        Used for arrays. Indicates whether the data is stored in C or Fortran format in memory.
+        See order_docs.md in the developer docs for more details.
 
-    is_argument: bool
-        if object is the argument of a function [Default value: False]
+    precision : str, default: 0
+        Precision of the data type.
 
-    is_kwonly: bool
-        if object is an argument which can only be specified using its keyword
+    is_argument : bool, default: False
+        Indicates if object is the argument of a function.
 
-    is_const: bool
-        if object is a const argument of a function [Default value: False]
+    is_private : bool, default: False
+        Indicates if object is private within a Module.
 
-    is_private: bool
-        if object is private within a Module [Default value: False]
-
-    is_temp: bool
+    is_temp : bool, default: False
         Indicates if this symbol represents a temporary variable created by Pyccel,
-        and was not present in the original Python code [default value : False].
+        and was not present in the original Python code.
 
     Examples
     --------
@@ -105,7 +106,7 @@ class Variable(PyccelAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
+            '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
             '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
 
@@ -125,7 +126,6 @@ class Variable(PyccelAstNode):
         order=None,
         precision=0,
         is_argument=False,
-        is_kwonly=False,
         is_temp =False,
         allows_negative_indexes=False
         ):
@@ -174,7 +174,6 @@ class Variable(PyccelAstNode):
         self._cls_base       = cls_base
         self._order          = order
         self._is_argument    = is_argument
-        self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
 
         # ------------ PyccelAstNode Properties ---------------
@@ -392,14 +391,6 @@ class Variable(PyccelAstNode):
         arguments are correctly flagged as such.
         """
         self._is_argument = True
-
-    @property
-    def is_kwonly(self):
-        """ If the Variable is an argument then this
-        indicates whether the argument is a keyword
-        only argument
-        """
-        return self._is_kwonly
 
     @property
     def is_ndarray(self):
