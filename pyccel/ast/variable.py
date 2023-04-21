@@ -93,6 +93,10 @@ class Variable(PyccelAstNode):
         Indicates if this symbol represents a temporary variable created by Pyccel,
         and was not present in the original Python code.
 
+    allows_negative_indexes : bool, default: False
+        Indicates if non-literal negative indexes should be correctly handled when indexing this
+        variable. The default is False for performance reasons.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable
