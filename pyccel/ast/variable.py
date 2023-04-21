@@ -384,7 +384,7 @@ class Variable(PyccelAstNode):
         """
         return self._is_argument
 
-    def declare_as_argument():
+    def declare_as_argument(self):
         """
         Indicate that the variable is used as an argument.
 
