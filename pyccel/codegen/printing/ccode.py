@@ -1161,28 +1161,29 @@ class CCodePrinter(CodePrinter):
             ret_type = self.get_declare_type(result_vars[0])
         elif n_results > 1:
             ret_type = self._print(datatype('int'))
-            self._additional_args.extend(result_vars)
+            arg_vars.extend(result_vars)
+            self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         else:
             ret_type = self._print(datatype('void'))
 
-        args.extend(self._additional_args[-1])
-
         name = expr.name
-        if not args:
+        if not arg_vars:
             arg_code = 'void'
         else:
-            def get_var_arg(arg, var):
+            def get_arg_declaration(var):
+                """ Get the code which declares the argument variable.
+                """
                 code = "const " * var.is_const
                 code += self.get_declare_type(var) + ' '
-                code += arg.name * print_arg_names
+                code += var.name * print_arg_names
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
-                                else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
+                                else get_arg_declaration(var) for var in arg_vars]
             arg_code = ', '.join(arg_code_list)
 
         if self._additional_args :
-            extra_args = self._additional_args.pop()
+            self._additional_args.pop()
 
         if isinstance(expr, FunctionAddress):
             return f'{ret_type} (*{name})({arg_code})'
