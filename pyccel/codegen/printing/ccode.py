@@ -1152,16 +1152,21 @@ class CCodePrinter(CodePrinter):
         str
             Signature of the function.
         """
-        if len(expr.results) > 1:
-            self._additional_args.append([r.var for r in expr.results])
-        args = list(expr.arguments)
-        if len(expr.results) == 1:
-            ret_type = self.get_declare_type(expr.results[0].var)
-        elif len(expr.results) > 1:
+        arg_vars = [a.var for a in expr.arguments]
+        result_vars = [r.var for r in expr.results if not r.is_argument]
+
+        n_results = len(result_vars)
+
+        if n_results == 1:
+            ret_type = self.get_declare_type(result_vars[0])
+        elif n_results > 1:
             ret_type = self._print(datatype('int'))
-            args += [FunctionDefArgument(a.var) for a in expr.results]
+            self._additional_args.extend(result_vars)
         else:
             ret_type = self._print(datatype('void'))
+
+        args.extend(self._additional_args[-1])
+
         name = expr.name
         if not args:
             arg_code = 'void'
@@ -1172,13 +1177,12 @@ class CCodePrinter(CodePrinter):
                 code += arg.name * print_arg_names
                 return code
 
-            var_list = [a.var for a in args]
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
                                 else get_var_arg(arg, var) for arg, var in zip(args, var_list)]
             arg_code = ', '.join(arg_code_list)
 
         if self._additional_args :
-            self._additional_args.pop()
+            extra_args = self._additional_args.pop()
 
         if isinstance(expr, FunctionAddress):
             return f'{ret_type} (*{name})({arg_code})'
