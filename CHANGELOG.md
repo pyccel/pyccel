@@ -15,7 +15,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use `FunctionDefArgument` to store all argument specific properties.
 -   \[INTERNALS\] Reduce carbon footprint by avoiding unnecessary CI testing.
 -   \[INTERNALS\] Automatise PR labelling and review progress prompts.
--   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in FunctionDef.
+-   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in `FunctionDef`.
 -   \[INTERNALS\] Use `FunctionDefResult` to store all result specific properties.
 
 ### Deprecated
