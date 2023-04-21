@@ -3882,4 +3882,4 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefResult(self, expr, **settings):
         var = self._visit(expr.var)
-        return FunctionDefResult(var, originates_in_arg = var.is_argument, annotation = expr.annotation)
+        return FunctionDefResult(var, annotation = expr.annotation)

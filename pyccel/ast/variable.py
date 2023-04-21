@@ -384,6 +384,15 @@ class Variable(PyccelAstNode):
         """
         return self._is_argument
 
+    def declare_as_argument():
+        """
+        Indicate that the variable is used as an argument.
+
+        This function is called by FunctionDefArgument to ensure that
+        arguments are correctly flagged as such.
+        """
+        self._is_argument = True
+
     @property
     def is_kwonly(self):
         """ If the Variable is an argument then this

@@ -149,6 +149,7 @@ def as_static_function(func, *, mod_scope, name=None):
 
             a_new = Variable( a.dtype, a.name,
                               memory_handling = a.memory_handling,
+                              is_argument = True,
                               is_optional = a.is_optional,
                               shape       = shape_new,
                               rank        = a.rank,
@@ -158,7 +159,7 @@ def as_static_function(func, *, mod_scope, name=None):
             _args += [FunctionDefArgument(a_new)]
 
             if a.name in results_names:
-                _results += [FunctionDefResult(a_new, originates_in_arg = True)]
+                _results += [FunctionDefResult(a_new)]
 
         else:
             _args += [FunctionDefArgument(a)]
