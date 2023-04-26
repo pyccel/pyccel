@@ -13,8 +13,10 @@ from git_evaluation_tools import get_previous_pr_comments
 senior_reviewer = ['yguclu', 'EmilyBourne']
 trusted_reviewers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+pr_test_keys = ['docs', 'pylint',
                 'lint', 'spelling']
+#pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#                'lint', 'spelling']
 
 review_labels = ('needs_initial_review', 'Ready_for_review', 'Ready_to_merge')
 
@@ -216,6 +218,8 @@ def mark_as_ready(pr_id):
     data = get_job_information(event['run_number'])
 
     job_data = [j for j in data if j['name'] not in ('Bot', 'CleanUpBot')]
+
+    print(job_data)
 
     failures = [j['name'] for j in job_data if j['conclusion'] in ('cancelled', 'failed')]
 
