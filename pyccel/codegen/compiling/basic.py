@@ -59,7 +59,6 @@ class CompileObj:
                  accelerators = (),
                  has_target_file = True,
                  prog_target  = None):
-        print("Force fail")
 
         self._file = os.path.join(folder, file_name)
         self._folder = folder
