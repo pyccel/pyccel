@@ -20,11 +20,20 @@ args = parser.parse_args()
 diff = get_diff_as_json(args.diffFile)
 untested, file_contents = cov.get_untested_lines(args.coverageFile)
 
-untested = cov.allow_untested_error_calls(cov.compare_coverage_to_diff(untested, diff))
+print(untested)
+new_untested = cov.compare_coverage_to_diff(untested, diff)
 
-untested = cov.allow_untested_debug_code(cov.compare_coverage_to_diff(untested, diff))
+print(new_untested)
 
-cov.print_markdown_summary(untested, file_contents, args.commit, args.output)
+new_untested = cov.allow_untested_error_calls(new_untested)
 
-cov.show_results(untested)
+print(new_untested)
+
+new_untested = cov.allow_untested_debug_code(new_untested)
+
+print(new_untested)
+
+cov.print_markdown_summary(new_untested, file_contents, args.commit, args.output)
+
+cov.show_results(new_untested)
 
