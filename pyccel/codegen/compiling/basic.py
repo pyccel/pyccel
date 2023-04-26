@@ -45,9 +45,14 @@ class CompileObj:
     accelerators : str
         Tool used to accelerate the code (e.g. openmp openacc).
 
-    has_target_file : bool
+    has_target_file : bool, default : True
         If set to false then this flag indicates that the file has no target.
         Eg an interface for a library.
+
+    prog_target : str, default: None
+        The name of the executable that should be generated if this file is a
+        program. If no name is provided then the module name deduced from the file
+        name is used.
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_lock','_flags','_includes','_libs','_libdirs','_accelerators',
