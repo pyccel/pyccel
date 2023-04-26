@@ -523,6 +523,7 @@ if __name__ == '__main__':
 
         # Check whether user is new and/or trusted
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        print("Current user trust level is : ", event['pull_request']['author_association'])
         if trusted_user:
             prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['user']['login'])
             new_user = (len(prs) == 0)
@@ -540,7 +541,7 @@ if __name__ == '__main__':
 
         # If unknown user ask for trust approval
         if not trusted_user:
-            leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+            leave_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
     elif event['action'] == 'converted_to_draft':
         # Collect id from a pull_request event with a converted_to_draft action
