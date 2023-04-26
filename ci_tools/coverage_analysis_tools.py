@@ -116,9 +116,11 @@ def allow_untested_debug_code(untested):
                 line = f_lines[l]
                 strip_line = line.lstrip()
                 n_indent = len(line)-len(strip_line)
-                if n_indent < line and strip_line.startswith('def '):
+                if n_indent < n and strip_line.startswith('def '):
                     func_found = strip_line.split()[1].strip(':')
                 else:
+                    if n_indent < n:
+                        n = n_indent
                     i-=1
             if func_found not in ('__repr__', '__str__'):
                 reduced_untested.setdefault(f, []).append(l)
