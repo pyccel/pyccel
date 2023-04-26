@@ -6,12 +6,10 @@ on:
     types: [ opened, ready_for_review, synchronize, converted_to_draft ]
   issue_comment:
     types: [ created ]
-  pull_request_review:
-    types: [ submitted ]
 
 jobs:
   Bot:
-    if: ${{ ( github.event_name == 'pull_request' ) || (github.event_name == 'issue_comment' && github.event.issue.pull_request ) || github.event_name == 'pull_request_review' }}
+    if: ${{ ( github.event_name == 'pull_request' ) || (github.event_name == 'issue_comment' && github.event.issue.pull_request ) }}
     runs-on: ubuntu-latest
     outputs:
       run_linux: ${{ steps.run_bot.outputs.run_linux }}
@@ -138,6 +136,7 @@ jobs:
       ./.github/workflows/pyccel_lint.yml
     with:
       python_version: ${{ needs.Bot.outputs.python_version }}
+      base: ${{ needs.Bot.outputs.BASE }}
       ref: ${{ needs.Bot.outputs.REF }}
 
   spelling:

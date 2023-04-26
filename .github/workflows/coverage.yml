@@ -49,7 +49,6 @@ jobs:
         run: |
           git fetch
           git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          ls
         shell: bash
       - name: Check coverage
         run: |
