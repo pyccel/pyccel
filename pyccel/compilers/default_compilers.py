@@ -184,6 +184,8 @@ def change_to_lib_flag(lib):
             end = end-2
         if lib.endswith('.so'):
             end = end-3
+        if lib.endswith('.dylib'):
+            end = end-5
         return '-l{}'.format(lib[3:end])
     else:
         return lib
@@ -219,7 +221,8 @@ else:
 
     # Collect a list of all possible libraries matching the name in the configs
     # which can be found on the system
-    possible_shared_lib = [l for l in python_shared_libs if '.so' in l]
+    shared_ending = '.dylib' if sys.platform == "darwin" else '.so'
+    possible_shared_lib = [l for l in python_shared_libs if shared_ending in l]
     possible_static_lib = [l for l in python_shared_libs if '.a' in l]
 
     # Prefer saving the library as a dependency where possible to avoid
@@ -228,7 +231,7 @@ else:
     # Prefer a shared library as it requires less memory
     if possible_shared_lib:
         if len(possible_shared_lib)>1:
-            preferred_lib = [l for l in possible_shared_lib if l.endswith('.so')]
+            preferred_lib = [l for l in possible_shared_lib if l.endswith(shared_ending)]
             if preferred_lib:
                 possible_shared_lib = preferred_lib
 
