@@ -10,8 +10,8 @@ assignees: ''
 ### Untested code
 
 The untested code is:
-```python
-```
+https://github.com/pyccel/pyccel/blob/{COMMIT_SHA}/{file_location}#{line_numbers}
 
-which can be found here : 
-The problem was discovered in PR : 
+The problem was discovered in PR : X
+
+This problem needs to be investigated. Either a test should be added which uses this code, or the code should be removed.
