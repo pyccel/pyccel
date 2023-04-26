@@ -21,33 +21,33 @@ class CompileObj:
 
     Parameters
     ----------
-    file_name     : str
-                    Name of file to be compiled
+    file_name : str
+        Name of file to be compiled.
 
-    folder        : str
-                    Name of the folder where the file is found
+    folder : str
+        Name of the folder where the file is found.
 
-    flags         : str
-                    Any non-default flags passed to the compiler
+    flags : str
+        Any non-default flags passed to the compiler.
 
-    includes      : iterable of strs
-                    include directories paths
+    includes : iterable of strs
+        Include directories paths.
 
-    libs          : iterable of strs
-                    required libraries
+    libs : iterable of strs
+        Required libraries.
 
-    libdirs       : iterable of strs
-                    paths to directories containing the required libraries
+    libdirs : iterable of strs
+        Paths to directories containing the required libraries.
 
-    dependencies  : iterable of CompileObjs
-                    objects which must also be compiled in order to compile this module/program
+    dependencies : iterable of CompileObjs
+        Objects which must also be compiled in order to compile this module/program.
 
-    accelerators  : str
-                    Tool used to accelerate the code (e.g. openmp openacc)
+    accelerators : str
+        Tool used to accelerate the code (e.g. openmp openacc).
 
     has_target_file : bool
-                    If set to false then this flag indicates that the file has no target.
-                    Eg an interface for a library
+        If set to false then this flag indicates that the file has no target.
+        Eg an interface for a library.
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_lock','_flags','_includes','_libs','_libdirs','_accelerators',
@@ -153,19 +153,32 @@ class CompileObj:
 
     @property
     def includes(self):
-        """ Returns the additional include directories required to compile the file
+        """
+        Get the additional include directories required to compile the file.
+
+        Return a set containing all the directories which must be passed to the
+        compiler via the include flag `-I`.
         """
         return self._includes.union([di for d in self._dependencies.values() for di in d.includes])
 
     @property
     def libs(self):
-        """ Returns the additional libraries required to compile the file
+        """
+        Get the additional libraries required to compile the file.
+
+        Return a list containing all the libraries which must be passed to the
+        compiler via the library flag `-l`.
         """
         return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
 
     @property
     def libdirs(self):
-        """ Returns the additional library directories required to compile the file
+        """
+        Get the additional library directories required to compile the file.
+
+        Return a set containing all the directories which must be passed to the
+        compiler via the library directory flag `-L` so that the necessary
+        libraries can be correctly located.
         """
         return self._libdirs.union([dld for d in self._dependencies.values() for dld in d.libdirs])
 
@@ -235,7 +248,15 @@ class CompileObj:
 
     @property
     def accelerators(self):
-        """ Returns the names of the accelerators required to compile the file
+        """
+        Get the names of the accelerators required to compile the file.
+
+        Return a set containing the name of all accelarators required
+        to compile the file. An accelerator is a tool used to add a new
+        capacity to the code. Such an addition requires multiple flags
+        (includes/libs/libdirs/etc) and is therefore specified separately
+        in the compiler configuration file. Examples of 'accelerators' are:
+        openmp, openacc, python.
         """
         return self._accelerators.union([da for d in self._dependencies.values() for da in d.accelerators])
 
