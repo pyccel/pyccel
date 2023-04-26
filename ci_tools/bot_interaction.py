@@ -228,10 +228,12 @@ def mark_as_ready(pr_id):
 
     if coverage_failed and not others_failed:
         set_draft(pr_id)
+        remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
         leave_comment(pr_id, message_from_file('warn_coverage.txt'))
 
     elif others_failed:
         set_draft(pr_id)
+        remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
         message = message_from_file('set_draft_failing.txt')
         for f in failures:
             message += f'- {f}\n'
