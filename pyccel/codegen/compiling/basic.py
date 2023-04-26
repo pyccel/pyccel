@@ -13,7 +13,11 @@ from filelock import FileLock
 
 class CompileObj:
     """
-    Class containing all information necessary for compiling
+    Class containing all information necessary for compiling.
+
+    A class which stores all information which may be needed in order to
+    compile an object. This includes its name, location, and all dependencies
+    and flags which may need to be passed to the compiler.
 
     Parameters
     ----------
@@ -87,9 +91,7 @@ class CompileObj:
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
-        self._dependencies = dict()
-        if dependencies:
-            self.add_dependencies(*dependencies)
+        self._dependencies = {a.module_target:a for a in dependencies}
         self._has_target_file = has_target_file
 
     def reset_folder(self, folder):
@@ -153,19 +155,19 @@ class CompileObj:
     def includes(self):
         """ Returns the additional include directories required to compile the file
         """
-        return self._includes
+        return self._includes.union([di for d in self._dependencies.values() for di in d.includes])
 
     @property
     def libs(self):
         """ Returns the additional libraries required to compile the file
         """
-        return self._libs
+        return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
 
     @property
     def libdirs(self):
         """ Returns the additional library directories required to compile the file
         """
-        return self._libdirs
+        return self._libdirs.union([dld for d in self._dependencies.values() for dld in d.libdirs])
 
     @property
     def extra_modules(self):
@@ -200,11 +202,6 @@ class CompileObj:
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update({a.module_target:a for a in args})
-        for a in args:
-            self._includes.update(a.includes)
-            self._libs.extend(a.libs)
-            self._libdirs.update(a.libdirs)
-            self._accelerators.update(a.accelerators)
 
     def acquire_lock(self):
         """
@@ -240,7 +237,7 @@ class CompileObj:
     def accelerators(self):
         """ Returns the names of the accelerators required to compile the file
         """
-        return self._accelerators
+        return self._accelerators.union([da for d in self._dependencies.values() for da in d.accelerators])
 
     def __eq__(self, other):
         return self.module_target == other.module_target
