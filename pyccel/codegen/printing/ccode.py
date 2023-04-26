@@ -1625,7 +1625,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(res, Variable) and not res.is_temp:
                 decs += [Declare(res.dtype, res)]
             elif not isinstance(res, Variable):
-                decs += [FuncAddressDeclare(res)]
+                raise NotImplementedError(f"Can't return {type(res)} from a function")
         decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
                 if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
