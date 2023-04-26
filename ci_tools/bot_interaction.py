@@ -354,7 +354,7 @@ def accept_coverage_failure(pr_id):
     -------
     bool : True if trustworthy, false otherwise.
     """
-    comments = [c for c in get_previous_pr_comments(pr_id)]
+    comments = get_previous_pr_comments(pr_id)
     for c in comments:
         words = c.body.strip().split()
         if words[:3] == ['/bot', 'accept', 'coverage']:
