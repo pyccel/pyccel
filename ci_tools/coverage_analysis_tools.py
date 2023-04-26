@@ -119,7 +119,7 @@ def allow_untested_debug_code(untested):
                 if n_indent < line and strip_line.startswith('def '):
                     func_found = strip_line.split()[1].strip(':')
                 else:
-                    i--
+                    i-=1
             if func_found not in ('__repr__', '__str__'):
                 reduced_untested.setdefault(f, []).append(l)
 
