@@ -1,7 +1,7 @@
 ---
 name: Missing coverage
 about: Ask for a coverage problem to be investigated in detail
-title: [COVERAGE]:
+title: 'COVERAGE :'
 labels: internals
 assignees: ''
 
