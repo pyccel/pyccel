@@ -2103,6 +2103,7 @@ class FunctionCall(PyccelAstNode):
         return self._interface_name
 
     def __repr__(self):
+        print("UNTESTED")
         return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
 
     @classmethod
