@@ -16,6 +16,7 @@ runs:
     - name: Test with pytest
       run: |
         which python
+        pyccel epyccel/modules/multi_rank.py --verbose
         python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
