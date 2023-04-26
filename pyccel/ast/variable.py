@@ -35,10 +35,6 @@ __all__ = (
     'Variable'
 )
 
-a = False
-if a:
-    print("UNTESTED")
-
 class Variable(PyccelAstNode):
 
     """Represents a typed variable.
