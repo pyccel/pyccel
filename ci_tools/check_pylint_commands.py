@@ -94,7 +94,7 @@ if __name__ == '__main__':
             if file_changed:
                 messages.append(f"[ERROR] New unexpected pylint disables found in `{f}`: {disabled_str}")
             else:
-                messages.append(f"New unexpected pylint disables found in `{f}`: {disabled_str}")
+                messages.append(f"Unexpected pylint disables found in `{f}`: {disabled_str}")
             success &= (not file_changed)
 
     if messages:

@@ -215,15 +215,25 @@ def mark_as_ready(pr_id):
 
     data = get_job_information(event['run_number'])
 
-    job_data = [j for j in data if j['name'] not in ('Bot', 'CleanUpBot')]
+    job_data = [j for j in data if j.get('name','') not in ('Bot', 'CleanUpBot')]
 
-    failures = [j['name'] for j in job_data if j['conclusion'] in ('cancelled', 'failed')]
+    failures = [j.get('name','') for j in job_data if j['conclusion'] in ('cancelled', 'failure')]
 
     if any(j['name'] == 'Codacy Static Code Analysis' and j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED') for j in running_job_data):
         failures.append('Codacy Static Code Analysis')
 
-    if failures:
+    ignore_coverage = accept_coverage_failure(pr_id)
+    coverage_failed = any('coverage' in f for f in failures) and not ignore_coverage
+    others_failed = any('coverage' not in f for f in failures)
+
+    if coverage_failed and not others_failed:
         set_draft(pr_id)
+        remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
+        leave_comment(pr_id, message_from_file('warn_coverage.txt'))
+
+    elif others_failed:
+        set_draft(pr_id)
+        remove_labels(pr_id, ['Ready_to_merge', 'Ready_for_review', 'needs_initial_review'])
         message = message_from_file('set_draft_failing.txt')
         for f in failures:
             message += f'- {f}\n'
@@ -325,6 +335,34 @@ def start_review_check(pr_id, event, outputs):
     else:
         outputs['cleanup_trigger'] = 'request_review_status'
         run_tests(pr_id, ['pr_tests'], outputs, event)
+
+def accept_coverage_failure(pr_id):
+    """
+    Check if the coverage result has been flagged as acceptable.
+
+    Look through the previous comments on the PR to check if the coverage
+    result has been flagged as acceptable via the `/bot accept coverage`
+    command.
+
+    Parameters
+    ----------
+    pr_id : int
+        The number of the PR.
+
+    user : str
+        The username of the user who may be untrustworthy.
+
+    Results
+    -------
+    bool : True if trustworthy, false otherwise.
+    """
+    comments = get_previous_pr_comments(pr_id)
+    for c in comments:
+        words = c.body.strip().split()
+        if words[:3] == ['/bot', 'accept', 'coverage']:
+            return True
+
+    return False
 
 def flagged_as_trusted(pr_id, user):
     """
@@ -471,6 +509,9 @@ if __name__ == '__main__':
                 outputs['cleanup_trigger'] = 'request_review_status'
                 run_tests(pr_id, ['pr_tests'], outputs, event)
 
+        elif command_words[:2] == ['accept', 'coverage']:
+            leave_comment(pr_id, message_from_file('coverage_ignored.txt'))
+
         else:
             leave_comment(pr_id, message_from_file('bot_commands.txt'))
 
@@ -482,6 +523,7 @@ if __name__ == '__main__':
 
         # Check whether user is new and/or trusted
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
+        print("Current user trust level is : ", event['pull_request']['author_association'])
         if trusted_user:
             prs = check_previous_contributions(event['repository']['full_name'], event['pull_request']['user']['login'])
             new_user = (len(prs) == 0)
@@ -499,7 +541,7 @@ if __name__ == '__main__':
 
         # If unknown user ask for trust approval
         if not trusted_user:
-            leave_comment(pr_id, ", ".join(senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+            leave_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
     elif event['action'] == 'converted_to_draft':
         # Collect id from a pull_request event with a converted_to_draft action
