@@ -232,7 +232,6 @@ else:
     expected_dir = config_vars["LIBDIR"]
     version = config_vars["VERSION"]
     python_shared_libs = glob.glob(f"{expected_dir}/libpython{version}*")
-    print(python_shared_libs)
 
     # Collect a list of all possible libraries matching the name in the configs
     # which can be found on the system
