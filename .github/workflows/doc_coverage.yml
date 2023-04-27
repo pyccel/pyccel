@@ -48,8 +48,8 @@ jobs:
       - name: Show report
         run: |
           echo "${{ github.event.pull_request.base.sha }}"
-          docstr-coverage base/pyccel 2>base_cov || true
-          docstr-coverage compare/pyccel 2>compare_cov || true
+          docstr-coverage base/pyccel 2>base_cov
+          docstr-coverage compare/pyccel 2>compare_cov
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
           cd compare
           pip install .
@@ -57,7 +57,7 @@ jobs:
           git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           while read line; do    
-            python -m numpydoc --validate $line > report.txt 2>&1 || true
+            python -m numpydoc --validate $line > report.txt 2>&1
           done < objects.txt
           cat report.txt
           python ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
