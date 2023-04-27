@@ -91,3 +91,4 @@ if __name__ == '__main__':
         with open(args.output, 'w', encoding="utf-8") as f:
             for obj in objects:
                 print(obj, file=f)
+                print(obj)
