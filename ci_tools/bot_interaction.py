@@ -215,9 +215,9 @@ def mark_as_ready(pr_id):
 
     data = get_job_information(event['run_number'])
 
-    job_data = [j for j in data if j['name'] not in ('Bot', 'CleanUpBot')]
+    job_data = [j for j in data if j.get('name','') not in ('Bot', 'CleanUpBot')]
 
-    failures = [j.get('name',"") for j in job_data if j['conclusion'] in ('cancelled', 'failure')]
+    failures = [j.get('name','') for j in job_data if j['conclusion'] in ('cancelled', 'failure')]
 
     if any(j['name'] == 'Codacy Static Code Analysis' and j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED') for j in running_job_data):
         failures.append('Codacy Static Code Analysis')
