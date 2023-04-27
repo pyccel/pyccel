@@ -176,7 +176,22 @@ nvc_info = {'exec' : 'nvc',
 #------------------------------------------------------------
 def change_to_lib_flag(lib):
     """
-    Convert a library to a library flag
+    Convert a library to a library flag.
+
+    Take a library file and return the associated library
+    flag by stripping the library suffix. If the file does
+    not begin with the expected 'lib' prefix then it is returned
+    unchanged.
+
+    Parameters
+    ----------
+    lib : str
+        The library file.
+
+    Returns
+    -------
+    str
+        The library flag.
     """
     if lib.startswith('lib'):
         end = len(lib)
