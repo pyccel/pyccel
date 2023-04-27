@@ -55,11 +55,10 @@ jobs:
           pip install .
           git fetch
           git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
-          touch objects.txt
-          touch report.txt
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
+          cat objects.txt
           while read line; do    
-            python -m numpydoc --validate $line >> report.txt 2>&1 || true 
+            python -m numpydoc --validate $line > report.txt 2>&1 || true
           done < objects.txt
           cat report.txt
           python ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
