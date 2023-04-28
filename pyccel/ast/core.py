@@ -2025,7 +2025,7 @@ class FunctionDefResult(PyccelAstNode):
     var : Variable
         The variable which represents the returned value.
 
-    annotation : str
+    annotation : str, default: None
         The type annotation describing the argument.
 
     See Also
