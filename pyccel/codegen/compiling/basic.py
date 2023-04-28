@@ -42,7 +42,7 @@ class CompileObj:
     dependencies : iterable of CompileObjs
         Objects which must also be compiled in order to compile this module/program.
 
-    accelerators : str
+    accelerators : iterable of str
         Tool used to accelerate the code (e.g. openmp openacc).
 
     has_target_file : bool, default : True
