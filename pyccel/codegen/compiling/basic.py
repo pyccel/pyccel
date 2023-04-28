@@ -256,7 +256,7 @@ class CompileObj:
         """
         Get the names of the accelerators required to compile the file.
 
-        Return a set containing the name of all accelarators required
+        Return a set containing the name of all accelerators required
         to compile the file. An accelerator is a tool used to add a new
         capacity to the code. Such an addition requires multiple flags
         (includes/libs/libdirs/etc) and is therefore specified separately
