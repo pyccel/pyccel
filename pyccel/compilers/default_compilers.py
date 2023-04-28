@@ -3,6 +3,7 @@ Module responsible for the creation of the json files containing the default con
 This module only needs to be imported once. Once the json files have been generated they can be used directly thus
 avoiding the need for a large number of imports
 """
+import glob
 import os
 import sys
 import sysconfig
@@ -175,7 +176,22 @@ nvc_info = {'exec' : 'nvc',
 #------------------------------------------------------------
 def change_to_lib_flag(lib):
     """
-    Convert a library to a library flag
+    Convert a library to a library flag.
+
+    Take a library file and return the associated library
+    flag by stripping the library suffix. If the file does
+    not begin with the expected 'lib' prefix then it is returned
+    unchanged.
+
+    Parameters
+    ----------
+    lib : str
+        The library file.
+
+    Returns
+    -------
+    str
+        The library flag.
     """
     if lib.startswith('lib'):
         end = len(lib)
@@ -183,6 +199,8 @@ def change_to_lib_flag(lib):
             end = end-2
         if lib.endswith('.so'):
             end = end-3
+        if lib.endswith('.dylib'):
+            end = end-5
         return '-l{}'.format(lib[3:end])
     else:
         return lib
@@ -200,27 +218,44 @@ python_info = {
         }
 
 if sys.platform == "win32":
-    python_lib = os.path.join(config_vars["prefix"], 'python{}.dll'.format(config_vars["VERSION"]))
-    if os.path.exists(python_lib):
-        python_info['python']['dependencies'] = (python_lib,)
+    expected_dir = config_vars["prefix"]
+    version = config_vars["VERSION"]
+    python_libs = glob.glob(f"{expected_dir}/python{version}.dll")
+    if python_libs:
+        python_info['python']['dependencies'] = tuple(python_libs)
     else:
-        python_info['python']['libs'] = ('python{}'.format(config_vars["VERSION"]),)
+        python_info['python']['libs'] = (f'python{version}',)
         python_info['python']['libdirs'] = config_vars.get("installed_base","").split()
 
 else:
     # Collect library according to python config file
-    python_lib_base = os.path.join(config_vars["prefix"], "lib", config_vars["LDLIBRARY"])
+    expected_dir = config_vars["LIBDIR"]
+    version = config_vars["VERSION"]
+    python_shared_libs = glob.glob(f"{expected_dir}/libpython{version}*")
 
     # Collect a list of all possible libraries matching the name in the configs
     # which can be found on the system
-    possible_shared_lib = python_lib_base.replace('.a','.so')
-    possible_shared_lib = possible_shared_lib if os.path.exists(possible_shared_lib) else ''
-    possible_static_lib = python_lib_base.replace('.so','.a')
-    possible_static_lib = possible_static_lib if os.path.exists(possible_static_lib) else ''
-    # Prefer the static library where possible to avoid unnecessary libdirs
-    # which may lead to the wrong libraries being linked
-    if possible_static_lib != '':
-        python_info['python']['dependencies'] = (possible_static_lib,)
+    shared_ending = '.dylib' if sys.platform == "darwin" else '.so'
+    possible_shared_lib = [l for l in python_shared_libs if shared_ending in l]
+    possible_static_lib = [l for l in python_shared_libs if '.a' in l]
+
+    # Prefer saving the library as a dependency where possible to avoid
+    # unnecessary libdirs which may lead to the wrong versions being linked
+    # for other libraries
+    # Prefer a shared library as it requires less memory
+    if possible_shared_lib:
+        if len(possible_shared_lib)>1:
+            preferred_lib = [l for l in possible_shared_lib if l.endswith(shared_ending)]
+            if preferred_lib:
+                possible_shared_lib = preferred_lib
+
+        python_info['python']['dependencies'] = (possible_shared_lib[0],)
+    elif possible_static_lib:
+        if len(possible_static_lib)>1:
+            preferred_lib = [l for l in possible_static_lib if l.endswith('.a')]
+            if preferred_lib:
+                possible_static_lib = preferred_lib
+        python_info['python']['dependencies'] = (possible_static_lib[0],)
     else:
         # If the proposed library does not exist use different config flags
         # to specify the library

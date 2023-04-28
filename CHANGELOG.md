@@ -9,9 +9,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1367 : Use an absolute path to link to Python library.
+
 ### Changed
 
 -   Default to linking Python dynamically instead of statically
+-   Ensure only absolute paths are used in compilation command.
 -   \[INTERNALS\] Use `FunctionDefArgument` to store all argument specific properties.
 -   \[INTERNALS\] Reduce carbon footprint by avoiding unnecessary CI testing.
 -   \[INTERNALS\] Automatise PR labelling and review progress prompts.
