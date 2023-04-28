@@ -877,7 +877,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         FunctionCall/PyccelInternalFunction
-            The semantic represenation of the call.
+            The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
             func = func.cls_name

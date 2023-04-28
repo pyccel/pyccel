@@ -217,7 +217,7 @@ class FunctionHeader(Header):
 
     is_static : bool, default: False
         True if we want to pass arrays in bind(c) mode. Every argument of type
-        array will be preceeded by its shape, the later will appear in the
+        array will be preceeded by its shape, which will also appear in the
         argument declaration.
 
     Examples
