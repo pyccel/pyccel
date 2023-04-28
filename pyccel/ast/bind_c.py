@@ -156,15 +156,15 @@ def as_static_function(func, *, mod_scope, name=None):
                               order       = a.order,
                               precision   = a.precision)
 
-            _args += [FunctionDefArgument(a_new)]
+            _args.append(FunctionDefArgument(a_new))
 
         else:
-            _args += [FunctionDefArgument(a)]
+            _args.append(FunctionDefArgument(a))
 
     args = _args
     results = [FunctionDefResult(r) for r in _results]
     # ...
-    return BindCFunctionDef( name, list(args), results, body,
+    return BindCFunctionDef( name, args, results, body,
                         is_static = True,
                         functions = functions,
                         interfaces = interfaces,
