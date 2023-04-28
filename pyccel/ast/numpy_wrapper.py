@@ -4,7 +4,7 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Handling the transitions between python code and C code using (Numpy/C Api).
+Handling the transitions between Python code and C code using (Numpy/C Api).
 """
 
 import numpy as np
@@ -266,7 +266,7 @@ def scalar_type_check(py_variable, c_variable):
     Parameters
     ----------
     py_variable : Variable
-        The python argument of the check function.
+        The Python argument of the check function.
 
     c_variable : Variable
         The variable needed for the generation of the type check.

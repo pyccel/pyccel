@@ -5,7 +5,7 @@
 
 """
 Module representing objects (functions/variables etc) required for the interface
-between python code and C code (using Python/C Api and cwrapper.c).
+between Python code and C code (using Python/C Api and cwrapper.c).
 """
 
 from ..errors.errors import Errors
@@ -335,7 +335,7 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
 
 def Python_to_C(c_object):
     """
-    Create a FunctionDef responsible for casting scalar python argument to C.
+    Create a FunctionDef responsible for casting scalar Python argument to C.
 
     Creates a FunctionDef node which contains all the code necessary
     for casting a PythonObject to a C object whose characteristics
@@ -530,16 +530,16 @@ check_type_registry = {
 
 def scalar_object_check(py_object, c_object):
     """
-    Create FunctionCall responsible for checking python argument data type.
+    Create FunctionCall responsible for checking Python argument data type.
 
-    Create a FunctionCall which checks whether the python argument
+    Create a FunctionCall which checks whether the Python argument
     passed as an argument is a scalar with a type which matches the
     type of the C object.
 
     Parameters
     ----------
     py_object : Variable
-        The python argument of the check function.
+        The Python argument of the check function.
     c_object : Variable
         The variable needed for the generation of the type check.
 
