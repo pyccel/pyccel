@@ -219,7 +219,7 @@ def mark_as_ready(pr_id):
 
     failures = [j.get('name','') for j in job_data if j['conclusion'] in ('cancelled', 'failure')]
 
-    if any(j['name'] == 'Codacy Static Code Analysis' and j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED') for j in running_job_data):
+    if any(j.get('name','') == 'Codacy Static Code Analysis' and j['conclusion'] in ('FAILURE', 'ACTION_REQUIRED') for j in running_job_data):
         failures.append('Codacy Static Code Analysis')
 
     ignore_coverage = accept_coverage_failure(pr_id)
