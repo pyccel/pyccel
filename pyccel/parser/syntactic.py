@@ -108,8 +108,8 @@ class SyntaxParser(BasicParser):
 
     This class is described in detail in developer_docs/syntactic_stage.md.
     It extracts all necessary information from the Python AST in order to create
-    a representation complete enough to provide all necessary information for
-    the semantic stage.
+    a representation complete enough for the semantic stage to determine types, etc
+    as described in developer_docs/semantic_stage.md.
 
     Parameters
     ----------
