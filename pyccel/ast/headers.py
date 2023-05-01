@@ -217,7 +217,7 @@ class FunctionHeader(Header):
 
     is_static : bool, default: False
         True if we want to pass arrays in bind(c) mode. Every argument of type
-        array will be preceeded by its shape, the later will appear in the
+        array will be preceeded by its shape, which will also appear in the
         argument declaration.
 
     Examples
@@ -303,7 +303,29 @@ class FunctionHeader(Header):
         dtypes = []
 
         def build_argument(var_name, dc):
-            #Constructs an argument variable from a dictionary.
+            """
+            Construct an argument variable from a dictionary describing its properties.
+
+            Use a dictionary describing the properties of a variable which is either
+            an argument (in/inout) or a result (out) to create a variable and an
+            annotation string for the variable.
+
+            Parameters
+            ----------
+            var_name : srt
+                The name of the variable.
+
+            dc : dict
+                The properties of the variable.
+
+            Returns
+            -------
+            Variable
+                The newly created variable.
+
+            str
+                The annotation string.
+            """
             dtype    = dc['datatype']
             memory_handling = dc['memory_handling']
             precision = dc['precision']
@@ -329,9 +351,9 @@ class FunctionHeader(Header):
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,
-                           is_argument=True, is_temp=True)
+                           is_temp=True)
 
-            return FunctionDefArgument(var, annotation = annotation)
+            return var, annotation
 
         def process_template(signature, Tname, d_type):
             #Replaces templates named Tname inside signature, with the given type.
@@ -378,19 +400,20 @@ class FunctionHeader(Header):
                     _count = 0
                     for dc in d['decs']:
                         _name, _count = create_incremented_string(used_names, 'in', _count)
-                        var = build_argument(_name, dc)
-                        decs.append(var)
+                        var, annotation = build_argument(_name, dc)
+                        decs.append(FunctionDefArgument(var, annotation=annotation))
                     _count = 0
                     for dc in d['results']:
                         _name, _count = create_incremented_string(used_names, 'out', _count)
-                        var = build_argument(_name, dc)
-                        results.append(FunctionDefResult(var.var))
+                        var, annotation = build_argument(_name, dc)
+                        results.append(FunctionDefResult(var, annotation=annotation))
                     arg_name = 'arg_{0}'.format(str(i))
                     arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
 
                 else:
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = build_argument(arg_name, d)
+                    var, annotation = build_argument(arg_name, d)
+                    arg = FunctionDefArgument(var, annotation=annotation)
                 args.append(arg)
 
             # ... factorize the following 2 blocks

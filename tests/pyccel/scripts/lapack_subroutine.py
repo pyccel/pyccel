@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # Matrix inverse test using dgetri and dgetrf subroutines
 
 from numpy import zeros,float64,int32

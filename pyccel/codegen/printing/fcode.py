@@ -3,8 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
-
 """Print to F90 standard. Trying to follow the information provided at
 www.fortran90.org as much as possible."""
 
@@ -74,7 +72,7 @@ from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.utilities import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.errors.errors import Errors
@@ -549,7 +547,7 @@ class FCodePrinter(CodePrinter):
             source = self._print(source)
 
         # importing of pyccel extensions is not printed
-        if source in pyccel_builtin_import_registery:
+        if source in pyccel_builtin_import_registry:
             return ''
 
         if expr.source_module:
@@ -1831,35 +1829,30 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = []
+        out_args = [r.var for r in expr.results if not r.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1 or expr.results[0].var.rank > 0:
+        if len(out_args) != 1 or out_args[0].rank > 0:
             func_type = 'subroutine'
-            out_args = [r.var for r in expr.results]
             for result in out_args:
-                if result in argument_vars:
-                    dec = Declare(result.dtype, result, intent='inout')
-                else:
-                    dec = Declare(result.dtype, result, intent='out')
-                args_decs[result] = dec
+                args_decs[result] = Declare(result.dtype, result, intent='out')
 
             functions = expr.functions
 
         else:
            #todo: if return is a function
             func_type = 'function'
-            result = expr.results[0].var
+            result = out_args[0]
             functions = expr.functions
 
             func_end = 'result({0})'.format(result.name)
 
-            dec = Declare(result.dtype, result)
-            args_decs[result] = dec
+            args_decs[result] = Declare(result.dtype, result)
+            out_args = []
         # ...
 
         for i, arg in enumerate(arguments):
@@ -1872,11 +1865,6 @@ class FCodePrinter(CodePrinter):
                 else:
                     dec = Declare(arg_var.dtype, arg_var, intent='in')
                 args_decs[arg_var] = dec
-
-        #remove parametres intent(inout) from out_args to prevent repetition
-        for i in argument_vars:
-            if i in out_args:
-                out_args.remove(i)
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)

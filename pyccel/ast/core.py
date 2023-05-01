@@ -1922,6 +1922,9 @@ class FunctionDefArgument(PyccelAstNode):
         self._kwonly     = kwonly
         self._annotation = annotation
 
+        if isinstance(name, Variable):
+            name.declare_as_argument()
+
         if pyccel_stage != "syntactic":
             self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
 
@@ -2022,10 +2025,7 @@ class FunctionDefResult(PyccelAstNode):
     var : Variable
         The variable which represents the returned value.
 
-    originates_in_arg : bool
-        Indicate whether the result is also an argument.
-
-    annotation : str
+    annotation : str, default: None
         The type annotation describing the argument.
 
     See Also
@@ -2039,17 +2039,20 @@ class FunctionDefResult(PyccelAstNode):
     >>> n
     n
     """
-    __slots__ = ('_var','_originates_in_arg','_annotation')
+    __slots__ = ('_var','_is_argument','_annotation')
     _attribute_nodes = ('_var',)
 
-    def __init__(self, var, *, originates_in_arg = False, annotation=None):
+    def __init__(self, var, *, annotation=None):
+        self._var        = var
+        self._annotation = annotation
+
         if pyccel_stage == 'syntactic':
             if not isinstance(var, PyccelSymbol):
                 raise TypeError("Var must be a PyccelSymbol")
         elif not isinstance(var, Variable):
             raise TypeError("Var must be a Variable")
-        self._var        = var
-        self._annotation = annotation
+        else:
+            self._is_argument = var.is_argument
 
         super().__init__()
 
@@ -2072,6 +2075,17 @@ class FunctionDefResult(PyccelAstNode):
         types, precision, etc, necessary to fully define the result.
         """
         return self._annotation
+
+    @property
+    def is_argument(self):
+        """
+        Indicates if the result was declared as an argument.
+
+        Indicates if the result of the function was initially declared
+        as an argument of the same function. If this is the case then
+        the result may be printed simply as an inout argument.
+        """
+        return self._is_argument
 
     def __repr__(self):
         return 'FunctionDefResult({})'.format(repr(self.var))

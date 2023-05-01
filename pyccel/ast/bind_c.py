@@ -278,35 +278,32 @@ def as_static_function(func, *, mod_scope, name=None):
 
             _args += [FunctionDefArgument(a) for a in additional_args]
 
-            a_new = Variable(a.dtype, a.name,
-                             memory_handling=a.memory_handling,
-                             is_optional=a.is_optional,
-                             shape=shape_new,
-                             rank=a.rank,
-                             order=a.order,
-                             precision=a.precision)
+            a_new = Variable( a.dtype, a.name,
+                              memory_handling = a.memory_handling,
+                              is_argument = True,
+                              is_optional = a.is_optional,
+                              shape       = shape_new,
+                              rank        = a.rank,
+                              order       = a.order,
+                              precision   = a.precision)
 
-            if not (a.name in results_names):
-                _args += [FunctionDefArgument(a_new)]
-
-            if a.name in results_names:
-                _results += [FunctionDefResult(a_new, originates_in_arg = True)]
+            _args.append(FunctionDefArgument(a_new))
 
         else:
-            _args += [FunctionDefArgument(a)]
+            _args.append(FunctionDefArgument(a))
 
     args = _args
     results = [FunctionDefResult(r) for r in _results]
     # ...
-    return BindCFunctionDef(name, list(args), results, body,
-                            is_static=True,
-                            functions=functions,
-                            interfaces=interfaces,
-                            imports=func.imports,
-                            original_function=func,
-                            doc_string=func.doc_string,
-                            scope=scope
-                            )
+    return BindCFunctionDef( name, args, results, body,
+                        is_static = True,
+                        functions = functions,
+                        interfaces = interfaces,
+                        imports = func.imports,
+                        original_function = func,
+                        doc_string = func.doc_string,
+                        scope = scope
+                        )
 
 # =======================================================================================
 
