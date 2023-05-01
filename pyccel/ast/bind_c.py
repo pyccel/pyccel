@@ -155,19 +155,14 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 # =======================================================================================
 
 
-class BindCFunctionDefResult(Basic):
+class BindCFunctionDefResult(FunctionDefResult):
     __slots__ = ('_var', '_sizes')
     _attribute_nodes = ('_var', '_sizes')
 
     def __init__(self, var, sizes = (), **kwargs):
-        self._var = var
         self._sizes = sizes
         assert len(sizes) == var.rank
-        super().__init__()
-
-    @property
-    def var(self):
-        return self._var
+        super().__init__(var, **kwargs)
 
     @property
     def sizes(self):
