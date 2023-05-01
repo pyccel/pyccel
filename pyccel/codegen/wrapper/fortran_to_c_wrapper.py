@@ -142,7 +142,7 @@ class FortranToCWrapper(Wrapper):
 
         func_results = [self._wrap_FunctionDefResult(r) for r in expr.results]
 
-        func_call_results = [self.scope.get_expected_name(r.name) for r in expr.results]
+        func_call_results = [self.scope.get_expected_name(r.var.name) for r in expr.results]
 
         body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
 
@@ -173,9 +173,10 @@ class FortranToCWrapper(Wrapper):
                 kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
 
     def _wrap_FunctionDefResult(self, expr):
-        name = expr.name
+        var = expr.var
+        name = var.name
         scope = self.scope
-        local_var = expr.clone(scope.get_new_name(name))
+        local_var = var.clone(scope.get_new_name(name))
 
         if local_var.rank:
             # Allocatable is not returned so it must appear in local scope
@@ -184,21 +185,21 @@ class FortranToCWrapper(Wrapper):
             # Save the shapes of the array
             sizes   = [Variable(dtype=NativeInteger(),
                                 name=scope.get_new_name(f'{name}_shape_{i+1}'))
-                       for i in range(expr.rank)]
-            self._additional_exprs.extend([Assign(sizes[i], expr.shape[i]) for i in range(expr.rank)])
-            bind_var = Variable(dtype=BindCPointer(), rank=expr.rank,
+                       for i in range(var.rank)]
+            self._additional_exprs.extend([Assign(sizes[i], var.shape[i]) for i in range(var.rank)])
+            bind_var = Variable(dtype=BindCPointer(), rank=var.rank,
                                 name=scope.get_new_name('bound_'+name))
             self.scope.insert_variable(bind_var)
 
             # Create a C-compatible array variable
-            ptr_var = expr.clone(scope.get_new_name(name+'_ptr'),
+            ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
                                 memory_handling='alias')
             self.scope.insert_variable(ptr_var)
 
             # Define the additional steps necessary to define and fill ptr_var
-            alloc = Allocate(ptr_var, shape=expr.shape,
-                             order=expr.order, status='unallocated')
-            copy = Assign(ptr_var, expr)
+            alloc = Allocate(ptr_var, shape=var.shape,
+                             order=var.order, status='unallocated')
+            copy = Assign(ptr_var, var)
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
 

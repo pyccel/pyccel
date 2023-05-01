@@ -85,8 +85,7 @@ class BindCFunctionDef(FunctionDef):
 
     @property
     def results(self):
-        result_packs = [[r.var, *r.sizes] for r in self._results]
-        return [r for rp in result_packs for r in rp]
+        return [ai for a in self._results for ai in a.get_all_function_def_results()]
 
     @property
     def arguments(self):
@@ -167,6 +166,11 @@ class BindCFunctionDefResult(FunctionDefResult):
     @property
     def sizes(self):
         return self._sizes
+
+    def get_all_function_def_results(self):
+        res = [self]
+        res += [FunctionDefResult(size) for size in self.sizes]
+        return res
 
 # =======================================================================================
 
