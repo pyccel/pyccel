@@ -96,18 +96,18 @@ class BindCFunctionDef(FunctionDef):
 
 
 class BindCFunctionDefArgument(FunctionDefArgument):
-    __slots__ = ('_sizes', '_strides', '_original_arg_var')
+    __slots__ = ('_sizes', '_strides', '_original_arg_var', '_rank')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + ('_sizes', '_strides', '_original_arg_var')
 
     def __init__(self, var, scope, original_arg_var, **kwargs):
         name = var.name
-        rank = original_arg_var.rank
+        self._rank = original_arg_var.rank
         sizes   = [Variable(dtype=NativeInteger(),
                             name=scope.get_new_name(f'{name}_shape_{i+1}'))
-                   for i in range(rank)]
+                   for i in range(self._rank)]
         strides = [Variable(dtype=NativeInteger(),
                             name=scope.get_new_name(f'{name}_stride_{i+1}'))
-                   for i in range(rank)]
+                   for i in range(self._rank)]
         self._sizes = sizes
         self._strides = strides
         self._original_arg_var = original_arg_var
@@ -135,9 +135,9 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         if self.has_default:
             argument = str(self.name)
             value = str(self.value)
-            return 'BindCFunctionDefArgument({0}={1})'.format(argument, value)
+            return 'BindCFunctionDefArgument({0}={1}, inout={2})'.format(argument, value, self.inout)
         else:
-            return 'BindCFunctionDefArgument({})'.format(repr(self.name))
+            return 'BindCFunctionDefArgument({}, inout={})'.format(repr(self.name), self.inout)
 
     @property
     def inout(self):
@@ -147,7 +147,10 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         True if the argument may be modified in the function. False if
         the argument remains constant in the function.
         """
-        return [super().inout, False, False]
+        if self._rank:
+            return [False, False, False]
+        else:
+            return super().inout
 
 # =======================================================================================
 
