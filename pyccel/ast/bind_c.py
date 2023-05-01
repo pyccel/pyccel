@@ -148,7 +148,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         the argument remains constant in the function.
         """
         if self._rank:
-            return [super().inout, False, False]
+            return [False, False, False]
         else:
             return super().inout
 

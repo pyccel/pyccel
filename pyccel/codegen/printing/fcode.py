@@ -15,7 +15,7 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCModule
+from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -1858,13 +1858,22 @@ class FCodePrinter(CodePrinter):
         for i, arg in enumerate(arguments):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
-                if i == 0 and expr.cls_name:
-                    dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
-                elif arg.inout:
-                    dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
+                    for b_arg,inout in zip(arg.get_all_function_def_arguments(), arg.inout):
+                        v = b_arg.var
+                        if inout:
+                            dec = Declare(v.dtype, v, intent='inout')
+                        else:
+                            dec = Declare(v.dtype, v, intent='in')
+                        args_decs[v] = dec
                 else:
-                    dec = Declare(arg_var.dtype, arg_var, intent='in')
-                args_decs[arg_var] = dec
+                    if i == 0 and expr.cls_name:
+                        dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                    elif arg.inout:
+                        dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                    else:
+                        dec = Declare(arg_var.dtype, arg_var, intent='in')
+                    args_decs[arg_var] = dec
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)

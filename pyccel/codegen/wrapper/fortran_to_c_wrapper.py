@@ -188,7 +188,8 @@ class FortranToCWrapper(Wrapper):
                        for i in range(var.rank)]
             self._additional_exprs.extend([Assign(sizes[i], var.shape[i]) for i in range(var.rank)])
             bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+name))
+                                name=scope.get_new_name('bound_'+name),
+                                is_const=True)
             self.scope.insert_variable(bind_var)
 
             # Create a C-compatible array variable
