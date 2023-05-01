@@ -1337,7 +1337,8 @@ class CWrapperCodePrinter(CCodePrinter):
         self.set_scope(self.scope.new_child_scope(expr.name))
 
         local_arg_vars = {}
-        for a in expr.arguments:
+        args = expr.bind_c_arguments if isinstance(expr, BindCFunctionDef) else expr.arguments
+        for a in args:
             v = (a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var)
             if isinstance(v, Variable):
                 new_name = self.scope.get_new_name(v.name)
