@@ -1421,9 +1421,7 @@ class FCodePrinter(CodePrinter):
         externalstr    = ''
 
         # Compute intent string
-        if isinstance(expr_dtype, BindCPointer):
-            intentstr = ', value, intent(in)'
-        elif intent:
+        if intent:
             if intent == 'in' and rank == 0 and not (is_static and is_optional):
                 intentstr = ', value'
                 if is_const:

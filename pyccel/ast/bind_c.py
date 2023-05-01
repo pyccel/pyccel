@@ -96,7 +96,8 @@ class BindCFunctionDef(FunctionDef):
 
 class BindCFunctionDefArgument(FunctionDefArgument):
     __slots__ = ('_sizes', '_strides', '_original_arg_var', '_rank')
-    _attribute_nodes = FunctionDefArgument._attribute_nodes + ('_sizes', '_strides', '_original_arg_var')
+    _attribute_nodes = FunctionDefArgument._attribute_nodes + \
+                        ('_sizes', '_strides', '_original_arg_var')
 
     def __init__(self, var, scope, original_arg_var, **kwargs):
         name = var.name
@@ -147,7 +148,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         the argument remains constant in the function.
         """
         if self._rank:
-            return [False, False, False]
+            return [super().inout, False, False]
         else:
             return super().inout
 
@@ -155,13 +156,19 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 
 class BindCFunctionDefResult(FunctionDefResult):
-    __slots__ = ('_var', '_sizes')
-    _attribute_nodes = ('_var', '_sizes')
+    __slots__ = ('_sizes', '_original_res_var')
+    _attribute_nodes = FunctionDefResult._attribute_nodes + \
+                        ('_var', '_sizes', '_original_res_var')
 
-    def __init__(self, var, sizes = (), **kwargs):
+    def __init__(self, var, original_res_var, sizes = (), **kwargs):
         self._sizes = sizes
-        assert len(sizes) == var.rank
+        assert len(sizes) == original_res_var.rank
+        self._original_res_var = original_res_var
         super().__init__(var, **kwargs)
+
+    @property
+    def original_function_result_variable(self):
+        return self._original_res_var
 
     @property
     def sizes(self):

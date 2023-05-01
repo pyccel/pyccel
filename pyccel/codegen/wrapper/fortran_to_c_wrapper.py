@@ -187,7 +187,7 @@ class FortranToCWrapper(Wrapper):
                                 name=scope.get_new_name(f'{name}_shape_{i+1}'))
                        for i in range(var.rank)]
             self._additional_exprs.extend([Assign(sizes[i], var.shape[i]) for i in range(var.rank)])
-            bind_var = Variable(dtype=BindCPointer(), rank=var.rank,
+            bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name))
             self.scope.insert_variable(bind_var)
 
@@ -203,6 +203,6 @@ class FortranToCWrapper(Wrapper):
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
 
-            return BindCFunctionDefResult(bind_var, sizes)
+            return BindCFunctionDefResult(bind_var, var, sizes)
         else:
-            return BindCFunctionDefResult(local_var)
+            return BindCFunctionDefResult(local_var, var)

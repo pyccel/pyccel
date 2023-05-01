@@ -409,7 +409,6 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         body = []
-        print("get_static_results")
 
         if isinstance(result, BindCFunctionDefResult):
             print(result)
