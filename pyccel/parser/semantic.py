@@ -864,9 +864,6 @@ class SemanticParser(BasicParser):
         args : tuple
                The arguments passed to the function.
 
-        **settings : dict
-            The settings passed to _visit functions.
-
         Returns
         -------
         FunctionCall/PyccelInternalFunction
