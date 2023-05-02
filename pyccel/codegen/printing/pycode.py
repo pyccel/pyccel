@@ -176,13 +176,20 @@ class PythonCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionDefArgument(self, expr):
+        name = self._print(expr.name)
+        type_annotation = ''
+        default = ''
+
+        if expr.annotation:
+            type_annotation = f' : {expr.annotation}'
+
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value.name))
+                default = f' = {self._print(expr.value.name)}'
             else:
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-        else:
-            return self._print(expr.name)
+                default = f' = {self._print(expr.value)}'
+
+        return f'{name}{type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:

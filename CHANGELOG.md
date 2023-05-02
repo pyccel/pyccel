@@ -14,11 +14,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   Default to linking Python dynamically instead of statically
+-   Ensure only absolute paths are used in compilation command.
 -   \[INTERNALS\] Use `FunctionDefArgument` to store all argument specific properties.
 -   \[INTERNALS\] Reduce carbon footprint by avoiding unnecessary CI testing.
 -   \[INTERNALS\] Automatise PR labelling and review progress prompts.
--   Default to linking Python dynamically instead of statically.
--   Ensure only absolute paths are used in compilation command.
+-   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in `FunctionDef`.
+-   \[INTERNALS\] Use `FunctionDefResult` to store all result specific properties.
 
 ### Deprecated
 
