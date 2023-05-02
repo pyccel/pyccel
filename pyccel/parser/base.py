@@ -131,9 +131,10 @@ class BasicParser(object):
 
     """
 
-    def __init__(self,
-                 debug=False,
-                 headers=None):
+    def __init__(self):
+    # def __init__(self,
+    #              debug=False,
+    #              headers=None):
 
         self._code = None
         self._fst  = None
@@ -161,12 +162,12 @@ class BasicParser(object):
 
         self._blocking = error_mode.value == 'developer'
 
-        if headers:
-            if not isinstance(headers, dict):
-                raise TypeError('Expecting a dict of headers')
+        # if headers:
+        #     if not isinstance(headers, dict):
+        #         raise TypeError('Expecting a dict of headers')
 
 
-            self.scope.headers.update(headers)
+        #     self.scope.headers.update(headers)
 
         self._created_from_pickle = False
 
