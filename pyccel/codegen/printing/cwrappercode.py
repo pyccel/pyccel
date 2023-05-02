@@ -801,7 +801,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return collect_var
 
-    def get_PyBuildValue(self, variable):
+    def get_PyBuildValue(self, result):
         """
         Responsible for collecting the variable required to build the result
         and the necessary cast function
@@ -819,9 +819,9 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
+        variable = result.original_function_result_variable
         if variable.rank != 0:
             self.add_import(cwrapper_ndarray_import)
-
 
         cast_function = FunctionCall(C_to_Python(variable), [ObjectAddress(variable)])
 
@@ -1416,7 +1416,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
-        for a in result_vars :
+        for a in results :
             collect_var, cast_func = self.get_PyBuildValue(a)
             if cast_func is not None:
                 wrapper_body.append(AliasAssign(collect_var, cast_func))
