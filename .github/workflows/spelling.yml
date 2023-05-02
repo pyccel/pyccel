@@ -19,10 +19,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.8
+        if: inputs.python_version == ''
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
+        if: inputs.python_version != ''
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools

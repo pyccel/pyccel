@@ -55,7 +55,8 @@ def get_status_json(pr_id, tags):
     # Check status of PR
     cmds = [github_cli, 'pr', 'view', str(pr_id), '--json', tags]
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        result, _ = p.communicate()
+        result, err = p.communicate()
+    print(err)
 
     data = json.loads(result)
 
@@ -282,7 +283,8 @@ def get_job_information(run_id):
     """
     cmd = [github_cli, 'run', 'view', str(run_id), '--json', 'jobs']
     with subprocess.Popen(cmd, stdout=subprocess.PIPE) as p:
-        result, _ = p.communicate()
+        result, err = p.communicate()
+    print(err)
     return json.loads(result)['jobs']
 
 
@@ -311,7 +313,8 @@ def leave_comment(number, comment, edit = False):
         cmds.append('--edit-last')
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        p.communicate()
+        _,err = p.communicate()
+    print(err)
 
 
 
@@ -336,7 +339,8 @@ def add_labels(number, labels):
         cmds += ['--add-label', lab]
 
     with subprocess.Popen(cmds) as p:
-        p.communicate()
+        _, err = p.communicate()
+    print(err)
 
 
 def remove_labels(number, labels):
@@ -360,7 +364,8 @@ def remove_labels(number, labels):
         cmds += ['--remove-label', lab]
 
     with subprocess.Popen(cmds) as p:
-        p.communicate()
+        _, err = p.communicate()
+    print(err)
 
 
 def set_ready(number):
@@ -378,7 +383,8 @@ def set_ready(number):
     cmds = [github_cli, 'pr', 'ready', str(number)]
 
     with subprocess.Popen(cmds) as p:
-        p.communicate()
+        _, err = p.communicate()
+    print(err)
 
 
 def set_draft(number):
@@ -395,7 +401,8 @@ def set_draft(number):
     cmds = [github_cli, 'pr', 'ready', str(number), '--undo']
 
     with subprocess.Popen(cmds) as p:
-        p.communicate()
+        _, err = p.communicate()
+    print(err)
 
 def check_previous_contributions(repo, author):
     """
@@ -415,6 +422,7 @@ def check_previous_contributions(repo, author):
     cmds = [github_cli, 'search', 'prs', '--author', author, '--repo', repo, '--json', 'number,state']
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        result, _ = p.communicate()
+        result, err = p.communicate()
+    print(err)
 
     return json.loads(result)
