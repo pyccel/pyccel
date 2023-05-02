@@ -2414,7 +2414,7 @@ class SemanticParser(BasicParser):
                 else:
                     # If macro is function, create left-hand side variable
                     if isinstance(master, FunctionDef) and master.results:
-                        d_var = self._infer_type(master.results[0])
+                        d_var = self._infer_type(master.results[0].var)
                         dtype = d_var.pop('datatype')
                         lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
                         var = self.check_for_variable(lhs.name)
@@ -2487,9 +2487,9 @@ class SemanticParser(BasicParser):
                 results = func.results
                 if results:
                     if len(results)==1:
-                        d_var = self._infer_type(results[0])
+                        d_var = self._infer_type(results[0].var)
                     else:
-                        d_var = self._infer_type(PythonTuple(*results))
+                        d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
                 elif expr.lhs.is_temp:
                     return rhs
                 else:
@@ -2516,7 +2516,7 @@ class SemanticParser(BasicParser):
                         d_var['order'          ] = arg.order
 
             elif isinstance(func, Interface):
-                d_var = [self._infer_type(i) for i in
+                d_var = [self._infer_type(i.var) for i in
                          func.functions[0].results]
 
                 # TODO imporve this will not work for
@@ -3044,8 +3044,7 @@ class SemanticParser(BasicParser):
 
     def _visit_IfTernaryOperator(self, expr):
         value_true  = self._visit(expr.value_true)
-        if value_true.rank 
-        0 or value_true.dtype is NativeString():
+        if value_true.rank > 0 or value_true.dtype is NativeString():
             lhs = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
             # Temporarily deactivate type checks to construct syntactic assigns
             pyccel_stage.set_stage('syntactic')
@@ -3110,7 +3109,7 @@ class SemanticParser(BasicParser):
                 a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
 
-        results = [self._visit(i) for i in return_vars]
+        results = [self._visit(i.var) for i in return_objs]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
@@ -3253,8 +3252,8 @@ class SemanticParser(BasicParser):
                         a_new = FunctionAddress(self.scope.get_expected_name(a.name),
                                         ahv.arguments, ahv.results, [], **d_var)
                     else:
-                        d_var = self._infer_type(ah)
-                        d_var['shape'] = ah.alloc_shape
+                        d_var = self._infer_type(ahv)
+                        d_var['shape'] = ahv.alloc_shape
                         d_var['is_argument'] = True
                         d_var['is_const'] = ahv.is_const
                         dtype = d_var.pop('datatype')
@@ -3293,7 +3292,8 @@ class SemanticParser(BasicParser):
                 new_results = []
 
                 for a, ah in zip(results, header_results):
-                    d_var = self._infer_type(ah)
+                    av = a.var
+                    d_var = self._infer_type(ah.var)
                     dtype = d_var.pop('datatype')
                     a_new = Variable(dtype, self.scope.get_expected_name(av),
                             **d_var, is_temp = av.is_temp)
@@ -3870,6 +3870,6 @@ class SemanticParser(BasicParser):
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
 
-    def _visit_FunctionDefResult(self, expr, **settings):
+    def _visit_FunctionDefResult(self, expr):
         var = self._visit(expr.var)
         return FunctionDefResult(var, annotation = expr.annotation)
