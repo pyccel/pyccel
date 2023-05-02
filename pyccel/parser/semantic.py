@@ -2700,7 +2700,6 @@ class SemanticParser(BasicParser):
 
         # treatment of the index/indices
         iterable = Iterable(self._visit(expr.iterable, **settings))
-        body     = list(expr.body.body)
 
         new_expr = []
 
@@ -2747,7 +2746,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
 
-        body = [self._visit(i, **settings) for i in body]
+        body = self._visit(expr.body, **settings)
 
         self.exit_loop_scope()
 
