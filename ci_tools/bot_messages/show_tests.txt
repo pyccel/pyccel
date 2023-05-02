@@ -1,4 +1,4 @@
-The following is a list of keywords which can be used to run tests. Tests in bold are run by pull requests marked as ready for review:
+The following is a list of keywords which can be used to run tests. Tests in bold are run by pull requests when they are marked as ready for review or pushed to while not in draft:
 - **linux** : Runs the unit tests on a Linux system.
 - **windows** : Runs the unit tests on a Windows system.
 - **macosx** : Runs the unit tests on a MacOS X system.

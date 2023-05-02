@@ -200,6 +200,24 @@ def test_continue(language):
 
     assert( out1 == out2 )
 
+def test_temp_array_in_loop(language):
+    f1 = loops.temp_array_in_loop
+    f2 = epyccel( f1, language = language )
+
+    a = np.zeros(6, dtype=int)
+    b = np.zeros(6, dtype=int)
+
+    c_py,d_py = f1(a,b)
+
+    a[:] = 0
+    b[:] = 0
+
+    c_ep,d_ep = f2(a,b)
+
+    assert np.array_equal(c_py, c_ep)
+    assert np.array_equal(d_py, d_ep)
+
+
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
 ##==============================================================================

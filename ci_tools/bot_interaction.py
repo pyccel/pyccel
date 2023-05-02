@@ -20,6 +20,12 @@ review_labels = ('needs_initial_review', 'Ready_for_review', 'Ready_to_merge')
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
+icons = {
+        'success' : ':heavy_check_mark:',
+        'failure' : ':x:',
+        'cancelled' : ':no_entry_sign:'
+        }
+
 def get_run_url(event):
     """
     Get the URL of the workflow run.
@@ -298,8 +304,7 @@ def update_test_information(pr_id, event):
         if conclusion == 'skipped' or name in ('Bot', 'CleanUpBot'):
             continue
         job_passed = (conclusion == 'success')
-        icon = ':heavy_check_mark:' if job_passed else ':x:'
-        comment += f"- {icon} {name}\n"
+        comment += f"- {icons[conclusion]} {name}\n"
         passed &= job_passed
 
     leave_comment(pr_id, comment, url in last_message)
