@@ -20,6 +20,12 @@ review_labels = ('needs_initial_review', 'Ready_for_review', 'Ready_to_merge')
 
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
+icons = {
+        'success' : ':heavy_check_mark:',
+        'failure' : ':x:',
+        'cancelled' : ':no_entry_sign:'
+        }
+
 def get_run_url(event):
     """
     Get the URL of the workflow run.
@@ -298,8 +304,7 @@ def update_test_information(pr_id, event):
         if conclusion == 'skipped' or name in ('Bot', 'CleanUpBot'):
             continue
         job_passed = (conclusion == 'success')
-        icon = ':heavy_check_mark:' if job_passed else ':x:'
-        comment += f"- {icon} {name}\n"
+        comment += f"- {icons[conclusion]} {name}\n"
         passed &= job_passed
 
     leave_comment(pr_id, comment, url in last_message)
@@ -571,7 +576,7 @@ if __name__ == '__main__':
         pr_id = event['number']
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
+            trusted_user = flagged_as_trusted(pr_id, event['pull_request']['user']['login'])
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
