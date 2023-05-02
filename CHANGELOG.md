@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+
+## \[1.7.4\] - 2023-05-02
+
+### Added
+
 -   #1352 : Added a change log.
 
 ### Fixed
