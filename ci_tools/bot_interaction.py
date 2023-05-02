@@ -571,7 +571,7 @@ if __name__ == '__main__':
         pr_id = event['number']
         trusted_user = event['pull_request']['author_association'] in ('COLLABORATOR', 'CONTRIBUTOR', 'MEMBER', 'OWNER')
         if not trusted_user:
-            trusted_user = flagged_as_trusted(pr_id, event['comment']['user']['login'])
+            trusted_user = flagged_as_trusted(pr_id, event['pull_request']['user']['login'])
 
         if trusted_user:
             start_review_check(pr_id, event, outputs)
