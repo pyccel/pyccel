@@ -285,7 +285,7 @@ for a system-wide installation.
     ```sh
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
-    pip3 install --user -e .[test]
+    pip3 install --user -e ".[test]"
     ```
 
 this will install a _python_ library **Pyccel** and a _binary_ called **`pyccel`**.
@@ -307,7 +307,7 @@ A warning, reminding the user to execute this command, will be printed to the sc
 In order to run the unit tests and to get a coverage report, a few additional Python packages should be installed:
 
 ```sh
-pip install --user -e .[test]
+pip install --user -e ".[test]"
 ```
 
 Most of the unit tests can also be run in parallel.
