@@ -1,0 +1,1 @@
+Thank you for investigating the coverage errors. I will now ignore this result when checking if the PR is ready to merge. Please keep an eye on the results if you make further significant changes to your PR.
