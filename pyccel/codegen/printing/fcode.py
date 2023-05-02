@@ -397,12 +397,23 @@ class FCodePrinter(CodePrinter):
 
     def _get_external_declarations(self):
         """
-        Look for external functions and declare their result type
+        Find external functions and declare their result type.
+
+        Look for any external functions in the local imports from
+        the scope and use their definitions to create declarations
+        from the results. These declarations are stored in a
+        dictionary whose keys are the result variable which will
+        be declared.
+
+        Returns
+        -------
+        dict
+            The declarations necessary to use the external function.
         """
         decs = {}
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].dtype, name=str(key))
+                i = Variable(f.results[0].var.dtype, name=str(key))
                 dec = Declare(i.dtype, i, external=True)
                 decs[i] = dec
 
@@ -829,7 +840,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
-            base = expr.lhs.funcdef.results[0]
+            base = expr.lhs.funcdef.results[0].var
             if (not self._additional_code):
                 self._additional_code = ''
             var_name = self.scope.get_new_name()
@@ -1790,7 +1801,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCFunctionDef(self, expr):
         name = self._print(expr.name)
-        results   = list(expr.results)
+        results = [r.var for r in expr.results]
 
         self.set_scope(expr.scope)
         self.scope.functions[expr.name] = expr
@@ -1890,35 +1901,30 @@ class FCodePrinter(CodePrinter):
         """
         is_pure      = expr.is_pure
         is_elemental = expr.is_elemental
-        out_args = []
+        out_args = [r.var for r in expr.results if not r.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
-        if len(expr.results) != 1 or expr.results[0].rank > 0:
+        if len(out_args) != 1 or out_args[0].rank > 0:
             func_type = 'subroutine'
-            out_args = list(expr.results)
             for result in out_args:
-                if result in argument_vars:
-                    dec = Declare(result.dtype, result, intent='inout')
-                else:
-                    dec = Declare(result.dtype, result, intent='out')
-                args_decs[result] = dec
+                args_decs[result] = Declare(result.dtype, result, intent='out')
 
             functions = expr.functions
 
         else:
            #todo: if return is a function
             func_type = 'function'
-            result = expr.results[0]
+            result = out_args[0]
             functions = expr.functions
 
             func_end = 'result({0})'.format(result.name)
 
-            dec = Declare(result.dtype, result)
-            args_decs[result] = dec
+            args_decs[result] = Declare(result.dtype, result)
+            out_args = []
         # ...
 
         for i, arg in enumerate(arguments):
@@ -1931,11 +1937,6 @@ class FCodePrinter(CodePrinter):
                 else:
                     dec = Declare(arg_var.dtype, arg_var, intent='in')
                 args_decs[arg_var] = dec
-
-        #remove parametres intent(inout) from out_args to prevent repetition
-        for i in argument_vars:
-            if i in out_args:
-                out_args.remove(i)
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)
@@ -1995,9 +1996,10 @@ class FCodePrinter(CodePrinter):
         decs.update(self._get_external_declarations())
 
         arguments = [a.var for a in expr.arguments]
+        results = [a.var for a in expr.results]
         vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
+            if (v not in expr.local_vars) and (v not in results) and (v not in arguments):
                 decs[v] = Declare(v.dtype,v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
@@ -2980,7 +2982,7 @@ class FCodePrinter(CodePrinter):
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
         args   = expr.args
-        func_results  = func.results
+        func_results  = [r.var for r in func.results]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
@@ -3059,7 +3061,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_DottedFunctionCall(self, expr):
         if isinstance(expr.prefix, FunctionCall):
-            base = expr.prefix.funcdef.results[0]
+            base = expr.prefix.funcdef.results[0].var
             if (not self._additional_code):
                 self._additional_code = ''
             var_name = self.scope.get_new_name()
