@@ -250,7 +250,7 @@ def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
     c = np.zeros_like(a)
     d1 = np.zeros_like(a)
     d2 = np.zeros_like(a)
-    for m in range(1):
+    for _ in range(1):
         for d in range(2):
             b[d] += d
         c[:] = b - a
