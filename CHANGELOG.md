@@ -9,7 +9,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
-
 ## \[1.7.4\] - 2023-05-02
 
 ### Added
