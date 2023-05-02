@@ -60,6 +60,8 @@ jobs:
     with:
       python_version: ${{ needs.Bot.outputs.python_version }}
       ref: ${{ needs.Bot.outputs.REF }}
+    secrets:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   windows:
     needs: Bot
