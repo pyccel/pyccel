@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1367 : Use an absolute path to link to Python library.
+-   #1379 : Ensure temporary arrays created for function calls are correctly declared in loops.
 
 ### Changed
 
