@@ -161,8 +161,8 @@ Although this construction ensures that valid code can be written easily, unless
 It is therefore very important to use the AST to represent class objects, so that the pointer differentiation can be handled in as few functions as possible.
 The following objects are very useful for this purpose:
 -   `DottedVariable` : Used to access member variables of a class. It may be necessary to create a `DottedVariable` to print an object such as a member of the `t_ndarray` class.
--   `NumpyArraySize` : The size of an array in a given dimension
--   `PyccelArraySize` : The total size of an array
+-   `NumpyArrayShapeElement` : The size of an array in a given dimension
+-   `NumpyArraySize` : The total size of an array
 
 Finally it is also important to mention the function `is_c_pointer`, which indicates whether or not its argument is accessed via a pointer in the C code.
 If code relies on the AST nodes described above the use of this function should be limited to the printing of a few low level objects.

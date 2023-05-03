@@ -25,7 +25,7 @@ from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 
 from .datatypes import NativeInteger
 
-from .variable  import Variable, PyccelArraySize
+from .variable  import Variable, NumpyArraySize
 
 __all__ = ('sympy_to_pyccel',
            'pyccel_to_sympy')
@@ -182,7 +182,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         symbol_map[sym] = expr
         return sym
 
-    elif isinstance(expr, PyccelArraySize):
+    elif isinstance(expr, NumpyArraySize):
         sym_name,_ = create_incremented_string(used_names, prefix = 'tmp_size')
         used_names.add(sym_name)
         sym = sp.Symbol(sym_name)

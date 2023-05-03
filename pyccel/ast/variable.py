@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
-from .internals import PyccelArraySize, Slice, get_final_precision
+from .internals import NumpyArraySize, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -227,7 +227,7 @@ class Variable(PyccelAstNode):
         required we do not require this expression
         (which can be quite long). This function therefore
         replaces those expressions with calls to
-        PyccelArraySize
+        NumpyArraySize
         """
         if self.rank == 0:
             return None
@@ -238,13 +238,13 @@ class Variable(PyccelAstNode):
         for i,s in enumerate(shape):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
-                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+                new_shape.append(NumpyArraySize(self, LiteralInteger(i)))
             elif isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
             elif s is None or isinstance(s, PyccelAstNode):
-                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+                new_shape.append(NumpyArraySize(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
                                 'Variable, Slice, PyccelAstNode, int, Function')
@@ -261,7 +261,7 @@ class Variable(PyccelAstNode):
         Indicate that the exact shape is unknown, e.g. if the allocate is done in
         an If block.
         """
-        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
+        self._shape = [NumpyArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
 
     @property
     def name(self):
@@ -274,7 +274,7 @@ class Variable(PyccelAstNode):
         """ Shape of the variable at allocation
 
         The shape used in pyccel is usually simplified to contain
-        only Literals and PyccelArraySizes but the shape for
+        only Literals and NumpyArraySizes but the shape for
         the allocation of x cannot be `Shape(x)`
         """
         return self._alloc_shape

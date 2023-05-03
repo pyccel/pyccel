@@ -30,7 +30,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
-from .internals      import PyccelArraySize
+from .internals      import NumpyArraySize
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
@@ -75,7 +75,7 @@ __all__ = (
     'NumpyAmin',
     'NumpyArange',
     'NumpyArray',
-    'NumpyArraySize',
+    'NumpyArrayShapeElement',
     'NumpyBool',
     'NumpyCountNonZero',
     'NumpyComplex',
@@ -1679,7 +1679,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
         """
         return self._keep_dims
 
-class NumpyArraySize(PyccelInternalFunction):
+class NumpyArrayShapeElement(PyccelInternalFunction):
     """
     Class representing a call to the numpy size function which
     returns the shape of an object in a given dimension
@@ -1703,7 +1703,7 @@ class NumpyArraySize(PyccelInternalFunction):
 
     def __new__(cls, a, axis = None):
         if axis is not None:
-            return PyccelArraySize(a, axis)
+            return NumpyArraySize(a, axis)
         elif not isinstance(a, (list,
                                     tuple,
                                     PyccelAstNode)):
@@ -1756,7 +1756,7 @@ numpy_funcs = {
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , Shape),
-    'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
+    'size'      : PyccelFunctionDef('size'      , NumpyArrayShapeElement),
     'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
     'real'      : PyccelFunctionDef('real'      , NumpyReal),

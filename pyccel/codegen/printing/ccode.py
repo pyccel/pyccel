@@ -42,7 +42,7 @@ from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import IndexedElement
-from pyccel.ast.variable import PyccelArraySize, Variable
+from pyccel.ast.variable import NumpyArraySize, Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
@@ -1215,7 +1215,7 @@ class CCodePrinter(CodePrinter):
                 #managing the Slice input
                 for i , ind in enumerate(inds):
                     if isinstance(ind, Slice):
-                        inds[i] = self._new_slice_with_processed_arguments(ind, PyccelArraySize(base, i),
+                        inds[i] = self._new_slice_with_processed_arguments(ind, NumpyArraySize(base, i),
                             allow_negative_indexes)
                     else:
                         inds[i] = Slice(ind, PyccelAdd(ind, LiteralInteger(1), simplify = True), LiteralInteger(1),
@@ -1272,7 +1272,7 @@ class CCodePrinter(CodePrinter):
         ----------
             _slice : Slice
                 slice needed to collect (start, stop, step)
-            array_size : PyccelArraySize
+            array_size : NumpyArraySize
                 call to function size()
             allow_negative_index : Bool
                 True when the decorator allow_negative_index is present
@@ -1286,13 +1286,13 @@ class CCodePrinter(CodePrinter):
         # negative start and end in slice
         if isinstance(start, PyccelUnarySub) and isinstance(start.args[0], LiteralInteger):
             start = PyccelMinus(array_size, start.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(start, (LiteralInteger, PyccelArraySize)):
+        elif allow_negative_index and not isinstance(start, (LiteralInteger, NumpyArraySize)):
             start = IfTernaryOperator(PyccelLt(start, LiteralInteger(0)),
                             PyccelMinus(array_size, start, simplify = True), start)
 
         if isinstance(stop, PyccelUnarySub) and isinstance(stop.args[0], LiteralInteger):
             stop = PyccelMinus(array_size, stop.args[0], simplify = True)
-        elif allow_negative_index and not isinstance(stop, (LiteralInteger, PyccelArraySize)):
+        elif allow_negative_index and not isinstance(stop, (LiteralInteger, NumpyArraySize)):
             stop = IfTernaryOperator(PyccelLt(stop, LiteralInteger(0)),
                             PyccelMinus(array_size, stop, simplify = True), stop)
 
@@ -1315,13 +1315,13 @@ class CCodePrinter(CodePrinter):
 
         return Slice(start, stop, step)
 
-    def _print_NumpyArraySize(self, expr):
+    def _print_NumpyArrayShapeElement(self, expr):
         arg = expr.arg
         if self.is_c_pointer(arg):
             return '{}->length'.format(self._print(ObjectAddress(arg)))
         return '{}.length'.format(self._print(arg))
 
-    def _print_PyccelArraySize(self, expr):
+    def _print_NumpyArraySize(self, expr):
         arg    = expr.arg
         if self.is_c_pointer(arg):
             return '{}->shape[{}]'.format(self._print(ObjectAddress(arg)), self._print(expr.index))

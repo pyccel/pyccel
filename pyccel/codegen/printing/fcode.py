@@ -33,7 +33,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
 from pyccel.ast.variable  import (Variable,
                              IndexedElement,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize)
+                             DottedName, NumpyArraySize)
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
@@ -1145,13 +1145,13 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
-    def _print_NumpyArraySize(self, expr):
+    def _print_NumpyArrayShapeElement(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
         return 'size({0}, kind={1})'.format(init_value, prec)
 
     # ======================================================================= #
-    def _print_PyccelArraySize(self, expr):
+    def _print_NumpyArraySize(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
 
@@ -2889,7 +2889,7 @@ class FCodePrinter(CodePrinter):
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
-            _shape = PyccelArraySize(base, i if expr.base.order != 'C' else len(inds) - i - 1)
+            _shape = NumpyArraySize(base, i if expr.base.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
                 inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
@@ -2914,7 +2914,7 @@ class FCodePrinter(CodePrinter):
         ----------
             _slice : Slice
                 slice needed to collect (start, stop, step)
-            array_size : PyccelArraySize
+            array_size : NumpyArraySize
                 call to function size()
             allow_negative_index : Bool
                 True when the decorator allow_negative_index is present

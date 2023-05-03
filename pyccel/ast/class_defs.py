@@ -11,7 +11,7 @@ from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpyArraySize)
+                        NumpyConjugate, NumpyArrayShapeElement)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -138,7 +138,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             FunctionDef('shape',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':Shape}),
             FunctionDef('size',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyArraySize}),
+                decorators={'property':'property', 'numpy_wrapper':NumpyArrayShapeElement}),
             FunctionDef('T',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyTranspose}),
             FunctionDef('transpose',[],[],body=[],

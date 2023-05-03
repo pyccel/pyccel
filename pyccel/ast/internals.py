@@ -19,7 +19,7 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
-    'PyccelArraySize',
+    'NumpyArraySize',
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
@@ -53,7 +53,7 @@ class PyccelInternalFunction(PyccelAstNode):
         return False
 
 
-class PyccelArraySize(PyccelInternalFunction):
+class NumpyArraySize(PyccelInternalFunction):
     """
     Class representing a call to a function which would
     return the shape of an object in a given dimension
@@ -105,7 +105,7 @@ class PyccelArraySize(PyccelInternalFunction):
         return 'Shape({},{})'.format(str(self.arg), str(self.index))
 
     def __eq__(self, other):
-        if isinstance(other, PyccelArraySize):
+        if isinstance(other, NumpyArraySize):
             return self.arg == other.arg and self.index == other.index
         else:
             return False
