@@ -5,11 +5,20 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## \[1.7.4\] - 2023-05-02
+
+### Added
+
 -   #1352 : Added a change log.
 
 ### Fixed
 
 -   #1367 : Use an absolute path to link to Python library.
+-   #1379 : Ensure temporary arrays created for function calls are correctly declared in loops.
 
 ### Changed
 

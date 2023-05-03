@@ -549,7 +549,6 @@ def wrap_module_array_var(var, scope, mod):
     func_scope = scope.new_child_scope(func_name)
     body, necessary_vars = wrap_array(var, func_scope, True)
     func_scope.insert_variable(necessary_vars[0])
-    arg_vars = necessary_vars
     result_vars = [FunctionDefResult(v) for v in necessary_vars]
     import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
     func = BindCFunctionDef(name = func_name,
