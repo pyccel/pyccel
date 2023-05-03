@@ -2748,7 +2748,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
 
-        body = [self._visit(i) for i in body]
+        body = self._visit(expr.body)
 
         self.exit_loop_scope()
 
