@@ -244,3 +244,17 @@ def for_loop3():
     for i in range(10, 1, -2):
         x += i
     return x
+
+def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
+    import numpy as np
+    c = np.zeros_like(a)
+    d1 = np.zeros_like(a)
+    d2 = np.zeros_like(a)
+    for _ in range(1):
+        for d in range(2):
+            b[d] += d
+        c[:] = b - a
+        d1[:] = np.abs(c)
+        d2[:] = np.abs(b - a)
+    return d1, d2
+

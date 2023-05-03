@@ -5,19 +5,30 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+## \[1.7.4\] - 2023-05-02
+
+### Added
+
 -   #1352 : Added a change log.
 
 ### Fixed
 
 -   #1367 : Use an absolute path to link to Python library.
+-   #1379 : Ensure temporary arrays created for function calls are correctly declared in loops.
 
 ### Changed
 
+-   Default to linking Python dynamically instead of statically
+-   Ensure only absolute paths are used in compilation command.
 -   \[INTERNALS\] Use `FunctionDefArgument` to store all argument specific properties.
 -   \[INTERNALS\] Reduce carbon footprint by avoiding unnecessary CI testing.
 -   \[INTERNALS\] Automatise PR labelling and review progress prompts.
--   Default to linking Python dynamically instead of statically.
--   Ensure only absolute paths are used in compilation command.
+-   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in `FunctionDef`.
+-   \[INTERNALS\] Use `FunctionDefResult` to store all result specific properties.
 
 ### Deprecated
 

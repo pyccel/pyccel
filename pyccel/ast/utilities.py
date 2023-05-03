@@ -355,13 +355,16 @@ LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'
 #==============================================================================
 def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
+    Collect blocks of code into loops.
+
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
     and the size of the code block.
     So the following:
-    a = a+b
+    `a = a+b`
     for a: int[:,:] and b: int[:]
     Would be returned as:
+    ```
     [
       ([
         ([a[i,j]=a[i,j]+b[j]],a.shape[1])
@@ -369,23 +372,28 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
        , a.shape[0]
       )
     ]
+    ```
 
     Parameters
-    ==========
-    block                 : list of Ast Nodes
-                            The expressions to be modified
-    indices               : list
-                            An empty list to be filled with the temporary variables created
-    new_index             : function (class method of a Scope)
-                            A function which provides a new variable from a base name,
-                            avoiding name collisions.
-    language_has_vectors  : bool
-                            Indicates if the language has support for vector
-                            operations of the same shape
-    Results
-    =======
-    block : list of tuples of lists
-            The modified expression
+    ----------
+    block : list of Ast Nodes
+        The expressions to be modified.
+    indices : list
+        An empty list to be filled with the temporary variables created.
+    new_index : function (class method of a Scope)
+        A function which provides a new variable from a base name,
+        avoiding name collisions.
+    language_has_vectors : bool
+        Indicates if the language has support for vector
+        operations of the same shape.
+    result : list, default: None
+        The list which will be returned. If none is provided, a new list
+        is created.
+
+    Returns
+    -------
+    list of tuples of lists
+        The modified expression.
     """
     if result is None:
         result = []
@@ -475,7 +483,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0] for f in funcs]
+            func_results = [f.funcdef.results[0].var for f in funcs]
             func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 

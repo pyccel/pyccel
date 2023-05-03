@@ -108,18 +108,18 @@ def allow_untested_debug_code(untested):
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         for l in line_nums:
-            line = f_lines[l]
+            line = f_lines[l-1]
             n = len(line)-len(line.lstrip())
             i = l
             func_found = ''
             while i >= 0 and not func_found:
-                line = f_lines[l]
+                line = f_lines[i]
                 strip_line = line.lstrip()
                 n_indent = len(line)-len(strip_line)
                 if n_indent < n and strip_line.startswith('def '):
-                    func_found = strip_line.split()[1].strip(':')
+                    func_found = strip_line.split()[1].split('(')[0]
                 else:
-                    if n_indent < n:
+                    if n_indent < n and strip_line!='':
                         n = n_indent
                     i-=1
             if func_found not in ('__repr__', '__str__'):
