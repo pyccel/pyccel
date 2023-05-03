@@ -68,5 +68,3 @@ tests/examples/openmp/*.mod
 tests/examples/openmp/*.o
 
 benchmarks/tmp/*
-
-test.sh
