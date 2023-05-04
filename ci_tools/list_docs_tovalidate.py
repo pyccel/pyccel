@@ -33,6 +33,9 @@ def should_ignore(name):
     #ignore _print_ methods in the codegen.printing module
     if '_print_' in name and 'pyccel.codegen.printing' in name:
         return True
+    #ignore _wrap_ methods in the codegen.wrapper module
+    if 'Wrapper._wrap_' in name:
+        return True
     return False
 
 if __name__ == '__main__':
