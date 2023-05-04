@@ -1210,11 +1210,12 @@ class CWrapperCodePrinter(CCodePrinter):
             which should be used to increment the byte flag if the argument at the same index
             has the type expected by the function.
         """
+        orig_funcs = [func.original_function if isinstance(func, BindCFunctionDef) else func for func in funcs]
         argument_type_flags = {func:[] for func in funcs}
-        nargs = len(funcs[0].arguments)
+        nargs = len(orig_funcs[0].arguments)
         step = 1
         for i in range(nargs):
-            interface_args = [func.arguments[i].var for func in funcs]
+            interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
             interface_types = [(a.dtype, a.precision) for a in interface_args]
             possible_types = list(dict.fromkeys(interface_types)) # Remove duplicates but preserve order
             for func, t in zip(funcs, interface_types):
