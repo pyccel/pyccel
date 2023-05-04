@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule
@@ -105,6 +106,7 @@ class FortranToCWrapper(Wrapper):
 
         # Wrap contents
         funcs = [self._wrap(f) for f in expr.funcs if not f.is_private]
+        funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variable_getters = [self._wrap(f) for v in expr.variables if not v.is_private]
@@ -131,7 +133,7 @@ class FortranToCWrapper(Wrapper):
 
         self._additional_exprs = []
 
-        if any(isinstance(a, FunctionAddress) for a in expr.arguments):
+        if any(isinstance(a.var, FunctionAddress) for a in expr.arguments):
             warnings.warn("Functions with functions as arguments cannot be wrapped by pyccel")
             return EmptyNode()
 
@@ -159,6 +161,7 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_Interface(self, expr):
         functions = [self.scope.functions[self._wrapper_names_dict[f.name]] for f in expr.functions]
+        functions = [f for f in functions if not isinstance(f, EmptyNode)]
         return Interface(expr.name, functions, expr.is_argument)
 
     def _wrap_FunctionDefArgument(self, expr):
