@@ -1055,7 +1055,8 @@ class CWrapperCodePrinter(CCodePrinter):
             else:
                 arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                         for a in func.arguments}
-            result_vars = [r.var for r in func.results]
+            results = func.bind_c_results if isinstance(func, BindCFunctionDef) else func.results
+            result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
                               else v) : a for v,a in arg_vars.items()}
@@ -1094,7 +1095,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
 
             # Loop for all res in every functions and create the corresponding body and cast
-            for r in result_vars :
+            for r in results :
                 collect_var, cast_func = self.get_PyBuildValue(r)
                 if cast_func is not None:
                     mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
