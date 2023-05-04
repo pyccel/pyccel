@@ -1,8 +1,8 @@
-name: master_tests
+name: devel_tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ devel ]
 
 jobs:
 
@@ -16,6 +16,8 @@ jobs:
       ./.github/workflows/linux.yml
     with:
       python_version: ${{ matrix.python-version }}
+    secrets:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
   Windows:
 
