@@ -142,7 +142,7 @@ class FortranToCWrapper(Wrapper):
 
         func_results = [self._wrap_FunctionDefResult(r) for r in expr.results]
 
-        func_call_results = [self.scope.get_expected_name(r.var.name) for r in expr.results]
+        func_call_results = [r.var.clone(self.scope.get_expected_name(r.var.name)) for r in expr.results]
 
         body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
 
