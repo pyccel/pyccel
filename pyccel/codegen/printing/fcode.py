@@ -1351,7 +1351,6 @@ class FCodePrinter(CodePrinter):
         var = expr.variable
         rank            = var.rank
         shape           = var.alloc_shape
-        is_target       = var.is_target
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
@@ -1360,6 +1359,7 @@ class FCodePrinter(CodePrinter):
         on_stack        = var.on_stack
         is_static       = expr.static
         is_external     = expr.external
+        is_target       = var.is_target and not var.is_alias
         intent          = expr.intent
         intent_in = intent and intent != 'out'
 
