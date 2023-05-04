@@ -88,7 +88,7 @@ class FortranToCWrapper(Wrapper):
         """
         if original_arg.is_ndarray:
             new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False,
-                                memory_handling = 'alias')
+                                memory_handling = 'alias', allows_negative_indexes=False)
             self.scope.insert_variable(new_var)
             start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
             stop = None
@@ -124,7 +124,7 @@ class FortranToCWrapper(Wrapper):
                 scope = mod_scope)
 
     def _wrap_FunctionDef(self, expr):
-        name = self.scope.get_new_name(f'bind_c_{expr.name}')
+        name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
         self._wrapper_names_dict[expr.name] = name
         func_scope = self.scope.new_child_scope(name)
         self.set_scope(func_scope)

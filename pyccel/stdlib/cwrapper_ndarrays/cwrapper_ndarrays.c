@@ -491,13 +491,24 @@ void    *nd_data(t_ndarray *a)
  * -------------------------------------------
  * https://numpy.org/doc/1.17/reference/c-api.array.html#c.PyArray_DIM
  */
-int     nd_nstep(t_ndarray *a, int n)
+int     nd_nstep_C(t_ndarray *a, int n)
 {
 	if (a == NULL)
 		return 0;
 
 	int step = a->strides[n];
 	for (int i = n+1; i<a->nd; ++i) {
+		step /= a->shape[i];
+	}
+	return step;
+}
+int     nd_nstep_F(t_ndarray *a, int n)
+{
+	if (a == NULL)
+		return 0;
+
+	int step = a->strides[n];
+	for (int i = 0; i<n; ++i) {
 		step /= a->shape[i];
 	}
 	return step;

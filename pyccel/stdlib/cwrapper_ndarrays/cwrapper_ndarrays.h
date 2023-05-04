@@ -49,6 +49,7 @@ bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag);
 
 void    *nd_data(t_ndarray *a);
 int     nd_ndim(t_ndarray *a, int n);
-int     nd_nstep(t_ndarray *a, int n);
+int     nd_nstep_C(t_ndarray *a, int n);
+int     nd_nstep_F(t_ndarray *a, int n);
 
 #endif

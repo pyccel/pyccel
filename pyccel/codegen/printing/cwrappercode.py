@@ -38,7 +38,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.numpy_wrapper   import array_type_check
 from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
-from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_step
+from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_c_step, array_get_f_step
 
 from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
@@ -349,9 +349,14 @@ class CWrapperCodePrinter(CCodePrinter):
             static_args+= [
                 FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
             ]
-            static_args+= [
-                FunctionCall(array_get_step, [arg_address, i]) for i in range(argument.rank)
-            ]
+            if argument.order == 'C':
+                static_args+= [
+                    FunctionCall(array_get_c_step, [arg_address, i]) for i in range(argument.rank)
+                ]
+            else:
+                static_args+= [
+                    FunctionCall(array_get_f_step, [arg_address, i]) for i in range(argument.rank)
+                ]
         else:
             static_args = [argument]
 
@@ -420,7 +425,6 @@ class CWrapperCodePrinter(CCodePrinter):
             nd_var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
                     name = result.name,
                     memory_handling = 'alias')
-            print(result)
             body.append(Allocate(result, shape = sizes, order = result.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
