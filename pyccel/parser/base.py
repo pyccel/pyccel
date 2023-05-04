@@ -120,21 +120,9 @@ class BasicParser(object):
     """ Class for a base Parser.
     This class contains functions and properties which are common to SyntacticParser and SemanticParser
 
-    Parameters
-    ----------
-
-        debug: bool
-            True if in debug mode.
-
-        headers: list, tuple
-            list of headers to append to the scope
-
     """
 
     def __init__(self):
-    # def __init__(self,
-    #              debug=False,
-    #              headers=None):
 
         self._code = None
         self._fst  = None
@@ -165,7 +153,6 @@ class BasicParser(object):
         # if headers:
         #     if not isinstance(headers, dict):
         #         raise TypeError('Expecting a dict of headers')
-
 
         #     self.scope.headers.update(headers)
 
