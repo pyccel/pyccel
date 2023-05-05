@@ -1243,10 +1243,12 @@ def test_size_property(language):
 
     @types('int[:]','int')
     def test_size_axis(f, axis):
-        return f.size
+        from numpy import size
+        return size(f,axis)
+
 
     from numpy import empty
-    f1 = epyccel(test_size_1d, language = language)
+    f1 = epyccel(test_size_1d ,language = language)
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_axis, language = language)
     n1 = randint(20)
@@ -1256,7 +1258,7 @@ def test_size_property(language):
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     x4 = empty(n4,dtype = int)
-    axis = randint(2)
+    axis = 0
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
     assert f3(x4,axis) == test_size_axis(x4,axis)
