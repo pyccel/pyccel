@@ -58,7 +58,7 @@ __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 dtype_registry = {('pyobject'     , 0) : 'PyObject',
                   ('pyarrayobject', 0) : 'PyArrayObject',
                   ('void'         , 0) : 'void',
-                  ('bind_c_ptr'   , 0) : 'void*'}
+                  ('bind_c_ptr'   , 0) : 'void'}
 
 module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),

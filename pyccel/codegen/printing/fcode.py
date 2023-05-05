@@ -1349,12 +1349,13 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
+        expr_dtype = expr.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
-        is_alias        = var.is_alias
+        is_alias        = var.is_alias and not isinstance(expr_dtype, BindCPointer)
         on_heap         = var.on_heap
         on_stack        = var.on_stack
         is_static       = expr.static
@@ -1369,13 +1370,11 @@ class FCodePrinter(CodePrinter):
 
         # ... print datatype
         if isinstance(expr.dtype, CustomDataType):
-            dtype = expr.dtype
+            name   = expr_dtype.__class__.__name__
+            prefix = expr_dtype.prefix
+            alias  = expr_dtype.alias
 
-            name   = dtype.__class__.__name__
-            prefix = dtype.prefix
-            alias  = dtype.alias
-
-            if dtype.is_polymorphic or expr.passed_from_dotted:
+            if expr_dtype.is_polymorphic or expr.passed_from_dotted:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1384,9 +1383,8 @@ class FCodePrinter(CodePrinter):
                 name = name.replace(prefix, '')
             else:
                 name = alias
-            dtype = '{0}({1})'.format(sig, name)
+            dtype = f'{sig}({name})'
         else:
-            expr_dtype = expr.dtype
             dtype = self._print(expr_dtype)
 
         # ...

@@ -177,7 +177,7 @@ class FortranToCWrapper(Wrapper):
         var = expr.var
         if var.is_ndarray or var.is_optional:
             new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name),
-                                is_argument = True, is_optional = False)
+                                is_argument = True, is_optional = False, memory_handling='alias')
         else:
             new_var = var.clone(self.scope.get_new_name(expr.name))
 
@@ -201,7 +201,7 @@ class FortranToCWrapper(Wrapper):
             self._additional_exprs.extend([Assign(sizes[i], var.shape[i]) for i in range(var.rank)])
             bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name),
-                                is_const=True)
+                                is_const=True, memory_handling='alias')
             self.scope.insert_variable(bind_var)
 
             # Create a C-compatible array variable
