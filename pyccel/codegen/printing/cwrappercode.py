@@ -823,7 +823,7 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
-        variable = result.original_function_result_variable
+        variable = getattr(result, 'original_function_result_variable', result.var)
         if variable.rank != 0:
             self.add_import(cwrapper_ndarray_import)
 
