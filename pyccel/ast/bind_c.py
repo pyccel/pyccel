@@ -22,9 +22,6 @@ __all__ = (
     'BindCPointer',
     'CLocFunc',
     'as_static_function',
-    'as_static_function_call',
-    'as_static_module',
-    'sanitize_arguments',
     'wrap_array',
     'wrap_module_array_var',
 )
@@ -196,20 +193,6 @@ class BindCModule(Module):
         return self._orig_mod
 
 # =======================================================================================
-def sanitize_arguments(args):
-    """ Ensure that all arguments are of expected types (Variable or FunctionAddress)
-    """
-    _args = []
-    for a in args:
-        if isinstance(a.var, (Variable, FunctionAddress)):
-            _args.append(a.var)
-
-        else:
-            raise NotImplementedError(f'TODO for {type(a)}')
-
-    return _args
-
-# =======================================================================================
 
 
 def as_static_function(func, *, mod_scope, name=None):
@@ -312,103 +295,6 @@ def as_static_function(func, *, mod_scope, name=None):
                         doc_string = func.doc_string,
                         scope = scope
                         )
-
-# =======================================================================================
-
-def as_static_module(funcs, original_module):
-    """ Create the module contained in the bind_c_mod.f90 file
-    This is the interface between the c code and the fortran code thanks
-    to iso_c_bindings
-
-    Parameters
-    ==========
-    funcs : list of FunctionDef
-            All the functions which may be exposed to c
-    original_module : Module
-            The module being wrapped
-    """
-    funcs = [f for f in funcs if not f.is_private]
-    variables = [f for f in original_module.variables if not f.is_private]
-    imports = []
-    scope = Scope(used_symbols=original_module.scope.local_used_symbols.copy())
-    bind_c_funcs = [as_static_function_call(
-        f, original_module, scope, imports=imports) for f in funcs]
-    bind_c_arrays = [wrap_module_array_var(
-        v, scope, original_module) for v in variables if v.rank > 0]
-    if isinstance(original_module.name, AsName):
-        name = scope.get_new_name(f'bind_c_{original_module.name.target}')
-    else:
-        name = scope.get_new_name(f'bind_c_{original_module.name}')
-    return Module(name, (), bind_c_funcs+bind_c_arrays, imports=imports, scope=scope)
-
-#=======================================================================================
-def as_static_function_call(func, mod, mod_scope, name=None, imports = None):
-    """
-    Create a BindCFunctionDef which calls the provided FunctionDef.
-
-    Translate a FunctionDef to a BindCFunctionDef which calls the
-    original function. A BindCFunctionDef is a FunctionDef where the
-    arguments are altered to allow the function to be called from c.
-    E.g. the size of each dimension of an array is provided.
-
-    Parameters
-    ----------
-    func : FunctionDef
-        The function to be translated.
-
-    mod : Module
-        The module which contains the function.
-
-    mod_scope : Scope
-        The scope describing the module.
-
-    name : str
-        The new name of the function.
-
-    imports : list
-        An optional parameter into which any required imports
-        can be collected.
-
-    Returns
-    -------
-    BindCFunctionDef
-        The function which can be called from C.
-    """
-
-    assert isinstance(func, FunctionDef)
-    assert isinstance(mod, Module)
-    mod_name = mod.scope.get_python_name(mod.name)
-
-    # from module import func
-    if imports is None:
-        local_imports = [Import(target=AsName(
-            func, func.name), source=mod_name, mod=mod)]
-    else:
-        imports.append(Import(target=AsName(
-            func, func.name), source=mod_name, mod=mod))
-        local_imports = ()
-
-    # function arguments
-    args = sanitize_arguments(func.arguments)
-    # function body
-    call    = FunctionCall(func, args)
-    results = [r.var for r in func.results]
-    results = results[0] if len(results) == 1 else results
-    stmt = call if len(func.results) == 0 else Assign(results, call)
-    body = [stmt]
-
-    # new function declaration
-    new_func = FunctionDef(func.name, func.arguments, func.results, body,
-                           functions=func.functions,
-                           interfaces=func.interfaces,
-                           imports=local_imports,
-                           doc_string=func.doc_string
-                           )
-
-    # make it compatible with c
-    static_func = as_static_function(new_func, name=name, mod_scope=mod_scope)
-
-    return static_func
 
 # =======================================================================================
 
