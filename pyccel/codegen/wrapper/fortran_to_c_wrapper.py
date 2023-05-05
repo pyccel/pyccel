@@ -46,11 +46,12 @@ class FortranToCWrapper(Wrapper):
         list
                 A list of Basic nodes describing the body of the function.
         """
-        optional = next((a for a in func_def_args if a.var.is_optional and a not in handled), None)
+        optional = next((a for a in func_def_args if a.original_function_argument_variable.is_optional and a not in handled), None)
         if optional:
             args = func_def_args.copy()
+            optional_var = optional.var
             handled += (optional, )
-            true_section = IfSection(PyccelIsNot(optional, Nil()),
+            true_section = IfSection(PyccelIsNot(optional_var, Nil()),
                                     self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
             args.remove(optional)
             false_section = IfSection(LiteralTrue(),
@@ -61,6 +62,8 @@ class FortranToCWrapper(Wrapper):
             size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else fa.sizes for fa in func_def_args]
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
                     for fa,s in zip(func_def_args, size) if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
+                     and fa.original_function_argument_variable.is_optional]
             func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
                         Assign(results, FunctionCall(func, args))
             return body + [func_call]
@@ -77,7 +80,7 @@ class FortranToCWrapper(Wrapper):
 
         Parameters
         ----------
-        original_arg : FunctionDefArgument
+        original_arg : Variable
                        The argument to the function being wrapped.
         bind_c_arg : BindCFunctionDefArgument
                         The argument to the wrapped bind_c_X function.
@@ -96,6 +99,11 @@ class FortranToCWrapper(Wrapper):
             stop = None
             indexes = [Slice(start, stop, step) for step in bind_c_arg.strides]
             return IndexedElement(new_var, *indexes)
+        elif original_arg.is_optional:
+            new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_optional = False,
+                    memory_handling = 'alias')
+            self.scope.insert_variable(new_var)
+            return new_var
         else:
             return bind_c_arg.var
 
@@ -167,9 +175,9 @@ class FortranToCWrapper(Wrapper):
 
     def _wrap_FunctionDefArgument(self, expr):
         var = expr.var
-        if var.is_ndarray:
+        if var.is_ndarray or var.is_optional:
             new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name),
-                                is_argument = True, is_optional = var.is_optional)
+                                is_argument = True, is_optional = False)
         else:
             new_var = var.clone(self.scope.get_new_name(expr.name))
 

@@ -452,7 +452,7 @@ class C_F_Pointer(Basic):
     __slots__ = ('_c_expr', '_f_expr', '_sizes')
     _attribute_nodes = ('_c_expr', '_f_expr', '_sizes')
 
-    def __init__(self, c_expr, f_expr, sizes):
+    def __init__(self, c_expr, f_expr, sizes = ()):
         self._c_expr = c_expr
         self._f_expr = f_expr
         self._sizes = sizes

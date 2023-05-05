@@ -2402,13 +2402,19 @@ class FCodePrinter(CodePrinter):
 
 
     def _print_PyccelIs(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+        lhs = self._print(lhs_var)
+        rhs = self._print(rhs_var)
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
-            return '.not. present({})'.format(lhs)
+        if isinstance(rhs_var, Nil):
+            if isinstance(lhs_var.dtype, BindCPointer):
+                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
+                return f'.not. c_associated({lhs})'
+            else:
+                return f'.not. present({lhs})'
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return '{} .eqv. {}'.format(lhs, rhs)
@@ -2417,13 +2423,19 @@ class FCodePrinter(CodePrinter):
                       symbol=expr, severity='fatal')
 
     def _print_PyccelIsNot(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+        lhs = self._print(lhs_var)
+        rhs = self._print(rhs_var)
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
-            return 'present({})'.format(lhs)
+        if isinstance(rhs_var, Nil):
+            if isinstance(lhs_var.dtype, BindCPointer):
+                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
+                return f'c_associated({lhs})'
+            else:
+                return f'present({lhs})'
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return '{} .neqv. {}'.format(lhs, rhs)
@@ -3040,7 +3052,10 @@ class FCodePrinter(CodePrinter):
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
         sizes = ','.join(self._print(s) for s in expr.sizes)
-        return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{sizes}])\n'
+        if sizes:
+            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{sizes}])\n'
+        else:
+            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)})\n'
 
 #=======================================================================================
 
