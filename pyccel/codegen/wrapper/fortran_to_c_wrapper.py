@@ -7,7 +7,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule
-from pyccel.ast.core import Assign, FunctionCall, FunctionDefArgument
+from pyccel.ast.core import Assign, FunctionCall, FunctionDefArgument, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.datatypes import NativeInteger
@@ -58,7 +58,7 @@ class FortranToCWrapper(Wrapper):
                                     self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
             return [If(true_section, false_section)]
         else:
-            args = [func_arg_to_call_arg[fa] for fa in func_def_args]
+            args = [FunctionCallArgument(func_arg_to_call_arg[fa], keyword = fa.name) for fa in func_def_args]
             size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else fa.sizes for fa in func_def_args]
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
                     for fa,s in zip(func_def_args, size) if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
