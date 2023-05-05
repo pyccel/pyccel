@@ -7,7 +7,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule
-from pyccel.ast.core import Assign, FunctionCall, FunctionDefArgument, FunctionCallArgument
+from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.datatypes import NativeInteger
@@ -162,7 +162,8 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr)
+        func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
+                doc_string = expr.doc_string)
 
         self.scope.functions[name] = func
 
