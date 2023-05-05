@@ -135,9 +135,9 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         if self.has_default:
             argument = str(self.name)
             value = str(self.value)
-            return 'BindCFunctionDefArgument({0}={1}, inout={2})'.format(argument, value, self.inout)
+            return f'BindCFunctionDefArgument({argument}={value}, inout={self.inout})'
         else:
-            return 'BindCFunctionDefArgument({}, inout={})'.format(repr(self.name), self.inout)
+            return f'BindCFunctionDefArgument({repr(self.name)}, inout={self.inout})'
 
     @property
     def inout(self):
@@ -205,7 +205,7 @@ def sanitize_arguments(args):
             _args.append(a.var)
 
         else:
-            raise NotImplementedError('TODO for {}'.format(type(a)))
+            raise NotImplementedError(f'TODO for {type(a)}')
 
     return _args
 
@@ -271,13 +271,12 @@ def as_static_function(func, *, mod_scope, name=None):
     for i_a, a in enumerate(args):
         a = a.var
         if not isinstance(a, (Variable, FunctionAddress)):
-            raise TypeError(
-                'Expecting a Variable or FunctionAddress type for {}'.format(a))
+            raise TypeError(f'Expecting a Variable or FunctionAddress type for {a}')
         if not isinstance(a, FunctionAddress) and a.rank > 0:
             # ...
             additional_args = []
             for i in range(a.rank):
-                n_name = 'n{i}_{name}'.format(name=a.name, i=i)
+                n_name = f'n{i}_{a.name}'
                 n_arg = Variable('int', n_name)
 
                 additional_args += [n_arg]
@@ -337,10 +336,9 @@ def as_static_module(funcs, original_module):
     bind_c_arrays = [wrap_module_array_var(
         v, scope, original_module) for v in variables if v.rank > 0]
     if isinstance(original_module.name, AsName):
-        name = scope.get_new_name(
-            'bind_c_{}'.format(original_module.name.target))
+        name = scope.get_new_name(f'bind_c_{original_module.name.target}')
     else:
-        name = scope.get_new_name('bind_c_{}'.format(original_module.name))
+        name = scope.get_new_name(f'bind_c_{original_module.name}')
     return Module(name, (), bind_c_funcs+bind_c_arrays, imports=imports, scope=scope)
 
 #=======================================================================================
