@@ -16,6 +16,9 @@ class Wrapper:
     start_language = None
     target_language = None
 
+    def __init__(self):
+        self._scope = None
+
     @property
     def scope(self):
         """ Get the current scope

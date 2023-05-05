@@ -22,6 +22,7 @@ class FortranToCWrapper(Wrapper):
     def __init__(self):
         self._additional_exprs = []
         self._wrapper_names_dict = {}
+        super().__init__()
 
     def _get_function_def_body(self, func, func_def_args, func_arg_to_call_arg, results, handled = ()):
         """
