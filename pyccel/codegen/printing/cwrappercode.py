@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import as_static_function, wrap_module_array_var, BindCPointer
+from pyccel.ast.bind_c   import wrap_module_array_var, BindCPointer
 from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef, BindCFunctionDefArgument
 from pyccel.ast.bind_c   import BindCFunctionDefResult
 
@@ -256,31 +256,6 @@ class CWrapperCodePrinter(CCodePrinter):
             return AliasAssign(arg, Py_None)
         else:
             raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
-
-    def get_static_function(self, function):
-        """
-
-        Create a static FunctionDef from the argument used for
-        C/fortran binding.
-        If target language is C return the argument function
-        If target language is Fortran, return a static function which
-        takes both the data and the shapes as arguments
-
-        Parameters
-        ----------
-        function    : FunctionDef
-            FunctionDef holding information needed to create static function
-
-        Returns   :
-        -----------
-        static_func : FunctionDef
-        """
-        if self._target_language == 'fortran':
-            static_func = as_static_function(function, mod_scope = self.scope)
-        else:
-            static_func = function
-
-        return static_func
 
     def static_function_signature(self, expr):
         """
