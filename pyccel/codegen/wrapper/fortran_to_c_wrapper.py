@@ -7,7 +7,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule
-from pyccel.ast.core import Module, Assign, FunctionCall, FunctionDefArgument
+from pyccel.ast.core import Assign, FunctionCall, FunctionDefArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.datatypes import NativeInteger
