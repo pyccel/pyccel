@@ -1258,11 +1258,11 @@ def test_size_property(language):
     n5 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
-    x4 = empty((n2,n3), dtype = int)
+    x3 = empty((n4,n5), dtype = int)
     axis = randint(2)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
-    assert f3(x4,axis) == test_size_axis(x4,axis)
+    assert f3(x3,axis) == test_size_axis(x3,axis)
 
 
 def test_full_basic_real(language):
