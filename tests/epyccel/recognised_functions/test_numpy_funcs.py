@@ -1241,7 +1241,7 @@ def test_size_property(language):
     def test_size_2d(f):
         return f.size
 
-    @types('int[:]','int')
+    @types('int[:,:]','int')
     def test_size_axis(f, axis):
         from numpy import size
         return size(f,axis)
@@ -1255,10 +1255,11 @@ def test_size_property(language):
     n2 = randint(20)
     n3 = randint(20)
     n4 = randint(20)
+    n5 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
-    x4 = empty(n4,dtype = int)
-    axis = 0
+    x4 = empty((n2,n3), dtype = int)
+    axis = randint(2)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
     assert f3(x4,axis) == test_size_axis(x4,axis)
