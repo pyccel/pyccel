@@ -116,11 +116,21 @@ def get_filename_from_import(module,input_folder=''):
 #==============================================================================
 
 class BasicParser(object):
+   """
+    Class for a basic parser.
 
-    """
-    Class for a base Parser.
     This class contains functions and properties which are common to SyntacticParser and SemanticParser.
 
+    See Also
+    --------
+    SyntacticParser
+    SemanticParser
+
+    Examples
+    --------
+    To use the BasicParser class, create an instance and call its parse() method:
+    >>> parser = BasicParser()
+    >>> result = parser.parse("1 + 2")
     """
 
     def __init__(self):
