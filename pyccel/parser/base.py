@@ -134,16 +134,15 @@ class BasicParser(object):
     """
 
     def __init__(self):
-
         self._code = None
-        self._fst  = None
-        self._ast  = None
+        self._fst = None
+        self._ast = None
 
         self._filename = None
         self._metavars = {}
 
         # represent the scope of a function
-        self._scope    = Scope()
+        self._scope = Scope()
         self._current_class    = None
         self._current_function = None
 
