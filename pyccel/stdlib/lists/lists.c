@@ -82,6 +82,7 @@ void    free_genericobject(GenericObject *go)
     free(go);
 }
 
+/*recursively copy all the items in src into dest*/
 int pyccel_copylist(PyccelList **src, PyccelList **dest)
 {
     for (size_t i = 0; i < (*src)->noi; i++)
@@ -108,6 +109,7 @@ int pyccel_expandlist(PyccelList **list)
     if ((*list) == NULL)
         return 1;
 
+    //initialize_list will double the given number
     newlist = initialise_list((*list)->capacity);
     pyccel_copylist(list, &newlist);
     free_list(*list);

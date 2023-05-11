@@ -1,6 +1,6 @@
 #include "lists_wrapper_tools.h"
 
-
+/*Recursively copying all the items in a PyObject that is a list (py_list) into PyccelList (pyccel_list)*/
 int     PyObject_to_PyccelList(PyObject *py_list, PyccelList **pyccel_list)
 {
     Py_ssize_t py_list_size;
@@ -26,6 +26,7 @@ int     PyObject_to_PyccelList(PyObject *py_list, PyccelList **pyccel_list)
     return 0;
 }
 
+/*Recursively do the exact opposite of the above :)*/
 int PyccelList_to_PyObject(PyccelList *pyccel_list, PyObject **pylist)
 {
     size_t pyccel_list_size;
