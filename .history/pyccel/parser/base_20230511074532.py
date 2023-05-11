@@ -123,7 +123,7 @@ class BasicParser(object):
 
     See Also
     --------
-    SyntacticParser : A parser for Pyccel based on a context-free grammar.
+        SyntacticParser : A parser for Pyccel based on a context-free grammar.
     SemanticParser : A parser for Pyccel based on a context-sensitive grammar.
 
     Examples
