@@ -1,0 +1,20 @@
+from pyccel_append import pyccel_append
+
+a = [1,2,3]
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+a = pyccel_append(a,a)
+print(a)
