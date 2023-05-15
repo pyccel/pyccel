@@ -1726,9 +1726,6 @@ class SemanticParser(BasicParser):
 
         return mod
 
-    def _visit_tuple(self, expr):
-        return tuple(self._visit(i) for i in expr)
-
     def _visit_PythonTuple(self, expr):
         ls = [self._visit(i) for i in expr]
         return PythonTuple(*ls)
@@ -1752,13 +1749,6 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(assign)
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
-
-    def _visit_FunctionDefArgument(self, expr):
-        var   = self._visit(expr.var)
-        value = self._visit(expr.value)
-        return FunctionDefArgument(var, value=value,
-                annotation=expr.annotation,
-                kwonly=expr.is_kwonly)
 
     def _visit_CodeBlock(self, expr):
         ls = []
@@ -2449,7 +2439,6 @@ class SemanticParser(BasicParser):
             rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
                 i.set_fst(fst)
-            rhs = self._visit_FunctionDef(rhs)
             return rhs
 
         elif isinstance(rhs, CodeBlock):
