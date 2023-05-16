@@ -120,20 +120,21 @@ class BindCFunctionDefArgument(FunctionDefArgument):
     in order to fully construct the object. This class is mostly important
     for array objects. These objects must pass not only the data, but also
     meta-data. Namely the shape and strides for the array in each dimension.
-    This information is stored in this class
+    This information is stored in this class.
 
     Parameters
     ----------
     var : Variable
-        The variable being passed as an argument.
+        The variable being passed as an argument (with a C-compatible type).
 
     scope : pyccel.parser.scope.Scope
         The scope in which any arguments to the function should be declared.
         This is used to create the shape and stride variables.
 
-    original_arg_var : FunctionDefArgument
-        The argument which was passed to the function currently being wrapped
-        in a C-Fortran interface.
+    original_arg_var : Variable
+        The variable which was passed to the function currently being wrapped
+        in a C-Fortran interface. This variable may have a type which is not
+        compatible with C.
 
     **kwargs : dict
         See FunctionDefArgument.
@@ -165,8 +166,9 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         """
         The argument which was passed to the function currently being wrapped.
 
-        The FunctionDefArgument which was originally passed to the function
-        currently being wrapped in a C-Fortran interface.
+        The Variable which was passed to the function currently being wrapped
+        in a C-Fortran interface. This variable may have a type which is not
+        compatible with C.
         """
         return self._original_arg_var
 
@@ -195,7 +197,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
     def get_all_function_def_arguments(self):
         """
-        Get all arguments which must be printed to fully describe this argument.
+        Get all argument variables which must be printed to fully describe this argument.
 
         Get a list of all the arguments to the C-compatible function which are
         required in order to fully describe this argument. This includes the data
@@ -205,7 +207,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         Returns
         -------
         list
-            A list of FunctionDefArguments which will be arguments of a BindCFunction.
+            A list of FunctionDefArguments which will be arguments of a BindCFunctionDef.
         """
         args = [self]
         args += [FunctionDefArgument(size) for size in self.sizes]
@@ -238,6 +240,32 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
 
 class BindCFunctionDefResult(FunctionDefResult):
+    """
+    Stores all the information necessary to expose a result to C code.
+
+    Results of a C-compatible function may need additional information
+    in order to fully construct the object. This class is mostly important
+    for array objects. These objects must describe not only the data, but also
+    meta-data. Namely the shape for the array in each dimension.
+    This information is stored in this class.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable being returned (with a C-compatible type).
+
+    original_res_var : Variable
+        The variable which was returned by the function currently being wrapped
+        in a C-Fortran interface. This variable may have a type which is not
+        compatible with C.
+
+    **kwargs : dict
+        See FunctionDefResult.
+
+    See Also
+    --------
+    pyccel.ast.core.FunctionDefResult
+    """
     __slots__ = ('_sizes', '_original_res_var')
     _attribute_nodes = FunctionDefResult._attribute_nodes + \
                         ('_var', '_sizes', '_original_res_var')
@@ -250,13 +278,40 @@ class BindCFunctionDefResult(FunctionDefResult):
 
     @property
     def original_function_result_variable(self):
+        """
+        The result returned by the function currently being wrapped.
+
+        The variable which was returned by the function currently being wrapped
+        in a C-Fortran interface. This variable may have a type which is not
+        compatible with C.
+        """
         return self._original_res_var
 
     @property
     def sizes(self):
+        """
+        The sizes of the array result in each dimension.
+
+        A tuple containing the variables which describe the number of
+        elements along each dimension of an array result. These values
+        must be returned by any C-compatible function returning an array.
+        """
         return self._sizes
 
     def get_all_function_def_results(self):
+        """
+        Get all result variables which must be printed to fully describe this result.
+
+        Get a list of all the results of the C-compatible function which are
+        required in order to fully describe this result. This includes the data
+        for the object itself as well as any sizes necessary to
+        define arrays.
+
+        Returns
+        -------
+        list
+            A list of FunctionDefResults which will be results of a BindCFunctionDef.
+        """
         res = [self]
         res += [FunctionDefResult(size) for size in self.sizes]
         return res
@@ -264,6 +319,28 @@ class BindCFunctionDefResult(FunctionDefResult):
 # =======================================================================================
 
 class BindCModule(Module):
+    """
+    Represents a Module which only contains functions compatible with C.
+
+    Represents a Module which provides the C-Fortran interface to another module.
+    Both functions and module variables are wrapped in order to be compatible with
+    C.
+
+    Parameters
+    ----------
+    *args : tuple
+        See pyccel.ast.core.Module
+
+    original_module : Module
+        The Module being wrapped
+
+    *kwargs : dict
+        See pyccel.ast.core.Module
+
+    See Also
+    --------
+    pyccel.ast.core.Module
+    """
     __slots__ = ('_orig_mod',)
     _attribute_nodes = ('_orig_mod',)
 
@@ -273,14 +350,21 @@ class BindCModule(Module):
 
     @property
     def original_module(self):
-        """ The module which was wrapped
+        """
+        The module which was wrapped.
+
+        The original module for which this object provides the C-Fortran interface.
         """
         return self._orig_mod
 
 # =======================================================================================
 
 class BindCPointer(DataType):
-    """ Datatype representing a c pointer in fortran
+    """
+    Datatype representing a C pointer in Fortran.
+
+    Datatype representing a C pointer in Fortran. This data type is defined
+    in the iso_c_binding module.
     """
     __slots__ = ()
     _name = 'bindcpointer'
@@ -288,8 +372,19 @@ class BindCPointer(DataType):
 # =======================================================================================
 
 class CLocFunc(Basic):
-    """ Class representing the iso_c_binding function cloc which returns a valid
-    C pointer to the location where an object can be found
+    """
+    Creates a C-compatible pointer to the argument.
+
+    Class representing the iso_c_binding function cloc which returns a valid
+    C pointer to the location where an object can be found.
+
+    Parameters
+    ----------
+    argument : Variable
+        The object which should be pointed to.
+
+    result : Variable of dtype BindCPointer
+        The variable where the C-compatible pointer should be stored.
     """
     __slots__ = ('_arg', '_result')
     _attribute_nodes = ()
@@ -297,23 +392,49 @@ class CLocFunc(Basic):
     def __init__(self, argument, result):
         self._arg = argument
         self._result = result
+        assert result.dtype is BindCPointer()
         super().__init__()
 
     @property
     def arg(self):
-        """ Object which will be pointed at
+        """
+        Pointer target.
+
+        Object which will be pointed at by the result pointer.
         """
         return self._arg
 
     @property
     def result(self):
-        """ The variable in which the pointer is stored
+        """
+        The variable where the C-compatible pointer should be stored.
+
+        The variable where the C-compatible pointer of dtype BindCPointer
+        should be stored.
         """
         return self._result
 
 # =======================================================================================
 
 class C_F_Pointer(Basic):
+    """
+    Creates a Fortran array pointer from a C pointer and size information.
+
+    Represents the iso_c_binding function C_F_Pointer which takes a pointer
+    to an object in C (with dtype BindCPointer) and a list of sizes and returns
+    a Fortran array pointer.
+
+    Parameters
+    ----------
+    c_expr : Variable of dtype BindCPointer
+        The Variable containing the C pointer.
+
+    f_expr : Variable
+        The Variable containing the resulting array.
+
+    sizes : list of Variables
+        A list describing the Variables which dictate the size of the array in each dimension.
+    """
     __slots__ = ('_c_expr', '_f_expr', '_sizes')
     _attribute_nodes = ('_c_expr', '_f_expr', '_sizes')
 
@@ -325,14 +446,30 @@ class C_F_Pointer(Basic):
 
     @property
     def c_pointer(self):
+        """
+        The Variable containing the C pointer.
+
+        The Variable of dtype BindCPointer which contains the C pointer.
+        """
         return self._c_expr
 
     @property
     def f_array(self):
+        """
+        The Variable containing the resulting array.
+
+        The Variable where the array pointer will be stored.
+        """
         return self._f_expr
 
     @property
     def sizes(self):
+        """
+        A list of the sizes of the array in each dimension.
+
+        A list describing the Variables which are passed as arguments, in order to
+        determine the size of the array in each dimension.
+        """
         return self._sizes
 
 # =======================================================================================
