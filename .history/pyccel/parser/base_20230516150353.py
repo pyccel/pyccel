@@ -160,6 +160,7 @@ class BasicParser(object):
 
         self._blocking = error_mode.value == 'developer'
 
+
         self._created_from_pickle = False
 
     def __setstate__(self, state):

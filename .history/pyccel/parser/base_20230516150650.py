@@ -160,6 +160,12 @@ class BasicParser(object):
 
         self._blocking = error_mode.value == 'developer'
 
+        # if headers:
+        #     if not isinstance(headers, dict):
+        #         raise TypeError('Expecting a dict of headers')
+
+        #     self.scope.headers.update(headers)
+
         self._created_from_pickle = False
 
     def __setstate__(self, state):
