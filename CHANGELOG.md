@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\] - 2023-05-16
 
 ### Added
+
 -   #1302 : raise error message in case of empty class
+
 ### Fixed
 
 ### Changed
