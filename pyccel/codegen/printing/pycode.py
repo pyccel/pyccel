@@ -13,7 +13,7 @@ from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
+from pyccel.ast.numpyext   import NumpyShape, numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable

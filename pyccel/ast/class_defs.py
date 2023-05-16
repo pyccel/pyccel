@@ -9,7 +9,7 @@ from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, FunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString)
-from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
+from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpyArraySize)
 
@@ -136,7 +136,7 @@ TupleClass = ClassDef('tuple',
 NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
             FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Shape}),
+                decorators={'property':'property', 'numpy_wrapper':NumpyShape}),
             FunctionDef('size',[],[],body=[],
                 decorators={'property':'property', 'numpy_wrapper':NumpyArraySize}),
             FunctionDef('T',[],[],body=[],

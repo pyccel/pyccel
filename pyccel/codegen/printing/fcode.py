@@ -69,7 +69,6 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
-from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -2885,7 +2884,6 @@ class FCodePrinter(CodePrinter):
         inds = list(expr.indices)
         if expr.base.order == 'C':
             inds = inds[::-1]
-        base_shape = Shape(expr.base)
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):

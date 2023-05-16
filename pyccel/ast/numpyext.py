@@ -115,7 +115,7 @@ __all__ = (
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike',
-    'Shape',
+    'NumpyShape',
 )
 
 #=======================================================================================
@@ -677,7 +677,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
 #==============================================================================
 
-class Shape(PyccelInternalFunction):
+class NumpyShape(PyccelInternalFunction):
     """ Represents a call to numpy.shape for code generation
     """
     __slots__ = ()
@@ -1097,7 +1097,7 @@ class NumpyFullLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
 
 #=======================================================================================
@@ -1112,7 +1112,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyEmpty(shape, dtype, order)
 
@@ -1128,7 +1128,7 @@ class NumpyOnesLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyOnes(shape, dtype, order)
 
@@ -1144,7 +1144,7 @@ class NumpyZerosLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyZeros(shape, dtype, order)
 
@@ -1755,7 +1755,7 @@ numpy_funcs = {
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
-    'shape'     : PyccelFunctionDef('shape'     , Shape),
+    'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
     'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
     'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
