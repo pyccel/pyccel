@@ -1315,7 +1315,7 @@ class CCodePrinter(CodePrinter):
 
         return Slice(start, stop, step)
 
-    def _print_NumpyArraySize(self, expr):
+    def _print_NumpySize(self, expr):
         arg = expr.arg
         if self.is_c_pointer(arg):
             return '{}->length'.format(self._print(ObjectAddress(arg)))

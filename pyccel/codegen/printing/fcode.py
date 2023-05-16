@@ -1144,7 +1144,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
-    def _print_NumpyArraySize(self, expr):
+    def _print_NumpySize(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
         return 'size({0}, kind={1})'.format(init_value, prec)
