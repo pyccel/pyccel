@@ -411,24 +411,18 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
 
         if isinstance(result, BindCFunctionDefResult):
-            print(result)
-        if self._target_language == 'fortran' and result.rank > 0:
-            sizes = [
-                     self.scope.get_temporary_variable(NativeInteger(),
-                         result.name+'_size') for _ in range(result.rank)
-                     ]
-            nd_var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
-                    name = result.name,
-                    memory_handling = 'alias')
-            body.append(Allocate(result, shape = sizes, order = result.order,
+            sizes = [self.scope.get_temporary_variable(s) for s in result.sizes]
+            var = result.original_function_result_variable
+            nd_var = self.scope.find(self.scope.get_expected_name(result.var.name), category='variables')
+            body.append(Allocate(var, shape = sizes, order = var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=result), nd_var))
+                lhs=var), nd_var))
 
             static_results = [ObjectAddress(nd_var), *sizes]
 
         else:
-            static_results = [result]
+            static_results = [result.var]
 
         return body, static_results
 
@@ -1090,7 +1084,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 mini_wrapper_func_body += body
 
             # create the corresponding function call
-            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, result_vars))
+            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, results))
 
 
             # Loop for all res in every functions and create the corresponding body and cast
@@ -1354,8 +1348,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         results = expr.bind_c_results if isinstance(expr, BindCFunctionDef) else expr.results
         result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
-        for v in result_vars:
+        for r,v in zip(results,result_vars):
             self.scope.insert_variable(v)
+            if isinstance(r, BindCFunctionDefResult):
+                self.scope.insert_variable(r.original_function_result_variable)
         # update ndarray and optional local variables properties
 
         # Find a name for the wrapper function
@@ -1413,7 +1409,7 @@ class CWrapperCodePrinter(CCodePrinter):
         wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
         wrapper_body.extend(wrapper_body_translations)
 
-        wrapper_body.extend(self._get_static_func_call_code(expr, static_func_args, result_vars))
+        wrapper_body.extend(self._get_static_func_call_code(expr, static_func_args, results))
 
         # Loop over results to carry out necessary casts and collect Py_BuildValue type string
         res_args = []
