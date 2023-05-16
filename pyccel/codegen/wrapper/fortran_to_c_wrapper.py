@@ -3,6 +3,10 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+Module describing the code-wrapping class : FortranToCWrapper
+which creates an interface exposing Fortran code to C.
+"""
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
@@ -19,6 +23,13 @@ from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
 
 class FortranToCWrapper(Wrapper):
+    """
+    Class for creating a wrapper exposing Fortran code to C.
+
+    A class which provides all necessary functions for wrapping different AST
+    objects such that the resulting AST is C-compatible. This new AST is
+    printed as an intermediary layer.
+    """
     def __init__(self):
         self._additional_exprs = []
         self._wrapper_names_dict = {}

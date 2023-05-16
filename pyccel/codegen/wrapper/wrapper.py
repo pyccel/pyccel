@@ -3,6 +3,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+Module describing the base code-wrapping class : Wrapper.
+"""
 
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -13,6 +16,13 @@ errors = Errors()
 
 
 class Wrapper:
+    """
+    The base class for code-wrapping subclasses.
+
+    The base class for any classes designed to create a wrapper around code.
+    Such wrappers are necessary to create an interface between two different
+    languages.
+    """
     start_language = None
     target_language = None
 
@@ -37,21 +47,42 @@ class Wrapper:
         self._scope = self._scope.parent_scope
 
     def wrap(self, expr):
+        """
+        Get the wrapped version of the AST object.
+
+        Return the AST object which allows the object `expr` printed
+        in the start language to be accessed from the target language.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.basic.Basic
+            The expression that should be wrapped.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The AST which describes the object that lets you
+            access the expression.
+        """
         return self._wrap(expr)
 
     def _wrap(self, expr):
-        """ Return the AST object which is used to access
-        the expression from the target language
+        """
+        Get the wrapped version of the AST object.
+
+        Private function returning the AST object which is used to access
+        the object `expr` from the target language.
 
         Parameters
         ----------
         expr : AST node
-                The expression that should be wrapped
+            The expression that should be wrapped.
 
         Returns
         -------
-        The AST which describes the object that lets you
-        access the expression
+        pyccel.ast.basic.Basic
+            The AST which describes the object that lets you
+            access the expression.
         """
         classes = type(expr).mro()
         for cls in classes:

@@ -127,6 +127,26 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.is_c_pointer(self,a)
 
     def get_python_name(self, scope, obj):
+        """
+        Get the name of object as defined in the original python code.
+
+        Get the name of the object as it was originally defined in the
+        python code being translated. This name may have changed before
+        the printing stage in the case of name clashes or language interfaces.
+
+        Parameters
+        ----------
+        scope : pyccel.parser.scope.Scope
+            The scope where the object was defined.
+
+        obj : pyccel.ast.basic.Basic
+            The object whose name we wish to identify.
+
+        Returns
+        -------
+        str
+            The original name of the object.
+        """
         if isinstance(obj, BindCFunctionDef):
             return scope.get_python_name(obj.original_function.name)
         elif isinstance(obj, BindCModule):
