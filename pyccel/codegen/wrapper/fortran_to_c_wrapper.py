@@ -14,6 +14,7 @@ from pyccel.ast.bind_c import CLocFunc, BindCModule
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
+from pyccel.ast.core import AsName, Module
 from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
@@ -147,7 +148,7 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        return BindCModule(name, (), funcs + variable_getters,
+        return BindCModule(name, (), funcs, variable_wrappers = variable_getters,
                 init_func = init_func, free_func = free_func,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,
@@ -212,22 +213,23 @@ class FortranToCWrapper(Wrapper):
 
         if local_var.rank:
             # Allocatable is not returned so it must appear in local scope
-            self.scope.insert_variable(local_var)
+            scope.insert_variable(local_var)
 
-            # Save the shapes of the array
-            sizes   = [Variable(dtype=NativeInteger(),
-                                name=scope.get_new_name(f'{name}_shape_{i+1}'))
-                       for i in range(var.rank)]
-            self._additional_exprs.extend([Assign(sizes[i], var.shape[i]) for i in range(var.rank)])
+            # Create the data pointer
             bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name),
                                 is_const=True, memory_handling='alias')
-            self.scope.insert_variable(bind_var)
+            scope.insert_variable(bind_var)
+
+            result = BindCFunctionDefResult(bind_var, var, scope)
+
+            # Save the shapes of the array
+            self._additional_exprs.extend([Assign(result.sizes[i], var.shape[i]) for i in range(var.rank)])
 
             # Create a C-compatible array variable
             ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
                                 memory_handling='alias')
-            self.scope.insert_variable(ptr_var)
+            scope.insert_variable(ptr_var)
 
             # Define the additional steps necessary to define and fill ptr_var
             alloc = Allocate(ptr_var, shape=var.shape,
@@ -236,12 +238,36 @@ class FortranToCWrapper(Wrapper):
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
 
-            return BindCFunctionDefResult(bind_var, var, sizes)
+            return result
         else:
-            return BindCFunctionDefResult(local_var, var)
+            return BindCFunctionDefResult(local_var, var, scope)
 
     def _wrap_Variable(self, expr):
         if expr.rank == 0:
             return EmptyNode()
         else:
-            raise NotImplementedError
+            scope = self.scope
+            func_name = scope.get_new_name('bind_c_'+expr.name.lower())
+            func_scope = scope.new_child_scope(func_name)
+            mod = expr.get_user_nodes(Module)[0]
+            import_mod = Import(mod.name, AsName(expr,expr.name), mod=mod)
+            func_scope.imports['variables'][expr.name] = expr
+
+            # Create the data pointer
+            bind_var = Variable(dtype=BindCPointer(),
+                                name=scope.get_new_name('bound_'+expr.name),
+                                is_const=True, memory_handling='alias')
+            func_scope.insert_variable(bind_var)
+
+            result = BindCFunctionDefResult(bind_var, expr, func_scope)
+            assigns = [Assign(result.sizes[i], expr.shape[i]) for i in range(expr.rank)]
+            c_loc = CLocFunc(expr, bind_var)
+            body = [*assigns, c_loc]
+            func = BindCFunctionDef(name = func_name,
+                          body      = body,
+                          arguments = [],
+                          results   = [result],
+                          imports   = [import_mod],
+                          scope = func_scope,
+                          original_function = expr)
+            return func

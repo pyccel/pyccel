@@ -271,6 +271,10 @@ class BindCFunctionDefResult(FunctionDefResult):
         in a C-Fortran interface. This variable may have a type which is not
         compatible with C.
 
+    scope : pyccel.parser.scope.Scope
+        The scope in which any arguments to the function should be declared.
+        This is used to create the shape and stride variables.
+
     **kwargs : dict
         See FunctionDefResult.
 
@@ -282,9 +286,11 @@ class BindCFunctionDefResult(FunctionDefResult):
     _attribute_nodes = FunctionDefResult._attribute_nodes + \
                         ('_var', '_sizes', '_original_res_var')
 
-    def __init__(self, var, original_res_var, sizes = (), **kwargs):
-        self._sizes = sizes
-        assert len(sizes) == original_res_var.rank
+    def __init__(self, var, original_res_var, scope, **kwargs):
+        name = original_res_var.name
+        self._sizes   = [scope.get_temporary_variable(NativeInteger(),
+                            name=f'{name}_shape_{i+1}')
+                         for i in range(original_res_var._rank)]
         self._original_res_var = original_res_var
         super().__init__(var, **kwargs)
 
@@ -346,6 +352,9 @@ class BindCModule(Module):
     original_module : Module
         The Module being wrapped
 
+    variable_wrappers : list of BindCFunctionDef
+        A list containing all the functions which expose module variables to C.
+
     *kwargs : dict
         See pyccel.ast.core.Module
 
@@ -353,11 +362,12 @@ class BindCModule(Module):
     --------
     pyccel.ast.core.Module
     """
-    __slots__ = ('_orig_mod',)
-    _attribute_nodes = ('_orig_mod',)
+    __slots__ = ('_orig_mod','_variable_wrappers')
+    _attribute_nodes = ('_orig_mod','_variable_wrappers')
 
-    def __init__(self, *args, original_module, **kwargs):
+    def __init__(self, *args, original_module, variable_wrappers = (), **kwargs):
         self._orig_mod = original_module
+        self._variable_wrappers = variable_wrappers
         super().__init__(*args, **kwargs)
 
     @property
@@ -368,6 +378,15 @@ class BindCModule(Module):
         The original module for which this object provides the C-Fortran interface.
         """
         return self._orig_mod
+
+    @property
+    def variable_wrappers(self):
+        """
+        Get the wrappers which expose module variables to C.
+
+        Get a list containing all the BindCFunctionDefs which expose module variables to C.
+        """
+        return self._variable_wrappers
 
 # =======================================================================================
 

@@ -409,20 +409,21 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         body = []
+        var = result.var
 
-        if isinstance(result, BindCFunctionDefResult):
+        if isinstance(result, BindCFunctionDefResult) and var.rank != 0:
             sizes = [self.scope.get_temporary_variable(s) for s in result.sizes]
-            var = result.original_function_result_variable
-            nd_var = self.scope.find(self.scope.get_expected_name(result.var.name), category='variables')
-            body.append(Allocate(var, shape = sizes, order = var.order,
+            orig_var = result.original_function_result_variable
+            nd_var = self.scope.find(self.scope.get_expected_name(var.name), category='variables')
+            body.append(Allocate(orig_var, shape = sizes, order = orig_var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=var), nd_var))
+                lhs=orig_var), nd_var))
 
             static_results = [ObjectAddress(nd_var), *sizes]
 
         else:
-            static_results = [result.var]
+            static_results = [var]
 
         return body, static_results
 
@@ -892,13 +893,14 @@ class CWrapperCodePrinter(CCodePrinter):
         scope.insert_variable(mod_var)
 
         # Collect module variables from translated code
-        orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
         body = []
-        if self._target_language == 'fortran':
+        if isinstance(expr, BindCModule):
+            orig_vars_to_wrap = [v for v in expr.original_module.variables if not v.is_private]
+            wrapper_funcs = {f.original_function: f for f in expr.variable_wrappers}
             # Collect python compatible module variables
             vars_to_wrap = []
             for v in orig_vars_to_wrap:
-                if v.rank > 0:
+                if v in wrapper_funcs:
                     # Get pointer to store array data
                     var = scope.get_temporary_variable(dtype_or_var = v,
                             name = v.name,
@@ -908,7 +910,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     sizes = [scope.get_temporary_variable(NativeInteger(),
                             v.name+'_size') for _ in range(v.rank)]
                     # Get the bind_c function which wraps a fortran array and returns c objects
-                    var_wrapper = wrap_module_array_var(v, scope, expr)
+                    var_wrapper = wrapper_funcs[v]
                     # Call bind_c function
                     call = Assign(PythonTuple(ObjectAddress(var), *sizes), FunctionCall(var_wrapper, ()))
                     body.append(call)
@@ -936,6 +938,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         w.set_fst(assign.fst)
                     vars_to_wrap.append(w)
         else:
+            orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
             vars_to_wrap = orig_vars_to_wrap
         var_names = [str(self.get_python_name(expr.scope, v)) for v in orig_vars_to_wrap]
 
@@ -1350,7 +1353,7 @@ class CWrapperCodePrinter(CCodePrinter):
         result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
         for r,v in zip(results,result_vars):
             self.scope.insert_variable(v)
-            if isinstance(r, BindCFunctionDefResult):
+            if v.rank != 0:
                 self.scope.insert_variable(r.original_function_result_variable)
         # update ndarray and optional local variables properties
 
@@ -1452,21 +1455,21 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
 
         # Insert declared objects into scope
-        #if self._target_language == 'fortran':
-        #    for f in expr.funcs:
-        #        scope.insert_symbol('bind_c_'+f.name.lower())
-        #    for v in expr.variables:
-        #        if not v.is_private:
-        #            if v.rank > 0:
-        #                scope.insert_symbol('bind_c_'+v.name.lower())
-        #            else:
-        #                scope.insert_symbol(v.name.lower())
-        #else:
-        #    for f in expr.funcs:
-        #        scope.insert_symbol(f.name.lower())
-        #    for v in expr.variables:
-        #        if not v.is_private:
-        #            scope.insert_symbol(v.name.lower())
+        if self._target_language == 'fortran':
+            for f in expr.funcs:
+                scope.insert_symbol('bind_c_'+f.name.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    if v.rank > 0:
+                        scope.insert_symbol('bind_c_'+v.name.lower())
+                    else:
+                        scope.insert_symbol(v.name.lower())
+        else:
+            for f in expr.funcs:
+                scope.insert_symbol(f.name.lower())
+            for v in expr.variables:
+                if not v.is_private:
+                    scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
@@ -1478,11 +1481,9 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = self.get_python_name(scope, expr)
         sep = self._print(SeparatorComment(40))
 
-        function_signatures = ''.join('{};\n'.format(self.static_function_signature(f)) for f in expr.funcs)
+        function_signatures = ''.join(f'{self.static_function_signature(f)};\n' for f in expr.funcs)
         if self._target_language == 'fortran':
-            var_wrappers = [wrap_module_array_var(v, self.scope, expr) \
-                    for v in expr.variables if not v.is_private and v.rank > 0]
-            function_signatures += ''.join('{};\n'.format(self.function_signature(v)) for v in var_wrappers)
+            function_signatures += ''.join(f'{self.static_function_signature(f)};\n' for f in expr.variable_wrappers)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]

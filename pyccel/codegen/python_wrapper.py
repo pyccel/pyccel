@@ -116,8 +116,8 @@ def create_shared_library(codegen,
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
-    if "ndarrays" in wrapper_codegen.get_additional_imports():
-        for lib_name in ("ndarrays", "cwrapper_ndarrays"):
+    for lib_name in ("ndarrays", "cwrapper_ndarrays"):
+        if lib_name in wrapper_codegen.get_additional_imports():
             stdlib_folder, stdlib = internal_libs[lib_name]
 
             lib_dest_path = copy_internal_library(stdlib_folder, pyccel_dirpath)
