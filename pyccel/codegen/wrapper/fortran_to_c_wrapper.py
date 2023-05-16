@@ -125,13 +125,21 @@ class FortranToCWrapper(Wrapper):
         self.set_scope(mod_scope)
 
         # Wrap contents
-        funcs = [self._wrap(f) for f in expr.funcs if not f.is_private]
+        funcs_to_wrap = [f for f in expr.funcs if not f.is_private]
+        funcs = [self._wrap(f) for f in funcs_to_wrap]
+        if expr.init_func:
+            init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]
+        else:
+            init_func = None
+        if expr.free_func:
+            free_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.free_func)]
+        else:
+            free_func = None
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variable_getters = [self._wrap(v) for v in expr.variables if not v.is_private]
-        init_func = self._wrap(expr.init_func) if expr.init_func else None
-        free_func = self._wrap(expr.free_func) if expr.free_func else None
+        variable_getters = [v for v in variable_getters if not isinstance(v, EmptyNode)]
         imports = [Import(expr.name, target = expr, mod=expr)]
 
         name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
@@ -231,3 +239,9 @@ class FortranToCWrapper(Wrapper):
             return BindCFunctionDefResult(bind_var, var, sizes)
         else:
             return BindCFunctionDefResult(local_var, var)
+
+    def _wrap_Variable(self, expr):
+        if expr.rank == 0:
+            return EmptyNode()
+        else:
+            raise NotImplementedError
