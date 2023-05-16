@@ -1679,52 +1679,32 @@ class NumpyCountNonZero(PyccelInternalFunction):
         """
         return self._keep_dims
 
+
 class NumpySize(PyccelInternalFunction):
     """
-    Class representing a call to the numpy size function which
-    returns the shape of an object in a given dimension
+    Class representing a call to the Numpy size function which returns
+    the total number of elements in a multidimensional array, or the
+    number of elements along a given dimension.
 
     Parameters
-    ==========
-    arg   : PyccelAstNode
-            A PyccelAstNode of unknown shape
-    axis  : int
-            The dimension along which the size is
-            requested
+    ----------
+    arg : PyccelAstNode
+        An array of unknown size.
+
+    axis : int, optional
+        The dimension along which the size is requested.
     """
-    __slots__ = ('_arg',)
-    _attribute_nodes = ('_arg',)
-    name   = 'size'
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    __slots__ = ()
 
     def __new__(cls, a, axis = None):
-        if axis is not None:
-            return PyccelArraySize(a, axis)
-        elif not isinstance(a, (list,
-                                    tuple,
-                                    PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(a))
-        elif all(isinstance(s, LiteralInteger) for s in a.shape):
-            return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
-        else:
-            return super().__new__(cls)
 
-    def __init__(self, a, axis = None):
-        self._arg   = a
-        super().__init__(a)
+        if axis is None:
+            return PyccelArraySize(a)
 
-    @property
-    def arg(self):
-        """ Object whose size is investigated
-        """
-        return self._arg
+        if isinstance(axis, LiteralInteger) and a.shape is not None:
+            return a.shape[axis.python_value]
 
-    def __str__(self):
-        return 'Size({})'.format(str(self.arg))
+        return IndexedElement(NumpyShape(a), axis)
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
