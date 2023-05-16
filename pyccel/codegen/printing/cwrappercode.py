@@ -380,13 +380,10 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype = self.find_in_dtype_registry(dtype, prec)
 
         if self.is_c_pointer(variable):
-            return '{0}*'.format(dtype)
-
-        elif self._target_language == 'fortran' and variable.rank > 0:
-            return '{0}*'.format(dtype)
+            return f'{dtype}*'
 
         else:
-            return '{0}'.format(dtype)
+            return dtype
 
     def get_static_results(self, result):
         """
