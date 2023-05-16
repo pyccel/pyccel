@@ -29,8 +29,6 @@ __all__ = (
     'BindCPointer',
     'CLocFunc',
     'C_F_Pointer',
-    'wrap_array',
-    'wrap_module_array_var',
 )
 
 
@@ -502,90 +500,3 @@ class C_F_Pointer(Basic):
         determine the size of the array in each dimension.
         """
         return self._sizes
-
-# =======================================================================================
-
-
-def wrap_array(var, scope, persistent):
-    """ Function returning the code and local variables necessary to wrap an array
-
-    Parameters
-    ----------
-    var : Variable
-            The array to be wrapped
-    scope : Scope
-            The current scope (used to find valid names for variables)
-    persistent : bool
-            Indicates whether the variable is persistent in memory or
-            if it needs copying to avoid dead pointers
-
-    Results
-    -------
-    body : list
-            A list describing the lines which must be printed to wrap the array
-    variables : list
-            A list of all new variables necessary to wrap the array. The list
-            contains:
-            - The C Pointer which wraps the array
-            - Variables containing the sizes of the array
-            - The Fortran pointer which will contain a copy of the Fortran data
-              (unless the variable is persistent in memory)
-    """
-    bind_var = Variable(dtype=BindCPointer(),
-                        name=scope.get_new_name('bound_'+var.name))
-    sizes = [Variable(dtype=NativeInteger(), name=scope.get_new_name())
-             for _ in range(var.rank)]
-    assigns = [Assign(sizes[i], var.shape[i]) for i in range(var.rank)]
-    variables = [bind_var, *sizes]
-    if not persistent:
-        ptr_var = var.clone(scope.get_new_name(var.name+'_ptr'),
-                            memory_handling='alias')
-        alloc = Allocate(ptr_var, shape=var.shape,
-                         order=var.order, status='unallocated')
-        copy = Assign(ptr_var, var)
-        c_loc = CLocFunc(ptr_var, bind_var)
-        variables.append(ptr_var)
-        body = [*assigns, alloc, copy, c_loc]
-    else:
-        c_loc = CLocFunc(var, bind_var)
-        body = [*assigns, c_loc]
-    return body, variables
-
-# =======================================================================================
-
-def wrap_module_array_var(var, scope, mod):
-    """
-    Get a function which allows a module variable to be accessed.
-
-    Create a function which exposes a module array variable to C.
-    This allows the module variable to be accessed from the Python
-    code.
-
-    Parameters
-    ----------
-    var : Variable
-            The array to be exposed.
-    scope : Scope
-            The current scope (used to find valid names for variables).
-    mod : Module
-            The module where the variable is defined.
-
-    Returns
-    -------
-    FunctionDef
-        A function which wraps an array and can be called from C.
-    """
-    func_name = 'bind_c_'+var.name.lower()
-    func_scope = scope.new_child_scope(func_name)
-    body, necessary_vars = wrap_array(var, func_scope, True)
-    func_scope.insert_variable(necessary_vars[0])
-    result_vars = [FunctionDefResult(v) for v in necessary_vars]
-    import_mod = Import(mod.name, AsName(var,var.name), mod=mod)
-    func = BindCFunctionDef(name = func_name,
-                  body      = body,
-                  arguments = [],
-                  results   = result_vars,
-                  imports   = [import_mod],
-                  scope = func_scope,
-                  original_function = None)
-    return func

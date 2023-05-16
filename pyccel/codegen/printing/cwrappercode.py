@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import wrap_module_array_var, BindCPointer
+from pyccel.ast.bind_c   import BindCPointer
 from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef, BindCFunctionDefArgument
 from pyccel.ast.bind_c   import BindCFunctionDefResult
 
