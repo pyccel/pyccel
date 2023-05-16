@@ -75,7 +75,7 @@ __all__ = (
     'NumpyAmin',
     'NumpyArange',
     'NumpyArray',
-    'NumpyArraySize',
+    'NumpySize',
     'NumpyBool',
     'NumpyCountNonZero',
     'NumpyComplex',
@@ -1679,7 +1679,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
         """
         return self._keep_dims
 
-class NumpyArraySize(PyccelInternalFunction):
+class NumpySize(PyccelInternalFunction):
     """
     Class representing a call to the numpy size function which
     returns the shape of an object in a given dimension
@@ -1756,7 +1756,7 @@ numpy_funcs = {
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
-    'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
+    'size'      : PyccelFunctionDef('size'      , NumpySize),
     'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
     'real'      : PyccelFunctionDef('real'      , NumpyReal),
