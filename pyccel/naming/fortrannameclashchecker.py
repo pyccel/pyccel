@@ -4,7 +4,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-Handles name clash problems in Fortran
+Handles name clash problems in Fortran.
 """
 import warnings
 
@@ -47,9 +47,6 @@ class FortranNameClashChecker(metaclass = Singleton):
             'asin', 'acos', 'atan', 'exp', 'log', 'int', 'nint',
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
             'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer', 'c_ptr'])
-
-    def __init__(self):
-        pass
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
