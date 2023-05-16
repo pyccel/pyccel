@@ -103,10 +103,22 @@ class BindCFunctionDef(FunctionDef):
 
     @property
     def results(self):
+        """
+        List of all objects returned by the function.
+
+        A list of all objects returned by the function including variables
+        which contain array metadata.
+        """
         return [ai for a in self._results for ai in a.get_all_function_def_results()]
 
     @property
     def arguments(self):
+        """
+        List of all arguments passed to the function.
+
+        List of all arguments passed to the function including variables
+        which contain array metadata.
+        """
         return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
 
 # =======================================================================================
