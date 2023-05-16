@@ -48,6 +48,9 @@ class FortranNameClashChecker(metaclass = Singleton):
             'floor', 'fraction', 'real', 'max', 'mod', 'count',
             'pack', 'numpy_sign', 'c_associated', 'c_loc', 'c_f_pointer', 'c_ptr'])
 
+    def __init__(self):
+        pass
+
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
         """
