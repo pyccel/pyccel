@@ -3,6 +3,10 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+Module describing all elements of the AST needed to represent elements which appear in a Fortran-C binding
+file.
+"""
 
 from pyccel.ast.basic import Basic
 from pyccel.ast.core import CodeBlock, FunctionCall, Module
@@ -19,8 +23,12 @@ from pyccel.parser.scope import Scope
 
 __all__ = (
     'BindCFunctionDef',
+    'BindCFunctionDefArgument',
+    'BindCFunctionDefResult',
+    'BindCModule',
     'BindCPointer',
     'CLocFunc',
+    'C_F_Pointer',
     'wrap_array',
     'wrap_module_array_var',
 )
@@ -28,6 +36,8 @@ __all__ = (
 
 class BindCFunctionDef(FunctionDef):
     """
+    Represents the definition of a C-compatible function.
+
     Contains the C-compatible version of the function which is
     used for the wrapper.
     As compared to a normal FunctionDef, this version contains
@@ -36,10 +46,18 @@ class BindCFunctionDef(FunctionDef):
 
     Parameters
     ----------
-    *args : See FunctionDef
+    *args : list
+        See FunctionDef
 
     original_function : FunctionDef
         The function from which the c-compatible version was created
+
+    **kwargs : dict
+        See FunctionDef
+
+    See Also
+    --------
+    pyccel.ast.core.FunctionDef
     """
     __slots__ = ('_original_function',)
     _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
@@ -53,7 +71,11 @@ class BindCFunctionDef(FunctionDef):
 
     @property
     def original_function(self):
-        """ The function which is wrapped by this BindCFunctionDef
+        """
+        The function which is wrapped by this BindCFunctionDef.
+
+        The original function which would be printed in pure Fortran which is not
+        compatible with C.
         """
         return self._original_function
 
@@ -91,6 +113,35 @@ class BindCFunctionDef(FunctionDef):
 
 
 class BindCFunctionDefArgument(FunctionDefArgument):
+    """
+    Stores all the information necessary to expose an argument to C code.
+
+    Arguments of a C-compatible function may need additional information
+    in order to fully construct the object. This class is mostly important
+    for array objects. These objects must pass not only the data, but also
+    meta-data. Namely the shape and strides for the array in each dimension.
+    This information is stored in this class
+
+    Parameters
+    ----------
+    var : Variable
+        The variable being passed as an argument.
+
+    scope : pyccel.parser.scope.Scope
+        The scope in which any arguments to the function should be declared.
+        This is used to create the shape and stride variables.
+
+    original_arg_var : FunctionDefArgument
+        The argument which was passed to the function currently being wrapped
+        in a C-Fortran interface.
+
+    **kwargs : dict
+        See FunctionDefArgument.
+
+    See Also
+    --------
+    pyccel.ast.core.FunctionDefArgument
+    """
     __slots__ = ('_sizes', '_strides', '_original_arg_var', '_rank')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
                         ('_sizes', '_strides', '_original_arg_var')
@@ -98,11 +149,11 @@ class BindCFunctionDefArgument(FunctionDefArgument):
     def __init__(self, var, scope, original_arg_var, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
-        sizes   = [Variable(dtype=NativeInteger(),
-                            name=scope.get_new_name(f'{name}_shape_{i+1}'))
+        sizes   = [scope.get_temporary_variable(NativeInteger(),
+                            name=f'{name}_shape_{i+1}')
                    for i in range(self._rank)]
-        strides = [Variable(dtype=NativeInteger(),
-                            name=scope.get_new_name(f'{name}_stride_{i+1}'))
+        strides = [scope.get_temporary_variable(NativeInteger(),
+                            name=f'{name}_stride_{i+1}')
                    for i in range(self._rank)]
         self._sizes = sizes
         self._strides = strides
@@ -111,17 +162,51 @@ class BindCFunctionDefArgument(FunctionDefArgument):
 
     @property
     def original_function_argument_variable(self):
+        """
+        The argument which was passed to the function currently being wrapped.
+
+        The FunctionDefArgument which was originally passed to the function
+        currently being wrapped in a C-Fortran interface.
+        """
         return self._original_arg_var
 
     @property
     def sizes(self):
+        """
+        The sizes of the array argument in each dimension.
+
+        A tuple containing the variables which describe the number of
+        elements along each dimension of an array argument. These values
+        must be passed to any C-compatible function taking an array as an
+        argument.
+        """
         return self._sizes
 
     @property
     def strides(self):
+        """
+        The strides of the array argument in each dimension.
+
+        A tuple containing the variables which describe the strides of
+        an array argument in each dimension. These values must be passed to
+        any C-compatible function taking an array as an argument.
+        """
         return self._strides
 
     def get_all_function_def_arguments(self):
+        """
+        Get all arguments which must be printed to fully describe this argument.
+
+        Get a list of all the arguments to the C-compatible function which are
+        required in order to fully describe this argument. This includes the data
+        for the object itself as well as any sizes or strides necessary to
+        define arrays.
+
+        Returns
+        -------
+        list
+            A list of FunctionDefArguments which will be arguments of a BindCFunction.
+        """
         args = [self]
         args += [FunctionDefArgument(size) for size in self.sizes]
         args += [FunctionDefArgument(stride) for stride in self.strides]
@@ -141,10 +226,11 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         Indicates whether the argument may be modified by the function.
 
         True if the argument may be modified in the function. False if
-        the argument remains constant in the function.
+        the argument remains constant in the function. For array arguments
+        the inout status of the sizes and strides are also returned.
         """
         if self._rank:
-            return [False, False, False]
+            return [False] + [False, False]*self._rank
         else:
             return super().inout
 
