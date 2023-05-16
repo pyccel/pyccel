@@ -12,7 +12,13 @@ from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 
 class FortranNameClashChecker(metaclass = Singleton):
-    """ Class containing functions to help avoid problematic names in C
+    """
+    Class containing functions to help avoid problematic names in C.
+
+    A class which provides functionalities to check or propose variable names and
+    verify that they do not cause name clashes. Name clashes may be due to
+    capitalisation (as Fortran is not case-sensitive), or due to the use of reserved
+    keywords.
     """
     # Keywords as mentioned on https://fortranwiki.org/fortran/show/Keywords
     # Intrinsic functions as mentioned on https://pages.mtu.edu/~shene/COURSES/cs201/NOTES/chap02/funct.html
