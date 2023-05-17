@@ -64,6 +64,8 @@ class PyccelArraySize(PyccelInternalFunction):
     arg : PyccelAstNode
         An array of unknown size.
     """
+    name = 'size'
+
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0

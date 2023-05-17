@@ -1695,6 +1695,7 @@ class NumpySize(PyccelInternalFunction):
         The dimension along which the size is requested.
     """
     __slots__ = ()
+    name = 'size'
 
     def __new__(cls, a, axis = None):
 
