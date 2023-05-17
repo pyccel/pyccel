@@ -16,6 +16,7 @@ import warnings
 from filelock import FileLock
 from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
+from pyccel.commands.console import is_conda_warnings_disabled
 
 errors = Errors()
 
@@ -39,7 +40,8 @@ def get_condaless_search_path():
                           'Conda', 'Anaconda', 'Miniconda')
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
-        warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
+        if not is_conda_warnings_disabled:
+            warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
     return acceptable_search_paths
 
