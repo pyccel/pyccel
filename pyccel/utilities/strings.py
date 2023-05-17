@@ -6,7 +6,7 @@
 """ Module containing helper functions for managing strings
 """
 
-def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
+def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, name_clash_checker = None):
     """This function takes a prefix and a counter and uses them to construct
     a new name of the form:
             prefix_counter
@@ -40,8 +40,13 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1):
     name_format = "{prefix}_{counter:0="+str(nDigits)+"d}"
     name = name_format.format(prefix=prefix, counter = counter)
     counter += 1
-    while name in forbidden_exprs:
-        name = name_format.format(prefix=prefix, counter = counter)
-        counter += 1
+    if name_clash_checker:
+        while name_clash_checker.has_clash(name, forbidden_exprs):
+            name = name_format.format(prefix=prefix, counter = counter)
+            counter += 1
+    else:
+        while name in forbidden_exprs:
+            name = name_format.format(prefix=prefix, counter = counter)
+            counter += 1
 
     return name, counter

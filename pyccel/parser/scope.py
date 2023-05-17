@@ -418,7 +418,8 @@ class Scope(object):
           new_name     : str
         """
 
-        new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
+        new_name, counter = create_incremented_string(self.local_used_symbols.values(),
+                                    prefix = prefix, name_clash_checker = self.name_clash_checker)
 
         new_symbol = PyccelSymbol(new_name, is_temp=True)
 
@@ -452,13 +453,13 @@ class Scope(object):
             # Avoid confusing names by also searching in parent scopes
             new_name, self._dummy_counter = create_incremented_string(self.all_used_symbols,
                                                 prefix = current_name,
-                                                counter = self._dummy_counter)
+                                                counter = self._dummy_counter,
+                                                name_clash_checker = self.name_clash_checker)
         else:
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
         new_name = PyccelSymbol(new_name, is_temp = True)
-
         self.insert_symbol(new_name)
 
         return new_name
