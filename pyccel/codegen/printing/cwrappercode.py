@@ -406,11 +406,13 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         body = []
+        var_name = self.scope.get_expected_name(result.var.name)
 
         if isinstance(result, BindCFunctionDefResult) and result.sizes:
             sizes = [self.scope.get_temporary_variable(s) for s in result.sizes]
-            orig_var = result.original_function_result_variable
-            nd_var = self.scope.find(self.scope.get_expected_name(result.var.name), category='variables')
+            orig_name = result.original_function_result_variable.name
+            orig_var = self.scope.find(self.scope.get_expected_name(orig_name), category='variables')
+            nd_var = self.scope.find(var_name, category='variables')
             body.append(Allocate(orig_var, shape = sizes, order = orig_var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
@@ -419,7 +421,8 @@ class CWrapperCodePrinter(CCodePrinter):
             static_results = [ObjectAddress(nd_var), *sizes]
 
         else:
-            static_results = [result.var]
+            var = self.scope.find(var_name, category='variables')
+            static_results = [var]
 
         return body, static_results
 
@@ -809,7 +812,9 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_func_stmts : functionCall
             call to cast function responsible for the conversion of one data type into another
         """
-        variable = getattr(result, 'original_function_result_variable', result.var)
+        out_var = getattr(result, 'original_function_result_variable', result.var)
+        name = self.scope.get_expected_name(out_var.name)
+        variable = self.scope.find(name, category='variables')
         if variable.rank != 0:
             self.add_import(cwrapper_ndarray_import)
 
@@ -1350,11 +1355,19 @@ class CWrapperCodePrinter(CCodePrinter):
                 local_arg_vars[v] = a
 
         results = expr.bind_c_results if isinstance(expr, BindCFunctionDef) else expr.results
-        result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
-        for r,v in zip(results,result_vars):
+        result_vars = []
+        for r in results:
+            var = r.var
+            name = var.name
+            self.scope.insert_symbol(name)
+            v = var.clone(self.scope.get_expected_name(name))
+            result_vars.append(v)
             self.scope.insert_variable(v)
             if isinstance(r, BindCFunctionDefResult) and r.sizes:
-                self.scope.insert_variable(r.original_function_result_variable)
+                original_var = r.original_function_result_variable
+                original_name = original_var.name
+                self.scope.insert_symbol(original_name)
+                self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name)))
         # update ndarray and optional local variables properties
 
         # Find a name for the wrapper function
