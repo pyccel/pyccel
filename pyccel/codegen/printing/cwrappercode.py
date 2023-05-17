@@ -1484,9 +1484,16 @@ class CWrapperCodePrinter(CCodePrinter):
             if not v.is_private:
                 scope.insert_symbol(v.name.lower())
 
+        funcs = []
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
                                     for v in variables if not v.is_private and v.rank == 0]
+
+            wrapper_args    = self.get_wrapper_arguments()
+            wrapper_results = [self.get_new_PyObject("result")]
+            for f in expr.original_module.funcs:
+                if f.is_private:
+                    funcs.append(f)
         else:
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
                                     for v in expr.variables if not v.is_private]
@@ -1499,7 +1506,7 @@ class CWrapperCodePrinter(CCodePrinter):
             function_signatures += ''.join(f'{self.static_function_signature(f)};\n' for f in expr.variable_wrappers)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
-        funcs = [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
+        funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
         self._in_header = True
         decs = ''.join('extern '+self._print(d) for d in vars_to_wrap_decs)
