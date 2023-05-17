@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\]
 
 ### Added
-
+-   #1396 : Added the `--ignore-conda-warnings` and `--detailed-conda-warnings`, and updating the `compiler.md`.
 ### Fixed
 
 ### Changed
