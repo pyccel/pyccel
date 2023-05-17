@@ -79,7 +79,7 @@ class FortranToCWrapper(Wrapper):
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
             if func.is_inline and any(isinstance(a.value, IndexedElement) for a in args):
-                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args}
+                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args if isinstance(a.value, IndexedElement)}
                 body += [AliasAssign(v, k.value) for k,v in array_args.items()]
                 args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
 
