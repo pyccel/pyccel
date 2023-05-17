@@ -1009,13 +1009,14 @@ class CWrapperCodePrinter(CCodePrinter):
             example_args = funcs[0].bind_c_arguments
             example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                     for a in example_args}
+            arg_names = [a.var.name for a in funcs[0].original_function.arguments]
         else:
             example_args = funcs[0].arguments
             example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                     for a in example_args}
+            arg_names = [a.name for a in example_args]
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.name for a in example_args]
         keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
         wrapper_body      = [keyword_list]
@@ -1388,7 +1389,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self.scope.insert_variable(wrapper_results[0])
 
         # Collect argument names for PyArgParse
-        arg_names         = [a.var.name for a in local_arg_vars.values()]
+        arg_names         = [a.var.name for a in (expr.original_function.arguments if isinstance(expr, BindCFunctionDef) else expr.arguments)]
         keyword_list_name = self.scope.get_new_name('kwlist')
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
