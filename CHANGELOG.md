@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #1302 : raise error message in case of empty class
+-   #1302 : Raise error message in case of empty class
 
 ### Changed
 
