@@ -1053,7 +1053,19 @@ class CWrapperCodePrinter(CCodePrinter):
                 arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
                         for a in func.arguments}
             results = func.bind_c_results if isinstance(func, BindCFunctionDef) else func.results
-            result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
+            result_vars = []
+            for r in results:
+                var = r.var
+                name = var.name
+                self.scope.insert_symbol(name)
+                v = var.clone(self.scope.get_expected_name(name))
+                result_vars.append(v)
+                self.scope.insert_variable(v)
+                if isinstance(r, BindCFunctionDefResult) and r.sizes:
+                    original_var = r.original_function_result_variable
+                    original_name = original_var.name
+                    self.scope.insert_symbol(original_name)
+                    self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name)))
 
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
@@ -1061,10 +1073,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
             for a in local_arg_vars:
                 mini_scope.insert_variable(a)
-            for r,v in zip(results,result_vars):
-                self.scope.insert_variable(v)
-                if isinstance(r, BindCFunctionDefResult) and r.sizes:
-                    self.scope.insert_variable(r.original_function_result_variable)
 
             # Loop for all args in every functions and create the corresponding condition and body
             for idx, (p_arg, (f_var, f_arg)) in enumerate(zip(parse_args, local_arg_vars.items())):
