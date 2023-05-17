@@ -461,8 +461,12 @@ class FCodePrinter(CodePrinter):
         if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
+        func_strings = []
         if expr.funcs:
-            body += '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
+            func_strings = [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+        if isinstance(expr, BindCModule):
+            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
+        body += '\n'.join(func_strings)
         # ...
 
         # ...
