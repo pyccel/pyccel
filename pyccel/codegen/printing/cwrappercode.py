@@ -1350,7 +1350,7 @@ class CWrapperCodePrinter(CCodePrinter):
         result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
         for r,v in zip(results,result_vars):
             self.scope.insert_variable(v)
-            if v.rank != 0:
+            if v.rank != 0 and isinstance(r, BindCFunctionDefResult):
                 self.scope.insert_variable(r.original_function_result_variable)
         # update ndarray and optional local variables properties
 
