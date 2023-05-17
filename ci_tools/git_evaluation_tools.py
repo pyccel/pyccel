@@ -423,6 +423,16 @@ def check_previous_contributions(repo, author):
 
     with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
         result, err = p.communicate()
+        returncode = p.returncode
     print(err)
+    print(returncode)
+    if returncode:
+        while returncode:
+            sleep(10)
+            with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+                result, err = p.communicate()
+                returncode = p.returncode
+            print("New returncode : ", returncode)
+
 
     return json.loads(result)
