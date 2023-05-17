@@ -529,7 +529,7 @@ if __name__ == '__main__':
         else:
             leave_comment(pr_id, message_from_file('bot_commands.txt'))
 
-    elif event['action'] == 'opened':
+    elif event['action'] in ('opened', 'reopened'):
         # If new PR (opened trigger)
 
         # Collect id from a pull request event with an opened action
