@@ -21,7 +21,6 @@ __all__ = (
 #
     'CustomDataType',
     'DataType',
-    'FunctionType',
     'NativeBool',
     'NativeComplex',
     'NativeGeneric',
@@ -209,23 +208,6 @@ class VariableType(DataType):
     @property
     def alias(self):
         return self._alias
-
-class FunctionType(DataType):
-    __slots__ = ('_domain','_codomain','_domains','_name')
-
-    def __init__(self, domains):
-        self._domain = domains[0]
-        self._codomain = domains[1:]
-        self._domains = domains
-        self._name = ' -> '.join('{}'.format(V) for V in self._domains)
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def codomain(self):
-        return self._codomain
 # ...
 
 
