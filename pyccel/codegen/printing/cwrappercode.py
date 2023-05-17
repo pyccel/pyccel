@@ -1449,31 +1449,22 @@ class CWrapperCodePrinter(CCodePrinter):
         return CCodePrinter._print_FunctionDef(self, wrapper_func)
 
     def _print_Module(self, expr):
-        scope = Scope(used_symbols = expr.scope.local_used_symbols.copy(), original_symbols = expr.scope.python_names.copy())
+        scope = Scope(original_symbols = expr.scope.python_names.copy())
         self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
 
         # Insert declared objects into scope
-        if self._target_language == 'fortran':
-            for f in expr.funcs:
-                scope.insert_symbol('bind_c_'+f.name.lower())
-            for v in expr.variables:
-                if not v.is_private:
-                    if v.rank > 0:
-                        scope.insert_symbol('bind_c_'+v.name.lower())
-                    else:
-                        scope.insert_symbol(v.name.lower())
-        else:
-            for f in expr.funcs:
-                scope.insert_symbol(f.name.lower())
-            for v in expr.variables:
-                if not v.is_private:
-                    scope.insert_symbol(v.name.lower())
+        variables = expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables
+        for f in expr.funcs:
+            scope.insert_symbol(f.name.lower())
+        for v in variables:
+            if not v.is_private:
+                scope.insert_symbol(v.name.lower())
 
         if self._target_language == 'fortran':
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
-                                    for v in expr.variables if not v.is_private and v.rank == 0]
+                                    for v in variables if not v.is_private and v.rank == 0]
         else:
             vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
                                     for v in expr.variables if not v.is_private]
