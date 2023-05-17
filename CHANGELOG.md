@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 ### Fixed
-
+-   #1355 : remove BasicParser arguments.
 ### Changed
 
 ## \[1.7.4\] - 2023-05-02
