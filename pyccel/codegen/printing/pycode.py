@@ -424,7 +424,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))
 
-    def _print_PyccelArraySize(self, expr):
+    def _print_PyccelArrayShapeElement(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
         name = self._aliases.get(NumpyShape, expr.name)
