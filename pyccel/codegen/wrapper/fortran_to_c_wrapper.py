@@ -208,6 +208,7 @@ class FortranToCWrapper(Wrapper):
                                 is_argument = True, is_optional = False, memory_handling='alias')
         else:
             new_var = var.clone(self.scope.get_new_name(expr.name))
+        self.scope.insert_variable(new_var)
 
         return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,
                 kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
