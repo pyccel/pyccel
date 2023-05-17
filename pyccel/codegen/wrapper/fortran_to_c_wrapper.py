@@ -202,12 +202,15 @@ class FortranToCWrapper(Wrapper):
         return Interface(expr.name, functions, expr.is_argument)
 
     def _wrap_FunctionDefArgument(self, expr):
+        name = expr.name
+        self.scope.insert_symbol(name)
         var = expr.var
+        collisionless_name = self.scope.get_expected_name(var.name)
         if var.is_ndarray or var.is_optional:
-            new_var = Variable(BindCPointer(), self.scope.get_new_name(var.name),
+            new_var = Variable(BindCPointer(), self.scope.get_new_name(collisionless_name),
                                 is_argument = True, is_optional = False, memory_handling='alias')
         else:
-            new_var = var.clone(self.scope.get_new_name(expr.name))
+            new_var = var.clone(collisionless_name)
         self.scope.insert_variable(new_var)
 
         return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,

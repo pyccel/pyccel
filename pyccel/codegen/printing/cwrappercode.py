@@ -1375,7 +1375,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 original_var = r.original_function_result_variable
                 original_name = original_var.name
                 self.scope.insert_symbol(original_name)
-                self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name)))
+                new_var = original_var.clone(self.scope.get_expected_name(original_name))
+                self.scope.insert_variable(new_var)
         # update ndarray and optional local variables properties
 
         # Find a name for the wrapper function
