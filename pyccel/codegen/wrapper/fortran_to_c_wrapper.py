@@ -14,7 +14,7 @@ from pyccel.ast.bind_c import CLocFunc, BindCModule
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
-from pyccel.ast.core import AsName, Module
+from pyccel.ast.core import AsName, Module, AliasAssign
 from pyccel.ast.datatypes import NativeInteger
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
@@ -76,6 +76,14 @@ class FortranToCWrapper(Wrapper):
                     for fa,s in zip(func_def_args, size) if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
             body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
                      and fa.original_function_argument_variable.is_optional]
+
+            # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
+            # are respected
+            if func.is_inline and any(isinstance(a.value, IndexedElement) for a in args):
+                array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args}
+                body += [AliasAssign(v, k.value) for k,v in array_args.items()]
+                args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
+
             func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
                         Assign(results, FunctionCall(func, args))
             return body + [func_call]
@@ -209,11 +217,13 @@ class FortranToCWrapper(Wrapper):
         var = expr.var
         name = var.name
         scope = self.scope
-        local_var = var.clone(scope.get_new_name(name))
+        # Make name availiable for later
+        scope.insert_symbol(name)
+        local_var = var.clone(scope.get_expected_name(name))
 
         if local_var.rank:
             # Allocatable is not returned so it must appear in local scope
-            scope.insert_variable(local_var)
+            scope.insert_variable(local_var, name)
 
             # Create the data pointer
             bind_var = Variable(dtype=BindCPointer(),
