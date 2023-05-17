@@ -11,6 +11,7 @@ import argparse
 
 __all__ = ['MyParser', 'pyccel']
 is_conda_warnings_disabled = False
+is_conda_warnings_detailed = False
 
 #==============================================================================
 class MyParser(argparse.ArgumentParser):
@@ -118,6 +119,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                         help='file to which the compiler json file is exported')
     group.add_argument('--disable-conda-warnings', action='store_true', \
                         help='disable warnings when pyccel running in conda environment')
+    group.add_argument('--detailed-conda-warnings', action='store_true', \
+                        help='show list of conda paths ignored by pyccel')
     # ...
 
     # TODO move to another cmd line
@@ -128,7 +131,9 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     # ...
     args = parser.parse_args()
     global is_conda_warnings_disabled
+    global is_conda_warnings_detailed
     is_conda_warnings_disabled = args.disable_conda_warnings
+    is_conda_warnings_detailed = args.detailed_conda_warnings
     # ...
 
     # Imports

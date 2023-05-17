@@ -16,7 +16,7 @@ import warnings
 from filelock import FileLock
 from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
-from pyccel.commands.console import is_conda_warnings_disabled
+from pyccel.commands.console import is_conda_warnings_disabled, is_conda_warnings_detailed
 
 errors = Errors()
 
@@ -31,7 +31,10 @@ if platform.system() == 'Darwin':
 
 def get_condaless_search_path():
     """ Get the value of the PATH variable to be set when searching for the compiler.
-    This is the same as the environment PATH variable but without any conda paths
+    This is the same as the environment PATH variable but without any conda paths,
+    and print a warning to the user that conda paths are ignored if not given the
+    flag '--disable-conda-warnings'
+    show list of ignored paths if the flag '--detailed-conda-warnings' is given
     """
     path_sep = ';' if platform.system() == 'Windows' else ':'
     current_path = os.environ['PATH']
@@ -41,7 +44,11 @@ def get_condaless_search_path():
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         if not is_conda_warnings_disabled:
-            warnings.warn(UserWarning("Ignoring conda paths when searching for compiler : {}".format(conda_folders)))
+            warnings.warn(UserWarning("Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md  for details"))
+            conda_search_paths = path_sep.join(p for p in folders.keys() if p in conda_folders and os.path.exists(p))
+            if is_conda_warnings_detailed:
+                print("Conda ignored paths: ")
+                print(conda_search_paths)
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
     return acceptable_search_paths
 
