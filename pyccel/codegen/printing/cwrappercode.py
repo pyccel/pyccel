@@ -406,12 +406,11 @@ class CWrapperCodePrinter(CCodePrinter):
         """
 
         body = []
-        var = result.var
 
-        if isinstance(result, BindCFunctionDefResult) and var.rank != 0:
+        if isinstance(result, BindCFunctionDefResult) and result.sizes:
             sizes = [self.scope.get_temporary_variable(s) for s in result.sizes]
             orig_var = result.original_function_result_variable
-            nd_var = self.scope.find(self.scope.get_expected_name(var.name), category='variables')
+            nd_var = self.scope.find(self.scope.get_expected_name(result.var.name), category='variables')
             body.append(Allocate(orig_var, shape = sizes, order = orig_var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
@@ -420,7 +419,7 @@ class CWrapperCodePrinter(CCodePrinter):
             static_results = [ObjectAddress(nd_var), *sizes]
 
         else:
-            static_results = [var]
+            static_results = [result.var]
 
         return body, static_results
 
@@ -1350,7 +1349,7 @@ class CWrapperCodePrinter(CCodePrinter):
         result_vars = [v.var.clone(self.scope.get_new_name(v.var.name)) for v in results]
         for r,v in zip(results,result_vars):
             self.scope.insert_variable(v)
-            if v.rank != 0 and isinstance(r, BindCFunctionDefResult):
+            if isinstance(r, BindCFunctionDefResult) and r.sizes:
                 self.scope.insert_variable(r.original_function_result_variable)
         # update ndarray and optional local variables properties
 
