@@ -5,6 +5,7 @@ from datetime import datetime
 import json
 import shutil
 import subprocess
+import time
 
 __all__ = ('github_cli',
            'ReviewComment',
@@ -428,7 +429,7 @@ def check_previous_contributions(repo, author):
     print(returncode)
     if returncode:
         while returncode:
-            sleep(10)
+            time.sleep(10)
             with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
                 result, err = p.communicate()
                 returncode = p.returncode
