@@ -337,9 +337,18 @@ def start_review_check(pr_id, event, outputs):
     if len(words) < 3:
         leave_comment(pr_id, message_from_file('set_draft_no_description.txt'))
         set_draft(pr_id)
-    else:
-        outputs['cleanup_trigger'] = 'request_review_status'
-        run_tests(pr_id, ['pr_tests'], outputs, event)
+        return
+
+    comments = get_previous_pr_comments(pr_id)
+    checklist = [c for c in comments if c.author == 'github-actions' and '- [ ]' in c.body]
+    print(checklist)
+    if checklist:
+        leave_comment(pr_id, message_from_file('set_draft_checklist_incomplete.txt'))
+        set_draft(pr_id)
+        return
+
+    outputs['cleanup_trigger'] = 'request_review_status'
+    run_tests(pr_id, ['pr_tests'], outputs, event)
 
 def accept_coverage_failure(pr_id):
     """
