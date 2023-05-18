@@ -9,17 +9,11 @@ file.
 """
 
 from pyccel.ast.basic import Basic
-from pyccel.ast.core import CodeBlock, FunctionCall, Module
-from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import Module
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core import Assign
-from pyccel.ast.core import Import
-from pyccel.ast.core import AsName
-from pyccel.ast.core import Allocate
 from pyccel.ast.datatypes import DataType, NativeInteger
 from pyccel.ast.variable import Variable
-from pyccel.parser.scope import Scope
 
 __all__ = (
     'BindCFunctionDef',
