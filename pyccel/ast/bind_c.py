@@ -13,7 +13,6 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
-from pyccel.ast.variable import Variable
 
 __all__ = (
     'BindCFunctionDef',
