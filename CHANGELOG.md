@@ -7,7 +7,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
+
 ### Changed
+
+-   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
 
 ## \[1.7.4\] - 2023-05-02
 
