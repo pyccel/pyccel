@@ -17,7 +17,7 @@ from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.core import AsName, Module, AliasAssign
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
-from pyccel.ast.operators import PyccelIsNot
+from pyccel.ast.operators import PyccelIsNot, PyccelMul
 from pyccel.ast.variable import Variable, IndexedElement
 from pyccel.parser.scope import Scope
 from .wrapper import Wrapper
@@ -69,12 +69,21 @@ class FortranToCWrapper(Wrapper):
                                     self._get_function_def_body(func, args, func_arg_to_call_arg, results, handled))
             return [If(true_section, false_section)]
         else:
-            args = [FunctionCallArgument(func_arg_to_call_arg[fa], keyword = fa.original_function_argument_variable.name) for fa in func_def_args]
-            size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else fa.sizes for fa in func_def_args]
+            args = [FunctionCallArgument(func_arg_to_call_arg[fa],
+                                         keyword = fa.original_function_argument_variable.name)
+                    for fa in func_def_args]
+            size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else
+                    fa.sizes for fa in func_def_args]
+            stride = [fa.strides[::-1] if fa.original_function_argument_variable.order == 'C' else
+                      fa.strides for fa in func_def_args]
+            orig_size = [[PyccelMul(l,s) for l,s in zip(sz, st)] for sz,st in zip(size,stride)]
             body = [C_F_Pointer(fa.var, func_arg_to_call_arg[fa].base, s)
-                    for fa,s in zip(func_def_args, size) if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
-            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
-                     and fa.original_function_argument_variable.is_optional]
+                    for fa,s in zip(func_def_args, orig_size)
+                    if isinstance(func_arg_to_call_arg[fa], IndexedElement)]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa])
+                     for fa in func_def_args
+                     if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
+                        and fa.original_function_argument_variable.is_optional]
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
