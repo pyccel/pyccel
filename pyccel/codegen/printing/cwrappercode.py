@@ -1490,8 +1490,6 @@ class CWrapperCodePrinter(CCodePrinter):
             vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
                                     for v in variables if not v.is_private and v.rank == 0]
 
-            wrapper_args    = self.get_wrapper_arguments()
-            wrapper_results = [self.get_new_PyObject("result")]
             for f in expr.original_module.funcs:
                 if f.is_private:
                     funcs.append(f)
