@@ -45,7 +45,7 @@ Arrays are not compatible with C. Instead the wrapper prints a function which re
 
 ### Functions
 
-In the simplest case a wrapper around a function takes the same arguments, calls the function and then returns the result. The only difference between this function and the original function is the body (where the original function is called) and the `bind(c)` tag which ensures that the function name is accessible from C and is not ambiguated.
+In the simplest case a wrapper around a function takes the same arguments, calls the function and then returns the result. The only difference between this function and the original function is the body (where the original function is called) and the `bind(c)` tag which ensures that the function name is accessible from C and is not mangled.
 
 More complex cases include functions with array arguments or results, optional variables and functions as arguments.
 
