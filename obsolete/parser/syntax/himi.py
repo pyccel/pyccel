@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+#pylint: disable=pointless-string-statement
 """
 This module contains the syntax associated to the types.tx grammar
 """
@@ -13,7 +14,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import Variable
 from pyccel.ast.datatypes import datatype, VariableType, FunctionType
 
-""" from pyccel.ast.datatypes #pylint: disable=pointless-string-statement
+""" from pyccel.ast.datatypes
 
 class VariableType(DataType):
     __slots__ = ('_alias','_rhs','_name')
