@@ -25,7 +25,7 @@ from pyccel.utilities.stage        import PyccelStage
 from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
-from .compiling.compilers import Compiler
+from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
@@ -55,7 +55,9 @@ def execute_pyccel(fname, *,
                    debug         = False,
                    accelerators  = (),
                    output_name   = None,
-                   compiler_export_file = None):
+                   compiler_export_file = None,
+                   is_conda_warnings_disabled = False,
+                   is_conda_warnings_detailed = False):
     """
     Carries out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
@@ -202,6 +204,7 @@ def execute_pyccel(fname, *,
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
+    Compiler._acceptable_bin_paths = get_condaless_search_path(is_conda_warnings_disabled,is_conda_warnings_detailed)
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 

@@ -111,7 +111,9 @@ def epyccel_seq(function_or_module, *,
                 libdirs       = (),
                 modules       = (),
                 libs          = (),
-                folder        = None):
+                folder        = None,
+                is_conda_warnings_disabled = False,
+                is_conda_warnings_detailed = False):
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
@@ -177,7 +179,9 @@ def epyccel_seq(function_or_module, *,
                            libs          = libs,
                            debug         = debug,
                            accelerators  = accelerators,
-                           output_name   = module_name)
+                           output_name   = module_name,
+                           is_conda_warnings_disabled = is_conda_warnings_disabled,
+                           is_conda_warnings_detailed = is_conda_warnings_detailed)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
@@ -245,6 +249,10 @@ def epyccel( python_function_or_module, **kwargs ):
     -------------
     compiler : str, optional
         User-defined command for compiling generated source code.
+    is_conda_warnings_disabled : {True, False}
+        If True, Conda ignored Paths warnings will be disabled
+    is_conda_warnings_detailed : {True, False}
+        If True, Pyccel will show a list of ignored conda paths
 
     Returns
     -------
