@@ -88,5 +88,6 @@ All notable changes to this project will be documented in this file.
 -   #1245 : Reduce false negative test results by using a tolerance to compare floats.
 -   #1272 : Remove use of deprecated NumPy syntax in tests.
 -   #1253 : Provide minimum requirements.
+-   #1385 : Remove settings from from _visit function.
 
 ### Deprecated
