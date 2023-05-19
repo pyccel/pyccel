@@ -2438,7 +2438,7 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(rhs_var, Nil):
-            return '.not. '+ self._print_not_none(lhs, lhs_var)
+            return '.not. '+ self._handle_not_none(lhs, lhs_var)
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
             return f'{lhs} .eqv. {rhs}'
@@ -2455,7 +2455,7 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(rhs_var, Nil):
-            return self._print_not_none(lhs, lhs_var)
+            return self._handle_not_none(lhs, lhs_var)
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
             return f'{lhs} .neqv. {rhs}'
