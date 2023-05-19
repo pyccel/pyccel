@@ -483,8 +483,8 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr: data-type
-            Data type.
+        expr : data-type
+                Data type.
 
         Returns
         -------
