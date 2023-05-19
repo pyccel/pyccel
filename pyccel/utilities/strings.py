@@ -7,30 +7,35 @@
 """
 
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, name_clash_checker = None):
-    """This function takes a prefix and a counter and uses them to construct
+    """
+    Create a new unique string by incrementing a prefix.
+
+    This function takes a prefix and a counter and uses them to construct
     a new name of the form:
             prefix_counter
     Where counter is formatted to fill 4 characters
     The new name is checked against a list of forbidden expressions. If the
     constructed name is forbidden then the counter is incremented until a valid
-    name is found
+    name is found.
 
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
+    Parameters
+    ----------
+    forbidden_exprs : set
+        A set of all the values which are not valid solutions to this problem.
+    prefix : str
+        The prefix used to begin the string.
+    counter : int
+        The expected value of the next name.
+    name_clash_checker : LanguageNameClashChecker
+        A class instance providing access to a `has_clash` function which determines
+        if names clash in a given language.
 
-      Returns
-      ----------
-      name            : str
-                        The incremented string name
-      counter         : int
-                        The expected value of the next name
-
+    Returns
+    -------
+    name : str
+        The incremented string name.
+    counter : int
+        The expected value of the next name.
     """
     nDigits = 4
 
