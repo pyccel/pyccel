@@ -1452,8 +1452,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        expr_new
-                CodeBlock containing the semantic version of the GeneratorComprehension node.
+        pyccel.ast.variable.Variable
         """
         result   = expr.expr
 
@@ -1574,13 +1573,12 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr : object
+        expr : pyccel.ast.basic.Basic
             Object to visit.
         
         Returns
         -------
-        obj
-            The annotated object.
+        pyccel.ast.variable.Variable
         """
 
         # TODO - add settings to Errors
