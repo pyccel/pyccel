@@ -271,7 +271,21 @@ class SemanticParser(BasicParser):
     #================================================================
 
     def annotate(self):
-        """."""
+        """
+        Examines the AST.
+
+        Call to 'self._visit(self.ast)' from the constructor to
+        examine an AST object created by the syntactic stage.
+
+        Returns
+        -------
+        ast
+            Sympy ast.
+
+        See Also
+        --------
+        _visit
+        """
 
         if self.semantic_done:
             print ('> semantic analysis already done')
@@ -479,7 +493,7 @@ class SemanticParser(BasicParser):
 
         if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
-					  NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
+                      NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
             d_var['datatype'   ] = '*'
             d_var['rank'       ] = 0
@@ -768,6 +782,10 @@ class SemanticParser(BasicParser):
         -------
         list of FunctionCallArgument
             The arguments passed to the function.
+
+        See Also
+        --------
+        _visit
         """
         args  = []
         for arg in arguments:
@@ -1029,35 +1047,40 @@ class SemanticParser(BasicParser):
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
-        Create a lhs based on the information in d_var
-        If the lhs already exists then check that it has the expected properties.
+        Create a lhs based on the information in d_var, if the lhs already exists
+        then check that it has the expected properties.
 
         Parameters
         ----------
         lhs : PyccelSymbol (or DottedName of PyccelSymbols)
-            The representation of the lhs provided by the SyntacticParser
+            The representation of the lhs provided by the SyntacticParser.
 
         d_var : dict
-            Dictionary of expected lhs properties
+            Dictionary of expected lhs properties.
 
         rhs : Variable / expression
             The representation of the rhs provided by the SemanticParser.
             This is necessary in order to set the rhs 'is_target' property
-            if necessary
+            if necessary.
 
-        new_expression : list
+        new_expressions : list
             A list which allows collection of any additional expressions
-            resulting from this operation (e.g. Allocation)
+            resulting from this operation (e.g. Allocation).
 
         is_augassign : bool
             Indicates whether this is an assign ( = ) or an augassign ( += / -= / etc )
             This is necessary as the restrictions on the dtype are less strict in this
-            case
+            case.
 
         arr_in_multirets : bool
             If True, rhs has an array in its results, otherwise, it should be set to False.
             It helps when we don't need lhs to be a pointer in case of a returned array in
             a tuple of results.
+            
+        Returns
+        -------
+        lhs
+            The representation of the lhs provided by the SyntacticParser.
         """
 
         if isinstance(lhs, IndexedElement):
@@ -1396,16 +1419,16 @@ class SemanticParser(BasicParser):
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
-        Visit the GeneratorComprehension node creating all necessary expressions
-        for its definition
+        Visit the GeneratorComprehension node creating all necessary expressions for its definition.
 
         Parameters
         ----------
         lhs_name : str
-                    The name to which the expression is assigned
+                    The name to which the expression is assigned.
         expr : GeneratorComprehension
+                The GeneratorComprehension node.
 
-        Results
+        Returns
         -------
         new_expr : CodeBlock
                    CodeBlock containing the semantic version of the GeneratorComprehension node
@@ -1518,13 +1541,24 @@ class SemanticParser(BasicParser):
 
 
     def _visit(self, expr):
-        """Annotates the AST.
+        """
+        Annotate the AST.
 
         The annotation is done by finding the appropriate function _visit_X
         for the object expr. X is the type of the object expr. If this function
         does not exist then the method resolution order is used to search for
         other compatible _visit_X functions. If none are found then an error is
-        raised
+        raised.
+        
+        Parameters
+        ----------
+        expr
+            Object to visit.
+        
+        Returns
+        -------
+        obj
+            The annotated object.
         """
 
         # TODO - add settings to Errors
