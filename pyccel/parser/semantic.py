@@ -272,7 +272,7 @@ class SemanticParser(BasicParser):
 
     def annotate(self):
         """
-        Examines the AST.
+        Examine the AST.
 
         Call to 'self._visit(self.ast)' from the constructor to
         examine an AST object created by the syntactic stage.
@@ -281,10 +281,6 @@ class SemanticParser(BasicParser):
         -------
         ast
             Sympy ast.
-
-        See Also
-        --------
-        _visit
         """
 
         if self.semantic_done:
@@ -480,7 +476,20 @@ class SemanticParser(BasicParser):
 
     def _infer_type(self, expr):
         """
-        type inference for expressions
+        Type inference for expressions.
+
+        Create Dictionary of type inference for data type
+        passed in expr.
+
+        Parameters
+        ----------
+        expr
+            Data type.
+
+        Returns
+        -------
+        d_var
+            Dictionary of type inference for expr.
         """
         # TODO - add settings to Errors
         #      - line and column
@@ -782,10 +791,6 @@ class SemanticParser(BasicParser):
         -------
         list of FunctionCallArgument
             The arguments passed to the function.
-
-        See Also
-        --------
-        _visit
         """
         args  = []
         for arg in arguments:
@@ -1047,8 +1052,7 @@ class SemanticParser(BasicParser):
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
-        Create a lhs based on the information in d_var, if the lhs already exists
-        then check that it has the expected properties.
+        Create a lhs based on the information in d_var, if the lhs already exists then check that it has the expected properties.
 
         Parameters
         ----------
@@ -1076,7 +1080,7 @@ class SemanticParser(BasicParser):
             If True, rhs has an array in its results, otherwise, it should be set to False.
             It helps when we don't need lhs to be a pointer in case of a returned array in
             a tuple of results.
-            
+
         Returns
         -------
         lhs
@@ -1419,7 +1423,10 @@ class SemanticParser(BasicParser):
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
-        Visit the GeneratorComprehension node creating all necessary expressions for its definition.
+        Visit the GeneratorComprehension node.
+
+        Create all necessary expressions for the
+        GeneratorComprehension node definition.
 
         Parameters
         ----------
@@ -1431,7 +1438,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         new_expr : CodeBlock
-                   CodeBlock containing the semantic version of the GeneratorComprehension node
+                    CodeBlock containing the semantic version of the GeneratorComprehension node.
         """
         result   = expr.expr
 
@@ -1552,7 +1559,7 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr
+        expr : object
             Object to visit.
         
         Returns
