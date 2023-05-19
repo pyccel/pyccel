@@ -13,7 +13,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import Variable
 from pyccel.ast.datatypes import datatype, VariableType, FunctionType
 
-""" from pyccel.ast.datatypes
+""" from pyccel.ast.datatypes #pylint: disable=pointless-string-statement
 
 class VariableType(DataType):
     __slots__ = ('_alias','_rhs','_name')
@@ -43,7 +43,7 @@ class FunctionType(DataType):
 ￼    @property
 ￼    def codomain(self):
 ￼        return self._codomain
-""" #pylint: disable=pointless-string-statement
+"""
 
 
 def _construct_dtype(dtype):
