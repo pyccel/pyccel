@@ -2402,6 +2402,32 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
+    def _handle_not_none(self, lhs, lhs_var):
+        """
+        Print code for `x is not None` statement.
+
+        Print the code which checks if x is not None. This means different
+        things depending on the type of `x`. If `x` is optional it checks
+        if it is present, if `x` is a c pointer it checks if it points at
+        anything.
+
+        Parameters
+        ----------
+        lhs : str
+            The code representing `x`.
+        lhs_var : Variable
+            The Variable `x`.
+
+        Returns
+        -------
+        str
+            The code which checks if `x is not None`.
+        """
+        if isinstance(lhs_var.dtype, BindCPointer):
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
+            return f'c_associated({lhs})'
+        else:
+            return f'present({lhs})'
 
     def _print_PyccelIs(self, expr):
         lhs_var = expr.lhs
@@ -2412,14 +2438,10 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(rhs_var, Nil):
-            if isinstance(lhs_var.dtype, BindCPointer):
-                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
-                return f'.not. c_associated({lhs})'
-            else:
-                return f'.not. present({lhs})'
+            return '.not. '+ self._print_not_none(lhs, lhs_var)
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
-            return '{} .eqv. {}'.format(lhs, rhs)
+            return f'{lhs} .eqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
@@ -2433,14 +2455,10 @@ class FCodePrinter(CodePrinter):
         b = expr.args[1]
 
         if isinstance(rhs_var, Nil):
-            if isinstance(lhs_var.dtype, BindCPointer):
-                self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
-                return f'c_associated({lhs})'
-            else:
-                return f'present({lhs})'
+            return self._print_not_none(lhs, lhs_var)
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
-            return '{} .neqv. {}'.format(lhs, rhs)
+            return f'{lhs} .neqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
