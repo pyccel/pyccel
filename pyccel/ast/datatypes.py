@@ -33,7 +33,6 @@ __all__ = (
     'NativeSymbol',
     'NativeVoid',
     'UnionType',
-    'VariableType',
     'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
@@ -195,19 +194,6 @@ class NativeGeneric(DataType):
     __slots__ = ()
     _name = 'Generic'
 
-
-# ...
-class VariableType(DataType):
-    __slots__ = ('_alias','_rhs','_name')
-
-    def __init__(self, rhs, alias):
-        self._alias = alias
-        self._rhs = rhs
-        self._name = rhs._name
-
-    @property
-    def alias(self):
-        return self._alias
 # ...
 
 
