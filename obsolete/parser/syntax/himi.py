@@ -43,7 +43,7 @@ class FunctionType(DataType):
 ￼    @property
 ￼    def codomain(self):
 ￼        return self._codomain
-"""
+""" #pylint: disable=pointless-string-statement
 
 
 def _construct_dtype(dtype):
