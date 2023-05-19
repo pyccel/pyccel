@@ -1064,7 +1064,7 @@ class SemanticParser(BasicParser):
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
-        Create a lhs.
+        Create a variable from the left-hand side (lhs) of an assignment.
         
         Create a lhs based on the information in d_var, if the lhs already exists
         then check that it has the expected properties.
