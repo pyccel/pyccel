@@ -483,7 +483,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr
+        expr: data-type
             Data type.
 
         Returns
@@ -1052,7 +1052,10 @@ class SemanticParser(BasicParser):
 
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
-        Create a lhs based on the information in d_var, if the lhs already exists then check that it has the expected properties.
+        Create a lhs.
+        
+        Create a lhs based on the information in d_var, if the lhs already exists
+        then check that it has the expected properties.
 
         Parameters
         ----------
@@ -1437,8 +1440,8 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        new_expr : CodeBlock
-                    CodeBlock containing the semantic version of the GeneratorComprehension node.
+        expr_new
+                CodeBlock containing the semantic version of the GeneratorComprehension node.
         """
         result   = expr.expr
 
