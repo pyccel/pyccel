@@ -272,15 +272,18 @@ class SemanticParser(BasicParser):
 
     def annotate(self):
         """
-        Examine the AST.
+        Add type information to the AST.
 
-        Call to 'self._visit(self.ast)' from the constructor to
-        examine an AST object created by the syntactic stage.
+        This function is the entry point for this class. It annotates the
+        AST object created by the syntactic stage which was collected
+        in the constructor. The annotation adds all necessary information
+        about the type etc to describe the object sufficiently well for
+        printing. See the developer docs for more details.
 
         Returns
         -------
-        ast
-            Sympy ast.
+        pyccel.ast.basic.Basic
+            An annotated object which can be printed.
         """
 
         if self.semantic_done:
