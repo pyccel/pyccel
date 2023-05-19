@@ -145,7 +145,7 @@ class SyntaxParser(BasicParser):
         self._fst           = tree
         self._in_lhs_assign = False
 
-        self.parse(verbose=True)
+        self.parse()
         self.dump()
 
     def parse(self):
