@@ -148,8 +148,18 @@ class SyntaxParser(BasicParser):
         self.parse(verbose=True)
         self.dump()
 
-    def parse(self, verbose=False):
-        """converts python ast to sympy ast."""
+    def parse(self):
+        """
+        Convert Python's AST to Pyccel's AST object.
+
+        Convert Python's AST to Pyccel's AST object and raise errors
+        for any unsupported objects.
+
+        Results
+        -------
+        pyccel.ast.basic.Basic
+            The Pyccel AST object.
+        """
 
         if self.syntax_done:
             return self.ast
