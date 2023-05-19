@@ -118,53 +118,55 @@ def epyccel_seq(function_or_module, *,
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
     Parameters:
+    -----------
         function_or_module : function | module
             Python function or module to be accelerated.
 
         language: {'fortran', 'c', 'python'}
             Language of generated code (default: 'fortran').
 
-        compiler :
+        compiler : iterable of str
             The compiler to be used for compilation. (default: 'GNU')
 
-        fflags :
+        fflags : iterable of str
             Compiler flags.
 
-        wrapper_flags :
+        wrapper_flags : iterable of str
             Flags to be passed to the wrapper code generator.
 
-        accelerators :
+        accelerators : iterable of str, optional
             Tuple of accelerator types to be used.
 
-        verbose :
+        verbose : bool
             Enable verbose output during the translation process.
 
-        debug :
+        debug : bool
             Enable debug mode.
 
-        includes :
+        includes : tulpe
             Additional include directories for the compiler.
 
-        libdirs :
+        libdirs : tulpe
             Additional library directories for the compiler.
 
-        modules :
+        modules : tulpe
             Additional modules to be imported.
 
-        libs:
+        libs: tulpe
             Additional libraries.
 
-        folder:
+        folder: string
             Output folder for the compiled code.
 
-        is_conda_warnings_disabled:
+        is_conda_warnings_disabled: bool
             Disable Conda path warnings. Defaults to False.
 
-        is_conda_warnings_detailed:
+        is_conda_warnings_detailed: bool
              Enable detailed Conda path warnings. Defaults to False.
 
-    Returns:
-        Return accelerated Python module and function
+    Returns: Object
+    --------
+        Return accelerated Python module and function.
     """
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
