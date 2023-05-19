@@ -479,20 +479,29 @@ class SemanticParser(BasicParser):
 
     def _infer_type(self, expr):
         """
-        Type inference for expressions.
+        Infer all relevant type information for the expression.
 
-        Create Dictionary of type inference for data type
-        passed in expr.
+        Create a dictionary describing all the type information that can be
+        inferred about the expression `expr`. This includes information about:
+        - `datatype`
+        - `precision`
+        - `rank`
+        - `shape`
+        - `order`
+        - `memory_handling`
+        - `cls_base`
+        - `is_target`
 
         Parameters
         ----------
-        expr : data-type
-                Data type.
+        expr : pyccel.ast.basic.Basic
+                An AST object representing an object in the code whose type
+                must be determined.
 
         Returns
         -------
-        d_var
-            Dictionary of type inference for expr.
+        dict
+            Dictionary containing all the type information which was inferred.
         """
         # TODO - add settings to Errors
         #      - line and column
