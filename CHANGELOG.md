@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\]
 
 ### Added
-
+	#1400:	- Added the `--ignore-conda-warnings`, `--detailed-conda-warnings` pyccel flags.
+			- Updating the `compiler.md`
+			- Added the `is_conda_warnings_detailed` and `is_conda_warnings_disabled` to epyccel.
 ### Fixed
 
 ### Changed
