@@ -1098,7 +1098,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        lhs
+        pyccel.ast.variable.Variable
             The representation of the lhs provided by the SyntacticParser.
         """
 
