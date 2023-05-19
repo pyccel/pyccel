@@ -155,7 +155,7 @@ class SyntaxParser(BasicParser):
         Convert Python's AST to Pyccel's AST object and raise errors
         for any unsupported objects.
 
-        Results
+        Returns
         -------
         pyccel.ast.basic.Basic
             The Pyccel AST object.
