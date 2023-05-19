@@ -118,7 +118,7 @@ def epyccel_seq(function_or_module, *,
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
     Parameters:
-        python_function_or_module : function | module
+        function_or_module : function | module
             Python function or module to be accelerated.
 
         language: {'fortran', 'c', 'python'}
@@ -128,7 +128,7 @@ def epyccel_seq(function_or_module, *,
             The compiler to be used for compilation. (default: 'GNU')
 
         fflags :
-            Compiler flags for optimization.
+            Compiler flags.
 
         wrapper_flags :
             Flags to be passed to the wrapper code generator.
