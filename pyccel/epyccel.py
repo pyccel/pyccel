@@ -114,7 +114,58 @@ def epyccel_seq(function_or_module, *,
                 folder        = None,
                 is_conda_warnings_disabled = False,
                 is_conda_warnings_detailed = False):
+    """
+    Accelerate Python function or module using Pyccel in "embedded" mode.
 
+    Parameters:
+        python_function_or_module : function | module
+            Python function or module to be accelerated.
+
+        language: {'fortran', 'c', 'python'}
+            Language of generated code (default: 'fortran').
+
+        compiler :
+            The compiler to be used for compilation. (default: 'GNU')
+
+        fflags :
+            Compiler flags for optimization.
+
+        wrapper_flags :
+            Flags to be passed to the wrapper code generator.
+
+        accelerators :
+            Tuple of accelerator types to be used.
+
+        verbose :
+            Enable verbose output during the translation process.
+
+        debug :
+            Enable debug mode.
+
+        includes :
+            Additional include directories for the compiler.
+
+        libdirs :
+            Additional library directories for the compiler.
+
+        modules :
+            Additional modules to be imported.
+
+        libs:
+            Additional libraries.
+
+        folder:
+            Output folder for the compiled code.
+
+        is_conda_warnings_disabled:
+            Disable Conda path warnings. Defaults to False.
+
+        is_conda_warnings_detailed:
+             Enable detailed Conda path warnings. Defaults to False.
+
+    Returns:
+        Return accelerated Python module and function
+    """
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
         pyfunc = function_or_module
