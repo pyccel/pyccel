@@ -494,22 +494,22 @@ void    *nd_data(t_ndarray *a)
 int     nd_nstep_C(t_ndarray *a, int n)
 {
 	if (a == NULL)
-		return 0;
+		return 1;
 
 	int step = a->strides[n];
 	for (int i = n+1; i<a->nd; ++i) {
 		step /= a->shape[i];
 	}
-	return step;
+	return step > 0 ? step : 1;
 }
 int     nd_nstep_F(t_ndarray *a, int n)
 {
 	if (a == NULL)
-		return 0;
+		return 1;
 
 	int step = a->strides[n];
 	for (int i = 0; i<n; ++i) {
 		step /= a->shape[i];
 	}
-	return step;
+	return step > 0 ? step : 1;
 }
