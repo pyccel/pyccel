@@ -123,26 +123,26 @@ def epyccel_seq(function_or_module, *,
         Python function or module to be accelerated.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
-    fflags: iterable of str, optional
+    fflags : iterable of str, optional
         Compiler flags.
-    wrapper_flags: iterable of str, optional
+    wrapper_flags : iterable of str, optional
         Flags to be passed to the wrapper code generator.
     accelerators : iterable of str, optional
         Parallel multi-threading acceleration strategy
         (currently supported: 'mpi', 'openmp', 'openacc').
     verbose : bool
         Print additional information (default: False).
-    debug: bool, optional
+    debug : bool, optional
         Enable debug mode.
-    includes: tuple, optional
+    includes : tuple, optional
         Additional include directories for the compiler.
-    libdirs: tuple, optional
+    libdirs : tuple, optional
         Additional library directories for the compiler.
-    modules: tuple, optional
+    modules : tuple, optional
         Additional modules to be imported.
-    libs: tuple, optional
+    libs : tuple, optional
         Additional libraries.
-    folder: string, optional
+    folder : string, optional
         Output folder for the compiled code.
     compiler : str, optional
         User-defined command for compiling generated source code.
@@ -151,20 +151,19 @@ def epyccel_seq(function_or_module, *,
     is_conda_warnings_detailed : {True, False}
         If True, Pyccel will show a list of ignored conda paths
 
-    Other Parameters
-    ----------------
-    # Options for parallel mode
-    comm : mpi4py.MPI.Comm, optional
-        MPI communicator for calling Pyccel in parallel mode (default: None).
-    root : int, optional
-        MPI rank of process in charge of accelerating code (default: 0).
-    bcast : {True, False}
-        If False, only root process loads accelerated function/module (default: True).
-
     Returns
     -------
     Object
         Return accelerated Python module and function.
+
+    Other Parameters
+    ----------------
+    comm : mpi4py.MPI.Comm, optional
+        MPI communicator for calling Pyccel in parallel mode (default: None). (for parallel mode)
+    root : int, optional
+        MPI rank of process in charge of accelerating code (default: 0). (for parallel mode)
+    bcast : {True, False}
+        If False, only root process loads accelerated function/module (default: True). (for parallel mode)
     """
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
@@ -289,7 +288,6 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> from pyccel.epyccel import epyccel
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
-
     """
     assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
 
