@@ -124,7 +124,6 @@ def epyccel_seq(function_or_module, *,
     It generates optimized code in the specified language (default is 'fortran')
     and compiles it for improved performance.
 
-
     Parameters
     ----------
     function_or_module : function | module
@@ -276,7 +275,11 @@ def epyccel_seq(function_or_module, *,
 def epyccel( python_function_or_module, **kwargs ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
-    
+
+    This function accelerates a Python function or module using Pyccel in "embedded" mode.
+    It generates optimized code in the specified language (default is 'fortran')
+    and compiles it for improved performance
+
     Parameters
     ----------
     python_function_or_module : function | module
