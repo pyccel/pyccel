@@ -144,6 +144,12 @@ def epyccel_seq(function_or_module, *,
         Additional libraries.
     folder: string, optional
         Output folder for the compiled code.
+    compiler : str, optional
+        User-defined command for compiling generated source code.
+    is_conda_warnings_disabled : {True, False}
+        If True, Conda ignored Paths warnings will be disabled
+    is_conda_warnings_detailed : {True, False}
+        If True, Pyccel will show a list of ignored conda paths
 
     Other Parameters
     ----------------
@@ -154,15 +160,6 @@ def epyccel_seq(function_or_module, *,
         MPI rank of process in charge of accelerating code (default: 0).
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True).
-
-    Other Parameters
-    ----------------
-    compiler : str, optional
-        User-defined command for compiling generated source code.
-    is_conda_warnings_disabled : {True, False}
-        If True, Conda ignored Paths warnings will be disabled
-    is_conda_warnings_detailed : {True, False}
-        If True, Pyccel will show a list of ignored conda paths
 
     Returns
     -------
@@ -272,8 +269,11 @@ def epyccel_seq(function_or_module, *,
 def epyccel( python_function_or_module, **kwargs ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
+    
     Parameters
     ----------
+    python_function_or_module : function | module
+        Python function or module to be accelerated.
     **kwargs :
         Additional keyword arguments for configuring the compilation and acceleration process.
         Available options are defined in epyccel_seq.
