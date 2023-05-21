@@ -145,8 +145,9 @@ def epyccel_seq(function_or_module, *,
     folder: string, optional
         Output folder for the compiled code.
 
-    Options for parallel mode
-    -------------------------
+    Other Parameters
+    ----------------
+    # Options for parallel mode
     comm : mpi4py.MPI.Comm, optional
         MPI communicator for calling Pyccel in parallel mode (default: None).
     root : int, optional
@@ -154,8 +155,8 @@ def epyccel_seq(function_or_module, *,
     bcast : {True, False}
         If False, only root process loads accelerated function/module (default: True).
 
-    Other options
-    -------------
+    Other Parameters
+    ----------------
     compiler : str, optional
         User-defined command for compiling generated source code.
     is_conda_warnings_disabled : {True, False}
