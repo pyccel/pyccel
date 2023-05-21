@@ -113,7 +113,10 @@ def epyccel_seq(function_or_module, *,
                 libs          = (),
                 folder        = None,
                 is_conda_warnings_disabled = False,
-                is_conda_warnings_detailed = False):
+                is_conda_warnings_detailed = False,
+                comm          = None,
+                root          = None,
+                bcast         = None):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -142,7 +145,7 @@ def epyccel_seq(function_or_module, *,
         Additional modules to be imported.
     libs : tuple, optional
         Additional libraries.
-    folder : string, optional
+    folder : str, optional
         Output folder for the compiled code.
     compiler : str, optional
         User-defined command for compiling generated source code.
@@ -159,11 +162,11 @@ def epyccel_seq(function_or_module, *,
     Other Parameters
     ----------------
     comm : mpi4py.MPI.Comm, optional
-        MPI communicator for calling Pyccel in parallel mode (default: None). (for parallel mode)
+        MPI communicator for calling Pyccel in parallel mode (default: None) (for parallel mode).
     root : int, optional
-        MPI rank of process in charge of accelerating code (default: 0). (for parallel mode)
+        MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
     bcast : {True, False}
-        If False, only root process loads accelerated function/module (default: True). (for parallel mode)
+        If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
     """
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
