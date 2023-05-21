@@ -126,6 +126,8 @@ def epyccel_seq(function_or_module, *,
         Python function or module to be accelerated.
     language : {'fortran', 'c', 'python'}
         Language of generated code (default: 'fortran').
+    compiler : str, optional
+        User-defined command for compiling generated source code.
     fflags : iterable of str, optional
         Compiler flags.
     wrapper_flags : iterable of str, optional
@@ -147,8 +149,6 @@ def epyccel_seq(function_or_module, *,
         Additional libraries.
     folder : str, optional
         Output folder for the compiled code.
-    compiler : str, optional
-        User-defined command for compiling generated source code.
     is_conda_warnings_disabled : {True, False}
         If True, Conda ignored Paths warnings will be disabled
     is_conda_warnings_detailed : {True, False}
