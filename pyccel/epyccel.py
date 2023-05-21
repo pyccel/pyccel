@@ -156,8 +156,12 @@ def epyccel_seq(function_or_module, *,
 
     Returns
     -------
-    Object
+    object
         Return accelerated Python module and function.
+
+    Notes
+    -----
+    This function accelerates a Python function or module using Pyccel in "embedded" mode. It generates optimized code in the specified language (default is 'fortran') and compiles it for improved performance.
 
     Other Parameters
     ----------------
@@ -282,7 +286,7 @@ def epyccel( python_function_or_module, **kwargs ):
 
     Returns
     -------
-    res : object
+    object
         Accelerated function or module.
 
     Examples
