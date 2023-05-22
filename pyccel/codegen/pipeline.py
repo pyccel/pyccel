@@ -204,7 +204,7 @@ def execute_pyccel(fname, *,
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
-    Compiler._acceptable_bin_paths = get_condaless_search_path(is_conda_warnings_disabled,is_conda_warnings_detailed)
+    Compiler.acceptable_bin_paths = get_condaless_search_path(is_conda_warnings_disabled,is_conda_warnings_detailed)
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 

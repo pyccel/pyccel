@@ -68,7 +68,7 @@ class Compiler:
                Indicates whether we are compiling in debug mode.
     """
     __slots__ = ('_debug','_info')
-    _acceptable_bin_paths = ()
+    acceptable_bin_paths = ()
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return
@@ -94,7 +94,7 @@ class Compiler:
 
         # Clean conda paths out of the PATH variable
         current_path = os.environ['PATH']
-        os.environ['PATH'] = self._acceptable_bin_paths
+        os.environ['PATH'] = self.acceptable_bin_paths
 
         # Find the exact path of the executable
         exec_loc = shutil.which(exec_cmd)
