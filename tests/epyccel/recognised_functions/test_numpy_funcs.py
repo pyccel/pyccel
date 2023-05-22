@@ -1241,16 +1241,29 @@ def test_size_property(language):
     def test_size_2d(f):
         return f.size
 
+    @types('int[:,:]','int')
+    def test_size_axis(f, axis):
+        from numpy import size
+        return size(f,axis)
+
+
     from numpy import empty
-    f1 = epyccel(test_size_1d, language = language)
+    f1 = epyccel(test_size_1d ,language = language)
     f2 = epyccel(test_size_2d, language = language)
+    f3 = epyccel(test_size_axis, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
+    n4 = randint(20)
+    n5 = randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
+    x3 = empty((n4,n5), dtype = int)
+    axis = randint(2)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
+    assert f3(x3,axis) == test_size_axis(x3,axis)
+
 
 def test_full_basic_real(language):
     @types('int')
@@ -6308,3 +6321,4 @@ def test_nonzero(language):
     assert epyccel_func(fl) == nonzero_func(fl)
     assert epyccel_func(fl32) == nonzero_func(fl32)
     assert epyccel_func(fl64) == nonzero_func(fl64)
+
