@@ -1099,7 +1099,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         pyccel.ast.variable.Variable
-            The representation of the lhs provided by the SyntacticParser.
+            The representation of the lhs provided by the SemanticParser.
         """
 
         if isinstance(lhs, IndexedElement):
