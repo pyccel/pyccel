@@ -137,7 +137,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
     def __str__(self):
         return f'Shape({self.arg}, {self.index})'
- 
+
     def __eq__(self, other):
         if isinstance(other, PyccelArrayShapeElement):
             return self.arg == other.arg and self.index == other.index
