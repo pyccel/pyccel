@@ -1575,12 +1575,12 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         expr : pyccel.ast.basic.Basic
-            Object to visit.
+            Object to visit of type X.
         
         Returns
         -------
-        pyccel.ast.variable.Variable
-            AST object of type X.
+        pyccel.ast.basic.Basic
+            AST object which is the semantic equivalent of expr.
         """
 
         # TODO - add settings to Errors
