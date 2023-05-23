@@ -312,12 +312,11 @@ def test_conda_flag_disable(language):
 def test_conda_flag_verbose(language):
     def one():
         return True;
-    with pytest.warns() as record1:
+    with pytest.warns(None) as record1:
         epyccel(one, language='c', is_conda_warnings_detailed = True)
     if len(record1)>0:
         warn_message = record1[1].message
         assert str(warn_message).split(':')[1] in os.environ['PATH']
-    pytest.skip("No Conda env detected")
 
 #==============================================================================
 
