@@ -3464,17 +3464,17 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonPrint(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
-        for i in range(len(args)):
-            if isinstance(args[i].value, PyccelInternalFunction):
+        for i, arg in enumerate(args):
+            if isinstance(arg[i].value, PyccelInternalFunction):
                 new_symbol = PyccelSymbol(self.scope.get_new_name())
-                d_var = self._infer_type(args[i].value, **settings)
+                d_var = self._infer_type(arg[i].value, **settings)
                 new_expression = []
-                tmp_var = self._assign_lhs_variable(new_symbol, d_var , args[i].value, new_expression , is_augassign=False, **settings)
-                creation = Assign(tmp_var, args[i].value, fst=args[i].value.fst)
+                tmp_var = self._assign_lhs_variable(new_symbol, d_var , arg[i].value, new_expression , is_augassign=False, **settings)
+                creation = Assign(tmp_var, arg[i].value, fst=arg[i].value.fst)
                 new_expression.append(creation)
                 for v in new_expression:
                     self._additional_exprs[-1].append(v)
-                args[i] = FunctionCallArgument(tmp_var)
+                arg[i] = FunctionCallArgument(tmp_var)
         if len(args) == 0:
             return PythonPrint(args)
 
