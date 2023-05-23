@@ -9,8 +9,10 @@ All notable changes to this project will be documented in this file.
 			- Added the `is_conda_warnings_detailed` and `is_conda_warnings_disabled` to epyccel.
 ### Fixed
 
-### Changed
+-   #1302 : Raise error message in case of empty class
 
+### Changed
+-   #1355 : Remove unused `BasicParser` arguments.
 ## \[1.7.4\] - 2023-05-02
 
 ### Added
