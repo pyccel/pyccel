@@ -317,6 +317,8 @@ def test_conda_flag_verbose(language):
     if len(record1)>0:
         warn_message = record1[1].message
         assert str(warn_message).split(':')[1] in os.environ['PATH']
+    pytest.skip("No Conda env detected")
+
 #==============================================================================
 
 if __name__ == '__main__':
