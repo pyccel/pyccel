@@ -21,7 +21,7 @@ def test_array_int_1d_scalar_add(language):
         for i in range(x_len):
             x[i] += a
     f1 = array_int_1d_scalar_add
-    f2 = epyccel(f1, language=language, is_conda_warnings_detailed=True)
+    f2 = epyccel(f1, language=language)
 
     for t in int_types:
         size = randint(1, 30)
