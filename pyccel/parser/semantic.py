@@ -3474,7 +3474,7 @@ class SemanticParser(BasicParser):
                 new_expression.append(creation)
                 for v in new_expression:
                     self._additional_exprs[-1].append(v)
-                arg[i] = FunctionCallArgument(tmp_var)
+                args[i] = FunctionCallArgument(tmp_var)
         if len(args) == 0:
             return PythonPrint(args)
 
