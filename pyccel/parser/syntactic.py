@@ -841,7 +841,12 @@ class SyntaxParser(BasicParser):
 
         name = stmt.name
         scope = self.create_new_class_scope(name)
-        methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
+        methods = []
+        for i in stmt.body:
+            if isinstance(i, ast.FunctionDef):
+                methods.append(self._visit(i))
+            elif isinstance(i, ast.Pass):
+                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
         for i in methods:
             i.cls_name = name
         attributes = [a.var for a in methods[0].arguments]
