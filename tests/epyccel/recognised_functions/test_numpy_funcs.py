@@ -1038,7 +1038,7 @@ def test_shape_indexed(language):
     f2 = epyccel(test_shape_2d, language = language)
     n1 = 0#randint(20)
     n2 = 0#randint(20)
-    n3 = 0#randint(20)
+    n3 = 1#1randint(20)
     x1 = empty(n1,dtype = int)
     x2 = empty((n2,n3), dtype = int)
     assert(f1(x1) == test_shape_1d(x1))
