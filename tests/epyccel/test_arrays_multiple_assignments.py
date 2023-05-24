@@ -310,6 +310,7 @@ def test_conda_flag_disable(language):
         f1 = epyccel(one, language='c', is_conda_warnings_disabled = True)
     assert len(record1) == 0 # Equals 0 on every platform
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_conda_flag_verbose(language):
     def one():
         return True;
