@@ -3,4 +3,4 @@
 - [ ] Update documentation if necessary
 - [ ] Update Changelog
 - [ ] Ensure any relevant issues are linked
-- [ ] Ensure tests are passing
+- [ ] Ensure new tests are passing
