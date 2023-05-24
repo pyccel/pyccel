@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       ref:
-        required: false
+        required: true
         type: string
       base:
         required: true
