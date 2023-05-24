@@ -493,7 +493,7 @@ void    *nd_data(t_ndarray *a)
  */
 int     nd_nstep_C(t_ndarray *a, int n)
 {
-	if (a == NULL)
+	if (a == NULL || a->length == 0)
 		return 1;
 
 	int step = a->strides[n];
@@ -504,7 +504,7 @@ int     nd_nstep_C(t_ndarray *a, int n)
 }
 int     nd_nstep_F(t_ndarray *a, int n)
 {
-	if (a == NULL)
+	if (a == NULL || a->length == 0)
 		return 1;
 
 	int step = a->strides[n];
