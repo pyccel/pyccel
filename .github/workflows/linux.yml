@@ -1,7 +1,7 @@
 name: Linux unit tests
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python_version:
         required: true

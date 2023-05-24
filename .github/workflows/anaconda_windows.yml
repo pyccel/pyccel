@@ -1,7 +1,7 @@
 name: Anaconda-Windows
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python_version:
         required: true
