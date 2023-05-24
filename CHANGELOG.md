@@ -11,8 +11,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 -   #1355 : Remove unused `BasicParser` arguments.
--   \[INTERNALS\] In ast.numpyext rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
--   \[INTERNALS\] In ast.internals rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
+-   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
+-   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
 
 ## \[1.7.4\] - 2023-05-02
