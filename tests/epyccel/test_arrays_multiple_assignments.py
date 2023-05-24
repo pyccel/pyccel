@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import os
-
+import sys
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
 from pyccel.errors.errors import Errors, PyccelSemanticError
@@ -302,6 +302,7 @@ def test_Assign_between_nested_If(lang):
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
 def test_conda_flag_disable(language):
     def one():
         return True;
@@ -315,8 +316,9 @@ def test_conda_flag_verbose(language):
     with pytest.warns(None) as record1:
         epyccel(one, language='c', is_conda_warnings_detailed = True)
     if len(record1)>0:
-        warn_message = record1[1].message
-        assert str(warn_message).split(':')[1] in os.environ['PATH']
+        warn_message = record1[0].message
+        p = str(warn_message).split(":")[2].replace('\n','')
+        assert p in os.environ['PATH']
 
 #==============================================================================
 

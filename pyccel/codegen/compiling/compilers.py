@@ -40,11 +40,11 @@ def get_condaless_search_path(is_conda_warnings_disabled = False, is_conda_warni
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         if not is_conda_warnings_disabled:
-            warnings.warn(UserWarning("Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md for details"))
+            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md for details"
             if is_conda_warnings_detailed:
-                warnings.warn(UserWarning("Conda ignored PATH:"))
-                for path in conda_folders:
-                    warnings.warn(UserWarning(path))
+                message_warning = message_warning + "\nConda ignored PATH:" + "\n"
+                message_warning = message_warning + ":".join(conda_folders)
+            warnings.warn(UserWarning(message_warning))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
     return acceptable_search_paths
 
