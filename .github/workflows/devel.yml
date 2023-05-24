@@ -2,7 +2,7 @@ name: devel_tests
 
 on:
   push:
-    branches: [ devel ]
+    branches: [ pyccel/devel ]
 
 jobs:
 
