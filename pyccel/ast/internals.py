@@ -64,6 +64,7 @@ class PyccelArraySize(PyccelInternalFunction):
     arg : PyccelAstNode
         An array of unknown size.
     """
+    __slots__ = ()
     name = 'size'
 
     _dtype = NativeInteger()
@@ -104,6 +105,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     index : int
         The dimension along which the shape should be provided.
     """
+    __slots__ = ()
     name = 'shape'
 
     _dtype = NativeInteger()
