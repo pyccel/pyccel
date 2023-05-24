@@ -293,6 +293,10 @@ def epyccel( python_function_or_module, **kwargs ):
     object
         Accelerated function or module.
 
+    See Also
+    --------
+    epyccel_seq
+
     Examples
     --------
     >>> def one(): return 1
