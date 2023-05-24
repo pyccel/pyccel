@@ -1,7 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import os
-import pytest
 import sys
+import pytest
+
 from pyccel.epyccel import epyccel
 from pyccel.decorators import stack_array, types
 from pyccel.errors.errors import Errors, PyccelSemanticError
