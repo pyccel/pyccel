@@ -28,7 +28,7 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
-def get_condaless_search_path(is_conda_warnings_disabled = False, is_conda_warnings_detailed = False):
+def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warnings_detailed=False):
     """ Get the value of the PATH variable to be set when searching for the compiler.
     This is the same as the environment PATH variable but without any conda paths
     """
@@ -40,9 +40,9 @@ def get_condaless_search_path(is_conda_warnings_disabled = False, is_conda_warni
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
         if not is_conda_warnings_disabled:
-            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md for details"
+            message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md#utilising-pyccel-within-a-conda-environment for details"
             if is_conda_warnings_detailed:
-                message_warning = message_warning + "\nConda ignored PATH:" + "\n"
+                message_warning = message_warning + "\nConda ignored PATH:\n"
                 message_warning = message_warning + ":".join(conda_folders)
             warnings.warn(UserWarning(message_warning))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
@@ -68,7 +68,7 @@ class Compiler:
                Indicates whether we are compiling in debug mode.
     """
     __slots__ = ('_debug','_info')
-    acceptable_bin_paths = ()
+    acceptable_bin_paths = None
     def __init__(self, vendor : str, language : str, debug=False):
         if language=='python':
             return

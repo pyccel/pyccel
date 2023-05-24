@@ -303,7 +303,7 @@ def test_Assign_between_nested_If(lang):
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. NumPy causing unreadable Windows output see issue #1405")
 def test_conda_flag_disable(language):
     def one():
         return True
@@ -311,7 +311,7 @@ def test_conda_flag_disable(language):
         epyccel(one, language='c', is_conda_warnings_disabled = True)
     assert len(record1) == 0 # Equals 0 on every platform
 
-@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. On execution Windows raises: error while loading shared libraries: libblas.dll: cannot open shared object file: No such file or directory" )
+@pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. NumPy causing unreadable Windows output see issue #1405")
 def test_conda_flag_verbose(language):
     def one():
         return True
@@ -319,7 +319,7 @@ def test_conda_flag_verbose(language):
         epyccel(one, language='c', is_conda_warnings_detailed = True)
     if len(record1)>0:
         warn_message = record1[0].message
-        p = str(warn_message).split(":")[2].replace('\n','')
+        p = str(warn_message).split(":")[2].strip('\n')
         assert p in os.environ['PATH']
 
 #==============================================================================

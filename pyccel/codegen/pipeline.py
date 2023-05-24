@@ -135,6 +135,10 @@ def execute_pyccel(fname, *,
     export_compile_info : str
                     Name of the json file to which compiler information is exported
                     Default : None
+    is_conda_warnings_disabled : {True, False}
+                    If True, Conda ignored Paths warnings will be disabled
+    is_conda_warnings_detailed : {True, False}
+                    If True, Pyccel will show a list of ignored conda paths
     """
     if fname.endswith('.pyh'):
         syntax_only = True
