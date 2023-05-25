@@ -41,6 +41,11 @@ def test_mpi(f):
 def test_openmp(f, language):
     execute_pyccel(f, accelerators=['openmp'], language=language)
 
+def test_file_named_test():
+    with pytest.raises(ValueError) as exc_info:
+        execute_pyccel(fname="test.py")
+    assert str(exc_info.value) == "files called test can cause problems for some compilers and can't be imported from Python. see #issue: 1403"
+
 #@pytest.mark.parametrize("f", get_files_from_folder('openacc'))
 #@pytest.mark.external
 #def test_openacc():
