@@ -38,17 +38,19 @@ class BindCFunctionDef(FunctionDef):
     Parameters
     ----------
     *args : list
-        See FunctionDef
+        See FunctionDef.
 
     original_function : FunctionDef
-        The function from which the c-compatible version was created
+        The function from which the c-compatible version was created.
 
     **kwargs : dict
-        See FunctionDef
+        See FunctionDef.
 
     See Also
     --------
     pyccel.ast.core.FunctionDef
+        The class from which BindCFunctionDef inherits which contains all
+        details about the args and kwargs.
     """
     __slots__ = ('_original_function',)
     _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
@@ -145,6 +147,8 @@ class BindCFunctionDefArgument(FunctionDefArgument):
     See Also
     --------
     pyccel.ast.core.FunctionDefArgument
+        The class from which BindCFunctionDefArgument inherits which
+        contains all details about the args and kwargs.
     """
     __slots__ = ('_sizes', '_strides', '_original_arg_var', '_rank')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
@@ -272,6 +276,8 @@ class BindCFunctionDefResult(FunctionDefResult):
     See Also
     --------
     pyccel.ast.core.FunctionDefResult
+        The class from which BindCFunctionDefResult inherits which
+        contains all details about the args and kwargs.
     """
     __slots__ = ('_sizes', '_original_res_var')
     _attribute_nodes = FunctionDefResult._attribute_nodes + \
@@ -338,20 +344,22 @@ class BindCModule(Module):
     Parameters
     ----------
     *args : tuple
-        See pyccel.ast.core.Module
+        See `pyccel.ast.core.Module`.
 
     original_module : Module
-        The Module being wrapped
+        The Module being wrapped.
 
     variable_wrappers : list of BindCFunctionDef
         A list containing all the functions which expose module variables to C.
 
-    *kwargs : dict
-        See pyccel.ast.core.Module
+    **kwargs : dict
+        See `pyccel.ast.core.Module`.
 
     See Also
     --------
     pyccel.ast.core.Module
+        The class from which BindCModule inherits which contains all details
+        about the args and kwargs.
     """
     __slots__ = ('_orig_mod','_variable_wrappers')
     _attribute_nodes = ('_orig_mod','_variable_wrappers')

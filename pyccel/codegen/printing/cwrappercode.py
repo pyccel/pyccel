@@ -322,20 +322,37 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_static_args(self, argument):
         """
-        Create bind_C arguments for arguments rank > 0 in fortran.
-        needed in static function call
-        func(a) ==> static_func(nd_dim(a) , nd_data(a))
-        where nd_data(a) = buffer holding data
-              nd_dim(a)  = size of array
+        Get the value(s) which should be passed for the provided argument.
+
+        Get the value(s) which should be passed to the function for the
+        specified argument. In the case of a BindCFunctionDef (when the
+        target language is Fortran) and an argument with rank > 0,
+        multiple arguments are needed:
+        - buffer holding data.
+        - shape of array in each dimension.
+        - stride for the array in each dimension.
 
         Parameters
         ----------
-        argument    : Variable
-            Variable holding information needed (rank)
+        argument : Variable
+            Variable holding information needed (rank).
 
-        Returns     : List of arguments
+        Returns
+        -------
+        List of arguments
             List that can contains Variables and FunctionCalls
-        -----------
+
+        Example
+        -------
+        If target language is Fortran:
+        >>> x = Variable('int', 'x', rank=2, order='c')
+        >>> self.get_static_args(x)
+        [&nd_data(x), nd_ndim(x, 0), nd_ndim(x, 1), nd_nstep_C(x, 0), nd_nstep_C(x, 1)]
+
+        If target language is C:
+        >>> x = Variable('int', 'x', rank=2, order='c')
+        >>> self.get_static_args(x)
+        [x]
         """
 
         if self._target_language == 'fortran' and argument.rank > 0:
