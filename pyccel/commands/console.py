@@ -28,7 +28,7 @@ class MyParser(argparse.ArgumentParser):
 #      but quickstart and build are still calling it for the moment
 def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, compiler=None):
     """
-    pyccel console command.
+    Pyccel console command.
 
     Parameters
     ----------
