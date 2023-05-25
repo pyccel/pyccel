@@ -340,10 +340,10 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns
         -------
         List of arguments
-            List that can contains Variables and FunctionCalls
+            List that can contains Variables and FunctionCalls.
 
-        Example
-        -------
+        Examples
+        --------
         If target language is Fortran:
         >>> x = Variable('int', 'x', rank=2, order='c')
         >>> self.get_static_args(x)
