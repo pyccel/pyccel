@@ -36,6 +36,58 @@ def create_shared_library(codegen,
                           wrapper_compiler,
                           sharedlib_modname=None,
                           verbose = False):
+    """
+    Create a shared library which can be called from Pyccel.
+
+    From a CodePrinter object describing code which has been printed
+    in a target language, create a shared library which can be
+    called from Pyccel. In order to do this the code must be wrapped.
+    First, if the code is not written in C, it must be wrapped to
+    make it callable from C. This intermediary code is printed
+    and compiled. From the C-compatible code a second (first for C)
+    wrapper is created which exposes the C code to Python. This
+    is done via the CWrapper. Finally this new code is compiled
+    to generate the required shared language.
+
+    Parameters
+    ----------
+    codegen : pyccel.codegen.printing.codeprinter.CodePrinter
+        The printer which was used to print the translated code.
+
+    main_obj : pyccel.codegen.compiling.basic.CompileObj
+        The compile object which describes the translated code.
+
+    language : str
+        The language which Pyccel translated to.
+
+    wrapper_flags : iterable
+        Any additional flags which should be used to compile the wrapper.
+
+    pyccel_dirpath : str
+        The path to the directory where the files are created and compiled.
+
+    src_compiler : pyccel.codegen.compiling.compilers.Compiler
+        The compiler which should be used to compile the library.
+
+    wrapper_compiler : 
+        The compiler which should be used to compile the wrapper.
+        Often this is the same as src_compiler but it may be different
+        when the language is not C to ensure that src_compiler can link
+        the appropriate language-specific libraries.
+
+    sharedlib_modname : str, default: None
+        The name of the shared library. The default is the name of the
+        module printed by the printer.
+
+    verbose : bool, default: False
+        Indicates if the compiling should be done with verbosity to show the
+        compiler commands.
+
+    Returns
+    -------
+    str
+        The absolute path to the shared library which was created.
+    """
 
     pyccel_stage.set_stage('cwrapper')
 
