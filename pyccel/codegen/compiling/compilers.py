@@ -28,9 +28,23 @@ if platform.system() == 'Darwin':
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
+
 def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warnings_detailed=False):
-    """ Get the value of the PATH variable to be set when searching for the compiler.
+    """
+    Get the value of the PATH variable to be set when searching for the compiler.
     This is the same as the environment PATH variable but without any conda paths
+
+    Parameters
+    ----------
+    is_conda_warnings_disabled : bool, optional
+        If True, Conda ignored Paths warnings will be disabled, by default False
+    is_conda_warnings_detailed : bool, optional
+        If True, Pyccel will show a list of ignored conda paths, by default False
+
+    Returns
+    -------
+    str
+        A list of paths excluding the conda paths.
     """
     path_sep = ';' if platform.system() == 'Windows' else ':'
     current_path = os.environ['PATH']
@@ -46,6 +60,7 @@ def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warning
                 message_warning = message_warning + ":".join(conda_folders)
             warnings.warn(UserWarning(message_warning))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
+    print(acceptable_search_paths)
     return acceptable_search_paths
 
 #------------------------------------------------------------
@@ -89,6 +104,24 @@ class Compiler:
         self._debug = debug
 
     def _get_exec(self, accelerators):
+        """
+        Obtain the path of the executable based on the specified accelerators.
+
+        Parameters
+        ----------
+        accelerators : str
+            Specifies the accelerators to be used.
+
+        Returns
+        -------
+        str
+            The path of the executable corresponding to the specified accelerators.
+
+        Raises
+        ------
+        PyccelError
+            If the compiler executable cannot be found.
+        """
         # Get executable
         exec_cmd = self._info['mpi_exec'] if 'mpi' in accelerators else self._info['exec']
 

@@ -295,7 +295,7 @@ def epyccel( python_function_or_module, **kwargs ):
 
     See Also
     --------
-    epyccel_seq
+    epyccel_seq : The extenstion of this function.
 
     Examples
     --------
