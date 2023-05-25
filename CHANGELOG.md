@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1302 : Raise error message in case of empty class
+-   #1407 : Raising an error in case of a file named ``test.py``
 
 ### Changed
 -   #1355 : Remove unused `BasicParser` arguments.
