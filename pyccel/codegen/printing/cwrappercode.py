@@ -404,22 +404,40 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_static_results(self, result):
         """
-        Create bind_C results for results rank > 0 in fortran.
-        needed in static function call
-        func(a) ==> static_func(a.shape[0] , &a->raw_data)
+        Get the value(s) which should be used to collect the provided result.
+
+        Get the value(s) which should be collected from the function for the
+        specified argument. In the case of a BindCFunctionDefResult (when the
+        target language is Fortran) and an argument with rank > 0,
+        multiple outputs are needed:
+        - buffer holding data.
+        - shape of array in each dimension.
+        These must then be used to create the expected result variable.
 
         Parameters
         ----------
-        result      : Variable
-            Variable holding information needed (rank)
+        result : FunctionDefResult
+            The result of the function which we want to collect.
 
         Returns
         -------
         body : list
-            Additional instructions (allocations and pointer assignments) for function body
+            Additional instructions (allocations and pointer assignments) for function body.
 
         static_results : list
-            Expanded list of function arguments corresponding to the given result
+            Expanded list of function arguments corresponding to the given result.
+
+        Examples
+        --------
+        If target language is Fortran:
+        >>> x_res = BindCFunctionDefResult(Variable(BindCPointer(), 'x_ptr', memory_handling='alias'), Variable('int', 'x', rank=2, order='c'), scope)
+        >>> self.get_static_results(x)
+        [allocate(x, [x_shape_0, x_shape_1]), x.raw_data=>x_ptr], [&nd_data(x_ptr), x_shape_0, x_shape_1]
+
+        If target language is C:
+        >>> x_res = FunctionDefResult(Variable('int', 'x', rank=2, order='c'))
+        >>> self.get_static_args(x)
+        [], [Variable(x)]
         """
 
         body = []
@@ -1076,14 +1094,18 @@ class CWrapperCodePrinter(CCodePrinter):
                 var = r.var
                 name = var.name
                 self.scope.insert_symbol(name)
-                v = var.clone(self.scope.get_expected_name(name))
+                if var.rank > 0:
+                    v = var.clone(self.scope.get_expected_name(name), memory_handling = 'alias')
+                else:
+                    v = var.clone(self.scope.get_expected_name(name))
                 result_vars.append(v)
                 self.scope.insert_variable(v)
                 if isinstance(r, BindCFunctionDefResult) and r.sizes:
                     original_var = r.original_function_result_variable
                     original_name = original_var.name
                     self.scope.insert_symbol(original_name)
-                    self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name)))
+                    # Declare as pointer as the array should not free its data when it goes out of scope
+                    self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name), memory_handling = 'alias'))
 
             local_arg_vars = {(v.clone(v.name, memory_handling='alias')
                               if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
@@ -1136,6 +1158,13 @@ class CWrapperCodePrinter(CCodePrinter):
             # Call free function for C type
             mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                                         else Deallocate(i) for i in local_arg_vars if i.rank > 0]
+            if self._target_language == 'fortran':
+                dealloc_results = [self.scope.find(self.scope.get_expected_name(r.original_function_result_variable.name), category='variables')
+                                    for r in results]
+            else:
+                dealloc_results = result_vars
+            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
+                                else Deallocate(i) for i in dealloc_results if i.rank > 0]
             mini_wrapper_func_body.append(Return(wrapper_results))
             self._to_free_PyObject_list.clear()
 
@@ -1386,14 +1415,18 @@ class CWrapperCodePrinter(CCodePrinter):
             var = r.var
             name = var.name
             self.scope.insert_symbol(name)
-            v = var.clone(self.scope.get_expected_name(name))
+            if var.rank > 0:
+                v = var.clone(self.scope.get_expected_name(name), memory_handling = 'alias')
+            else:
+                v = var.clone(self.scope.get_expected_name(name))
             result_vars.append(v)
             self.scope.insert_variable(v)
             if isinstance(r, BindCFunctionDefResult) and r.sizes:
                 original_var = r.original_function_result_variable
                 original_name = original_var.name
                 self.scope.insert_symbol(original_name)
-                new_var = original_var.clone(self.scope.get_expected_name(original_name))
+                # Declare as pointer as the array should not free its data when it goes out of scope
+                new_var = original_var.clone(self.scope.get_expected_name(original_name), memory_handling='alias')
                 self.scope.insert_variable(new_var)
         # update ndarray and optional local variables properties
 
@@ -1472,6 +1505,13 @@ class CWrapperCodePrinter(CCodePrinter):
         # Call free function for C type
         wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
                             else Deallocate(i) for i in local_arg_vars if i.rank > 0]
+        if self._target_language == 'fortran':
+            dealloc_results = [self.scope.find(self.scope.get_expected_name(r.original_function_result_variable.name), category='variables')
+                                for r in results]
+        else:
+            dealloc_results = result_vars
+        wrapper_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
+                            else Deallocate(i) for i in dealloc_results if i.rank > 0]
         self._to_free_PyObject_list.clear()
 
         #Return
