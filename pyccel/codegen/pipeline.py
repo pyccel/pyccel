@@ -99,18 +99,18 @@ def execute_pyccel(fname, *,
         List of required libraries.
     debug : bool, optional
         Indicates whether the file should be compiled in debug mode. Default is False.
-        (Currently, this only implies that the flag -fcheck=bounds is added.)
+        (Currently, this only implies that the flag -fcheck=bounds is added.).
     accelerators : iterable, optional
         Tool used to accelerate the code (e.g., OpenMP, OpenACC).
     output_name : str, optional
         Name of the generated module. Default is the same name as the translated file.
-    export_compile_info : str, optional
+    compiler_export_file : str, optional
         Name of the JSON file to which compiler information is exported. Default is None.
     is_conda_warnings_disabled : bool, optional
         If True, Conda ignored Paths warnings will be disabled.
     is_conda_warnings_detailed : bool, optional
         If True, Pyccel will show a list of ignored Conda paths.
-	"""
+    """
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
