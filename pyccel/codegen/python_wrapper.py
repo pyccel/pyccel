@@ -69,7 +69,7 @@ def create_shared_library(codegen,
     src_compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the library.
 
-    wrapper_compiler : 
+    wrapper_compiler : pyccel.codegen.compiling.compilers.Compiler
         The compiler which should be used to compile the wrapper.
         Often this is the same as src_compiler but it may be different
         when the language is not C to ensure that src_compiler can link
