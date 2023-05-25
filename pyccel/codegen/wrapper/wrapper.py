@@ -31,18 +31,38 @@ class Wrapper:
 
     @property
     def scope(self):
-        """ Get the current scope
+        """
+        Get the current scope.
+
+        Get the scope for the current context.
+
+        See Also
+        --------
+        pyccel.parser.scope.Scope
+            The type of the returned object.
         """
         return self._scope
 
     def set_scope(self, scope):
-        """ Change the current scope
+        """
+        Change the current scope.
+
+        Set the current scope to the scope passed as an argument.
+
+        Parameters
+        ----------
+        scope : pyccel.parser.scope.Scope
+            The new scope.
         """
         assert scope is not None
         self._scope = scope
 
     def exit_scope(self):
-        """ Exit the current scope and return to the enclosing scope
+        """
+        Exit the current scope and return to the enclosing scope.
+
+        Exit the current scope and set the scope back to the value
+        of the enclosing scope.
         """
         self._scope = self._scope.parent_scope
 

@@ -37,22 +37,33 @@ class FortranToCWrapper(Wrapper):
 
     def _get_function_def_body(self, func, func_def_args, func_arg_to_call_arg, results, handled = ()):
         """
-        Get the body of the function definition.
+        Get the body of the bind c function definition.
 
-        Get the body of the function definition by inserting if blocks
-        to check the presence of optional variables.
+        Get the body of the bind c function definition by inserting if blocks
+        to check the presence of optional variables. Once we have ascertained
+        the prescence of the variables the original function is called. This
+        code slices array variables to ensure the correct step.
 
         Parameters
         ----------
-        func_def_args : list of FunctionDefArguments
-                The arguments received by the function.
-        func_arg_to_call_arg : dict
-                A dictionary mapping the arguments received by the function to the arguments
-                to be passed to the function call.
-        results : list of Variables
-                The Variables where the result of the function call will be saved.
+        func : FunctionDef
+            The function which should be called.
 
-        Results
+        func_def_args : list of FunctionDefArguments
+            The arguments received by the function.
+
+        func_arg_to_call_arg : dict
+            A dictionary mapping the arguments received by the function to the arguments
+            to be passed to the function call.
+
+        results : list of Variables
+            The Variables where the result of the function call will be saved.
+
+        handled : tuple
+            A list of all variables which have been handled (checked to see if they
+            are present).
+
+        Returns
         -------
         list
                 A list of Basic nodes describing the body of the function.
@@ -97,7 +108,8 @@ class FortranToCWrapper(Wrapper):
             return body + [func_call]
 
     def _get_call_argument(self, original_arg, bind_c_arg):
-        """ Get the argument which should be passed to the function call.
+        """
+        Get the argument which should be passed to the function call.
 
         The FunctionDefArgument passed to the function may contain additional
         information which should not be passed to the function being wrapped
@@ -109,15 +121,16 @@ class FortranToCWrapper(Wrapper):
         Parameters
         ----------
         original_arg : Variable
-                       The argument to the function being wrapped.
-        bind_c_arg : BindCFunctionDefArgument
-                        The argument to the wrapped bind_c_X function.
+            The argument to the function being wrapped.
 
-        Results
+        bind_c_arg : BindCFunctionDefArgument
+            The argument to the wrapped bind_c_X function.
+
+        Returns
         -------
         PyccelAstNode
-                An object which can be passed to a function call of the function
-                being wrapped.
+            An object which can be passed to a function call of the function
+            being wrapped.
         """
         if original_arg.is_ndarray:
             new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False,

@@ -463,23 +463,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _get_static_func_call_code(self, expr, static_func_args, results):
         """
-        Get all code necessary to call the wrapped function
+        Get all code necessary to call the wrapped function.
+
+        Get the function call which calls the underlying translated function
+        being wrapped. This may involve creating new variables in order to
+        call the funciton in a compatible way.
 
         Parameters
         ----------
-        expr             : FunctionDef
-                           The function being wrapped
+        expr : FunctionDef
+            The function being wrapped.
+
         static_func_args : List of arguments
-                           Arguments compatible with the static function
-        results          : List of results
-                           Results of the wrapped function
+            Arguments compatible with the static function.
+
+        results : List of results
+            Results of the wrapped function.
 
         Returns
         -------
-        body             : List of Basic Nodes
-                           List of nodes describing the instructions which call the
-                           wrapped function
-
+        list of pyccel.ast.basic.Basic
+            List of nodes describing the instructions which call the
+            wrapped function.
         """
         body = []
         if len(results) == 0:
@@ -831,21 +836,24 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def get_PyBuildValue(self, result):
         """
+        Get the necessary objects for calling PyBuildValue.
+
         Responsible for collecting the variable required to build the result
-        and the necessary cast function
+        using the Python function PyBuildValue. Also responsible for creating
+        the necessary cast function which creates this variable.
 
         Parameters
         ----------
-        variable : Variable
-            The variable returned by the translated function
+        result : Variable
+            The variable returned by the translated function.
 
         Returns
         -------
-        collect_var : Variable
-            The variable which will be provided to PyBuild
+        Variable
+            The variable which will be provided to PyBuild.
 
-        cast_func_stmts : functionCall
-            call to cast function responsible for the conversion of one data type into another
+        FunctionCall
+            Call to cast function responsible for the conversion of one data type into another.
         """
         out_var = getattr(result, 'original_function_result_variable', result.var)
         name = self.scope.get_expected_name(out_var.name)
