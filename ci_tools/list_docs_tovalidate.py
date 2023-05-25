@@ -91,6 +91,6 @@ if __name__ == '__main__':
                             child.name = '.'.join([obj_pref, child.name])
                             to_visit.append(child)
 
-        with open(args.output, 'w', encoding="utf-8") as f:
+        with open(args.output, 'a', encoding="utf-8") as f:
             for obj in objects:
                 print(obj, file=f)
