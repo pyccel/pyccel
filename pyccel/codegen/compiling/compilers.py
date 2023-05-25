@@ -31,7 +31,7 @@ if platform.system() == 'Darwin':
 
 def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warnings_detailed=False):
     """
-	Get a list of paths excluding the conda paths.
+    Get a list of paths excluding the conda paths.
 
     Get the value of the PATH variable to be set when searching for the compiler
     This is the same as the environment PATH variable but without any conda paths.

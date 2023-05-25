@@ -59,6 +59,8 @@ def execute_pyccel(fname, *,
                    is_conda_warnings_disabled = False,
                    is_conda_warnings_detailed = False):
     """
+    Pyccel internal.
+
     Carrie out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
