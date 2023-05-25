@@ -35,15 +35,15 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     files : str or list of str, optional
         File(s) to be translated. It can be a single file or a list of files (currently pyccel support single), by default None.
     mpi : bool, optional
-        Enable MPI support, by default None
+        Enable MPI support, by default None.
     openmp : bool, optional
-        Enable OpenMP support, by default None
+        Enable OpenMP support, by default None.
     openacc : bool, optional
-        Enable OpenACC support, by default None
+        Enable OpenACC support, by default None.
     output_dir : str, optional
-        Directory to store the translated file(s), by default None
+        Directory to store the translated file(s), by default None.
     compiler : str, optional
-        Compiler to be used for translation, by default None
+        Compiler to be used for translation, by default None.
     """
     parser = MyParser(description='pyccel command line')
 

@@ -110,16 +110,16 @@ def execute_pyccel(fname, *,
                     Default : provided by Compiler.
 
     includes      : list
-                    list of include directories paths.
+                    List of include directories paths.
 
     libdirs       : list
-                    list of paths to directories containing the required libraries.
+                    List of paths to directories containing the required libraries.
 
     modules       : list
-                    list of files which must also be compiled in order to compile this module.
+                    List of files which must also be compiled in order to compile this module.
 
     libs          : list
-                    list of required libraries.
+                    List of required libraries.
 
     debug         : bool
                     Boolean indicating whether the file should be compiled in debug mode,

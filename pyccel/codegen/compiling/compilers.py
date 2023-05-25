@@ -31,15 +31,15 @@ if platform.system() == 'Darwin':
 
 def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warnings_detailed=False):
     """
-    Get the value of the PATH variable to be set when searching for the compiler.
-    This is the same as the environment PATH variable but without any conda paths
+    Get the value of the PATH variable to be set when searching for the compiler
+    This is the same as the environment PATH variable but without any conda paths.
 
     Parameters
     ----------
     is_conda_warnings_disabled : bool, optional
-        If True, Conda ignored Paths warnings will be disabled, by default False
+        If True, Conda ignored Paths warnings will be disabled, by default False.
     is_conda_warnings_detailed : bool, optional
-        If True, Pyccel will show a list of ignored conda paths, by default False
+        If True, Pyccel will show a list of ignored conda paths, by default False.
 
     Returns
     -------
@@ -60,7 +60,6 @@ def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warning
                 message_warning = message_warning + ":".join(conda_folders)
             warnings.warn(UserWarning(message_warning))
     acceptable_search_paths = path_sep.join(p for p in folders.keys() if p not in conda_folders and os.path.exists(p))
-    print(acceptable_search_paths)
     return acceptable_search_paths
 
 #------------------------------------------------------------
