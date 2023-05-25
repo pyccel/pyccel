@@ -108,6 +108,9 @@ class Compiler:
         """
         Obtain the path of the executable based on the specified accelerators.
 
+        The `_get_exec` method is responsible for retrieving the path of the executable based on the specified accelerators.
+        It is used internally in the Pyccel module.
+
         Parameters
         ----------
         accelerators : str

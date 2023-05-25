@@ -69,79 +69,48 @@ def execute_pyccel(fname, *,
 
     Parameters
     ----------
-    fname         : str
-                    Name of python file to be translated.
-
-    syntax_only   : bool
-                    Boolean indicating whether the pipeline should stop
-                    after the syntax stage,
-                    Default : False.
-
-    semantic_only : bool
-                    Boolean indicating whether the pipeline should stop,
-                    after the semantic stage,
-                    Default : False.
-
-    convert_only  : bool
-                    Boolean indicating whether the pipeline should stop,
-                    after the codegen stage.
-                    Default : False.
-
-    verbose       : bool
-                    Boolean indicating whether debugging messages should be printed,
-                    Default : False.
-
-    folder        : str
-                    Path to the working directory,
-                    Default : folder containing the file to be translated.
-
-    language      : str
-                    The language which pyccel is translating to,
-                    Default : fortran.
-
-    compiler      : str
-                    The compiler used to compile the generated files,
-                    Default : GNU.
-
-    fflags        : str
-                    The flags passed to the compiler,
-                    Default : provided by Compiler.
-
-    wrapper_flags : str
-                    The flags passed to the compiler to compile the c wrapper,
-                    Default : provided by Compiler.
-
-    includes      : list
-                    List of include directories paths.
-
-    libdirs       : list
-                    List of paths to directories containing the required libraries.
-
-    modules       : list
-                    List of files which must also be compiled in order to compile this module.
-
-    libs          : list
-                    List of required libraries.
-
-    debug         : bool
-                    Boolean indicating whether the file should be compiled in debug mode,
-                    (currently this only implies that the flag -fcheck=bounds is added),
-                    Default : False.
-
-    accelerators  : iterable
-                    Tool used to accelerate the code (e.g. openmp openacc).
-
-    output_name   : str
-                    Name of the generated module,
-                    Default : Same name as the file which was translated.
-    export_compile_info : str
-                    Name of the json file to which compiler information is exported,
-                    Default : None.
-    is_conda_warnings_disabled : {True, False}
-                    If True, Conda ignored Paths warnings will be disabled.
-    is_conda_warnings_detailed : {True, False}
-                    If True, Pyccel will show a list of ignored conda paths.
-    """
+    fname : str
+        Name of the Python file to be translated.
+    syntax_only : bool, optional
+        Indicates whether the pipeline should stop after the syntax stage. Default is False.
+    semantic_only : bool, optional
+        Indicates whether the pipeline should stop after the semantic stage. Default is False.
+    convert_only : bool, optional
+        Indicates whether the pipeline should stop after the codegen stage. Default is False.
+    verbose : bool, optional
+        Indicates whether debugging messages should be printed. Default is False.
+    folder : str, optional
+        Path to the working directory. Default is the folder containing the file to be translated.
+    language : str, optional
+        The target language Pyccel is translating to. Default is 'fortran'.
+    compiler : str, optional
+        The compiler used to compile the generated files. Default is 'GNU'.
+    fflags : str, optional
+        The flags passed to the compiler. Default is provided by the Compiler.
+    wrapper_flags : str, optional
+        The flags passed to the compiler to compile the C wrapper. Default is provided by the Compiler.
+    includes : list, optional
+        List of include directory paths.
+    libdirs : list, optional
+        List of paths to directories containing the required libraries.
+    modules : list, optional
+        List of files that must be compiled in order to compile this module.
+    libs : list, optional
+        List of required libraries.
+    debug : bool, optional
+        Indicates whether the file should be compiled in debug mode. Default is False.
+        (Currently, this only implies that the flag -fcheck=bounds is added.)
+    accelerators : iterable, optional
+        Tool used to accelerate the code (e.g., OpenMP, OpenACC).
+    output_name : str, optional
+        Name of the generated module. Default is the same name as the translated file.
+    export_compile_info : str, optional
+        Name of the JSON file to which compiler information is exported. Default is None.
+    is_conda_warnings_disabled : bool, optional
+        If True, Conda ignored Paths warnings will be disabled.
+    is_conda_warnings_detailed : bool, optional
+        If True, Pyccel will show a list of ignored Conda paths.
+	"""
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
