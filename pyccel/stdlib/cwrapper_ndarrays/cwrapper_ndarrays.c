@@ -5,6 +5,8 @@
 
 #include <string.h>
 #include "cwrapper_ndarrays.h"
+#include <assert.h>
+#include <crtdbg.h>
 
 /*
  * Function : _numpy_to_ndarray_strides
@@ -25,18 +27,34 @@ static int64_t	*_numpy_to_ndarray_strides(npy_intp  *np_strides, int type_size, 
 
     ndarray_strides = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        ndarray_strides[i] = (int64_t) np_strides[i] / type_size;
+        ndarray_strides[i] = (int64_t)np_strides[i] / type_size;
 
     return ndarray_strides;
 }
 
-static npy_intp	*_ndarray_to_numpy_strides(int64_t  *nd_strides, int32_t type_size, int nd)
+static npy_intp	*_c_ndarray_to_numpy_strides(int64_t  *nd_strides, int type_size, int nd)
 {
     npy_intp *numpy_strides;
 
     numpy_strides = (npy_intp*)malloc(sizeof(npy_intp) * nd);
     for (int i = 0; i < nd; i++)
         numpy_strides[i] = (npy_intp) nd_strides[i] * type_size;
+
+    return numpy_strides;
+}
+
+static npy_intp	*_f_ndarray_to_numpy_strides(int64_t *nd_strides, int64_t *nd_shape, int type_size, int nd)
+{
+    npy_intp *numpy_strides;
+
+    numpy_strides = (npy_intp*)malloc(sizeof(npy_intp) * nd);
+    for (int32_t i = 0; i < nd; i++)
+    {
+        numpy_strides[i] = 1;
+        for (int32_t j = 0; j < i; j++)
+            numpy_strides[i] *= nd_shape[j];
+        numpy_strides[i] *= type_size;
+    }
 
     return numpy_strides;
 }
@@ -61,7 +79,7 @@ static int64_t     *_numpy_to_ndarray_shape(npy_intp  *np_shape, int nd)
 
     nd_shape = (int64_t*)malloc(sizeof(int64_t) * nd);
     for (int i = 0; i < nd; i++)
-        nd_shape[i] = (int64_t) np_shape[i];
+        nd_shape[i] = (int64_t)np_shape[i];
     return nd_shape;
 }
 
@@ -71,7 +89,7 @@ static npy_intp *_ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
 
     np_shape = (npy_intp*)malloc(sizeof(npy_intp) * nd);
     for (int i = 0; i < nd; i++)
-        np_shape[i] = (npy_intp) nd_shape[i];
+        np_shape[i] = (npy_intp)nd_shape[i];
     return np_shape;
 }
 
@@ -303,7 +321,7 @@ t_ndarray	pyarray_to_ndarray(PyObject *o)
 	return array;
 }
 
-PyObject* ndarray_to_pyarray(t_ndarray *o)
+PyObject* ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS;
     if (o->nd == 1) {
@@ -314,32 +332,50 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
     }
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
 
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    assert(_CrtCheckMemory());
+    return arr;
 }
 
-PyObject* c_ndarray_to_pyarray(t_ndarray *o)
+PyObject* c_ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
 
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _c_ndarray_to_numpy_strides(o->strides, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    assert(_CrtCheckMemory());
+    return arr;
 }
 
-PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
+PyObject* fortran_ndarray_to_pyarray(t_ndarray *o, bool release_data)
 {
     int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
+
+    enum NPY_TYPES npy_type = get_numpy_type(o);
+    PyArray_Descr* type_descr = PyArray_DescrFromType(npy_type);
+
+    PyObject* arr = PyArray_NewFromDescr(&PyArray_Type, type_descr,
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
+            _f_ndarray_to_numpy_strides(o->strides, o->shape, type_descr->elsize, o->nd),
             o->raw_data, FLAGS, NULL);
+    if (release_data)
+        PyArray_ENABLEFLAGS((PyArrayObject*)arr, NPY_ARRAY_OWNDATA);
+    assert(_CrtCheckMemory());
+    return arr;
 }
 
 /*

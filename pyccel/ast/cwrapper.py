@@ -394,6 +394,7 @@ def C_to_Python(c_object):
     FunctionDef
         The function which casts the C object to Python.
     """
+    arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))]
     if c_object.rank != 0:
         if c_object.order == 'C':
             cast_function = 'c_ndarray_to_pyarray'
@@ -401,6 +402,8 @@ def C_to_Python(c_object):
             cast_function = 'fortran_ndarray_to_pyarray'
         else:
             cast_function = 'ndarray_to_pyarray'
+
+        arguments.append(FunctionDefArgument(Variable(dtype=NativeBool(), name = 'release', precision = -1)))
     else:
         try :
             cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
@@ -409,7 +412,7 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))],
+                       arguments = arguments,
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
