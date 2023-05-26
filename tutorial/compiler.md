@@ -51,7 +51,7 @@ E.g.
 ```shell
 pyccel --compiler=PGI --language=c --export-compile-info=icc.json
 ```
-## Utilising Pyccel within a Conda Environment
+## Utilising Pyccel within Anaconda Environment
 While Anaconda is a popular way to install Python as it simplifies package management, it can introduce challenges when working with compilers.
 
 Upon installation Anaconda modifies your shell's environment variables.
