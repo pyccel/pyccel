@@ -7,7 +7,11 @@ For example in Fortran generated code there are often array arguments. These do 
 2.  The size(s) of the array in each dimension
 3.  The stride(s) between elements in each dimension
 
+When defining a slice in Python it is usual to pass a fourth parameter, namely the start of the slice. Internally NumPy simplifies these three integer quantities (`start`, `end`, `step`) into just a stride and a step this is why the start is not stored or passed as an argument.
+
 The wrapper stage takes the AST describing the generated code as an input and returns an AST which makes that code available to a target language (C or Python).
+
+It should be noted that when code is translated to Python, no wrapper is required.
 
 The entry point for the class `Wrapper` is the function `wrap`.
 
@@ -41,7 +45,7 @@ Scalar module variables are already accessible from C so no extra work is done h
 
 ### Array module variables
 
-Arrays are not compatible with C. Instead the wrapper prints a function which returns a pointer to the module variable as well as it's size information to make the information available from C.
+Arrays are not compatible with C. Instead the wrapper prints a function which returns a pointer to the module variable as well as its size information to make the information available from C.
 
 ### Functions
 
