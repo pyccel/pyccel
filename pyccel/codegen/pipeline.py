@@ -59,7 +59,7 @@ def execute_pyccel(fname, *,
                    is_conda_warnings_disabled = False,
                    is_conda_warnings_detailed = False):
     """
-    Pyccel internal.
+    Run Pyccel on the provided code.
 
     Carrie out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
