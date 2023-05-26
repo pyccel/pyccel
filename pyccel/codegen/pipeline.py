@@ -110,7 +110,7 @@ def execute_pyccel(fname, *,
         if verbose:
             print("Header file recognised, stopping after syntactic stage")
     if fname == "test.py":
-        raise ValueError("files called test can cause problems for some compilers and can't be imported from Python. see #issue: 1403")
+        raise ValueError("files called test can cause problems for some compilers and can't be imported from Python. See #1402")
     # Reset Errors singleton before parsing a new file
     errors = Errors()
     errors.reset()
