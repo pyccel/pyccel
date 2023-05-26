@@ -319,7 +319,7 @@ def test_conda_flag_verbose(language):
         epyccel(one, language='c', is_conda_warnings_detailed = True)
     if len(record1)>0:
         warn_message = record1[0].message
-        p = str(warn_message).split(":")[2].strip('\n')
+        p = str(warn_message).split(":")[2].strip()
         assert p in os.environ['PATH']
 
 #==============================================================================
