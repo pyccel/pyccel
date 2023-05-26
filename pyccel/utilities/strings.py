@@ -26,7 +26,7 @@ def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, na
         The prefix used to begin the string.
     counter : int
         The expected value of the next name.
-    name_clash_checker : LanguageNameClashChecker
+    name_clash_checker : pyccel.naming.languagenameclashchecker.LanguageNameClashChecker
         A class instance providing access to a `has_clash` function which determines
         if names clash in a given language.
 
