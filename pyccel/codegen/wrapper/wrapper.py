@@ -95,7 +95,7 @@ class Wrapper:
 
         Parameters
         ----------
-        expr : AST node
+        expr : pyccel.ast.basic.Basic
             The expression that should be wrapped.
 
         Returns
