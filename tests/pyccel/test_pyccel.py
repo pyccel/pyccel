@@ -7,6 +7,7 @@ import sys
 import re
 import pytest
 import numpy as np
+from pyccel.codegen.pipeline import execute_pyccel
 
 #==============================================================================
 # UTILITIES
@@ -995,3 +996,9 @@ def test_json():
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_file_named_test():
+    with pytest.raises(ValueError) as exc_info:
+        execute_pyccel(fname="test.py")
+    assert str(exc_info.value) == "files called test can cause problems for some compilers and can't be imported from Python. See #1402"
