@@ -43,7 +43,8 @@ class Wrapper:
         """
         return self._scope
 
-    def set_scope(self, scope):
+    @scope.setter
+    def scope(self, scope):
         """
         Change the current scope.
 

@@ -152,7 +152,7 @@ class FortranToCWrapper(Wrapper):
         # Define scope
         scope = expr.scope
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
-        self.set_scope(mod_scope)
+        self.scope = mod_scope
 
         # Wrap contents
         funcs_to_wrap = [f for f in expr.funcs if not f.is_private]
@@ -187,7 +187,7 @@ class FortranToCWrapper(Wrapper):
         name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
         self._wrapper_names_dict[expr.name] = name
         func_scope = self.scope.new_child_scope(name)
-        self.set_scope(func_scope)
+        self.scope = func_scope
 
         self._additional_exprs = []
 
