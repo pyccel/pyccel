@@ -61,7 +61,7 @@ def execute_pyccel(fname, *,
     """
     Run Pyccel on the provided code.
 
-    Carrie out the main steps required to execute pyccel
+    Carry out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
     - Generates the translated file(s) (codegen stage)
