@@ -59,7 +59,7 @@ def execute_pyccel(fname, *,
     """
     Pyccel internal.
 
-    Carrie out the main steps required to execute pyccel
+    Carry out the main steps required to execute pyccel
     - Parses the python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
     - Generates the translated file(s) (codegen stage)
@@ -109,7 +109,7 @@ def execute_pyccel(fname, *,
         syntax_only = True
         if verbose:
             print("Header file recognised, stopping after syntactic stage")
-    if fname == "test.py":
+    if os.path.basename(fname) == "test.py":
         raise ValueError("files called test can cause problems for some compilers and can't be imported from Python. see #issue: 1403")
     # Reset Errors singleton before parsing a new file
     errors = Errors()
