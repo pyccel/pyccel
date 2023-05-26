@@ -293,9 +293,10 @@ def epyccel( python_function_or_module, **kwargs ):
     object
         Accelerated function or module.
 
-    See Also
-    --------
-    epyccel_seq : The extenstion of this function.
+    See Also 
+    -------- 
+    epyccel_seq
+        The version of this function called in a sequential context.
 
     Examples
     --------
