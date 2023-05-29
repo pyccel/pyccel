@@ -3465,7 +3465,7 @@ class SemanticParser(BasicParser):
     def _visit_PythonPrint(self, expr, **settings):
         args = [self._visit(i, **settings) for i in expr.expr]
         for i, arg in enumerate(args):
-            if isinstance(arg.value, PyccelInternalFunction):
+            if hasattr(arg.value, 'rank') and arg.value.rank and not isinstance(arg.value, (Variable, PythonTuple, IndexedElement)):
                 new_symbol = PyccelSymbol(self.scope.get_new_name())
                 d_var = self._infer_type(arg.value, **settings)
                 new_expression = []
