@@ -2444,47 +2444,6 @@ class SemanticParser(BasicParser):
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
 
-        elif isinstance(rhs, DottedVariable):
-            var = rhs.rhs
-            name = _get_name(var)
-            macro = self.scope.find(name, 'macros')
-            if macro is None:
-                rhs = self._visit(rhs)
-            else:
-                master = macro.master
-                if isinstance(macro, MacroVariable):
-                    rhs = master
-                else:
-                    # If macro is function, create left-hand side variable
-                    if isinstance(master, FunctionDef) and master.results:
-                        d_var = self._infer_type(master.results[0].var)
-                        dtype = d_var.pop('datatype')
-                        lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
-                        var = self.check_for_variable(lhs.name)
-                        if var is None:
-                            self.scope.insert_variable(lhs)
-
-                    name = macro.name
-                    if not sympy_iterable(lhs):
-                        lhs = [lhs]
-                    results = []
-                    for a in lhs:
-                        _name = _get_name(a)
-                        var = self.get_variable(_name)
-                        results.append(var)
-
-                    args = rhs.rhs.args
-                    args = [rhs.lhs] + list(args)
-                    args = [self._visit(i) for i in args]
-
-                    args = macro.apply(args, results=results)
-
-                    # Distinguish between function
-                    if master.results:
-                        return Assign(lhs[0], FunctionCall(master, args, self._current_function))
-                    else:
-                        return FunctionCall(master, args, self._current_function)
-
         else:
             rhs = self._visit(rhs)
 
