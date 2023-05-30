@@ -10,10 +10,11 @@ import warnings
 
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
+from .languagenameclashchecker import LanguageNameClashChecker
 
-class FortranNameClashChecker(metaclass = Singleton):
+class FortranNameClashChecker(LanguageNameClashChecker):
     """
-    Class containing functions to help avoid problematic names in C.
+    Class containing functions to help avoid problematic names in Fortran.
 
     A class which provides functionalities to check or propose variable names and
     verify that they do not cause name clashes. Name clashes may be due to
@@ -56,21 +57,31 @@ class FortranNameClashChecker(metaclass = Singleton):
                any(name == s.lower() for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
-        """ Get the name that will be used in the fortran code
+        """
+        Get a valid name which doesn't collision with symbols or Fortran keywords.
+
+        Find a new name based on the suggested name which will not cause
+        conflicts with Fortran keywords, does not conflict with the provided symbols,
+        and is a valid name in Fortran code.
+
+        Parameters
+        ----------
+        name : str
+            The suggested name.
+        symbols : set
+            Symbols which should be considered as collisions.
+
+        Returns
+        -------
+        str
+            A new name which is collision free.
         """
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             # Ignore magic methods
             return name
         if name[0] == '_':
             name = 'private'+name
-        prefix = name.lower()
-        coll_symbols = self.keywords.copy()
-        coll_symbols.update(s.lower() for s in symbols)
-        if prefix in coll_symbols:
-            counter = 1
-            new_name, counter = create_incremented_string(coll_symbols,
-                    prefix = prefix, counter = counter)
-            name = name+new_name[-5:]
+        name = self._get_collisionless_name(name, symbols)
         if len(name) > 96:
             warnings.warn("Name {} is too long for Fortran. This may cause compiler errors".format(name))
         return name
