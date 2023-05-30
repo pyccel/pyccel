@@ -7,7 +7,7 @@ For example in Fortran generated code there are often array arguments. These do 
 2.  The size(s) of the array in each dimension
 3.  The stride(s) between elements in each dimension
 
-When defining a slice in Python it is usual to pass a fourth parameter, namely the start of the slice. Internally NumPy simplifies these three integer quantities (`start`, `end`, `step`) into just a stride and a step this is why the start is not stored or passed as an argument.
+When defining a slice in Python it is usual to pass a fourth parameter, namely the start of the slice. Internally NumPy simplifies these three integer quantities (`start`, `end`, `step`) into just a stride and a step. This is why the start is not stored or passed as an argument.
 
 The wrapper stage takes the AST describing the generated code as an input and returns an AST which makes that code available to a target language (C or Python).
 
