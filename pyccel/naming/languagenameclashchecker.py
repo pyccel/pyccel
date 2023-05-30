@@ -42,6 +42,6 @@ class LanguageNameClashChecker(metaclass = Singleton):
         coll_symbols.update(s.lower() for s in symbols)
         if name in coll_symbols:
             counter = 1
-            new_name, counter = create_incremented_string(coll_symbols,
+            name, counter = create_incremented_string(coll_symbols,
                     prefix = name, counter = counter, name_clash_checker = self)
         return name
