@@ -41,7 +41,7 @@ class FortranToCWrapper(Wrapper):
 
         Get the body of the bind c function definition by inserting if blocks
         to check the presence of optional variables. Once we have ascertained
-        the prescence of the variables the original function is called. This
+        the presence of the variables the original function is called. This
         code slices array variables to ensure the correct step.
 
         Parameters
@@ -66,7 +66,7 @@ class FortranToCWrapper(Wrapper):
         Returns
         -------
         list
-                A list of Basic nodes describing the body of the function.
+            A list of Basic nodes describing the body of the function.
         """
         optional = next((a for a in func_def_args if a.original_function_argument_variable.is_optional and a not in handled), None)
         if optional:
@@ -114,7 +114,7 @@ class FortranToCWrapper(Wrapper):
         The FunctionDefArgument passed to the function may contain additional
         information which should not be passed to the function being wrapped
         (e.g. an array with strides should not pass the strides explicitly to
-        the function call, and nor should it pass the entire contiguous array).
+        the function call, nor should it pass the entire contiguous array).
         This function extracts the necessary information and returns the object
         which can be passed to the function call.
 
@@ -242,7 +242,7 @@ class FortranToCWrapper(Wrapper):
         var = expr.var
         name = var.name
         scope = self.scope
-        # Make name availiable for later
+        # Make name available for later
         scope.insert_symbol(name)
         local_var = var.clone(scope.get_expected_name(name))
 
