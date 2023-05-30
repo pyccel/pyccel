@@ -7,6 +7,7 @@
 Module describing the base code-wrapping class : Wrapper.
 """
 
+from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
 
@@ -55,7 +56,7 @@ class Wrapper:
         scope : pyccel.parser.scope.Scope
             The new scope.
         """
-        assert scope is not None
+        assert isinstance(scope, Scope)
         self._scope = scope
 
     def exit_scope(self):
