@@ -83,8 +83,8 @@ class FortranToCWrapper(Wrapper):
             args = [FunctionCallArgument(func_arg_to_call_arg[fa],
                                          keyword = fa.original_function_argument_variable.name)
                     for fa in func_def_args]
-            size = [fa.sizes[::-1] if fa.original_function_argument_variable.order == 'C' else
-                    fa.sizes for fa in func_def_args]
+            size = [fa.shape[::-1] if fa.original_function_argument_variable.order == 'C' else
+                    fa.shape for fa in func_def_args]
             stride = [fa.strides[::-1] if fa.original_function_argument_variable.order == 'C' else
                       fa.strides for fa in func_def_args]
             orig_size = [[PyccelMul(l,s) for l,s in zip(sz, st)] for sz,st in zip(size,stride)]
@@ -259,7 +259,7 @@ class FortranToCWrapper(Wrapper):
             result = BindCFunctionDefResult(bind_var, var, scope)
 
             # Save the shapes of the array
-            self._additional_exprs.extend([Assign(result.sizes[i], var.shape[i]) for i in range(var.rank)])
+            self._additional_exprs.extend([Assign(result.shape[i], var.shape[i]) for i in range(var.rank)])
 
             # Create a C-compatible array variable
             ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
@@ -295,7 +295,7 @@ class FortranToCWrapper(Wrapper):
             func_scope.insert_variable(bind_var)
 
             result = BindCFunctionDefResult(bind_var, expr, func_scope)
-            assigns = [Assign(result.sizes[i], expr.shape[i]) for i in range(expr.rank)]
+            assigns = [Assign(result.shape[i], expr.shape[i]) for i in range(expr.rank)]
             c_loc = CLocFunc(expr, bind_var)
             body = [*assigns, c_loc]
             func = BindCFunctionDef(name = func_name,

@@ -41,7 +41,7 @@ class BindCFunctionDef(FunctionDef):
         See FunctionDef.
 
     original_function : FunctionDef
-        The function from which the c-compatible version was created.
+        The function from which the C-compatible version was created.
 
     **kwargs : dict
         See FunctionDef.
@@ -150,20 +150,20 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         The class from which BindCFunctionDefArgument inherits which
         contains all details about the args and kwargs.
     """
-    __slots__ = ('_sizes', '_strides', '_original_arg_var', '_rank')
+    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
-                        ('_sizes', '_strides', '_original_arg_var')
+                        ('_shape', '_strides', '_original_arg_var')
 
     def __init__(self, var, scope, original_arg_var, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
-        sizes   = [scope.get_temporary_variable(NativeInteger(),
+        shape   = [scope.get_temporary_variable(NativeInteger(),
                             name=f'{name}_shape_{i+1}')
                    for i in range(self._rank)]
         strides = [scope.get_temporary_variable(NativeInteger(),
                             name=f'{name}_stride_{i+1}')
                    for i in range(self._rank)]
-        self._sizes = sizes
+        self._shape = shape
         self._strides = strides
         self._original_arg_var = original_arg_var
         super().__init__(var, **kwargs)
@@ -180,16 +180,16 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         return self._original_arg_var
 
     @property
-    def sizes(self):
+    def shape(self):
         """
-        The sizes of the array argument in each dimension.
+        The shape of the array argument in each dimension.
 
         A tuple containing the variables which describe the number of
         elements along each dimension of an array argument. These values
         must be passed to any C-compatible function taking an array as an
         argument.
         """
-        return self._sizes
+        return self._shape
 
     @property
     def strides(self):
@@ -217,7 +217,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
             A list of FunctionDefArguments which will be arguments of a BindCFunctionDef.
         """
         args = [self]
-        args += [FunctionDefArgument(size) for size in self.sizes]
+        args += [FunctionDefArgument(size) for size in self.shape]
         args += [FunctionDefArgument(stride) for stride in self.strides]
         return args
 
@@ -279,13 +279,13 @@ class BindCFunctionDefResult(FunctionDefResult):
         The class from which BindCFunctionDefResult inherits which
         contains all details about the args and kwargs.
     """
-    __slots__ = ('_sizes', '_original_res_var')
+    __slots__ = ('_shape', '_original_res_var')
     _attribute_nodes = FunctionDefResult._attribute_nodes + \
-                        ('_var', '_sizes', '_original_res_var')
+                        ('_shape', '_original_res_var')
 
     def __init__(self, var, original_res_var, scope, **kwargs):
         name = original_res_var.name
-        self._sizes   = [scope.get_temporary_variable(NativeInteger(),
+        self._shape   = [scope.get_temporary_variable(NativeInteger(),
                             name=f'{name}_shape_{i+1}')
                          for i in range(original_res_var._rank)]
         self._original_res_var = original_res_var
@@ -303,15 +303,15 @@ class BindCFunctionDefResult(FunctionDefResult):
         return self._original_res_var
 
     @property
-    def sizes(self):
+    def shape(self):
         """
-        The sizes of the array result in each dimension.
+        The shape of the array result in each dimension.
 
         A tuple containing the variables which describe the number of
         elements along each dimension of an array result. These values
         must be returned by any C-compatible function returning an array.
         """
-        return self._sizes
+        return self._shape
 
     def get_all_function_def_results(self):
         """
@@ -328,7 +328,7 @@ class BindCFunctionDefResult(FunctionDefResult):
             A list of FunctionDefResults which will be results of a BindCFunctionDef.
         """
         res = [self]
-        res += [FunctionDefResult(size) for size in self.sizes]
+        res += [FunctionDefResult(size) for size in self.shape]
         return res
 
 # =======================================================================================
@@ -462,16 +462,16 @@ class C_F_Pointer(Basic):
     f_expr : Variable
         The Variable containing the resulting array.
 
-    sizes : list of Variables
+    shape : list of Variables
         A list describing the Variables which dictate the size of the array in each dimension.
     """
-    __slots__ = ('_c_expr', '_f_expr', '_sizes')
-    _attribute_nodes = ('_c_expr', '_f_expr', '_sizes')
+    __slots__ = ('_c_expr', '_f_expr', '_shape')
+    _attribute_nodes = ('_c_expr', '_f_expr', '_shape')
 
-    def __init__(self, c_expr, f_expr, sizes = ()):
+    def __init__(self, c_expr, f_expr, shape = ()):
         self._c_expr = c_expr
         self._f_expr = f_expr
-        self._sizes = sizes
+        self._shape = shape
         super().__init__()
 
     @property
@@ -493,11 +493,11 @@ class C_F_Pointer(Basic):
         return self._f_expr
 
     @property
-    def sizes(self):
+    def shape(self):
         """
         A list of the sizes of the array in each dimension.
 
         A list describing the Variables which are passed as arguments, in order to
         determine the size of the array in each dimension.
         """
-        return self._sizes
+        return self._shape

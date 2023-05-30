@@ -3071,9 +3071,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_C_F_Pointer(self, expr):
         self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
-        sizes = ','.join(self._print(s) for s in expr.sizes)
-        if sizes:
-            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{sizes}])\n'
+        shape = ','.join(self._print(s) for s in expr.shape)
+        if shape:
+            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
         else:
             return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)})\n'
 

@@ -443,17 +443,17 @@ class CWrapperCodePrinter(CCodePrinter):
         body = []
         var_name = self.scope.get_expected_name(result.var.name)
 
-        if isinstance(result, BindCFunctionDefResult) and result.sizes:
-            sizes = [self.scope.get_temporary_variable(s) for s in result.sizes]
+        if isinstance(result, BindCFunctionDefResult) and result.shape:
+            shape = [self.scope.get_temporary_variable(s) for s in result.shape]
             orig_name = result.original_function_result_variable.name
             orig_var = self.scope.find(self.scope.get_expected_name(orig_name), category='variables')
             nd_var = self.scope.find(var_name, category='variables')
-            body.append(Allocate(orig_var, shape = sizes, order = orig_var.order,
+            body.append(Allocate(orig_var, shape = shape, order = orig_var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
                 lhs=orig_var), nd_var))
 
-            static_results = [ObjectAddress(nd_var), *sizes]
+            static_results = [ObjectAddress(nd_var), *shape]
 
         else:
             var = self.scope.find(var_name, category='variables')
@@ -950,13 +950,13 @@ class CWrapperCodePrinter(CCodePrinter):
                             name = v.name,
                             memory_handling = 'alias',
                             rank = 0, shape = None, order = None)
-                    # Create variables to store sizes of array
-                    sizes = [scope.get_temporary_variable(NativeInteger(),
+                    # Create variables to store the shape of the array
+                    shape = [scope.get_temporary_variable(NativeInteger(),
                             v.name+'_size') for _ in range(v.rank)]
                     # Get the bind_c function which wraps a fortran array and returns c objects
                     var_wrapper = wrapper_funcs[v]
                     # Call bind_c function
-                    call = Assign(PythonTuple(ObjectAddress(var), *sizes), FunctionCall(var_wrapper, ()))
+                    call = Assign(PythonTuple(ObjectAddress(var), *shape), FunctionCall(var_wrapper, ()))
                     body.append(call)
 
                     # Create ndarray to store array data
@@ -964,7 +964,7 @@ class CWrapperCodePrinter(CCodePrinter):
                             name = v.name,
                             memory_handling = 'alias'
                             )
-                    alloc = Allocate(nd_var, shape=sizes, order=nd_var.order, status='unallocated')
+                    alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
                     body.append(alloc)
                     # Save raw_data into ndarray to obtain useable pointer
                     set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
@@ -1108,7 +1108,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     v = var.clone(self.scope.get_expected_name(name))
                 result_vars.append(v)
                 self.scope.insert_variable(v)
-                if isinstance(r, BindCFunctionDefResult) and r.sizes:
+                if isinstance(r, BindCFunctionDefResult) and r.shape:
                     original_var = r.original_function_result_variable
                     original_name = original_var.name
                     self.scope.insert_symbol(original_name)
@@ -1429,7 +1429,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 v = var.clone(self.scope.get_expected_name(name))
             result_vars.append(v)
             self.scope.insert_variable(v)
-            if isinstance(r, BindCFunctionDefResult) and r.sizes:
+            if isinstance(r, BindCFunctionDefResult) and r.shape:
                 original_var = r.original_function_result_variable
                 original_name = original_var.name
                 self.scope.insert_symbol(original_name)
