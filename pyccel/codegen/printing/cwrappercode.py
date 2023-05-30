@@ -131,7 +131,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Get the name of object as defined in the original python code.
 
         Get the name of the object as it was originally defined in the
-        python code being translated. This name may have changed before
+        Python code being translated. This name may have changed before
         the printing stage in the case of name clashes or language interfaces.
 
         Parameters
@@ -340,7 +340,7 @@ class CWrapperCodePrinter(CCodePrinter):
         Returns
         -------
         List of arguments
-            List that can contains Variables and FunctionCalls.
+            List that can contain Variables and FunctionCalls.
 
         Examples
         --------
@@ -467,7 +467,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Get the function call which calls the underlying translated function
         being wrapped. This may involve creating new variables in order to
-        call the funciton in a compatible way.
+        call the function in a compatible way.
 
         Parameters
         ----------
