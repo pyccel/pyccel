@@ -2408,7 +2408,7 @@ class FCodePrinter(CodePrinter):
 
         Print the code which checks if x is not None. This means different
         things depending on the type of `x`. If `x` is optional it checks
-        if it is present, if `x` is a c pointer it checks if it points at
+        if it is present, if `x` is a C pointer it checks if it points at
         anything.
 
         Parameters
