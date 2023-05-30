@@ -15,6 +15,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.core import AsName, Module, AliasAssign
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
@@ -278,7 +279,29 @@ class FortranToCWrapper(Wrapper):
             return BindCFunctionDefResult(local_var, var, scope)
 
     def _wrap_Variable(self, expr):
-        if expr.rank == 0:
+        """
+        Create all objects necessary to expose a module variable to C.
+
+        Create and return the objects which must be printed in the wrapping
+        module in order to expose the variable to C. In the case of scalar
+        numerical values nothing needs to be done so an EmptyNode is returned.
+        In the case of numerical arrays a C-compatible function must be created
+        which returns the array. This is necessary because built-in Fortran
+        arrays are not C-compatible. In the case of classes a C-compatible
+        function is also created which returns a pointer to the class object.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.variables.Variable
+            The module variable.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The AST object describing the code which must be printed in
+            the wrapping module to expose the variable.
+        """
+        if expr.rank == 0 and expr.dtype in NativeNumeric:
             return EmptyNode()
         else:
             scope = self.scope
@@ -295,8 +318,13 @@ class FortranToCWrapper(Wrapper):
             func_scope.insert_variable(bind_var)
 
             result = BindCFunctionDefResult(bind_var, expr, func_scope)
-            assigns = [Assign(result.shape[i], expr.shape[i]) for i in range(expr.rank)]
-            c_loc = CLocFunc(expr, bind_var)
+            if expr.rank == 0:
+                #assigns = []
+                #c_loc = CLocFunc(expr, bind_var)
+                raise NotImplementedError("Classes cannot be wrapped")
+            else:
+                assigns = [Assign(result.shape[i], expr.shape[i]) for i in range(expr.rank)]
+                c_loc = CLocFunc(expr, bind_var)
             body = [*assigns, c_loc]
             func = BindCFunctionDef(name = func_name,
                           body      = body,
