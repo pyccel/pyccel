@@ -9,7 +9,12 @@ Handles name clash problems in C
 from .languagenameclashchecker import LanguageNameClashChecker
 
 class CNameClashChecker(LanguageNameClashChecker):
-    """ Class containing functions to help avoid problematic names in C
+    """
+    Class containing functions to help avoid problematic names in C.
+
+    A class which provides functionalities to check or propose variable names and
+    verify that they do not cause name clashes. Name clashes may be due to
+    new variables, or due to the use of reserved keywords.
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',

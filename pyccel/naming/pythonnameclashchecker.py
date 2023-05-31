@@ -9,7 +9,12 @@ Handles name clash problems in Python
 from .languagenameclashchecker import LanguageNameClashChecker
 
 class PythonNameClashChecker(LanguageNameClashChecker):
-    """ Class containing functions to help avoid problematic names in Python
+    """
+    Class containing functions to help avoid problematic names in Python.
+
+    A class which provides functionalities to check or propose variable names and
+    verify that they do not cause name clashes. Name clashes may arise when
+    generating names for new variables.
     """
     keywords = set()
 
