@@ -198,7 +198,7 @@ class FortranToCWrapper(Wrapper):
 
         Create a function which can be called from C which internally calls the original
         function. It does this by wrapping the arguments and the results and unrolling
-        the body using self._get_function_def_body to enssure optional arguments are
+        the body using self._get_function_def_body to ensure optional arguments are
         present before accessing them. With all this information a BindCFunctionDef is
         created which is C-compatible.
 
@@ -254,7 +254,6 @@ class FortranToCWrapper(Wrapper):
     def _wrap_Interface(self, expr):
         """
         Create an interface containing only C-compatible functions.
-
 
         Create an interface containing only functions which can be called from C
         from an interface which is not necessarily C-compatible.
