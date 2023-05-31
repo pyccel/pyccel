@@ -108,7 +108,7 @@ class FortranToCWrapper(Wrapper):
                         Assign(results, FunctionCall(func, args))
             return body + [func_call]
 
-    def _get_call_argument(self, original_arg, bind_c_arg):
+    def _get_call_argument(self, bind_c_arg):
         """
         Get the argument which should be passed to the function call.
 
@@ -121,9 +121,6 @@ class FortranToCWrapper(Wrapper):
 
         Parameters
         ----------
-        original_arg : Variable
-            The argument to the function being wrapped.
-
         bind_c_arg : BindCFunctionDefArgument
             The argument to the wrapped bind_c_X function.
 
@@ -133,21 +130,15 @@ class FortranToCWrapper(Wrapper):
             An object which can be passed to a function call of the function
             being wrapped.
         """
+        original_arg = bind_c_arg.original_function_argument_variable
+        arg_var = self.scope.find(original_arg.name, category='variables')
         if original_arg.is_ndarray:
-            new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_argument = False, is_optional = False,
-                                memory_handling = 'alias', allows_negative_indexes=False)
-            self.scope.insert_variable(new_var)
             start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
             stop = None
             indexes = [Slice(start, stop, step) for step in bind_c_arg.strides]
-            return IndexedElement(new_var, *indexes)
-        elif original_arg.is_optional:
-            new_var = original_arg.clone(self.scope.get_new_name(original_arg.name), is_optional = False,
-                    memory_handling = 'alias')
-            self.scope.insert_variable(new_var)
-            return new_var
+            return IndexedElement(arg_var, *indexes)
         else:
-            return bind_c_arg.var
+            return arg_var
 
     def _wrap_Module(self, expr):
         """
@@ -202,8 +193,32 @@ class FortranToCWrapper(Wrapper):
                 scope = mod_scope)
 
     def _wrap_FunctionDef(self, expr):
+        """
+        Create a C-compatible function which executes the original function.
+
+        Create a function which can be called from C which internally calls the original
+        function. It does this by wrapping the arguments and the results and unrolling
+        the body using self._get_function_def_body to enssure optional arguments are
+        present before accessing them. With all this information a BindCFunctionDef is
+        created which is C-compatible.
+
+        Functions which cannot be wrapped raise a warning and return an EmptyNode. This
+        is the case for functions with functions as arguments.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function to wrap.
+
+        Returns
+        -------
+        BindCFunctionDef
+            The C-compatible function.
+        """
         name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
         self._wrapper_names_dict[expr.name] = name
+
+        # Create the scope
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
 
@@ -213,9 +228,9 @@ class FortranToCWrapper(Wrapper):
             warnings.warn("Functions with functions as arguments cannot be wrapped by pyccel")
             return EmptyNode()
 
+        # Wrap the arguments and collect the expressions passed as the call argument.
         func_arguments = [self._wrap(a) for a in expr.arguments]
-        original_arguments = [a.var for a in expr.arguments]
-        call_arguments = [self._get_call_argument(oa, fa) for oa, fa in zip(original_arguments, func_arguments)]
+        call_arguments = [self._get_call_argument(fa) for fa in func_arguments]
         func_to_call = {fa : ca for ca, fa in zip(call_arguments, func_arguments)}
 
         func_results = [self._wrap_FunctionDefResult(r) for r in expr.results]
@@ -259,13 +274,49 @@ class FortranToCWrapper(Wrapper):
         return Interface(expr.name, functions, expr.is_argument)
 
     def _wrap_FunctionDefArgument(self, expr):
-        name = expr.name
-        self.scope.insert_symbol(name)
+        """
+        Create the equivalent BindCFunctionDefArgument for a C-compatible function.
+
+        Take a FunctionDefArgument and create a BindCFunctionDefArgument describing
+        all the information that should be passed to the C-compatible function in order
+        to be able to create the argument described by `expr`.
+
+        In the case of a scalar numerical the function simply creates a copy of the
+        variable described by the function argument in the local scope.
+
+        In the case of an array, C cannot represent the array natively. Rather it is
+        stored in a pointer. This function therefore creates a variable to represent
+        that pointer. Additionally information about the shape and strides of the array
+        are necessary, however these objects are created by the `BindCFunctionDefArgument`
+        class.
+
+        The objects which describe the argument passed to the `expr` argument of the
+        original function are also created here. However the expressions necessary to
+        collect the information from the BindCFunctionDefArgument in order to create
+        these objects are left for later. This is done to ensure that optionals are
+        handled locally to the function call. This ensures that we do not duplicate if
+        conditions.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument to be wrapped.
+
+        Returns
+        -------
+        BindCFunctionDefArgument
+            The C-compatible argument.
+        """
         var = expr.var
+        name = var.name
+        self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
         if var.is_ndarray or var.is_optional:
-            new_var = Variable(BindCPointer(), self.scope.get_new_name(collisionless_name),
+            new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
+            arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
+                                memory_handling = 'alias', allows_negative_indexes=False)
+            self.scope.insert_variable(arg_var)
         else:
             new_var = var.clone(collisionless_name)
         self.scope.insert_variable(new_var)
@@ -274,6 +325,37 @@ class FortranToCWrapper(Wrapper):
                 kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
 
     def _wrap_FunctionDefResult(self, expr):
+        """
+        Create the equivalent BindCFunctionDefResult for a C-compatible function.
+
+        Take a FunctionDefResult and create a BindCFunctionDefResult describing
+        all the information that should be returned from the C-compatible function
+        in order to fully describe the result `expr`. This function also adds any
+        expressions necessary to build the C-compatible return value to
+        `self._additional_exprs`.
+
+        In the case of a scalar numerical the function simply creates a local version
+        of the variable described by the function result and returns the
+        BindCFunctionDefResult.
+
+        In the case of an array, C cannot represent the array natively. Rather it is
+        stored in a pointer. This function therefore creates a variable to represent
+        that pointer. Additionally information about the shape and strides of the array
+        are necessary. These objects are created by the `BindCFunctionDefResult`
+        class. The assignment expressions which define the shapes and strides are
+        then stored in `self._additional_exprs` along with the allocation of the
+        pointer.
+
+        Parameters
+        ----------
+        expr : FunctionDefResult
+            The result to be wrapped.
+
+        Returns
+        -------
+        BindCFunctionDefResult
+            The C-compatible result.
+        """
         var = expr.var
         name = var.name
         scope = self.scope
@@ -285,7 +367,7 @@ class FortranToCWrapper(Wrapper):
             # Allocatable is not returned so it must appear in local scope
             scope.insert_variable(local_var, name)
 
-            # Create the data pointer
+            # Create the C-compatible data pointer
             bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name),
                                 is_const=True, memory_handling='alias')
@@ -296,13 +378,13 @@ class FortranToCWrapper(Wrapper):
             # Save the shapes of the array
             self._additional_exprs.extend([Assign(result.shape[i], var.shape[i]) for i in range(var.rank)])
 
-            # Create a C-compatible array variable
+            # Create an array variable which can be passed to CLocFunc
             ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
                                 memory_handling='alias')
             scope.insert_variable(ptr_var)
 
             # Define the additional steps necessary to define and fill ptr_var
-            alloc = Allocate(ptr_var, shape=var.shape,
+            alloc = Allocate(ptr_var, shape=result.shape,
                              order=var.order, status='unallocated')
             copy = Assign(ptr_var, var)
             c_loc = CLocFunc(ptr_var, bind_var)
