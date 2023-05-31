@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1302 : Raise error message in case of empty class
--   #1407 : Raise an error if file is named ``test.py``
+-   #1407 : Raise an error if file name matches a Python package module.
 
 ### Changed
 -   #1355 : Remove unused `BasicParser` arguments.
