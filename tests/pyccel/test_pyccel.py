@@ -1001,4 +1001,4 @@ def test_json():
 def test_file_named_test():
     with pytest.raises(ValueError) as exc_info:
         execute_pyccel(fname="test.py")
-    assert str(exc_info.value) == "files called test can cause problems for some compilers and can't be imported from Python. See #1402"
+    assert str(exc_info.value) == "File called test.py has the same name as a python built-in package and can't be imported from Python. See #1402"
