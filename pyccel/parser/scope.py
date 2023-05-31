@@ -22,14 +22,33 @@ from pyccel.utilities.strings import create_incremented_string
 errors = Errors()
 
 class Scope(object):
-    """ Class representing all objects defined within a given
-    scope
+    """
+    Class representing all objects defined within a given scope.
+
+    This class provides all necessary functionalities for creating new object
+    names without causing name clashes. It also stores all objects defined
+    within the scope. This allows us to search for variables only in relevant
+    scopes.
 
     Parameters
     ----------
-    decorators : dict
-                 A dictionary of any decorators which operate on
-                 objects in this scope
+    decorators : dict, default: ()
+        A dictionary of any decorators which operate on objects in this scope.
+
+    is_loop : bool, default: False
+        Indicates if the scope represents a loop (in Python variables declared
+        in loops are not scoped to the loop).
+
+    parent_scope : Scope, default: None
+        The enclosing scope.
+
+    used_symbols : set, default: None
+        A set of all the names which we know will appear in the scope and which
+        we therefore want to avoid when creating new names.
+
+    original_symbols : dict, default: None
+        A dictionary which maps names used in the code to the original name used
+        in the Python code.
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
@@ -42,7 +61,7 @@ class Scope(object):
             'macros','templates','headers','decorators',
             'cls_constructs')
 
-    def __init__(self, *, decorators=None, is_loop = False,
+    def __init__(self, *, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
                     original_symbols = None):
 
@@ -60,8 +79,7 @@ class Scope(object):
 
         self._dummy_counter = 0
 
-        if decorators:
-            self._locals['decorators'].update(decorators)
+        self._locals['decorators'].update(decorators)
 
         # TODO use another name for headers
         #      => reserved keyword, or use __
@@ -407,18 +425,27 @@ class Scope(object):
 
     def get_new_incremented_symbol(self, prefix, counter):
         """
-        Creates a new name by adding a numbered suffix to the provided prefix.
+        Create a new name by adding a numbered suffix to the provided prefix.
 
-          Parameters
-          ----------
-          prefix : str
+        Create a new name which does not clash with any existing names by
+        adding a numbered suffix to the provided prefix.
 
-          Returns
-          -------
-          new_name     : str
+        Parameters
+        ----------
+        prefix : str
+            The prefix from which the new name will be created.
+
+        counter : int
+            The starting point for the incrementation.
+
+        Returns
+        -------
+        pyccel.ast.internals.PyccelSymbol
+            The newly created name.
         """
 
-        new_name, counter = create_incremented_string(self.local_used_symbols.values(), prefix = prefix)
+        new_name, counter = create_incremented_string(self.local_used_symbols.values(),
+                                    prefix = prefix, counter = counter, name_clash_checker = self.name_clash_checker)
 
         new_symbol = PyccelSymbol(new_name, is_temp=True)
 
@@ -428,20 +455,24 @@ class Scope(object):
 
     def get_new_name(self, current_name = None):
         """
+        Get a new name which does not clash with any names in the current context.
+
         Creates a new name. A current_name can be provided indicating the name the
         user would like to use if possible. If this name is not available then it
         will be used as a prefix for the new name.
         If no current_name is provided, then the standard prefix is used, and the
         dummy counter is used and updated to facilitate finding the next value of
-        this common case
+        this common case.
 
-          Parameters
-          ----------
-          current_name : str
+        Parameters
+        ----------
+        current_name : str, default: None
+            The name the user would like to use if possible.
 
-          Returns
-          -------
-          new_name     : PyccelSymbol
+        Returns
+        -------
+        PyccelSymbol
+            The new name which will be printed in the code.
         """
         if current_name is not None and not self.name_clash_checker.has_clash(current_name, self.all_used_symbols):
             new_name = PyccelSymbol(current_name)
@@ -452,13 +483,13 @@ class Scope(object):
             # Avoid confusing names by also searching in parent scopes
             new_name, self._dummy_counter = create_incremented_string(self.all_used_symbols,
                                                 prefix = current_name,
-                                                counter = self._dummy_counter)
+                                                counter = self._dummy_counter,
+                                                name_clash_checker = self.name_clash_checker)
         else:
             # When a name is suggested, try to stick to it
             new_name,_ = create_incremented_string(self.all_used_symbols, prefix = current_name)
 
         new_name = PyccelSymbol(new_name, is_temp = True)
-
         self.insert_symbol(new_name)
 
         return new_name

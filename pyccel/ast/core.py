@@ -1232,10 +1232,12 @@ class Module(ScopedNode):
 
         if init_func:
             init_if = init_func.body.body[0]
-            init_cond = init_if.blocks[0].condition
-            init_var = init_cond.args[0]
-            self._variables.append(init_var)
-            self._variable_inits.append(LiteralFalse())
+            # The init function should always contain an If block unless it is part of a wrapper
+            if isinstance(init_if, If):
+                init_cond = init_if.blocks[0].condition
+                init_var = init_cond.args[0]
+                self._variables.append(init_var)
+                self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
