@@ -46,16 +46,6 @@ class Wrapper:
 
     @scope.setter
     def scope(self, scope):
-        """
-        Change the current scope.
-
-        Set the current scope to the scope passed as an argument.
-
-        Parameters
-        ----------
-        scope : pyccel.parser.scope.Scope
-            The new scope.
-        """
         assert isinstance(scope, Scope)
         self._scope = scope
 
