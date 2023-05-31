@@ -8,7 +8,6 @@ Handles name clash problems in Fortran.
 """
 import warnings
 
-from pyccel.utilities.strings import create_incremented_string
 from .languagenameclashchecker import LanguageNameClashChecker
 
 class FortranNameClashChecker(LanguageNameClashChecker):
