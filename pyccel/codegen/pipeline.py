@@ -10,6 +10,7 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
+from pathlib import Path
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
@@ -22,6 +23,7 @@ from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
+from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
@@ -109,8 +111,10 @@ def execute_pyccel(fname, *,
         syntax_only = True
         if verbose:
             print("Header file recognised, stopping after syntactic stage")
-    if os.path.basename(fname) == "test.py":
-        raise ValueError("files called test can cause problems for some compilers and can't be imported from Python. See #1402")
+
+    if Path(fname).stem in python_builtin_libs:
+        raise ValueError("File called {} have same name as python built-in package and can cause problems for some compilers and can't be imported from Python. See #1402".format(os.path.basename(fname)))
+
     # Reset Errors singleton before parsing a new file
     errors = Errors()
     errors.reset()
