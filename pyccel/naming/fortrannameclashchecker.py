@@ -56,7 +56,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
 
     def get_collisionless_name(self, name, symbols):
         """
-        Get a valid name which doesn't collision with symbols or Fortran keywords.
+        Get a valid name which doesn't collide with symbols or Fortran keywords.
 
         Find a new name based on the suggested name which will not cause
         conflicts with Fortran keywords, does not conflict with the provided symbols,
