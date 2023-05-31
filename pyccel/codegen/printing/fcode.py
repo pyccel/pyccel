@@ -15,7 +15,7 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.bind_c import BindCPointer
+from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -458,11 +458,15 @@ class FCodePrinter(CodePrinter):
         # ...
         sep = self._print(SeparatorComment(40))
         interfaces = ''
-        if expr.interfaces:
+        if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
+        func_strings = []
         if expr.funcs:
-            body += '\n'.join(''.join([sep, self._print(i), sep]) for i in expr.funcs)
+            func_strings = [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+        if isinstance(expr, BindCModule):
+            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
+        body += '\n'.join(func_strings)
         # ...
 
         # ...
@@ -1349,17 +1353,18 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
+        expr_dtype = expr.dtype
         rank            = var.rank
         shape           = var.alloc_shape
-        is_target       = var.is_target
         is_const        = var.is_const
         is_optional     = var.is_optional
         is_private      = var.is_private
-        is_alias        = var.is_alias
+        is_alias        = var.is_alias and not isinstance(expr_dtype, BindCPointer)
         on_heap         = var.on_heap
         on_stack        = var.on_stack
         is_static       = expr.static
         is_external     = expr.external
+        is_target       = var.is_target and not var.is_alias
         intent          = expr.intent
         intent_in = intent and intent != 'out'
 
@@ -1369,13 +1374,11 @@ class FCodePrinter(CodePrinter):
 
         # ... print datatype
         if isinstance(expr.dtype, CustomDataType):
-            dtype = expr.dtype
+            name   = expr_dtype.__class__.__name__
+            prefix = expr_dtype.prefix
+            alias  = expr_dtype.alias
 
-            name   = dtype.__class__.__name__
-            prefix = dtype.prefix
-            alias  = dtype.alias
-
-            if dtype.is_polymorphic or expr.passed_from_dotted:
+            if expr_dtype.is_polymorphic or expr.passed_from_dotted:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1384,9 +1387,8 @@ class FCodePrinter(CodePrinter):
                 name = name.replace(prefix, '')
             else:
                 name = alias
-            dtype = '{0}({1})'.format(sig, name)
+            dtype = f'{sig}({name})'
         else:
-            expr_dtype = expr.dtype
             dtype = self._print(expr_dtype)
 
         # ...
@@ -1799,78 +1801,6 @@ class FCodePrinter(CodePrinter):
                  '{body}\n'
                 'end Block {name}\n').format(name=expr.name, prelude=prelude, body=body_code)
 
-    def _print_BindCFunctionDef(self, expr):
-        name = self._print(expr.name)
-        results = [r.var for r in expr.results]
-
-        self.set_scope(expr.scope)
-        self.scope.functions[expr.name] = expr
-
-        body = self._print(expr.body)
-
-        decs = OrderedDict()
-        for arg in expr.arguments:
-            if arg.inout:
-                intent='inout'
-            else:
-                intent='in'
-
-            arg_var = arg.var
-
-            if isinstance(arg_var, FunctionAddress):
-                # Functions with function addresses as arguments cannot be
-                # exposed to python so there is no need to print their signature
-                return ''
-
-            dec = Declare(arg_var.dtype, arg_var, intent=intent , static=True)
-            decs[arg_var] = dec
-
-        arguments = [a.var for a in expr.arguments]
-
-        for result in results:
-            dec = Declare(result.dtype, result, intent='out', static=True)
-            decs[result] = dec
-
-        decs.update(self._get_external_declarations())
-
-        for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
-            decs[i] = dec
-        vars_to_print = self.scope.variables.values()
-        for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in expr.results) and (v not in arguments):
-                decs[v] = Declare(v.dtype,v)
-
-        func_type = 'subroutine'
-        func_end  = ''
-        if len(results) == 1 and results[0].rank == 0:
-            func_type = 'function'
-            result = results.pop()
-            func_end = 'result({0})'.format(result.name)
-            dec = Declare(result.dtype, result, static=True)
-            decs[result] = dec
-
-        # ...
-
-        interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
-        arg_code  = ', '.join(self._print(i) for i in chain( arguments, results ))
-        imports   = ''.join(self._print(i) for i in expr.imports)
-        prelude   = ''.join(self._print(i) for i in decs.values())
-        body_code = body
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
-
-        self.exit_scope()
-
-        parts = [doc_string,
-                '{0} {1}({2}) bind(c) {3}\n'.format(func_type, name, arg_code, func_end),
-                 imports,
-                'implicit none\n',
-                 prelude,
-                 interfaces,
-                 body_code,
-                 'end {} {}\n'.format(func_type, name)]
-        return '\n'.join(p for p in parts if p)
-
     def _print_FunctionAddress(self, expr):
         return expr.name
 
@@ -1930,13 +1860,22 @@ class FCodePrinter(CodePrinter):
         for i, arg in enumerate(arguments):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
-                if i == 0 and expr.cls_name:
-                    dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
-                elif arg.inout:
-                    dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
+                    for b_arg,inout in zip(arg.get_all_function_def_arguments(), arg.inout):
+                        v = b_arg.var
+                        if inout:
+                            dec = Declare(v.dtype, v, intent='inout')
+                        else:
+                            dec = Declare(v.dtype, v, intent='in')
+                        args_decs[v] = dec
                 else:
-                    dec = Declare(arg_var.dtype, arg_var, intent='in')
-                args_decs[arg_var] = dec
+                    if i == 0 and expr.cls_name:
+                        dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                    elif arg.inout:
+                        dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                    else:
+                        dec = Declare(arg_var.dtype, arg_var, intent='in')
+                    args_decs[arg_var] = dec
 
         # treat case of pure function
         sig = '{0}{1} {2}'.format(rec, func_type, name)
@@ -1982,6 +1921,7 @@ class FCodePrinter(CodePrinter):
                     name = name.replace(i, _default_methods[i])
 
         sig_parts = self.function_signature(expr, name)
+        bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
         decs = OrderedDict()
         functions = [f for f in expr.functions if not f.is_inline]
@@ -2009,7 +1949,7 @@ class FCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in expr.imports)
 
         parts = [doc_string,
-                "{}({}) {}\n".format(sig_parts['sig'], sig_parts['arg_code'], sig_parts['func_end']),
+                f"{sig_parts['sig']}({sig_parts['arg_code']}){bind_c} {sig_parts['func_end']}\n",
                 imports,
                 'implicit none\n',
                 prelude,
@@ -2462,33 +2402,63 @@ class FCodePrinter(CodePrinter):
                 '{body}\n'
                 '{epilog}\n').format(prolog=prolog, body=body, epilog=epilog)
 
+    def _handle_not_none(self, lhs, lhs_var):
+        """
+        Print code for `x is not None` statement.
+
+        Print the code which checks if x is not None. This means different
+        things depending on the type of `x`. If `x` is optional it checks
+        if it is present, if `x` is a C pointer it checks if it points at
+        anything.
+
+        Parameters
+        ----------
+        lhs : str
+            The code representing `x`.
+        lhs_var : Variable
+            The Variable `x`.
+
+        Returns
+        -------
+        str
+            The code which checks if `x is not None`.
+        """
+        if isinstance(lhs_var.dtype, BindCPointer):
+            self._constantImports.setdefault('ISO_C_Binding', set()).add('c_associated')
+            return f'c_associated({lhs})'
+        else:
+            return f'present({lhs})'
 
     def _print_PyccelIs(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+        lhs = self._print(lhs_var)
+        rhs = self._print(rhs_var)
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
-            return '.not. present({})'.format(lhs)
+        if isinstance(rhs_var, Nil):
+            return '.not. '+ self._handle_not_none(lhs, lhs_var)
 
         if (a.dtype is NativeBool() and b.dtype is NativeBool()):
-            return '{} .eqv. {}'.format(lhs, rhs)
+            return f'{lhs} .eqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
 
     def _print_PyccelIsNot(self, expr):
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+        lhs = self._print(lhs_var)
+        rhs = self._print(rhs_var)
         a = expr.args[0]
         b = expr.args[1]
 
-        if isinstance(expr.rhs, Nil):
-            return 'present({})'.format(lhs)
+        if isinstance(rhs_var, Nil):
+            return self._handle_not_none(lhs, lhs_var)
 
         if a.dtype is NativeBool() and b.dtype is NativeBool():
-            return '{} .neqv. {}'.format(lhs, rhs)
+            return f'{lhs} .neqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
                       symbol=expr, severity='fatal')
@@ -3096,6 +3066,16 @@ class FCodePrinter(CodePrinter):
         rhs = self._print(expr.arg)
         self._constantImports.setdefault('ISO_C_Binding', set()).add('c_loc')
         return f'{lhs} = c_loc({rhs})\n'
+
+#=======================================================================================
+
+    def _print_C_F_Pointer(self, expr):
+        self._constantImports.setdefault('ISO_C_Binding', set()).add('C_F_Pointer')
+        shape = ','.join(self._print(s) for s in expr.shape)
+        if shape:
+            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)}, [{shape}])\n'
+        else:
+            return f'call C_F_Pointer({self._print(expr.c_pointer)}, {self._print(expr.f_array)})\n'
 
 #=======================================================================================
 

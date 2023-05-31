@@ -8,9 +8,14 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1302 : Raise error message in case of empty class
+-   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 
 ### Changed
+
 -   #1355 : Remove unused `BasicParser` arguments.
+-   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
+
 ## \[1.7.4\] - 2023-05-02
 
 ### Added
