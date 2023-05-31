@@ -40,7 +40,7 @@ class LanguageNameClashChecker(metaclass = Singleton):
         """
         coll_symbols = self.keywords.copy()
         coll_symbols.update(s.lower() for s in symbols)
-        if self.has_clash(name, coll_symbols):
+        if self.has_clash(name, coll_symbols): #pylint: disable=no-member
             counter = 1
             name, counter = create_incremented_string(coll_symbols,
                     prefix = name, counter = counter, name_clash_checker = self)
