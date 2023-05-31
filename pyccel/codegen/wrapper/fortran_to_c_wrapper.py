@@ -237,6 +237,23 @@ class FortranToCWrapper(Wrapper):
         return func
 
     def _wrap_Interface(self, expr):
+        """
+        Create an interface containing only C-compatible functions.
+
+
+        Create an interface containing only functions which can be called from C
+        from an interface which is not necessarily C-compatible.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.core.Interface
+            The interface to be wrapped.
+
+        Returns
+        -------
+        pyccel.ast.core.Interface
+            The C-compatible interface.
+        """
         functions = [self.scope.functions[self._wrapper_names_dict[f.name]] for f in expr.functions]
         functions = [f for f in functions if not isinstance(f, EmptyNode)]
         return Interface(expr.name, functions, expr.is_argument)
