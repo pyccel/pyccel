@@ -6,7 +6,6 @@
 """
 Handles name clash problems in Python
 """
-from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 from .languagenameclashchecker import LanguageNameClashChecker
 
