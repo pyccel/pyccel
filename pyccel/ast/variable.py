@@ -191,7 +191,7 @@ class Variable(PyccelAstNode):
             raise TypeError('rank must be an instance of int.')
 
         if rank == 0:
-            assert shape is None
+            assert shape is None or shape == ()
             assert order is None
 
         elif shape is None:

@@ -2819,7 +2819,16 @@ class SemanticParser(BasicParser):
 
         target  = expr.expr
         index   = new_index
-        indices = [self.scope.get_expected_name(i) for i in expr.indices]
+
+        indices = []
+        for idc in expr.indices:
+            if(isinstance(idc, PythonTuple)):
+                tmp = []
+                tmp.append(self.scope.get_expected_name(idc[0]))
+                tmp.append(self.scope.get_expected_name(idc[1]))
+                indices.append(tmp)
+            else:
+                indices.append(self.scope.get_expected_name(idc))
         dims    = []
         body    = expr.loops[1]
 
@@ -2831,10 +2840,17 @@ class SemanticParser(BasicParser):
         i = 0
         while isinstance(body, For):
 
+            indice_is_tupple = False
             stop  = None
             start = LiteralInteger(0)
             step  = LiteralInteger(1)
-            var   = indices[i]
+
+            if(type(indices[i]) == list):
+                var = indices[i][0]
+                var2 = indices[i][1]
+                indice_is_tupple = True
+            else:
+                var   = indices[i]
             i += 1
             a     = self._visit(body.iterable)
             if isinstance(a, PythonRange):
@@ -2844,15 +2860,44 @@ class SemanticParser(BasicParser):
                 start = a.start
                 step  = a.step
             elif isinstance(a, (PythonZip, PythonEnumerate)):
-                dvar  = self._infer_type(a.element)
-                dtype = dvar.pop('datatype')
-                if dvar['rank'] > 0:
-                    dvar['rank' ] -= 1
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if dvar['rank'] == 0:
-                    dvar['memory_handling'] = 'stack'
-                var  = Variable(dtype, var, **dvar)
-                stop = a.element.shape[0]
+                if indice_is_tupple:
+                    if isinstance(a, PythonEnumerate):
+                        dvar  = self._infer_type(a.element)
+                        dtype = dvar.pop('datatype')
+                        if dvar['rank'] > 0:
+                            dvar['rank' ] -= 1
+                            dvar['shape'] = (dvar['shape'])[1:]
+                        if dvar['rank'] == 0:
+                            dvar['memory_handling'] = 'stack'
+                        var  = Variable(dtype, var, **dvar)
+                        var2 = self._create_variable(var2, 'int', start, {})
+                        dvar2 = self._infer_type(var2)
+                        start = a.start
+                        stop = LiteralInteger(int(a.element.shape[0]) + int(start))
+                    elif isinstance(a, PythonZip):
+                        dvar = self._infer_type(a.args[0])
+                        dtype = dvar.pop('datatype')
+                        if dvar['rank'] > 0:
+                            dvar['rank' ] -= 1
+                            dvar['shape'] = (dvar['shape'])[1:]
+                        if dvar['rank'] == 0:
+                            dvar['memory_handling'] = 'stack'
+                        var  = Variable(dtype, var, **dvar)
+
+                        dvar2 = self._infer_type(a.args[1])
+                        dtype = dvar2.pop('datatype')
+                        if dvar2['rank'] > 0:
+                            dvar2['rank' ] -= 1
+                            dvar2['shape'] = (dvar2['shape'])[1:]
+                        if dvar2['rank'] == 0:
+                            dvar2['memory_handling'] = 'stack'
+                        var2  = Variable(dtype, var2, **dvar2)
+                        stop0 = a.args[0].shape[0]
+                        stop1 = a.args[1].shape[0]
+                        if(int(stop0) < int(stop1)):
+                            stop = stop0
+                        else:
+                            stop = stop1
             elif isinstance(a, Variable):
                 dvar  = self._infer_type(a)
                 dtype = dvar.pop('datatype')
@@ -2876,8 +2921,10 @@ class SemanticParser(BasicParser):
                 if self._infer_type(existing_var) != dvar:
                     errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
-            else:
+            else:    
                 self.scope.insert_variable(var)
+                if(indice_is_tupple):
+                    self.scope.insert_variable(var2)
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
@@ -2894,11 +2941,24 @@ class SemanticParser(BasicParser):
         # we now calculate the size of the array which will be allocated
 
         for idx in indices:
-            var = self.get_variable(idx)
-            idx_subs[idx] = var
+            if(type(idx) == list):
+                for m_idx in idx:
+                    var = self.get_variable(m_idx)
+                    idx_subs[m_idx] = var
+            else:
+                var = self.get_variable(idx)
+                idx_subs[idx] = var
 
+        sp_indices = []
 
-        sp_indices  = [sp_Symbol(i) for i in indices]
+        for idx in indices:
+            if(type(idx) == list):
+                for m_idx in idx:
+                    sp_indices.append(sp_Symbol(m_idx))
+            else:
+                sp_indices.append(sp_Symbol(idx))
+
+        # sp_indices  = [sp_Symbol(i) for i in indices]
 
         dim = sp_Integer(1)
 
@@ -2998,15 +3058,29 @@ class SemanticParser(BasicParser):
 
         l = loops[-1]
         for idx in indices:
-            assert isinstance(l, For)
             # Sub in indices as defined here for coherent naming
-            if idx.is_temp:
-                self.scope.remove_variable(l.target)
-                l.substitute(l.target, idx_subs[idx])
+            assert isinstance(l, For)
+            if(type(idx) == list):
+                for m_idx in idx:
+                    if m_idx.is_temp:
+                        self.scope.remove_variable(l.target)
+                        l.substitute(l.target, idx_subs[idx])
+            else:
+                if idx.is_temp:
+                    self.scope.remove_variable(l.target)
+                    l.substitute(l.target, idx_subs[idx])
             l = l.body.body[-1]
 
         #self.exit_loop_scope()
-
+        #change the nest tuples in indices to the indices itself
+        tmp = []
+        for idx in indices:
+            if(type(idx) == list):
+                for m_idx in idx:
+                    tmp.append(m_idx)
+            else:
+                tmp.append(idx)
+        indices = tmp
         return CodeBlock([lhs_alloc, FunctionalFor(loops, lhs=lhs, indices=indices, index=index)])
 
     def _visit_GeneratorComprehension(self, expr):
