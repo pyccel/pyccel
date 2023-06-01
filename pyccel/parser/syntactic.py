@@ -145,11 +145,21 @@ class SyntaxParser(BasicParser):
         self._fst           = tree
         self._in_lhs_assign = False
 
-        self.parse(verbose=True)
+        self.parse()
         self.dump()
 
-    def parse(self, verbose=False):
-        """converts python ast to sympy ast."""
+    def parse(self):
+        """
+        Convert Python's AST to Pyccel's AST object.
+
+        Convert Python's AST to Pyccel's AST object and raise errors
+        for any unsupported objects.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The Pyccel AST object.
+        """
 
         if self.syntax_done:
             return self.ast

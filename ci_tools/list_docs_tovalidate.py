@@ -33,6 +33,9 @@ def should_ignore(name):
     #ignore _print_ methods in the codegen.printing module
     if 'Printer._print_' in name:
         return True
+    #ignore _wrap_ methods in the codegen.wrapper module
+    if 'Wrapper._wrap_' in name:
+        return True
     return False
 
 if __name__ == '__main__':
@@ -88,6 +91,6 @@ if __name__ == '__main__':
                             child.name = '.'.join([obj_pref, child.name])
                             to_visit.append(child)
 
-        with open(args.output, 'w', encoding="utf-8") as f:
+        with open(args.output, 'a', encoding="utf-8") as f:
             for obj in objects:
                 print(obj, file=f)

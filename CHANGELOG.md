@@ -8,9 +8,13 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1302 : Raise error message in case of empty class
+-   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 
 ### Changed
+
 -   #1355 : Remove unused `BasicParser` arguments.
+-   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
 -   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
@@ -94,5 +98,6 @@ All notable changes to this project will be documented in this file.
 -   #1245 : Reduce false negative test results by using a tolerance to compare floats.
 -   #1272 : Remove use of deprecated NumPy syntax in tests.
 -   #1253 : Provide minimum requirements.
+-   \[INTERNALS\]  #1385 : Remove unused settings keyword arguments from `_visit` function.
 
 ### Deprecated
