@@ -2958,8 +2958,6 @@ class SemanticParser(BasicParser):
             else:
                 sp_indices.append(sp_Symbol(idx))
 
-        # sp_indices  = [sp_Symbol(i) for i in indices]
-
         dim = sp_Integer(1)
 
         for i in reversed(range(len(dims))):
@@ -3072,7 +3070,8 @@ class SemanticParser(BasicParser):
             l = l.body.body[-1]
 
         #self.exit_loop_scope()
-        #change the nest tuples in indices to the indices itself
+
+        #change the nested list indices to a normal list to prevent "Basic child cannot be a tuple of tuples" Error
         tmp = []
         for idx in indices:
             if(type(idx) == list):
