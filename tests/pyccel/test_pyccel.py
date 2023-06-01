@@ -5,8 +5,8 @@ import os
 import shutil
 import sys
 import re
-import pytest
 import random
+import pytest
 import numpy as np
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.ast.utilities import python_builtin_libs
