@@ -2921,7 +2921,7 @@ class SemanticParser(BasicParser):
                 if self._infer_type(existing_var) != dvar:
                     errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
-            else:    
+            else:
                 self.scope.insert_variable(var)
                 if(indice_is_tupple):
                     self.scope.insert_variable(var2)
