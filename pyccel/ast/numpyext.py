@@ -7,9 +7,6 @@
 """ Module containing objects from the numpy module understood by pyccel
 """
 
-from functools import reduce
-import operator
-
 import numpy
 
 from pyccel.errors.errors import Errors
