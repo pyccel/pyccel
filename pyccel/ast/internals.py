@@ -56,6 +56,8 @@ class PyccelInternalFunction(PyccelAstNode):
 
 class PyccelArraySize(PyccelInternalFunction):
     """
+    Gets the total number of elements in an array.
+
     Class representing a call to a function which would return
     the total number of elements in a multi-dimensional array.
 
@@ -73,8 +75,8 @@ class PyccelArraySize(PyccelInternalFunction):
     _shape = None
     _order = None
 
-    def __init__(self, a):
-        super().__init__(a)
+    def __init__(self, arg):
+        super().__init__(arg)
 
     @property
     def arg(self):
@@ -94,6 +96,8 @@ class PyccelArraySize(PyccelInternalFunction):
 
 class PyccelArrayShapeElement(PyccelInternalFunction):
     """
+    Gets the number of elements in a given dimension of an array.
+
     Class representing a call to a function which would return
     the shape of a multi-dimensional array in a given dimension.
 
@@ -148,17 +152,22 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
 
 class Slice(Basic):
-    """Represents a slice in the code.
+    """
+    Represents a slice in the code.
 
     Parameters
     ----------
     start : PyccelSymbol or int
-        starting index
+        Starting index.
 
     stop : PyccelSymbol or int
-        ending index
+        Ending index.
 
     step : PyccelSymbol or int default None
+        The step between indices.
+
+    slice_type : Literal
+        The type of the slice. Either Slice.Range or Slice.Element.
 
     Examples
     --------
