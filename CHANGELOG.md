@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #1404 : Creating Temporary Variable for Functions Passed as Arguments in the function print()
+-   #1404 : Bug preventing printing of some functions in a `print()` call
 -   #1302 : Raise error message in case of empty class
 
 ### Changed

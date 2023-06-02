@@ -3497,15 +3497,9 @@ class SemanticParser(BasicParser):
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
         for i, arg in enumerate(args):
-            if hasattr(arg.value, 'rank') and arg.value.rank and not isinstance(arg.value, (Variable, PythonTuple, IndexedElement)):
-                new_symbol = PyccelSymbol(self.scope.get_new_name())
-                d_var = self._infer_type(arg.value)
-                new_expression = []
-                tmp_var = self._assign_lhs_variable(new_symbol, d_var , arg.value, new_expression , is_augassign=False)
-                creation = Assign(tmp_var, arg.value, fst=arg.value.fst)
-                new_expression.append(creation)
-                for v in new_expression:
-                    self._additional_exprs[-1].append(v)
+            if getattr(arg.value, 'rank', 0) and isinstance(arg.value, PyccelInternalFunction):
+                tmp_var = self._assign_lhs_variable(self.scope.get_new_name(), self._infer_type(arg.value) , arg.value, self._additional_exprs[-1] , is_augassign=False)
+                self._additional_exprs[-1].append(Assign(tmp_var, arg.value, fst=arg.value.fst))
                 args[i] = FunctionCallArgument(tmp_var)
         if len(args) == 0:
             return PythonPrint(args)
