@@ -2444,47 +2444,6 @@ class SemanticParser(BasicParser):
                                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                                   severity='fatal')
 
-        elif isinstance(rhs, DottedVariable):
-            var = rhs.rhs
-            name = _get_name(var)
-            macro = self.scope.find(name, 'macros')
-            if macro is None:
-                rhs = self._visit(rhs)
-            else:
-                master = macro.master
-                if isinstance(macro, MacroVariable):
-                    rhs = master
-                else:
-                    # If macro is function, create left-hand side variable
-                    if isinstance(master, FunctionDef) and master.results:
-                        d_var = self._infer_type(master.results[0].var)
-                        dtype = d_var.pop('datatype')
-                        lhs = Variable(dtype, lhs.name, **d_var, is_temp=lhs.is_temp)
-                        var = self.check_for_variable(lhs.name)
-                        if var is None:
-                            self.scope.insert_variable(lhs)
-
-                    name = macro.name
-                    if not sympy_iterable(lhs):
-                        lhs = [lhs]
-                    results = []
-                    for a in lhs:
-                        _name = _get_name(a)
-                        var = self.get_variable(_name)
-                        results.append(var)
-
-                    args = rhs.rhs.args
-                    args = [rhs.lhs] + list(args)
-                    args = [self._visit(i) for i in args]
-
-                    args = macro.apply(args, results=results)
-
-                    # Distinguish between function
-                    if master.results:
-                        return Assign(lhs[0], FunctionCall(master, args, self._current_function))
-                    else:
-                        return FunctionCall(master, args, self._current_function)
-
         else:
             rhs = self._visit(rhs)
 
@@ -2525,48 +2484,36 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
-            if isinstance(func, FunctionDef):
-                results = func.results
-                if results:
-                    if len(results)==1:
-                        d_var = self._infer_type(results[0].var)
-                    else:
-                        d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
-                elif expr.lhs.is_temp:
-                    return rhs
+            results = func.results
+            if results:
+                if len(results)==1:
+                    d_var = self._infer_type(results[0].var)
                 else:
-                    raise NotImplementedError("Cannot assign result of a function without a return")
-
-                # case of elemental function
-                # if the input and args of func do not have the same shape,
-                # then the lhs must be already declared
-                if func.is_elemental:
-                    # we first compare the funcdef args with the func call
-                    # args
-#                   d_var = None
-                    func_args = func.arguments
-                    call_args = rhs.args
-                    f_ranks = [x.var.rank for x in func_args]
-                    c_ranks = [x.value.rank for x in call_args]
-                    same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
-                    if not all(same_ranks):
-                        assert(len(c_ranks) == 1)
-                        arg = call_args[0].value
-                        d_var['shape'          ] = arg.shape
-                        d_var['rank'           ] = arg.rank
-                        d_var['memory_handling'] = arg.memory_handling
-                        d_var['order'          ] = arg.order
-
-            elif isinstance(func, Interface):
-                d_var = [self._infer_type(i.var) for i in
-                         func.functions[0].results]
-
-                # TODO imporve this will not work for
-                # the case of different results types
-                d_var[0]['datatype'] = rhs.dtype
-
+                    d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
+            elif expr.lhs.is_temp:
+                return rhs
             else:
-                d_var = self._infer_type(rhs)
+                raise NotImplementedError("Cannot assign result of a function without a return")
+
+            # case of elemental function
+            # if the input and args of func do not have the same shape,
+            # then the lhs must be already declared
+            if func.is_elemental:
+                # we first compare the funcdef args with the func call
+                # args
+                # d_var = None
+                func_args = func.arguments
+                call_args = rhs.args
+                f_ranks = [x.var.rank for x in func_args]
+                c_ranks = [x.value.rank for x in call_args]
+                same_ranks = [x==y for (x,y) in zip(f_ranks, c_ranks)]
+                if not all(same_ranks):
+                    assert(len(c_ranks) == 1)
+                    arg = call_args[0].value
+                    d_var['shape'          ] = arg.shape
+                    d_var['rank'           ] = arg.rank
+                    d_var['memory_handling'] = arg.memory_handling
+                    d_var['order'          ] = arg.order
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs)

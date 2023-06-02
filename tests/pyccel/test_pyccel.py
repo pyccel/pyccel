@@ -5,8 +5,11 @@ import os
 import shutil
 import sys
 import re
+import random
 import pytest
 import numpy as np
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.ast.utilities import python_builtin_libs
 
 #==============================================================================
 # UTILITIES
@@ -995,3 +998,10 @@ def test_json():
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_reserved_file_name():
+    with pytest.raises(ValueError) as exc_info:
+        libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
+        execute_pyccel(fname=libname)
+    assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"

@@ -10,6 +10,7 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
+from pathlib import Path
 
 from pyccel.errors.errors          import Errors, PyccelError
 from pyccel.errors.errors          import PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError
@@ -22,6 +23,7 @@ from pyccel.codegen.utilities      import internal_libs
 from pyccel.codegen.python_wrapper import create_shared_library
 from pyccel.naming                 import name_clash_checkers
 from pyccel.utilities.stage        import PyccelStage
+from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
@@ -57,87 +59,61 @@ def execute_pyccel(fname, *,
                    output_name   = None,
                    compiler_export_file = None):
     """
-    Carries out the main steps required to execute pyccel
+    Run Pyccel on the provided code.
+
+    Carry out the main steps required to execute Pyccel:
     - Parses the python file (syntactic stage)
     - Annotates the abstract syntax tree (semantic stage)
     - Generates the translated file(s) (codegen stage)
-    - Compiles the files to generate an executable and/or a shared library
+    - Compiles the files to generate an executable and/or a shared library.
 
     Parameters
     ----------
-    fname         : str
-                    Name of python file to be translated
-
-    syntax_only   : bool
-                    Boolean indicating whether the pipeline should stop
-                    after the syntax stage
-                    Default : False
-
-    semantic_only : bool
-                    Boolean indicating whether the pipeline should stop
-                    after the semantic stage
-                    Default : False
-
-    convert_only  : bool
-                    Boolean indicating whether the pipeline should stop
-                    after the codegen stage
-                    Default : False
-
-    verbose       : bool
-                    Boolean indicating whether debugging messages should be printed
-                    Default : False
-
-    folder        : str
-                    Path to the working directory
-                    Default : folder containing the file to be translated
-
-    language      : str
-                    The language which pyccel is translating to
-                    Default : fortran
-
-    compiler      : str
-                    The compiler used to compile the generated files
-                    Default : GNU
-
-    fflags        : str
-                    The flags passed to the compiler
-                    Default : provided by Compiler
-
-    wrapper_flags : str
-                    The flags passed to the compiler to compile the c wrapper
-                    Default : provided by Compiler
-
-    includes      : list
-                    list of include directories paths
-
-    libdirs       : list
-                    list of paths to directories containing the required libraries
-
-    modules       : list
-                    list of files which must also be compiled in order to compile this module
-
-    libs          : list
-                    list of required libraries
-
-    debug         : bool
-                    Boolean indicating whether the file should be compiled in debug mode
-                    (currently this only implies that the flag -fcheck=bounds is added)
-                    Default : False
-
-    accelerators  : iterable
-                    Tool used to accelerate the code (e.g. openmp openacc)
-
-    output_name   : str
-                    Name of the generated module
-                    Default : Same name as the file which was translated
-    export_compile_info : str
-                    Name of the json file to which compiler information is exported
-                    Default : None
+    fname : str
+        Name of the Python file to be translated.
+    syntax_only : bool, optional
+        Indicates whether the pipeline should stop after the syntax stage. Default is False.
+    semantic_only : bool, optional
+        Indicates whether the pipeline should stop after the semantic stage. Default is False.
+    convert_only : bool, optional
+        Indicates whether the pipeline should stop after the codegen stage. Default is False.
+    verbose : bool, optional
+        Indicates whether debugging messages should be printed. Default is False.
+    folder : str, optional
+        Path to the working directory. Default is the folder containing the file to be translated.
+    language : str, optional
+        The target language Pyccel is translating to. Default is 'fortran'.
+    compiler : str, optional
+        The compiler used to compile the generated files. Default is 'GNU'.
+    fflags : str, optional
+        The flags passed to the compiler. Default is provided by the Compiler.
+    wrapper_flags : str, optional
+        The flags passed to the compiler to compile the C wrapper. Default is provided by the Compiler.
+    includes : list, optional
+        List of include directory paths.
+    libdirs : list, optional
+        List of paths to directories containing the required libraries.
+    modules : list, optional
+        List of files that must be compiled in order to compile this module.
+    libs : list, optional
+        List of required libraries.
+    debug : bool, optional
+        Indicates whether the file should be compiled in debug mode. Default is False.
+        (Currently, this only implies that the flag -fcheck=bounds is added.).
+    accelerators : iterable, optional
+        Tool used to accelerate the code (e.g., OpenMP, OpenACC).
+    output_name : str, optional
+        Name of the generated module. Default is the same name as the translated file.
+    compiler_export_file : str, optional
+        Name of the JSON file to which compiler information is exported. Default is None.
     """
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
             print("Header file recognised, stopping after syntactic stage")
+
+    if Path(fname).stem in python_builtin_libs:
+        raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
