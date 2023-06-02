@@ -113,7 +113,7 @@ def execute_pyccel(fname, *,
             print("Header file recognised, stopping after syntactic stage")
 
     if Path(fname).stem in python_builtin_libs:
-        raise ValueError(f"File called {os.path.basename(fname)} has the same name as a python built-in package and can't be imported from Python. See #1402")
+        raise ValueError(f"File called {os.path.basename(fname)} has the same name as a Python built-in package and can't be imported from Python. See #1402")
 
     # Reset Errors singleton before parsing a new file
     errors = Errors()
