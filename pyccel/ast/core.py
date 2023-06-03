@@ -2699,7 +2699,7 @@ class FunctionDef(ScopedNode):
         """ Mark the function as a recursive function """
         self._is_recursive = True
 
-    def clone(self, newname):
+    def clone(self, newname, **new_kwargs):
         """
         Create an identical FunctionDef with name
         newname.
@@ -2710,6 +2710,7 @@ class FunctionDef(ScopedNode):
             new name for the FunctionDef
         """
         args, kwargs = self.__getnewargs__()
+        kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)

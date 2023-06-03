@@ -19,6 +19,7 @@ from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionCall, FunctionDef, FunctionAddress
+from .core      import Module
 
 from .internals import get_final_precision
 
@@ -137,36 +138,25 @@ class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args,
                         python_func_kwargs,
-                        c_func_args, parse_args,
+                        parse_args,
                         arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not all(isinstance(c, FunctionDefArgument) for c in c_func_args):
-            raise TypeError('C func args should be a list of Arguments')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if len(parse_args) != len(c_func_args):
-            raise TypeError('There should be the same number of c_func_args and parse_args')
 
-        self._flags      = ''
         i = 0
-
         while i < len(c_func_args) and not c_func_args[i].has_default:
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
+        self._flags = 'O'*i
+
         if i < len(c_func_args):
             self._flags += '|'
-        while i < len(c_func_args):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
-            i+=1
-        # Restriction as of python 3.8
-        if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
-            errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
-                          symbol=c_func_args, severity='warning')
+            self._flags += 'O'*(len(c_func_args)-i)
 
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
@@ -409,7 +399,7 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
@@ -447,6 +437,9 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
                            FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
               results   = [])
 
+PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
+PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
+
 def set_python_error_message(exception, message):
     """
     Generate a function call which sets the Python error.
@@ -467,15 +460,10 @@ def set_python_error_message(exception, message):
     FunctionCall
         The FunctionCall which raises the error.
     """
-    func = FunctionDef(name = 'PyErr_SetString',
-                  body      = [],
-                  arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
-                               FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
-                  results   = [])
 
     exception = Variable(PyccelPyObject(), name = exception)
 
-    return FunctionCall(func, [exception, message])
+    return FunctionCall(PyErr_SetString, [exception, message])
 
 
 def generate_datatype_error(variable):
@@ -511,6 +499,17 @@ def generate_datatype_error(variable):
             dtype     = variable.dtype)
     return set_python_error_message('PyExc_TypeError', message)
 
+# Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
+py_to_c_registry = {
+    (NativeBool(), 4)      : 'PyBool_to_Bool',
+    (NativeInteger(), 1)   : 'PyInt8_to_Int8',
+    (NativeInteger(), 2)   : 'PyInt16_to_Int16',
+    (NativeInteger(), 4)   : 'PyInt32_to_Int32',
+    (NativeInteger(), 8)   : 'PyInt64_to_Int64',
+    (NativeFloat(), 4)     : 'PyFloat_to_Float',
+    (NativeFloat(), 8)     : 'PyDouble_to_Double',
+    (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
+    (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
@@ -560,3 +559,17 @@ def scalar_object_check(py_object, c_object):
                     results   = [FunctionDefResult(Variable(dtype=NativeBool(), name = 'r'))])
 
     return FunctionCall(check_func, [py_object])
+
+class PyModule(Module):
+    """
+    Class to hold a module which is accessible from Python
+    """
+    __slots__ = ('_func_names', '_external_funcs')
+    def __init__(self, *args, func_names, external_funcs, **kwargs):
+        self._func_names = func_names
+        self._external_funcs = external_funcs
+        super().__init__(*args, **kwargs)
+
+    @property
+    def external_funcs(self):
+        return self._external_funcs

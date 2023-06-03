@@ -1610,6 +1610,12 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+
+        if expr.is_external:
+            return self.function_signature(expr)
+
+        print(expr, expr.body, expr.is_external)
+
         self.set_scope(expr.scope)
 
         arguments = [a.var for a in expr.arguments]
