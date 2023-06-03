@@ -261,7 +261,7 @@ class CToPythonWrapper(Wrapper):
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
 
         if orig_var.rank:
-            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
+            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             self.scope.insert_variable(arg_var, expr.var.name)
             [self.scope.insert_variable(v,s.name) for v,s in zip(shape_vars, expr.shape)]
