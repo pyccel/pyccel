@@ -3,6 +3,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+#pylint: disable=pointless-string-statement
 """
 This module contains the syntax associated to the types.tx grammar
 """
@@ -12,6 +13,38 @@ from os.path import join, dirname
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.core import Variable
 from pyccel.ast.datatypes import datatype, VariableType, FunctionType
+
+""" from pyccel.ast.datatypes
+
+class VariableType(DataType):
+    __slots__ = ('_alias','_rhs','_name')
+
+    def __init__(self, rhs, alias):
+        self._alias = alias
+        self._rhs = rhs
+        self._name = rhs._name
+
+    @property
+    def alias(self):
+        return self._alias
+
+class FunctionType(DataType):
+￼    __slots__ = ('_domain','_codomain','_domains','_name')
+￼
+￼    def __init__(self, domains):
+￼        self._domain = domains[0]
+￼        self._codomain = domains[1:]
+￼        self._domains = domains
+￼        self._name = ' -> '.join('{}'.format(V) for V in self._domains)
+￼
+￼    @property
+￼    def domain(self):
+￼        return self._domain
+￼
+￼    @property
+￼    def codomain(self):
+￼        return self._codomain
+"""
 
 
 def _construct_dtype(dtype):
