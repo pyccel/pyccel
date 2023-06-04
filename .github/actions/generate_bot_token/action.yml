@@ -24,6 +24,8 @@ runs:
         payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
 
         # Create JWT
-        print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = "${{ github.output }}")
+        with open("${{ github.output }}", 'a') as f:
+            print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = f)
+        print("::add-mask::$token")
       shell: python
       id: get_token
