@@ -43,12 +43,12 @@ jobs:
           echo "${auth_id}"
           echo "${auth_id}" | cut -c1-5
         env:
-          auth_id: "${{ steps.token.outputs.token }}"
+          auth_id: "${{ steps.token.outputs.installation_token }}"
       - name: "Post in progress"
         uses: ./.github/actions/post_triggered
         with:
           ref: ${{ inputs.ref }}
-          installation_token: ${{ steps.token.outputs.token }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
           name: "Python linting"
       - name: Check branch
         run: |
@@ -68,6 +68,6 @@ jobs:
         if: always()
         uses: ./.github/actions/post_completed
         with:
-          installation_token: ${{ steps.token.outputs.token }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
           run_id: ${{ github.run_id }}
           status: steps.pylint.output
