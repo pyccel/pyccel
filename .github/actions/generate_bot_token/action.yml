@@ -12,7 +12,7 @@ runs:
   using: "composite"
   steps:
     - run: |
-        pip install jwt
+        pip install jwt requests
       shell: bash
     - run: |
         echo "$PEM" > bot.pem
@@ -24,21 +24,25 @@ runs:
         import jwt
         import time
         import os
+        import requests
         with open("bot.pem", "rb") as f:
-            v = f.read()
-            print(v[:10])
-            signing_key = jwt.jwk_from_pem(v)
-        with open("bot2.pem", "rb") as f:
-            v = f.read()
-            print(v[:10])
+            signing_key = jwt.jwk_from_pem(f.read())
         # Issued at time
         # JWT expiration time (10 minutes maximum)
         # GitHub App's identifier
         payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
 
+        jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+
+        headers = {"Accept": "application/vnd.github+json", "Authorization:", f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
+
+        reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
+
+        print(reply)
+
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
-            print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = f)
+            print("token=", reply["token"], sep='', file = f)
       shell: python
       id: get_token
     - run:
