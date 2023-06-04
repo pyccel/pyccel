@@ -29,3 +29,6 @@ runs:
         print("::add-mask::$token")
       shell: python
       id: get_token
+    - run: |
+      echo "${{ steps.get_token.outputs.token }}"
+      shell: bash
