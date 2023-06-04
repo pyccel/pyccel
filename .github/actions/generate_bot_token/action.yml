@@ -12,6 +12,8 @@ runs:
   using: "composite"
   steps:
     - run: |
+        import jwt
+        import time
         signing_key = jwt.jwk_from_pem("${{ inputs.bot_pem }}")
         # Issued at time
         # JWT expiration time (10 minutes maximum)
