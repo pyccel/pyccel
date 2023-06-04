@@ -38,8 +38,11 @@ jobs:
             python -m pip install .[test]
         shell: bash
       - name: Fortran/C tests with pytest
+        timeout-minutes: 60
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
+        timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
+        timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
