@@ -5,7 +5,7 @@ class GitHubAPIInteractions:
     def __init__(self, repo, install_token):
         self._org, self._repo = repo.split('/')
         self._headers={"Accept": "application/vnd.github+json",
-                 "Authorization:", f"Bearer {install_token}",
+                 "Authorization": f"Bearer {install_token}",
                  "X-GitHub-Api-Version": "2022-11-28"}
 
     def _post_request(self, method, url, json=None):
@@ -40,3 +40,7 @@ class GitHubAPIInteractions:
     def get_comments(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
         return self._post_request("GET", url)
+
+    def create_comment(self, pr_id, comment):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
+        return self._post_request("POST", url, json={"body":comment})

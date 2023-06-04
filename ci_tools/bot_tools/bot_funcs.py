@@ -15,10 +15,10 @@ default_python_versions = {
         }
 
 def show_tests():
-    pass
+    GitHubAPIInteractions(repo, install_token).create_comment(message_from_file('show_tests.txt'))
 
 def show_commands():
-    pass
+    GitHubAPIInteractions(repo, install_token).create_comment(message_from_file('bot_commands.txt'))
 
 def trust_user():
     pass
