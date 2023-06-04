@@ -16,6 +16,7 @@ runs:
       shell: bash
     - run:
         echo "${PEM}" > bot.pem
+      shell: bash
       env:
         PEM: ${{ inputs.bot_pem }}
     - run: |
