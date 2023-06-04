@@ -21,7 +21,7 @@ runs:
       run: |
         import requests
         
-        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer ${{ inputs.installation_token }}", "X-GitHub-Api-Version": "2022-11-28"}
+        headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer ${{ inputs.installation_token }}", "X-GitHub-Api-Version": "2022-11-28"}
         data = {"name":"${{ inputs.name }}","head_sha":"${{ inputs.ref }}","status":"in_progress"}
 
         reply = requests.post("https://api.github.com/repos/${{ github.repository }}/check-runs", headers=headers, json=data)
@@ -33,3 +33,4 @@ runs:
         with open("${{ github.output }}", 'a') as f:
             print("check_id=",id,sep='')
       shell: python
+      id: post
