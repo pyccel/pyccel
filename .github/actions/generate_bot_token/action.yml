@@ -14,8 +14,8 @@ runs:
     - run: |
         pip install jwt
       shell: bash
-    - run: |
-      echo "${PEM}" > bot.pem
+    - run:
+        echo "${PEM}" > bot.pem
       env:
         PEM: ${{ inputs.bot_pem }}
     - run: |
