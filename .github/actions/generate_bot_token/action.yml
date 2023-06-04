@@ -34,7 +34,7 @@ runs:
 
         jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
 
-        headers = {"Accept": "application/vnd.github+json", "Authorization:", f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
+        headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
 
         reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
