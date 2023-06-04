@@ -6,8 +6,13 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - run: |
-        from ci_tools.bot_tools.generate_jwt import get_jwt
-        #print("token=", get_jwt(${{ secrets.BOT_PEM }}), sep='', file = ${{ github.output }})
+    #- run: |
+    #    from ci_tools.bot_tools.generate_jwt import get_jwt
+    #    #print("token=", get_jwt(${{ secrets.BOT_PEM }}), sep='', file = ${{ github.output }})
+    #  shell: python
+    #  id: get_token
+    - name: Display the path
+      run: |
+        import os
+        print(os.environ['PATH'])
       shell: python
-      id: get_token
