@@ -11,6 +11,9 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - run: 
+        ls
+      shell: bash
     - run: |
         from ci_tools.bot_tools.generate_jwt import get_jwt
         print("token=", get_jwt("${{ inputs.bot_pem }}"), sep='', file = "${{ github.output }}")
