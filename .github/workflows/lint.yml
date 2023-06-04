@@ -32,6 +32,9 @@ jobs:
         uses: ./.github/actions/generate_bot_token
         with:
           bot_pem: "${{ secrets.BOT_PEM }}"
+      - name: "Test output"
+        run:
+          echo "${{ steps.token.outputs.token }}"
       - name: "Post in progress"
         uses: ./.github/actions/post_triggered
         with:
