@@ -23,7 +23,6 @@ runs:
                 result = json.load(f)
         else:
             result = {}
-        result["details_url"] = "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         result["status"] = "${{ inputs.status }}"
 
         headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer ${{ inputs.installation_token }}", "X-GitHub-Api-Version": "2022-11-28"}

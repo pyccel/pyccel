@@ -22,7 +22,8 @@ runs:
         import requests
         
         headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer ${{ inputs.installation_token }}", "X-GitHub-Api-Version": "2022-11-28"}
-        data = {"name":"${{ inputs.name }}","head_sha":"${{ inputs.ref }}","status":"in_progress"}
+        data = {"name":"${{ inputs.name }}","head_sha":"${{ inputs.ref }}","status":"in_progress",
+                "details_url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"}
 
         reply = requests.post("https://api.github.com/repos/${{ github.repository }}/check-runs", headers=headers, json=data)
 
