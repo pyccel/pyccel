@@ -17,7 +17,8 @@ runs:
     - run: |
         import jwt
         import time
-        signing_key = jwt.jwk_from_pem(b"""${{ inputs.bot_pem }}""")
+        import os
+        signing_key = jwt.jwk_from_pem(os.environ["PEM"])
         # Issued at time
         # JWT expiration time (10 minutes maximum)
         # GitHub App's identifier
@@ -26,6 +27,8 @@ runs:
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
             print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = f)
+      env:
+        PEM: ${{ inputs.bot_pem }}
       shell: python
       id: get_token
     - run:
