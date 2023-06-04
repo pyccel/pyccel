@@ -39,8 +39,11 @@ jobs:
         with:
           bot_pem: "${{ secrets.BOT_PEM }}"
       - name: "Test output"
-        run:
-          echo "${{ steps.token.outputs.token }}"
+        run: |
+          echo "${auth_id}"
+          echo '${auth_id}' | cut -c1-5
+        env:
+          auth_id: "${{ steps.token.outputs.token }}"
       - name: "Post in progress"
         uses: ./.github/actions/post_triggered
         with:
