@@ -26,7 +26,6 @@ runs:
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
             print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = f)
-        #print("::add-mask::$token")
       shell: python
       id: get_token
     - run:
