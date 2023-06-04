@@ -59,4 +59,4 @@ jobs:
         with:
           installation_token: ${{ steps.token.outputs.installation_token }}
           run_id: ${{ steps.check_create.outputs.check_id }}
-          status: ${{ steps.pylint.output }}
+          status: ${{ steps.pylint.outcome }}
