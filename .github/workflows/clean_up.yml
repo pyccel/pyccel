@@ -1,0 +1,16 @@
+name: Clean up
+
+on:
+  check_run:
+    types: completed
+
+jobs:
+  Post:
+    runs-on: ubuntu-latest
+    name: Report result
+
+    steps:
+      - name: hi
+        run:
+          echo "Hello world"
+        shell: bash
