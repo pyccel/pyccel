@@ -57,5 +57,5 @@ jobs:
         uses: ./.github/actions/post_completed
         with:
           installation_token: ${{ steps.token.outputs.token }}
-          run_id: ${{ id }}
+          run_id: ${{ github.run_id }}
           status: steps.pylint.output
