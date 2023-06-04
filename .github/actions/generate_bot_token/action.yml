@@ -1,0 +1,33 @@
+outputs:
+  installation_token:
+    description: "The token which will allow you to authentificate as the GitHub app for 1 hour"
+    value: ${{ steps.get_token.outputs.token }}
+
+runs:
+  using: "composite"
+  steps:
+    - run: |
+      import jwt
+      import time
+      import sys
+      
+      # Open PEM
+      with open(${{ secrets.BOT_PEM }}, 'rb') as pem_file:
+          signing_key = jwt.jwk_from_pem(pem_file.read())
+      
+      payload = {
+          # Issued at time
+          'iat': int(time.time()),
+          # JWT expiration time (10 minutes maximum)
+          'exp': int(time.time()) + 600,
+          # GitHub App's identifier
+          'iss': 337566
+      }
+      
+      # Create JWT
+      jwt_instance = jwt.JWT()
+      encoded_jwt = jwt_instance.encode(payload, signing_key, alg='RS256')
+      
+      print(f"token={encoded_jwt}", file = ${{ github.output }})
+      shell: python
+      id: get_token
