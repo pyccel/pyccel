@@ -14,7 +14,7 @@ runs:
   using: "composite"
   steps:
     - name: "Posting"
-      run:
+      run: |
         curl -L \
           -X POST \
           -H "Accept: application/vnd.github+json" \
