@@ -27,6 +27,7 @@ runs:
         
         with open('test_json_result.json', 'w') as f:
             json.dump(result, f)
+      shell: python
     - name: "Posting"
       run: |
         json_result=$(cat test_json_result.json)
