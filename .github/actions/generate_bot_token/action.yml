@@ -1,3 +1,4 @@
+name: "Generate bot token"
 outputs:
   installation_token:
     description: "The token which will allow you to authentificate as the GitHub app for 1 hour"
