@@ -13,6 +13,7 @@ runs:
   steps:
     - run: |
         pip install jwt
+      shell: bash
     - run: |
         import jwt
         import time
