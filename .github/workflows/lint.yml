@@ -41,7 +41,7 @@ jobs:
       - name: "Test output"
         run: |
           echo "${auth_id}"
-          echo '${auth_id}' | cut -c1-5
+          echo "${auth_id}" | cut -c1-5
         env:
           auth_id: "${{ steps.token.outputs.token }}"
       - name: "Post in progress"

@@ -52,11 +52,13 @@ runs:
 
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
-            print("token=", reply.json()["token"], sep='', file = f)
+            print("token=", t, sep='', file = f)
+        print("DONE")
       shell: python
       id: get_token
       env:
         PEM: ${{ inputs.bot_pem }}
     - run:
         echo "${{ steps.get_token.outputs.token }}"
+        echo "${{ steps.get_token.outputs.token }}" | cut -c1-5
       shell: bash
