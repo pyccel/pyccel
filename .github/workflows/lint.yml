@@ -22,6 +22,8 @@ jobs:
       - name: "Generate token"
         id: token
         uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: ${{ secrets.BOT_PEM }}
       - name: "Post in progress"
         uses: ./.github/actions/post_triggered
         with:

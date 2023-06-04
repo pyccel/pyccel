@@ -1,4 +1,8 @@
 name: "Generate bot token"
+inputs:
+  bot_pem:
+    description: "The private key which identfies the bot"
+    required: true
 outputs:
   installation_token:
     description: "The token which will allow you to authentificate as the GitHub app for 1 hour"
@@ -9,6 +13,6 @@ runs:
   steps:
     - run: |
         from ci_tools.bot_tools.generate_jwt import get_jwt
-        print("token=", get_jwt(${{ secrets.BOT_PEM }}), sep='', file = ${{ github.output }})
+        print("token=", get_jwt(${{ inputs.bot_pem }}), sep='', file = ${{ github.output }})
       shell: python
       id: get_token
