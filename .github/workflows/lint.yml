@@ -32,7 +32,7 @@ jobs:
           cat bot2.pem
         shell: bash
         env:
-          PEM: ${{ inputs.bot_pem }}
+          PEM: ${{ secrets.BOT_PEM }}
       - name: "Generate token"
         id: token
         uses: ./.github/actions/generate_bot_token

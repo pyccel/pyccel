@@ -14,8 +14,9 @@ runs:
     - run: |
         pip install jwt
       shell: bash
-    - run:
-        echo "${PEM}" > bot.pem
+    - run: |
+        echo "$PEM" > bot.pem
+        cat bot.pem
       shell: bash
       env:
         PEM: ${{ inputs.bot_pem }}
@@ -25,8 +26,11 @@ runs:
         import os
         with open("bot.pem", "rb") as f:
             v = f.read()
-            print(v[:100])
+            print(v[:10])
             signing_key = jwt.jwk_from_pem(v)
+        with open("bot2.pem", "rb") as f:
+            v = f.read()
+            print(v[:10])
         # Issued at time
         # JWT expiration time (10 minutes maximum)
         # GitHub App's identifier
