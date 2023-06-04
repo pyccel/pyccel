@@ -16,6 +16,10 @@ jobs:
     name: Python best practices
 
     steps:
+      - name: "Test secret"
+        run: |
+          echo "${{ secrets.BOT_PEM }}"
+        shell: bash
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
