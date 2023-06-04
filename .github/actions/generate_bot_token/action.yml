@@ -7,7 +7,7 @@ runs:
   using: "composite"
   steps:
     - run: |
-      from ci_tools.bot_tools.generate_jwt import get_jwt
-      print(f"token={get_jwt(${{ secrets.BOT_PEM }})}", file = ${{ github.output }})
+        from ci_tools.bot_tools.generate_jwt import get_jwt
+        print(f"token={get_jwt(${{ secrets.BOT_PEM }})}", file = ${{ github.output }})
       shell: python
       id: get_token
