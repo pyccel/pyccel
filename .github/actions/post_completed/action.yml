@@ -38,4 +38,4 @@ runs:
           -H "X-GitHub-Api-Version: 2022-11-28" \
           --url https://api.github.com/repos/${{ github.repository }}/check-runs/${{ inputs.run_id }} \
           -d "${json_result}"
-      shell: shell
+      shell: bash
