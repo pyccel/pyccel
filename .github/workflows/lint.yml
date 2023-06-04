@@ -27,24 +27,13 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-      - run: |
-          echo "$PEM" > bot2.pem
-          cat bot2.pem
-        shell: bash
-        env:
-          PEM: ${{ secrets.BOT_PEM }}
       - name: "Generate token"
         id: token
         uses: ./.github/actions/generate_bot_token
         with:
           bot_pem: "${{ secrets.BOT_PEM }}"
-      - name: "Test output"
-        run: |
-          echo "${auth_id}"
-          echo "${auth_id}" | cut -c1-5
-        env:
-          auth_id: "${{ steps.token.outputs.installation_token }}"
       - name: "Post in progress"
+        id: check_create
         uses: ./.github/actions/post_triggered
         with:
           ref: ${{ inputs.ref }}
@@ -69,5 +58,5 @@ jobs:
         uses: ./.github/actions/post_completed
         with:
           installation_token: ${{ steps.token.outputs.installation_token }}
-          run_id: ${{ github.run_id }}
+          run_id: ${{ steps.check_create.outputs.check_id }}
           status: steps.pylint.output
