@@ -31,6 +31,6 @@ runs:
 
         id = reply.json()["id"]
         with open("${{ github.output }}", 'a') as f:
-            print("check_id=",id,sep='')
+            print("check_id=", id, sep='', file=f)
       shell: python
       id: post
