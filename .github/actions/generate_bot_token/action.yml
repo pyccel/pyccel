@@ -38,11 +38,12 @@ runs:
 
         reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
-        print(reply)
+        print(reply.text)
+        print(reply.json())
 
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
-            print("token=", reply["token"], sep='', file = f)
+            print("token=", reply.json()["token"], sep='', file = f)
       shell: python
       id: get_token
     - run:
