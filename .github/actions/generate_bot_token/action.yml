@@ -11,11 +11,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - run: 
-        ls
-      shell: bash
     - run: |
-        from ci_tools.bot_tools.generate_jwt import get_jwt
-        print("token=", get_jwt("${{ inputs.bot_pem }}"), sep='', file = "${{ github.output }}")
+        signing_key = jwt.jwk_from_pem("${{ inputs.bot_pem }}")
+        # Issued at time
+        # JWT expiration time (10 minutes maximum)
+        # GitHub App's identifier
+        payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
+
+        # Create JWT
+        print("token=", jwt.JWT().encode(payload, signing_key, alg='RS256'), sep='', file = "${{ github.output }}")
       shell: python
       id: get_token
