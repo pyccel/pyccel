@@ -26,13 +26,19 @@ runs:
         import os
         import requests
         with open("bot.pem", "rb") as f:
-            signing_key = jwt.jwk_from_pem(f.read())
+            v = f.read()
+            print(v[:10])
+            signing_key = jwt.jwk_from_pem(v)
+        v = os.environ["PEM"]
+        print(v[:10])
         # Issued at time
         # JWT expiration time (10 minutes maximum)
         # GitHub App's identifier
         payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
 
         jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+
+        print(jw_token[:10])
 
         headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
 
@@ -41,11 +47,16 @@ runs:
         print(reply.text)
         print(reply.json())
 
+        t = reply.json()["token"]
+        print(t[:10])
+
         # Create JWT
         with open("${{ github.output }}", 'a') as f:
             print("token=", reply.json()["token"], sep='', file = f)
       shell: python
       id: get_token
+      env:
+        PEM: ${{ inputs.bot_pem }}
     - run:
         echo "${{ steps.get_token.outputs.token }}"
       shell: bash
