@@ -22,4 +22,4 @@ runs:
           -H "X-GitHub-Api-Version: 2022-11-28" \
           --url https://api.github.com/repos/${GITHUB_REPOSITORY}/check-runs \
           -d '{"name":"${{ inputs.name }}","head_sha":"${{ inputs.ref }}","status":"in_progress"}'
-      shell: shell
+      shell: bash
