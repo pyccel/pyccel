@@ -26,16 +26,22 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-        if: inputs.python_version == ''
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-        if: inputs.python_version != ''
+      - name: "Generate token"
+        id: token
+        uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: "${{ secrets.BOT_PEM }}"
+      - name: "Post in progress"
+        id: check_create
+        uses: ./.github/actions/post_triggered
+        with:
+          ref: ${{ inputs.ref }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          name: "Coverage verification (coverage)"
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -51,6 +57,14 @@ jobs:
           git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
+        id: coverage
         run: |
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ inputs.sha }} $GITHUB_STEP_SUMMARY
         shell: bash
+      - name: "Post completed"
+        if: always()
+        uses: ./.github/actions/post_completed
+        with:
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          run_id: ${{ steps.check_create.outputs.check_id }}
+          status: ${{ steps.coverage.outcome }}

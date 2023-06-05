@@ -46,11 +46,26 @@ jobs:
             python -m pip install .[test]
         shell: bash
       - name: Fortran/C tests with pytest
+        id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
+        id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
       - name: Parallel tests with pytest
+        id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
+      - name: Final status
+        if: always()
+        id: status
+        run:
+          python ci_tools/check_success.py $GITHUB_OUTPUT steps.f_c_pytest.outcome steps.python_pytest.outcome steps.parallel.outcome
+      - name: "Post completed"
+        if: always()
+        uses: ./.github/actions/post_completed
+        with:
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          run_id: ${{ steps.check_create.outputs.check_id }}
+          status: ${{ steps.status.outcome }}

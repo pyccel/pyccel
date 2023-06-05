@@ -32,6 +32,7 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel from wheel
+        id: pickle
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build
@@ -39,4 +40,17 @@ jobs:
           python -m pip install dist/*.whl
         shell: bash
       - name: Check for existence of pickled files
+        id: pickle_check
         uses: ./.github/actions/check_for_pickled
+      - name: Final status
+        if: always()
+        id: status
+        run:
+          python ci_tools/check_success.py $GITHUB_OUTPUT steps.pickle.outcome steps.pickle_check.outcome
+      - name: "Post completed"
+        if: always()
+        uses: ./.github/actions/post_completed
+        with:
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          run_id: ${{ steps.check_create.outputs.check_id }}
+          status: ${{ steps.status.outcome }}

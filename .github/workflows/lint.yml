@@ -16,10 +16,6 @@ jobs:
     name: Python best practices
 
     steps:
-      - name: "Test secret"
-        run: |
-          echo "${{ secrets.BOT_PEM }}"
-        shell: bash
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.ref }}
@@ -38,7 +34,7 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
-          name: "Python linting"
+          name: "Python linting (pylint)"
       - name: Check branch
         run: |
           git branch
