@@ -6,6 +6,8 @@ from git_evaluation_tools import get_diff_as_json
 import coverage_analysis_tools as cov
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
+parser.add_argument('repo', metavar='repo', type=str,
+                        help='The repository being tested.')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
                         help='File containing the git diff output')
 parser.add_argument('coverageFile', metavar='coverageFile', type=str,
@@ -14,6 +16,8 @@ parser.add_argument('commit', metavar='commit', type=str,
                         help='The commit being analysed')
 parser.add_argument('output', metavar='output', type=str,
                         help='File where the markdown output will be printed')
+parser.add_argument('json_output', metavar='joson_output', type=str,
+                        help='File where the json output will be printed')
 
 args = parser.parse_args()
 
@@ -26,7 +30,13 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 
 new_untested = cov.allow_untested_debug_code(new_untested)
 
-cov.print_markdown_summary(new_untested, file_contents, args.commit, args.output)
+comments = cov.print_json_summary(new_untested, file_contents)
+
+cov.print_markdown_summary(comments, args.commit, args.output, args.repo)
+
+Bot(repo).post_coverage_review(comments)
+
+bot.post_coverage_review(comments)
 
 cov.show_results(new_untested)
 

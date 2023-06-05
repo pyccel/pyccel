@@ -159,9 +159,37 @@ def allow_untested_error_calls(untested):
 
     return reduced_untested
 
-def print_markdown_summary(untested, content_lines, commit, output):
+def print_markdown_summary(untested, commit, output, repo):
     """
     Print the results neatly in markdown in a provided file
+
+    Parameters
+    ----------
+    untested : list of dict
+        A list of dictionaries describing all lines with unacceptable coverage.
+    commit : str
+        The commit being tested
+    output : str
+        The file where the markdown summary should be printed
+    """
+    if len(untested) == 0:
+        md_string = "## Congratulations! All new python code in the pyccel package is fully tested! :tada:"
+    else:
+        md_string = "## Warning! The new code is not run\n"
+        current_file = None
+        for c in untested:
+            f = c['path']
+            if f!= current_file:
+                md_string += f"### {f}\n"
+                current_file = f
+            md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{c['start_line']}-L{c['line']}\n"
+
+    with open(output, "a", encoding="utf-8") as out_file:
+        print(md_string, file=out_file)
+
+def get_json_summary(untested, content_lines):
+    """
+    Print the results neatly in json in a provided file
 
     Parameters
     ----------
@@ -174,35 +202,31 @@ def print_markdown_summary(untested, content_lines, commit, output):
         Dictionary whose keys are the files in pyccel and whose
         values are lists containing the line numbers where python
         commands begin
-    commit : str
-        The commit being tested
-    output : str
-        The file where the markdown summary should be printed
-    """
-    if len(untested) == 0:
-        md_string = "## Congratulations! All new python code in the pyccel package is fully tested! :tada:"
-    else:
-        md_string = "## Warning! The new code is not run\n"
-        for f, lines in untested.items():
-            md_string += f"### {f}\n"
-            line_indices = content_lines[f]
-            n_code_lines = len(line_indices)
-            n_untested = len(lines)
-            i = 0
-            while i < n_untested:
-                start_line = lines[i]
-                j = line_indices.index(start_line)
-                while j < n_code_lines and i < n_untested and lines[i] == line_indices[j]:
-                    i+=1
-                    j+=1
-                if j < n_code_lines-1:
-                    end_line = line_indices[j]-1
-                else:
-                    end_line = line_indices[j]
-                md_string += "https://github.com/pyccel/pyccel/blob/"+commit+"/"+f+f"#L{start_line}-L{end_line}\n"
 
-    with open(output, "a", encoding="utf-8") as out_file:
-        print(md_string, file=out_file)
+    Returns
+    -------
+    list of dict
+        A list of dictionaries describing all lines with unacceptable coverage.
+    """
+    comments = []
+    for f, lines in untested.items():
+        line_indices = content_lines[f]
+        n_code_lines = len(line_indices)
+        n_untested = len(lines)
+        i = 0
+        while i < n_untested:
+            start_line = lines[i]
+            j = line_indices.index(start_line)
+            while j < n_code_lines and i < n_untested and lines[i] == line_indices[j]:
+                i+=1
+                j+=1
+            if j < n_code_lines-1:
+                end_line = line_indices[j]-1
+            else:
+                end_line = line_indices[j]
+            comments.append({'path':f, 'line':end_line, 'start_line': start_line, body=message})
+
+    return comments
 
 def show_results(untested):
     """
