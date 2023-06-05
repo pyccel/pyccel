@@ -1,8 +1,10 @@
 import requests
+import time
 
+comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
 class GitHubAPIInteractions:
-    def __init__(self, repo, install_token):
+    def __init__(self, repo):
         self._org, self._repo = repo.split('/')
         self._headers={"Accept": "application/vnd.github+json",
                  "Authorization": f"Bearer {install_token}",
@@ -44,3 +46,21 @@ class GitHubAPIInteractions:
     def create_comment(self, pr_id, comment):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
         return self._post_request("POST", url, json={"body":comment})
+
+    def create_review(self, pr_id, commit, comment, comments = ()):
+        status = 'APPROVE' if len(comments)==0 else 'REQUEST_CHANGES'
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
+        review = {'commit_id':commit, 'body' = comment, 'event': status, 'comments': comments}
+        return self._post_request("POST", url, json=review)
+
+    def check_for_user_in_team(self, user, team):
+        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
+        return self._post_request("GET", url)
+
+    def get_merged_prs(self):
+        url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
+        return self._post_request("GET", url)
+
+    def get_check_runs(self, commit):
+        url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
+        return self._post_request("GET", url)

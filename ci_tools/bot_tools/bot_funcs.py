@@ -14,23 +14,97 @@ default_python_versions = {
         'windows': '3.8'
         }
 
-def show_tests():
-    GitHubAPIInteractions(repo, install_token).create_comment(message_from_file('show_tests.txt'))
+def message_from_file(filename):
+    """
+    Get the message saved in the file.
 
-def show_commands():
-    GitHubAPIInteractions(repo, install_token).create_comment(message_from_file('bot_commands.txt'))
+    Reads the contents of the file `filename`, located in the
+    folder ./bot_messages/. The extracted string is returned for
+    use as a comment on a PR.
 
-def trust_user():
-    pass
+    Parameters
+    ----------
+    filename : str
+        The name of the file to be read
 
-def run_tests(, python_version = None):
-    pass
+    Results
+    -------
+    str : The message to be printed.
+    """
+    with open(os.path.join(comment_folder, filename), encoding="utf-8") as msg_file:
+        comment = msg_file.read()
+    return comment
 
-def trigger_mark_as_ready():
-    pass
+class Bot:
+    trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-def mark_as_ready():
-    pass
+    def __init__(self, repo, commit, pr_id):
+        self._repo = repo
+        self._GAI = GitHubAPIInteractions(self._repo)
+        self._pr_id = pr_id
+        self._ref = commit
 
-def accept_coverage():
-    pass
+    def show_tests(self):
+        self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
+
+    def show_commands(self):
+        self._GAI.create_comment(self._pr_id, message_from_file('bot_commands.txt'))
+
+    def trust_user(self):
+        pass
+
+    def run_tests(self, tests, python_version = None):
+        already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
+        for t in tests:
+            if any("({t})" in a for a in already_triggered):
+                continue
+            pv = python_version or default_python_versions[t]
+            self._GAI.run_workflow(f'{t}.yml', {'python_version':pv, 'ref':self._ref})
+
+    def mark_as_draft(self):
+        cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
+
+        with subprocess.Popen(cmds) as p:
+            _, err = p.communicate()
+        print(err)
+
+    def mark_as_ready(self):
+        cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
+
+        with subprocess.Popen(cmds) as p:
+            _, err = p.communicate()
+        print(err)
+
+    def post_coverage_review(self, comments):
+        message = message_from_file('coverage_review_message.txt')
+        self._GAI.create_review(self._pr_id, self._commit, message, comments)
+
+    def is_user_trusted(self, user):
+        """
+        Is the indicated user is trusted by the App.
+
+        Detect whether the indicated user is trusted by the App.
+        A user is considered trustworthy if they are in the pyccel-dev
+        team, if they have previously created a PR which was merged, or
+        if a senior dev has declared them trustworthy.
+        """
+        in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
+        if in_team:
+            return True
+        merged_prs = self._GAI.get_merged_prs()
+        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user)
+        if has_merged_pr:
+            return has_merged_pr
+        comments = self._GAI.get_comments(self._pr_id)
+        comments_from_trust_givers = [c['body'].split() for c in comments if c['user']['login'] in self.trust_givers]
+        expected_trust_command = ['/bot', 'trust', 'user', user]
+        awarded_trust = any(c[:4] == expected_trust_command for c in comments_from_trust_givers)
+        return awarded_trust
+
+    def warn_untrusted(self):
+        self._GAI.create_comment(self._pr_id, message_from_file('untrusted_user.txt'))
+
+    def indicate_trust(self, user):
+        if user.startswith('@'):
+            user = user[1:]
+        self._GAI.create_comment(self._pr_id, message_from_file('trusting_user.txt').format(user=user))
