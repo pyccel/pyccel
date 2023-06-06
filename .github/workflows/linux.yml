@@ -21,7 +21,7 @@ jobs:
         id: ref
         run: |
           ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
-          with open(${{ github.output }}, "a") as f:
+          with open("${{ github.output }}", "a") as f:
               print("ref=", ref, sep='', file=f)
         shell: python
       - uses: actions/checkout@v3
