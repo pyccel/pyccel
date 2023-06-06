@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       ref:
-        required: true
+        required: false
         type: string
       base:
         required: true
@@ -21,6 +21,13 @@ jobs:
     name: Documentation Format
 
     steps:
+      - name: Get ref 
+         id: ref 
+         run: | 
+           ref = "${{ inputs.ref }}" or "${{ github.event.ref }}" 
+           with open("${{ github.output }}", "a") as f: 
+               print("ref=", ref, sep='', file=f) 
+         shell: python
       - uses: actions/checkout@v3
         with:
           ref: ${{ inputs.base }}
@@ -28,7 +35,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: compare
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -42,7 +49,7 @@ jobs:
         id: check_create
         uses: ./.github/actions/post_triggered
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           name: "Check documentation (docs)"
       - name: Install python dependencies
