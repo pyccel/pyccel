@@ -1,13 +1,13 @@
-#TOKEN="$(python3 ci_tools/bot_tools/generate_jwt.py /home/emily/Downloads/testpyccelbot.2023-05-23.private-key.pem)"
-#
+INSTALLATION_TOKEN="$(python3 ci_tools/bot_tools/generate_jwt.py /home/emily/Downloads/testpyccelbot.2023-05-23.private-key.pem)"
+
+echo ${INSTALLATION_TOKEN}
+
 ## Get installation token
 #curl --request POST \
 #--url "https://api.github.com/app/installations/37820767/access_tokens" \
 #--header "Accept: application/vnd.github+json" \
 #--header "Authorization: Bearer ${TOKEN}" \
 #--header "X-GitHub-Api-Version: 2022-11-28"
-
-INSTALLATION_TOKEN="ghs_OjLM3WujWH0yUqaru3pNjqWWqx3jij24UtQv"
 
 #["token"]
 
@@ -39,11 +39,11 @@ INSTALLATION_TOKEN="ghs_OjLM3WujWH0yUqaru3pNjqWWqx3jij24UtQv"
 #  -d '{"status":"completed","conclusion":"success"}'
 
 # Get a PR
-#curl -L \
-#  -H "Accept: application/vnd.github+json" \
-#  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
-#  -H "X-GitHub-Api-Version: 2022-11-28" \
-#  https://api.github.com/repos/EmilyBourne/pyccel/pulls/24
+curl -L \
+  -H "Accept: application/vnd.github+json" \
+  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
+  -H "X-GitHub-Api-Version: 2022-11-28" \
+  https://api.github.com/repos/EmilyBourne/pyccel/pulls/24
 
 # ["mergeable_state"] == "clean"
 # ["head"]["sha"]
@@ -63,5 +63,34 @@ INSTALLATION_TOKEN="ghs_OjLM3WujWH0yUqaru3pNjqWWqx3jij24UtQv"
 #  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
 #  -H "X-GitHub-Api-Version: 2022-11-28" \
 #  https://api.github.com/repos/EmilyBourne/pyccel/issues/24/comments
+#
+#curl -L \
+#  -X DELETE \
+#  -H "Accept: application/vnd.github+json" \
+#  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
+#  -H "X-GitHub-Api-Version: 2022-11-28" \
+#  https://api.github.com/repos/EmilyBourne/pyccel/issues/comments/1575476719
 
-# Request reviews : https://docs.github.com/en/rest/pulls/review-requests?apiVersion=2022-11-28
+ #Request reviews : https://docs.github.com/en/rest/pulls/review-requests?apiVersion=2022-11-28
+
+# curl -L \
+#  -H "Accept: application/vnd.github+json" \
+#  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
+#  -H "X-GitHub-Api-Version: 2022-11-28" \
+#  https://api.github.com/orgs/pyccel/members/EmilyBourne
+
+# curl -L \
+#  -H "Accept: application/vnd.github+json" \
+#  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
+#  -H "X-GitHub-Api-Version: 2022-11-28" \
+#  https://api.github.com/orgs/pyccel/teams/pyccel-dev
+
+
+
+#curl -L \
+#  -X PATCH \
+#  -H "Accept: application/vnd.github+json" \
+#  -H "Authorization: Bearer ${INSTALLATION_TOKEN}"\
+#  -H "X-GitHub-Api-Version: 2022-11-28" \
+#  https://api.github.com/repos/EmilyBourne/pyccel/pulls/24 \
+#  -d '{"draft": false}'
