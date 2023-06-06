@@ -1,0 +1,21 @@
+name: Pull Request
+
+on:
+  issue_comment:
+    types: [ created ]
+
+jobs:
+  Bot:
+    if: ${{ startsWith( github.event.comment, '/bot ' ) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - id: run_bot
+        run: |
+          python ci_tools/bot_comment_react.py
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -4,8 +4,6 @@ on:
   pull_request:
     branches: [ devel ]
     types: [ opened, reopened, ready_for_review, synchronize, converted_to_draft ]
-  issue_comment:
-    types: [ created ]
 
 jobs:
   Bot:
