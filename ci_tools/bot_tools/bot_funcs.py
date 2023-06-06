@@ -38,7 +38,7 @@ def message_from_file(filename):
 class Bot:
     trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-    def __init__(self, repo, commit, pr_id):
+    def __init__(self, repo, pr_id, commit = None):
         self._repo = repo
         self._GAI = GitHubAPIInteractions(self._repo)
         self._pr_id = pr_id
