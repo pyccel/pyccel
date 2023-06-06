@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       ref:
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -17,9 +17,15 @@ jobs:
     name: Unit tests
 
     steps:
+      - name: Get ref
+        id: ref
+        run: |
+          ref = ${{ inputs.ref }} or ${{ github.event.ref }}
+          with open(${{ github.output }}, "a") as f:
+              print("ref=", ref, sep='', file=f)
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ ref.outputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -33,7 +39,7 @@ jobs:
         id: check_create
         uses: ./.github/actions/post_triggered
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           name: "Unit tests on linux (linux)"
       - name: Install dependencies
