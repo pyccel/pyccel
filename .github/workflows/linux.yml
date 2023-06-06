@@ -25,7 +25,7 @@ jobs:
               print("ref=", ref, sep='', file=f)
       - uses: actions/checkout@v3
         with:
-          ref: ${{ ref.outputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -39,7 +39,7 @@ jobs:
         id: check_create
         uses: ./.github/actions/post_triggered
         with:
-          ref: ${{ ref.outputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           name: "Unit tests on linux (linux)"
       - name: Install dependencies
