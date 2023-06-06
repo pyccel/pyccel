@@ -7,11 +7,11 @@ def get_final_status(statuses : set):
     if len(statuses) == 1:
         return statuses.pop()
 
-    statuses.pop('skipped')
+    statuses.discard('skipped')
     if len(statuses) == 1:
         return statuses.pop()
 
-    statuses.pop('success')
+    statuses.discard('success')
     if len(statuses) == 1:
         return statuses.pop()
 
