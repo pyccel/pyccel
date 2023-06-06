@@ -20,7 +20,7 @@ jobs:
       - name: Get ref
         id: ref
         run: |
-          ref = ${{ inputs.ref }} or ${{ github.event.ref }}
+          ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
           with open(${{ github.output }}, "a") as f:
               print("ref=", ref, sep='', file=f)
       - uses: actions/checkout@v3
