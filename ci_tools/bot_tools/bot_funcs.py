@@ -1,3 +1,4 @@
+from github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
         'anaconda_linux': '3.10',
