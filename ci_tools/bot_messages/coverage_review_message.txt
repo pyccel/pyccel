@@ -1,0 +1,6 @@
+There seems to be lines in this PR which aren't tested. Please take a look at the result and add tests which cover the new code.
+
+If this is modified code which cannot be easily tested in this PR please open an issue to request that this code be either removed or tested. Once you have done that please leave a message on the relevant conversation beginning with the line `/bot accept` and referencing the issue.
+
+Similarly if the new code cannot be tested for some reason, please leave a comment beginning with the line `/bot accept` on the relevant conversation explaining why the code can't be tested.
+
