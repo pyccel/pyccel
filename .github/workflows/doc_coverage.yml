@@ -90,7 +90,7 @@ jobs:
           python ./base/ci_tools/check_success.py $GITHUB_OUTPUT steps.doc_coverage.outcome steps.doc_format.outcome
       - name: "Post completed"
         if: always()
-        uses: ./.github/actions/post_completed
+        uses: ./base/.github/actions/post_completed
         with:
           installation_token: ${{ steps.token.outputs.installation_token }}
           run_id: ${{ steps.check_create.outputs.check_id }}

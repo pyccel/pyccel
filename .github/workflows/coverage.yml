@@ -12,9 +12,6 @@ on:
       base:
         required: true
         type: string
-      sha:
-        required: true
-        type: string
 
 jobs:
   CoverageChecker:
@@ -59,7 +56,7 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
-          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ inputs.sha }} $GITHUB_STEP_SUMMARY
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ inputs.ref }} $GITHUB_STEP_SUMMARY review.json
         shell: bash
       - name: "Post completed"
         if: always()
