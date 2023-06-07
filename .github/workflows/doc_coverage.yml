@@ -42,12 +42,12 @@ jobs:
           python-version: ${{ inputs.python_version }}
       - name: "Generate token"
         id: token
-        uses: ./.github/actions/generate_bot_token
+        uses: ./base/.github/actions/generate_bot_token
         with:
           bot_pem: "${{ secrets.BOT_PEM }}"
       - name: "Post in progress"
         id: check_create
-        uses: ./.github/actions/post_triggered
+        uses: ./base/.github/actions/post_triggered
         with:
           ref: ${{ steps.ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
@@ -81,12 +81,13 @@ jobs:
           done < objects.txt
           cat report.txt
           python ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
+          cd ..
         shell: bash
       - name: Final status
         if: always()
         id: status
         run:
-          python ci_tools/check_success.py $GITHUB_OUTPUT steps.doc_coverage.outcome steps.doc_format.outcome
+          python ./base/ci_tools/check_success.py $GITHUB_OUTPUT steps.doc_coverage.outcome steps.doc_format.outcome
       - name: "Post completed"
         if: always()
         uses: ./.github/actions/post_completed
