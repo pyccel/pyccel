@@ -1,3 +1,5 @@
+import os
+import subprocess
 from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
@@ -14,6 +16,8 @@ default_python_versions = {
         'spelling': '3.8',
         'windows': '3.8'
         }
+
+comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
 def message_from_file(filename):
     """

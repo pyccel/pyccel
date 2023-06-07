@@ -1,8 +1,6 @@
 import requests
 import time
 
-comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
-
 class GitHubAPIInteractions:
     def __init__(self, repo):
         self._org, self._repo = repo.split('/')
