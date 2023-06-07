@@ -7,7 +7,7 @@ on:
         required: true
         type: string
       ref:
-        required: true
+        required: false
         type: string
 
 jobs:
@@ -16,9 +16,16 @@ jobs:
     name: Unit tests
 
     steps:
+      - name: Get ref
+        id: ref
+        run: |
+          ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
+          with open("${{ github.output }}", "a") as f:
+              print("ref=", ref, sep='', file=f)
+        shell: python
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - uses: conda-incubator/setup-miniconda@v2
@@ -35,7 +42,7 @@ jobs:
         id: check_create
         uses: ./.github/actions/post_triggered
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           name: "Unit tests on linux with anaconda (linux_anaconda)"
       - name: Install python dependencies
