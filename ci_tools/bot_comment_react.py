@@ -8,7 +8,7 @@ pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
 
 def get_unique_test_list(keys):
     tests = set(command_words[1:])
-    t = tests.pop('pr_tests')
+    t = tests.remove('pr_tests')
     if t:
         tests.update(pr_test_keys)
     if 'coverage' in tests:
