@@ -13,6 +13,7 @@ def get_unique_test_list(keys):
         tests.update(pr_test_keys)
     if 'coverage' in tests:
         tests.add('linux')
+    return tests
 
 # Parse event payload from $GITHUB_EVENT_PATH variable
 # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
