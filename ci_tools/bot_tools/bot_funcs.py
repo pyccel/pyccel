@@ -78,7 +78,7 @@ class Bot:
                 inputs = {'python_version':pv, 'ref':self._ref}
                 if t in tests_with_base:
                     inputs['base'] = self._base
-                self._GAI.run_workflow(f'{t}.yml', )
+                self._GAI.run_workflow(f'{t}.yml', inputs)
 
     def mark_as_draft(self):
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
