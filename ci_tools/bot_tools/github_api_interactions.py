@@ -17,9 +17,7 @@ def get_authorization():
     # Create JWT
     reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
-    print(reply.json())
-
-    return reply.json()["token"]
+    return reply.json()["token"], reply.json()["expires_at"]
 
     #with open("${{ github.output }}", 'a') as f:
     #    print("token=", t, sep='', file = f)
