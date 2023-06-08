@@ -7,12 +7,12 @@ default_python_versions = {
         'anaconda_windows': '3.10',
         'coverage': '3.7',
         'doc_coverage': '3.8',
-        'lint': '3.8',
         'linux': '3.7',
         'macosx': '3.10',
         'pickle_wheel': '3.7',
         'pickle': '3.8',
         'pyccel_lint': '3.8',
+        'pylint': '3.8',
         'spelling': '3.8',
         'windows': '3.8'
         }
