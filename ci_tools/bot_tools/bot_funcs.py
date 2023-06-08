@@ -49,13 +49,13 @@ class Bot:
         self._repo = repo
         self._GAI = GitHubAPIInteractions(self._repo)
         self._pr_id = pr_id
+        self._pr_details = self._GAI.get_pr_details(pr_id)
         if commit:
             self._ref = commit
             self._base = None
         else:
-            pr = self._GAI.get_pr_details(pr_id)
-            self._ref = pr["merge_commit_sha"]
-            self._base = pr["base"]["sha"]
+            self._ref = self._pr_details["head"]["sha"]
+            self._base = self._pr_details["base"]["sha"]
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
@@ -69,6 +69,8 @@ class Bot:
     def run_tests(self, tests, python_version = None):
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
+        elif self._pr_details["mergeable_state"] != "clean":
+            self._GAI.create_comment(self._pr_id, message_from_file('merge_target.txt'))
         else:
             already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
             print(already_triggered)
