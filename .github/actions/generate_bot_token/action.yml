@@ -3,6 +3,10 @@ inputs:
   bot_pem:
     description: "The private key which identfies the bot"
     required: true
+  dir:
+    description: "The directory where the code is found"
+    required: false
+    default: "."
 outputs:
   installation_token:
     description: "The token which will allow you to authentificate as the GitHub app for 1 hour"
@@ -18,6 +22,7 @@ runs:
         pip install jwt requests
       shell: bash
     - run: |
+        cd ${{ inputs.dir }}
         python -c "from ci_tools.bot_tools.github_api_interactions import get_authorization; t,d=get_authorization(); print('token=',t,sep=''); print('token_exp=',d,sep='')" >> ${{ github.output }}
       shell: bash
       id: get_token

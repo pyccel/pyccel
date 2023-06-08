@@ -45,6 +45,7 @@ jobs:
         uses: ./base/.github/actions/generate_bot_token
         with:
           bot_pem: "${{ secrets.BOT_PEM }}"
+          dir: "base"
       - name: "Post in progress"
         id: check_create
         uses: ./base/.github/actions/post_triggered
