@@ -19,7 +19,7 @@ default_python_versions = {
 
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 
-comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
+comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
 def message_from_file(filename):
     """
