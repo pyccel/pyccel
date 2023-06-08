@@ -44,7 +44,7 @@ jobs:
         with:
           ref: ${{ steps.ref.outputs.ref }}
           installation_token: ${{ steps.token.outputs.installation_token }}
-          name: "Python linting (pylint)"
+          name: "Pyccel best practices"
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel
