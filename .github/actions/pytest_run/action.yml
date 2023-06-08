@@ -65,6 +65,4 @@ runs:
       run:
           python ci_tools/json_pytest_output.py steps.pytest_1.outcome steps.pytest_2.outcome steps.pytest_3.outcome steps.pytest_4.outcome steps.pytest_5.outcome steps.pytest_6.outcome
       shell: ${{ inputs.shell_cmd }}
-      working-directory: ./tests
-
 
