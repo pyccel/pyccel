@@ -28,7 +28,10 @@ class GitHubAPIInteractions:
     def _post_request(self, method, url, json=None):
         reply = requests.request(method, url, json=json, headers=self.get_headers())
         print(reply.text)
-        return reply.json()
+        if method != "POST":
+            return reply.json()
+        else:
+            return reply
 
     def check_runs(self, commit):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
