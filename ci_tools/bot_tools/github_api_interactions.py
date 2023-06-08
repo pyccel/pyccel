@@ -23,6 +23,7 @@ class GitHubAPIInteractions:
     def __init__(self, repo):
         self._org, self._repo = repo.split('/')
         self._install_token = os.environ["installation_token"]
+        print(os.environ["installation_token_exp"])
         self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
 
     def _post_request(self, method, url, json=None):
