@@ -32,6 +32,7 @@ runs:
         #reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
         #t = reply.json()["token"]
+        ls
         from ci_tools.bot_tools.github_api_interactions import get_authorization
 
         t = get_authorization()
