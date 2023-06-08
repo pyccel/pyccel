@@ -15,34 +15,10 @@ runs:
         pip install jwt requests
       shell: bash
     - run: |
-        #import jwt
-        #import time
-        #import os
-        #import requests
-        #signing_key = jwt.jwk_from_pem(bytes(os.environ["PEM"], "utf-8"))
-        ## Issued at time
-        ## JWT expiration time (10 minutes maximum)
-        ## GitHub App's identifier
-        #payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
+        token=$(python -c "from ci_tools.bot_tools.github_api_interactions import get_authorization; print(get_authorization())")
 
-        #jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
-
-        #headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
-
-        #reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
-
-        #t = reply.json()["token"]
-        import os
-        print(os.getcwd())
-        print(os.listdir())
-        from ci_tools.bot_tools.github_api_interactions import get_authorization
-
-        t = get_authorization()
-
-        # Create JWT
-        with open("${{ github.output }}", 'a') as f:
-            print("token=", t, sep='', file = f)
-      shell: python
+        echo "token=${token}" >> ${{ github.output }}
+      shell: bash
       id: get_token
       env:
         PEM: ${{ inputs.bot_pem }}
