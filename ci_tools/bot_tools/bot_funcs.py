@@ -54,7 +54,7 @@ class Bot:
             self._base = None
         else:
             pr = self._GAI.get_pr_details(pr_id)
-            self._ref = pr["head"]["sha"]
+            self._ref = pr["merge_commit_sha"]
             self._base = pr["base"]["sha"]
 
     def show_tests(self):
