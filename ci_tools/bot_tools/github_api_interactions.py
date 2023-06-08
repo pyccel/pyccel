@@ -27,7 +27,9 @@ class GitHubAPIInteractions:
 
     def _post_request(self, method, url, json=None):
         reply = requests.request(method, url, json=json, headers=self.get_headers())
+        print("----------------------------------------")
         print(reply.text)
+        print("----------------------------------------")
         if method != "POST":
             return reply.json()
         else:

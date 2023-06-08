@@ -71,6 +71,7 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('bot_commands.txt'))
         else:
             already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
+            print(already_triggered)
             for t in tests:
                 if any("({t})" in a for a in already_triggered):
                     continue
@@ -111,7 +112,6 @@ class Bot:
         if in_team["message"] != "Not found":
             return True
         merged_prs = self._GAI.get_merged_prs()
-        print(merged_prs)
         has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user)
         if has_merged_pr:
             return has_merged_pr
