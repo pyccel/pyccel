@@ -19,19 +19,14 @@ def get_authorization():
 
     return reply.json()["token"], reply.json()["expires_at"]
 
-    #with open("${{ github.output }}", 'a') as f:
-    #    print("token=", t, sep='', file = f)
-
 class GitHubAPIInteractions:
     def __init__(self, repo):
         self._org, self._repo = repo.split('/')
-        install_token = os.environ["installation_token"]
-        self._headers={"Accept": "application/vnd.github+json",
-                 "Authorization": f"Bearer {install_token}",
-                 "X-GitHub-Api-Version": "2022-11-28"}
+        self._install_token = os.environ["installation_token"]
+        self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
 
     def _post_request(self, method, url, json=None):
-        return requests.request(method, url, json=json, headers=self._headers)
+        return requests.request(method, url, json=json, headers=self.get_headers())
 
     def check_runs(self, commit):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
@@ -84,3 +79,11 @@ class GitHubAPIInteractions:
     def get_check_runs(self, commit):
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
         return self._post_request("GET", url)
+
+    def get_headers(self):
+        if self._install_token_exp < time.struct_time(time.gmtime())
+            self._install_token, self._install_token_exp = get_authorization()
+
+        return {"Accept": "application/vnd.github+json",
+                 "Authorization": f"Bearer {self._install_token}",
+                 "X-GitHub-Api-Version": "2022-11-28"}
