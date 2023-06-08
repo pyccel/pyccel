@@ -6,7 +6,7 @@ default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
         'coverage': '3.7',
-        'docs': '3.8',
+        'doc_coverage': '3.8',
         'lint': '3.8',
         'linux': '3.7',
         'macosx': '3.10',

@@ -3,7 +3,7 @@ The following is a list of keywords which can be used to run tests. Tests in bol
 - **windows** : Runs the unit tests on a Windows system.
 - **macosx** : Runs the unit tests on a MacOS X system.
 - **coverage** : Runs the unit tests on a Linux system and checks the coverage of the tests.
-- **docs** : Checks if the documentation follows the numpydoc format.
+- **doc_coverage** : Checks if the documentation follows the numpydoc format.
 - **pylint** : Runs pylint on files which are too big to be handled by codacy.
 - **lint** : Runs a linter to check that Pyccel's best practices are followed.
 - **spelling** : Checks if everything in the documentation is spelled (and capitalised) correctly.
