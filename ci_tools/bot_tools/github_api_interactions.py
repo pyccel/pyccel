@@ -81,7 +81,7 @@ class GitHubAPIInteractions:
         return self._post_request("GET", url)
 
     def get_headers(self):
-        if self._install_token_exp < time.struct_time(time.gmtime())
+        if self._install_token_exp < time.struct_time(time.gmtime()):
             self._install_token, self._install_token_exp = get_authorization()
 
         return {"Accept": "application/vnd.github+json",
