@@ -97,6 +97,7 @@ class Bot:
         if in_team:
             return True
         merged_prs = self._GAI.get_merged_prs()
+        print(merged_prs)
         has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user)
         if has_merged_pr:
             return has_merged_pr
