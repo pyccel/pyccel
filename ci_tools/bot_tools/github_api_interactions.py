@@ -1,9 +1,11 @@
-import requests
+import os
 import time
+import requests
 
 class GitHubAPIInteractions:
     def __init__(self, repo):
         self._org, self._repo = repo.split('/')
+        install_token = os.environ["installation_token"]
         self._headers={"Accept": "application/vnd.github+json",
                  "Authorization": f"Bearer {install_token}",
                  "X-GitHub-Api-Version": "2022-11-28"}
