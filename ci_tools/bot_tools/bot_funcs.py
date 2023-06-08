@@ -47,7 +47,13 @@ class Bot:
         self._repo = repo
         self._GAI = GitHubAPIInteractions(self._repo)
         self._pr_id = pr_id
-        self._ref = commit
+        if commit:
+            self._ref = commit
+            self._base = None
+        else:
+            pr = self._GAI.get_pr_details(pr_id)
+            self._ref = pr["head"]["sha"]
+            self._base = pr["base"]["sha"]
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
@@ -64,7 +70,7 @@ class Bot:
             if any("({t})" in a for a in already_triggered):
                 continue
             pv = python_version or default_python_versions[t]
-            self._GAI.run_workflow(f'{t}.yml', {'python_version':pv, 'ref':self._ref})
+            self._GAI.run_workflow(f'{t}.yml', {'python_version':pv, 'ref':self._ref, 'base':self._base})
 
     def mark_as_draft(self):
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
@@ -94,7 +100,7 @@ class Bot:
         if a senior dev has declared them trustworthy.
         """
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team:
+        if in_team["message"] != "Not found":
             return True
         merged_prs = self._GAI.get_merged_prs()
         print(merged_prs)
