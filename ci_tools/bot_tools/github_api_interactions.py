@@ -26,7 +26,7 @@ class GitHubAPIInteractions:
         self._install_token_exp = time.strptime(os.environ["installation_token_exp"], "%Y-%m-%dT%H:%M:%SZ")
 
     def _post_request(self, method, url, json=None):
-        reply = requests.request(method, url, json=json, headers=self.get_headers()).json()
+        reply = requests.request(method, url, json=json, headers=self.get_headers())
         print(reply.text)
         return reply.json()
 
