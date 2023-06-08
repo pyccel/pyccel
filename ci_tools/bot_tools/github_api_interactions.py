@@ -1,6 +1,28 @@
+import jwt
 import os
 import time
 import requests
+
+def get_authorization():
+    signing_key = jwt.jwk_from_pem(bytes(os.environ["PEM"], "utf-8"))
+    # Issued at time
+    # JWT expiration time (10 minutes maximum)
+    # GitHub App's identifier
+    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
+
+    jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+
+    headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
+
+    # Create JWT
+    reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
+
+    print(reply.json())
+
+    return reply.json()["token"]
+
+    #with open("${{ github.output }}", 'a') as f:
+    #    print("token=", t, sep='', file = f)
 
 class GitHubAPIInteractions:
     def __init__(self, repo):
