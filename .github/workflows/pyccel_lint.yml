@@ -19,9 +19,16 @@ jobs:
     name: Best practices
 
     steps:
+      - name: Get ref
+        id: ref
+        run: |
+          ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
+          with open("${{ github.output }}", "a") as f:
+              print("ref=", ref, sep='', file=f)
+        shell: python
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ steps.ref.outputs.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -49,7 +56,7 @@ jobs:
       - name: Collect diff information
         run: |
           git fetch
-          git diff ${{ inputs.base }}..${{ inputs.ref }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ inputs.base }}..${{ steps.ref.outputs.ref }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
         id: lint
