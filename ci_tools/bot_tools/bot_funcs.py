@@ -17,6 +17,8 @@ default_python_versions = {
         'windows': '3.8'
         }
 
+tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
+
 comment_folder = os.path.join(os.path.dirname(__file__), 'bot_messages')
 
 def message_from_file(filename):
@@ -73,7 +75,10 @@ class Bot:
                 if any("({t})" in a for a in already_triggered):
                     continue
                 pv = python_version or default_python_versions[t]
-                self._GAI.run_workflow(f'{t}.yml', {'python_version':pv, 'ref':self._ref, 'base':self._base})
+                inputs = {'python_version':pv, 'ref':self._ref}
+                if t in tests_with_base:
+                    inputs['base'] = self._base
+                self._GAI.run_workflow(f'{t}.yml', )
 
     def mark_as_draft(self):
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]

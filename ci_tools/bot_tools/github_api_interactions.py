@@ -53,7 +53,7 @@ class GitHubAPIInteractions:
     def run_workflow(self, filename, inputs):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
-                "inputs": str(inputs)}
+                "inputs": inputs}
         return self._post_request("POST", url, json)
 
     def get_comments(self, pr_id):
@@ -84,7 +84,8 @@ class GitHubAPIInteractions:
 
     def get_headers(self):
         if self._install_token_exp < time.struct_time(time.gmtime()):
-            self._install_token, self._install_token_exp = get_authorization()
+            self._install_token, expiry = get_authorization()
+            self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
         return {"Accept": "application/vnd.github+json",
                  "Authorization": f"Bearer {self._install_token}",
