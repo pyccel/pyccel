@@ -15,7 +15,7 @@ def get_json_status():
     summary['pytest 5'] = sys.argv[5]
     summary['pytest 6'] = sys.argv[6]
     data['summary'] = summary
-    return data
+    return json.dumps(data)
 
 with open(output_file, 'a') as f:
     print(get_json_status(), sep='', file=f)
