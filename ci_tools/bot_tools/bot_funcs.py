@@ -17,6 +17,21 @@ default_python_versions = {
         'windows': '3.8'
         }
 
+test_names = {
+        'anaconda_linux': "Unit tests on linux with anaconda",
+        'anaconda_windows': "Unit tests on windowd with anaconda",
+        'coverage': "Coverage verification",
+        'doc_coverage': "Check documentation",
+        'linux': "Unit tests on linux",
+        'macosx': "Unit tests on macosx",
+        'pickle_wheel': "Test pickling during wheel installation",
+        'pickle': "Test pickling during source installation",
+        'pyccel_lint': "Pyccel best practices",
+        'pylint': "Python linting",
+        'spelling': "Spelling verification",
+        'windows': "Unit tests on windows"
+        }
+
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
@@ -75,10 +90,15 @@ class Bot:
             already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
             print(already_triggered)
             for t in tests:
-                if any("({t})" in a for a in already_triggered):
-                    continue
                 pv = python_version or default_python_versions[t]
-                inputs = {'python_version':pv, 'ref':self._ref}
+                key = f"({t}, {pv})"
+                if any(key in a for a in already_triggered):
+                    continue
+                name = f"{name} {key}"
+                self._GAI.prepare_run(self._ref, name)
+                if t == "coverage":
+                    continue
+                inputs = {'python_version': pv, 'ref': self._ref}
                 if t in tests_with_base:
                     inputs['base'] = self._base
                 self._GAI.run_workflow(f'{t}.yml', inputs)
