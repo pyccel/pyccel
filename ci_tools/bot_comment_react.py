@@ -3,8 +3,8 @@ import json
 import os
 from bot_tools.bot_funcs import Bot
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'lint', 'spelling']
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
+                'pyccel_lint', 'spelling']
 
 def get_unique_test_list(keys):
     tests = set(command_words[1:])
