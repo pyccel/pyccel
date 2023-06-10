@@ -76,11 +76,6 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         return self._post_request("POST", url, json)
 
-    def update_run(self, run_id, **kwargs):
-        # Check runs (https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28)
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
-        return self._post_request("POST", url, kwargs)
-
     def get_pr_details(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
         print(url)
