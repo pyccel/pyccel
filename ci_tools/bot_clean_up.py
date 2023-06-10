@@ -1,3 +1,6 @@
+import json
+import os
+from bot_tools.bot_funcs import Bot
 
 coverage_deps = ['linux']
 
