@@ -65,7 +65,7 @@ class GitHubAPIInteractions:
                 "details_url": workflow_url}
         return self._post_request("POST", url, json)
 
-    def prepare_run(self, commit, name, workflow_url):
+    def prepare_run(self, commit, name):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         json = {"name": name,
                 "head_sha": commit,
