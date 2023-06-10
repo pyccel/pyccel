@@ -10,6 +10,7 @@ jobs:
     name: Report result
 
     steps:
+      - uses: actions/checkout@v3
       - name: Clean up
         run:
           python ci_tools/bot_clean_up.py
