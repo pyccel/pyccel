@@ -9,6 +9,9 @@ on:
       ref:
         required: false
         type: string
+      check_run_id:
+        required: false
+        type: string
 
 jobs:
   Wheel-pickled-installation:
@@ -26,16 +29,10 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ steps.ref.outputs.ref }}
-      - name: Set up Python 3.7
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-        if: inputs.python_version == ''
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-        if: inputs.python_version != ''
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel from wheel

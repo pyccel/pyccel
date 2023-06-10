@@ -12,6 +12,9 @@ on:
       base:
         required: true
         type: string
+      check_run_id:
+        required: false
+        type: string
 
 jobs:
   Pyccel-Linter:
