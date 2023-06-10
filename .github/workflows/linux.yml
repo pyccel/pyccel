@@ -36,7 +36,8 @@ jobs:
           python-version: ${{ inputs.python_version }}
       - name: "Setup"
         id: token
-        run:
+        run: |
+          pip install jwt requests
           python ci_tools/setup_check_run.py
         env:
           BOT_PEM: ${{ secrets.BOT_PEM }}
