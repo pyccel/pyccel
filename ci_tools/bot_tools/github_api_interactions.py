@@ -23,7 +23,7 @@ def get_authorization():
     with open(os.environ["GITHUB_OUTPUT"], "r") as f:
         output = f.read()
 
-    if "installation_token" in lines:
+    if "installation_token" in output:
         lines = output.split('\n')
         print(lines)
         output = '\n'.join(l for l in lines if "installation_token" not in l)
