@@ -110,19 +110,19 @@ class GitHubAPIInteractions:
 
     def check_for_user_in_team(self, user, team):
         url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
-        return self._post_request("GET", url)
+        return self._post_request("GET", url).json()
 
     def get_merged_prs(self):
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
-        return self._post_request("GET", url)
+        return self._post_request("GET", url).json()
 
     def get_check_runs(self, commit):
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
-        return self._post_request("GET", url)
+        return self._post_request("GET", url).json()
 
     def get_pr_events(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/events"
-        return self._post_request("GET", url)
+        return self._post_request("GET", url).json()
 
 
     def get_headers(self):
