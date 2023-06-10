@@ -11,6 +11,8 @@ pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylin
 def get_name_key(name):
     if name == "Codacy Static Analysis":
         return "Codacy"
+    elif '(' in name:
+        return name.split('(')[1].split(',')[0]
     else:
         return name.split('(')[1].split(',')[0]
 
