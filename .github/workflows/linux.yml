@@ -40,7 +40,7 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py
         env:
-          BOT_PEM: ${{ secrets.BOT_PEM }}
+          BOT: ${{ secrets.BOT_PEM }}
           GITHUB_RUN_ID: ${{ github.run_id }}
       - name: Coverage install
         uses: ./.github/actions/coverage_install
