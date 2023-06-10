@@ -83,6 +83,7 @@ class GitHubAPIInteractions:
 
     def get_pr_details(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
+        print(url)
         return self._post_request("GET", url).json()
 
     def run_workflow(self, filename, inputs):
