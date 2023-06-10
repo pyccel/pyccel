@@ -34,7 +34,7 @@ comments = cov.print_json_summary(new_untested, file_contents)
 
 cov.print_markdown_summary(comments, args.commit, args.output, args.repo)
 
-Bot(repo).post_coverage_review(comments)
+bot = Bot()
 
 bot.post_coverage_review(comments)
 
