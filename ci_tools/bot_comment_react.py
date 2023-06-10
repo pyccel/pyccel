@@ -50,7 +50,7 @@ elif command_words[0] == 'try':
 
 elif command_words[:3] == ['mark', 'as', 'ready']:
     if bot.is_user_trusted(event['comment']['user']['login']):
-        bot.mark_as_ready()
+        bot.request_mark_as_ready()
         bot.run_tests(pr_test_keys)
     else:
         bot.warn_untrusted()

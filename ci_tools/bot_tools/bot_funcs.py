@@ -60,17 +60,44 @@ def message_from_file(filename):
 class Bot:
     trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
-    def __init__(self, repo, pr_id, commit = None):
-        self._repo = repo
+    def __init__(self, pr_id = None, check_run_id = None, commit = None):
+        self._repo = os.environ["GITHUB_REPOSITORY"]
         self._GAI = GitHubAPIInteractions(self._repo)
-        self._pr_id = pr_id
-        self._pr_details = self._GAI.get_pr_details(pr_id)
+        if pr_id:
+            self._pr_id = pr_id
+            self._pr_details = self._GAI.get_pr_details(pr_id)
         if commit:
             self._ref = commit
             self._base = None
         else:
             self._ref = self._pr_details["head"]["sha"]
             self._base = self._pr_details["base"]["sha"]
+
+        if check_run_id:
+            self._check_run_id = check_run_id
+
+    def create_in_progress_check_run(self):
+        self._GAI.create_run(create_run)
+
+    def post_in_progress(self):
+        inputs = {
+                "status":"in_progress",
+                "details_url": f"https://github.com/${{ self._repo }}/actions/runs/${{ os.environ['GITHUB_RUN_ID'] }}"
+                }
+        self._GAI.update_run(self._check_run_id, inputs)
+
+    def post_completed(self, conclusion):
+        if os.path.exists('test_json_result.json'):
+            with open('test_json_result.json', 'r') as f:
+                result = json.load(f)
+        else:
+            result = {}
+        inputs = {
+                "status": "completed",
+                "conclusion": conclusion,
+                "result": result
+                }
+        self._GAI.update_run(self._check_run_id, inputs)
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
@@ -110,12 +137,15 @@ class Bot:
             _, err = p.communicate()
         print(err)
 
-    def mark_as_ready(self):
+    def request_mark_as_ready(self):
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id), '--undo']
 
         with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
+
+    def mark_as_ready(self):
+        pass
 
     def post_coverage_review(self, comments):
         message = message_from_file('coverage_review_message.txt')
@@ -150,3 +180,43 @@ class Bot:
         if user.startswith('@'):
             user = user[1:]
         self._GAI.create_comment(self._pr_id, message_from_file('trusting_user.txt').format(user=user))
+
+    def check_review_stage(pr_id):
+        """
+        Find the review stage.
+
+        Use the GitHub CLI to examine the reviews left on the pull request
+        and determine the current stage of the review process.
+
+        Parameters
+        ----------
+        pr_id : int
+            The number of the PR.
+
+        Results
+        -------
+        bool : Indicates if the PR is ready to merge.
+
+        bool : Assuming the PR is not ready to merge, indicates if the PR is
+                ready for a review from a senior reviewer.
+
+        requested_changes : List of authors who requested changes.
+
+        reviews : Summary of all reviews left on the PR.
+        """
+        reviews, _ = get_review_status(pr_id)
+        senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
+
+        other_review = [r for a,r in reviews.items() if a not in senior_reviewer]
+
+        ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
+
+        ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_review)
+
+        requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
+
+        return ready_to_merge, ready_for_senior_review, requested_changes, reviews
+
+    @property
+    def GAI(self):
+        return self._GAI
