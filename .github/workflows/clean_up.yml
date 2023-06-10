@@ -10,7 +10,7 @@ jobs:
     name: Report result
 
     steps:
-      - name: hi
+      - name: Clean up
         run:
-          echo "Hello world"
+          python ci_tools/bot_clean_up.py
         shell: bash
