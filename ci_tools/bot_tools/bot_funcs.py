@@ -122,7 +122,7 @@ class Bot:
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
                     continue
-                name = f"{name} {key}"
+                name = f"{test_names[t]} {key}"
                 self._GAI.prepare_run(self._ref, name)
                 if t == "coverage":
                     continue
