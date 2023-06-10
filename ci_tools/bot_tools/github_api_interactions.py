@@ -17,8 +17,8 @@ def get_authorization():
     # Create JWT
     reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
-    token = reply.json()["token"]
-    time  = reply.json()["expires_at"]
+    token  = reply.json()["token"]
+    expiry = reply.json()["expires_at"]
 
     with open(os.environ["GITHUB_OUTPUT"], "r") as f:
         output = f.read()
@@ -31,9 +31,9 @@ def get_authorization():
     with open(os.environ["GITHUB_OUTPUT"], "w") as f:
         f.write(output)
         print(f"installation_token={token}", file=f)
-        print(f"installation_token_exp={token}", file=f)
+        print(f"installation_token_exp={expiry}", file=f)
 
-    return token, time
+    return token, expiry
 
 class GitHubAPIInteractions:
     def __init__(self, repo):
