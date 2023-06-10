@@ -70,6 +70,7 @@ class Bot:
             self._ref = commit
             self._base = None
         else:
+            print(self._pr_details)
             self._ref = self._pr_details["head"]["sha"]
             self._base = self._pr_details["base"]["sha"]
 
