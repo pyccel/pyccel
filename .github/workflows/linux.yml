@@ -38,9 +38,8 @@ jobs:
         id: token
         run:
           python ci_tools/setup_check_run.py
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
         env:
+          BOT_PEM: ${{ secrets.BOT_PEM }}
           GITHUB_RUN_ID: ${{ github.run_id }}
       - name: Coverage install
         uses: ./.github/actions/coverage_install
