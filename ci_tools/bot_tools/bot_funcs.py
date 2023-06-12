@@ -128,7 +128,7 @@ class Bot:
                 print(posted)
                 if t == "coverage":
                     continue
-                inputs = {'python_version': pv, 'ref': self._ref, 'check_run_id': posted["id"]}
+                inputs = {'python_version': pv, 'ref': self._ref, 'check_run_id': str(posted["id"])}
                 if t in tests_with_base:
                     inputs['base'] = self._base
                 self._GAI.run_workflow(f'{t}.yml', inputs)
