@@ -921,7 +921,7 @@ class SemanticParser(BasicParser):
                 if len(func.results)>0 and not isinstance(func.results[0].var, PyccelAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
-            parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+            parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
             if not parent_assign and len(func.results) == 1 and func.results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
@@ -2661,6 +2661,7 @@ class SemanticParser(BasicParser):
             new_expr = Assign(l, r)
 
             if isinstance(expr, AugAssign):
+                new_expr.invalidate_node()
                 new_expr = AugAssign(l, expr.op, r)
             elif is_pointer_i:
                 new_expr = AliasAssign(l, r)
