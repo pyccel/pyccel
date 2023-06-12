@@ -2656,31 +2656,31 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
-
-            new_expr = Assign(l, r)
-
             if isinstance(expr, AugAssign):
-                new_expr.invalidate_node()
                 new_expr = AugAssign(l, expr.op, r)
-            elif is_pointer_i:
-                new_expr = AliasAssign(l, r)
+            else:
+                is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
+                new_expr = Assign(l, r)
 
+                if is_pointer_i:
+                    new_expr = AliasAssign(l, r)
 
-            elif new_expr.is_symbolic_alias:
-                new_expr = SymbolicAssign(l, r)
+                elif new_expr.is_symbolic_alias:
+                    new_expr = SymbolicAssign(l, r)
 
-                # in a symbolic assign, the rhs can be a lambda expression
-                # it is then treated as a def node
+                    # in a symbolic assign, the rhs can be a lambda expression
+                    # it is then treated as a def node
 
-                F = self.scope.find(l, 'symbolic_functions')
-                if F is None:
-                    self.insert_symbolic_function(new_expr)
-                else:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                                  severity='fatal')
+                    F = self.scope.find(l, 'symbolic_functions')
+                    if F is None:
+                        self.insert_symbolic_function(new_expr)
+                    else:
+                        errors.report(PYCCEL_RESTRICTION_TODO,
+                                      bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                                      severity='fatal')
+
             new_expressions.append(new_expr)
+
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
 
