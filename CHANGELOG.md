@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 ### Fixed
 
+-   #1404 : Bug preventing printing of some functions in a `print()` call
 -   #1302 : Raise error message in case of empty class
 -   #1407 : Raise an error if file name matches a Python built-in module.
 -   #929 : Allow optional variables when compiling with intel or nvidia.
