@@ -5,9 +5,9 @@ from pyccel.parser.parser   import Parser
 from pyccel.errors.errors   import Errors
 
 from pyccel.ast.basic       import Basic
-from pyccel.ast.core        import Assign, Return, FunctionDef
+from pyccel.ast.core        import Assign, Return, FunctionDef, AugAssign, FunctionDefArgument
 from pyccel.ast.literals    import LiteralInteger
-from pyccel.ast.operators   import PyccelOperator, PyccelAdd, PyccelMinus
+from pyccel.ast.operators   import PyccelOperator, PyccelAdd, PyccelMinus, PyccelMul
 from pyccel.ast.variable    import Variable
 
 base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -95,6 +95,23 @@ def test_get_user_nodes_excluded():
 
     plus_assign = a_var.get_user_nodes(Assign, excluded_nodes = PyccelMinus)
     assert(len(plus_assign)==2)
+
+def test_get_all_user_nodes():
+    filename = os.path.join(path_dir, "math.py")
+
+    interesting_var = Variable('int', 'b')
+
+    fst = get_functions(filename)[0]
+    atts = set(fst.get_attribute_nodes(Variable))
+    atts = [v for v in atts  if v == interesting_var]
+
+    a_var = atts[0]
+
+    users = set(a_var.get_all_user_nodes())
+
+    assert(all(isinstance(s, (PyccelMul, PyccelMinus, AugAssign, FunctionDefArgument)) for s in users))
+
+    assert(len(users) == 4)
 
 def test_get_direct_user_nodes():
     filename = os.path.join(path_dir, "math.py")
