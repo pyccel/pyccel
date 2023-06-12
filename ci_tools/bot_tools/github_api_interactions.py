@@ -76,7 +76,7 @@ class GitHubAPIInteractions:
     def update_run(self, run_id, json):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         print(url)
-        return self._post_request("POST", url, json)
+        return self._post_request("PATCH", url, json)
 
     def get_pr_details(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
