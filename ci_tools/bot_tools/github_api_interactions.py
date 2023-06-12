@@ -88,6 +88,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
                 "inputs": inputs}
+        print(url, json)
         return self._post_request("POST", url, json)
 
     def get_comments(self, pr_id):
