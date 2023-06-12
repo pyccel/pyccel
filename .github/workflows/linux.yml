@@ -10,7 +10,7 @@ on:
         required: false
         type: string
       check_run_id:
-        required: false
+        required: true
         type: string
 
 jobs:
@@ -42,6 +42,7 @@ jobs:
         env:
           PEM: ${{ secrets.BOT_PEM }}
           GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel with tests
@@ -88,5 +89,5 @@ jobs:
         env:
           installation_token: ${{ steps.token.outputs.installation_token }}
           installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
-          check_run_id: ${{ steps.check_create.outputs.check_id }}
+          check_run_id: ${{ inputs.check_run_id }}
           status: ${{ steps.status.outcome }}
