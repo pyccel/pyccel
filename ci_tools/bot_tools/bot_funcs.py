@@ -129,12 +129,14 @@ class Bot:
                     continue
                 name = f"{test_names[t]} {key}"
                 posted = self._GAI.prepare_run(self._ref, name)
-                if t == "coverage":
-                    continue
-                inputs = {'python_version': pv, 'ref': self._ref, 'check_run_id': str(posted["id"])}
-                if t in tests_with_base:
-                    inputs['base'] = self._base
-                self._GAI.run_workflow(f'{t}.yml', inputs)
+                if t != "coverage":
+                    self.run_test(t, pv, str(posted["id"]))
+
+    def run_test(self, test, python_version, check_run_id):
+        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': check_run_id}
+        if t in tests_with_base:
+            inputs['base'] = self._base
+        self._GAI.run_workflow(f'{t}.yml', inputs)
 
     def mark_as_draft(self):
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]

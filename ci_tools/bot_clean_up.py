@@ -39,8 +39,7 @@ if name_key in coverage_deps:
     coverage_run = next(r for r in runs if get_name_key(r['name']) == 'coverage')
     if all(c in successful_runs for c in coverage_deps):
         python_version = coverage_run["name"].split('(')[1].split(',')[1].split(')')[0].strip()
-        inputs = {'ref':event['check_run']['head_sha'], 'python_version': python_version}
-        bot.GAI.run_workflow(filename, inputs)
+        bot.run_test('coverage', python_version, coverage_run["id"])
     elif all(c in completed_runs for c in coverage_deps):
         bot.GAI.update_run(coverage_run["id"], {'conclusion':'cancelled', 'status':"completed"})
 
