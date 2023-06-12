@@ -221,6 +221,9 @@ class Bot:
 
         return ready_to_merge, ready_for_senior_review, requested_changes, reviews
 
+    def get_check_runs(self):
+        return self._GAI.get_check_runs(self._ref)['check_runs']
+
     @property
     def GAI(self):
         return self._GAI

@@ -30,7 +30,7 @@ name_key = get_name_key(name)
 print(event['check_run']['pull_requests'])
 bot = Bot(pr_id = event['check_run']['pull_requests'][0]['number'])
 
-runs = bot.GAI.get_check_runs(self._ref)['check_runs']
+runs = bot.get_check_runs()
 
 successful_runs = [get_name_key(r['name']) for r in runs if r['conclusion'] == "success"]
 completed_runs = [get_name_key(r['name']) for r in runs if r['status'] == "completed"]
