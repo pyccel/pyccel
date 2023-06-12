@@ -16,3 +16,5 @@ jobs:
           pip install jwt requests
           python ci_tools/bot_clean_up.py
         shell: bash
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
