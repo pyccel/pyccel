@@ -3,10 +3,8 @@ import numpy as np
 from numpy.random import random
 import pytest
 
-from pyccel.epyccel import epyccel
-
 import modules.augassign as mod
-
+from pyccel.epyccel import epyccel
 
 # += tests
 
