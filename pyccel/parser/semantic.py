@@ -3444,6 +3444,12 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
+        for i, arg in enumerate(args):
+            rhs = arg.value
+            if getattr(rhs, 'rank', 0) and isinstance(rhs, PyccelInternalFunction):
+                tmp_var = self._assign_lhs_variable(self.scope.get_new_name(), self._infer_type(rhs) , rhs, self._additional_exprs[-1] , is_augassign=False)
+                self._additional_exprs[-1].append(Assign(tmp_var, rhs, fst=rhs.fst))
+                args[i] = FunctionCallArgument(tmp_var)
         if len(args) == 0:
             return PythonPrint(args)
 
