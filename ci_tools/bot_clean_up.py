@@ -12,10 +12,9 @@ def get_name_key(name):
     if name == "Codacy Static Analysis":
         return "Codacy"
     elif '(' in name:
-        print(name)
         return name.split('(')[1].split(',')[0]
     else:
-        return name.split('(')[1].split(',')[0]
+        return name
 
 # Parse event payload from $GITHUB_EVENT_PATH variable
 # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
