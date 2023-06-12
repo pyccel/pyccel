@@ -124,10 +124,11 @@ class Bot:
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
-                self._GAI.prepare_run(self._ref, name)
+                posted = self._GAI.prepare_run(self._ref, name)
+                print(posted)
                 if t == "coverage":
                     continue
-                inputs = {'python_version': pv, 'ref': self._ref}
+                inputs = {'python_version': pv, 'ref': self._ref, 'check_run_id': posted["id"]}
                 if t in tests_with_base:
                     inputs['base'] = self._base
                 self._GAI.run_workflow(f'{t}.yml', inputs)

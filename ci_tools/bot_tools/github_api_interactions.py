@@ -58,7 +58,8 @@ class GitHubAPIInteractions:
 
     def create_run(self, commit, name, workflow_url):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
-        workflow_url = f"https://github.com/${{ self._repo }}/actions/runs/${{ os.environ['GITHUB_RUN_ID'] }}"
+        workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+        print("create_run:", url)
         json = {"name": name,
                 "head_sha": commit,
                 "status": "in_progress",
@@ -70,7 +71,7 @@ class GitHubAPIInteractions:
         json = {"name": name,
                 "head_sha": commit,
                 "status": "queued"}
-        return self._post_request("POST", url, json)
+        return self._post_request("POST", url, json).json()
 
     def update_run(self, run_id, json):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
