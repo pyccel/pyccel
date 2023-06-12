@@ -129,7 +129,6 @@ class Bot:
                     continue
                 name = f"{test_names[t]} {key}"
                 posted = self._GAI.prepare_run(self._ref, name)
-                print(posted)
                 if t == "coverage":
                     continue
                 inputs = {'python_version': pv, 'ref': self._ref, 'check_run_id': str(posted["id"])}
