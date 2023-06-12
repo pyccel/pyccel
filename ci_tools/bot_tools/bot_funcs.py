@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 from .github_api_interactions import GitHubAPIInteractions
 
@@ -36,6 +37,8 @@ test_names = {
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
+
+github_cli = shutil.which('gh')
 
 def message_from_file(filename):
     """
