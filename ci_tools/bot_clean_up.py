@@ -28,7 +28,8 @@ name = event['check_run']['name']
 
 name_key = get_name_key(name)
 
-bot = Bot(os.environ["GITHUB_REPOSITORY"], pr_id)
+print(event['check_run']['pull_requests'])
+bot = Bot(pr_id = event['check_run']['pull_requests'][0]['number'])
 
 runs = bot.GAI.get_check_runs(self._ref)['check_runs']
 
