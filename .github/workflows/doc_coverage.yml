@@ -65,7 +65,7 @@ jobs:
           cd compare
           pip install .
           git fetch
-          git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color &>/dev/null
+          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           touch objects.txt
           touch report.txt
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
