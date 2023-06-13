@@ -308,7 +308,7 @@ def test_conda_flag_disable(language):
     def one():
         return True
     with pytest.warns(None) as record1:
-        epyccel(one, language='c', is_conda_warnings_disabled = True)
+        epyccel(one, language='c', conda_warnings = 'off')
     assert len(record1) == 0 # Equals 0 on every platform
 
 @pytest.mark.skipif(sys.platform == 'win32', reason="Compilation problem. NumPy causing unreadable Windows output see issue #1405")
@@ -316,7 +316,7 @@ def test_conda_flag_verbose(language):
     def one():
         return True
     with pytest.warns(None) as record1:
-        epyccel(one, language='c', is_conda_warnings_detailed = True)
+        epyccel(one, language='c', conda_warnings = 'verbose')
     if len(record1)>0:
         warn_message = record1[0].message
         p = str(warn_message).split(":")[2].strip()

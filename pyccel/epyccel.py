@@ -112,8 +112,7 @@ def epyccel_seq(function_or_module, *,
                 modules       = (),
                 libs          = (),
                 folder        = None,
-                is_conda_warnings_disabled = False,
-                is_conda_warnings_detailed = False,
+                conda_warnings= 'basic',
                 comm          = None,
                 root          = None,
                 bcast         = None):
@@ -153,10 +152,8 @@ def epyccel_seq(function_or_module, *,
         Additional libraries.
     folder : str, optional
         Output folder for the compiled code.
-    is_conda_warnings_disabled : {True, False}
-        If True, Conda ignored Paths warnings will be disabled
-    is_conda_warnings_detailed : {True, False}
-        If True, Pyccel will show a list of ignored conda paths
+    conda_warnings : {off, basic, verbose}
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
 
     Returns
     -------
@@ -237,8 +234,7 @@ def epyccel_seq(function_or_module, *,
                            debug         = debug,
                            accelerators  = accelerators,
                            output_name   = module_name,
-                           is_conda_warnings_disabled = is_conda_warnings_disabled,
-                           is_conda_warnings_detailed = is_conda_warnings_detailed)
+                           conda_warnings= conda_warnings)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)

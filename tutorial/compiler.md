@@ -58,10 +58,10 @@ Upon installation Anaconda modifies your shell's environment variables.
 
 This can lead to packages installed in conda/anaconda usurping the packages manually installed by the user.
 
-This in turn easily leads to nasty surprises (e.g. using libraries compiled for serial execution instead of optimised parallel implementations.
+This in turn easily leads to nasty surprises (e.g. using libraries compiled for serial execution instead of optimised parallel implementations).
 
 To avoid these problems, Pyccel ignores Conda paths when searching for compilers in the system's PATH.
 
 By using the expected compiler, the expected libraries are correctly linked.
 
-Pyccel offers flags to manage Conda-related warnings for a smoother experience: `--disable-conda-warnings` hides warnings, and `--detailed-conda-warnings` lists the ignored Conda paths.
+Pyccel offers flags to manage Conda-related warnings for a smoother experience: `--conda-warnings` hides warnings, and `--detailed-conda-warnings` lists the ignored Conda paths.

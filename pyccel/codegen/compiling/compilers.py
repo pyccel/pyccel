@@ -29,7 +29,7 @@ if platform.system() == 'Darwin':
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 
-def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warnings_detailed=False):
+def get_condaless_search_path(conda_warnings = 'basic'):
     """
     Get a list of paths excluding the conda paths.
 
@@ -38,10 +38,8 @@ def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warning
 
     Parameters
     ----------
-    is_conda_warnings_disabled : bool, optional
-        If True, Conda ignored Paths warnings will be disabled, by default False.
-    is_conda_warnings_detailed : bool, optional
-        If True, Pyccel will show a list of ignored conda paths, by default False.
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
 
     Returns
     -------
@@ -55,9 +53,9 @@ def get_condaless_search_path(is_conda_warnings_disabled=False, is_conda_warning
                           'Conda', 'Anaconda', 'Miniconda')
     conda_folders = [p for p,f in folders.items() if any(con in f for con in conda_folder_names)]
     if conda_folders:
-        if not is_conda_warnings_disabled:
+        if conda_warnings in ('basic', 'verbose'):
             message_warning = "Conda paths are ignored. See https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md#utilising-pyccel-within-anaconda-environment for details"
-            if is_conda_warnings_detailed:
+            if conda_warnings == 'verbose':
                 message_warning = message_warning + "\nConda ignored PATH:\n"
                 message_warning = message_warning + ":".join(conda_folders)
             warnings.warn(UserWarning(message_warning))

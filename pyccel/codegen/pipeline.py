@@ -58,8 +58,7 @@ def execute_pyccel(fname, *,
                    accelerators  = (),
                    output_name   = None,
                    compiler_export_file = None,
-                   is_conda_warnings_disabled = False,
-                   is_conda_warnings_detailed = False):
+                   conda_warnings = 'basic'):
     """
     Run Pyccel on the provided code.
 
@@ -108,10 +107,8 @@ def execute_pyccel(fname, *,
         Name of the generated module. Default is the same name as the translated file.
     compiler_export_file : str, optional
         Name of the JSON file to which compiler information is exported. Default is None.
-    is_conda_warnings_disabled : bool, optional
-        If True, Conda ignored Paths warnings will be disabled.
-    is_conda_warnings_detailed : bool, optional
-        If True, Pyccel will show a list of ignored Conda paths.
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
     if fname.endswith('.pyh'):
         syntax_only = True
@@ -173,6 +170,9 @@ def execute_pyccel(fname, *,
     # Change working directory to 'folder'
     os.chdir(folder)
 
+    if conda_warnings not in ('off', 'basic', 'verbose'):
+        raise ValueError("conda warnings accept {off, basic,verbose}")
+
     if language is None:
         language = 'fortran'
 
@@ -184,7 +184,7 @@ def execute_pyccel(fname, *,
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
-    Compiler.acceptable_bin_paths = get_condaless_search_path(is_conda_warnings_disabled,is_conda_warnings_detailed)
+    Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 

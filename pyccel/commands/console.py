@@ -139,6 +139,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                          help='disable warnings when pyccel running in conda environment')
     group.add_argument('--detailed-conda-warnings', action='store_true', \
                          help='show list of conda paths ignored by pyccel')
+    group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), help='Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is basic.')
+
     # ...
 
     # TODO move to another cmd line
@@ -171,6 +173,9 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
 
     if not openacc:
         openacc = args.openacc
+
+    if not args.conda_warnings:
+        args.conda_warnings = 'basic'
 
     if args.convert_only or args.syntax_only or args.semantic_only:
         compiler = None
@@ -277,8 +282,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        accelerators  = accelerators,
                        folder        = args.output,
                        compiler_export_file = compiler_export_file,
-                       is_conda_warnings_disabled = args.disable_conda_warnings,
-                       is_conda_warnings_detailed = args.detailed_conda_warnings)
+                       conda_warnings = args.conda_warnings)
     except PyccelError:
         sys.exit(1)
     finally:
