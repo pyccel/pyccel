@@ -1,4 +1,5 @@
 name: Unit test coverage
+run-name: coverage
 
 on:
   workflow_dispatch:

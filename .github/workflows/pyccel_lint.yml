@@ -1,4 +1,5 @@
 name: Pyccel Linting
+run-name: pyccel_lint
 
 on:
   workflow_dispatch:

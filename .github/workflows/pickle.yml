@@ -1,4 +1,5 @@
 name: Pickled-installation
+run-name: pickle
 
 on:
   workflow_dispatch:

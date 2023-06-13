@@ -1,4 +1,5 @@
 name: Wheel-pickled-installation
+run-name: pickle_wheel
 
 on:
   workflow_dispatch:

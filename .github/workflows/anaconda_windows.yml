@@ -1,4 +1,5 @@
 name: Anaconda-Windows
+run-name: anaconda_windows
 
 on:
   workflow_dispatch:

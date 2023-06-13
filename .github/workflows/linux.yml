@@ -1,4 +1,5 @@
 name: Linux unit tests
+run-name: linux
 
 on:
   workflow_dispatch:
