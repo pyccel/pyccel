@@ -134,7 +134,7 @@ class Bot:
 
     def run_test(self, test, python_version, check_run_id):
         inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': check_run_id}
-        if t in tests_with_base:
+        if test in tests_with_base:
             inputs['base'] = self._base
         self._GAI.run_workflow(f'{t}.yml', inputs)
 
