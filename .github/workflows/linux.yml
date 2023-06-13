@@ -10,7 +10,7 @@ on:
         required: false
         type: string
       check_run_id:
-        required: true
+        required: false
         type: string
 
 jobs:
