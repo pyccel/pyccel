@@ -1824,6 +1824,7 @@ class CCodePrinter(CodePrinter):
 
         if op == '%' and isinstance(lhs.dtype, NativeFloat):
             _expr = expr.to_basic_assign()
+            expr.invalidate_node()
             return self._print(_expr)
 
         lhs_code = self._print(lhs)

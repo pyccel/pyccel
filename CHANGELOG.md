@@ -7,11 +7,12 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #1404 : Bug preventing printing of some functions in a `print()` call
--   #1302 : Raise error message in case of empty class
+-   #1404 : Bug preventing printing of some functions in a `print()` call.
+-   #1302 : Raise error message in case of empty class.
 -   #1407 : Raise an error if file name matches a Python built-in module.
 -   #929 : Allow optional variables when compiling with intel or nvidia.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
+-   #1415 : Fix incorrect handling of assignments augmented by function calls.
 
 ### Changed
 
