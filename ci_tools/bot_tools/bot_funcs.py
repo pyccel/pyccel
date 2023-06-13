@@ -83,7 +83,7 @@ class Bot:
             self._check_run_id = check_run_id
 
     def create_in_progress_check_run(self):
-        t = os.basename(os.environ["GITHUB_WORKFLOW_REF"]).splitext()[0]
+        t = os.path.basename(os.environ["GITHUB_WORKFLOW_REF"]).splitext()[0]
         print(t)
         pv = platform.python_version()
         key = f"({t}, {pv})"
