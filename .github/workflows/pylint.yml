@@ -1,5 +1,4 @@
 name: Python Linting
-run-name: pylint
 
 on:
   workflow_dispatch:

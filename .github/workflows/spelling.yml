@@ -1,5 +1,4 @@
 name: Spellcheck Action
-run-name: spelling
 
 on:
   workflow_dispatch:

@@ -1,5 +1,4 @@
 name: Anaconda-Linux
-run-name: anaconda_linux
 
 on:
   workflow_dispatch:

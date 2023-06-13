@@ -1,5 +1,4 @@
 name: Doc Coverage Action
-run-name: doc_coverage
 
 on:
   workflow_dispatch:

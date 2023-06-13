@@ -1,5 +1,4 @@
 name: MacOSX unit tests
-run-name: macosx
 
 on:
   workflow_dispatch:

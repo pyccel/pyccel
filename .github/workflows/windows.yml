@@ -1,5 +1,4 @@
 name: Windows unit tests
-run-name: windows
 
 on:
   workflow_dispatch:
