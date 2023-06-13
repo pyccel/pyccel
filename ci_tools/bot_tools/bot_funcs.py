@@ -107,7 +107,7 @@ class Bot:
         inputs = {
                 "status": "completed",
                 "conclusion": conclusion,
-                "result": result
+                "output": result
                 }
         self._GAI.update_run(self._check_run_id, inputs)
 
