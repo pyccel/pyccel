@@ -14,11 +14,11 @@ The semantic stage serves several purposes:
 ## Navigation
 
 The entry point for the class `SemanticParser` is the function `annotate`.
-This function is called from the constructor to examine an AST (Abstract Syntax Tree) object created by the [syntactic stage](.syntactic_stage.md).
+This function is called from the constructor to examine an AST (Abstract Syntax Tree) object created by the [syntactic stage](syntactic_stage.md).
 
 The key line of the function `annotate` is the call to `self._visit(self.ast)`.
 All elements of the tree must be visited.
-Similarly to in the [syntactic stage](.syntactic_stage.md), the `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
+Similarly to in the [syntactic stage](syntactic_stage.md), the `_visit` function internally calls a function named `_visit_X`, where `X` is the type of the object.
 These functions must have the form:
 ```python
 def _visit_ClassName(self, stmt):

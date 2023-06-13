@@ -27,7 +27,7 @@ from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
-from .compiling.compilers import Compiler
+from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
@@ -57,7 +57,8 @@ def execute_pyccel(fname, *,
                    debug         = False,
                    accelerators  = (),
                    output_name   = None,
-                   compiler_export_file = None):
+                   compiler_export_file = None,
+                   conda_warnings = 'basic'):
     """
     Run Pyccel on the provided code.
 
@@ -106,6 +107,8 @@ def execute_pyccel(fname, *,
         Name of the generated module. Default is the same name as the translated file.
     compiler_export_file : str, optional
         Name of the JSON file to which compiler information is exported. Default is None.
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
     if fname.endswith('.pyh'):
         syntax_only = True
@@ -167,6 +170,9 @@ def execute_pyccel(fname, *,
     # Change working directory to 'folder'
     os.chdir(folder)
 
+    if conda_warnings not in ('off', 'basic', 'verbose'):
+        raise ValueError("conda warnings accept {off, basic,verbose}")
+
     if language is None:
         language = 'fortran'
 
@@ -178,6 +184,7 @@ def execute_pyccel(fname, *,
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
+    Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 

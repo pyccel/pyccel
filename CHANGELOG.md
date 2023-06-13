@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\]
 
 ### Added
-
+-   #1400 : Added flags to Pyccel for managing conda PATH warnings.
 ### Fixed
 
 -   #1404 : Bug preventing printing of some functions in a `print()` call.
