@@ -79,7 +79,7 @@ jobs:
       - name: "Post completed"
         if: always()
         run:
-          python ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }}
+          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.doc_format.outcome }}
         env:
           installation_token: ${{ steps.token.outputs.installation_token }}
           installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
