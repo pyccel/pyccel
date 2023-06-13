@@ -8,6 +8,7 @@ jobs:
   Post:
     runs-on: ubuntu-latest
     name: Report result
+    if: ${{ github.check_run.pull_requests }}
 
     steps:
       - uses: actions/checkout@v3
