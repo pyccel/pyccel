@@ -1,5 +1,6 @@
 import json
 import os
+import platform
 import shutil
 import subprocess
 from .github_api_interactions import GitHubAPIInteractions
@@ -82,7 +83,12 @@ class Bot:
             self._check_run_id = check_run_id
 
     def create_in_progress_check_run(self):
-        self._GAI.create_run(create_run)
+        t = os.basename(os.environ["GITHUB_WORKFLOW_REF"]).splitext()[0]
+        print(t)
+        pv = platform.python_version()
+        key = f"({t}, {pv})"
+        name = f"{test_names[t]} {key}"
+        self._GAI.create_run(self._ref, name)
 
     def post_in_progress(self):
         inputs = {
@@ -115,7 +121,6 @@ class Bot:
         pass
 
     def run_tests(self, tests, python_version = None):
-        print("Run : ", tests)
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         elif self._pr_details["mergeable_state"] == "unknown":

@@ -56,7 +56,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
         return self._post_request("GET", url).json()
 
-    def create_run(self, commit, name, workflow_url):
+    def create_run(self, commit, name):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
