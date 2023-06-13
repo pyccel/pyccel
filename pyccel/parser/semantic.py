@@ -922,19 +922,21 @@ class SemanticParser(BasicParser):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
-            if not parent_assign and len(func.results) == 1 and func.results[0].var.rank > 0:
+
+            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
+            func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
+
+            if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
                 assign.set_fst(expr.fst)
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
-            if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+            if len(args) > len(func_args):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-
-            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
             # Sort arguments to match the order in the function definition
             input_args = [a for a in args if a.keyword is None]
             nargs = len(input_args)
