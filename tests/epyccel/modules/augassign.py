@@ -157,5 +157,10 @@ def augassign_div_2d_complex(a):
 def augassign_func(x : float, y : float):
     def fun1(x: 'float') -> 'float':
         return x + 1
-    x += fun1(y)
+    x %= fun1(y)
     return x
+
+def augassign_array_func(x : 'float[:]', y : 'float[:]'):
+    def fun1(x: 'float[:]') -> 'float[:]':
+        return x + 1
+    x %= fun1(y)

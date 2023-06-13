@@ -224,7 +224,7 @@ def test_augassign_func(language):
     func = mod.augassign_func
     func_epyc = epyccel(func, language = language)
 
-    x = random()*100
+    x = random()*100+20
     y = random()*100
 
     z = func(x,y)
@@ -232,3 +232,25 @@ def test_augassign_func(language):
 
     assert z == z_epyc
     assert isinstance(z, type(z_epyc))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Function in function not implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_augassign_array_func(language):
+    func = mod.augassign_array_func
+    func_epyc = epyccel(func, language = language)
+
+    x = random(10)*100+20
+    y = random(10)*100
+    x_epyc = x.copy()
+
+    func(x,y)
+    func_epyc(x_epyc,y)
+
+    assert np.array_equal(x, x_epyc)
