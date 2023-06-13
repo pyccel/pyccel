@@ -133,7 +133,7 @@ class Bot:
                     self.run_test(t, pv, posted["id"])
 
     def run_test(self, test, python_version, check_run_id):
-        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id})
+        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id)}
         if test in tests_with_base:
             inputs['base'] = self._base
         self._GAI.run_workflow(f'{test}.yml', inputs)
