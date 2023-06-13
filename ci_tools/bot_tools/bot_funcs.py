@@ -115,6 +115,7 @@ class Bot:
         pass
 
     def run_tests(self, tests, python_version = None):
+        print("Run : ", tests)
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         elif self._pr_details["mergeable_state"] == "unknown":
