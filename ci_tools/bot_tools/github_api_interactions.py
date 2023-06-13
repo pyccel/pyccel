@@ -64,19 +64,24 @@ class GitHubAPIInteractions:
                 "head_sha": commit,
                 "status": "in_progress",
                 "details_url": workflow_url}
-        return self._post_request("POST", url, json).json()
+        run = self._post_request("POST", url, json)
+        assert run.status_code == 201
+        return run.json()
 
     def prepare_run(self, commit, name):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         json = {"name": name,
                 "head_sha": commit,
                 "status": "queued"}
-        return self._post_request("POST", url, json).json()
+        run = self._post_request("POST", url, json)
+        assert run.status_code == 201
+        return run.json()
 
     def update_run(self, run_id, json):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
-        print(url)
-        return self._post_request("PATCH", url, json)
+        run = self._post_request("PATCH", url, json)
+        assert run.status_code == 200
+        return run
 
     def get_pr_details(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
