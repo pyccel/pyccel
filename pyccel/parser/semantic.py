@@ -921,20 +921,22 @@ class SemanticParser(BasicParser):
                 if len(func.results)>0 and not isinstance(func.results[0].var, PyccelAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
-            parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
-            if not parent_assign and len(func.results) == 1 and func.results[0].var.rank > 0:
+            parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
+
+            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
+            func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
+
+            if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
                 assign.set_fst(expr.fst)
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
-            if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+            if len(args) > len(func_args):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-
-            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
             # Sort arguments to match the order in the function definition
             input_args = [a for a in args if a.keyword is None]
             nargs = len(input_args)
@@ -2656,30 +2658,31 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
-            is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
-
-            new_expr = Assign(l, r)
-
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
-            elif is_pointer_i:
-                new_expr = AliasAssign(l, r)
+            else:
+                is_pointer_i = l.is_alias if isinstance(l, Variable) else is_pointer
+                new_expr = Assign(l, r)
 
+                if is_pointer_i:
+                    new_expr = AliasAssign(l, r)
 
-            elif new_expr.is_symbolic_alias:
-                new_expr = SymbolicAssign(l, r)
+                elif new_expr.is_symbolic_alias:
+                    new_expr = SymbolicAssign(l, r)
 
-                # in a symbolic assign, the rhs can be a lambda expression
-                # it is then treated as a def node
+                    # in a symbolic assign, the rhs can be a lambda expression
+                    # it is then treated as a def node
 
-                F = self.scope.find(l, 'symbolic_functions')
-                if F is None:
-                    self.insert_symbolic_function(new_expr)
-                else:
-                    errors.report(PYCCEL_RESTRICTION_TODO,
-                                  bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                                  severity='fatal')
+                    F = self.scope.find(l, 'symbolic_functions')
+                    if F is None:
+                        self.insert_symbolic_function(new_expr)
+                    else:
+                        errors.report(PYCCEL_RESTRICTION_TODO,
+                                      bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                                      severity='fatal')
+
             new_expressions.append(new_expr)
+
         if (len(new_expressions)==1):
             new_expressions = new_expressions[0]
 
