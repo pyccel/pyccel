@@ -82,14 +82,11 @@ class Bot:
         if check_run_id:
             self._check_run_id = check_run_id
 
-    def create_in_progress_check_run(self):
-        print(os.environ["GITHUB_WORKFLOW"])
-        print(os.environ["GITHUB_EVENT_PATH"])
-        t = os.path.splitext(os.path.basename(os.environ["GITHUB_WORKFLOW_REF"]))[0]
-        print(t)
+    def create_in_progress_check_run(self, test):
+        print(test)
         pv = platform.python_version()
-        key = f"({t}, {pv})"
-        name = f"{test_names[t]} {key}"
+        key = f"({test}, {pv})"
+        name = f"{test_names[test]} {key}"
         self._GAI.create_run(self._ref, name)
 
     def post_in_progress(self):
