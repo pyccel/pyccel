@@ -40,7 +40,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python base/ci_tools/setup_check_run.py
         env:
           PEM: ${{ secrets.BOT_PEM }}
           GITHUB_RUN_ID: ${{ github.run_id }}
