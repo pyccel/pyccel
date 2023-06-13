@@ -11,7 +11,9 @@ if os.environ["GITHUB_CHECK_RUN_ID"]=="":
     # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
-    bot.create_in_progress_check_run(event["workflow"])
+    workflow_file = event["workflow"]
+    test_key = os.path.splitext(os.path.basename(workflow_file))[0]
+    bot.create_in_progress_check_run(test_key)
 else:
     print(os.environ["GITHUB_CHECK_RUN_ID"])
     bot.post_in_progress()
