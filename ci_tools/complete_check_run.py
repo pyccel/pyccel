@@ -3,11 +3,11 @@ import sys
 from bot_tools.bot_funcs import Bot
 
 def get_final_status(statuses : set):
-    if len(statuses) == 1:
-        return statuses.pop()
-
     statuses.discard('skipped')
-    if len(statuses) == 1:
+    if len(statuses) == 0:
+        return 'cancelled'
+
+    elif len(statuses) == 1:
         return statuses.pop()
 
     statuses.discard('success')
