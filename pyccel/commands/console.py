@@ -135,10 +135,6 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                         help='shows internal messages')
     group.add_argument('--export-compile-info', type=str, default = None, \
                         help='file to which the compiler json file is exported')
-    group.add_argument('--disable-conda-warnings', action='store_true', \
-                         help='disable warnings when pyccel running in conda environment')
-    group.add_argument('--detailed-conda-warnings', action='store_true', \
-                         help='show list of conda paths ignored by pyccel')
     group.add_argument('--conda-warnings', choices=('off', 'basic', 'verbose'), help='Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is basic.')
 
     # ...
