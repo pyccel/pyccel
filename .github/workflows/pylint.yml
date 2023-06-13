@@ -33,18 +33,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-      - name: "Generate token"
+      - name: "Setup"
         id: token
-        uses: ./.github/actions/generate_bot_token
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
-      - name: "Post in progress"
-        id: check_create
-        uses: ./.github/actions/post_triggered
-        with:
-          ref: ${{ steps.ref.outputs.ref }}
-          installation_token: ${{ steps.token.outputs.installation_token }}
-          name: "Python linting (pylint)"
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
       - name: Check branch
         run: |
           git branch
@@ -61,8 +58,9 @@ jobs:
         shell: bash
       - name: "Post completed"
         if: always()
-        uses: ./.github/actions/post_completed
-        with:
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.pylint.outcome }}
+        env:
           installation_token: ${{ steps.token.outputs.installation_token }}
-          run_id: ${{ steps.check_create.outputs.check_id }}
-          status: ${{ steps.pylint.outcome }}
+          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
+          check_run_id: ${{ inputs.check_run_id }}

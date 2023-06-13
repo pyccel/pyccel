@@ -34,18 +34,15 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
           python-version: ${{ inputs.python_version }}
-      - name: "Generate token"
+      - name: "Setup"
         id: token
-        uses: ./.github/actions/generate_bot_token
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
-      - name: "Post in progress"
-        id: check_create
-        uses: ./.github/actions/post_triggered
-        with:
-          ref: ${{ steps.ref.outputs.ref }}
-          installation_token: ${{ steps.token.outputs.installation_token }}
-          name: "Unit tests on windowd with anaconda (windows_anaconda)"
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -65,16 +62,11 @@ jobs:
         uses: ./.github/actions/pytest_run_python
         with:
           shell_cmd: 'bash -l -eo pipefail {0}'
-      - name: Final status
-        if: always()
-        id: status
-        run:
-          python ci_tools/check_success.py $GITHUB_OUTPUT steps.f_c_pytest.outcome steps.python_pytest.outcome
       - name: "Post completed"
         if: always()
-        uses: ./.github/actions/post_completed
-        with:
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
+        env:
           installation_token: ${{ steps.token.outputs.installation_token }}
-          run_id: ${{ steps.check_create.outputs.check_id }}
-          status: ${{ steps.status.outcome }}
-
+          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
+          check_run_id: ${{ inputs.check_run_id }}

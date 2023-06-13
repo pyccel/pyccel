@@ -33,6 +33,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
+      - name: "Setup"
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel from wheel
@@ -46,15 +55,11 @@ jobs:
       - name: Check for existence of pickled files
         id: pickle_check
         uses: ./.github/actions/check_for_pickled
-      - name: Final status
-        if: always()
-        id: status
-        run:
-          python ci_tools/check_success.py $GITHUB_OUTPUT steps.pickle.outcome steps.pickle_check.outcome
       - name: "Post completed"
         if: always()
-        uses: ./.github/actions/post_completed
-        with:
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }}
+        env:
           installation_token: ${{ steps.token.outputs.installation_token }}
-          run_id: ${{ steps.check_create.outputs.check_id }}
-          status: ${{ steps.status.outcome }}
+          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
+          check_run_id: ${{ inputs.check_run_id }}
