@@ -19,16 +19,9 @@ jobs:
     name: Deploy tests
 
     steps:
-      - name: Get ref
-        id: ref
-        run: |
-          ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
-          with open("${{ github.output }}", "a") as f:
-              print("ref=", ref, sep='', file=f)
-        shell: python
       - uses: actions/checkout@v3
         with:
-          ref: ${{ steps.ref.outputs.ref }}
+          ref: ${{ inputs.ref || github.event.ref }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
