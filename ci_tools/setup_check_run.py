@@ -20,6 +20,6 @@ else:
     run_id = os.environ["GITHUB_CHECK_RUN_ID"]
 
 print(f"check_run_id={run_id}", sep='')
-print(os.environ["GITHUB_ENV"], "a")
+print(os.environ["GITHUB_ENV"])
 with open(os.environ["GITHUB_ENV"], "a") as f:
     print(f"check_run_id={run_id}", sep='', file=f)

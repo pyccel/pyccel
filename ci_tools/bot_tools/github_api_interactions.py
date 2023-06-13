@@ -64,7 +64,7 @@ class GitHubAPIInteractions:
                 "head_sha": commit,
                 "status": "in_progress",
                 "details_url": workflow_url}
-        return self._post_request("POST", url, json)
+        return self._post_request("POST", url, json).json()
 
     def prepare_run(self, commit, name):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"

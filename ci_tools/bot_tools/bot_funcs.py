@@ -86,7 +86,8 @@ class Bot:
         pv = platform.python_version()
         key = f"({test}, {pv})"
         name = f"{test_names[test]} {key}"
-        self._GAI.create_run(self._ref, name)
+        posted = self._GAI.create_run(self._ref, name)
+        return posted["id"]
 
     def post_in_progress(self):
         inputs = {
