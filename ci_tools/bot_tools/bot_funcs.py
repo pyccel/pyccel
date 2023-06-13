@@ -130,10 +130,10 @@ class Bot:
                 name = f"{test_names[t]} {key}"
                 posted = self._GAI.prepare_run(self._ref, name)
                 if t != "coverage":
-                    self.run_test(t, pv, str(posted["id"]))
+                    self.run_test(t, pv, posted["id"])
 
     def run_test(self, test, python_version, check_run_id):
-        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': check_run_id}
+        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id})
         if test in tests_with_base:
             inputs['base'] = self._base
         self._GAI.run_workflow(f'{test}.yml', inputs)
