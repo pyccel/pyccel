@@ -103,6 +103,7 @@ class Bot:
                 result = json.load(f)
         else:
             result = {}
+        print(result)
         inputs = {
                 "status": "completed",
                 "conclusion": conclusion,
