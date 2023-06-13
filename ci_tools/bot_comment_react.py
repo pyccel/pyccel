@@ -8,9 +8,9 @@ pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylin
 
 def get_unique_test_list(keys):
     tests = set(command_words[1:])
-    t = tests.discard('pr_tests')
-    if t:
+    if 'pr_tests' in tests:
         tests.update(pr_test_keys)
+    t = tests.discard('pr_tests')
     if 'coverage' in tests:
         tests.add('linux')
     return tests
