@@ -83,7 +83,6 @@ class Bot:
             self._check_run_id = check_run_id
 
     def create_in_progress_check_run(self, test):
-        print(test)
         pv = platform.python_version()
         key = f"({test}, {pv})"
         name = f"{test_names[test]} {key}"
