@@ -83,6 +83,8 @@ class Bot:
             self._check_run_id = check_run_id
 
     def create_in_progress_check_run(self):
+        print(os.environ["GITHUB_WORKFLOW"])
+        print(os.environ["GITHUB_EVENT_PATH"])
         t = os.path.splitext(os.path.basename(os.environ["GITHUB_WORKFLOW_REF"]))[0]
         print(t)
         pv = platform.python_version()
