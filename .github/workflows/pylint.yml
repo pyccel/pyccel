@@ -47,7 +47,8 @@ jobs:
       - name: Pylint
         id: pylint
         run: |
-            python -m pylint --rcfile=.pylintrc pyccel/parser/semantic.py > $GITHUB_STEP_SUMMARY
+          echo $GITHUB_WORKFLOW_SHA
+          python -m pylint --rcfile=.pylintrc pyccel/parser/semantic.py > $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
