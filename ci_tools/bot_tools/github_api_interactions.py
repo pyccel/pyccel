@@ -107,7 +107,9 @@ class GitHubAPIInteractions:
         status = 'APPROVE' if len(comments)==0 else 'REQUEST_CHANGES'
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
-        return self._post_request("POST", url, json=review)
+        reply = self._post_request("POST", url, json=review)
+        assert reply.status_code == 200
+        return reply
 
     def check_for_user_in_team(self, user, team):
         url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
