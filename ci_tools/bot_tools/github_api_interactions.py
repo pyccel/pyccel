@@ -36,7 +36,8 @@ def get_authorization():
     return token, expiry
 
 class GitHubAPIInteractions:
-    def __init__(self, repo):
+    def __init__(self):
+        repo = os.environ["GITHUB_REPOSITORY"]
         self._org, self._repo = repo.split('/')
         if "installation_token" in os.environ:
             self._install_token = os.environ["installation_token"]
@@ -126,6 +127,16 @@ class GitHubAPIInteractions:
     def get_pr_events(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/events"
         return self._post_request("GET", url).json()
+
+    def get_artifacts(self, name):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts"
+        query= {'name': name}
+        return self._post_request("GET", url).json()
+ 
+    def download_artifact(self, artifact_id):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts/{artifact_id}/zip"
+        reply = self._post_request("GET", url)
+        assert reply.status_code == 302
 
 
     def get_headers(self):

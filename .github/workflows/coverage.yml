@@ -15,6 +15,9 @@ on:
       check_run_id:
         required: false
         type: string
+      artifact_urls:
+        required: true
+        type: string
 
 jobs:
   CoverageChecker:

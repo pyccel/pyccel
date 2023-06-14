@@ -67,7 +67,7 @@ class Bot:
 
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
-        self._GAI = GitHubAPIInteractions(self._repo)
+        self._GAI = GitHubAPIInteractions()
         if pr_id:
             self._pr_id = pr_id
             self._pr_details = self._GAI.get_pr_details(pr_id)
@@ -104,11 +104,12 @@ class Bot:
         else:
             result = {}
         print(result)
-        inputs = {
+        params = {
                 "status": "completed",
                 "conclusion": conclusion,
-                "output": result
                 }
+        if result:
+            params["output"] = result
         self._GAI.update_run(self._check_run_id, inputs)
 
     def show_tests(self):
@@ -142,6 +143,10 @@ class Bot:
         inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id)}
         if test in tests_with_base:
             inputs['base'] = self._base
+        if test == 'coverage':
+            possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
+            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['head_sha']==self._commit]
+            inputs['artifact_urls'] = ' '.join(acceptable_urls)
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def mark_as_draft(self):
