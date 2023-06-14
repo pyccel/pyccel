@@ -1,6 +1,7 @@
 """ Script to check that all new lines in the python files in the pyccel/ code folder are used in the tests
 """
 import json
+import os
 import argparse
 from git_evaluation_tools import get_diff_as_json
 from bot_tools.bot_funcs import Bot
