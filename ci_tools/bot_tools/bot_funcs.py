@@ -83,7 +83,7 @@ class Bot:
             self._check_run_id = check_run_id
 
     def create_in_progress_check_run(self, test):
-        pv = platform.python_version()
+        pv = '.'.join(platform.python_version_tuple()[:2])
         key = f"({test}, {pv})"
         name = f"{test_names[test]} {key}"
         posted = self._GAI.create_run(self._ref, name)
