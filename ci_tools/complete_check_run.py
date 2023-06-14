@@ -18,5 +18,5 @@ def get_final_status(statuses : set):
 
     return statuses.pop()
 
-bot = Bot(check_run_id = os.environ["check_run_id"], commit = os.environ["GITHUB_REF"])
+bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["GITHUB_CHECK_RUN_ID"], commit = os.environ["COMMIT"])
 bot.post_completed(get_final_status(set(sys.argv[1:])))
