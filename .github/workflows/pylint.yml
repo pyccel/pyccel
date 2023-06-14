@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref || github.event.ref }}
+          ref: ${{ env.COMMIT }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
