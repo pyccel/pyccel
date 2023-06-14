@@ -3,6 +3,7 @@
 import json
 import argparse
 from git_evaluation_tools import get_diff_as_json
+from bot_tools.bot_funcs import Bot
 import coverage_analysis_tools as cov
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
@@ -28,7 +29,7 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 comments = cov.get_json_summary(new_untested, file_contents)
 
-bot = Bot()
+bot = Bot(commit = args.commit)
 
 cov.print_markdown_summary(comments, args.commit, args.output, bot.repo)
 
