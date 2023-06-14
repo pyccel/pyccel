@@ -242,3 +242,7 @@ class Bot:
     @property
     def GAI(self):
         return self._GAI
+
+    @property
+    def repo(self):
+        return self._repo

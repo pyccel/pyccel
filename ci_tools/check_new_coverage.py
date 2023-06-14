@@ -6,8 +6,6 @@ from git_evaluation_tools import get_diff_as_json
 import coverage_analysis_tools as cov
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-parser.add_argument('repo', metavar='repo', type=str,
-                        help='The repository being tested.')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
                         help='File containing the git diff output')
 parser.add_argument('coverageFile', metavar='coverageFile', type=str,
@@ -30,9 +28,9 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 comments = cov.print_json_summary(new_untested, file_contents)
 
-cov.print_markdown_summary(comments, args.commit, args.output, args.repo)
-
 bot = Bot()
+
+cov.print_markdown_summary(comments, args.commit, args.output, bot.repo)
 
 bot.post_coverage_review(comments)
 
