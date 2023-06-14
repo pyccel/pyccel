@@ -72,5 +72,5 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
-          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${COMMIT} $GITHUB_STEP_SUMMARY
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml $GITHUB_STEP_SUMMARY
         shell: bash

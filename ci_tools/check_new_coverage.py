@@ -12,8 +12,6 @@ parser.add_argument('diffFile', metavar='diffFile', type=str,
                         help='File containing the git diff output')
 parser.add_argument('coverageFile', metavar='coverageFile', type=str,
                         help='File containing the coverage xml output')
-parser.add_argument('commit', metavar='commit', type=str,
-                        help='The commit being analysed')
 parser.add_argument('output', metavar='output', type=str,
                         help='File where the markdown output will be printed')
 
@@ -30,9 +28,9 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 comments = cov.get_json_summary(new_untested, file_contents)
 
-bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = args.commit)
+bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['COMMIT'])
 
-cov.print_markdown_summary(comments, args.commit, args.output, bot.repo)
+cov.print_markdown_summary(comments, os.environ['HEAD_SHA'], args.output, bot.repo)
 
 bot.post_coverage_review(comments)
 
