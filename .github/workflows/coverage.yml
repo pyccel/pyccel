@@ -44,6 +44,8 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
+          cat $GITHUB_ENV
+        shell: bash
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -71,9 +73,6 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
+          echo $PR_ID
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${COMMIT} $GITHUB_STEP_SUMMARY
         shell: bash
-      - name: "Post completed"
-        if: always()
-        run:
-          python ci_tools/complete_check_run.py ${{ steps.coverage.outcome }}

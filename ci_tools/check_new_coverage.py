@@ -29,7 +29,7 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 comments = cov.get_json_summary(new_untested, file_contents)
 
-bot = Bot(commit = args.commit)
+bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = args.commit)
 
 cov.print_markdown_summary(comments, args.commit, args.output, bot.repo)
 

@@ -3,9 +3,11 @@ import os
 from bot_tools.bot_funcs import Bot
 from bot_tools.setup_values import get_pr_id
 
-bot = Bot(pr_id = 0, check_run_id = os.environ["GITHUB_CHECK_RUN_ID"], commit = os.environ["COMMIT"])
+input_check_run_id = os.environ["GITHUB_CHECK_RUN_ID"]
 
-if os.environ["GITHUB_CHECK_RUN_ID"]=="":
+bot = Bot(pr_id = 0, check_run_id = input_check_run_id, commit = os.environ["COMMIT"])
+
+if input_check_run_id == "":
     # Parse event payload from $GITHUB_EVENT_PATH variable
     # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
     # The contents of this json file depend on the triggering event and are
@@ -17,6 +19,7 @@ if os.environ["GITHUB_CHECK_RUN_ID"]=="":
     posted = bot.create_in_progress_check_run(test_key)
 else:
     posted = bot.post_in_progress()
+
 print(posted)
 run_id = posted['id']
 pr_id = get_pr_id(posted['pull_requests'])
@@ -24,5 +27,5 @@ pr_id = get_pr_id(posted['pull_requests'])
 print(f"check_run_id={run_id}", sep='')
 print(os.environ["GITHUB_ENV"])
 with open(os.environ["GITHUB_ENV"], "a") as f:
-    print(f"check_run_id={run_id}", sep='', file=f)
+    print(f"CHECK_RUN_ID={run_id}", sep='', file=f)
     print(f"PR_ID={pr_id}", sep='', file=f)
