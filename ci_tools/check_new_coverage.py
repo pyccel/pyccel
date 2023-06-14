@@ -37,3 +37,4 @@ bot.post_coverage_review(comments)
 
 cov.show_results(new_untested)
 
+bot.post_completed('failure' if comments else 'success')
