@@ -80,7 +80,7 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
-          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ steps.ref.outputs.ref }} $GITHUB_STEP_SUMMARY review.json
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ steps.ref.outputs.ref }} $GITHUB_STEP_SUMMARY
         shell: bash
         env:
           PEM: ${{ secrets.BOT_PEM }}
