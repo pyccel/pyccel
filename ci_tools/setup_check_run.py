@@ -1,6 +1,7 @@
 import json
 import os
 from bot_tools.bot_funcs import Bot
+from bot_tools.setup_values import get_pr_id
 
 bot = Bot(check_run_id = os.environ["GITHUB_CHECK_RUN_ID"], commit = os.environ["GITHUB_REF"])
 
@@ -17,7 +18,7 @@ if os.environ["GITHUB_CHECK_RUN_ID"]=="":
 else:
     posted = bot.post_in_progress()
 run_id = posted['id']
-pr_id = next(p['number'] for p in posted['pull_requests'])
+pr_id = get_pr_id(posted['pull_requests'])
 
 print(f"check_run_id={run_id}", sep='')
 print(os.environ["GITHUB_ENV"])
