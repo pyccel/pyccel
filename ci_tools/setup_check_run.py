@@ -17,6 +17,7 @@ if os.environ["GITHUB_CHECK_RUN_ID"]=="":
     posted = bot.create_in_progress_check_run(test_key)
 else:
     posted = bot.post_in_progress()
+print(posted)
 run_id = posted['id']
 pr_id = get_pr_id(posted['pull_requests'])
 
