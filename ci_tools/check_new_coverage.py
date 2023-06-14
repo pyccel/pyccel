@@ -28,9 +28,9 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 comments = cov.get_json_summary(new_untested, file_contents)
 
-bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['COMMIT'])
+bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['HEAD_SHA'])
 
-cov.print_markdown_summary(comments, os.environ['HEAD_SHA'], args.output, bot.repo)
+cov.print_markdown_summary(comments, os.environ['COMMIT'], args.output, bot.repo)
 
 bot.post_coverage_review(comments)
 
