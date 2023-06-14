@@ -133,8 +133,7 @@ class GitHubAPIInteractions:
         query= {'name': name}
         return self._post_request("GET", url).json()
  
-    def download_artifact(self, artifact_id):
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts/{artifact_id}/zip"
+    def download_artifact(self, url):
         reply = self._post_request("GET", url)
         assert reply.status_code == 302
 
