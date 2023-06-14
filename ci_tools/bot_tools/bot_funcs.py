@@ -110,7 +110,7 @@ class Bot:
                 }
         if result:
             params["output"] = result
-        self._GAI.update_run(self._check_run_id, inputs)
+        self._GAI.update_run(self._check_run_id, params)
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
