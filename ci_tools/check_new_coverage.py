@@ -16,8 +16,6 @@ parser.add_argument('commit', metavar='commit', type=str,
                         help='The commit being analysed')
 parser.add_argument('output', metavar='output', type=str,
                         help='File where the markdown output will be printed')
-parser.add_argument('json_output', metavar='joson_output', type=str,
-                        help='File where the json output will be printed')
 
 args = parser.parse_args()
 
