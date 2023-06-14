@@ -87,7 +87,7 @@ class Bot:
         key = f"({test}, {pv})"
         name = f"{test_names[test]} {key}"
         posted = self._GAI.create_run(self._ref, name)
-        return posted["id"]
+        return posted
 
     def post_in_progress(self):
         inputs = {
@@ -95,7 +95,7 @@ class Bot:
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
                 }
         print(inputs)
-        self._GAI.update_run(self._check_run_id, inputs)
+        return self._GAI.update_run(self._check_run_id, inputs).json()
 
     def post_completed(self, conclusion):
         if os.path.exists('test_json_result.json'):
