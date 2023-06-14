@@ -2065,6 +2065,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_AugAssign(self, expr):
         new_expr = expr.to_basic_assign()
+        expr.invalidate_node()
         return self._print(new_expr)
 
     def _print_PythonRange(self, expr):
