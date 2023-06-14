@@ -61,6 +61,10 @@ jobs:
           coverage combine
           coverage xml
         shell: bash
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@master
         continue-on-error: True
@@ -77,10 +81,15 @@ jobs:
         run: |
           python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ steps.ref.outputs.ref }} $GITHUB_STEP_SUMMARY review.json
         shell: bash
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
       - name: "Post completed"
         if: always()
         run:
           python ci_tools/complete_check_run.py ${{ steps.coverage.outcome }}
         env:
+          PEM: ${{ secrets.BOT_PEM }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}
