@@ -19,6 +19,9 @@ on:
         required: true
         type: string
 
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+
 jobs:
   CoverageChecker:
 
@@ -26,16 +29,9 @@ jobs:
     name: Unit tests
 
     steps:
-      - name: Get ref
-        id: ref
-        run: |
-          ref = "${{ inputs.ref }}" or "${{ github.event.ref }}"
-          with open("${{ github.output }}", "a") as f:
-              print("ref=", ref, sep='', file=f)
-        shell: python
       - uses: actions/checkout@v3
         with:
-          ref: ${{ steps.ref.outputs.ref }}
+          ref: ${COMMIT}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -80,7 +76,7 @@ jobs:
       - name: Check coverage
         id: coverage
         run: |
-          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${{ steps.ref.outputs.ref }} $GITHUB_STEP_SUMMARY
+          python ci_tools/check_new_coverage.py pull_diff.txt cobertura.xml ${COMMIT} $GITHUB_STEP_SUMMARY
         shell: bash
         env:
           PEM: ${{ secrets.BOT_PEM }}

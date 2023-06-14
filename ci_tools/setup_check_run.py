@@ -3,7 +3,7 @@ import os
 from bot_tools.bot_funcs import Bot
 from bot_tools.setup_values import get_pr_id
 
-bot = Bot(pr_id = 0, check_run_id = os.environ["GITHUB_CHECK_RUN_ID"], commit = os.environ["GITHUB_REF"])
+bot = Bot(pr_id = 0, check_run_id = os.environ["GITHUB_CHECK_RUN_ID"], commit = os.environ["COMMIT"])
 
 if os.environ["GITHUB_CHECK_RUN_ID"]=="":
     # Parse event payload from $GITHUB_EVENT_PATH variable

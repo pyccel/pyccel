@@ -13,6 +13,9 @@ on:
         required: false
         type: string
 
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+
 jobs:
   Spelling:
     runs-on: ubuntu-latest
@@ -21,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref || github.event.ref }}
+          ref: ${COMMIT}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:

@@ -13,6 +13,9 @@ on:
         required: false
         type: string
 
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+
 jobs:
   Anaconda-Windows:
     runs-on: windows-latest
@@ -21,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref || github.event.ref }}
+          ref: ${COMMIT}
       - uses: conda-incubator/setup-miniconda@v2
         with:
           auto-update-conda: true
