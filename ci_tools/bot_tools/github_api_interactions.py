@@ -107,6 +107,7 @@ class GitHubAPIInteractions:
         status = 'APPROVE' if len(comments)==0 else 'REQUEST_CHANGES'
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
+        print(review)
         reply = self._post_request("POST", url, json=review)
         print(reply.text)
         assert reply.status_code == 200
