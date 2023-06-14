@@ -63,17 +63,11 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
-      - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@master
-        continue-on-error: True
-        with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          coverage-reports: cobertura.xml
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifact
-          path: cobertura.xml
+          path: .coverage
           retention-days: 1
       - name: "Post completed"
         if: always()

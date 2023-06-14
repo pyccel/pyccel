@@ -55,9 +55,18 @@ jobs:
           python -m pip install defusedxml
         shell: bash
       - name: Collect coverage information
-        uses: actions/download-artifact@v3
+        run: |
+          python ci_tools/fetch_artifacts.py ${{ inputs.artifact_urls }}
+          echo -e "[paths]\nsource =\n   $(pwd)/pyccel\n   */site-packages/pyccel\n[xml]\noutput = cobertura.xml" > .coveragerc
+          coverage combine
+          coverage xml
+        shell: bash
+      - name: Run codacy-coverage-reporter
+        uses: codacy/codacy-coverage-reporter-action@master
+        continue-on-error: True
         with:
-          name: coverage-artifact
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: cobertura.xml
       - name: Collect diff information
         run: |
           git fetch

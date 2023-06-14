@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-artifact
-          path: cobertura.xml
+          path: .coverage
           retention-days: 1
       - name: "Post completed"
         if: always()
