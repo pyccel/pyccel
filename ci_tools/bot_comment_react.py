@@ -31,7 +31,7 @@ comment = event['comment']['body']
 command = comment.split('/bot')[1].strip()
 command_words = command.split()
 
-bot = Bot(pr_id)
+bot = Bot(pr_id = pr_id)
 
 if command_words[:2] == ['show', 'tests']:
     bot.show_tests()

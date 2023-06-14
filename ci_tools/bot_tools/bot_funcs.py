@@ -68,9 +68,8 @@ class Bot:
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
         self._GAI = GitHubAPIInteractions()
-        if pr_id:
-            self._pr_id = pr_id
-            self._pr_details = self._GAI.get_pr_details(pr_id)
+        self._pr_id = pr_id or os.environ["PR_ID"]
+        self._pr_details = self._GAI.get_pr_details(pr_id)
         if commit:
             self._ref = commit
             self._base = None
