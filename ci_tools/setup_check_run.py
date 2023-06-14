@@ -13,11 +13,11 @@ if os.environ["GITHUB_CHECK_RUN_ID"]=="":
         event = json.load(event_file)
     workflow_file = event["workflow"]
     test_key = os.path.splitext(os.path.basename(workflow_file))[0]
-    run_id = bot.create_in_progress_check_run(test_key)
+    posted = bot.create_in_progress_check_run(test_key)
 else:
-    print(os.environ["GITHUB_CHECK_RUN_ID"])
-    bot.post_in_progress()
-    run_id = os.environ["GITHUB_CHECK_RUN_ID"]
+    posted = bot.post_in_progress()
+run_id = posted['id']
+pr_id = next(p['number'] for p in posted['pull_requests'])
 
 print(f"check_run_id={run_id}", sep='')
 print(os.environ["GITHUB_ENV"])
