@@ -170,8 +170,11 @@ class Bot:
         pass
 
     def post_coverage_review(self, comments):
-        message = message_from_file('coverage_review_message.txt')
-        self._GAI.create_review(self._pr_id, self._commit, message, comments)
+        if len(comments) == 0:
+            message = message_from_file('coverage_ok.txt')
+        else:
+            message = message_from_file('coverage_review_message.txt')
+        self._GAI.create_review(self._pr_id, self._ref, message, comments)
 
     def is_user_trusted(self, user):
         """
