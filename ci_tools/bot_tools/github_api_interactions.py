@@ -46,11 +46,8 @@ class GitHubAPIInteractions:
             self._install_token, expiry = get_authorization()
             self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
-    def _post_request(self, method, url, json=None):
-        reply = requests.request(method, url, json=json, headers=self.get_headers())
-        print("----------------------------------------")
-        print(reply.text)
-        print("----------------------------------------")
+    def _post_request(self, method, url, json=None, **kwargs):
+        reply = requests.request(method, url, json=json, headers=self.get_headers(), **kwargs)
         return reply
 
     def check_runs(self, commit):
@@ -133,9 +130,10 @@ class GitHubAPIInteractions:
         query= {'name': name}
         return self._post_request("GET", url).json()
  
-    def download_artifact(self, url):
-        reply = self._post_request("GET", url)
-        assert reply.status_code == 302
+    def download_artifact(self, name, url):
+        reply = self._post_request("GET", url, stream=True)
+        with open(name, 'wb') as f:
+            f.write(reply.content)
 
 
     def get_headers(self):
