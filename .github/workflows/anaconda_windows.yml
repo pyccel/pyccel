@@ -15,6 +15,9 @@ on:
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
 
 jobs:
   Anaconda-Windows:
@@ -35,10 +38,6 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
-        env:
-          PEM: ${{ secrets.BOT_PEM }}
-          GITHUB_RUN_ID: ${{ github.run_id }}
-          GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
@@ -62,6 +61,3 @@ jobs:
         if: always()
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
-        env:
-          installation_token: ${{ steps.token.outputs.installation_token }}
-          installation_token_exp: ${{ steps.token.outputs.installation_token_exp }}

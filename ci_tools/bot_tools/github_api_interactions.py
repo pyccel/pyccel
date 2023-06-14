@@ -20,7 +20,7 @@ def get_authorization():
     token  = reply.json()["token"]
     expiry = reply.json()["expires_at"]
 
-    with open(os.environ["GITHUB_OUTPUT"], "r") as f:
+    with open(os.environ["GITHUB_ENV"], "r") as f:
         output = f.read()
 
     if "installation_token" in output:
@@ -28,7 +28,7 @@ def get_authorization():
         print(lines)
         output = '\n'.join(l for l in lines if "installation_token" not in l)
 
-    with open(os.environ["GITHUB_OUTPUT"], "w") as f:
+    with open(os.environ["GITHUB_ENV"], "w") as f:
         f.write(output)
         print(f"installation_token={token}", file=f)
         print(f"installation_token_exp={expiry}", file=f)
