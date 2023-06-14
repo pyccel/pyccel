@@ -26,7 +26,7 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 
 new_untested = cov.allow_untested_debug_code(new_untested)
 
-comments = cov.print_json_summary(new_untested, file_contents)
+comments = cov.get_json_summary(new_untested, file_contents)
 
 bot = Bot()
 
