@@ -225,7 +225,10 @@ def get_json_summary(untested, content_lines):
                 end_line = line_indices[j]-1
             else:
                 end_line = line_indices[j]
-            comments.append({'path':f, 'line':end_line, 'start_line': start_line, 'body':message})
+            output = {'path':f, 'line':end_line, 'body':message}
+            if start_line != end_line:
+                output['start_line'] = start_line
+            comments.append(output)
 
     return comments
 
