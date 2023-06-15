@@ -47,6 +47,7 @@ if name_key in coverage_deps:
     if all(c in successful_runs for c in coverage_deps):
         python_version = coverage_run["name"].split('(')[1].split(',')[1].split(')')[0].strip()
         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
+        print("Searching for ids: ", workflow_ids)
         bot.run_test('coverage', python_version, coverage_run["id"], workflow_ids)
     elif all(c in completed_runs for c in coverage_deps):
         bot.GAI.update_run(coverage_run["id"], {'conclusion':'cancelled', 'status':"completed"})
