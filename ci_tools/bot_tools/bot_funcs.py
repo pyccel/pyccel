@@ -142,14 +142,14 @@ class Bot:
                 if t != "coverage":
                     self.run_test(t, pv, posted["id"])
 
-    def run_test(self, test, python_version, check_run_id):
+    def run_test(self, test, python_version, check_run_id, workflow_ids):
         inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id)}
         if test in tests_with_base:
             inputs['base'] = self._base
         if test == 'coverage':
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
             print("possible_artifacts : ", possible_artifacts)
-            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['head_sha'] == self._ref]
+            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
         self._GAI.run_workflow(f'{test}.yml', inputs)
