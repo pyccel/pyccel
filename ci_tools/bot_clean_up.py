@@ -36,14 +36,15 @@ runs = bot.get_check_runs()
 
 print("Runs: ", runs)
 
-successful_runs = [get_name_key(r['name']) for r in runs if r['conclusion'] == "success"]
-completed_runs = [get_name_key(r['name']) for r in runs if r['status'] == "completed"]
+all_run_names = [get_name_key(r['name']) for r in runs]
+successful_runs = [n for n,r in zip(all_run_names, runs) if r['conclusion'] == "success"]
+completed_runs = [n for n,r in zip(all_run_names, runs) if r['status'] == "completed"]
 
 print("Successful:", successful_runs)
 print("Completed:", completed_runs)
 
-if name_key in coverage_deps:
-    coverage_run = next(r for r in runs if get_name_key(r['name']) == 'coverage')
+if name_key in coverage_deps and 'coverage' in all_run_names:
+    coverage_run = next(r for n, r in zip(all_run_names, runs) if n == 'coverage')
     if all(c in successful_runs for c in coverage_deps):
         python_version = coverage_run["name"].split('(')[1].split(',')[1].split(')')[0].strip()
         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
