@@ -78,6 +78,7 @@ class GitHubAPIInteractions:
     def update_run(self, run_id, json):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         run = self._post_request("PATCH", url, json)
+        print(run.text)
         assert run.status_code == 200
         return run
 
