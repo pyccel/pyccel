@@ -74,13 +74,11 @@ class Bot:
             self._pr_id = pr_id
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
+            self._base = self._pr_details["base"]["sha"]
         if commit:
             self._ref = commit
-            self._base = None
         else:
-            print(self._pr_details)
             self._ref = self._pr_details["head"]["sha"]
-            self._base = self._pr_details["base"]["sha"]
 
         if check_run_id:
             self._check_run_id = check_run_id
