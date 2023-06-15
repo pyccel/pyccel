@@ -74,13 +74,11 @@ class Bot:
             self._pr_id = pr_id
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
+            self._base = self._pr_details["base"]["sha"]
         if commit:
             self._ref = commit
-            self._base = None
         else:
-            print(self._pr_details)
             self._ref = self._pr_details["head"]["sha"]
-            self._base = self._pr_details["base"]["sha"]
 
         if check_run_id:
             self._check_run_id = check_run_id
@@ -113,7 +111,14 @@ class Bot:
                 }
         if result:
             params["output"] = result
-        self._GAI.update_run(self._check_run_id, params)
+        try:
+            self._GAI.update_run(self._check_run_id, params)
+        except AssertionError:
+            params = {
+                    "status": "completed",
+                    "conclusion": "failure",
+                    }
+            self._GAI.update_run(self._check_run_id, params)
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
@@ -142,13 +147,16 @@ class Bot:
                 if t != "coverage":
                     self.run_test(t, pv, posted["id"])
 
-    def run_test(self, test, python_version, check_run_id):
+    def run_test(self, test, python_version, check_run_id, workflow_ids = None):
         inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id)}
         if test in tests_with_base:
             inputs['base'] = self._base
         if test == 'coverage':
+            assert workflow_ids is not None
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
-            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['head_sha']==self._commit]
+            print("possible_artifacts : ", possible_artifacts)
+            acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+            print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
         self._GAI.run_workflow(f'{test}.yml', inputs)
 

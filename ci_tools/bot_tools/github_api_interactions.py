@@ -78,6 +78,7 @@ class GitHubAPIInteractions:
     def update_run(self, run_id, json):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         run = self._post_request("PATCH", url, json)
+        print(run.text)
         assert run.status_code == 200
         return run
 
@@ -92,7 +93,9 @@ class GitHubAPIInteractions:
         json = {"ref": "devel",
                 "inputs": inputs}
         print(url, json)
-        return self._post_request("POST", url, json)
+        reply = self._post_request("POST", url, json)
+        print(reply.text)
+        assert reply.status_code == 204
 
     def get_comments(self, pr_id):
         # Inspect comments (https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28)
