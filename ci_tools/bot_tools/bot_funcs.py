@@ -148,7 +148,9 @@ class Bot:
             inputs['base'] = self._base
         if test == 'coverage':
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
+            print("possible_artifacts : ", possible_artifacts)
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['head_sha'] == self._ref]
+            print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
