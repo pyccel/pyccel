@@ -182,7 +182,8 @@ def print_markdown_summary(untested, commit, output, repo):
             if f!= current_file:
                 md_string += f"### {f}\n"
                 current_file = f
-            md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{c['start_line']}-L{c['line']}\n"
+            start_line = c.get('start_line', c['line'])
+            md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{start_line}-L{c['line']}\n"
 
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
