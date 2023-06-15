@@ -67,7 +67,7 @@ jobs:
       - name: Collect diff information
         run: |
           git fetch
-          git diff origin/${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
         id: coverage
