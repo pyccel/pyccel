@@ -38,8 +38,8 @@ def get_untested_lines(coverage_filename):
         lines = f.findall('lines')[0].findall('line')
         all_lines = [int(l.attrib['number']) for l in lines]
         untested_lines = [int(l.attrib['number']) for l in lines if l.attrib['hits'] == "0"]
-        no_coverage[os.path.join('pyccel',filename)] = untested_lines
-        content_lines[os.path.join('pyccel',filename)] = all_lines
+        no_coverage[filename] = untested_lines
+        content_lines[filename] = all_lines
 
     return no_coverage, content_lines
 
