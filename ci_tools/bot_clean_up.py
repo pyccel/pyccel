@@ -37,6 +37,9 @@ runs = bot.get_check_runs()
 successful_runs = [get_name_key(r['name']) for r in runs if r['conclusion'] == "success"]
 completed_runs = [get_name_key(r['name']) for r in runs if r['status'] == "completed"]
 
+print("Successful:", successful_runs)
+print("Completed:", completed_runs)
+
 if name_key in coverage_deps:
     coverage_run = next(r for r in runs if get_name_key(r['name']) == 'coverage')
     if all(c in successful_runs for c in coverage_deps):
