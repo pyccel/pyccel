@@ -92,7 +92,9 @@ class GitHubAPIInteractions:
         json = {"ref": "devel",
                 "inputs": inputs}
         print(url, json)
-        return self._post_request("POST", url, json)
+        reply = self._post_request("POST", url, json)
+        print(reply.text)
+        assert reply.status_code == 204
 
     def get_comments(self, pr_id):
         # Inspect comments (https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28)
