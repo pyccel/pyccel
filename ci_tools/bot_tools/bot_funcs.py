@@ -113,12 +113,13 @@ class Bot:
             params["output"] = result
         try:
             self._GAI.update_run(self._check_run_id, params)
-        except AssertionError:
+        except AssertionError as a:
             params = {
                     "status": "completed",
                     "conclusion": "failure",
                     }
             self._GAI.update_run(self._check_run_id, params)
+            raise a
 
     def show_tests(self):
         self._GAI.create_comment(self._pr_id, message_from_file('show_tests.txt'))
