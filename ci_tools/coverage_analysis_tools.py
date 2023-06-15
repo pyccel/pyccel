@@ -208,6 +208,7 @@ def get_json_summary(untested, content_lines):
     list of dict
         A list of dictionaries describing all lines with unacceptable coverage.
     """
+    message = "This code isn't tested. Please can you take a look"
     comments = []
     for f, lines in untested.items():
         line_indices = content_lines[f]
