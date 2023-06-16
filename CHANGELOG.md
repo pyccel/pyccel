@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #929 : Allow optional variables when compiling with intel or nvidia.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 -   #1415 : Fix incorrect handling of assignments augmented by function calls.
+-   #1418 : Fix `itertools.product` implementation.
 
 ### Changed
 
