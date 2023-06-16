@@ -1,19 +1,29 @@
 """ Script to check that all new lines in the python files in the pyccel/ code folder are used in the tests
 """
+import argparse
 import json
 import os
-import argparse
+import shutil
+import subprocess
 from git_evaluation_tools import get_diff_as_json
 from bot_tools.bot_funcs import Bot
 import coverage_analysis_tools as cov
 
-def get_relevant_lines(diff_hunk, position):
+git = shutil.which('git')
+
+def get_relevant_lines(review):
+    diff_hunk = review['diff_hunk']
+    original_position = review['original_position']
     lines = diff_hunk.split('\n')
     _, line_info, lines[0] = lines[0].split('@@')
-    print(lines)
-    print(line_info)
-    start_line, old_len, new_start_line, new_len = line_info.split(',')
-    return new_start_line + position - 1
+    line_info = line_info.strip()
+    start_line = int(line_info.split(' ')[1].split(',')[0])
+    original_line = new_start_line + original_position - 1
+
+    cmd = [git, 'diff', '--unified=0', review['original_commit_id'], '--', review['commit_id'], review['path']]
+
+    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
+        out, err = p.communicate()
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
@@ -42,12 +52,14 @@ revs = bot.get_bot_review_comments()
 
 print(revs)
 
-handled_lines = [get_relevant_lines(r['diff_hunk'], r['original_position']) for r in revs]
+original_lines = [get_relevant_lines(r) for r in revs]
 
-cov.print_markdown_summary(comments, os.environ['COMMIT'], args.output, bot.repo)
+print(original_lines)
 
-bot.post_coverage_review(comments)
-
-bot.post_completed('failure' if comments else 'success')
-
-cov.show_results(new_untested)
+#cov.print_markdown_summary(comments, os.environ['COMMIT'], args.output, bot.repo)
+#
+#bot.post_coverage_review(comments)
+#
+#bot.post_completed('failure' if comments else 'success')
+#
+#cov.show_results(new_untested)

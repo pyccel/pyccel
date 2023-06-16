@@ -258,6 +258,9 @@ class Bot:
         all_reviews = self._GAI.get_reviews(self._pr_id)
         comments = [c for r in all_reviews for c in self._GAI.get_review_comments(self._pr_id, r["id"])]
         relevant_comments = [c for c in comments if c['position'] is not None]
+        discarded_comments = [c for c in comments if c['position'] is None]
+        print("Discarded:")
+        print(discarded_comments)
 
         return relevant_comments
 
