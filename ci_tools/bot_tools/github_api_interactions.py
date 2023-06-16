@@ -120,7 +120,7 @@ class GitHubAPIInteractions:
         url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
         return self._post_request("GET", url).json()
 
-    def get_merged_prs(self):
+    def get_prs(self, state='open'):
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
         return self._post_request("GET", url).json()
 
@@ -136,11 +136,20 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts"
         query= {'name': name}
         return self._post_request("GET", url).json()
- 
+
     def download_artifact(self, name, url):
         reply = self._post_request("GET", url, stream=True)
         with open(name, 'wb') as f:
             f.write(reply.content)
+
+    def get_reviews(self, pr_id):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
+        return self._post_request("GET", url).json()
+
+    def get_review_comments(self, pr_id, review_id):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews/{review_id}/comments"
+        return self._post_request("GET", url).json()
+
 
 
     def get_headers(self):

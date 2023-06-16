@@ -20,9 +20,8 @@ if input_check_run_id == "":
 else:
     posted = bot.post_in_progress()
 
-print(posted)
 run_id = posted['id']
-pr_id = get_pr_id(posted['pull_requests'])
+pr_id = bot.get_pr_id()
 sha = posted['head_sha']
 
 print(f"check_run_id={run_id}", sep='')

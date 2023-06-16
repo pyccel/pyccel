@@ -197,8 +197,8 @@ class Bot:
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
         if in_team["message"] != "Not found":
             return True
-        merged_prs = self._GAI.get_merged_prs()
-        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user)
+        merged_prs = self._GAI.get_prs('all')
+        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
         if has_merged_pr:
             return has_merged_pr
         comments = self._GAI.get_comments(self._pr_id)
@@ -215,7 +215,7 @@ class Bot:
             user = user[1:]
         self._GAI.create_comment(self._pr_id, message_from_file('trusting_user.txt').format(user=user))
 
-    def check_review_stage(pr_id):
+    def check_review_stage(self, pr_id):
         """
         Find the review stage.
 
@@ -253,6 +253,18 @@ class Bot:
 
     def get_check_runs(self):
         return self._GAI.get_check_runs(self._ref)['check_runs']
+
+    def get_bot_review_comments(self):
+        all_reviews = self._GAI.get_reviews(self._pr_id)
+        comments = [c for r in all_reviews for c in self._GAI.get_review_comments(self._pr_id, r["id"])]
+        relevant_comments = [c for c in comments if c['position'] is not None]
+
+        return relevant_comments
+
+    def get_pr_id(self):
+        possible_prs = self._GAI.get_prs()
+        self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+        return self._pr_id
 
     @property
     def GAI(self):
