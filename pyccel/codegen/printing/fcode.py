@@ -2723,6 +2723,7 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
+        print("hhhhhh")
         func = PyccelFunctionDef('numpy_sign', NumpySign)
         self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
