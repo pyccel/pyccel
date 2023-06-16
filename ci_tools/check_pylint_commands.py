@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import sys
+import json
 from git_evaluation_tools import get_diff_as_json
 
 accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):['reimported'],
@@ -19,6 +20,32 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('./tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
                             re.compile('./tests/semantic/scripts/expressions.py'):['unused-variable'],
                             re.compile('./tests/semantic/scripts/calls.py'):['unused-variable']}
+
+def run_pylint(file, flag, messages):
+    """
+    Check for an expected pylint disable flag. If the flag is present
+    then it is ignored by removing it from the list. Otherwise if the
+    file raises the error a message is saved recommending that the
+    flag be disabled in the file.
+
+    Parameters
+    ----------
+    file : file object
+        The file being analysed.
+    flag : str
+        The name of the flag being investigated.
+    messages : list
+        The list of messages which should be printed.
+    """
+    with subprocess.Popen([shutil.which('pylint'), file, '--disable=all', f'--enable={flag}']) as r:
+        r.communicate()
+        result = r.returncode
+    if result:
+        messages["annotations"].append({
+            "annotation_level":"Warning",
+            "start_line":1, "end_line":1,
+            "path":file,
+            "message":f"Feel free to disable {flag}"})
 
 def check_expected_pylint_disable(file, disabled, flag, messages):
     """
@@ -40,14 +67,20 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
     messages : list
         The list of messages which should be printed.
     """
-    if flag in disabled:
-        disabled.remove(flag)
+    disabled_copy = disabled.copy()
+    if disabled:
+        for flags, line_number in disabled_copy:
+            if flag in flags:
+                new_flags = tuple(value for value in flags if value != flag)
+                if new_flags == ('',):
+                    disabled.remove((flags, line_number))
+                else:
+                    disabled.remove((flags, line_number))
+                    disabled.add((new_flags, line_number))
+            else:
+                run_pylint(file, flag, messages)
     else:
-        with subprocess.Popen([shutil.which('pylint'), file, '--disable=all', f'--enable={flag}']) as r:
-            r.communicate()
-            result = r.returncode
-        if result:
-            messages.append(f"Feel free to disable `{flag}` in `{file}`")
+        run_pylint(file, flag, messages)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
@@ -57,7 +90,6 @@ if __name__ == '__main__':
                             help='File containing the git diff output')
     parser.add_argument('output', metavar='output', type=str,
                             help='File where the markdown output will be printed')
-
     args = parser.parse_args()
 
     diff = get_diff_as_json(args.diffFile)
@@ -68,15 +100,19 @@ if __name__ == '__main__':
 
     success = True
 
-    messages = []
+    messages = {
+        "title":"Pylint Interaction",
+        "summary":"",
+        "annotations":[],
+        }
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
             lines = [l.replace(' ','') for l in myfile.readlines()]
-        pylint_lines = [l.strip() for l in lines if l.startswith('#pylint:disable=')]
+        pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
         disabled = set()
-        for l in pylint_lines:
-            disabled.update(l.split('=')[1].split(','))
+        for value, key in pylint_lines_and_numbers:
+            disabled.update([(tuple(value.split('=')[1].split(',')), key)])
         for r,d in accepted_pylint_commands.items():
             if r.match(f):
                 for di in d:
@@ -90,18 +126,34 @@ if __name__ == '__main__':
                 disabled.discard('reimported')
         if disabled:
             file_changed = f in diff
-            disabled_str = ", ".join(f"`{d}`" for d in disabled)
             if file_changed:
-                messages.append(f"[ERROR] New unexpected pylint disables found in `{f}`: {disabled_str}")
+                for value, key in disabled:
+                    for v in value:
+                        messages["annotations"].append({
+                            "annotation_level":"Error",
+                            "path":f,
+                            "message":f"New unexpected pylint disables found in {v}",
+                            "start_line":key,
+                            "end_line":key})
             else:
-                messages.append(f"Unexpected pylint disables found in `{f}`: {disabled_str}")
+                for value, key in disabled:
+                    for v in value:
+                        messages["annotations"].append({
+                            "annotation_level":"Warning",
+                            "path":f,
+                            "message":f"Unexpected pylint disables found in {v}",
+                            "start_line":key,
+                            "end_line":key})
             success &= (not file_changed)
 
     if messages:
-        with open(args.output, mode='a', encoding="utf-8") as outfile:
-            print("## Pylint Interaction", file=outfile)
-            for m in messages:
-                print(m, file=outfile)
-
-    if not success:
-        sys.exit(1)
+        json_data = json.dumps(messages)
+        with open(args.output, 'w') as json_file:
+            json_file.write(json_data)
+    else:
+        if not success:
+            sys.exit(1)
+        else:
+            json_data = {}
+            with open(args.output, 'w') as json_file:
+                json_file.write(json_data)
