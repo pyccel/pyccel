@@ -602,6 +602,10 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
+        print("Waay away")
+        print("Waay away")
+        print("Waay away")
+        print("Waay away")
         end = LiteralString('\n')
         sep = LiteralString(' ')
         code = ''
