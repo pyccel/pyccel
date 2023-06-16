@@ -177,7 +177,7 @@ if __name__ == '__main__':
             "summary":"Success:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.",
         }
     json_data = json.dumps(messages)
-    with open(args.output, 'w') as json_file:
+    with open(args.output, mode='a', encoding="utf-8") as json_file:
         json_file.write(json_data)
     if not success:
         sys.exit(1)
