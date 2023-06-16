@@ -2737,7 +2737,7 @@ class FCodePrinter(CodePrinter):
         elif var.rank == 2:
             return 'transpose({0})'.format(arg)
         else:
-            print("LALALALALALA")
+            print("LALALALALALAL")
             var_shape = var.shape[::-1] if var.order == 'F' else var.shape
             shape = ', '.join(self._print(i) for i in var_shape)
             order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
