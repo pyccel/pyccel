@@ -100,6 +100,18 @@ def test_product_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
+def test_product_loop(language):
+
+    f1 = loops.product_loop
+    f2 = epyccel(f1, language=language)
+
+    x = np.zeros( (44), dtype=float )
+    y = np.zeros( (44), dtype=float )
+
+    f1( x, 4, 11 )
+    f2( y, 4, 11 )
+    assert np.array_equal( x, y )
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
