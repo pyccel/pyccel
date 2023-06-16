@@ -1,7 +1,6 @@
 import json
 import os
 from bot_tools.bot_funcs import Bot
-from bot_tools.setup_values import get_pr_id
 
 input_check_run_id = os.environ["GITHUB_CHECK_RUN_ID"]
 
