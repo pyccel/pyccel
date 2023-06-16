@@ -41,11 +41,19 @@ def run_pylint(file, flag, messages):
         r.communicate()
         result = r.returncode
     if result:
-        messages["annotations"].append({
+        output_item = {
+            "title":"Pylint Interaction",
+            "summary":f"Feel free to disable in {file}",
+            "annotations": []
+        }
+        output_item["annotations"].append({
             "annotation_level":"Warning",
-            "start_line":1, "end_line":1,
+            "start_line":1,
+            "end_line":1,
             "path":file,
-            "message":f"Feel free to disable {flag}"})
+            "message":f"disable: {flag}"
+        })
+        messages["output"].append(output_item)
 
 def check_expected_pylint_disable(file, disabled, flag, messages):
     """
@@ -100,11 +108,7 @@ if __name__ == '__main__':
 
     success = True
 
-    messages = {
-        "title":"Pylint Interaction",
-        "summary":"",
-        "annotations":[],
-        }
+    messages = {"output":[]}
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
@@ -127,33 +131,53 @@ if __name__ == '__main__':
         if disabled:
             file_changed = f in diff
             if file_changed:
+                first_iteration = True
+                output_item = None
                 for value, key in disabled:
                     for v in value:
-                        messages["annotations"].append({
+                        if first_iteration:
+                            output_item = {
+                                "title":"Pylint Interaction",
+                                "summary":f"[ERROR]: New unexpected pylint disables found in {f}",
+                                "annotations":[]
+                                }
+                            first_iteration = False
+                        output_item["annotations"].append({
+                            "path":f,
+                            "start_line":key,
+                            "end_line":key,
                             "annotation_level":"Error",
-                            "path":f,
-                            "message":f"New unexpected pylint disables found in {v}",
-                            "start_line":key,
-                            "end_line":key})
+                            "message":f"New unexpected pylint disables: {v}"})
+                if output_item:
+                    messages["output"].append(output_item)
             else:
+                first_iteration = True
+                output_item = None
                 for value, key in disabled:
                     for v in value:
-                        messages["annotations"].append({
-                            "annotation_level":"Warning",
+                        if first_iteration:
+                            output_item = {
+                                "title":"Pylint Interaction",
+                                "summary":f"Unexpected pylint disables found in {f}",
+                                "annotations":[]
+                                }
+                            first_iteration = False
+                        output_item["annotations"].append({
                             "path":f,
-                            "message":f"Unexpected pylint disables found in {v}",
                             "start_line":key,
-                            "end_line":key})
+                            "end_line":key,
+                            "annotation_level":"Warning",
+                            "message":f"Unexpected pylint disables: {v}"})
+                if output_item:
+                    messages["output"].append(output_item)
             success &= (not file_changed)
-
-    if messages:
-        json_data = json.dumps(messages)
-        with open(args.output, 'w') as json_file:
-            json_file.write(json_data)
-    else:
-        if not success:
-            sys.exit(1)
-        else:
-            json_data = {}
-            with open(args.output, 'w') as json_file:
-                json_file.write(json_data)
+    if not messages["output"] and success:
+        messages["output"] = {
+            "title":"Pylint Interaction",
+            "summary":"Success:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.",
+        }
+    json_data = json.dumps(messages)
+    with open(args.output, 'w') as json_file:
+        json_file.write(json_data)
+    if not success:
+        sys.exit(1)
