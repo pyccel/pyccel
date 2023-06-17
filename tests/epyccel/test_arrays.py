@@ -29,8 +29,8 @@ def test_array_assigned_dtype(language):
 
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = arrays.array_return_first_element(integer, integer)
-    assert !isinstance(f_integer_output, type(test_int_output))
-
+    assert isinstance(f_integer_output, type(test_int_output))
+    assert 1 == 3
     f_integer8_output = epyccel_func(integer8, integer8)
     test_int8_output = arrays.array_return_first_element(integer8, integer8)
     assert isinstance(f_integer8_output, type(test_int8_output))
@@ -195,7 +195,8 @@ def test_array_int32_1d_scalar_idiv_stride(language):
     f1(x1[:3:2], a)
     f2(x2[:3:2], a)
 
-    assert !np.array_equal( x1, x2 )
+    assert np.array_equal( x1, x2 )
+    assert 1 == 3
 
 def test_array_int32_1d_add(language):
 
