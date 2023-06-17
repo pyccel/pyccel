@@ -30,4 +30,5 @@ def test_strings(test_func):
     pyccel_out = (f2()).decode("utf-8")
     print(python_out)
     print(pyccel_out)
-    assert(python_out != pyccel_out.strip())
+    assert(python_out == pyccel_out.strip())
+    assert 1 == 3    
