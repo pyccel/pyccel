@@ -63,6 +63,6 @@ runs:
       if: always()
       id: status
       run:
-        python ci_tools/json_pytest_output.py s1_outfile.out s2_outfile.out s3_outfile.out s4_outfile.out s5_outfile.out s6_outfile.out
+        python ci_tools/json_pytest_output.py tests/s1_outfile.out tests/s2_outfile.out tests/s3_outfile.out tests/s4_outfile.out tests/s5_outfile.out tests/s6_outfile.out
       shell: ${{ inputs.shell_cmd }}
 
