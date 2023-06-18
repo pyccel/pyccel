@@ -45,7 +45,7 @@ if __name__ == '__main__':
         }
     }
 
-    json_f = json.dumps(json_ouput)
+    json_f = json.dump(json_ouput)
     with open(output_file, 'a') as f:
         print(json_f, sep='', file=f)
 
