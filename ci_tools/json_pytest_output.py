@@ -1,22 +1,51 @@
 import sys
+import re
 import json
 
+if __name__ == '__main__':
 
-output_file = 'test_json_result.json'
+    if len(sys.argv) == 1:
+        raise ValueError("please provide an output file")
 
-def get_json_status():
-    data = {}
-    summary = {}
-    data['title'] = 'pytest results'
-    summary['pytest 1'] = sys.argv[1]
-    summary['pytest 2'] = sys.argv[2]
-    summary['pytest 3'] = sys.argv[3]
-    summary['pytest 4'] = sys.argv[4]
-    summary['pytest 5'] = sys.argv[5]
-    summary['pytest 6'] = sys.argv[6]
-    data['summary'] = summary
-    return json.dumps(data)
+    outfile = ""
+    args = sys.argv[1:]
+    output_file = 'test_json_result.json'
 
-with open(output_file, 'a') as f:
-    print(get_json_status(), sep='', file=f)
+
+    for i in sys.argv:
+        with open(i , 'r') as f:
+            outfile =  outfile + "\n"  + f.read()
+
+    c_tests = []
+    f_tests = []
+    py_tests = []
+    failed_pattern = r"^FAILED.*"
+    c_pattern = r".*\[c\].*"
+    f_pattern = r".*\[fortran\].*"
+    py_pattern = r".*\[python\].*"
+
+    failed_matches = re.findall(failed_pattern, outfile, re.MULTILINE)
+
+    r = re.compile(c_pattern)
+    c_failed = list(filter(r.match, failed_matches))
+
+    r = re.compile(f_pattern)
+    f_failed = list(filter(r.match, failed_matches))
+
+    r = re.compile(py_pattern)
+    py_failed = list(filter(r.match, failed_matches))
+
+    json_ouput = {
+        "title":"linux unit test",
+        "summary":
+        {
+            "c tests":c_failed,
+            "fortran tests":f_failed,
+            "python tests":py_failed
+        }
+    }
+
+    json_f = json.dumps(json_ouput)
+    with open(output_file, 'a') as f:
+        print(json_f, sep='', file=f)
 

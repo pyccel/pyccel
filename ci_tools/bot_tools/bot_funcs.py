@@ -102,6 +102,7 @@ class Bot:
         if os.path.exists('test_json_result.json'):
             with open('test_json_result.json', 'r') as f:
                 result = json.load(f)
+                result = json.dumps(result)
         else:
             result = {}
         print(result)
