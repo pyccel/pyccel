@@ -63,6 +63,7 @@ runs:
       if: always()
       id: status
       run:
-        python ci_tools/json_pytest_output.py #tests/s*_outfile.out
+        #python ci_tools/json_pytest_output.py tests/s*_outfile.out
+        echo "Nothing ran"
       shell: ${{ inputs.shell_cmd }}
 
