@@ -158,7 +158,7 @@ class Bot:
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
-            inputs['pr_id'] = self._pr_id
+            inputs['pr_id'] = str(self._pr_id)
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def mark_as_draft(self):
