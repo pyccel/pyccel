@@ -49,7 +49,6 @@ if __name__ == '__main__':
     py_pattern = r".*\[python\].*"
 
     failed_matches = re.findall(failed_pattern, outfile, re.MULTILINE)
-    #print(f"--------------------------------\n{failed_matches}")
     failed_matches = [re.sub(r'.*FAILED ', "- ", string) for string in failed_matches]
     
 
