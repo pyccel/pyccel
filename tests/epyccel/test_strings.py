@@ -31,4 +31,3 @@ def test_strings(test_func):
     print(python_out)
     print(pyccel_out)
     assert(python_out == pyccel_out.strip())
-    assert 1 == 3    
