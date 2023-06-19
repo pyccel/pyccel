@@ -35,17 +35,12 @@ if __name__ == '__main__':
     r = re.compile(py_pattern)
     py_failed = list(filter(r.match, failed_matches))
 
+    summary = f"c tests:\n {c_failed}\n f tests:\n {f_failed}\n python tests:\n {py_failed}\n"
+
     json_ouput = {
         "title":"linux unit test",
-        "summary":
-        {
-            "c tests":c_failed,
-            "fortran tests":f_failed,
-            "python tests":py_failed
-        }
+        "summary":summary
     }
 
     with open(output_file, 'w') as f:
         json.dump(json_ouput,f)
-
-
