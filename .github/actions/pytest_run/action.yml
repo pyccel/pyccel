@@ -63,6 +63,12 @@ runs:
       if: always()
       id: status
       run:
-        python ci_tools/json_pytest_output.py tests/s*_outfile.out
+        python ci_tools/json_pytest_output.py -t "Linux Test Summary" --tests "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}:${{ steps.pytest_1.outcome }}:tests/s1_outfile.out" \
+                       "SITE_DIR is set:${{ steps.pytest_2.outcome}}:tests/s2_outfile.out" \
+                       "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }} --ignore=symbolic --ignore=ndarrays :${{ steps.pytest_3.outcome }}:tests/s3_outfile.out" \
+                       "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}:${{ steps.pytest_4.outcome }}:tests/s4_outfile.out" \
+                       "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}:${{ steps.pytest_5.outcome }}:tests/s5_outfile.out" \
+                       "pytest ndarrays/ -rXx:${{ steps.pytest_6.outcome }}:tests/s6_outfile.out" 
+                      
       shell: ${{ inputs.shell_cmd }}
 
