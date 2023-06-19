@@ -2,6 +2,7 @@ import sys
 import re
 import json
 import argparse
+import os
 
 def     mini_md_summary(title, outcome, c, f, py):
     md = f"## {title} - {outcome} "
@@ -41,9 +42,9 @@ if __name__ == '__main__':
         values = i.split(':')
         mini_title = values[0] if len(values) >= 1 else None
         outcome = values[1] if len(values) >= 2 else None
-        out_file = values[2] if len(values) >= 3 and values[2] != '' else None
+        out_file = values[2] if len(values) >= 3 else None
 
-        if out_file != None:
+        if out_file != None and os.path.exists(out_file):
             with open(out_file , 'r') as f:
                 outfile = f.read()
             
