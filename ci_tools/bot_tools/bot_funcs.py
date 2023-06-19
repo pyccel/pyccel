@@ -40,6 +40,7 @@ tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
 github_cli = shutil.which('gh')
+git = shutil.which('git')
 
 def message_from_file(filename):
     """
@@ -178,11 +179,13 @@ class Bot:
     def mark_as_ready(self):
         pass
 
-    def post_coverage_review(self, comments):
-        if len(comments) == 0:
+    def post_coverage_review(self, comments, approve):
+        if approve:
             message = message_from_file('coverage_ok.txt')
+            status = 'APPROVE'
         else:
             message = message_from_file('coverage_review_message.txt')
+            status = 'REQUEST_CHANGES'
         self._GAI.create_review(self._pr_id, self._ref, message, comments)
 
     def is_user_trusted(self, user):
@@ -260,14 +263,44 @@ class Bot:
         relevant_comments = [c for c in comments if c['position'] is not None]
         discarded_comments = [c for c in comments if c['position'] is None]
         print("Discarded:")
-        print(discarded_comments)
 
-        return relevant_comments
+        result = {}
+
+        for c in relevant_comments:
+            c_id = c.get('in_reply_to_id', c['id'])
+            result.setdefault(c_id, []).append(c)
+
+        return result
 
     def get_pr_id(self):
         possible_prs = self._GAI.get_prs()
         self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
         return self._pr_id
+
+    def get_diff(self):
+        cmd = [git, 'diff', f"{self._base}..{self._ref}"]
+        with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            out, _ = p.communicate()
+        diff = {f: None for f in out.strip().split('\n')}
+        for f in diff:
+            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+                out, err = p.communicate()
+            if not err:
+                lines = out.split('\n')
+                n = next(i for i,l in enumerate(lines) if '@@' in l)
+                diff[f] = lines[n:]
+        return {f:l for f,l in diff.items() if l is not None}
+
+    def get_detailed_comments(self, comment_id):
+        return self._GAI.get_detailed_comments(comment_id)
+
+    def accept_coverage_fix(self, comment_thread):
+        message = message_from_file('accept_coverage_fix.txt')
+        if any(c['body'] == message for c in comment_thread):
+            return
+        comment_id = comment_thread[0]['id']
+        self._GAI.create_comment(self._pr_id, message,
+                                 reply_to = comment_id)
 
     @property
     def GAI(self):

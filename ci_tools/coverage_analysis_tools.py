@@ -188,7 +188,7 @@ def print_markdown_summary(untested, commit, output, repo):
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
 
-def get_json_summary(untested, content_lines):
+def get_json_summary(untested, content_lines, existing_comments):
     """
     Print the results neatly in json in a provided file
 
@@ -210,7 +210,9 @@ def get_json_summary(untested, content_lines):
         A list of dictionaries describing all lines with unacceptable coverage.
     """
     message = "This code isn't tested. Please can you take a look"
-    comments = []
+    new_comments = []
+    old_comments = []
+    existing_repeats = set()
     for f, lines in untested.items():
         line_indices = content_lines[f]
         n_code_lines = len(line_indices)
@@ -229,9 +231,13 @@ def get_json_summary(untested, content_lines):
             output = {'path':f, 'line':end_line, 'body':message}
             if start_line != end_line:
                 output['start_line'] = start_line
-            comments.append(output)
+            if (f,end_line) in existing_comments:
+                old_comments.append(output)
+                existing_repeats.add((f,end_line))
+            else:
+                new_comments.append(output)
 
-    return comments
+    return old_comments, new_comments, existing_repeats
 
 def show_results(untested):
     """
@@ -250,3 +256,17 @@ def show_results(untested):
 
     if len(untested) != 0:
         sys.exit(1)
+
+def check_if_coverage_ignored(bot, comment_json, existing_comments):
+    key = (comment_json['path'], comment_json['line'])
+    comment = existing_comments[key]
+    return any('/bot accept' in c['body'] for c in comment)
+
+def evaluate_success(bot, old_comments, new_comments, existing_comments):
+    if new_comments:
+        return True
+
+    if len(old_comments) == 0:
+        return True
+
+    return all(check_if_coverage_ignored(bot, r, existing_comments) for r in old_comments)

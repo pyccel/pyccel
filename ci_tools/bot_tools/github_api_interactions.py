@@ -25,7 +25,7 @@ def get_authorization():
 
     if "installation_token" in output:
         lines = output.split('\n')
-        print(lines)
+        print("Parsed : ", lines)
         output = '\n'.join(l for l in lines if "installation_token" not in l)
 
     with open(os.environ["GITHUB_ENV"], "w") as f:
@@ -102,12 +102,13 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
         return self._post_request("GET", url)
 
-    def create_comment(self, pr_id, comment):
+    def create_comment(self, pr_id, comment, reply_to = None):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
+        if reply_to:
+            url = f"{url}/{reply_to}/replies"
         return self._post_request("POST", url, json={"body":comment})
 
-    def create_review(self, pr_id, commit, comment, comments = ()):
-        status = 'APPROVE' if len(comments)==0 else 'REQUEST_CHANGES'
+    def create_review(self, pr_id, commit, comment, status, comments = ()):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
         print(review)
@@ -150,6 +151,9 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews/{review_id}/comments"
         return self._post_request("GET", url).json()
 
+    def get_detailed_comments(self, comment_id):
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/comments/{comment_id}"
+        return self._post_request("GET", url).json()
 
 
     def get_headers(self):

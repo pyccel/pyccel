@@ -11,19 +11,18 @@ import coverage_analysis_tools as cov
 
 git = shutil.which('git')
 
-def get_relevant_lines(review):
+def get_relevant_lines(diff, review):
     diff_hunk = review['diff_hunk']
-    original_position = review['original_position']
-    lines = diff_hunk.split('\n')
-    _, line_info, lines[0] = lines[0].split('@@')
+    position = review['position']
+    file = review['path']
+    lines = diff[file]
+    line_indicators = [(i, l) for i,l in enumerate(lines) if '@@' in l]
+    line_key = next((i,l) for i,l in reversed(line_indicators) if i<position)
+    offset = position-line_key[0]
+    _, line_info, lines[0] = line_key[1].split('@@')
     line_info = line_info.strip()
     start_line = int(line_info.split(' ')[1].split(',')[0])
-    original_line = new_start_line + original_position - 1
-
-    cmd = [git, 'diff', '--unified=0', review['original_commit_id'], '--', review['commit_id'], review['path']]
-
-    with subprocess.Popen(cmds, stdout=subprocess.PIPE) as p:
-        out, err = p.communicate()
+    return start_line + offset - 1
 
 parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
 parser.add_argument('diffFile', metavar='diffFile', type=str,
@@ -35,6 +34,16 @@ parser.add_argument('output', metavar='output', type=str,
 
 args = parser.parse_args()
 
+bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['HEAD_SHA'])
+
+current_diff = bot.get_diff()
+
+#print("Diff:", current_diff)
+
+revs = bot.get_bot_review_comments()
+
+commented_lines = {(r[0]['path'], get_relevant_lines(current_diff, r[0])): r for r in revs.values()}
+
 diff = get_diff_as_json(args.diffFile)
 untested, file_contents = cov.get_untested_lines(args.coverageFile)
 
@@ -44,22 +53,19 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 
 new_untested = cov.allow_untested_debug_code(new_untested)
 
-comments = cov.get_json_summary(new_untested, file_contents)
+old_comments, new_comments, existing_repeats = cov.get_json_summary(new_untested, file_contents, commented_lines)
 
-bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['HEAD_SHA'])
+for c,r in commented_lines:
+    if c not in existing_repeats:
+        print(r)
+        bot.accept_coverage_fix(r)
 
-revs = bot.get_bot_review_comments()
+success = cov.evaluate_success(bot, old_comments, new_comments, commented_lines)
 
-print(revs)
+cov.print_markdown_summary(old_comments + new_comments, os.environ['COMMIT'], args.output, bot.repo)
 
-original_lines = [get_relevant_lines(r) for r in revs]
+bot.post_coverage_review(new_comments, success)
 
-print(original_lines)
+bot.post_completed('success' if success else 'failure')
 
-#cov.print_markdown_summary(comments, os.environ['COMMIT'], args.output, bot.repo)
-#
-#bot.post_coverage_review(comments)
-#
-#bot.post_completed('failure' if comments else 'success')
-#
-#cov.show_results(new_untested)
+cov.show_results(new_untested)
