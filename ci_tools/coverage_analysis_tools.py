@@ -233,11 +233,10 @@ def get_json_summary(untested, content_lines, existing_comments):
                 output['start_line'] = start_line
             if (f,end_line) in existing_comments:
                 old_comments.append(output)
-                existing_repeats.add((f,end_line))
             else:
                 new_comments.append(output)
 
-    return old_comments, new_comments, existing_repeats
+    return old_comments, new_comments
 
 def show_results(untested):
     """
