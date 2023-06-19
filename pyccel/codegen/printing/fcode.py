@@ -3170,7 +3170,6 @@ class FCodePrinter(CodePrinter):
                         hunk = line[:pos].rstrip()
                         line = line[pos:].lstrip()
                     else:
-                        print("shhhhhh")
                         hunk = line[:pos]
                         line = line[pos:]
                     if line:
