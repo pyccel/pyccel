@@ -54,6 +54,8 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 new_untested = cov.allow_untested_debug_code(new_untested)
 
 old_comments, new_comments, existing_repeats = cov.get_json_summary(new_untested, file_contents, commented_lines)
+print(existing_repeats)
+print(commented_lines.keys())
 
 for c,r in commented_lines.items():
     if c not in existing_repeats:

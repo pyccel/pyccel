@@ -299,8 +299,9 @@ class Bot:
         if any(c['body'] == message for c in comment_thread):
             return
         comment_id = comment_thread[0]['id']
-        self._GAI.create_comment(self._pr_id, message,
+        reply = self._GAI.create_comment(self._pr_id, message,
                                  reply_to = comment_id)
+        print(reply.text)
 
     @property
     def GAI(self):
