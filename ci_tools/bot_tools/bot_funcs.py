@@ -259,17 +259,21 @@ class Bot:
     def get_bot_review_comments(self):
         all_reviews = self._GAI.get_reviews(self._pr_id)
         comments = [c for r in all_reviews for c in self._GAI.get_review_comments(self._pr_id, r["id"])]
-        relevant_comments = [c for c in comments if c['position'] is not None]
-        discarded_comments = [c for c in comments if c['position'] is None]
-        print("Discarded:")
 
-        result = {}
+        grouped_comments = {}
 
-        for c in relevant_comments:
+        for c in comments:
             c_id = c.get('in_reply_to_id', c['id'])
             result.setdefault(c_id, []).append(c)
 
-        return result
+        relevant_comments = [c for c in comments if c[0]['position'] is not None]
+        discarded_comments = [c for c in comments if c[0]['position'] is None]
+
+        for comment_thread in discarded_comments:
+            c = comment_thread[0]
+            self.accept_coverage_fix(comment_thread)
+
+        return relevant_comments
 
     def get_pr_id(self):
         possible_prs = self._GAI.get_prs()
@@ -298,7 +302,8 @@ class Bot:
         message = message_from_file('accept_coverage_fix.txt')
         if any(c['body'] == message for c in comment_thread):
             return
-        comment_id = comment_thread[0]['id']
+        target = comment_thread[0]
+        comment_id = target.get('in_reply_to_id', target['id'])
         reply = self._GAI.create_comment(self._pr_id, message,
                                  reply_to = comment_id)
         print(reply.text)
