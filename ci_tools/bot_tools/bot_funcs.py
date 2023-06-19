@@ -186,7 +186,7 @@ class Bot:
         else:
             message = message_from_file('coverage_review_message.txt')
             status = 'REQUEST_CHANGES'
-        self._GAI.create_review(self._pr_id, self._ref, message, comments)
+        self._GAI.create_review(self._pr_id, self._ref, message, status, comments)
 
     def is_user_trusted(self, user):
         """
@@ -279,6 +279,7 @@ class Bot:
 
     def get_diff(self):
         cmd = [git, 'diff', f"{self._base}..{self._ref}"]
+        print(cmd)
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}

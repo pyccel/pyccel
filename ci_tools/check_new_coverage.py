@@ -55,9 +55,8 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 old_comments, new_comments, existing_repeats = cov.get_json_summary(new_untested, file_contents, commented_lines)
 
-for c,r in commented_lines:
+for c,r in commented_lines.items():
     if c not in existing_repeats:
-        print(r)
         bot.accept_coverage_fix(r)
 
 success = cov.evaluate_success(bot, old_comments, new_comments, commented_lines)

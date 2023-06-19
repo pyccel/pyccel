@@ -264,7 +264,7 @@ def check_if_coverage_ignored(bot, comment_json, existing_comments):
 
 def evaluate_success(bot, old_comments, new_comments, existing_comments):
     if new_comments:
-        return True
+        return False
 
     if len(old_comments) == 0:
         return True
