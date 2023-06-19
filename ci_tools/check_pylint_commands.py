@@ -42,8 +42,8 @@ def run_pylint(file, flag, messages):
         result = r.returncode
     if result:
         output_item = {
-            "title":"Pylint Interaction",
-            "summary":f"Feel free to disable in {file}",
+            "title":f"[Warning]: Flag needs to be disabled",
+            "summary":f"Feel free to disable {flag} in {file}",
             "annotations": []
         }
         output_item["annotations"].append({
@@ -137,8 +137,8 @@ if __name__ == '__main__':
                     for v in value:
                         if first_iteration:
                             output_item = {
-                                "title":"Pylint Interaction",
-                                "summary":f"[ERROR]: New unexpected pylint disables found in {f}",
+                                "title":"[Error]: New unexpected pylint disables",
+                                "summary":f"New unexpected pylint disables found in {f}",
                                 "annotations":[]
                                 }
                             first_iteration = False
@@ -157,7 +157,7 @@ if __name__ == '__main__':
                     for v in value:
                         if first_iteration:
                             output_item = {
-                                "title":"Pylint Interaction",
+                                "title":"Warning: Unexpected pylint disables",
                                 "summary":f"Unexpected pylint disables found in {f}",
                                 "annotations":[]
                                 }
@@ -172,12 +172,19 @@ if __name__ == '__main__':
                     messages["output"].append(output_item)
             success &= (not file_changed)
     if not messages["output"] and success:
-        messages["output"] = {
-            "title":"Pylint Interaction",
-            "summary":"Success:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.",
+        output_item = {
+            "title":"[Succes]",
+            "summary":"The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.",
         }
+        messages["output"].append(output_item)
     json_data = json.dumps(messages)
-    with open(args.output, mode='a', encoding="utf-8") as json_file:
+    with open('../test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json_file.write(json_data)
+    with open(args.output, mode='w', encoding="utf-8") as md_file:
+        print(messages['output'])
+        for item in messages['output']:
+            md_file.write("# " + item['title'] + '\n')
+            md_file.write(item['summary'] + '\n\n')
+    
     if not success:
         sys.exit(1)
