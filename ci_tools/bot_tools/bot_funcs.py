@@ -21,18 +21,18 @@ default_python_versions = {
         }
 
 test_names = {
-        'anaconda_linux': "Unit tests on linux with anaconda",
-        'anaconda_windows': "Unit tests on windowd with anaconda",
+        'anaconda_linux': "Unit tests on Linux with anaconda",
+        'anaconda_windows': "Unit tests on Windows with anaconda",
         'coverage': "Coverage verification",
         'doc_coverage': "Check documentation",
-        'linux': "Unit tests on linux",
-        'macosx': "Unit tests on macosx",
+        'linux': "Unit tests on Linux",
+        'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
         'pickle': "Test pickling during source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
-        'windows': "Unit tests on windows"
+        'windows': "Unit tests on Windows"
         }
 
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
