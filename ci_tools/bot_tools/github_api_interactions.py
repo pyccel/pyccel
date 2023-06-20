@@ -109,7 +109,7 @@ class GitHubAPIInteractions:
         else:
             issue_type = 'issues'
             suffix = ''
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/{issue_type}/{pr_id}/comments{suffix}"
         print(url)
         return self._post_request("POST", url, json={"body":comment})
 
