@@ -258,6 +258,7 @@ def show_results(untested):
 def check_if_coverage_ignored(bot, comment_json, existing_comments):
     key = (comment_json['path'], comment_json['line'])
     comment = existing_comments[key]
+    print(comment)
     return any('/bot accept' in c['body'] for c in comment)
 
 def evaluate_success(bot, old_comments, new_comments, existing_comments):

@@ -36,6 +36,8 @@ current_diff = bot.get_diff()
 
 revs = bot.get_bot_review_comments()
 
+print(revs)
+
 commented_lines = {(r[0]['path'], get_relevant_lines(current_diff, r[0])): r for r in revs}
 
 diff = get_diff_as_json(args.diffFile)
