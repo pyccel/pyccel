@@ -42,18 +42,18 @@ def run_pylint(file, flag, messages):
         result = r.returncode
     if result:
         output_item = {
-            "title":f"[Warning]: Flag needs to be disabled",
-            "summary":f"Feel free to disable {flag} in {file}",
-            "annotations": []
+            "annotations": [],
+            "flags":flag,
+            "summary":"Feel free to disable",
         }
         output_item["annotations"].append({
-            "annotation_level":"Warning",
+            "annotation_level":"warning",
             "start_line":1,
             "end_line":1,
             "path":file,
-            "message":f"disable: {flag}"
+            "message":f"Feel free to disable {flag} in {file}"
         })
-        messages["output"].append(output_item)
+        messages.append(output_item)
 
 def check_expected_pylint_disable(file, disabled, flag, messages):
     """
@@ -98,6 +98,7 @@ if __name__ == '__main__':
                             help='File containing the git diff output')
     parser.add_argument('output', metavar='output', type=str,
                             help='File where the markdown output will be printed')
+
     args = parser.parse_args()
 
     diff = get_diff_as_json(args.diffFile)
@@ -108,7 +109,7 @@ if __name__ == '__main__':
 
     success = True
 
-    messages = {"output":[]}
+    messages = {"title":"Pylint Interaction","summary":"","annotations":[]}
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
@@ -123,68 +124,73 @@ if __name__ == '__main__':
                     disabled.discard(di)
         p = pathlib.Path(f)
         if p.parts[0] == 'tests':
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', messages)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', messages)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', messages)
+            msg = []
+            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
+            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
+            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
+            first_iteration = True
+            for item in msg:
+                if first_iteration:
+                    messages['summary'] += item['summary'] + ' ' + item['flags']
+                    first_iteration = False
+                else:
+                    messages['summary'] += ', ' + item['flags']
+                messages['annotations'].append(item['annotations'])
+            if not first_iteration:
+                messages['summary'] += f' in {f}\n\n'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
         if disabled:
             file_changed = f in diff
+            first_iteration = True
             if file_changed:
-                first_iteration = True
-                output_item = None
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            output_item = {
-                                "title":"[Error]: New unexpected pylint disables",
-                                "summary":f"New unexpected pylint disables found in {f}",
-                                "annotations":[]
-                                }
+                            messages['summary'] += f"New unexpected pylint disables found in {f}: "
+                            messages['summary'] += v
                             first_iteration = False
-                        output_item["annotations"].append({
-                            "path":f,
-                            "start_line":key,
-                            "end_line":key,
-                            "annotation_level":"Error",
-                            "message":f"New unexpected pylint disables: {v}"})
-                if output_item:
-                    messages["output"].append(output_item)
+                        else:
+                            messages['summary'] += ', ' + v
+                        messages['annotations'].append({
+                            'path':f,
+                            'start_line':key,
+                            'end_line':key,
+                            'annotation_level':"failure",
+                            'message':f"[ERROR] New unexpected pylint disables: {v}"})
+                if not first_iteration:
+                    messages['summary'] += '\n\n'
             else:
-                first_iteration = True
-                output_item = None
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            output_item = {
-                                "title":"Warning: Unexpected pylint disables",
-                                "summary":f"Unexpected pylint disables found in {f}",
-                                "annotations":[]
-                                }
+                            messages['summary'] += f"Unexpected pylint disables found in {f}: "
+                            messages['summary'] += v
                             first_iteration = False
-                        output_item["annotations"].append({
-                            "path":f,
-                            "start_line":key,
-                            "end_line":key,
-                            "annotation_level":"Warning",
-                            "message":f"Unexpected pylint disables: {v}"})
-                if output_item:
-                    messages["output"].append(output_item)
+                        else:
+                            messages['summary'] += ', ' + v
+                        messages['annotations'].append({
+                            'path':f,
+                            'start_line':key,
+                            'end_line':key,
+                            'annotation_level':"warning",
+                            'message':f"Unexpected pylint disables: {v}"})
+                if not first_iteration:
+                    messages['summary'] += '\n\n'
             success &= (not file_changed)
-    if not messages["output"] and success:
-        output_item = {
-            "title":"[Succes]",
-            "summary":"The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.",
-        }
-        messages["output"].append(output_item)
+
+    if not messages['summary'] and success:
+        messages['summary'] = "Success:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
+        messages.pop('annotations')
+    if not success and not messages['summary']:
+        messages['summary'] = "Error: Something went wrong"
+        messages.pop('annotations')
     json_data = json.dumps(messages)
-    with open('../test_json_result.json', mode='w', encoding="utf-8") as json_file:
+    with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json_file.write(json_data)
     with open(args.output, mode='w', encoding="utf-8") as md_file:
-        print(messages['output'])
-        for item in messages['output']:
-            md_file.write("# " + item['title'] + '\n')
-            md_file.write(item['summary'] + '\n\n')
+        md_file.write("# " + messages['title'] + '\n\n')
+        md_file.write(messages['summary'])
     
     if not success:
         sys.exit(1)
