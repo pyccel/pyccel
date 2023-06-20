@@ -2723,7 +2723,6 @@ class SemanticParser(BasicParser):
             iterable.set_loop_counter(index)
 
         if isinstance(iterator, PyccelSymbol):
-            print("hihi")
             iterator_rhs = iterable.get_target_from_range()
             iterator_d_var = self._infer_type(iterator_rhs)
 

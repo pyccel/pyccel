@@ -292,7 +292,6 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value or its shortcut if possible
         """
-        print("Waay away")
         precision = get_final_precision(expr)
         constant_name = iso_c_binding[self._print(expr.dtype)][precision]
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
@@ -602,10 +601,6 @@ class FCodePrinter(CodePrinter):
         return self._get_statement(code) + '\n'
 
     def _print_PythonPrint(self, expr):
-        print("Waay away")
-        print("Waay away")
-        print("Waay away")
-        print("Waay away")
         end = LiteralString('\n')
         sep = LiteralString(' ')
         code = ''
@@ -2728,7 +2723,6 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
-        print("hhhhhh")
         func = PyccelFunctionDef('numpy_sign', NumpySign)
         self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
@@ -2742,7 +2736,6 @@ class FCodePrinter(CodePrinter):
         elif var.rank == 2:
             return 'transpose({0})'.format(arg)
         else:
-            print("LALALALALALAL")
             var_shape = var.shape[::-1] if var.order == 'F' else var.shape
             shape = ', '.join(self._print(i) for i in var_shape)
             order = ', '.join(self._print(LiteralInteger(i)) for i in range(var.rank, 0, -1))
