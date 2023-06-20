@@ -4,6 +4,21 @@ import time
 import requests
 
 def get_authorization():
+    """
+    Get the token necessary to authentificate as the bot.
+
+    Use the private token of the bot (saved in an environment
+    secret) to request a JSON Web Token (JWT). Save that JWT
+    and its expiry date to the environment for future actions
+    ($GITHUB_ENV).
+
+    Returns
+    -------
+    str
+        The JWT used for authentificating as the bot.
+    str
+        A string describing the expiration of the JWT.
+    """
     signing_key = jwt.jwk_from_pem(bytes(os.environ["PEM"], "utf-8"))
     # Issued at time
     # JWT expiration time (10 minutes maximum)
