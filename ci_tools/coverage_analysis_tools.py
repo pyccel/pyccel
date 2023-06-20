@@ -212,7 +212,6 @@ def get_json_summary(untested, content_lines, existing_comments):
     message = "This code isn't tested. Please can you take a look"
     new_comments = []
     old_comments = []
-    existing_repeats = set()
     for f, lines in untested.items():
         line_indices = content_lines[f]
         n_code_lines = len(line_indices)

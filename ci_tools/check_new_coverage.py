@@ -7,7 +7,6 @@ from bot_tools.bot_funcs import Bot
 import coverage_analysis_tools as cov
 
 def get_relevant_lines(diff, review):
-    diff_hunk = review['diff_hunk']
     position = review['position']
     file = review['path']
     lines = diff[file]
