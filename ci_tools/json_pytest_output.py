@@ -13,7 +13,7 @@ def     mini_md_summary(title, outcome, c, f, py):
             for i in c:
                 md = md + i + "\n"
         if len(f) != 0:
-            md = md + '\n' + "### C Test summary: "
+            md = md + '\n' + "### Fortran Test summary: "
             md = md + '\n'
             for i in f:
                 md = md + i + "\n"
