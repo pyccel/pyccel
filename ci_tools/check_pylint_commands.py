@@ -51,7 +51,7 @@ def run_pylint(file, flag, messages):
             "start_line":1,
             "end_line":1,
             "path":file,
-            "message":f"Feel free to disable {flag} in {file}"
+            "message":f"Feel free to disable `{flag}`"
         })
         messages.append(output_item)
 
@@ -102,7 +102,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     diff = get_diff_as_json(args.diffFile)
-    print(diff)
 
     folder = args.folder
 
@@ -113,7 +112,6 @@ if __name__ == '__main__':
     messages = {"title":"Pylint Interaction","summary":"","annotations":[]}
 
     for f in files:
-        print("-------------", f, "-------------")
         with open(f, encoding="utf-8") as myfile:
             lines = [l.replace(' ','') for l in myfile.readlines()]
         pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
@@ -133,51 +131,69 @@ if __name__ == '__main__':
             first_iteration = True
             for item in msg:
                 if first_iteration:
-                    messages['summary'] += item['summary'] + ' ' + item['flags']
+                    messages['summary'] += item['summary'] + ' `' + item['flags'] + '`'
+                    for value in item['annotations']:
+                        messages['annotations'].append(value)
                     first_iteration = False
                 else:
-                    messages['summary'] += ', ' + item['flags']
-                messages['annotations'].append(item['annotations'])
+                    messages['summary'] += ', `' + item['flags'] + '`'
+                    messages['annotations'][-1]['message'] += ', `' + item['flags'] + '`'
             if not first_iteration:
-                messages['summary'] += f' in {f}\n\n'
+                messages['summary'] += f' in `{f}`\n\n'
+                messages['annotations'][-1]['message'] += f' in `{f}`'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
         if disabled:
             file_changed = f in diff
-            print(disabled, file_changed)
             first_iteration = True
             if file_changed:
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            messages['summary'] += f"New unexpected pylint disables found in {f}: "
-                            messages['summary'] += v
+                            messages['summary'] += f"New unexpected pylint disables found in `{f}`: `{v}`"
+                            messages['annotations'].append({
+                                'path':f,
+                                'start_line':key,
+                                'end_line':key,
+                                'annotation_level':"failure",
+                                'message':f"[ERROR] New unexpected pylint disables: `{v}`"})
                             first_iteration = False
                         else:
-                            messages['summary'] += ', ' + v
-                        messages['annotations'].append({
-                            'path':f,
-                            'start_line':key,
-                            'end_line':key,
-                            'annotation_level':"failure",
-                            'message':f"[ERROR] New unexpected pylint disables: {v}"})
+                            messages['summary'] += ', `' + v + '`'
+                            if key == messages['annotations'][-1]['start_line']:
+                                messages['annotations'][-1]['message'] += ', `' + v + '`'
+                            else:
+                                messages['annotations'].append({
+                                    'path':f,
+                                    'start_line':key,
+                                    'end_line':key,
+                                    'annotation_level':"failure",
+                                    'message':f"[ERROR] New unexpected pylint disables: `{v}`"})
                 if not first_iteration:
                     messages['summary'] += '\n\n'
             else:
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            messages['summary'] += f"Unexpected pylint disables found in {f}: "
-                            messages['summary'] += v
+                            messages['summary'] += f"Unexpected pylint disables found in `{f}`: `{v}`"
+                            messages['annotations'].append({
+                                'path':f,
+                                'start_line':key,
+                                'end_line':key,
+                                'annotation_level':"warning",
+                                'message':f"Unexpected pylint disables: `{v}`"})
                             first_iteration = False
                         else:
                             messages['summary'] += ', ' + v
-                        messages['annotations'].append({
-                            'path':f,
-                            'start_line':key,
-                            'end_line':key,
-                            'annotation_level':"warning",
-                            'message':f"Unexpected pylint disables: {v}"})
+                            if key == messages['annotations'][-1]['start_line']:
+                                messages['annotations'][-1]['message'] += ', `' + v + '`'
+                            else:
+                                messages['annotations'].append({
+                                    'path':f,
+                                    'start_line':key,
+                                    'end_line':key,
+                                    'annotation_level':"warning",
+                                    'message':f"Unexpected pylint disables: `{v}`"})
                 if not first_iteration:
                     messages['summary'] += '\n\n'
             success &= (not file_changed)
