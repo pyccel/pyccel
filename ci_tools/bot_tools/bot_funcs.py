@@ -280,9 +280,12 @@ class Bot:
         return relevant_comments
 
     def get_pr_id(self):
-        possible_prs = self._GAI.get_prs()
-        self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
-        return self._pr_id
+        if self._pr_id:
+            return self._pr_id
+        else:
+            possible_prs = self._GAI.get_prs()
+            self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+            return self._pr_id
 
     def get_diff(self):
         cmd = [git, 'diff', f"{self._base}..{self._ref}"]
