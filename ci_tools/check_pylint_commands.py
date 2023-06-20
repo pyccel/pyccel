@@ -143,8 +143,8 @@ if __name__ == '__main__':
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
         if disabled:
-            print(disabled, file_changed)
             file_changed = f in diff
+            print(disabled, file_changed)
             first_iteration = True
             if file_changed:
                 for value, key in disabled:
