@@ -137,10 +137,10 @@ if __name__ == '__main__':
                     first_iteration = False
                 else:
                     messages['summary'] += ', `' + item['flags'] + '`'
-                    messages['annotations'][-1]['message'] += ', `' + item['flags'] + '`'
+                    messages['annotations'][-1]['message'] += ', ' + item['flags']
             if not first_iteration:
                 messages['summary'] += f' in `{f}`\n\n'
-                messages['annotations'][-1]['message'] += f' in `{f}`'
+                messages['annotations'][-1]['message'] += f' in {f}'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
         if disabled:
@@ -156,19 +156,19 @@ if __name__ == '__main__':
                                 'start_line':key,
                                 'end_line':key,
                                 'annotation_level':"failure",
-                                'message':f"[ERROR] New unexpected pylint disables: `{v}`"})
+                                'message':f"[ERROR] New unexpected pylint disables: {v}"})
                             first_iteration = False
                         else:
                             messages['summary'] += ', `' + v + '`'
                             if key == messages['annotations'][-1]['start_line']:
-                                messages['annotations'][-1]['message'] += ', `' + v + '`'
+                                messages['annotations'][-1]['message'] += ', ' + v
                             else:
                                 messages['annotations'].append({
                                     'path':f,
                                     'start_line':key,
                                     'end_line':key,
                                     'annotation_level':"failure",
-                                    'message':f"[ERROR] New unexpected pylint disables: `{v}`"})
+                                    'message':f"[ERROR] New unexpected pylint disables: {v}"})
                 if not first_iteration:
                     messages['summary'] += '\n\n'
             else:
@@ -181,19 +181,19 @@ if __name__ == '__main__':
                                 'start_line':key,
                                 'end_line':key,
                                 'annotation_level':"warning",
-                                'message':f"Unexpected pylint disables: `{v}`"})
+                                'message':f"Unexpected pylint disables: {v}"})
                             first_iteration = False
                         else:
-                            messages['summary'] += ', ' + v
+                            messages['summary'] += ', `' + v + '`'
                             if key == messages['annotations'][-1]['start_line']:
-                                messages['annotations'][-1]['message'] += ', `' + v + '`'
+                                messages['annotations'][-1]['message'] += ', ' + v
                             else:
                                 messages['annotations'].append({
                                     'path':f,
                                     'start_line':key,
                                     'end_line':key,
                                     'annotation_level':"warning",
-                                    'message':f"Unexpected pylint disables: `{v}`"})
+                                    'message':f"Unexpected pylint disables: {v}"})
                 if not first_iteration:
                     messages['summary'] += '\n\n'
             success &= (not file_changed)
