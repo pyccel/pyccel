@@ -111,6 +111,9 @@ class Bot:
                 "conclusion": conclusion,
                 }
         if result:
+            print(os.environ['GITHUB_WORKFLOW'])
+            key = os.path.splitext(os.path.basename(os.environ['GITHUB_WORKFLOW']))[0]
+            result['title'] = test_names[key]
             params["output"] = result
         try:
             self._GAI.update_run(self._check_run_id, params)
