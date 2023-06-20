@@ -100,7 +100,12 @@ class GitHubAPIInteractions:
     def get_comments(self, pr_id):
         # Inspect comments (https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28)
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
-        return self._post_request("GET", url)
+        return self._post_request("GET", url).json()
+
+    def get_review_comments(self, pr_id):
+        # Inspect comments (https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28)
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
+        return self._post_request("GET", url).json()
 
     def create_comment(self, pr_id, comment, reply_to = None):
         if reply_to:
@@ -150,10 +155,6 @@ class GitHubAPIInteractions:
 
     def get_reviews(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        return self._post_request("GET", url).json()
-
-    def get_review_comments(self, pr_id, review_id):
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews/{review_id}/comments"
         return self._post_request("GET", url).json()
 
     def get_detailed_comments(self, comment_id):

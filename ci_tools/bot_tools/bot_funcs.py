@@ -258,8 +258,9 @@ class Bot:
         return self._GAI.get_check_runs(self._ref)['check_runs']
 
     def get_bot_review_comments(self):
-        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user'].get('type', 'user') == 'Bot']
-        comments = [c for r in all_reviews for c in self._GAI.get_review_comments(self._pr_id, r["id"])]
+        comments = [c for c in self._GAI.get_review_comments(self._pr_id)]
+        for c in comments:
+            print(json.dumps(c, indent=3))
 
         grouped_comments = {}
 
@@ -267,8 +268,13 @@ class Bot:
             c_id = c.get('in_reply_to_id', c['id'])
             grouped_comments.setdefault(c_id, []).append(c)
 
-        relevant_comments = [c for c in grouped_comments.values() if c[0]['position'] is not None]
-        discarded_comments = [c for c in grouped_comments.values() if c[0]['position'] is None]
+        for c_id, v in grouped_comments.items():
+            assert v[0]['id'] == c_id
+
+        bot_grouped_comments =[c for c in grouped_comments.values() if c[0]['user'].get('type', 'user') == 'Bot']
+
+        relevant_comments = [c for c in bot_grouped_comments if c[0]['position'] is not None]
+        discarded_comments = [c for c in bot_grouped_comments if c[0]['position'] is None]
 
         for comment_thread in discarded_comments:
             c = comment_thread[0]
