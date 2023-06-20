@@ -266,8 +266,8 @@ class Bot:
             c_id = c.get('in_reply_to_id', c['id'])
             grouped_comments.setdefault(c_id, []).append(c)
 
-        relevant_comments = [c for c in grouped_comments if c[0]['position'] is not None]
-        discarded_comments = [c for c in grouped_comments if c[0]['position'] is None]
+        relevant_comments = [c for c in grouped_comments.values() if c[0]['position'] is not None]
+        discarded_comments = [c for c in grouped_comments.values() if c[0]['position'] is None]
 
         for comment_thread in discarded_comments:
             c = comment_thread[0]
