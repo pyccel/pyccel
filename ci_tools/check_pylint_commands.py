@@ -113,6 +113,7 @@ if __name__ == '__main__':
     messages = {"title":"Pylint Interaction","summary":"","annotations":[]}
 
     for f in files:
+        print("-------------", f, "-------------")
         with open(f, encoding="utf-8") as myfile:
             lines = [l.replace(' ','') for l in myfile.readlines()]
         pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
@@ -141,8 +142,8 @@ if __name__ == '__main__':
                 messages['summary'] += f' in {f}\n\n'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
-        print(disabled)
         if disabled:
+            print(disabled, file_changed)
             file_changed = f in diff
             first_iteration = True
             if file_changed:
