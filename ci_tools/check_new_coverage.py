@@ -1,15 +1,10 @@
 """ Script to check that all new lines in the python files in the pyccel/ code folder are used in the tests
 """
 import argparse
-import json
 import os
-import shutil
-import subprocess
 from git_evaluation_tools import get_diff_as_json
 from bot_tools.bot_funcs import Bot
 import coverage_analysis_tools as cov
-
-git = shutil.which('git')
 
 def get_relevant_lines(diff, review):
     diff_hunk = review['diff_hunk']
