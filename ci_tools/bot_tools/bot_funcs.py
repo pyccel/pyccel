@@ -258,18 +258,12 @@ class Bot:
         return self._GAI.get_check_runs(self._ref)['check_runs']
 
     def get_bot_review_comments(self):
-        comments = [c for c in self._GAI.get_review_comments(self._pr_id)]
-        for c in comments:
-            print(json.dumps(c, indent=3))
-
+        comments = self._GAI.get_review_comments(self._pr_id)
         grouped_comments = {}
 
         for c in comments:
             c_id = c.get('in_reply_to_id', c['id'])
             grouped_comments.setdefault(c_id, []).append(c)
-
-        for c_id, v in grouped_comments.items():
-            assert v[0]['id'] == c_id
 
         bot_grouped_comments =[c for c in grouped_comments.values() if c[0]['user'].get('type', 'user') == 'Bot']
 
