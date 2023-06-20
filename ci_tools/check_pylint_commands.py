@@ -91,6 +91,14 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
         run_pylint(file, flag, messages)
 
 def ColorPrint(color, text):
+    """
+        Returning the text with the desired colour.
+
+        Parameters
+        ----------
+        color : the color of the output.
+        text : the output text.
+    """
     return f'***<span style="color: {color};">{text}</span>***'
 
 if __name__ == '__main__':
