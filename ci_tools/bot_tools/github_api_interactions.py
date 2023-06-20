@@ -51,6 +51,12 @@ def get_authorization():
     return token, expiry
 
 class GitHubAPIInteractions:
+    """
+    Class which handles all interactions with the GitHub API.
+
+    A helper class which exposes the GitHub API in a readable
+    manner.
+    """
     def __init__(self):
         repo = os.environ["GITHUB_REPOSITORY"]
         self._org, self._repo = repo.split('/')
@@ -62,14 +68,79 @@ class GitHubAPIInteractions:
             self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
 
     def _post_request(self, method, url, json=None, **kwargs):
+        """
+        Post the request to GitHub.
+
+        Use the requests library to sent the request to the API.
+
+        Parameters
+        ----------
+        method : str
+            The type of request, e.g. GET/POST/PATCH.
+
+        url : str
+            The url where the request should be sent.
+
+        json : dictionary, optional
+            Any additional information provided with the request.
+
+        **kwargs : dictionary
+            Any additional arguments for the requests library.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+        """
         reply = requests.request(method, url, json=json, headers=self.get_headers(), **kwargs)
         return reply
 
     def check_runs(self, commit):
+        """
+        Get a list of all check runs which were run on the commit.
+
+        Get a list of all check runs which were run in the repository for
+        the commit passed as an argument.
+
+        Parameters
+        ----------
+        commit : str
+            The SHA of the commit of interest.
+
+        Returns
+        -------
+        dict
+            A dictionary containing information about the check runs.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
         return self._post_request("GET", url).json()
 
     def create_run(self, commit, name):
+        """
+        Create a new check run.
+
+        Create a new check run with the specified name which tests the mentioned commit.
+        The check run is marked as in progress. The details url is pointed at the
+        run summary page for this run.
+
+        Parameters
+        ----------
+        commit : str
+            The commit to be tested.
+
+        name : str
+            The name of the check run.
+
+        Returns
+        -------
+        dict
+            A dictionary describing all properties of the new check run.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully posted.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
@@ -82,6 +153,30 @@ class GitHubAPIInteractions:
         return run.json()
 
     def prepare_run(self, commit, name):
+        """
+        Add a new check run to the queue.
+
+        Create a new check run with the specified name which tests the mentioned commit.
+        The check run is marked as queued.
+
+        Parameters
+        ----------
+        commit : str
+            The commit to be tested.
+
+        name : str
+            The name of the check run.
+
+        Returns
+        -------
+        dict
+            A dictionary describing all properties of the new check run.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully posted.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         json = {"name": name,
                 "head_sha": commit,
@@ -91,6 +186,30 @@ class GitHubAPIInteractions:
         return run.json()
 
     def update_run(self, run_id, json):
+        """
+        Update an existing check run.
+
+        Update information on the check run with id "run_id" using the information
+        in the json dictionary.
+
+        Parameters
+        ----------
+        run_id : int
+            The id of the check run.
+
+        json : dictionary
+            The information that should be updated in the check run.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully updated.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         run = self._post_request("PATCH", url, json)
         print(run.text)
@@ -99,15 +218,34 @@ class GitHubAPIInteractions:
 
     def get_pr_details(self, pr_id):
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
-        print(url)
         return self._post_request("GET", url).json()
 
     def run_workflow(self, filename, inputs):
-        # Create a workflow dispatch event (https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28)
+        """
+        Create a workflow dispatch event.
+
+        Create a workflow dispatch event as described in the API docs here:
+        https://docs.github.com/en/rest/actions/workflows?apiVersion=2022-11-28
+
+        All workflows are run from the devel branch, they then use the inputs
+        to checkout the relevant code.
+
+        Parameters
+        ----------
+        filename : str
+            The name of the file containing the workflow we wish to run.
+
+        inputs : dict
+            A dictionary of any inputs required for the workflow.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the workflow was not successfully started.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
                 "inputs": inputs}
-        print(url, json)
         reply = self._post_request("POST", url, json)
         print(reply.text)
         assert reply.status_code == 204
