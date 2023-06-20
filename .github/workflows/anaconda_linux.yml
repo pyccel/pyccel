@@ -46,6 +46,8 @@ jobs:
           mpi_type: openmpi
       - name: Coverage install
         uses: ./.github/actions/coverage_install
+        with:
+          shell_cmd: "bash -l {0}"
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
@@ -67,6 +69,8 @@ jobs:
       - name: Collect coverage information
         continue-on-error: True
         uses: ./.github/actions/coverage_collection
+        with:
+          shell_cmd: "bash -l {0}"
       - name: Save code coverage report
         uses: actions/upload-artifact@v3
         with:
