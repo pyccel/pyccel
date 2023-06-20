@@ -306,10 +306,12 @@ class Bot:
 
     def accept_coverage_fix(self, comment_thread):
         message = message_from_file('accept_coverage_fix.txt')
+        print(comment_thread)
         if any(c['body'] == message for c in comment_thread):
             return
         target = comment_thread[0]
         comment_id = target.get('in_reply_to_id', target['id'])
+        print("id: ", comment_id)
         reply = self._GAI.create_comment(self._pr_id, message,
                                  reply_to = comment_id)
         print(reply.text)

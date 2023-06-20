@@ -106,6 +106,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
         if reply_to:
             url = f"{url}/{reply_to}/replies"
+            print("url: ", url)
         return self._post_request("POST", url, json={"body":comment})
 
     def create_review(self, pr_id, commit, comment, status, comments = ()):
