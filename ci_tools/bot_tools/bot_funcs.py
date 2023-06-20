@@ -258,6 +258,7 @@ class Bot:
 
     def get_bot_review_comments(self):
         all_reviews = self._GAI.get_reviews(self._pr_id)
+        print(all_reviews)
         comments = [c for r in all_reviews for c in self._GAI.get_review_comments(self._pr_id, r["id"])]
 
         grouped_comments = {}
