@@ -102,6 +102,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     diff = get_diff_as_json(args.diffFile)
+    print(diff)
 
     folder = args.folder
 
@@ -140,6 +141,7 @@ if __name__ == '__main__':
                 messages['summary'] += f' in {f}\n\n'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
+        print(disabled)
         if disabled:
             file_changed = f in diff
             first_iteration = True
