@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     folder = args.folder
 
-    files = [os.path.join(root,f) for root, dirs, filenames in os.walk(folder) for f in filenames if os.path.splitext(f)[1] == '.py']
+    files = [os.path.relpath(os.path.join(root,f)) for root, dirs, filenames in os.walk(folder) for f in filenames if os.path.splitext(f)[1] == '.py']
 
     success = True
 
