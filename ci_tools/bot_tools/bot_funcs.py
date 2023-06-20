@@ -21,18 +21,18 @@ default_python_versions = {
         }
 
 test_names = {
-        'anaconda_linux': "Unit tests on linux with anaconda",
-        'anaconda_windows': "Unit tests on windowd with anaconda",
+        'anaconda_linux': "Unit tests on Linux with anaconda",
+        'anaconda_windows': "Unit tests on Windows with anaconda",
         'coverage': "Coverage verification",
         'doc_coverage': "Check documentation",
-        'linux': "Unit tests on linux",
-        'macosx': "Unit tests on macosx",
+        'linux': "Unit tests on Linux",
+        'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
         'pickle': "Test pickling during source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
-        'windows': "Unit tests on windows"
+        'windows': "Unit tests on Windows"
         }
 
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
@@ -110,6 +110,7 @@ class Bot:
                 "conclusion": conclusion,
                 }
         if result:
+            result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
             self._GAI.update_run(self._check_run_id, params)
@@ -159,6 +160,7 @@ class Bot:
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
+            inputs['pr_id'] = str(self._pr_id)
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def mark_as_draft(self):
