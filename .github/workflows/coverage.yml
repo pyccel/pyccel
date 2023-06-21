@@ -71,7 +71,9 @@ jobs:
       - name: Collect diff information
         run: |
           git fetch
+          git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git checkout ${{ env.COMMIT }}
         shell: bash
       - name: Check coverage
         id: coverage
