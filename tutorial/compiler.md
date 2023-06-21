@@ -23,7 +23,7 @@ epyccel(my_func, compiler='intel')
 
 ## User-defined compiler
 
-The user can also define their own compiler in a JSON file. To use this definition, the location of the JSON file must be passed to the _compiler_ argument. The JSON file must define the following:
+Der Benutzer kann auch seinen eigenen Compiler in einer JSON-Datei definieren. Um diese Definition zu verwenden, muss der Speicherort der JSON-Datei an das Argument _compiler_ übergeben werden. Die JSON-Datei muss Folgendes definieren:
 
 -   `exec` : The name of the executable
 -   `mpi_exec` : The name of the MPI executable
