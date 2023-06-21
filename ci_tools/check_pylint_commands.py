@@ -147,55 +147,38 @@ if __name__ == '__main__':
             file_changed = f in diff
             first_iteration = True
             if file_changed:
-                for value, key in disabled:
-                    for v in value:
-                        if first_iteration:
-                            messages['summary'] += f"New unexpected pylint disables found in `{f}`: `{v}`"
-                            messages['annotations'].append({
-                                'path':f,
-                                'start_line':key,
-                                'end_line':key,
-                                'annotation_level':"failure",
-                                'message':f"[ERROR] New unexpected pylint disables: {v}"})
-                            first_iteration = False
-                        else:
-                            messages['summary'] += ', `' + v + '`'
-                            if key == messages['annotations'][-1]['start_line']:
-                                messages['annotations'][-1]['message'] += ', ' + v
-                            else:
-                                messages['annotations'].append({
-                                    'path':f,
-                                    'start_line':key,
-                                    'end_line':key,
-                                    'annotation_level':"failure",
-                                    'message':f"[ERROR] New unexpected pylint disables: {v}"})
-                if not first_iteration:
-                    messages['summary'] += '\n\n'
+                summary_template = f"New unexpected pylint disables found in `{f}`: "
+                annotation_level = "failure"
+                annotation_message = "[ERROR] New unexpected pylint disables: "
             else:
-                for value, key in disabled:
-                    for v in value:
-                        if first_iteration:
-                            messages['summary'] += f"Unexpected pylint disables found in `{f}`: `{v}`"
+                summary_template = f"Unexpected pylint disables found in `{f}`: "
+                annotation_level = "warning"
+                annotation_message = "Unexpected pylint disables: "
+            first_iteration = True
+            for value, key in disabled:
+                for v in value:
+                    if first_iteration:
+                        messages['summary'] += f"{summary_template}`{v}`"
+                        messages['annotations'].append({
+                            'path':f,
+                            'start_line':key,
+                            'end_line':key,
+                            'annotation_level':annotation_level,
+                            'message':f"{annotation_message}{v}"})
+                        first_iteration = False
+                    else:
+                        messages['summary'] += ', `' + v + '`'
+                        if key == messages['annotations'][-1]['start_line']:
+                            messages['annotations'][-1]['message'] += ', ' + v
+                        else:
                             messages['annotations'].append({
                                 'path':f,
                                 'start_line':key,
                                 'end_line':key,
-                                'annotation_level':"warning",
-                                'message':f"Unexpected pylint disables: {v}"})
-                            first_iteration = False
-                        else:
-                            messages['summary'] += ', `' + v + '`'
-                            if key == messages['annotations'][-1]['start_line']:
-                                messages['annotations'][-1]['message'] += ', ' + v
-                            else:
-                                messages['annotations'].append({
-                                    'path':f,
-                                    'start_line':key,
-                                    'end_line':key,
-                                    'annotation_level':"warning",
-                                    'message':f"Unexpected pylint disables: {v}"})
-                if not first_iteration:
-                    messages['summary'] += '\n\n'
+                                'annotation_level':annotation_level,
+                                'message':f"{annotation_message}{v}"})
+            if not first_iteration:
+                messages['summary'] += '\n\n'
             success &= (not file_changed)
 
     if not messages['summary'] and success:
