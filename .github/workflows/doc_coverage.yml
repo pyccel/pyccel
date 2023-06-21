@@ -57,8 +57,8 @@ jobs:
         id: doc_coverage
         run: |
           echo "${{ github.event.pull_request.base.sha }}"
-          docstr-coverage --skip-magic --skip-init base/pyccel base/ci_tools 2> | tee base_cov || true
-          docstr-coverage --skip-magic --skip-init compare/pyccel compare/ci_tools 2> | tee compare_cov || true
+          docstr-coverage --skip-magic --skip-init --fail-under=0 base/pyccel base/ci_tools 2>&1 | tee base_cov
+          docstr-coverage --skip-magic --skip-init --fail-under=0 compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
         shell: bash
       - name: Check doc format
