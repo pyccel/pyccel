@@ -217,6 +217,21 @@ class GitHubAPIInteractions:
         return run
 
     def get_pr_details(self, pr_id):
+        """
+        Get the details of a pull request.
+
+        Get all details provided by the API for a given pull request.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the properties of the pull request.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}"
         return self._post_request("GET", url).json()
 
@@ -251,16 +266,78 @@ class GitHubAPIInteractions:
         assert reply.status_code == 204
 
     def get_comments(self, pr_id):
-        # Inspect comments (https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28)
+        """
+        Get all comments left on a given pull request or issue.
+
+        Get a dictionary containing a list of all the comments left
+        on a given pull request or issue. This list is obtained using
+        the API as described here:
+        https://docs.github.com/en/rest/issues/comments?apiVersion=2022-11-28
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request or comment.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the comments.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/comments"
         return self._post_request("GET", url).json()
 
     def get_review_comments(self, pr_id):
-        # Inspect comments (https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28)
+        """
+        Get all review comments left on a given pull request.
+
+        Get a dictionary containing a list of all the review comments left
+        on a given pull request. This includes comments left as a reply to a
+        review comment on a code snippet. This list is obtained using
+        the API as described here:
+        https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request or comment.
+
+        Returns
+        -------
+        dict
+            A dictionary containing the comments.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
         return self._post_request("GET", url).json()
 
     def create_comment(self, pr_id, comment, reply_to = None):
+        """
+        Create a comment on a pull request or issue.
+
+        Create a comment on a pull request or issue using the API as
+        described here:
+        https://docs.github.com/en/rest/pulls/comments?apiVersion=2022-11-28
+
+        Comments can also be left as a reply to a review comment on
+        a code snippet. This requires the id of the original comment
+        to be provided.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request or comment.
+
+        comment : str
+            The message to be left in the comment.
+
+        reply_to : int, optional
+            The id of the comment being replied to.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+        """
         if reply_to:
             suffix = f"/{reply_to}/replies"
             issue_type = 'pulls'
