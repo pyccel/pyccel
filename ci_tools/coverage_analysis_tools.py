@@ -255,17 +255,68 @@ def show_results(untested):
     if len(untested) != 0:
         sys.exit(1)
 
-def check_if_coverage_ignored(bot, comment_json, existing_comments):
+def check_if_coverage_ignored(comment_json, existing_comments):
+    """
+    Check if a reply was left indicating that the coverage can be ignored.
+
+    For a given coverage problem discovered on a previous run, check if a
+    reply to the comment was left indicating that the coverage can be
+    ignored.
+
+    Parameters
+    ----------
+    comment_json : dict
+        A dictionary describing a coverage problem which was found on a
+        previous run.
+
+    existing_comments : dict
+        A dictionary whose keys are a tuple containing the file and the
+        relevant line in the current version of the code, and whose values
+        are a list of comments and replies previously left on this blob.
+
+    Returns
+    -------
+    bool
+        True if the coverage issue should be ignored, false otherwise.
+    """
     key = (comment_json['path'], comment_json['line'])
     comment = existing_comments[key]
     print(comment)
     return any('/bot accept' in c['body'] for c in comment)
 
-def evaluate_success(bot, old_comments, new_comments, existing_comments):
+def evaluate_success(old_comments, new_comments, existing_comments):
+    """
+    Determine if the coverage check was successful.
+
+    Use the old comments, the new comments, and any replies to old comments
+    to determine whether the coverage check passes. The check passes if
+    there are no coverage issues, or if all the coverage issues are handled
+    via replies beginning with "/bot accept"
+
+    Parameters
+    ----------
+    old_comments : list of dict
+        A list of dictionaries describing any coverage problems which were
+        already found on a previous run.
+
+    new_comments : list of dict
+        A list of dictionaries describing any coverage problems which were
+        discovered during this run.
+
+    existing_comments : dict
+        A dictionary whose keys are a tuple containing the file and the
+        relevant line in the current version of the code, and whose values
+        are a list of comments and replies previously left on this blob.
+
+    Returns
+    -------
+    bool
+        True if the test succeeded, false otherwise.
+    """
     if new_comments:
         return False
 
     if len(old_comments) == 0:
         return True
 
-    return all(check_if_coverage_ignored(bot, r, existing_comments) for r in old_comments)
+    return all(check_if_coverage_ignored(r, existing_comments) for r in old_comments)

@@ -6,12 +6,44 @@ from git_evaluation_tools import get_diff_as_json
 from bot_tools.bot_funcs import Bot
 import coverage_analysis_tools as cov
 
-def get_relevant_lines(diff, review):
+def get_relevant_line(diff, review):
+    """
+    Get the line of the comment in the current version of the code.
+
+    From a review on the code and the current diff shown on the PR
+    for the branch, calculate the line of the comment in the code
+    currently on the branch.
+
+    Parameters
+    ----------
+    diff : dict
+        A dictionary whose keys are files and whose comments contain
+        the diff as shown on the PR starting from the first code
+        blob.
+
+    review : dict
+        A dictionary describing the review comment which was left on
+        the blob of code.
+
+    Returns
+    -------
+    int
+        The relevant line of code in the current commit.
+    """
+    # Get updated position according to git
     position = review['position']
+
+    # Get code
     file = review['path']
     lines = diff[file]
+
+    # Get line numbers indicated by the blob
     line_indicators = [(i, l) for i,l in enumerate(lines) if '@@' in l]
+
+    # Find the relevant blob
     line_key = next((i,l) for i,l in reversed(line_indicators) if i<position)
+
+    # Calculate the new line number
     offset = position-line_key[0]
     _, line_info, lines[0] = line_key[1].split('@@')
     line_info = line_info.strip()
@@ -32,13 +64,9 @@ bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"]
 
 current_diff = bot.get_diff()
 
-#print("Diff:", current_diff)
-
 revs = bot.get_bot_review_comments()
 
-print(revs)
-
-commented_lines = {(r[0]['path'], get_relevant_lines(current_diff, r[0])): r for r in revs}
+commented_lines = {(r[0]['path'], get_relevant_line(current_diff, r[0])): r for r in revs}
 
 diff = get_diff_as_json(args.diffFile)
 untested, file_contents = cov.get_untested_lines(args.coverageFile)
@@ -51,7 +79,7 @@ new_untested = cov.allow_untested_debug_code(new_untested)
 
 old_comments, new_comments = cov.get_json_summary(new_untested, file_contents, commented_lines)
 
-success = cov.evaluate_success(bot, old_comments, new_comments, commented_lines)
+success = cov.evaluate_success(old_comments, new_comments, commented_lines)
 
 cov.print_markdown_summary(old_comments + new_comments, os.environ['COMMIT'], args.output, bot.repo)
 
