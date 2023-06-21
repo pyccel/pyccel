@@ -13,7 +13,7 @@ def     mini_md_summary(title, outcome, c, f, py):
             for i in c:
                 md = md + i + "\n"
         if len(f) != 0:
-            md = md + '\n' + "### C Test summary: "
+            md = md + '\n' + "### Fortran Test summary: "
             md = md + '\n'
             for i in f:
                 md = md + i + "\n"
@@ -53,8 +53,8 @@ if __name__ == '__main__':
             py_tests = []
             failed_pattern = r".*FAILED.*"
             c_pattern = r".*\[c\].*"
-            f_pattern = r".*\[fortran\].*"
-            py_pattern = r".*\[python\].*"
+            f_pattern = r".*\[fortran\]\ \_.*"
+            py_pattern = r".*\[python\]\ \_.*"
 
             failed_matches = re.findall(failed_pattern, outfile, re.MULTILINE)
             failed_matches = [re.sub(r'.*FAILED ', "- ``", string) for string in failed_matches]
@@ -64,13 +64,13 @@ if __name__ == '__main__':
             c_failed = list(filter(r.match, failed_matches))
             c_failed = [re.sub(r'\[c\]', "`` :heavy_multiplication_x:", string) for string in c_failed]
 
-            r = re.compile(f_pattern)
-            f_failed = list(filter(r.match, failed_matches))
-            f_failed = [re.sub(r'\[fortran\]', "`` :heavy_multiplication_x:", string) for string in f_failed]
+            failed_matches = re.findall(f_pattern, outfile, re.MULTILINE)
+            failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
+            f_failed = [re.sub(r'\[fortran\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
 
-            r = re.compile(py_pattern)
-            py_failed = list(filter(r.match, failed_matches))
-            py_failed = [re.sub(r'\[python\]', "`` :heavy_multiplication_x:", string) for string in py_failed]
+            failed_matches = re.findall(py_pattern, outfile, re.MULTILINE)
+            failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
+            py_failed = [re.sub(r'\[python\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
 
 
         summary = summary + mini_md_summary(mini_title, outcome, c_failed, f_failed, py_failed)
