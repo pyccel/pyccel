@@ -90,17 +90,6 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
     else:
         run_pylint(file, flag, messages)
 
-def ColorPrint(color, text):
-    """
-        Returning the text with the desired colour.
-
-        Parameters
-        ----------
-        color : the color of the output.
-        text : the output text.
-    """
-    return f'***<span style="color: {color};">{text}</span>***'
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
     parser.add_argument('folder', type=str,
@@ -150,7 +139,7 @@ if __name__ == '__main__':
                     messages['summary'] += ', `' + item['flags'] + '`'
                     messages['annotations'][-1]['message'] += ', ' + item['flags']
             if not first_iteration:
-                messages['summary'] += f' in {ColorPrint("yellow", f)}\n\n'
+                messages['summary'] += f' in `{f}`\n\n'
                 messages['annotations'][-1]['message'] += f' in {f}'
             if p.parts[1] == 'epyccel':
                 disabled.discard('reimported')
@@ -161,7 +150,7 @@ if __name__ == '__main__':
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            messages['summary'] += f"New unexpected pylint disables found in {ColorPrint('yellow', f)}: `{v}`"
+                            messages['summary'] += f"New unexpected pylint disables found in `{f}`: `{v}`"
                             messages['annotations'].append({
                                 'path':f,
                                 'start_line':key,
@@ -186,7 +175,7 @@ if __name__ == '__main__':
                 for value, key in disabled:
                     for v in value:
                         if first_iteration:
-                            messages['summary'] += f"Unexpected pylint disables found in {ColorPrint('yellow', f)}: `{v}`"
+                            messages['summary'] += f"Unexpected pylint disables found in `{f}`: `{v}`"
                             messages['annotations'].append({
                                 'path':f,
                                 'start_line':key,
@@ -221,6 +210,6 @@ if __name__ == '__main__':
     with open(args.output, mode='w', encoding="utf-8") as md_file:
         md_file.write("# " + messages['title'] + '\n\n')
         md_file.write(messages['summary'])
-    
+
     if not success:
         sys.exit(1)
