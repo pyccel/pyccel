@@ -299,9 +299,6 @@ class Bot:
                 diff[f] = lines[n:]
         return {f:l for f,l in diff.items() if l is not None}
 
-    def get_detailed_comments(self, comment_id):
-        return self._GAI.get_detailed_comments(comment_id)
-
     def accept_coverage_fix(self, comment_thread):
         message = message_from_file('accept_coverage_fix.txt')
         print(comment_thread)

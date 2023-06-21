@@ -349,6 +349,40 @@ class GitHubAPIInteractions:
         return self._post_request("POST", url, json={"body":comment})
 
     def create_review(self, pr_id, commit, comment, status, comments = ()):
+        """
+        Create a review on the specified pull request.
+
+        Create a review on the specified pull request using the API as
+        described here:
+        https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#create-a-review-for-a-pull-request
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request or comment.
+
+        commit : str
+            The SHA of the most recent commit at the moment of the review.
+
+        comment : str
+            The message to be left in the review.
+
+        status : str
+            The status of the review, [REQUEST_CHANGES/APPROVE].
+
+        comments : list of dictionaries
+            A list of dictionaries describing the comments to be left on code snippets.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the review was not successfully posted.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         review = {'commit_id':commit, 'body': comment, 'event': status, 'comments': comments}
         print(review)
@@ -358,41 +392,168 @@ class GitHubAPIInteractions:
         return reply
 
     def check_for_user_in_team(self, user, team):
+        """
+        Check to determine if a user belongs to a given team.
+
+        Use the API to check to determine if a user belongs to a given team
+        as described here:
+        https://docs.github.com/en/rest/teams/members?apiVersion=2022-11-28#get-team-membership-for-a-user
+
+        Parameters
+        ----------
+        user : str
+            The user of interest.
+
+        team : str
+            The team which we are checking.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the result.
+        """
         url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
         return self._post_request("GET", url).json()
 
     def get_prs(self, state='open'):
+        """
+        Get a list of all pull requests in the repository.
+
+        Use the API to get a list of all pull requests in the repository which have
+        the specified state as described here:
+        https://docs.github.com/en/rest/pulls/pulls?apiVersion=2022-11-28#list-pull-requests
+
+        Parameters
+        ----------
+        state : str, default='open'
+            The state of the pull requests to report [open/closed/all].
+
+        Returns
+        -------
+        dict
+            A dictionary describing the pull requests.
+        """
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
         return self._post_request("GET", url).json()
 
     def get_check_runs(self, commit):
+        """
+        Get a list of all check runs which have run on a given commit.
+
+        Use the API to get a list of all check runs which have run on a given
+        commit as described here:
+        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#list-check-runs-for-a-git-reference
+
+        Parameters
+        ----------
+        state : str, default='open'
+            The state of the pull requests to report [open/closed/all].
+
+        Returns
+        -------
+        dict
+            A dictionary describing the pull requests.
+        """
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
         return self._post_request("GET", url).json()
 
     def get_pr_events(self, pr_id):
+        """
+        Get a list of all events which occured on this pull request.
+
+        Use the API to get a list of all events which occured on this pull
+        request as described here:
+        https://docs.github.com/en/rest/issues/events?apiVersion=2022-11-28#list-issue-events
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the events.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/events"
         return self._post_request("GET", url).json()
 
     def get_artifacts(self, name):
+        """
+        Find all artifacts with the specified name.
+
+        Find all artifacts in the repository with the specified name using
+        the API as described here:
+        https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#list-artifacts-for-a-repository
+
+        Parameters
+        ----------
+        name : str
+            The name of the artifact.
+
+        Returns
+        -------
+        dict
+            A dictionary describing all artifacts found.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts"
         query= {'name': name}
         return self._post_request("GET", url).json()
 
     def download_artifact(self, name, url):
+        """
+        Download the specified artifact from the url.
+
+        Use the API to download the specified artifact from the url
+        into a file called `name` as described here:
+        https://docs.github.com/en/rest/actions/artifacts?apiVersion=2022-11-28#download-an-artifact
+
+        Parameters
+        ----------
+        name : str
+            The name of the file where the result should be saved.
+
+        url : str
+            The url where the file is located.
+        """
         reply = self._post_request("GET", url, stream=True)
         with open(name, 'wb') as f:
             f.write(reply.content)
 
     def get_reviews(self, pr_id):
+        """
+        Get a list of all reviews which have been left on a given pull request.
+
+        Use the API to get a list of all reviews left on a given pull request
+        as described here:
+        https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#list-reviews-for-a-pull-request
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the reviews.
+        """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         return self._post_request("GET", url).json()
 
-    def get_detailed_comments(self, comment_id):
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/comments/{comment_id}"
-        return self._post_request("GET", url).json()
-
-
     def get_headers(self):
+        """
+        Get the header which is always passed to the API.
+
+        Get the header which must always be passed to the API to authentificate.
+        This header specifies the identity of the bot and the reference version
+        of the GitHub API.
+
+        Returns
+        -------
+        dict
+            The header which should be used in requests.
+        """
         if self._install_token_exp < time.struct_time(time.gmtime()):
             self._install_token, expiry = get_authorization()
             self._install_token_exp = time.strptime(expiry, "%Y-%m-%dT%H:%M:%SZ")
