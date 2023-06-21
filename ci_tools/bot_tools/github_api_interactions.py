@@ -190,7 +190,8 @@ class GitHubAPIInteractions:
         Update an existing check run.
 
         Update information on the check run with id "run_id" using the information
-        in the json dictionary.
+        in the json dictionary as described here:
+        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#update-a-check-run
 
         Parameters
         ----------
@@ -446,13 +447,13 @@ class GitHubAPIInteractions:
 
         Parameters
         ----------
-        state : str, default='open'
-            The state of the pull requests to report [open/closed/all].
+        commit : str
+            The SHA of the most recent commit at the moment of the review.
 
         Returns
         -------
         dict
-            A dictionary describing the pull requests.
+            A dictionary describing the check runs.
         """
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs'
         return self._post_request("GET", url).json()
