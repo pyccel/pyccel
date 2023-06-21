@@ -38,8 +38,8 @@ def get_untested_lines(coverage_filename):
         lines = f.findall('lines')[0].findall('line')
         all_lines = [int(l.attrib['number']) for l in lines]
         untested_lines = [int(l.attrib['number']) for l in lines if l.attrib['hits'] == "0"]
-        no_coverage[os.path.join('pyccel',filename)] = untested_lines
-        content_lines[os.path.join('pyccel',filename)] = all_lines
+        no_coverage[filename] = untested_lines
+        content_lines[filename] = all_lines
 
     return no_coverage, content_lines
 
@@ -182,12 +182,13 @@ def print_markdown_summary(untested, commit, output, repo):
             if f!= current_file:
                 md_string += f"### {f}\n"
                 current_file = f
-            md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{c['start_line']}-L{c['line']}\n"
+            start_line = c.get('start_line', c['line'])
+            md_string += f"https://github.com/{repo}/blob/{commit}/{f}#L{start_line}-L{c['line']}\n"
 
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
 
-def get_json_summary(untested, content_lines):
+def get_json_summary(untested, content_lines, existing_comments):
     """
     Print the results neatly in json in a provided file
 
@@ -208,7 +209,9 @@ def get_json_summary(untested, content_lines):
     list of dict
         A list of dictionaries describing all lines with unacceptable coverage.
     """
-    comments = []
+    message = "This code isn't tested. Please can you take a look"
+    new_comments = []
+    old_comments = []
     for f, lines in untested.items():
         line_indices = content_lines[f]
         n_code_lines = len(line_indices)
@@ -224,9 +227,15 @@ def get_json_summary(untested, content_lines):
                 end_line = line_indices[j]-1
             else:
                 end_line = line_indices[j]
-            comments.append({'path':f, 'line':end_line, 'start_line': start_line, 'body':message})
+            output = {'path':f, 'line':end_line, 'body':message}
+            if start_line != end_line:
+                output['start_line'] = start_line
+            if (f,end_line) in existing_comments:
+                old_comments.append(output)
+            else:
+                new_comments.append(output)
 
-    return comments
+    return old_comments, new_comments
 
 def show_results(untested):
     """
@@ -245,3 +254,69 @@ def show_results(untested):
 
     if len(untested) != 0:
         sys.exit(1)
+
+def check_if_coverage_ignored(comment_json, existing_comments):
+    """
+    Check if a reply was left indicating that the coverage can be ignored.
+
+    For a given coverage problem discovered on a previous run, check if a
+    reply to the comment was left indicating that the coverage can be
+    ignored.
+
+    Parameters
+    ----------
+    comment_json : dict
+        A dictionary describing a coverage problem which was found on a
+        previous run.
+
+    existing_comments : dict
+        A dictionary whose keys are a tuple containing the file and the
+        relevant line in the current version of the code, and whose values
+        are a list of comments and replies previously left on this blob.
+
+    Returns
+    -------
+    bool
+        True if the coverage issue should be ignored, false otherwise.
+    """
+    key = (comment_json['path'], comment_json['line'])
+    comment = existing_comments[key]
+    print(comment)
+    return any('/bot accept' in c['body'] for c in comment)
+
+def evaluate_success(old_comments, new_comments, existing_comments):
+    """
+    Determine if the coverage check was successful.
+
+    Use the old comments, the new comments, and any replies to old comments
+    to determine whether the coverage check passes. The check passes if
+    there are no coverage issues, or if all the coverage issues are handled
+    via replies beginning with "/bot accept"
+
+    Parameters
+    ----------
+    old_comments : list of dict
+        A list of dictionaries describing any coverage problems which were
+        already found on a previous run.
+
+    new_comments : list of dict
+        A list of dictionaries describing any coverage problems which were
+        discovered during this run.
+
+    existing_comments : dict
+        A dictionary whose keys are a tuple containing the file and the
+        relevant line in the current version of the code, and whose values
+        are a list of comments and replies previously left on this blob.
+
+    Returns
+    -------
+    bool
+        True if the test succeeded, false otherwise.
+    """
+    if new_comments:
+        return False
+
+    if len(old_comments) == 0:
+        return True
+
+    return all(check_if_coverage_ignored(r, existing_comments) for r in old_comments)
