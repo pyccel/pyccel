@@ -4,7 +4,16 @@ All notable changes to this project will be documented in this file.
 ## \[Unreleased\]
 
 ### Added
+
+### Fixed
+
+### Changed
+
+## \[1.8.0\] - 2023-06-20
+
+### Added
 -   #1400 : Added flags to Pyccel for managing conda PATH warnings.
+
 ### Fixed
 
 -   #1404 : Bug preventing printing of some functions in a `print()` call.
@@ -13,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #929 : Allow optional variables when compiling with intel or nvidia.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 -   #1415 : Fix incorrect handling of assignments augmented by function calls.
+-   #1418 : Fix `itertools.product` implementation.
 
 ### Changed
 

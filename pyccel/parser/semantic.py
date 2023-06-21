@@ -2742,7 +2742,6 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error')
 
-
         body = self._visit(expr.body)
 
         self.exit_loop_scope()
@@ -2751,8 +2750,13 @@ class SemanticParser(BasicParser):
             for_expr = body
             scopes = self.scope.create_product_loop_scope(scope, len(target))
 
-            for t, r, s in zip(target, iterable.get_range(), scopes[::-1]):
-                for_expr = For(t, r, for_expr, scope=s)
+            for t, i, r, s in zip(target[::-1], iterable.loop_counters[::-1], iterable.get_target_from_range()[::-1], scopes[::-1]):
+                # Create Variable iterable
+                loop_iter = Iterable(r.base)
+                loop_iter.set_loop_counter(i)
+
+                # Create a For loop for each level of the Product
+                for_expr = For(t, loop_iter, for_expr, scope=s)
                 for_expr.end_annotation = expr.end_annotation
                 for_expr = [for_expr]
             for_expr = for_expr[0]
