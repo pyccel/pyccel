@@ -269,7 +269,8 @@ class Bot:
                 if all(d in already_triggered_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success"]
+                        print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
                     self.run_test(t, pv, posted["id"], workflow_ids)
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
