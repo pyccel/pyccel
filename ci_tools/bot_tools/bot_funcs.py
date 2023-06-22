@@ -248,7 +248,8 @@ class Bot:
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         else:
-            already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
+            check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
+            already_triggered = [c["name"] for c in check_runs]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             print(already_triggered)
             for t in tests:
@@ -260,7 +261,10 @@ class Bot:
                 posted = self._GAI.prepare_run(self._ref, name)
                 deps = test_dependencies.get(t, ())
                 if all(d in already_triggered_names for d in deps):
-                    self.run_test(t, pv, posted["id"])
+                    workflow_ids = None
+                    if q_key == 'coverage':
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success"]
+                    self.run_test(t, pv, posted["id"], workflow_ids)
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
         """
