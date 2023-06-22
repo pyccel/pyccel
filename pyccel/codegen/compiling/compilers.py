@@ -27,6 +27,7 @@ if platform.system() == 'Darwin':
     mac_version_tuple = result.decode("utf-8").strip().split('.')
     mac_target = '{}.{}'.format(*mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
+    print("UNUSED!")
 
 
 def get_condaless_search_path(conda_warnings = 'basic'):
