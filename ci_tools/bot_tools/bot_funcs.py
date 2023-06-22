@@ -249,9 +249,9 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         else:
             check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if r['status'] == 'completed']
+            already_triggered = [c["name"] for c in check_runs if c['status'] == 'completed']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs if r['status'] == 'queued'}
+            already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
             for t in tests:
                 pv = python_version or default_python_versions[t]
