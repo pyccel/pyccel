@@ -260,6 +260,7 @@ class Bot:
                 name = f"{test_names[t]} {key}"
                 posted = self._GAI.prepare_run(self._ref, name)
                 deps = test_dependencies.get(t, ())
+                print(already_triggered_names, deps)
                 if all(d in already_triggered_names for d in deps):
                     workflow_ids = None
                     if q_key == 'coverage':
