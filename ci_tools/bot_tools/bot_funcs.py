@@ -268,7 +268,7 @@ class Bot:
                 print(already_triggered_names, deps)
                 if all(d in already_triggered_names for d in deps):
                     workflow_ids = None
-                    if q_key == 'coverage':
+                    if t == 'coverage':
                         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success"]
                     self.run_test(t, pv, posted["id"], workflow_ids)
 
