@@ -17,7 +17,7 @@ if input_check_run_id == "":
     test_key = os.path.splitext(os.path.basename(workflow_file))[0]
     posted = bot.create_in_progress_check_run(test_key)
 else:
-    posted = bot.post_in_progress(os.environ['GITHUB_RUN_ATTEMPT'] > 1)
+    posted = bot.post_in_progress(int(os.environ['GITHUB_RUN_ATTEMPT']) > 1)
 
 run_id = posted['id']
 pr_id = bot.get_pr_id()
