@@ -35,7 +35,7 @@ print("Successful:", successful_runs)
 print("Completed:", completed_runs)
 
 for q in queued_runs:
-    deps = test_dependencies.get(bot.get_name_key(q), ())
+    deps = test_dependencies.get(bot.get_name_key(q['name']), ())
     if name_key in deps:
         if all(r in deps for r in successful_runs):
             q_key = q.split('(')[1].split(')')[0].strip()
