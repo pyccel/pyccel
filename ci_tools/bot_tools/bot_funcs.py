@@ -137,7 +137,7 @@ class Bot:
         posted = self._GAI.create_run(self._ref, name)
         return posted
 
-    def post_in_progress(self):
+    def post_in_progress(self, rerequest = False):
         """
         Update a check run to indicate that the run is in progress.
 
@@ -154,9 +154,10 @@ class Bot:
         AssertionError
             An assertion error is raised if the check run was not successfully updated.
         """
+        if rerequest:
+            return self._GAI.rerequest_run(self._check_run_id, inputs).json()
         inputs = {
                 "status":"in_progress",
-                "conclusion":"neutral",
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
                 }
         return self._GAI.update_run(self._check_run_id, inputs).json()
