@@ -35,6 +35,8 @@ test_names = {
         'windows': "Unit tests on Windows"
         }
 
+test_dependencies = {'coverage':['linux']}
+
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
@@ -246,6 +248,7 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         else:
             already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
+            already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             print(already_triggered)
             for t in tests:
                 pv = python_version or default_python_versions[t]
@@ -254,7 +257,8 @@ class Bot:
                     continue
                 name = f"{test_names[t]} {key}"
                 posted = self._GAI.prepare_run(self._ref, name)
-                if t != "coverage":
+                deps = test_dependencies.get(t, ())
+                if all(d in already_triggered_names for d in deps):
                     self.run_test(t, pv, posted["id"])
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
@@ -577,3 +581,26 @@ class Bot:
         Get the full name of the repository being handled.
         """
         return self._repo
+
+    def get_name_key(self, name):
+        """
+        Get the name used as a key from the full run name.
+
+        Get the name used as a key to dictionaries including test_names and
+        default_python_versions from the full name reported in the check
+        run.
+
+        Parameter
+        ---------
+        name : str
+            The name saved in the check run.
+
+        Returns
+        -------
+        str
+            The name which can be used as a key.
+        """
+        if '(' in name:
+            return name.split('(')[1].split(',')[0]
+        else:
+            return name
