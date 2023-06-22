@@ -156,7 +156,7 @@ class Bot:
         """
         inputs = {
                 "status":"in_progress",
-                "conclusion":"",
+                "conclusion":"neutral",
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
                 }
         return self._GAI.update_run(self._check_run_id, inputs).json()
