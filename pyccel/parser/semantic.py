@@ -26,7 +26,7 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda)
+                                 PythonTuple, PythonMap, Lambda)
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -2811,7 +2811,6 @@ class SemanticParser(BasicParser):
             for_expr.end_annotation = expr.end_annotation
         return for_expr
 
-
     def _visit_FunctionalFor(self, expr):
         old_index   = expr.index
         new_index   = self.scope.get_new_name()
@@ -2829,6 +2828,7 @@ class SemanticParser(BasicParser):
                 indices.append(tmp)
             else:
                 indices.append(self.scope.get_expected_name(idc))
+
         dims    = []
         body    = expr.loops[1]
 
@@ -2843,88 +2843,76 @@ class SemanticParser(BasicParser):
             indice_is_tupple = False
             stop  = None
             start = LiteralInteger(0)
+            iterator_d_var = self._infer_type(start)
             step  = LiteralInteger(1)
-
+            index_symbole = None
             if(type(indices[i]) == list):
-                var = indices[i][0]
-                var2 = indices[i][1]
+                index_symbole = indices[i][0]
+                iterator = indices[i][1]
                 indice_is_tupple = True
             else:
-                var   = indices[i]
+                iterator   = indices[i]
             i += 1
-            a     = self._visit(body.iterable)
-            if isinstance(a, PythonRange):
-                var   = self._create_variable(var, 'int', start, {})
-                dvar  = self._infer_type(var)
-                stop  = a.stop
-                start = a.start
-                step  = a.step
-            elif isinstance(a, (PythonZip, PythonEnumerate)):
-                if indice_is_tupple:
-                    if isinstance(a, PythonEnumerate):
-                        dvar  = self._infer_type(a.element)
-                        dtype = dvar.pop('datatype')
-                        if dvar['rank'] > 0:
-                            dvar['rank' ] -= 1
-                            dvar['shape'] = (dvar['shape'])[1:]
-                        if dvar['rank'] == 0:
-                            dvar['memory_handling'] = 'stack'
-                        var  = Variable(dtype, var, **dvar)
-                        var2 = self._create_variable(var2, 'int', start, {})
-                        dvar2 = self._infer_type(var2)
-                        start = a.start
-                        stop = LiteralInteger(int(a.element.shape[0]) + int(start))
-                    elif isinstance(a, PythonZip):
-                        dvar = self._infer_type(a.args[0])
-                        dtype = dvar.pop('datatype')
-                        if dvar['rank'] > 0:
-                            dvar['rank' ] -= 1
-                            dvar['shape'] = (dvar['shape'])[1:]
-                        if dvar['rank'] == 0:
-                            dvar['memory_handling'] = 'stack'
-                        var  = Variable(dtype, var, **dvar)
+            # a     = self._visit(body.iterable)
+            new_expr = []
+            iterable = Iterable(self._visit(body.iterable))
 
-                        dvar2 = self._infer_type(a.args[1])
-                        dtype = dvar2.pop('datatype')
-                        if dvar2['rank'] > 0:
-                            dvar2['rank' ] -= 1
-                            dvar2['shape'] = (dvar2['shape'])[1:]
-                        if dvar2['rank'] == 0:
-                            dvar2['memory_handling'] = 'stack'
-                        var2  = Variable(dtype, var2, **dvar2)
-                        stop0 = a.args[0].shape[0]
-                        stop1 = a.args[1].shape[0]
+            if iterable.num_loop_counters_required:
+                iterable_indices = [Variable('int', self.scope.get_new_name(), is_temp=True)
+                            for i in range(iterable.num_loop_counters_required)]
+                iterable.set_loop_counter(*iterable_indices)
+            else:
+                if isinstance(iterable.iterable, PythonEnumerate):
+                    syntactic_index = index_symbole
+                else:
+                    iterator = self.scope.get_expected_name(iterator)
+                    syntactic_index = iterator
+                semantic_index = self.check_for_variable(syntactic_index)
+                if semantic_index is None:
+                    semantic_index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
+                                    rhs=start, new_expressions=new_expr,
+                                    is_augassign=False)
+                iterable.set_loop_counter(semantic_index)
+            if not indice_is_tupple and isinstance(iterator, PyccelSymbol):
+                iterator_rhs = iterable.get_target_from_range()
+                iterator_d_var = self._infer_type(iterator_rhs)
+
+                self._assign_lhs_variable(iterator, iterator_d_var,
+                                rhs=iterator_rhs, new_expressions=new_expr,
+                                is_augassign=False)
+
+            elif indice_is_tupple:
+                iterator_rhs = iterable.get_target_from_range()
+                new_expr = []
+                [self._assign_lhs_variable(it, self._infer_type(rhs),
+                                    rhs=rhs, new_expressions=new_expr,
+                                    is_augassign=False)
+                            for it, rhs in zip([index_symbole, iterator], iterator_rhs)]
+
+            if isinstance(iterable.iterable, PythonRange):
+                stop  = iterable.iterable.stop
+                start = iterable.iterable.start
+                step  = iterable.iterable.step
+            elif isinstance(iterable.iterable, PythonMap):
+                stop = iterable.iterable.func_args.shape[0]
+            elif isinstance(iterable.iterable, (PythonZip, PythonEnumerate)):
+                if indice_is_tupple:
+                    if isinstance(iterable.iterable, PythonEnumerate):
+                        stop = iterable.iterable.element.shape[0]
+                    elif isinstance(iterable.iterable, PythonZip):
+                        stop0 = iterable.iterable.args[0].shape[0]
+                        stop1 = iterable.iterable.args[1].shape[0]
                         if(int(stop0) < int(stop1)):
                             stop = stop0
                         else:
                             stop = stop1
-            elif isinstance(a, Variable):
-                dvar  = self._infer_type(a)
-                dtype = dvar.pop('datatype')
-                if dvar['rank'] == 1:
-                    dvar['rank']  = 0
-                    dvar['shape'] = None
-                if dvar['rank'] > 1:
-                    dvar['rank'] -= 1
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if dvar['rank'] == 0:
-                    dvar['memory_handling'] = 'stack'
-
-                var  = Variable(dtype, var, **dvar)
-                stop = a.shape[0]
+            elif isinstance(iterable.iterable, Variable):
+                stop = iterable.iterable.shape[0]
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO,
                               bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                               severity='fatal')
-            existing_var = self.scope.find(var.name, 'variables')
-            if existing_var:
-                if self._infer_type(existing_var) != dvar:
-                    errors.report(f"Variable {var} already exists with different type",
-                            symbol = expr, severity='error')
-            else:
-                self.scope.insert_variable(var)
-                if(indice_is_tupple):
-                    self.scope.insert_variable(var2)
+
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
