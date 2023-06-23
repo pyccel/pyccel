@@ -31,7 +31,7 @@ else:
 # Choose appropriate message to welcome author
 file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
-leave_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
+bot.GAI.leave_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
 
 # Ensure PR is draft
 if not event['pull_request']['draft']:
