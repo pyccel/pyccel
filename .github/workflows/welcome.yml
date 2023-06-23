@@ -1,11 +1,12 @@
-name: Thanks for the Pull Request!
+name: Bot
 
 on:
   pull_request:
-    types: [ opened ]
+    types: [ opened, reopened ]
 
 jobs:
   Bot:
+    name: Thanks for the Pull Request!
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
