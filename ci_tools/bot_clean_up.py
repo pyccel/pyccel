@@ -43,7 +43,7 @@ for q in queued_runs:
             q_name, python_version = q_key.split(',')
             workflow_ids = None
             if q_name == 'coverage':
-                workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
+                workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success" and '(' in r['name']]
             bot.run_test(q_name, python_version, q["id"], workflow_ids)
         elif all(d in completed_runs for d in deps):
             bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
