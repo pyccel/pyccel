@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 from bot_tools.bot_funcs import Bot
