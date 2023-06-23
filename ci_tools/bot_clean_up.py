@@ -35,10 +35,11 @@ print("Successful:", successful_runs)
 print("Completed:", completed_runs)
 
 for q in queued_runs:
-    deps = test_dependencies.get(bot.get_name_key(q['name']), ())
+    q_name = q['name']
+    deps = test_dependencies.get(bot.get_name_key(q_name), ())
     if name_key in deps:
         if all(d in successful_runs for d in deps):
-            q_key = q.split('(')[1].split(')')[0].strip()
+            q_key = q_name.split('(')[1].split(')')[0].strip()
             q_name, python_version = q_key.split(',')
             workflow_ids = None
             if q_key == 'coverage':
