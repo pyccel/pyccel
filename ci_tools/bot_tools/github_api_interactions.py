@@ -290,6 +290,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
                 "inputs": inputs}
+        print(url, json)
         reply = self._post_request("POST", url, json)
         print(reply.text)
         assert reply.status_code == 204
