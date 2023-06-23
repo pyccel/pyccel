@@ -42,7 +42,7 @@ for q in queued_runs:
             q_key = q_name.split('(')[1].split(')')[0].strip()
             q_name, python_version = q_key.split(',')
             workflow_ids = None
-            if q_key == 'coverage':
+            if q_name == 'coverage':
                 workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
             bot.run_test(q_name, python_version, q["id"], workflow_ids)
         elif all(d in completed_runs for d in deps):
