@@ -31,7 +31,7 @@ else:
 # Choose appropriate message to welcome author
 file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
-bot.GAI.leave_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
+bot.GAI.create_comment(pr_id, message_from_file(file) + message_from_file('checklist.txt'))
 
 # Ensure PR is draft
 if not event['pull_request']['draft']:
@@ -39,5 +39,5 @@ if not event['pull_request']['draft']:
 
 # If unknown user ask for trust approval
 if not trusted_user:
-    bot.GAI.leave_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
+    bot.GAI.create_comment(pr_id, ", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
