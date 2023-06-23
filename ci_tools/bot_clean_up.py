@@ -37,14 +37,14 @@ print("Completed:", completed_runs)
 for q in queued_runs:
     deps = test_dependencies.get(bot.get_name_key(q['name']), ())
     if name_key in deps:
-        if all(r in deps for r in successful_runs):
+        if all(d in successful_runs for d in deps):
             q_key = q.split('(')[1].split(')')[0].strip()
             q_name, python_version = q_key.split(',')
             workflow_ids = None
             if q_key == 'coverage':
                 workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
             bot.run_test(q_key, python_version, q["id"], workflow_ids)
-        elif all(r in deps for r in completed_runs):
+        elif all(d in completed_runs for d in deps):
             bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
 if all(k in completed_runs for k in pr_test_keys):
