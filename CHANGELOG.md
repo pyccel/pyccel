@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1302 : Raise error message in case of empty class
 -   #929 : Allow optional variables when compiling with intel or nvidia.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
--   #1399 : Fix enumerate and zip in comprehension list
+-   #1399 : Fix enumerate, map and zip in comprehension list
 
 ### Changed
 
