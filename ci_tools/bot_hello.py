@@ -1,6 +1,6 @@
 import json
 import os
-from bot_tools.bot_funcs import Bot
+from bot_tools.bot_funcs import Bot, message_from_file
 
 senior_reviewer = ['yguclu', 'EmilyBourne', 'bauom']
 
