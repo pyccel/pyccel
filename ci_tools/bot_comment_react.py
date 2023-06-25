@@ -43,6 +43,7 @@ elif command_words[0] == 'run':
 
 elif command_words[0] == 'try':
     if bot.is_user_trusted(event['comment']['user']['login']):
+        print(get_unique_test_list(command_words[2:]), command_words[1])
         bot.run_tests(get_unique_test_list(command_words[2:]), command_words[1])
     else:
         bot.warn_untrusted()
