@@ -6,7 +6,7 @@ pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylin
                 'pyccel_lint', 'spelling']
 
 def get_unique_test_list(keys):
-    tests = set(command_words[1:])
+    tests = set(keys)
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     t = tests.discard('pr_tests')
