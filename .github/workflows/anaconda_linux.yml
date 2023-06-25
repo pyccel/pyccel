@@ -21,7 +21,7 @@ env:
   PEM: ${{ secrets.BOT_PEM }}
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
-  PR_REPO: ${{ inputs.pr_repo or github.repository }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
   Anaconda-Linux:
