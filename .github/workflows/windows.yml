@@ -12,12 +12,16 @@ on:
       check_run_id:
         required: false
         type: string
+      pr_repo:
+        required: false
+        type: string
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
   PEM: ${{ secrets.BOT_PEM }}
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo or github.repository }}
 
 jobs:
   Windows:
@@ -29,6 +33,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
