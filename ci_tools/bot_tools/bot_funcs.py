@@ -14,6 +14,7 @@ default_python_versions = {
         'macosx': '3.10',
         'pickle_wheel': '3.7',
         'pickle': '3.8',
+        'pickle_edit': '3.8',
         'pyccel_lint': '3.8',
         'pylint': '3.8',
         'spelling': '3.8',
@@ -29,6 +30,7 @@ test_names = {
         'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
         'pickle': "Test pickling during source installation",
+        'pickle_edit': "Test pickling during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
@@ -310,6 +312,9 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
+        elif test == "pickle_edit":
+            test = "pickle"
+            inputs["editable_string"] = "-e"
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def mark_as_draft(self):
