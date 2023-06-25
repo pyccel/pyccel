@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
 from numpy import equal
+from numpy import arange
 
 from pyccel.epyccel import epyccel
 from modules import functionals
@@ -55,3 +56,18 @@ def test_functional_for_2d_array_range_const(language):
 
 def test_functional_for_3d_range(language):
     compare_epyccel(functionals.functional_for_3d_range, language)
+
+def test_functional_map_on_1d_array(language):
+    z = arange( 7 )
+    compare_epyccel(functionals.functional_map_on_1d_array, language, z)
+
+def test_functional_enumerate_on_1d_array(language):
+    z = arange( 7 )
+    compare_epyccel(functionals.functional_enumerate_on_1d_array, language, z)
+
+def test_functional_enumerate_on_1d_array_with_start(language):
+    z = arange( 7 )
+    compare_epyccel(functionals.functional_enumerate_on_1d_array_with_start, language, z, 4)
+
+def test_functional_zip_prod(language):
+    compare_epyccel(functionals.functional_zip_prod, language, 4)

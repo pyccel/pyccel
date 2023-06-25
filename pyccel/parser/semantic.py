@@ -97,7 +97,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow, PyccelLt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -2853,7 +2853,7 @@ class SemanticParser(BasicParser):
             else:
                 iterator   = indices[i]
             i += 1
-            # a     = self._visit(body.iterable)
+
             new_expr = []
             iterable = Iterable(self._visit(body.iterable))
 
@@ -2902,7 +2902,7 @@ class SemanticParser(BasicParser):
                     elif isinstance(iterable.iterable, PythonZip):
                         stop0 = iterable.iterable.args[0].shape[0]
                         stop1 = iterable.iterable.args[1].shape[0]
-                        if(int(stop0) < int(stop1)):
+                        if(PyccelLt(stop0, stop1)):
                             stop = stop0
                         else:
                             stop = stop1

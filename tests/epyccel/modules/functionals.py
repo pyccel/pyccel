@@ -62,3 +62,28 @@ def functional_for_2d_range_const():
 def functional_for_3d_range():
     a = [i*j for i in range(1,3) for j in range(i,4) for k in range(i,j)]
     return len(a), a[0], a[1], a[2], a[3]
+
+@types( 'int[:]' )
+def functional_map_on_1d_array( z ):
+    @types( int )
+    def f( y ):
+        return y+5
+    a = [v + 1 for v in map(f,z)]
+    return len(a), a[0], a[1], a[2], a[3]
+
+@types( 'int[:]' )
+def functional_enumerate_on_1d_array( z ):
+    a =  [i * j for i,j in enumerate( z )]
+    return len(a), a[0], a[1], a[2], a[3]
+
+@types( 'int[:]', 'int' )
+def functional_enumerate_on_1d_array_with_start( z, k ):
+    a =  [i * v for i,v in enumerate( z, k )]
+    return len(a), a[0], a[1], a[2], a[3]
+
+@types( 'int' )
+def functional_zip_prod( m ):
+    x = [  i for i in range(m)]
+    y = [2*j for j in range(m)]
+    a = [i1 * i2 for i1, i2 in zip(x, y)]
+    return len(a), a[0], a[1], a[2], a[3]
