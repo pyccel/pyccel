@@ -56,6 +56,6 @@ jobs:
         uses: ./.github/actions/check_for_pickled
       - name: "Post completed"
         if: always()
-        run:
+        run: |
           python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} --reasons "Installation failed." "Pickled files were not found in installaion."
           python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }}
