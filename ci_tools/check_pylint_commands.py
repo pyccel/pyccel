@@ -190,7 +190,7 @@ if __name__ == '__main__':
     json_data = json.dumps(messages)
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json_file.write(json_data)
-    with open(args.output, mode='w', encoding="utf-8") as md_file:
+    with open(args.output, mode='a', encoding="utf-8") as md_file:
         md_file.write("# " + messages['title'] + '\n\n')
         md_file.write(messages['summary'])
 
