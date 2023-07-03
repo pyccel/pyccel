@@ -51,7 +51,7 @@ if __name__ == '__main__':
     changes = {}
     for file, upds in results.items():
         filepath = PurePath(file)
-        if filepath.parts[0] == 'pyccel' and filepath.suffix == '.py':
+        if filepath.suffix == '.py':
             for line_no in upds['addition']:
                 if file in changes:
                     changes[file].append(int(line_no))

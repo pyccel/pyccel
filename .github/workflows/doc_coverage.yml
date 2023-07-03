@@ -15,12 +15,16 @@ on:
       check_run_id:
         required: false
         type: string
+      pr_repo:
+        required: false
+        type: string
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
   PEM: ${{ secrets.BOT_PEM }}
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
 
@@ -38,6 +42,7 @@ jobs:
         with:
           path: compare
           ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -57,8 +62,8 @@ jobs:
         id: doc_coverage
         run: |
           echo "${{ github.event.pull_request.base.sha }}"
-          docstr-coverage --skip-magic --skip-init base/pyccel 2>base_cov || true
-          docstr-coverage --skip-magic --skip-init compare/pyccel 2>compare_cov || true
+          docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=base/.docstr_coverage base/pyccel base/ci_tools 2>&1 | tee base_cov
+          docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=compare/.docstr_coverage compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
         shell: bash
       - name: Check doc format
