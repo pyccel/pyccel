@@ -48,14 +48,12 @@ def extract_dict_elements(input_dict):
     """
     output_dict = {'title':"Pyccel_lint", 'summary':"## Check Slots:\n\n",'annotations':[]}
     for values in input_dict.items():
-        first_iteration = True
-        for value in values[-1]:
-            if value:
-                if first_iteration:
-                    output_dict['summary'] += f"{value['title']} :\n\n"
-                    first_iteration = False
-                output_dict['summary'] += f"\t-{value['message']}\n\n"
-                output_dict['annotations'].append(value['annotations'])
+        value_list = values[-1]
+        if value_list:
+            output_dict['summary'] += f"### {value_list[0]['title']} :\n\n"
+            output_dict['summary'] += "\n\n".join(f"-  {value['message']}" for value in value_list)
+            output_dict['summary'] += "\n\n"
+            output_dict['annotations'].extend(value['annotations'] for value in value_list)
     return output_dict
 
 def fill_dictionary(title, message, file, start_line, end_line, annotation_level, annotation_msg):
