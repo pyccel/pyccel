@@ -138,6 +138,11 @@ def mix_types_3(x, y):
 
 
 @template('T', types=['int64[:]', 'real[:]', 'complex[:]'])
+@types('T')
+def mix_array_scalar(x):
+    x[:] += 1
+
+@template('T', types=['int64[:]', 'real[:]', 'complex[:]'])
 @types('T', 'int')
 def mix_array_1(x, a):
     x[:] += a
