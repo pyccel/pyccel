@@ -112,90 +112,91 @@ if __name__ == '__main__':
     messages = {"title":"Pyccel_lint","summary":"## Pylint Interaction:\n\n","annotations":[]}
 
     for f in files:
-        with open(f, encoding="utf-8") as myfile:
-            lines = [l.replace(' ','') for l in myfile.readlines()]
-        pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
-        disabled = set()
-        for value, key in pylint_lines_and_numbers:
-            disabled.update([(tuple(value.split('=')[1].split(',')), key)])
-        for r,d in accepted_pylint_commands.items():
-            if r.match(f):
-                for di in d:
+        if 'obsolete' not in f:
+            with open(f, encoding="utf-8") as myfile:
+                lines = [l.replace(' ','') for l in myfile.readlines()]
+            pylint_lines_and_numbers = [(l.strip(), i) for i,l in enumerate(lines,1) if l.startswith('#pylint:disable=')]
+            disabled = set()
+            for value, key in pylint_lines_and_numbers:
+                disabled.update([(tuple(value.split('=')[1].split(',')), key)])
+            for r,d in accepted_pylint_commands.items():
+                if r.match(f):
+                    for di in d:
+                        updated_disabled = disabled.copy()
+                        for item in updated_disabled:
+                            statements, num = item
+                            strings_list = list(statements)
+                            if di in strings_list:
+                                strings_list.remove(di)
+                                disabled.discard(item)
+                                if strings_list:
+                                    disabled.update([(tuple(strings_list), num)])
+            p = pathlib.Path(f)
+            if p.parts[0] == 'tests':
+                msg = []
+                check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
+                check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
+                check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
+                first_iteration = True
+                for item in msg:
+                    if first_iteration:
+                        messages['summary'] += item['summary'] + ' `' + item['flags'] + '`'
+                        for value in item['annotations']:
+                            messages['annotations'].append(value)
+                        first_iteration = False
+                    else:
+                        messages['summary'] += ', `' + item['flags'] + '`'
+                        messages['annotations'][-1]['message'] += ', ' + item['flags']
+                if not first_iteration:
+                    messages['summary'] += f' in `{f}`\n\n'
+                    messages['annotations'][-1]['message'] += f' in {f}'
+                if p.parts[1] == 'epyccel':
                     updated_disabled = disabled.copy()
                     for item in updated_disabled:
                         statements, num = item
                         strings_list = list(statements)
-                        if di in strings_list:
-                            strings_list.remove(di)
+                        if 'reimported' in strings_list:
+                            strings_list.remove('reimported')
                             disabled.discard(item)
                             if strings_list:
                                 disabled.update([(tuple(strings_list), num)])
-        p = pathlib.Path(f)
-        if p.parts[0] == 'tests':
-            msg = []
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
-            first_iteration = True
-            for item in msg:
-                if first_iteration:
-                    messages['summary'] += item['summary'] + ' `' + item['flags'] + '`'
-                    for value in item['annotations']:
-                        messages['annotations'].append(value)
-                    first_iteration = False
+            if disabled:
+                file_changed = f in diff
+                first_iteration = True
+                if file_changed:
+                    summary_template = f"-  New unexpected pylint disables found in `{f}`: "
+                    annotation_level = "failure"
+                    annotation_message = "[ERROR] New unexpected pylint disables: "
                 else:
-                    messages['summary'] += ', `' + item['flags'] + '`'
-                    messages['annotations'][-1]['message'] += ', ' + item['flags']
-            if not first_iteration:
-                messages['summary'] += f' in `{f}`\n\n'
-                messages['annotations'][-1]['message'] += f' in {f}'
-            if p.parts[1] == 'epyccel':
-                updated_disabled = disabled.copy()
-                for item in updated_disabled:
-                    statements, num = item
-                    strings_list = list(statements)
-                    if 'reimported' in strings_list:
-                        strings_list.remove('reimported')
-                        disabled.discard(item)
-                        if strings_list:
-                            disabled.update([(tuple(strings_list), num)])
-        if disabled and not p.parts[0] == 'obsolete':
-            file_changed = f in diff
-            first_iteration = True
-            if file_changed:
-                summary_template = f"-  New unexpected pylint disables found in `{f}`: "
-                annotation_level = "failure"
-                annotation_message = "[ERROR] New unexpected pylint disables: "
-            else:
-                summary_template = f"-  Unexpected pylint disables found in `{f}`: "
-                annotation_level = "warning"
-                annotation_message = "Unexpected pylint disables: "
-            first_iteration = True
-            for value, key in disabled:
-                for v in value:
-                    if first_iteration:
-                        messages['summary'] += f"{summary_template}`{v}`"
-                        messages['annotations'].append({
-                            'path':f,
-                            'start_line':key,
-                            'end_line':key,
-                            'annotation_level':annotation_level,
-                            'message':f"{annotation_message}{v}"})
-                        first_iteration = False
-                    else:
-                        messages['summary'] += ', `' + v + '`'
-                        if key == messages['annotations'][-1]['start_line']:
-                            messages['annotations'][-1]['message'] += ', ' + v
-                        else:
+                    summary_template = f"-  Unexpected pylint disables found in `{f}`: "
+                    annotation_level = "warning"
+                    annotation_message = "Unexpected pylint disables: "
+                first_iteration = True
+                for value, key in disabled:
+                    for v in value:
+                        if first_iteration:
+                            messages['summary'] += f"{summary_template}`{v}`"
                             messages['annotations'].append({
                                 'path':f,
                                 'start_line':key,
                                 'end_line':key,
                                 'annotation_level':annotation_level,
                                 'message':f"{annotation_message}{v}"})
-            if not first_iteration:
-                messages['summary'] += '\n\n'
-            success &= (not file_changed)
+                            first_iteration = False
+                        else:
+                            messages['summary'] += ', `' + v + '`'
+                            if key == messages['annotations'][-1]['start_line']:
+                                messages['annotations'][-1]['message'] += ', ' + v
+                            else:
+                                messages['annotations'].append({
+                                    'path':f,
+                                    'start_line':key,
+                                    'end_line':key,
+                                    'annotation_level':annotation_level,
+                                    'message':f"{annotation_message}{v}"})
+                if not first_iteration:
+                    messages['summary'] += '\n\n'
+                success &= (not file_changed)
 
     if not messages['summary'] and success:
         messages['summary'] = "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
