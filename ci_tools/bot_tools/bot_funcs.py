@@ -41,6 +41,9 @@ test_dependencies = {'coverage':['linux']}
 
 tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
 
+pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
+                'pyccel_lint', 'spelling')
+
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
 github_cli = shutil.which('gh')
