@@ -16,7 +16,7 @@ pr_id = event['number']
 
 bot = Bot(pr_id = pr_id)
 
-if bot.is_user_trusted(event['comment']['user']['login']):
+if bot.is_user_trusted(event['sender']['login']):
     bot.run_tests(pr_test_keys)
 else:
     bot.warn_untrusted()
