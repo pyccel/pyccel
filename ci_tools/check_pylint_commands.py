@@ -44,7 +44,7 @@ def run_pylint(file, flag, messages):
         output_item = {
             "annotations": [],
             "flags":flag,
-            "summary":"Feel free to disable",
+            "summary":"-  Feel free to disable",
         }
         output_item["annotations"].append({
             "annotation_level":"warning",
@@ -155,11 +155,11 @@ if __name__ == '__main__':
             file_changed = f in diff
             first_iteration = True
             if file_changed:
-                summary_template = f"New unexpected pylint disables found in `{f}`: "
+                summary_template = f"-  New unexpected pylint disables found in `{f}`: "
                 annotation_level = "failure"
                 annotation_message = "[ERROR] New unexpected pylint disables: "
             else:
-                summary_template = f"Unexpected pylint disables found in `{f}`: "
+                summary_template = f"-  Unexpected pylint disables found in `{f}`: "
                 annotation_level = "warning"
                 annotation_message = "Unexpected pylint disables: "
             first_iteration = True
@@ -193,7 +193,7 @@ if __name__ == '__main__':
         messages['summary'] = "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
         messages.pop('annotations')
     if not success and not messages['summary']:
-        messages['summary'] = "## Pylint Interaction:\n\nError: Something went wrong"
+        messages['summary'] = "## Pylint Interaction:\n\n**Error**: Something went wrong"
         messages.pop('annotations')
 
     with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
