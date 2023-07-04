@@ -114,7 +114,7 @@ for mod_name in ast_modules:
         if '__slots__' not in cls_obj.__dict__:
             sourceline = inspect.getsourcelines(cls_obj)[1]
             error_collection['missing_slots'].append(fill_dictionary("Classes with no `__slots__`", f"pyccel.ast.{mod_name}.{cls_name}",
-                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` classe with no `__slots__`"))
+                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` with no `__slots__`"))
         else:
             slots = cls_obj.__slots__
             for c in super_classes:
