@@ -119,7 +119,7 @@ if __name__ == '__main__':
         for value, key in pylint_lines_and_numbers:
             disabled.update([(tuple(value.split('=')[1].split(',')), key)])
         for r,d in accepted_pylint_commands.items():
-            if r.match(f):
+            if r.match("./" + f):
                 for di in d:
                     updated_disabled = disabled.copy()
                     for item in updated_disabled:
