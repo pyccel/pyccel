@@ -15,11 +15,11 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('.*/UNKNOWN_IMPORT.py'):['unused-import'],
                             re.compile('.*/UNKNOWN_IMPORT2.py'):['unused-import'],
                             re.compile('.*/USELESS_EXPRESSION.py'):['pointless-statement'],
-                            re.compile('./tests/errors/known_bugs/dicts.py'):['pointless-statement'],
+                            re.compile('tests/errors/known_bugs/dicts.py'):['pointless-statement'],
                             re.compile('.*/syntax/.*'):['pointless-statement','undefined-variable'],
-                            re.compile('./tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
-                            re.compile('./tests/semantic/scripts/expressions.py'):['unused-variable'],
-                            re.compile('./tests/semantic/scripts/calls.py'):['unused-variable']}
+                            re.compile('tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
+                            re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
+                            re.compile('tests/semantic/scripts/calls.py'):['unused-variable']}
 
 def run_pylint(file, flag, messages):
     """
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         for value, key in pylint_lines_and_numbers:
             disabled.update([(tuple(value.split('=')[1].split(',')), key)])
         for r,d in accepted_pylint_commands.items():
-            if r.match("./" + f):
+            if r.match(f):
                 for di in d:
                     updated_disabled = disabled.copy()
                     for item in updated_disabled:
