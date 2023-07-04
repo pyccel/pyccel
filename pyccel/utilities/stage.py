@@ -35,4 +35,14 @@ class PyccelStage(metaclass = Singleton):
 
     @property
     def current_stage(self):
+        """
+        Get the current stage as a string.
+
+        Returns one of:
+        - syntactic
+        - semantic
+        - codegen
+        - cwrapper
+        indicating the current stage.
+        """
         return self._stage
