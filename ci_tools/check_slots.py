@@ -68,7 +68,6 @@ def fill_dictionary(title, message, file, start_line, end_line, annotation_level
     Returns:
         dict: A dictionary filled with the provided data.
     """
-    print(file)
     index = file.find("site-packages")
     filled_dict = {
         'title':title,
