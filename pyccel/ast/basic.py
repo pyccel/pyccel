@@ -367,7 +367,11 @@ class Basic:
         return self._user_nodes[0]
 
     def clear_syntactic_user_nodes(self):
-        """ Delete all information about syntactic user nodes. This is useful
+        """
+        Delete all information about syntactic user nodes.
+
+        Delete all user nodes which are only valid for the syntactic
+        stage from the list of user nodes. This is useful
         if the same node is used for the syntactic and semantic
         stages.
         """

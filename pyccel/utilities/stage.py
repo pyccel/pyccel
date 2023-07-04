@@ -7,14 +7,17 @@
 from .metaclasses import Singleton
 
 class PyccelStage(metaclass = Singleton):
-    """ Class wrapping a string indicating which treatment stage Pyccel is executing.
+    """
+    Class wrapping a string indicating which treatment stage Pyccel is executing.
+
+    Class wrapping a string indicating which treatment stage Pyccel is executing.
     This string is one of:
      - syntactic
      - semantic
      - codegen
      - cwrapper
 
-    When Pyccel is not executing the stage is None
+    When Pyccel is not executing the stage is None.
     """
     def __init__(self):
         self._stage = None
