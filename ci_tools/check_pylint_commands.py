@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     success = True
 
-    messages = {"title":"Pyccel_lint","summary":"Pylint Interaction:\n\n","annotations":[]}
+    messages = {"title":"Pyccel_lint","summary":"## Pylint Interaction:\n\n","annotations":[]}
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
@@ -121,7 +121,15 @@ if __name__ == '__main__':
         for r,d in accepted_pylint_commands.items():
             if r.match(f):
                 for di in d:
-                    disabled.discard(di)
+                    updated_disabled = disabled.copy()
+                    for item in updated_disabled:
+                        statements, num = item
+                        strings_list = list(statements)
+                        if di in strings_list:
+                            strings_list.remove(di)
+                            disabled.discard(item)
+                            if strings_list:
+                                disabled.update([(tuple(strings_list), num)])
         p = pathlib.Path(f)
         if p.parts[0] == 'tests':
             msg = []
@@ -182,13 +190,13 @@ if __name__ == '__main__':
             success &= (not file_changed)
 
     if not messages['summary'] and success:
-        messages['summary'] = "Pylint Interaction:\n\nSuccess:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
+        messages['summary'] = "## Pylint Interaction:\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
         messages.pop('annotations')
     if not success and not messages['summary']:
-        messages['summary'] = "Pylint Interaction:\n\nError: Something went wrong"
+        messages['summary'] = "## Pylint Interaction:\n\nError: Something went wrong"
         messages.pop('annotations')
-    
-    with open('test_json_result.json', mode='r') as json_file:
+
+    with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
         slots_data = json.load(json_file)
         slots_data['summary'] += messages['summary']
         if "annotations" in slots_data:
@@ -199,9 +207,7 @@ if __name__ == '__main__':
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json_file.write(json_data)
     with open(args.output, mode='a', encoding="utf-8") as md_file:
-        index = messages['summary'].find('\n\n')
-        md_file.write("## " + messages['summary'][:index])
-        md_file.write(messages['summary'][index:])
+        md_file.write(messages['summary'])
 
     if not success:
         sys.exit(1)
