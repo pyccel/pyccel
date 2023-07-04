@@ -1826,31 +1826,38 @@ class SemanticParser(BasicParser):
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_EmptyNode(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_Break(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_Continue(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_Comment(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_CommentBlock(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_AnnotatedComment(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_OmpAnnotatedComment(self, expr):
@@ -1885,7 +1892,8 @@ class SemanticParser(BasicParser):
                 errors.report(msg, symbol=expr,
                     severity='fatal')
 
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_Omp_End_Clause(self, expr):
@@ -1895,17 +1903,21 @@ class SemanticParser(BasicParser):
                     severity='warning', symbol=expr)
             return EmptyNode()
         else:
-            expr.clear_user_nodes()
+            expr.clear_syntactic_user_nodes()
+            expr.update_pyccel_staging()
             return expr
 
     def _visit_Literal(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
     def _visit_PythonComplex(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
     def _visit_Pass(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_Variable(self, expr):
@@ -3070,18 +3082,21 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionHeader(self, expr):
         # TODO should we return it and keep it in the AST?
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         self.scope.insert_header(expr)
         return expr
 
     def _visit_Template(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         self.scope.insert_template(expr)
         return expr
 
     def _visit_ClassHeader(self, expr):
         # TODO should we return it and keep it in the AST?
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         self.scope.insert_header(expr)
         return expr
 
@@ -3804,7 +3819,8 @@ class SemanticParser(BasicParser):
         return macro
 
     def _visit_MacroShape(self, expr):
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
+        expr.update_pyccel_staging()
         return expr
 
     def _visit_MacroVariable(self, expr):
