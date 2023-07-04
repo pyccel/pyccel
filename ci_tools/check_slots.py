@@ -107,7 +107,6 @@ for mod_name in ast_modules:
             inspect.getfile(mod), 1, 1, "failure", f"Missing __all__ attribute in: `{mod_name}`"))
 
     classes = inspect.getmembers(mod, inspect.isclass)
-    first_iteration = True
     for cls_name, cls_obj in classes:
         if inspect.getmodule(cls_obj) is not mod:
             continue
@@ -135,7 +134,7 @@ for mod_name in ast_modules:
         if all_attr and cls_name not in all_attr:
             sourceline = inspect.getsourcelines(cls_obj)[1]
             error_collection['missing_from_all'].append(fill_dictionary("Classes missing from `__all__`", f"pyccel.ast.{mod_name}.{cls_name}",
-                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` classe is missing from `__all__`"))
+                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` is missing from `__all__`"))
 
 messages = extract_dict_elements(error_collection)
 if not messages['annotations']:
