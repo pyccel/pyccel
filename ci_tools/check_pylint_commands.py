@@ -159,7 +159,7 @@ if __name__ == '__main__':
                         disabled.discard(item)
                         if strings_list:
                             disabled.update([(tuple(strings_list), num)])
-        if disabled:
+        if disabled and not p.parts[0] == 'obsolete':
             file_changed = f in diff
             first_iteration = True
             if file_changed:
