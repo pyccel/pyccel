@@ -32,3 +32,7 @@ class PyccelStage(metaclass = Singleton):
         """ Indicate that Pyccel has finished running and reset stage to None
         """
         self._stage = None
+
+    @property
+    def current_stage(self):
+        return self._stage
