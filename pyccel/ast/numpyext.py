@@ -1726,6 +1726,10 @@ class NumpyArraySize(PyccelInternalFunction):
     def __str__(self):
         return 'Size({})'.format(str(self.arg))
 
+class NumpyIsInf(PyccelInternalFunction):
+    def __init__(self, arg):
+        self._arg = arg
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
