@@ -150,7 +150,15 @@ if __name__ == '__main__':
                 messages['summary'] += f' in `{f}`\n\n'
                 messages['annotations'][-1]['message'] += f' in {f}'
             if p.parts[1] == 'epyccel':
-                disabled.discard('reimported')
+                updated_disabled = disabled.copy()
+                for item in updated_disabled:
+                    statements, num = item
+                    strings_list = list(statements)
+                    if 'reimported' in strings_list:
+                        strings_list.remove('reimported')
+                        disabled.discard(item)
+                        if strings_list:
+                            disabled.update([(tuple(strings_list), num)])
         if disabled:
             file_changed = f in diff
             first_iteration = True
