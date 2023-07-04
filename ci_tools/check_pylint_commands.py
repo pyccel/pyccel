@@ -109,7 +109,7 @@ if __name__ == '__main__':
 
     success = True
 
-    messages = {"title":"Pylint Interaction","summary":"","annotations":[]}
+    messages = {"title":"Pyccel_lint","summary":"Pylint Interaction:\n\n","annotations":[]}
 
     for f in files:
         with open(f, encoding="utf-8") as myfile:
@@ -182,17 +182,26 @@ if __name__ == '__main__':
             success &= (not file_changed)
 
     if not messages['summary'] and success:
-        messages['summary'] = "Success:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
+        messages['summary'] = "Pylint Interaction:\n\nSuccess:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings."
         messages.pop('annotations')
     if not success and not messages['summary']:
-        messages['summary'] = "Error: Something went wrong"
+        messages['summary'] = "Pylint Interaction:\n\nError: Something went wrong"
         messages.pop('annotations')
-    json_data = json.dumps(messages)
+    
+    with open('test_json_result.json', mode='r') as json_file:
+        slots_data = json.load(json_file)
+        slots_data['summary'] += messages['summary']
+        if "annotations" in slots_data:
+            slots_data['annotations'].extend(messages['annotations'])
+        elif messages['annotations']:
+            slots_data.update({'annotations': messages['annotations']})
+    json_data = json.dumps(slots_data)
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json_file.write(json_data)
     with open(args.output, mode='a', encoding="utf-8") as md_file:
-        md_file.write("# " + messages['title'] + '\n\n')
-        md_file.write(messages['summary'])
+        index = messages['summary'].find('\n\n')
+        md_file.write("## " + messages['summary'][:index])
+        md_file.write(messages['summary'][index:])
 
     if not success:
         sys.exit(1)

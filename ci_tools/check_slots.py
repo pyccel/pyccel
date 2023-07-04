@@ -47,15 +47,15 @@ def extract_dict_elements(input_dict):
     Returns:
         dict: A new dictionary containing the extracted elements.
     """
-    output_dict = {'title':"Check Slots", 'summary':"",'annotations':[]}
+    output_dict = {'title':"Pyccel_lint", 'summary':"Check Slots:\n\n",'annotations':[]}
     for values in input_dict.items():
         first_iteration = True
         for value in values[-1]:
             if value:
                 if first_iteration:
-                    output_dict['summary'] += f"{value['title']} :\n"
+                    output_dict['summary'] += f"{value['title']} :\n\n"
                     first_iteration = False
-                output_dict['summary'] += f"\t-{value['message']}\n"
+                output_dict['summary'] += f"\t-{value['message']}\n\n"
                 output_dict['annotations'].append(value['annotations'])
     return output_dict
 
@@ -136,6 +136,9 @@ for mod_name in ast_modules:
                 inspect.getfile(mod), inspect.getsourcelines(cls_obj)[1], inspect.getsourcelines(cls_obj)[1], "failure", f"`{mod_name}.{cls_name}` classe is missing from `__all__`"))
 
 messages = extract_dict_elements(ErrorCollection)
+if not messages['annotations']:
+    messages['summary'] = "Check Slots\n\nSuccess:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
+    messages.pop('annotations')
 json_data = json.dumps(messages)
 with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
     json_file.write(json_data)
@@ -143,7 +146,9 @@ with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
 with open(args.output, "w", encoding="utf-8") as md_file:
     # Report error
     md_file.write("# " + messages['title'] + '\n\n')
-    md_file.write(messages['summary'])
+    index = messages['summary'].find('\n\n')
+    md_file.write("## " + messages['summary'][:index])
+    md_file.write(messages['summary'][index:])
 
 failure = (bool(ErrorCollection['missing_all']) or # bool(ErrorCollection['non_alphabetical_all']) or
           bool(ErrorCollection['missing_slots']) or bool(ErrorCollection['missing_attribute_nodes']) or
