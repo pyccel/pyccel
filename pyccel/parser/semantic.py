@@ -1830,11 +1830,6 @@ class SemanticParser(BasicParser):
         expr.update_pyccel_staging()
         return expr
 
-    def _visit_EmptyNode(self, expr):
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        return expr
-
     def _visit_Break(self, expr):
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
@@ -1911,10 +1906,7 @@ class SemanticParser(BasicParser):
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         return expr
-    def _visit_PythonComplex(self, expr):
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        return expr
+
     def _visit_Pass(self, expr):
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
