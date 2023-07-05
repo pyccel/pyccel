@@ -78,6 +78,8 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 new_untested = cov.allow_untested_debug_code(new_untested)
 
 print(commented_lines)
+for (p, l), r in commented_lines.items():
+    print(p,l,r)
 
 old_comments, new_comments = cov.get_json_summary(new_untested, file_contents, commented_lines)
 
