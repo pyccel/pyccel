@@ -51,7 +51,7 @@ if __name__ == '__main__':
     changes = {}
     for file, upds in results.items():
         filepath = PurePath(file)
-        if filepath.parts[0] == 'pyccel' and filepath.suffix == '.py':
+        if filepath.suffix == '.py':
             for line_no in upds['addition']:
                 if file in changes:
                     changes[file].append(int(line_no))
@@ -70,6 +70,7 @@ if __name__ == '__main__':
         objects = []
         to_visit = list(ast.iter_child_nodes(tree))
         for node in to_visit:
+            print(node)
             # This loop walks the ast and explores all objects
             # present in the file.
             # If the object is an instance of a FunctionDef or

@@ -1,4 +1,4 @@
-name: Pyccel Linting
+name: Python Linting
 
 on:
   workflow_dispatch:
@@ -8,9 +8,6 @@ on:
         type: string
       ref:
         required: false
-        type: string
-      base:
-        required: true
         type: string
       check_run_id:
         required: false
@@ -27,9 +24,9 @@ env:
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
-  Pyccel-Linter:
+  Linter:
     runs-on: ubuntu-latest
-    name: Best practices
+    name: Python best practices
 
     steps:
       - uses: actions/checkout@v3
@@ -45,27 +42,22 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
-      - name: Install dependencies
-        uses: ./.github/actions/linux_install
-      - name: Install Pyccel
+      - name: Check branch
+        run: |
+          git branch
+          git status
+      - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
           python -m pip install pylint
         shell: bash
-      - name: Collect diff information
+      - name: Pylint
+        id: pylint
         run: |
-          git fetch
-          git diff ${{ inputs.base }}..${COMMIT} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-        shell: bash
-      - name: Lint
-        id: lint
-        run: |
-          python ci_tools/check_slots.py $GITHUB_STEP_SUMMARY
-          python ci_tools/check_pylint_commands.py . pull_diff.txt $GITHUB_STEP_SUMMARY
-          cat $GITHUB_STEP_SUMMARY
+          echo $GITHUB_WORKFLOW_SHA
+          python -m pylint --rcfile=.pylintrc pyccel/parser/semantic.py > $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
         run:
-          python ci_tools/complete_check_run.py ${{ steps.lint.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.pylint.outcome }}

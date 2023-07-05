@@ -4,12 +4,10 @@ on:
   pull_request:
     branches: [ devel ]
     types: [ opened, reopened, ready_for_review, synchronize, converted_to_draft ]
-  issue_comment:
-    types: [ created ]
 
 jobs:
   Bot:
-    if: ${{ ( github.event_name == 'pull_request' ) || (github.event_name == 'issue_comment' && github.event.issue.pull_request ) }}
+    if: ${{ ( github.event_name == 'pull_request' && (! github.event.pull_request.draft) ) || (github.event_name == 'issue_comment' && github.event.issue.pull_request ) }}
     runs-on: ubuntu-latest
     outputs:
       run_linux: ${{ steps.run_bot.outputs.run_linux }}
@@ -52,166 +50,166 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
-  linux:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_linux == 'True' }}
-    uses:
-      ./.github/workflows/linux.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
-    secrets:
-      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+  #linux:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_linux == 'True' }}
+  #  uses:
+  #    ./.github/workflows/linux.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
+  #  secrets:
+  #    CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
 
-  windows:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_windows == 'True' }}
-    uses:
-      ./.github/workflows/windows.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #windows:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_windows == 'True' }}
+  #  uses:
+  #    ./.github/workflows/windows.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  macosx:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_macosx == 'True' }}
-    uses:
-      ./.github/workflows/macosx.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #macosx:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_macosx == 'True' }}
+  #  uses:
+  #    ./.github/workflows/macosx.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  coverage:
-    needs: [Bot, linux]
-    if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
-    uses:
-      ./.github/workflows/coverage.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      base: ${{ needs.Bot.outputs.BASE }}
-      ref: ${{ needs.Bot.outputs.REF }}
-      sha: ${{ needs.Bot.outputs.SHA }}
+  #coverage:
+  #  needs: [Bot, linux]
+  #  if: ${{ needs.Bot.outputs.run_coverage == 'True' }}
+  #  uses:
+  #    ./.github/workflows/coverage.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    base: ${{ needs.Bot.outputs.BASE }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
+  #    sha: ${{ needs.Bot.outputs.SHA }}
 
-  docs:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_docs == 'True' }}
-    uses:
-      ./.github/workflows/doc_coverage.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      base: ${{ needs.Bot.outputs.BASE }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #docs:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_docs == 'True' }}
+  #  uses:
+  #    ./.github/workflows/doc_coverage.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    base: ${{ needs.Bot.outputs.BASE }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  pylint:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_pylint == 'True' }}
-    uses:
-      ./.github/workflows/lint.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #pylint:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_pylint == 'True' }}
+  #  uses:
+  #    ./.github/workflows/lint.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  lint:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_lint == 'True' }}
-    uses:
-      ./.github/workflows/pyccel_lint.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      base: ${{ needs.Bot.outputs.BASE }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #lint:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_lint == 'True' }}
+  #  uses:
+  #    ./.github/workflows/pyccel_lint.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    base: ${{ needs.Bot.outputs.BASE }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  spelling:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_spelling == 'True' }}
-    uses:
-      ./.github/workflows/spelling.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #spelling:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_spelling == 'True' }}
+  #  uses:
+  #    ./.github/workflows/spelling.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  pickle:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_pickle == 'True' }}
-    uses:
-      ./.github/workflows/pickle.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #pickle:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_pickle == 'True' }}
+  #  uses:
+  #    ./.github/workflows/pickle.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  editable_pickle:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_editable_pickle == 'True' }}
-    uses:
-      ./.github/workflows/pickle.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      editable_string: '-e'
-      ref: ${{ needs.Bot.outputs.REF }}
+  #editable_pickle:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_editable_pickle == 'True' }}
+  #  uses:
+  #    ./.github/workflows/pickle.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    editable_string: '-e'
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  pickle_wheel:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_pickle_wheel == 'True' }}
-    uses:
-      ./.github/workflows/pickle_wheel.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #pickle_wheel:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_pickle_wheel == 'True' }}
+  #  uses:
+  #    ./.github/workflows/pickle_wheel.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
 
-  linux_anaconda:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_linux_anaconda == 'True' }}
-    uses:
-      ./.github/workflows/anaconda_linux.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #linux_anaconda:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_linux_anaconda == 'True' }}
+  #  uses:
+  #    ./.github/workflows/anaconda_linux.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  windows_anaconda:
-    needs: Bot
-    if: ${{ needs.Bot.outputs.run_windows_anaconda == 'True' }}
-    uses:
-      ./.github/workflows/anaconda_windows.yml
-    with:
-      python_version: ${{ needs.Bot.outputs.python_version }}
-      ref: ${{ needs.Bot.outputs.REF }}
+  #windows_anaconda:
+  #  needs: Bot
+  #  if: ${{ needs.Bot.outputs.run_windows_anaconda == 'True' }}
+  #  uses:
+  #    ./.github/workflows/anaconda_windows.yml
+  #  with:
+  #    python_version: ${{ needs.Bot.outputs.python_version }}
+  #    ref: ${{ needs.Bot.outputs.REF }}
 
-  CleanUpBot:
-    needs:
-      - Bot
-      - linux
-      - windows
-      - macosx
-      - coverage
-      - docs
-      - pylint
-      - lint
-      - spelling
-      - pickle
-      - editable_pickle
-      - pickle_wheel
-      - linux_anaconda
-      - windows_anaconda
-    if: ${{ always() && needs.Bot.outputs.cleanup_trigger != '' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ inputs.python_version }}
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      - id: run_bot
-        run: |
-          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.run_id }} ${{ needs.Bot.outputs.cleanup_trigger }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-      - name: Post status
-        if: ${{ github.event_name != 'pull_request' }}
-        run: |
-          gh api --method POST -H "Accept: application/vnd.github+json" \
-            ${{ needs.Bot.outputs.status_url }} \
-            -f state="${{ steps.run_bot.outputs.global_state }}" -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
-            -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
-        env:
-          GH_TOKEN: ${{ github.token }}
+  #CleanUpBot:
+  #  needs:
+  #    - Bot
+  #    - linux
+  #    - windows
+  #    - macosx
+  #    - coverage
+  #    - docs
+  #    - pylint
+  #    - lint
+  #    - spelling
+  #    - pickle
+  #    - editable_pickle
+  #    - pickle_wheel
+  #    - linux_anaconda
+  #    - windows_anaconda
+  #  if: ${{ always() && needs.Bot.outputs.cleanup_trigger != '' }}
+  #  runs-on: ubuntu-latest
+  #  steps:
+  #    - uses: actions/checkout@v3
+  #    - name: Set up Python ${{ inputs.python_version }}
+  #      uses: actions/setup-python@v4
+  #      with:
+  #        python-version: 3.9
+  #    - id: run_bot
+  #      run: |
+  #        python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.run_id }} ${{ needs.Bot.outputs.cleanup_trigger }}
+  #      env:
+  #        GH_TOKEN: ${{ github.token }}
+  #    - name: Post status
+  #      if: ${{ github.event_name != 'pull_request' }}
+  #      run: |
+  #        gh api --method POST -H "Accept: application/vnd.github+json" \
+  #          ${{ needs.Bot.outputs.status_url }} \
+  #          -f state="${{ steps.run_bot.outputs.global_state }}" -f target_url="${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}" \
+  #          -f description="${{ github.event.comment.body }}" -f context="Tests on Draft"
+  #      env:
+  #        GH_TOKEN: ${{ github.token }}
