@@ -20,11 +20,7 @@ def should_ignore(name):
     bool
         True if object should be ignored, False otherwise.
     '''
-    name_parts = name.split('.')
-    obj_name = name_parts[-1]
-    #ignore test files
-    if name_parts[0] == 'tests':
-        return True
+    obj_name = name.split('.')[-1]
     #ignore magic methods
     if obj_name.startswith('__') and obj_name.endswith('__'):
         return True
@@ -55,7 +51,7 @@ if __name__ == '__main__':
     changes = {}
     for file, upds in results.items():
         filepath = PurePath(file)
-        if filepath.suffix == '.py':
+        if filepath.parts[0] != 'tests' and filepath.suffix == '.py':
             for line_no in upds['addition']:
                 if file in changes:
                     changes[file].append(int(line_no))
