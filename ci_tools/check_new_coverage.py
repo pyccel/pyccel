@@ -66,6 +66,8 @@ current_diff = bot.get_diff()
 
 revs = bot.get_bot_review_comments()
 
+print("Review comments : ", len(revs))
+
 commented_lines = {(r[0]['path'], get_relevant_line(current_diff, r[0])): r for r in revs}
 
 diff = get_diff_as_json(args.diffFile)
@@ -77,9 +79,11 @@ new_untested = cov.allow_untested_error_calls(new_untested)
 
 new_untested = cov.allow_untested_debug_code(new_untested)
 
+print("Commented lines : ")
 print(commented_lines)
 for (p, l), r in commented_lines.items():
     print(p,l,r)
+print("--------------------------------------------------------")
 
 old_comments, new_comments = cov.get_json_summary(new_untested, file_contents, commented_lines)
 
