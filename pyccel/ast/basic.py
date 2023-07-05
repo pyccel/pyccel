@@ -30,7 +30,14 @@ class Immutable:
 
 #==============================================================================
 class Basic:
-    """Basic class for Pyccel AST."""
+    """
+    Basic class from which all objects in the Pyccel AST inherit.
+
+    This foundational class provides all the functionalities that are common to
+    objects in the Pyccel AST. This includes the construction and navigation of
+    the AST tree as well as an indication of the stage in which the object is
+    valid (syntactic/semantic/etc).
+    """
     __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress' ,'_pyccel_staging')
     _ignored_types = (Immutable, type)
     _attribute_nodes = None
