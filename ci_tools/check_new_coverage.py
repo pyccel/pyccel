@@ -71,7 +71,7 @@ revs = bot.get_bot_review_comments()
 
 print("Review comments : ", len(revs))
 
-commented_lines = {(r[0]['path'], get_relevant_line(current_diff, r[0])): r for r in revs}
+commented_lines = {(r[0]['path'], r[0]['line']): r for r in revs}
 
 diff = get_diff_as_json(args.diffFile)
 untested, file_contents = cov.get_untested_lines(args.coverageFile)
