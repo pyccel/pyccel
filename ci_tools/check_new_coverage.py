@@ -63,6 +63,7 @@ args = parser.parse_args()
 bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ['HEAD_SHA'])
 
 current_diff = bot.get_diff()
+print(current_diff.keys())
 
 revs = bot.get_bot_review_comments()
 
