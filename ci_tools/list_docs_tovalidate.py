@@ -20,7 +20,11 @@ def should_ignore(name):
     bool
         True if object should be ignored, False otherwise.
     '''
-    obj_name = name.split('.')[-1]
+    name_parts = name.split('.')
+    obj_name = name_parts[-1]
+    #ignore test files
+    if name_parts[0] == 'tests':
+        return True
     #ignore magic methods
     if obj_name.startswith('__') and obj_name.endswith('__'):
         return True
