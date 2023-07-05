@@ -39,6 +39,7 @@ def get_relevant_line(diff, review):
 
     # Get line numbers indicated by the blob
     line_indicators = [(i, l) for i,l in enumerate(lines) if '@@' in l]
+    print("looking for lines:", position, line_indicators)
 
     # Find the relevant blob
     line_key = next((i,l) for i,l in reversed(line_indicators) if i<position)
@@ -87,6 +88,11 @@ for (p, l), r in commented_lines.items():
 print("--------------------------------------------------------")
 
 old_comments, new_comments = cov.get_json_summary(new_untested, file_contents, commented_lines)
+
+print("Discovered:")
+print(old_comments)
+print(new_comments)
+print("--------------------------------------------------------")
 
 success = cov.evaluate_success(old_comments, new_comments, commented_lines)
 
