@@ -36,6 +36,7 @@ def get_relevant_line(diff, review):
     # Get code
     file = review['path']
     lines = diff[file]
+    print(file, lines)
 
     # Get line numbers indicated by the blob
     line_indicators = [(i, l) for i,l in enumerate(lines) if '@@' in l]
