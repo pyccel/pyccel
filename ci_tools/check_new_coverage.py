@@ -47,7 +47,7 @@ def get_relevant_line(diff, review):
 
     # Calculate the new line number
     offset = position-line_key[0]
-    _, line_info, lines[0] = line_key[1].split('@@')
+    _, line_info, _ = line_key[1].split('@@')
     line_info = line_info.strip()
     start_line = int(line_info.split(' ')[1].split(',')[0])
     return start_line + offset - 1
