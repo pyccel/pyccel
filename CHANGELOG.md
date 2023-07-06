@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1427 : Fix augmented assignment with a literal right hand side in templated code.
+-   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
 
