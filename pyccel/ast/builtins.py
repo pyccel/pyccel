@@ -132,11 +132,9 @@ class PythonConjugate(PyccelInternalFunction):
     Represents a call to the .conjugate() function.
 
     Represents a call to the conjugate function which is a member of
-    the builtin types int, float, complex.
+    the builtin types int, float, complex. The conjugate function is
+    called from Python as follows:
 
-    Examples
-    --------
-    e.g:
     > a = 1+2j
     > a.conjugate()
     1-2j
