@@ -273,7 +273,7 @@ def DataTypeFactory(name, argnames=["_name"],
                 raise TypeError("Argument %s not valid for %s"
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
-        BaseClass.__init__(self, name=name)
+        BaseClass.__init__(self)
 
     if prefix is None:
         prefix = 'Pyccel'
