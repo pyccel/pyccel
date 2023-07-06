@@ -51,7 +51,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeRange
+from pyccel.ast.datatypes import NativeRange, NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode
@@ -1367,7 +1367,7 @@ class FCodePrinter(CodePrinter):
             prefix = expr_dtype.prefix
             alias  = expr_dtype.alias
 
-            if var.cls_base.superclass:
+            if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1471,7 +1471,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         mod_str = ''
-        if expr.module_variable and not is_private and (rank == 0) and not var.cls_base:
+        if expr.module_variable and not is_private and (rank == 0) and expr_dtype in NativeNumeric:
             mod_str = ', bind(c)'
 
         # Construct declaration
