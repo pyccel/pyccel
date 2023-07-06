@@ -362,7 +362,21 @@ class Scope(object):
         self._locals['templates'][expr.name] = expr
 
     def insert_header(self, expr):
-        """ Add a header to the current scope
+        """
+        Add a header to the current scope.
+
+        Add a header describing a function, method or class to
+        the current scope.
+
+        Parameters
+        ----------
+        expr : pyccel.ast.Header
+            The header description.
+
+        Raises
+        ------
+        TypeError
+            Raised if the header type is unknown.
         """
         if isinstance(expr, (FunctionHeader, MethodHeader)):
             if expr.name in self.headers:
