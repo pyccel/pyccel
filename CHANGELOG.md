@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1430 : Added conjugate support to integers and floats.
+
 ### Fixed
 
 -   #1427 : Fix augmented assignment with a literal right hand side in templated code.
