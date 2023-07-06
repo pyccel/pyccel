@@ -3141,28 +3141,38 @@ class SympyFunction(FunctionDef):
 
 
 class ClassDef(ScopedNode):
+    """
+    Represents a class definition.
 
-    """Represents a class definition.
+    Class representing a class definition in the code. It holds all objects
+    which may be defined in a class including methods, interfaces, attributes,
+    etc. It also handles inheritance.
 
     Parameters
     ----------
     name : str
         The name of the class.
 
-    attributes: iterable
+    attributes : iterable
         The attributes to the class.
 
-    methods: iterable
-        Class methods
+    methods : iterable
+        Class methods.
 
-    options: list, tuple
-        list of options ('public', 'private', 'abstract')
+    options : list, tuple
+        A list of options ('public', 'private', 'abstract').
 
-    imports: list, tuple
-        list of needed imports
+    imports : list, tuple
+        A list of required imports.
 
     superclass : str
-        superclass's class name
+        The name of all superclasses.
+
+    interfaces : iterable
+        The interface methods.
+
+    scope : Scope
+        The scope for the class contents.
 
     Examples
     --------
@@ -3362,6 +3372,11 @@ class ClassDef(ScopedNode):
         """
         Get the method `name` of the current class.
 
+        Look through all methods and interfaces of the current class to
+        find a method called `name`. If this class inherits from another
+        class, that class is also searched to ensure that the inherited
+        methods are available.
+
         Parameters
         ----------
         name : str
@@ -3369,7 +3384,7 @@ class ClassDef(ScopedNode):
 
         Returns
         -------
-        FunctionDef/PyccelInternalFunction
+        FunctionDef
             The definition of the method.
         """
         try:
