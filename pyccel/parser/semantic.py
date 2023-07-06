@@ -953,7 +953,7 @@ class SemanticParser(BasicParser):
             args = input_args
 
             if isinstance(expr, DottedName):
-                new_expr = DottedFunctionCall(func, args[1:], current_function = self._current_function, prefix = args[0])
+                new_expr = DottedFunctionCall(func, args, current_function = self._current_function, prefix = args[0])
             else:
                 new_expr = FunctionCall(func, args, self._current_function)
 
