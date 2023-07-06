@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1430 : Added conjugate support to integers and floats.
+-   Allow interfaces in classes.
 
 ### Fixed
 
