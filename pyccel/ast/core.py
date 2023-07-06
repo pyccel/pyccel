@@ -3386,6 +3386,11 @@ class ClassDef(ScopedNode):
         -------
         FunctionDef
             The definition of the method.
+
+        Raises
+        ------
+        ValueError
+            Raised if the method cannot be found.
         """
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
@@ -3400,7 +3405,8 @@ class ClassDef(ScopedNode):
                     method = None
 
         if method is None:
-            raise ValueError(f"Can't find method {name} in class {self.name}")
+            errors.report(f"Can't find method {name} in class {self.name}",
+                    severity='fatal', symbol=self)
 
         return method
 
