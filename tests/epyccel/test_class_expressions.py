@@ -152,7 +152,7 @@ def test_int32_conjugate(language):
 
 def test_bool_conjugate(language):
     def f(a : 'bool', b : 'bool'):
-        return (a+b).conjugate()
+        return (a or b).conjugate()
 
     epyc_f = epyccel(f, language=language)
 
