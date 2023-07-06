@@ -174,10 +174,35 @@ literal_classes = {
 
 def get_cls_base(dtype, precision, rank):
     """
-    From the dtype and rank, determine the base class of an object
+    Determine the base class of an object.
+
+    From the dtype and rank, determine the base class of an object.
+
+    Parameters
+    ----------
+    dtype : DataType
+        The data type of the object.
+
+    precision : int
+        The precision of the object.
+
+    rank : int
+        The rank of the object.
+
+    Returns
+    -------
+    ClassDef
+        A class definition describing the base class of an object.
+
+    Raises
+    ------
+    NotImplementedError
+        Raised if the base class cannot be found.
     """
-    if precision == -1 and rank == 0:
+    if precision == -1 or precision == 0 and rank == 0:
         return literal_classes[dtype]
-    else:
+    elif isinstance(dtype, NativeNumeric):
         return NumpyArrayClass
+    else:
+        raise NotImplementedError(f"No class definition found for type {dtype}({precision})")
 
