@@ -374,11 +374,7 @@ class Scope(object):
 
             #  create a new Datatype for the current class
 
-            iterable = 'iterable' in expr.options
-            with_construct = 'with' in expr.options
-            dtype = DataTypeFactory(expr.name, '_name',
-                                    is_iterable=iterable,
-                                    is_with_construct=with_construct)
+            dtype = DataTypeFactory(expr.name, '_name')
             self.cls_constructs[expr.name] = dtype
         else:
             msg = 'header of type{0} is not supported'
