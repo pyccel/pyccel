@@ -188,16 +188,7 @@ class CustomDataType(DataType):
 
     A general class for custom data types which is used as a
     base class when a user defines their own type using classes.
-
-    Parameters
-    ----------
-    name : str
-        The name of the type.
     """
-    __slots__ = ('_name',)
-
-    def __init__(self, name='__UNDEFINED__'):
-        self._name = name
 
 class NativeGeneric(DataType):
     __slots__ = ()
@@ -248,11 +239,32 @@ class UnionType:
 
 def DataTypeFactory(name, argnames=["_name"],
                     BaseClass=CustomDataType,
-                    prefix=None,
-                    alias=None,
-                    is_iterable=False,
-                    is_with_construct=False,
-                    is_polymorphic=False):
+                    prefix=None):
+    """
+    Create a new data class.
+
+    Create a new data class which sub-classes a DataType. This provides
+    a new data type which can be used, for example, for class types.
+
+    Parameters
+    ----------
+    name : str
+        The name of the new class.
+
+    argnames : list of str
+        A list of all the arguments for the new class.
+
+    BaseClass : type inheriting from DataType
+        The class from which the new type will be sub-classed.
+
+    prefix : str
+        A prefix which will be added to the class name.
+
+    Returns
+    -------
+    type
+        A new DataType class.
+    """
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the
@@ -271,11 +283,7 @@ def DataTypeFactory(name, argnames=["_name"],
     newclass = type(prefix + name, (BaseClass,),
                     {"__init__":          __init__,
                      "_name":             name,
-                     "prefix":            prefix,
-                     "alias":             alias,
-                     "is_iterable":       is_iterable,
-                     "is_with_construct": is_with_construct,
-                     "is_polymorphic":    is_polymorphic})
+                     "prefix":            prefix})
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -335,6 +343,11 @@ def str_dtype(dtype):
     ----------
     dtype : DataType
         The datatype.
+
+    Returns
+    -------
+    str
+        A description of the data type.
 
     Examples
     --------
