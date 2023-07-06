@@ -252,7 +252,7 @@ def DataTypeFactory(name, argnames=["_name"],
                 raise TypeError("Argument %s not valid for %s"
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
-        BaseClass.__init__(self, name=name[:-len("Class")])
+        BaseClass.__init__(self, name=name)
 
     if prefix is None:
         prefix = 'Pyccel'
@@ -343,5 +343,7 @@ def str_dtype(dtype):
         return 'complex'
     elif isinstance(dtype, NativeBool):
         return 'bool'
+    elif isinstance(dtype, CustomDataType):
+        return dtype.name
     else:
         raise TypeError('Unknown datatype {0}'.format(str(dtype)))
