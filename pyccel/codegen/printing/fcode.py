@@ -2957,6 +2957,9 @@ class FCodePrinter(CodePrinter):
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
+        if isinstance(expr, DottedFunctionCall):
+            args = args[1:]
+
         if (not self._additional_code):
             self._additional_code = ''
         if parent_assign:
