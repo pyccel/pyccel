@@ -2154,8 +2154,6 @@ class FunctionCall(PyccelAstNode):
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
-        if func.cls_name:
-            f_args = f_args[1:]
         if not len(args) == len(f_args):
             # Collect dict of keywords and values (initialised as default)
             f_args_dict = {a.name: (a.name, a.value) if a.has_default \
