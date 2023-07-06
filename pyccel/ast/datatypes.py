@@ -189,6 +189,7 @@ class CustomDataType(DataType):
     A general class for custom data types which is used as a
     base class when a user defines their own type using classes.
     """
+    __slots__ = ()
 
 class NativeGeneric(DataType):
     __slots__ = ()
