@@ -772,6 +772,7 @@ def test_basic_header():
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_5.py",
+                                        "scripts/classes/generic_methods.py",
                                         ] )
 def test_classes( test_file ):
     pyccel_test(test_file, compile_with_pyccel = False)
