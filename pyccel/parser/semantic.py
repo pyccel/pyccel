@@ -2083,16 +2083,11 @@ class SemanticParser(BasicParser):
 
             # class property?
             else:
-                for i in methods:
-                    if i.name == rhs and \
-                            'property' in i.decorators.keys():
-                        if 'numpy_wrapper' in i.decorators.keys():
-                            func = i.decorators['numpy_wrapper']
-                            self.insert_import('numpy', AsName(func, rhs))
-                            return func(visited_lhs)
-                        else:
-                            return DottedFunctionCall(i, [], prefix = visited_lhs,
-                                    current_function = self._current_function)
+                method = cls_base.get_method(rhs_name)
+                assert 'property' in method.decorators
+                if cls_base.name == 'numpy.ndarray':
+                    self.insert_import('numpy', AsName(method, rhs_name))
+                return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)])
 
         # look for a macro
         else:
