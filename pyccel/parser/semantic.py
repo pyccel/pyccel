@@ -952,8 +952,8 @@ class SemanticParser(BasicParser):
 
             args = input_args
 
-            if dotted_prefix:
-                new_expr = DottedFunctionCall(func, args, self._current_function, prefix=dotted_prefix)
+            if isinstance(expr, DottedName):
+                new_expr = DottedFunctionCall(func, args[1:], current_function = self._current_function, prefix = args[0])
             else:
                 new_expr = FunctionCall(func, args, self._current_function)
 
@@ -2065,25 +2065,15 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
-            args = self._handle_function_args(rhs.args)
+            args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             method = cls_base.get_method(rhs_name)
-            if 'numpy_wrapper' in method.decorators.keys():
+            if cls_base.name == 'numpy.ndarray':
                 self.insert_import('numpy', AsName(method, rhs_name))
-
-                return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs), *args])
-            else:
-                return self._handle_function(expr, method, args, dotted_prefix = visited_lhs)
+            return self._handle_function(expr, method, args)
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
             methods = list(cls_base.methods) + list(cls_base.interfaces)
-            for method in methods:
-                if isinstance(method, Interface):
-                    errors.report('Generic methods are not supported yet',
-                        symbol=method.name,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                        severity='fatal')
             # standard class attribute
             if rhs in attr_name:
                 self._current_class = cls_base
