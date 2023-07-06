@@ -4,6 +4,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+from itertools import chain
 
 from sympy.logic.boolalg      import And as sp_And
 
@@ -3374,7 +3375,7 @@ class ClassDef(ScopedNode):
             The definition of the method.
         """
         try:
-            method = next(i for i in self.methods if i.name == name)
+            method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
         except StopIteration:
             method = None
             i = 0
@@ -3386,7 +3387,7 @@ class ClassDef(ScopedNode):
                     method = None
 
         if method is None:
-            raise ValueError(f"Can't find method {name} in class{self.name}")
+            raise ValueError(f"Can't find method {name} in class {self.name}")
 
         return method
 
