@@ -150,6 +150,31 @@ def test_int32_conjugate(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Class inheritance not fully implemented"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Class inheritance not fully implemented"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_bool_conjugate(language):
+    def f(a : 'bool', b : 'bool'):
+        return (a or b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = bool(randint(2))
+    b = bool(randint(2))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
 def test_ndarray_var_from_expr(language):
     def f(x : 'int[:]', y : 'int[:]'):
         z = x + y
