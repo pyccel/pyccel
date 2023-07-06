@@ -881,7 +881,7 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='error')
 
-    def _handle_function(self, expr, func, args):
+    def _handle_function(self, expr, func, args, dotted_prefix = None):
         """
         Create the node representing the function call.
 
@@ -952,7 +952,11 @@ class SemanticParser(BasicParser):
 
             args = input_args
 
-            new_expr = FunctionCall(func, args, self._current_function)
+            if dotted_prefix:
+                new_expr = DottedFunctionCall(func, args, self._current_function, prefix=dotted_prefix)
+            else:
+                new_expr = FunctionCall(func, args, self._current_function)
+
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
@@ -2052,14 +2056,6 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
-            methods = list(cls_base.methods) + list(cls_base.interfaces)
-            for method in methods:
-                if isinstance(method, Interface):
-                    errors.report('Generic methods are not supported yet',
-                        symbol=method.name,
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                        severity='fatal')
             macro = self.scope.find(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
@@ -2069,17 +2065,14 @@ class SemanticParser(BasicParser):
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
 
-            args = [self._visit(arg) for arg in
-                    rhs.args]
-            for i in methods:
-                if str(i.name) == rhs_name:
-                    if 'numpy_wrapper' in i.decorators.keys():
-                        func = i.decorators['numpy_wrapper']
-                        self.insert_import('numpy', AsName(func, rhs_name))
-                        return func(visited_lhs, *args)
-                    else:
-                        return DottedFunctionCall(i, args, prefix = visited_lhs,
-                                    current_function = self._current_function)
+            args = self._handle_function_args(rhs.args)
+            method = cls_base.get_method(rhs_name)
+            if 'numpy_wrapper' in method.decorators.keys():
+                self.insert_import('numpy', AsName(method, rhs_name))
+
+                return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs), *args])
+            else:
+                return self._handle_function(expr, method, args, dotted_prefix = visited_lhs)
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
