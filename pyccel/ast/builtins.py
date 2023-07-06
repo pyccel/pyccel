@@ -155,7 +155,7 @@ class PythonConjugate(PyccelInternalFunction):
 
     def __new__(cls, arg):
         if arg.dtype is NativeBool():
-            return PythonInteger(arg)
+            return PythonInt(arg)
         elif arg.dtype is not NativeComplex():
             return arg
         else:
