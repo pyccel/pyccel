@@ -881,7 +881,7 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='error')
 
-    def _handle_function(self, expr, func, args, dotted_prefix = None):
+    def _handle_function(self, expr, func, args):
         """
         Create the node representing the function call.
 
