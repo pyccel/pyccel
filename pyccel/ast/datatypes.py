@@ -182,9 +182,18 @@ class NativeSymbol(DataType):
     __slots__ = ()
     _name = 'Symbol'
 
-
-# TODO to be removed
 class CustomDataType(DataType):
+    """
+    Class from which user-defined types inherit.
+
+    A general class for custom data types which is used as a
+    base class when a user defines their own type using classes.
+
+    Parameters
+    ----------
+    name : str
+        The name of the type.
+    """
     __slots__ = ('_name',)
 
     def __init__(self, name='__UNDEFINED__'):
@@ -318,15 +327,21 @@ def datatype(arg):
 def str_dtype(dtype):
 
     """
-    This function takes a datatype and returns a pyccel datatype as a string
+    Get a string describing a datatype.
 
-    Example
-    -------
+    This function takes a pyccel datatype and returns a string which describes it.
+
+    Parameters
+    ----------
+    dtype : DataType
+        The datatype.
+
+    Examples
+    --------
     >>> str_dtype('int')
     'integer'
     >>> str_dtype(NativeInteger())
     'integer'
-
     """
     if isinstance(dtype, str):
         if dtype == 'int':
