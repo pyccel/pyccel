@@ -145,6 +145,12 @@ class PythonConjugate(PyccelInternalFunction):
     _order = None
     name = 'conjugate'
 
+    def __new__(cls, arg):
+        if arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return super().__new__(cls)
+
     def __init__(self, arg):
         super().__init__(arg)
 
