@@ -3237,6 +3237,9 @@ class ClassDef(ScopedNode):
 
         if not iterable(superclass):
             raise TypeError('superclass must be iterable')
+        for s in superclass:
+            if not isinstance(s, ClassDef):
+                raise TypeError('superclass item must be a ClassDef')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')

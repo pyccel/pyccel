@@ -3401,8 +3401,15 @@ class SemanticParser(BasicParser):
 
                 # update the class methods
 
+                superclass = [self.scope.find(s, 'classes') for s in cls.superclass]
+                if any(s is None for s in superclass):
+                    for s in superclass:
+                        if s is None:
+                            errors.report("Couldn't find class {s} in scope", symbol=expr,
+                                    severity='error')
+                    superclass = [s for s in superclass if s is not None]
                 self.scope.insert_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclass=cls.superclass))
+                        methods, superclass=superclass))
 
             funcs += [func]
 
@@ -3480,8 +3487,14 @@ class SemanticParser(BasicParser):
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
         methods = list(expr.methods)
-        parent = expr.superclass
         interfaces = []
+        parent = [self.scope.find(s, 'classes') for s in expr.superclass]
+        if any(s is None for s in parent):
+            for s in parent:
+                if s is None:
+                    errors.report("Couldn't find class {s} in scope", symbol=expr,
+                            severity='error')
+            parent = [s for s in parent if s is not None]
 
         # remove quotes for str representation
         cls = ClassDef(name, [], [], superclass=parent)

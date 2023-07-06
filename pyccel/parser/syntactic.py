@@ -851,6 +851,7 @@ class SyntaxParser(BasicParser):
             i.cls_name = name
         attributes = [a.var for a in methods[0].arguments]
         parent = [self._visit(i) for i in stmt.bases]
+        parent = [p for p in parent if p!='object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclass=parent, scope=scope)
