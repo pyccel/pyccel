@@ -2352,8 +2352,9 @@ class FunctionDef(ScopedNode):
     imports : list, tuple
         A list of needed imports.
 
-    decorators : list, tuple
-        A list of properties.
+    decorators : dict
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
 
     headers : list,tuple
         A list of headers describing the function.
@@ -2905,26 +2906,35 @@ class InlineFunctionDef(FunctionDef):
         return self._global_funcs
 
 class PyccelFunctionDef(FunctionDef):
-    """ Class inheriting from FunctionDef which can store a pointer
+    """
+    Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
+
+    Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
-    This is useful for importing builtin functions
+    This is useful for importing builtin functions and for defining
+    classes which have `PyccelInternalFunction`s as attributes or methods.
 
     Parameters
     ----------
     name : str
-           The name of the function
+           The name of the function.
+
     func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
-                 The class which should be instantiated upon a FunctionCall
-                 to this FunctionDef object
+         The class which should be instantiated upon a FunctionCall
+         to this FunctionDef object.
+
+    decorators : dictionary
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
     """
     __slots__ = ()
-    def __init__(self, name, func_class):
+    def __init__(self, name, func_class, *, decorators = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
         arguments = ()
         results = ()
         body = ()
-        super().__init__(name, arguments, results, body)
+        super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
 
 class Interface(Basic):
@@ -3348,6 +3358,37 @@ class ClassDef(ScopedNode):
             shape=var.shape,
             cls_base=var.cls_base,
             )
+
+    def get_method(self, name):
+        """
+        Get the method `name` of the current class.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute we are looking for.
+
+        Returns
+        -------
+        FunctionDef/PyccelInternalFunction
+            The definition of the method.
+        """
+        try:
+            method = next(i for i in self.methods if i.name == name)
+        except StopIteration:
+            method = None
+            i = 0
+            n_classes = len(self.superclass)
+            while method is None and i<n_classes:
+                try:
+                    method = self.superclass[i].get_method(name)
+                except StopIteration:
+                    method = None
+
+        if method is None:
+            raise ValueError(f"Can't find method {name} in class{self.name}")
+
+        return method
 
     @property
     def is_iterable(self):
