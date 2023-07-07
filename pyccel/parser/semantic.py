@@ -1961,9 +1961,7 @@ class SemanticParser(BasicParser):
         var = self.check_for_variable(name)
 
         if var is None:
-            var = self.scope.find(name, 'functions')
-        if var is None:
-            var = self.scope.find(name, 'symbolic_functions')
+            var = self.scope.find(name)
         if var is None:
             var = python_builtin_datatype(name)
 
@@ -2045,6 +2043,9 @@ class SemanticParser(BasicParser):
                         symbol=expr,
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                         severity='fatal')
+        if isinstance(first, ClassDef):
+            errors.report("Static class methods are not yet supported", symbol=expr,
+                    severity='fatal')
 
         d_var = self._infer_type(first)
         if d_var.get('cls_base', None) is None:
