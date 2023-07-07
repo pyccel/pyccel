@@ -2957,8 +2957,8 @@ class FCodePrinter(CodePrinter):
                 lhs_vars = {func_results[0]:lhs}
             else:
                 lhs_vars = dict(zip(func_results,lhs))
-            args = []
-            for a in expr.args:
+            assign_args = []
+            for a in args:
                 key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
@@ -2968,7 +2968,8 @@ class FCodePrinter(CodePrinter):
                     newarg = var
                 else:
                     newarg = arg
-                args.append(FunctionCallArgument(newarg, key))
+                assign_args.append(FunctionCallArgument(newarg, key))
+            args = assign_args
             results = list(lhs_vars.values())
             if is_function:
                 results_strs = []
