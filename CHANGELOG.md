@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+## \[1.8.1\] - 2023-07-07
+
+### Added
+
 -   #1430 : Added conjugate support to integers and floats.
 -   Allow interfaces in classes.
 
@@ -12,8 +22,6 @@ All notable changes to this project will be documented in this file.
 
 -   #1427 : Fix augmented assignment with a literal right hand side in templated code.
 -   \[INTERNALS\] Fix string base class selection.
-
-### Changed
 
 ## \[1.8.0\] - 2023-06-20
 
@@ -56,8 +64,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in `FunctionDef`.
 -   \[INTERNALS\] Use `FunctionDefResult` to store all result specific properties.
 
-### Deprecated
-
 ## \[1.7.3\] - 2023-03-07
 
 ### Added
@@ -72,8 +78,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   \[INTERNALS\] Add validation of docstrings to CI.
-
-### Deprecated
 
 ## \[1.7.2\] - 2023-02-02
 
@@ -90,8 +94,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add human-readable summaries to tests.
 -   \[INTERNALS\] Add tests to ensure Pyccel conventions are followed.
 -   \[INTERNALS\] Add tests to check spelling.
-
-### Deprecated
 
 ## \[1.7.1\] - 2023-01-26
 
@@ -115,5 +117,3 @@ All notable changes to this project will be documented in this file.
 -   #1272 : Remove use of deprecated NumPy syntax in tests.
 -   #1253 : Provide minimum requirements.
 -   \[INTERNALS\]  #1385 : Remove unused settings keyword arguments from `_visit` function.
-
-### Deprecated
