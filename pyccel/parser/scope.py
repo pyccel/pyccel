@@ -7,7 +7,6 @@
 """
 
 from pyccel.ast.core      import ClassDef
-from pyccel.ast.class_defs import literal_classes
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader
@@ -86,9 +85,6 @@ class Scope(object):
         #      => reserved keyword, or use __
         self._parent_scope       = parent_scope
         self._sons_scopes        = {}
-
-        if parent_scope is None:
-            self._locals['classes'].update(literal_classes)
 
         self._is_loop = is_loop
         # scoping for loops
