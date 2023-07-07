@@ -2071,7 +2071,8 @@ class SemanticParser(BasicParser):
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             method = cls_base.get_method(rhs_name)
             if cls_base.name == 'numpy.ndarray':
-                self.insert_import('numpy', AsName(method, rhs_name))
+                numpy_class = method.cls_name
+                self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
             return self._handle_function(expr, method, args, is_method = True)
 
         # look for a class attribute / property
@@ -2089,7 +2090,8 @@ class SemanticParser(BasicParser):
                 method = cls_base.get_method(rhs_name)
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
-                    self.insert_import('numpy', AsName(method, rhs_name))
+                    numpy_class = method.cls_name
+                    self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
                 return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)], is_method = True)
 
         # look for a macro
