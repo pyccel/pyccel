@@ -526,7 +526,7 @@ class SemanticParser(BasicParser):
             d_var['memory_handling'] = expr.memory_handling
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
-            d_var['cls_base'       ] = expr.cls_base
+            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype, 'classes')
             d_var['is_target'      ] = expr.is_target
             d_var['order'          ] = expr.order
             d_var['precision'      ] = expr.precision
@@ -1266,7 +1266,7 @@ class SemanticParser(BasicParser):
                 # update the attributes of the class and push it to the scope
                 attributes += [member]
                 new_cls = ClassDef(cls_name, attributes, [], superclass=parent)
-                self.scope.parent_scope.insert_class(new_cls)
+                self.scope.parent_scope.update_class(new_cls)
             else:
                 lhs = self._visit(lhs)
         else:
@@ -3411,7 +3411,7 @@ class SemanticParser(BasicParser):
                             errors.report("Couldn't find class {s} in scope", symbol=expr,
                                     severity='error')
                     superclass = [s for s in superclass if s is not None]
-                self.scope.insert_class(ClassDef(cls_name, cls.attributes,
+                self.scope.update_class(ClassDef(cls_name, cls.attributes,
                         methods, superclass=superclass))
 
             funcs += [func]
@@ -3486,11 +3486,9 @@ class SemanticParser(BasicParser):
         #      - wouldn't be better if it is done inside ClassDef?
 
         name = expr.name
+        # remove quotes for str representation
         name = name.replace("'", '')
-        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
-                    original_symbols = expr.scope.python_names.copy())
-        methods = list(expr.methods)
-        interfaces = []
+
         parent = [self.scope.find(s, 'classes') for s in expr.superclass]
         if any(s is None for s in parent):
             for s in parent:
@@ -3499,9 +3497,13 @@ class SemanticParser(BasicParser):
                             severity='error')
             parent = [s for s in parent if s is not None]
 
-        # remove quotes for str representation
         cls = ClassDef(name, [], [], superclass=parent)
         self.scope.insert_class(cls)
+
+        scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
+                    original_symbols = expr.scope.python_names.copy())
+        methods = list(expr.methods)
+        interfaces = []
         const = None
 
         for (i, method) in enumerate(methods):
@@ -3546,7 +3548,7 @@ class SemanticParser(BasicParser):
 
         cls = ClassDef(name, attributes, methods,
               interfaces=interfaces, superclass=parent, scope=scope)
-        self.scope.insert_class(cls)
+        self.scope.update_class(cls)
 
         return EmptyNode()
 

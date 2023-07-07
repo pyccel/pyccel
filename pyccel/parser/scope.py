@@ -7,6 +7,7 @@
 """
 
 from pyccel.ast.core      import ClassDef
+from pyccel.ast.class_defs import literal_classes
 from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader
@@ -86,6 +87,8 @@ class Scope(object):
         self._parent_scope       = parent_scope
         self._sons_scopes        = {}
 
+        if parent_scope is None:
+            self._locals['classes'].update(literal_classes)
 
         self._is_loop = is_loop
         # scoping for loops
@@ -340,8 +343,30 @@ class Scope(object):
         if self.is_loop:
             self.parent_scope.insert_class(cls)
         else:
-            #if name in self._locals['classes']:
-            #    raise RuntimeError('New class already exists in scope')
+            if name in self._locals['classes']:
+                raise RuntimeError('New class already exists in scope')
+            self._locals['classes'][name] = cls
+
+    def update_class(self, cls):
+        """ Add a class to the current scope
+
+        Parameters
+        ----------
+        cls  : ClassDef
+                The class to be inserted into the current scope
+        """
+        if not isinstance(cls, ClassDef):
+            raise TypeError('class must be of type ClassDef')
+
+        name = cls.name
+
+        name_found = name in self._locals['classes']
+
+        if not name_found and self.parent_scope:
+            self.parent_scope.update_class(cls)
+        else:
+            if not name_found:
+                raise RuntimeError('Class not found in scope')
             self._locals['classes'][name] = cls
 
     def insert_macro(self, macro):
