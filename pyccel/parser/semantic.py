@@ -3241,7 +3241,10 @@ class SemanticParser(BasicParser):
                         d_var['is_const'] = ahv.is_const
                         dtype = d_var.pop('datatype')
                         if not d_var['cls_base']:
-                            d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
+                            try:
+                                d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
+                            except KeyError:
+                                d_var['cls_base'] = self.scope.find( dtype, 'classes' )
 
                         if 'allow_negative_index' in self.scope.decorators:
                             if a.name in decorators['allow_negative_index']:
