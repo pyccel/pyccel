@@ -1,6 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Added
+
+### Fixed
+
+### Changed
+
 ## \[1.8.1\] - 2023-07-07
 
 ### Added
