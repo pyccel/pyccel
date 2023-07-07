@@ -199,7 +199,7 @@ def get_cls_base(dtype, precision, rank):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if precision == -1 or precision == 0 and rank == 0:
+    if precision in (-1, 0, None) and rank == 0:
         return literal_classes[dtype]
     elif dtype in NativeNumeric:
         return NumpyArrayClass
