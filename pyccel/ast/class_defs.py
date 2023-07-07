@@ -6,7 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .core      import ClassDef, FunctionDef, PyccelFunctionDef
+from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
