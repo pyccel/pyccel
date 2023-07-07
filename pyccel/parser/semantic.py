@@ -881,7 +881,7 @@ class SemanticParser(BasicParser):
                         symbol = expr,
                         severity='error')
 
-    def _handle_function(self, expr, func, args):
+    def _handle_function(self, expr, func, args, is_method = False):
         """
         Create the node representing the function call.
 
@@ -898,6 +898,9 @@ class SemanticParser(BasicParser):
 
         args : tuple
                The arguments passed to the function.
+
+        is_method : bool
+                Indicates if the function is a method (and should return a DottedFunctionCall).
 
         Returns
         -------
@@ -952,7 +955,7 @@ class SemanticParser(BasicParser):
 
             args = input_args
 
-            if isinstance(expr, DottedName):
+            if is_method:
                 new_expr = DottedFunctionCall(func, args, current_function = self._current_function, prefix = args[0].value)
             else:
                 new_expr = FunctionCall(func, args, self._current_function)
@@ -2069,7 +2072,7 @@ class SemanticParser(BasicParser):
             method = cls_base.get_method(rhs_name)
             if cls_base.name == 'numpy.ndarray':
                 self.insert_import('numpy', AsName(method, rhs_name))
-            return self._handle_function(expr, method, args)
+            return self._handle_function(expr, method, args, is_method = True)
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
@@ -2087,7 +2090,7 @@ class SemanticParser(BasicParser):
                 assert 'property' in method.decorators
                 if cls_base.name == 'numpy.ndarray':
                     self.insert_import('numpy', AsName(method, rhs_name))
-                return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)])
+                return self._handle_function(expr, method, [FunctionCallArgument(visited_lhs)], is_method = True)
 
         # look for a macro
         else:
