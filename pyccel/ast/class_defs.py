@@ -204,5 +204,9 @@ def get_cls_base(dtype, precision, rank):
     elif dtype in NativeNumeric:
         return NumpyArrayClass
     else:
-        raise NotImplementedError(f"No class definition found for type {dtype}({precision})")
+        type_name = f"{dtype}({precision})"
+        if rank:
+            dims = ','.join(':' for _ in range(rank))
+            type_name += f"[{dims}]"
+        raise NotImplementedError(f"No class definition found for type {type_name}")
 
