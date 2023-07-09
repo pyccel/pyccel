@@ -7,7 +7,7 @@ import json
 import sys
 
 from list_docs_tovalidate import should_ignore
-from annotation_helpers import print_to_string
+from annotation_helpers import print_to_string, get_code_file_and_lines
 
 parser = argparse.ArgumentParser(description='Check doc coverage change')
 parser.add_argument('base', metavar='head_cov', type=str,

@@ -4,7 +4,7 @@ import argparse
 import json
 import sys
 
-from annotation_helpers import print_to_string
+from annotation_helpers import print_to_string, get_code_file_and_lines
 
 parser = argparse.ArgumentParser(description='Process the output of numpydoc validator')
 parser.add_argument('report', metavar='report', type=str,
