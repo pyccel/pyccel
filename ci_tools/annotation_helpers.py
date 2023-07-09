@@ -70,7 +70,9 @@ def get_code_file_and_lines(obj, pyccel_folder = None, mod_name = None):
     mod = importlib.import_module(mod_name)
     filename = mod.__file__.split('/')
     if 'pyccel' in filename:
-        idx = filename.index('pyccel')
+        filename.reverse()
+        idx = len(filename)-1-filename.index('pyccel')
+        filename.reverse()
         file = '/'.join(filename[idx:])
     else:
         file = os.path.relpath(mod.__file__, pyccel_folder)
