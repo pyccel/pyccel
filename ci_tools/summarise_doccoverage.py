@@ -7,27 +7,7 @@ import json
 import sys
 
 from list_docs_tovalidate import should_ignore
-
-def print_to_string(*args, text):
-    """
-    Print to a string and to terminal.
-
-    Wrapper around the printing function to print the same text to both
-    the terminal and an output string.
-
-    Parameters
-    ----------
-    *args : tuple
-        Positional arguments to print function.
-
-    *kwargs : dict
-        Key word arguments to print function.
-
-    text : list
-        A list of strings where the output should also be saved.
-    """
-    print(*args)
-    text.append(' '.join(args)+'\n')
+from annotation_helpers import print_to_string
 
 parser = argparse.ArgumentParser(description='Check doc coverage change')
 parser.add_argument('base', metavar='head_cov', type=str,
@@ -149,4 +129,4 @@ else:
         print_to_string('### Compare Branch Summary', file=out)
         print_to_string(results['compare_summary'], file=out)
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
-        json.dump({'summary':"Documentation coverage is complete!"}, json_file)
+        json.dump({'summary':"# Documentation coverage is complete!"}, json_file)
