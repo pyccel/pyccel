@@ -22,7 +22,7 @@ def print_to_string(*args, text):
     print(*args)
     text.append(' '.join(args)+'\n')
 
-def get_code_file_and_lines(obj, mod_name = None):
+def get_code_file_and_lines(obj, pyccel_folder = None, mod_name = None):
     """
     Get the file and the relevant lines for the object.
 
@@ -37,6 +37,9 @@ def get_code_file_and_lines(obj, mod_name = None):
         then this is the name of the object inside the module, otherwise
         it may contain the module path.
 
+    pyccel_folder : str, default: current working directory
+        The folder containing the pyccel repo.
+
     mod_name : str, optional
         The python name of the module (relative to the base folder).
 
@@ -50,16 +53,16 @@ def get_code_file_and_lines(obj, mod_name = None):
     int
         The last line of relevant code.
     """
-    if not base_folder:
-        base_folder = os.getcwd()
+    if not pyccel_folder:
+        pyccel_folder = os.getcwd()
 
     obj_parts = obj.split('.')
     if mod_name is None:
         idx = len(obj_parts)
-        filename = os.path.join(base_folder, '/'.join(obj_parts[:idx])+'.py')
+        filename = os.path.join(pyccel_folder, '/'.join(obj_parts[:idx])+'.py')
         while idx > 0 and not os.path.isfile(filename):
             idx -= 1
-            filename = os.path.join(base_folder, '/'.join(obj_parts[:idx])+'.py')
+            filename = os.path.join(pyccel_folder, '/'.join(obj_parts[:idx])+'.py')
         assert idx != 0
         mod_name = '.'.join(obj_parts[:idx])
         obj_parts = obj_parts[idx:]

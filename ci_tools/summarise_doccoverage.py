@@ -2,6 +2,7 @@
 """
 import argparse
 import json
+import os
 import sys
 
 from list_docs_tovalidate import should_ignore
@@ -48,6 +49,8 @@ added_obj = {(mod, cls): methods for mod, obj in results['compare_no_obj'].items
                                  for cls, methods in obj.items() \
                                  if methods != results['base_no_obj'].get(mod, {}).get(cls, None)}
 
+base_folder = os.path.abspath(args.base[:-4])
+
 if len(added_mod) > 0 or len(added_obj) > 0:
     annotations = []
     summary = []
@@ -73,7 +76,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         idx = 0
         for (mod, cls), objects in added_obj.items():
             if [] in objects:
-                file, start, end = get_code_file_and_lines(cls, mod)
+                file, start, end = get_code_file_and_lines(cls, base_folder, mod)
                 print_to_string(f'{idx + 1}.  {mod}.{cls}', text=summary)
                 idx += 1
                 annotations.append({
@@ -87,7 +90,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                 if obj == []:
                     continue
                 obj_name = '.'.join(obj)
-                file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", mod)
+                file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, mod)
                 if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
                     level = 'warning'
                 else:
