@@ -45,7 +45,7 @@ def     annotations_builder(words):
     annotations = []
 
     for file_info, word in words:
-        line_no, column = find_word("../"+file_info, word) 
+        line_no, column = find_word(file_info, word) 
         annotation_1 = {
             "path": file_info,
             "start_line": line_no,
