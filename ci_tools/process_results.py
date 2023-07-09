@@ -74,6 +74,11 @@ with open(args.report, 'r', encoding='utf-8') as f:
                     if idx < nsections:
                         end = start + sections[idx+1][1] - 1
                     start += sections[idx][1]
+            if code.startswith('RT'):
+                idx = next(i for i, (sec, l) in enumerate(sections) if sec == 'Returns')
+                if idx < nsections:
+                    end = start + sections[idx+1][1] - 1
+                start += sections[idx][1]
             annotations.append({
                 "annotation_level":level,
                 "start_line":start,
