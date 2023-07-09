@@ -76,7 +76,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         idx = 0
         for (mod, cls), objects in added_obj.items():
             if [] in objects:
-                file, start, end = get_code_file_and_lines(cls, base_folder, f'compare.{mod}')
+                file, start, end = get_code_file_and_lines(cls, base_folder, mod)
                 print_to_string(f'{idx + 1}.  {mod}.{cls}', text=summary)
                 idx += 1
                 annotations.append({
@@ -90,7 +90,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                 if obj == []:
                     continue
                 obj_name = '.'.join(obj)
-                file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, f'compare.{mod}')
+                file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, mod)
                 if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
                     level = 'warning'
                 else:
