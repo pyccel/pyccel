@@ -80,7 +80,7 @@ jobs:
           done < objects.txt
           cat report.txt
           cd ..
-          python base/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
+          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
