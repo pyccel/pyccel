@@ -2,6 +2,7 @@
 """
 import argparse
 import json
+import os
 import sys
 
 from annotation_helpers import print_to_string, get_code_file_and_lines
@@ -20,6 +21,8 @@ error_codes = ['GL01', 'GL02', 'GL03', 'GL05', 'GL06', 'GL07', 'GL08', 'GL09',
                'SA02', 'SA03', 'SA04']
 
 warning_codes = ['EX01', 'SA01']
+
+pyccel_folder = os.path.abspath('compare')
 
 errors = {}
 warnings = {}
@@ -49,7 +52,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
             level = None
             parsing_errors.append(line)
         if level:
-            file, start, end = get_code_file_and_lines(file_name)
+            file, start, end = get_code_file_and_lines(file_name, pyccel_folder = pyccel_folder)
             with open(file, 'r', encoding='utf-8') as code_file:
                 lines = code_file.readlines()[start-1:end+2]
             lines = [l.strip() for l in lines]
