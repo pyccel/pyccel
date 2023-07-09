@@ -69,6 +69,7 @@ def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
         obj_parts = obj_parts[idx:]
 
     mod = importlib.import_module(mod_name)
+    print(base_folder, mod.__file__)
     file = os.path.relpath(mod.__file__, base_folder)
 
     if obj_parts:
