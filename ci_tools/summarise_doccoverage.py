@@ -51,6 +51,8 @@ added_obj = {(mod, cls): methods for mod, obj in results['compare_no_obj'].items
                                  for cls, methods in obj.items() \
                                  if methods != results['base_no_obj'].get(mod, {}).get(cls, None)}
 
+base_folder = os.path.abspath(args.base[:-4])
+
 if len(added_mod) > 0 or len(added_obj) > 0:
     annotations = []
     summary = []
@@ -75,13 +77,8 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         print_to_string('### This pull request added these objects without docstrings:', text=summary)
         idx = 0
         for (mod, cls), objects in added_obj.items():
-            mod_obj = importlib.import_module(mod)
             for obj in objects:
-                method = getattr(getattr(mod_obj, cls), obj)
-                # Unpack property to method
-                method = getattr(method, 'fget', method)
-                source, start_line = inspect.getsourcelines(method)
-                length = len(source)
+                file, start, end = get_code_file_and_lines(f"{cls}.{obj}", base_folder, mod)
                 if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
                     level = 'warning'
                 else:
@@ -90,23 +87,20 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                     idx += 1
                 annotations.append({
                     "annotation_level":level,
-                    "start_line":start_line,
-                    "end_line":start_line+length-1,
-                    "path":mod.replace('.','/')+".py",
+                    "start_line":start,
+                    "end_line":end,
+                    "path":file,
                     "message":f"Missing docstring."
                 })
             if len(objects) == 0:
+                file, start, end = get_code_file_and_lines(cls, base_folder, mod)
                 print_to_string(f'{idx + 1}.  {mod}.{cls}', text=summary)
                 idx += 1
-                method = getattr(mod_obj, cls)
-                # Unpack property to method
-                method = getattr(method, 'fget', method)
-                source, start_line = inspect.getsourcelines(method)
                 annotations.append({
                     "annotation_level":"error",
-                    "start_line":start_line,
-                    "end_line":start_line,
-                    "path":mod.replace('.','/')+".py",
+                    "start_line":start,
+                    "end_line":end,
+                    "path":file,
                     "message":f"Missing docstring."
                 })
         print_to_string(text=summary)
