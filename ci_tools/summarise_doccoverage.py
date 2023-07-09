@@ -41,7 +41,7 @@ for branch_file in [args.base, args.compare]:
                 if not should_ignore(objname):
                     obj_name_parts = objname.split('.')
                     mod_dict = results[branch + '_no_obj'].setdefault(modname, {})
-                    mod_dict.setdefault(obj_name_parts[0], []).extend(obj_name_parts[1:])
+                    mod_dict.setdefault(obj_name_parts[0], []).append(obj_name_parts[1:])
             i += 1
 
 added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]
@@ -75,27 +75,30 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         print_to_string('### This pull request added these objects without docstrings:', text=summary)
         idx = 0
         for (mod, cls), objects in added_obj.items():
-            for obj in objects:
-                file, start, end = get_code_file_and_lines(f"{cls}.{obj}", base_folder, mod)
-                if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
-                    level = 'warning'
-                else:
-                    level = 'error'
-                    print_to_string(f'{idx + 1}.  {mod}.{cls}.{obj}', text=summary)
-                    idx += 1
-                annotations.append({
-                    "annotation_level":level,
-                    "start_line":start,
-                    "end_line":end,
-                    "path":file,
-                    "message":"Missing docstring."
-                })
-            if len(objects) == 0:
+            if [] in objects:
                 file, start, end = get_code_file_and_lines(cls, base_folder, mod)
                 print_to_string(f'{idx + 1}.  {mod}.{cls}', text=summary)
                 idx += 1
                 annotations.append({
                     "annotation_level":"error",
+                    "start_line":start,
+                    "end_line":end,
+                    "path":file,
+                    "message":"Missing docstring."
+                })
+            for obj in objects:
+                if obj == []:
+                    continue
+                obj_name = '.'.join(obj)
+                file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, mod)
+                if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
+                    level = 'warning'
+                else:
+                    level = 'error'
+                    print_to_string(f'{idx + 1}.  {mod}.{cls}.{obj_name}', text=summary)
+                    idx += 1
+                annotations.append({
+                    "annotation_level":level,
                     "start_line":start,
                     "end_line":end,
                     "path":file,
