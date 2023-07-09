@@ -324,12 +324,16 @@ class Scope(object):
             raise RuntimeError("Variable not found in scope")
 
     def insert_class(self, cls):
-        """ Add a class to the current scope
+        """
+        Add a class to the current scope.
+
+        Add the definition of a class to the current scope to
+        make it discoverable when used.
 
         Parameters
         ----------
-        cls  : ClassDef
-                The class to be inserted into the current scope
+        cls : ClassDef
+            The class to be inserted into the current scope.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
@@ -344,12 +348,17 @@ class Scope(object):
             self._locals['classes'][name] = cls
 
     def update_class(self, cls):
-        """ Add a class to the current scope
+        """
+        Update a class which is in scope.
+
+        Search for a class in the current scope and its parents. Once it
+        has been found, replace it with the updated ClassDef passed as
+        argument.
 
         Parameters
         ----------
-        cls  : ClassDef
-                The class to be inserted into the current scope
+        cls : ClassDef
+            The class to be inserted into the current scope.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
