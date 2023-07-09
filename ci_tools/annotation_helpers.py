@@ -68,9 +68,12 @@ def get_code_file_and_lines(obj, pyccel_folder = None, mod_name = None):
         obj_parts = obj_parts[idx:]
 
     mod = importlib.import_module(mod_name)
-    filename = mod.__file__.split('.')
-    idx = filename.index('pyccel')
-    file = '/'.join(filename[idx:])
+    filename = mod.__file__.split('/')
+    if 'pyccel' in filename:
+        idx = filename.index('pyccel')
+        file = '/'.join(filename[idx:])
+    else:
+        file = os.path.relpath(file, pyccel_folder)
 
     if obj_parts:
         # Get the object
