@@ -53,6 +53,10 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
         shell: bash
+      - name: Setup imports
+        run: |
+          echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
+        shell: bash
       - name: Check doc coverage
         id: doc_coverage
         run: |
@@ -65,7 +69,6 @@ jobs:
         id: doc_format
         run: |
           cd compare
-          pip install .
           git fetch
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           touch objects.txt
