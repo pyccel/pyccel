@@ -57,6 +57,7 @@ jobs:
            python -m pyspelling > misspellings.txt || true
            cat misspellings.txt
            python ci_tools/summarise_pyspelling.py misspellings.txt $GITHUB_STEP_SUMMARY
+           python ci_tools/json_aspell.py misspellings.txt
       - name: "Post completed"
         if: always()
         run:
