@@ -58,6 +58,13 @@ jobs:
           python -m pip install docstr-coverage
           python -m pip install numpydoc
         shell: bash
+      - name: Setup imports
+        run: |
+          echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
+          cd compare
+          pip3 install .
+          cd ..
+        shell: bash
       - name: Check doc coverage
         id: doc_coverage
         run: |
@@ -70,18 +77,16 @@ jobs:
         id: doc_format
         run: |
           cd compare
-          pip install .
           git fetch
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          touch objects.txt
+          python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
-          python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
-          while read line; do    
+          while read line; do
             python -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
           cat report.txt
-          python ci_tools/process_results.py report.txt $GITHUB_STEP_SUMMARY
           cd ..
+          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()

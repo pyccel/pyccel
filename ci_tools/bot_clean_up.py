@@ -2,7 +2,7 @@ import json
 import os
 from bot_tools.bot_funcs import Bot, test_dependencies
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling', 'Codacy']
 
 

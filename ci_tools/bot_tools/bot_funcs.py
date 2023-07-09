@@ -9,7 +9,7 @@ default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
         'coverage': '3.7',
-        'doc_coverage': '3.8',
+        'docs': '3.8',
         'linux': '3.7',
         'macosx': '3.10',
         'pickle_wheel': '3.7',
@@ -25,7 +25,7 @@ test_names = {
         'anaconda_linux': "Unit tests on Linux with anaconda",
         'anaconda_windows': "Unit tests on Windows with anaconda",
         'coverage': "Coverage verification",
-        'doc_coverage': "Check documentation",
+        'docs': "Check documentation",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
@@ -39,7 +39,10 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
-tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
+tests_with_base = ('coverage', 'docs', 'pyccel_lint')
+
+pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+                'pyccel_lint', 'spelling')
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 

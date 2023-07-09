@@ -1,9 +1,6 @@
 import json
 import os
-from bot_tools.bot_funcs import Bot
-
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
-                'pyccel_lint', 'spelling']
+from bot_tools.bot_funcs import Bot, pr_test_keys
 
 def get_unique_test_list(keys):
     tests = set(keys)

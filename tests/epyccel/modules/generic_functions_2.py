@@ -3,29 +3,29 @@ from pyccel.decorators import types
 from pyccel.decorators import template
 
 
-@template('Z', types=['int', 'real'])
+@template('Z', types=['int', 'float'])
 @types('Z', 'Z')
 def tmplt_1(x, y):
     return x + y
 
-@template('Z', types=['int', 'real'])
-@template('Y', types=['int', 'real'])
+@template('Z', types=['int', 'float'])
+@template('Y', types=['int', 'float'])
 @types('Z', 'Z', 'Y')
 def multi_tmplt_1(x, y, z):
     return x + y + z
 
 @types('int', 'int')
-@types('int', 'real')
+@types('int', 'float')
 def multi_heads_1(x, y):
     return x + y
 
-@template(types=['int', 'real'], name = 'Z')
+@template(types=['int', 'float'], name = 'Z')
 @types('Z', 'Z')
 def tmplt_2(x, y):
     return x + y
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('K', 'G')
 def multi_tmplt_2(y, z):
     return y + z
@@ -34,20 +34,20 @@ def multi_tmplt_2(y, z):
 #------------------------------------------------------
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('G', 'K')
 def default_var_1(x , y = 5):
     return x + y
 
 
 @template('K', types=['complex'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('G', 'K')
 def default_var_2(x , y = 5j):
     return x + y
 
 @template('K', types=['bool'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('G', 'K')
 def default_var_3(x , y = False):
     if y is True:
@@ -55,13 +55,13 @@ def default_var_3(x , y = False):
     return x - 1
 
 @types('int', 'int')
-@types('real', 'int')
+@types('float', 'int')
 def default_var_4(x, y = 5):
     return x + y
 
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('G', 'K')
 def optional_var_1(x , y = None):
     if y is None :
@@ -70,15 +70,15 @@ def optional_var_1(x , y = None):
 
 
 @template('K', types=['complex'])
-@template('G', types=['int', 'real'])
+@template('G', types=['int', 'float'])
 @types('G', 'K')
 def optional_var_2(x , y = None):
     if y is None :
         return x + 1j
     return x + y
 
-@types('int', 'real')
-@types('real', 'real')
+@types('int', 'float')
+@types('float', 'float')
 def optional_var_3(x, y = None):
     if y is None:
         return x / 2.0
@@ -86,7 +86,7 @@ def optional_var_3(x, y = None):
 
 
 @types('complex', 'int')
-@types('real', 'int')
+@types('float', 'int')
 def optional_var_4(x, y = None):
     if y is None:
         return x
@@ -100,7 +100,7 @@ def int_types(x, y):
     return x + y
 
 
-@template('T', types=['real', 'float32', 'float64'])
+@template('T', types=['float', 'float32', 'float64'])
 @types('T', 'T')
 def float_types(x, y):
     return x + y
@@ -121,7 +121,7 @@ def mix_types_1(x, y, z):
     return x - y
 
 
-@template('T', types=['int64', 'int32', 'int16', 'real', 'complex', 'float32'])
+@template('T', types=['int64', 'int32', 'int16', 'float', 'complex', 'float32'])
 @types('T', 'T')
 def mix_types_2(x, y):
     if y != x:
@@ -137,14 +137,19 @@ def mix_types_3(x, y):
     return -x
 
 
-@template('T', types=['int64[:]', 'real[:]', 'complex[:]'])
+@template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
+@types('T')
+def mix_array_scalar(x):
+    x[:] += 1
+
+@template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
 @types('T', 'int')
 def mix_array_1(x, a):
     x[:] += a
 
 
 @types('complex[:]', 'complex[:]', 'int')
-@types('real[:]', 'int64[:]', 'int')
+@types('float[:]', 'int64[:]', 'int')
 def mix_array_2(x, y, a):
     x[:] += a
     y[:] -= a
@@ -159,17 +164,17 @@ def mix_int_array_1(x, a):
 def mix_int_array_2(x, a):
     x[:] += a
 
-@template('T', types=['real[:]', 'float32[:]'])
-@types('T', 'real')
+@template('T', types=['float[:]', 'float32[:]'])
+@types('T', 'float')
 def mix_float_array_1(x, a):
     x[:] *= a
 
 @template('T', types=['complex[:]', 'complex64[:]'])
-@types('T', 'real')
+@types('T', 'float')
 def mix_complex_array_1(x, a):
     x[:] *= a
 
-#$ header function dup_header(real)
+#$ header function dup_header(float)
 #$ header function dup_header(float64)
 @types('float')
 @types('float64')
