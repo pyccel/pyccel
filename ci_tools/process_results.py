@@ -71,15 +71,15 @@ if fail:
 for file_name, errs in errors.items():
     print_to_string(f'#### {file_name}', text=summary)
     print_to_string(''.join(f'- {err}' for err in errs), text=summary)
-if (len(warnings) > 0):
+if len(warnings) > 0:
     print_to_string('### WARNINGS!', text=summary)
 for file_name, warns in warnings.items():
     print_to_string(f'#### {file_name}', text=summary)
     print_to_string(''.join(f'- {warn}' for warn in warns), text=summary)
-if (len(parsing_errors) > 0):
+if len(parsing_errors) > 0:
     print_to_string('### PARSING ERRORS!', text=summary)
     parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]
-    print_to_string(''.join(f'{add_warn}' for add_warn in parsing_errors), file=f)
+    print_to_string(''.join(f'{add_warn}' for add_warn in parsing_errors), text=summary)
 
 summary_text = '\n'.join(summary)
 

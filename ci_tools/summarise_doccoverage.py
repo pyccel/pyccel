@@ -1,9 +1,8 @@
 """ Script to check if documentation coverage has decreased
 """
 import argparse
-import importlib
-import inspect
 import json
+import os
 import sys
 
 from list_docs_tovalidate import should_ignore
@@ -69,9 +68,9 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                 "start_line":1,
                 "end_line":1,
                 "path":mod.replace('.','/')+'.py',
-                "message":f"Missing module docstring."
+                "message":"Missing module docstring."
             })
-        print_to_string()
+        print_to_string(text=summary)
     if len(added_obj) > 0:
         print_to_string('### This pull request added these objects without docstrings:', text=summary)
         idx = 0
@@ -89,7 +88,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                     "start_line":start,
                     "end_line":end,
                     "path":file,
-                    "message":f"Missing docstring."
+                    "message":"Missing docstring."
                 })
             if len(objects) == 0:
                 file, start, end = get_code_file_and_lines(cls, base_folder, mod)
@@ -100,7 +99,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                     "start_line":start,
                     "end_line":end,
                     "path":file,
-                    "message":f"Missing docstring."
+                    "message":"Missing docstring."
                 })
         print_to_string(text=summary)
     summary_text = "\n".join(summary)
@@ -114,12 +113,15 @@ if len(added_mod) > 0 or len(added_obj) > 0:
     sys.exit(1)
 
 else:
+    summary = []
+    print_to_string('# Part 1:', text=summary)
+    print_to_string('## Success!', text=summary)
+    print_to_string('### Base Branch Summary', text=summary)
+    print_to_string(results['base_summary'], text=summary)
+    print_to_string('### Compare Branch Summary', text=summary)
+    print_to_string(results['compare_summary'], text=summary)
+    summary_text = "\n".join(summary)
     with open(args.output, "w", encoding="utf-8") as out:
-        print_to_string('# Part 1:', file=out)
-        print_to_string('## Success!', file=out)
-        print_to_string('### Base Branch Summary', file=out)
-        print_to_string(results['base_summary'], file=out)
-        print_to_string('### Compare Branch Summary', file=out)
-        print_to_string(results['compare_summary'], file=out)
+        print(summary_text, file=out)
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
         json.dump({'summary':"# Documentation coverage is complete!"}, json_file)
