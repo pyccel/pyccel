@@ -61,6 +61,9 @@ jobs:
       - name: Setup imports
         run: |
           echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
+          cd compare
+          pip3 install .
+          cd ..
         shell: bash
       - name: Check doc coverage
         id: doc_coverage
