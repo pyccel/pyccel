@@ -1,15 +1,15 @@
 include AUTHORS
-include CHANGES
+include CHANGELOG
 include LICENSE
 include README.md
 
-recursive-include pyccel *.tx
-recursive-include pyccel *.pyh
-recursive-include pyccel *.c
-recursive-include pyccel *.f90
-recursive-include pyccel *.h
-recursive-include pyccel *.pyccel
+recursive-include pyccel/pyccel *.tx
+recursive-include pyccel/pyccel *.pyh
+recursive-include pyccel/pyccel *.c
+recursive-include pyccel/pyccel *.f90
+recursive-include pyccel/pyccel *.h
+recursive-include pyccel/pyccel *.pyccel
 
-graft tutorial
-graft samples
+graft developer_docs
 graft tests
+graft tutorial
