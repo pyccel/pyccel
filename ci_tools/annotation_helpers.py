@@ -73,7 +73,7 @@ def get_code_file_and_lines(obj, pyccel_folder = None, mod_name = None):
         idx = filename.index('pyccel')
         file = '/'.join(filename[idx:])
     else:
-        file = os.path.relpath(file, pyccel_folder)
+        file = os.path.relpath(mod.__file__, pyccel_folder)
 
     if obj_parts:
         # Get the object
