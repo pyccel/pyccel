@@ -140,9 +140,8 @@ messages = extract_dict_elements(error_collection)
 if not messages['annotations']:
     messages['summary'] = "Check Slots\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
     messages.pop('annotations')
-json_data = json.dumps(messages)
 with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
-    json_file.write(json_data)
+    json.dump(messages, json_file)
 
 with open(args.output, "w", encoding="utf-8") as md_file:
     # Report error
