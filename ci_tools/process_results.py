@@ -87,7 +87,7 @@ with open('../test_json_result.json', mode='r', encoding="utf-8") as json_file:
     messages = json.load(json_file)
 
 messages['summary'] += '\n\n'+summary_text
-messages['annotations'].extend(annotations)
+messages.setdefault('annotations', []).extend(annotations)
 
 with open(args.summary, 'a', encoding='utf-8') as f:
     print(summary_text, file=f)
