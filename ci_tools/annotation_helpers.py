@@ -16,9 +16,6 @@ def print_to_string(*args, text):
     *args : tuple
         Positional arguments to print function.
 
-    *kwargs : dict
-        Key word arguments to print function.
-
     text : list
         A list of strings where the output should also be saved.
     """
