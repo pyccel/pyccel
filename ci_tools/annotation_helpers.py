@@ -24,7 +24,7 @@ def print_to_string(*args, text):
     print(*args)
     text.append(' '.join(args)+'\n')
 
-def get_code_file_and_lines(obj, base_folder, mod_name = None):
+def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
     """
     Get the file and the relevant lines for the object.
 
@@ -39,8 +39,9 @@ def get_code_file_and_lines(obj, base_folder, mod_name = None):
         then this is the name of the object inside the module, otherwise
         it may contain the module path.
 
-    base_folder : str
-        The name of the folder to which paths are relative.
+    base_folder : str, optional
+        The name of the folder to which paths are relative. Default is current
+        working directory.
 
     mod_name : str, optional
         The python name of the module (relative to the base folder).
@@ -55,6 +56,9 @@ def get_code_file_and_lines(obj, base_folder, mod_name = None):
     int
         The last line of relevant code.
     """
+    if not base_folder:
+        base_folder = os.getcwd()
+
     obj_parts = obj.split('.')
     if mod_name is None:
         idx = len(obj_parts)
