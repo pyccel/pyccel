@@ -59,6 +59,7 @@ def get_code_file_and_lines(obj, pyccel_folder = None, mod_name = None):
     obj_parts = obj.split('.')
     if mod_name is None:
         idx = len(obj_parts)
+        print(pyccel_folder, obj)
         filename = os.path.join(pyccel_folder, '/'.join(obj_parts[:idx])+'.py')
         while idx > 0 and not os.path.isfile(filename):
             idx -= 1
