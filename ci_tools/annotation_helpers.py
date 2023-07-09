@@ -1,6 +1,7 @@
 """ File containing functionalities which help output the CI annotations easily
 """
 import importlib
+import inspect
 import os
 
 def print_to_string(*args, text):
