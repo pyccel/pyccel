@@ -32,8 +32,7 @@ for branch_file in [args.base, args.compare]:
     n = len(lines)
     i = 0
     while i < n:
-        #modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(f'.{branch}.', 1)[1]
-        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(f'.pyccel.', 1)[1]
+        modname = lines[i].split()[1].strip('"')[:-3].replace('/','.').split(f'.{branch}.', 1)[1]
         i+=1
         while i<n and lines[i].startswith(' - '):
             if lines[i].startswith(' - No module docstring'):
