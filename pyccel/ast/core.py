@@ -308,6 +308,9 @@ class Duplicate(PyccelAstNode):
 
     @property
     def val(self):
+        """
+        Test new
+        """
         return self._val
 
     @property
@@ -421,6 +424,9 @@ class Assign(Basic):
 
     def __repr__(self):
         return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
+
+    def my_test(self):
+        bal
 
     @property
     def lhs(self):
@@ -3649,6 +3655,7 @@ class Declare(Basic):
         external = False,
         module_variable = False
         ):
+        test
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
