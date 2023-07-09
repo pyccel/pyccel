@@ -3649,7 +3649,6 @@ class Declare(Basic):
         external = False,
         module_variable = False
         ):
-        baskdf
         if isinstance(dtype, str):
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
