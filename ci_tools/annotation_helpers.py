@@ -80,9 +80,9 @@ def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
             obj = getattr(obj, o)
 
         # If the object is a class property, get the underlying function
-        method = getattr(method, 'fget', method)
+        obj = getattr(obj, 'fget', obj)
 
-        source, start_line = inspect.getsourcelines(method)
+        source, start_line = inspect.getsourcelines(obj)
         length = len(source)
         return file, start_line, start_line+length-1
     else:
