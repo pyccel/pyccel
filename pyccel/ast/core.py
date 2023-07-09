@@ -308,9 +308,6 @@ class Duplicate(PyccelAstNode):
 
     @property
     def val(self):
-        """
-        Test new
-        """
         return self._val
 
     @property
