@@ -60,8 +60,8 @@ if __name__ == '__main__':
 
     with open(args.output, 'w', encoding="utf-8") as f:
         for file, line_nos in changes.items():
-            with open(file, 'r', encoding="utf-8") as f:
-                tree = ast.parse(f.read())
+            with open(file, 'r', encoding="utf-8") as ast_file:
+                tree = ast.parse(ast_file.read())
             # The prefix variable stores the absolute dotted prefix of all
             # objects in the file.
             # for example: the objects in the file pyccel/ast/core.py will
