@@ -2078,7 +2078,6 @@ class SemanticParser(BasicParser):
 
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
-            methods = list(cls_base.methods) + list(cls_base.interfaces)
             # standard class attribute
             if rhs in attr_name:
                 self._current_class = cls_base
