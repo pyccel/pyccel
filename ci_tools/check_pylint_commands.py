@@ -212,9 +212,8 @@ if __name__ == '__main__':
             slots_data['annotations'].extend(messages['annotations'])
         elif messages['annotations']:
             slots_data.update({'annotations': messages['annotations']})
-    json_data = json.dumps(slots_data)
     with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
-        json_file.write(json_data)
+        json.dump(slots_data, json_file)
     with open(args.output, mode='a', encoding="utf-8") as md_file:
         md_file.write(messages['summary'])
 
