@@ -64,7 +64,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
         for idx, mod in enumerate(added_mod):
             print_to_string(f'{idx + 1}. {mod}', text=summary)
             annotations.append({
-                "annotation_level":"error",
+                "annotation_level":"failure",
                 "start_line":1,
                 "end_line":1,
                 "path":mod.replace('.','/')+'.py',
@@ -80,7 +80,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                 print_to_string(f'{idx + 1}.  {mod}.{cls}', text=summary)
                 idx += 1
                 annotations.append({
-                    "annotation_level":"error",
+                    "annotation_level":"failure",
                     "start_line":start,
                     "end_line":end,
                     "path":file,
@@ -94,7 +94,7 @@ if len(added_mod) > 0 or len(added_obj) > 0:
                 if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
                     level = 'warning'
                 else:
-                    level = 'error'
+                    level = 'failure'
                     print_to_string(f'{idx + 1}.  {mod}.{cls}.{obj_name}', text=summary)
                     idx += 1
                 annotations.append({

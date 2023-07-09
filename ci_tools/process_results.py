@@ -30,7 +30,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
         try:
             file_name, code, msg = line.split(':', maxsplit=2)
             if code in error_codes:
-                level = 'error'
+                level = 'failure'
                 if file_name not in errors:
                     errors[file_name] = [msg]
                 else:
@@ -48,7 +48,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
             if level:
                 file, start, end = get_code_file_and_lines(file_name)
                 annotations.append({
-                    "annotation_level":"error",
+                    "annotation_level":level,
                     "start_line":start,
                     "end_line":end,
                     "path":file,
