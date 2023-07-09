@@ -425,9 +425,6 @@ class Assign(Basic):
     def __repr__(self):
         return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
 
-    def my_test(self):
-        bal
-
     @property
     def lhs(self):
         return self._lhs
