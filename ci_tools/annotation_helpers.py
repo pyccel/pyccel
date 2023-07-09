@@ -22,7 +22,7 @@ def print_to_string(*args, text):
     print(*args)
     text.append(' '.join(args)+'\n')
 
-def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
+def get_code_file_and_lines(obj, mod_name = None):
     """
     Get the file and the relevant lines for the object.
 
@@ -36,10 +36,6 @@ def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
         The name of the object being examined. If mod_name is provided
         then this is the name of the object inside the module, otherwise
         it may contain the module path.
-
-    base_folder : str, optional
-        The name of the folder to which paths are relative. Default is current
-        working directory.
 
     mod_name : str, optional
         The python name of the module (relative to the base folder).
@@ -69,8 +65,9 @@ def get_code_file_and_lines(obj, base_folder = None, mod_name = None):
         obj_parts = obj_parts[idx:]
 
     mod = importlib.import_module(mod_name)
-    print(base_folder, mod.__file__)
-    file = os.path.relpath(mod.__file__, base_folder)
+    filename = mod.__file__.split('.')
+    idx = filename.index('pyccel')
+    file = '/'.join(filename[idx:])
 
     if obj_parts:
         # Get the object
