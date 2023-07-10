@@ -4,6 +4,52 @@ import argparse
 import difflib
 import os
 import sys
+import json
+import re
+
+def find_all_words(file_path, search_word):
+    results = []
+    
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+        for line_number, line in enumerate(lines, start=1):
+            matches = re.finditer(r"\b" + re.escape(search_word) + r"\b", line)
+            
+            for match in matches:
+                column = match.start() + 1
+                results.append((line_number, column))
+
+    if results:
+        return results
+    else:
+        return None
+
+def     annotations_builder(words):
+    annotations = []
+    msg_cus = ""
+
+    for file_info, words in words.items():
+        for word in words:
+            words_list = find_all_words(file_info.strip(":"), word)
+            for line_no, column in words_list:
+                suggestions = difflib.get_close_matches(word, internal_dict)
+                if suggestions:
+                    msg_cus = f" Misspelled word :  Did you mean {w} -> {suggestions}"
+                else:
+                    msg_cus = f"Misspelled word {word}"
+                annotation_1 = {
+                    "path": file_info,
+                    "start_line": line_no,
+                    "end_line": line_no,
+                    "start_column": column,
+                    "end_column": column + len(word),
+                    "annotation_level": "failure",
+                    "message": msg_cus,
+                    "title": "Misspelled word"
+                }
+                annotations.append(annotation_1)
+    return annotations
 
 parser = argparse.ArgumentParser(description='Create a neat markdown file to summarise the results')
 parser.add_argument('spelling', metavar='diffFile', type=str,
@@ -57,6 +103,21 @@ if errors:
 
         print("These errors may be due to typos, capitalisation errors, or lack of quotes around code. If this is a false positive please add your word to `.dict_custom.txt`", file=f)
 
+    # Generating a json file for github check runs
+    outfile = ""
+    output_file = 'test_json_result.json'
+    md = ""
+
+    with open(args.output, 'r', encoding="utf-8") as f:
+        md = f.read()
+    print(md)
+    json_ouput = {
+        "title":"Misspelling summary ",
+        "summary":md,
+        "annotations": annotations_builder(errors)
+    }
+    with open(output_file, 'w') as f:
+        json.dump(json_ouput,f)
     sys.exit(1)
 else:
     sys.exit(0)
