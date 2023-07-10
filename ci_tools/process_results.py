@@ -53,7 +53,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
             parsing_errors.append(line)
         if level:
             file, start, end = get_code_file_and_lines(file_name, pyccel_folder = pyccel_folder)
-            with open(file, 'r', encoding='utf-8') as code_file:
+            with open(os.path.join(pyccel_folder, file), 'r', encoding='utf-8') as code_file:
                 lines = code_file.readlines()[start-1:end+2]
             lines = [l.strip() for l in lines]
             doc_openings = [i for i,l in enumerate(lines) if l.startswith('"""') or l.endswith('"""')]
