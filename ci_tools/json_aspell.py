@@ -53,7 +53,7 @@ def     annotations_builder(words):
 
     for file_info, words in words.items():
         for word in words:
-            words_list = find_all_words("../"+file_info, word)
+            words_list = find_all_words(file_info, word)
             for line_no, column in words_list:
                 annotation_1 = {
                     "path": file_info,
