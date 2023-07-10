@@ -1,20 +1,10 @@
 import json
 import os
-from bot_tools.bot_funcs import Bot
+from bot_tools.bot_funcs import Bot, test_dependencies
 
-coverage_deps = ['linux']
-
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling', 'Codacy']
 
-
-def get_name_key(name):
-    if name == "Codacy Static Analysis":
-        return "Codacy"
-    elif '(' in name:
-        return name.split('(')[1].split(',')[0]
-    else:
-        return name
 
 # Parse event payload from $GITHUB_EVENT_PATH variable
 # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
@@ -25,33 +15,38 @@ with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
 
 name = event['check_run']['name']
 
-name_key = get_name_key(name)
-
 print(event)
 
 print(event['check_run']['pull_requests'])
 bot = Bot(pr_id = next(p['number'] for p in event['check_run']['pull_requests']), commit = event['check_run']['head_sha'])
 
+name_key = bot.get_name_key(name)
+
 runs = bot.get_check_runs()
 
 print("Runs: ", runs)
 
-all_run_names = [get_name_key(r['name']) for r in runs]
+all_run_names = [bot.get_name_key(r['name']) for r in runs]
 successful_runs = [n for n,r in zip(all_run_names, runs) if r['conclusion'] == "success"]
 completed_runs = [n for n,r in zip(all_run_names, runs) if r['status'] == "completed"]
+queued_runs = [r for r in runs if r['status'] == "queued"]
 
 print("Successful:", successful_runs)
 print("Completed:", completed_runs)
 
-if name_key in coverage_deps and 'coverage' in all_run_names:
-    coverage_run = next(r for n, r in zip(all_run_names, runs) if n == 'coverage')
-    if all(c in successful_runs for c in coverage_deps):
-        python_version = coverage_run["name"].split('(')[1].split(',')[1].split(')')[0].strip()
-        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success"]
-        print("Searching for ids: ", workflow_ids)
-        bot.run_test('coverage', python_version, coverage_run["id"], workflow_ids)
-    elif all(c in completed_runs for c in coverage_deps):
-        bot.GAI.update_run(coverage_run["id"], {'conclusion':'cancelled', 'status':"completed"})
+for q in queued_runs:
+    q_name = q['name']
+    deps = test_dependencies.get(bot.get_name_key(q_name), ())
+    if name_key in deps:
+        if all(d in successful_runs for d in deps):
+            q_key = q_name.split('(')[1].split(')')[0].strip()
+            q_name, python_version = q_key.split(',')
+            workflow_ids = None
+            if q_name == 'coverage':
+                workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success" and '(' in r['name']]
+            bot.run_test(q_name, python_version, q["id"], workflow_ids)
+        elif all(d in completed_runs for d in deps):
+            bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
 if all(k in completed_runs for k in pr_test_keys):
     if all(k in successful_runs for k in pr_test_keys):

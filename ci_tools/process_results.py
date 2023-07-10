@@ -1,7 +1,10 @@
 """ Script to process the output of numpydoc validator"
 """
 import argparse
+import json
 import sys
+
+from annotation_helpers import print_to_string, get_code_file_and_lines
 
 parser = argparse.ArgumentParser(description='Process the output of numpydoc validator')
 parser.add_argument('report', metavar='report', type=str,
@@ -21,23 +24,36 @@ warning_codes = ['EX01', 'SA01']
 errors = {}
 warnings = {}
 parsing_errors = []
+annotations = []
 with open(args.report, 'r', encoding='utf-8') as f:
     for line in f:
         try:
             file_name, code, msg = line.split(':', maxsplit=2)
             if code in error_codes:
+                level = 'failure'
                 if file_name not in errors:
                     errors[file_name] = [msg]
                 else:
                     errors[file_name].append(msg)
                 parsing_errors.append(line)
             elif code in warning_codes:
+                level = 'warning'
                 if file_name not in warnings:
                     warnings[file_name] = [msg]
                 else:
                     warnings[file_name].append(msg)
             else:
+                level = None
                 parsing_errors.append(line)
+            if level:
+                file, start, end = get_code_file_and_lines(file_name)
+                annotations.append({
+                    "annotation_level":level,
+                    "start_line":start,
+                    "end_line":end,
+                    "path":file,
+                    "message":msg
+                })
         # This catch is for errors that arise from the line split
         # when the line does not follow the file:err_code_msg pattern
         # ie, in the case of parsing errors.
@@ -46,23 +62,38 @@ with open(args.report, 'r', encoding='utf-8') as f:
 
 fail = len(errors) > 0 or len(parsing_errors) > 0
 
+summary = []
+
+print_to_string('# Part 2 : Numpydoc Validation:', text=summary)
+print_to_string(f'## {"FAILURE" if fail else "SUCCESS"}!', text=summary)
+if fail:
+    print_to_string('### ERRORS!', text=summary)
+for file_name, errs in errors.items():
+    print_to_string(f'#### {file_name}', text=summary)
+    print_to_string(''.join(f'- {err}' for err in errs), text=summary)
+if len(warnings) > 0:
+    print_to_string('### WARNINGS!', text=summary)
+for file_name, warns in warnings.items():
+    print_to_string(f'#### {file_name}', text=summary)
+    print_to_string(''.join(f'- {warn}' for warn in warns), text=summary)
+if len(parsing_errors) > 0:
+    print_to_string('### PARSING ERRORS!', text=summary)
+    parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]
+    print_to_string(''.join(f'{add_warn}' for add_warn in parsing_errors), text=summary)
+
+summary_text = '\n'.join(summary)
+
+with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
+    messages = json.load(json_file)
+
+messages['summary'] += '\n\n'+summary_text
+messages.setdefault('annotations', []).extend(annotations)
+
 with open(args.summary, 'a', encoding='utf-8') as f:
-    print('# Part 2 : Numpydoc Validation:', file=f)
-    print(f'## {"FAILURE" if fail else "SUCCESS"}!', file=f)
-    if fail:
-        print('### ERRORS!', file=f)
-    for file_name, errs in errors.items():
-        print(f'#### {file_name}', file=f)
-        print(''.join(f'- {err}' for err in errs), file=f)
-    if (len(warnings) > 0):
-        print('### WARNINGS!', file=f)
-    for file_name, warns in warnings.items():
-        print(f'#### {file_name}', file=f)
-        print(''.join(f'- {warn}' for warn in warns), file=f)
-    if (len(parsing_errors) > 0):
-        print('### PARSING ERRORS!', file=f)
-        parsing_errors = ['\n' if 'warn(msg)' in err else err for err in parsing_errors]
-        print(''.join(f'{add_warn}' for add_warn in parsing_errors), file=f)
+    print(summary_text, file=f)
+
+with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
+    json.dump(messages, json_file)
 
 sys.exit(fail)
 

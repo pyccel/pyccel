@@ -217,6 +217,34 @@ class GitHubAPIInteractions:
         assert run.status_code == 200
         return run
 
+    def rerequest_run(self, run_id):
+        """
+        Rerequest an existing check run.
+
+        Rerequest the check run with id "run_id" as described here:
+        https://docs.github.com/en/rest/checks/runs?apiVersion=2022-11-28#rerequest-a-check-run
+
+        Parameters
+        ----------
+        run_id : int
+            The id of the check run.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully rerequested.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}/rerequest"
+        run = self._post_request("PATCH", url)
+        print(run.text)
+        assert run.status_code == 201
+        return run
+
     def get_pr_details(self, pr_id):
         """
         Get the details of a pull request.
@@ -262,6 +290,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/workflows/{filename}/dispatches"
         json = {"ref": "devel",
                 "inputs": inputs}
+        print(url, json)
         reply = self._post_request("POST", url, json)
         print(reply.text)
         assert reply.status_code == 204
