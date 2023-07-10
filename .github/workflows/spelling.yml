@@ -61,8 +61,8 @@ jobs:
         id: manual_spelling
         run: |
           FILES=$(echo -e "import yaml\nfor f in yaml.safe_load(open('.pyspelling.yml'))['matrix'][0]['sources']:\n    print(f)" | python3)
-          grep python -w ${FILES}
+          python ci_tools/check_python_capitalisation.py $GITHUB_STEP_SUMMARY $FILES
       - name: "Post completed"
         if: always()
         run:
-          python ci_tools/complete_check_run.py ${{ steps.spelling.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.spelling.outcome }} ${{ steps.manual_spelling.outcome }}
