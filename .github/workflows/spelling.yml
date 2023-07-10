@@ -55,7 +55,6 @@ jobs:
         id: spelling
         run: |
            python -m pyspelling > misspellings.txt || true
-           python ci_tools/json_aspell.py misspellings.txt
            cat misspellings.txt
            python ci_tools/summarise_pyspelling.py misspellings.txt $GITHUB_STEP_SUMMARY
       - name: Common spelling problems
