@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import re
+import sys
 
 from annotation_helpers import locate_code_blocks, is_text, print_to_string
 
@@ -35,7 +36,7 @@ if __name__ == '__main__':
                     end = py_match.end()
                     if is_text(l, start, end, line_num, code_blocks):
                         annotations.append({
-                            "annotation_level":"error",
+                            "annotation_level":"failure",
                             "start_line":line_num,
                             "end_line":line_num,
                             "start_column":start+1,
@@ -65,3 +66,6 @@ if __name__ == '__main__':
     with open(p_args.output, mode='a', encoding="utf-8") as md_file:
         for l in output.values():
             md_file.write(''.join(l))
+
+    if annotations:
+        sys.exit(1)
