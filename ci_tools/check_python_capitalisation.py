@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     files = p_args.files
 
-    python_regex = re.compile(r'\bpython\b')
+    python_regex = re.compile(r'[^a-zA-Z]python[^a-zA-Z]')
 
     annotations = []
     output = {}
@@ -51,6 +51,8 @@ if __name__ == '__main__':
                     idx = end
                 else:
                     idx = n
+        if f in output:
+            print_to_string("", text = output[f])
 
     # Temporary if to be removed when spelling test outputs errors
     if os.path.exists('test_json_result.json'):
@@ -61,11 +63,13 @@ if __name__ == '__main__':
     if annotations:
         messages['summary'] += "# Python should be capitalised\n"
         messages.setdefault('annotations', []).extend(annotations)
-    with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
-        json.dump(messages, json_file)
     with open(p_args.output, mode='a', encoding="utf-8") as md_file:
         for l in output.values():
-            md_file.write(''.join(l))
+            text = ''.join(l)
+            md_file.write(text)
+            messages['summary'] += text
+    with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
+        json.dump(messages, json_file)
 
     if annotations:
         sys.exit(1)
