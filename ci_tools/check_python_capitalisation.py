@@ -1,5 +1,8 @@
+""" Look for instances of python which are not capitalised and report errors
+"""
 import argparse
 import json
+import os
 import re
 
 from annotation_helpers import locate_code_blocks, is_text, print_to_string
@@ -48,8 +51,12 @@ if __name__ == '__main__':
                 else:
                     idx = n
 
-    with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
-        messages = json.load(json_file)
+    # Temporary if to be removed when spelling test outputs errors
+    if os.path.exists('test_json_result.json'):
+        with open('test_json_result.json', mode='r', encoding="utf-8") as json_file:
+            messages = json.load(json_file)
+    else:
+        messages = {'summary':''}
     if annotations:
         messages['summary'] += "# Python should be capitalised\n"
         messages.setdefault('annotations', []).extend(annotations)
