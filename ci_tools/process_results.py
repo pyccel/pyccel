@@ -65,7 +65,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
             if code.startswith('PR'):
                 changed = False
                 if msg.startswith('Parameter "'):
-                    _, key, _ = msg.split('"', 3)
+                    _, key, _ = msg.split('"', 2)
                     try:
                         start = start + next(i for i,l in enumerate(lines) if l.startswith(key))
                         end = start
