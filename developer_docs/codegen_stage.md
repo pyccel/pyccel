@@ -47,7 +47,7 @@ This separation has not always been done with as much thought as necessary so im
 ## Adding variables
 
 Although the semantic layer usually takes care of creating all variables required it is occasionally necessary to create a variable in the code generation stage (e.g. the iteration index used when printing an array).
-Where possible this should be done using the function [`Scope.get_temporary_variable`](../python/parser/scope.py). Hello python. My code `python`.
+Where possible this should be done using the function [`Scope.get_temporary_variable`](../pyccel/parser/scope.py).
 If for some reason it is not possible to use this function (e.g. because a `DottedVariable` must be created) then it is important to use `Scope.insert_variable` to insert the variable into the scope.
 This ensures that it will be correctly declared.
 
