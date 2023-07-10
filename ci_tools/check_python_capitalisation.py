@@ -32,14 +32,14 @@ if __name__ == '__main__':
             while idx < n:
                 py_match = python_regex.search(l, idx)
                 if py_match:
-                    start = py_match.start()
-                    end = py_match.end()
+                    start = py_match.start()+1
+                    end = py_match.end()-1
                     if is_text(l, start, end, line_num, code_blocks):
                         annotations.append({
                             "annotation_level":"failure",
                             "start_line":line_num,
                             "end_line":line_num,
-                            "start_column":start+1,
+                            "start_column":start,
                             "end_column":end,
                             "path":f,
                             "message": "`python` should be capitalised."

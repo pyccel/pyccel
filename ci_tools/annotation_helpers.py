@@ -152,22 +152,36 @@ def is_text(line, start, end, line_number, code_blocks):
         idx = -1
         last_block_was_text = False
         in_link = False
+        in_url = False
         while idx < start:
             if in_link:
                 link_idx = line[idx+1:].find(')')
                 assert link_idx != -1
                 code_idx = n
+                url_idx = n
+            elif in_url:
+                url_idx = line[idx+1:].find('>')
+                assert url_idx != -1
+                code_idx = n
+                link_idx = n
             else:
                 code_idx = line[idx+1:].find('`')
                 link_idx = line[idx+1:].find('](')
+                url_idx = line[idx+1:].find('<')
                 if code_idx == -1:
                     code_idx = n
                 if link_idx == -1:
                     link_idx = n
+                if url_idx == -1:
+                    url_idx = n
 
-            if link_idx < code_idx:
+            nearest_match = min(code_idx, link_idx, url_idx)
+
+            if nearest_match == url_idx:
+                in_url = not in_url
+            elif nearest_match == link_idx:
                 in_link = not in_link
-            idx += min(code_idx, link_idx)+1
+            idx += nearest_match+1
             last_block_was_text = not last_block_was_text
 
         return last_block_was_text
