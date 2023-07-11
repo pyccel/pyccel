@@ -400,10 +400,10 @@ class Bot:
 
         if following_review:
             if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
-                if new_stage = "needs_initial_review":
+                if new_stage == "needs_initial_review":
                     message = message_from_file('new_pr.txt').format(author=author)
                     leave_comment(pr_id, message)
-                elif new_stage = 'Ready_for_review':
+                elif new_stage == 'Ready_for_review':
                     names = ', '.join(f'@{r}' for r in senior_reviewer)
                     approved = ', '.join(f'@{a}' for a in approving_reviewers)
                     message = message_from_file('senior_review.txt').format(
