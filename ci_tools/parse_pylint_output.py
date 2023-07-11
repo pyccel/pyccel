@@ -37,7 +37,7 @@ if __name__ == '__main__':
         output = "# Success! No pylint errors found\n"
 
     annotations = []
-    for mod, msgs in pylint_results:
+    for mod, msgs in pylint_results.items():
         output += f"## Errors found in module {mod}\n"
         for m in msgs:
             output += f"-  On line {m.line} : {m.message}\n"
