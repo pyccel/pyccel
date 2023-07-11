@@ -104,7 +104,7 @@ class GitHubAPIInteractions:
         Parameters
         ----------
         branch_name : str
-            The name of the branch
+            The name of the branch.
 
         Returns
         -------
