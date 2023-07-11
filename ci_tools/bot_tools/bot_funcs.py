@@ -200,6 +200,9 @@ class Bot:
                 "conclusion": conclusion,
                 }
         if result:
+            if "annotations" in result:
+                if(len(result["annotations"]) > 50):
+                    result["annotations"] = result["annotations"][0:50:1]
             result['title'] = os.environ['GITHUB_WORKFLOW']
             params["output"] = result
         try:
