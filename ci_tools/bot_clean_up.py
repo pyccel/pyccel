@@ -48,8 +48,39 @@ for q in queued_runs:
         elif all(d in completed_runs for d in deps):
             bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
-if all(k in completed_runs for k in pr_test_keys):
-    if all(k in successful_runs for k in pr_test_keys):
-        bot.mark_as_ready()
-    else:
-        bot.mark_as_draft()
+draft = bot.is_pr_draft()
+
+if not draft:
+
+    events = bot.GAI.get_events(bot._pr_id)
+
+    print(events)
+
+    shas = [e.get('sha', None) for e in events]
+    print(shas)
+    print(event['check_run']['head_sha'])
+    start_idx = next(s == event['check_run']['head_sha'] for s in shas)
+    try:
+        end_idx = next(s is not None for s in shas[start_idx+1:])
+    except StopIteration:
+        end_idx = len(shas)
+
+    relevant_events = events[:end_idx]
+    print(start_idx, end_idx)
+
+    print()
+    print("---------------------------------------------------------------------------")
+    print()
+
+    print(relevant_events)
+
+    event_types = [e['event'] for e in relevant_events]
+
+    ready_events = [e for e in event_types if e in ('ready_for_review', 'convert_to_draft')]
+
+    if ready_events and ready_events[-1] == 'ready_for_review':
+        if event['check_run']['conclusion'] not in ('success', 'skipped'):
+            bot.mark_as_draft()
+        elif all(k in completed_runs for k in pr_test_keys) and \
+             all(k in successful_runs for k in pr_test_keys):
+            print("TODO")
