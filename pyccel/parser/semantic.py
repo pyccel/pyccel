@@ -3844,7 +3844,6 @@ class SemanticParser(BasicParser):
         assert(var.rank==1)
         size = var.shape[0]
         for i in range(len(size)):
-            print(size[i])
             var+1
         return StarredArguments([var[i] for i in range(size)])
 
