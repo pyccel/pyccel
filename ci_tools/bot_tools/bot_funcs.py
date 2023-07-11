@@ -528,6 +528,8 @@ class Bot:
             return self._pr_id
         else:
             possible_prs = self._GAI.get_prs()
+            print(self._ref)
+            print([pr['head']['sha'] for pr in possible_prs])
             self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
             return self._pr_id
 
