@@ -6,7 +6,7 @@ Pyccel's main goal is to resolve the principal bottleneck in scientific computin
 Programmers usually develop their prototype code in a user-friendly interactive language like Python, but their final application requires an HPC implementation and therefore a new production code.
 In most cases this is written in a statically compiled language like Fortran/C/C++, and it uses SIMD vectorisation, parallel multi-threading, MPI parallelisation, GPU offloading, etc.
 
-We blobliblobliblo that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
+We believe that this expensive process can be avoided, or at least drastically reduced, by using Pyccel to accelerate the most computationally intensive parts of the Python prototype.
 Not only is the Pyccel-generated Fortran or C code very fast, but it is **human-readable**; hence the expert programmer can easily profile the code on the target machine and further optimise it.
 
 ## Some Useful Background
@@ -16,7 +16,7 @@ In particular, it is worth clarifying the difference between an object and a var
 
 ### Python object
 
--   Is created by the Python blobliblobliblo when `object.__new__()` is invoked (e.g. as a result of an expression).
+-   Is created by the Python interpreter when `object.__new__()` is invoked (e.g. as a result of an expression).
 -   Can be either **mutable** or **immutable**, but its type never changes.
 -   Resides in memory and has a **reference count**.
 -   Is accessed through one or more Python variables.
@@ -69,7 +69,7 @@ z = y + 1j   # complex
 
 ### Assumptions and Restrictions
 
-Because the type of a variable must be blobliblobliblo within a given **scope**, Pyccel cannot support some of the flexibility that Python provides.
+Because the type of a variable must be unique within a given **scope**, Pyccel cannot support some of the flexibility that Python provides.
 The following basic restrictions apply:
 
 1.  The type of a variable cannot be changed
@@ -164,7 +164,7 @@ int main()
 ```
 #### Example 2: extension module
 
-If the Python file to be accelerated only blobliblobliblo functions and class definitions, Pyccel will treat it as a Python module instead of just a script.
+If the Python file to be accelerated only contains functions and class definitions, Pyccel will treat it as a Python module instead of just a script.
 Accordingly, it will not generate a program, but rather a Python C extension module which can be imported from Python.
 
 For example, we now consider the Python module `mod.py`, which reads
@@ -445,7 +445,7 @@ After subtracting the amount of time required to create an array copy from the g
 
 ## Other Features
 
-Pyccel's generated code can use parallel multi-threading blobliblobliblo [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
+Pyccel's generated code can use parallel multi-threading through [OpenMP](https://en.wikipedia.org/wiki/OpenMP); please read [our documentation](https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md) for more details.
 
 We are also working on supporting [MPI](https://en.wikipedia.org/wiki/Open_MPI), [LAPACK](https://en.wikipedia.org/wiki/LAPACK)/[BLAS](https://en.wikipedia.org/wiki/Basic_Linear_Algebra_Subprograms), and [OpenACC](https://en.wikipedia.org/wiki/OpenACC).
 
