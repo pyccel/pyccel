@@ -22,7 +22,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 -   `h5py` (not available yet)
 
 Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
-The results for the master branch currently show the following performance on python 3.10:
+The results for the master branch currently show the following performance on Python 3.10:
 ![Pyccel execution times for master branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.svg)
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
@@ -244,7 +244,7 @@ os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64
 
 These commands must be run every time a Python instance is opened which will import a Pyccel-generated library.
 
-If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
+If you use Pyccel often and aren't scared of debugging any potential DLL confusion from other libraries. You can use a `.pth` file to run the necessary commands automatically. The location where the `.pth` file should be installed is described in the [Python docs](https://docs.python.org/3/library/site.html). Once the site is located you can run:
 ```sh
 echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" > $SITE_PATH/dll_path.pth
 ```
@@ -288,7 +288,7 @@ for a system-wide installation.
     pip3 install --user -e ".[test]"
     ```
 
-this will install a _python_ library **Pyccel** and a _binary_ called **`pyccel`**.
+this will install a _Python_ library **Pyccel** and a _binary_ called **`pyccel`**.
 Any required Python packages will be installed automatically from PyPI.
 
 ### On a read-only system
@@ -325,7 +325,7 @@ Pyccel container images are available through both Docker Hub (<docker.io>) and 
 The images:
 
 -   are based on `ubuntu:latest`
--   use distro packaged python3, GCC, GFortran, BLAS and OpenMPI
+-   use distro packaged Python3, GCC, GFortran, BLAS and OpenMPI
 -   support all Pyccel releases except the legacy "0.1"
 
 Image tags match Pyccel releases.

@@ -1,12 +1,13 @@
-name: Bot comment handler
+name: Bot
 
 on:
-  issue_comment:
-    types: [ created ]
+  pull_request:
+    branches: [ devel ]
+    types: [ ready_for_review ]
 
 jobs:
   Bot:
-    if: ${{ startsWith( github.event.comment.body, '/bot ' ) }}
+    name: Preparing Pull Request for review stage
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -24,8 +25,9 @@ jobs:
           bot_pem: "${{ secrets.BOT_PEM }}"
       - id: run_bot
         run: |
-          python ci_tools/bot_comment_react.py
+          python ci_tools/bot_ready_for_review.py
         env:
           GH_TOKEN: ${{ github.token }}
           installation_token: ${{ steps.token.outputs.installation_token }}
           installation_token_exp: ${{ steps.token.outputs.installation_token_expiry }}
+

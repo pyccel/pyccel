@@ -9,11 +9,12 @@ default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
         'coverage': '3.7',
-        'doc_coverage': '3.8',
+        'docs': '3.8',
         'linux': '3.7',
         'macosx': '3.10',
         'pickle_wheel': '3.7',
         'pickle': '3.8',
+        'editable_pickle': '3.8',
         'pyccel_lint': '3.8',
         'pylint': '3.8',
         'spelling': '3.8',
@@ -24,18 +25,24 @@ test_names = {
         'anaconda_linux': "Unit tests on Linux with anaconda",
         'anaconda_windows': "Unit tests on Windows with anaconda",
         'coverage': "Coverage verification",
-        'doc_coverage': "Check documentation",
+        'docs': "Check documentation",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
         'pickle_wheel': "Test pickling during wheel installation",
         'pickle': "Test pickling during source installation",
+        'editable_pickle': "Test pickling during editable source installation",
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
         'windows': "Unit tests on Windows"
         }
 
-tests_with_base = ('coverage', 'doc_coverage', 'pyccel_lint')
+test_dependencies = {'coverage':['linux']}
+
+tests_with_base = ('coverage', 'docs', 'pyccel_lint')
+
+pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+                'pyccel_lint', 'spelling')
 
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
@@ -97,6 +104,10 @@ class Bot:
             self._base = self._pr_details["base"]["sha"]
         if commit:
             self._ref = commit
+            if '/' in self._ref:
+                _, _, branch = self._ref.split('/')
+                branch_info = self._GAI.get_branch_details(branch)
+                self._ref = branch_info['commit']['sha']
         else:
             self._ref = self._pr_details["head"]["sha"]
 
@@ -135,7 +146,7 @@ class Bot:
         posted = self._GAI.create_run(self._ref, name)
         return posted
 
-    def post_in_progress(self):
+    def post_in_progress(self, rerequest = False):
         """
         Update a check run to indicate that the run is in progress.
 
@@ -152,6 +163,8 @@ class Bot:
         AssertionError
             An assertion error is raised if the check run was not successfully updated.
         """
+        if rerequest:
+            return self._GAI.rerequest_run(self._check_run_id, inputs).json()
         inputs = {
                 "status":"in_progress",
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
@@ -245,7 +258,10 @@ class Bot:
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
         else:
-            already_triggered = [c["name"] for c in self._GAI.get_check_runs(self._ref)['check_runs']]
+            check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
+            already_triggered = [c["name"] for c in check_runs if c['status'] == 'completed']
+            already_triggered_names = [self.get_name_key(t) for t in already_triggered]
+            already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
             for t in tests:
                 pv = python_version or default_python_versions[t]
@@ -253,9 +269,19 @@ class Bot:
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
-                posted = self._GAI.prepare_run(self._ref, name)
-                if t != "coverage":
-                    self.run_test(t, pv, posted["id"])
+                if key not in already_programmed:
+                    posted = self._GAI.prepare_run(self._ref, name)
+                else:
+                    posted = already_programmed[key]
+
+                deps = test_dependencies.get(t, ())
+                print(already_triggered_names, deps)
+                if all(d in already_triggered_names for d in deps):
+                    workflow_ids = None
+                    if t == 'coverage':
+                        print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                    self.run_test(t, pv, posted["id"], workflow_ids)
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
         """
@@ -293,6 +319,9 @@ class Bot:
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
+        elif test == "editable_pickle":
+            test = "pickle"
+            inputs["editable_string"] = "-e"
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def mark_as_draft(self):
@@ -577,3 +606,26 @@ class Bot:
         Get the full name of the repository being handled.
         """
         return self._repo
+
+    def get_name_key(self, name):
+        """
+        Get the name used as a key from the full run name.
+
+        Get the name used as a key to dictionaries including test_names and
+        default_python_versions from the full name reported in the check
+        run.
+
+        Parameter
+        ---------
+        name : str
+            The name saved in the check run.
+
+        Returns
+        -------
+        str
+            The name which can be used as a key.
+        """
+        if '(' in name:
+            return name.split('(')[1].split(',')[0]
+        else:
+            return name

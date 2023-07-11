@@ -1,13 +1,9 @@
-import argparse
 import json
 import os
-from bot_tools.bot_funcs import Bot
-
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'doc_coverage', 'pylint',
-                'pyccel_lint', 'spelling']
+from bot_tools.bot_funcs import Bot, pr_test_keys
 
 def get_unique_test_list(keys):
-    tests = set(command_words[1:])
+    tests = set(keys)
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     t = tests.discard('pr_tests')
@@ -44,7 +40,8 @@ elif command_words[0] == 'run':
 
 elif command_words[0] == 'try':
     if bot.is_user_trusted(event['comment']['user']['login']):
-        bot.run_tests(get_unique_test_list(command_words[1:]), command_words[1])
+        print(command_words, get_unique_test_list(command_words[2:]), command_words[1])
+        bot.run_tests(get_unique_test_list(command_words[2:]), command_words[1])
     else:
         bot.warn_untrusted()
 

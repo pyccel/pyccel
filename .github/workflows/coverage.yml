@@ -21,6 +21,9 @@ on:
       pr_id:
         required: true
         type: id
+      pr_repo:
+        required: false
+        type: string
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -28,6 +31,7 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_ID: ${{ inputs.pr_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
   CoverageChecker:
@@ -39,6 +43,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -72,8 +77,8 @@ jobs:
         run: |
           git fetch
           git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
-          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           git checkout ${{ env.COMMIT }}
+          git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Check coverage
         id: coverage
