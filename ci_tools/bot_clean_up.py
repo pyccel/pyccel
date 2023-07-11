@@ -78,6 +78,6 @@ if not draft:
     if ready_events and ready_events[-1] == 'ready_for_review':
         if event['check_run']['conclusion'] not in ('success', 'skipped'):
             bot.mark_as_draft()
-        elif all(k in completed_runs for k in pr_test_keys) and
+        elif all(k in completed_runs for k in pr_test_keys) and \
              all(k in successful_runs for k in pr_test_keys):
             print("TODO")
