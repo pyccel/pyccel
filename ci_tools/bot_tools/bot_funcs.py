@@ -588,6 +588,10 @@ class Bot:
                                  reply_to = comment_id)
         print(reply.text)
 
+    def is_pr_draft(self):
+        print(self._pr_details)
+        return self._pr_details['draft']
+
     @property
     def GAI(self):
         """
