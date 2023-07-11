@@ -18,3 +18,4 @@ jobs:
         shell: bash
         env:
           PEM: ${{ secrets.BOT_PEM }}
+          GH_TOKEN: ${{ github.token }}
