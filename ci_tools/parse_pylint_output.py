@@ -2,6 +2,8 @@
 """
 import argparse
 from collections import namedtuple
+import json
+import sys
 
 PylintMessage = namedtuple('PylintMessage', ['file','line', 'position', 'message'])
 
