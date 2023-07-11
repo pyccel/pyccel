@@ -614,6 +614,66 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
         return self._post_request("GET", url).json()
 
+    def clear_labels(self, pr_id, labels):
+        """
+        Remove the specified labels from the indicated pull request.
+
+        Use the API to remove the specified labels from the indicated pull
+        request as described here:
+        https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28#remove-a-label-from-an-issue
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        labels : list of str
+            A list containing the names of the labels to be removed.
+        """
+        for l in labels:
+            url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels/{l}"
+            self._post_request("DELETE", url)
+
+    def add_labels(self, pr_id, labels):
+        """
+        Add the specified labels to the indicated pull request.
+
+        Use the API to add the specified labels from the indicated pull
+        request as described here:
+        https://docs.github.com/en/rest/issues/labels?apiVersion=2022-11-28#add-labels-to-an-issue
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        labels : list of str
+            A list containing the names of the labels to be added.
+        """
+        assert labels
+        url = f"https://api.github.com/repos/OWNER/REPO/issues/ISSUE_NUMBER/labels"
+        self._post_request("POST", url, {"labels":labels})
+
+    def get_current_labels(self, pr_id):
+        """
+        Get a description of all labels currently on the pull request.
+
+        Use the API to get a description of all labels currently used
+        on the specified pull request.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        Returns
+        -------
+        list of dict
+            A list of dictionaries describing each of the labels.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
+        return self._post_request("POST", url).json()
+
     def get_headers(self):
         """
         Get the header which is always passed to the API.
