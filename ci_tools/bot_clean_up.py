@@ -48,8 +48,12 @@ for q in queued_runs:
         elif all(d in completed_runs for d in deps):
             bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
-if all(k in completed_runs for k in pr_test_keys):
-    if all(k in successful_runs for k in pr_test_keys):
-        bot.mark_as_ready()
-    else:
-        bot.mark_as_draft()
+events = bot.GAI.get_events(bot._pr_id)
+
+print(events)
+
+#if all(k in completed_runs for k in pr_test_keys):
+#    if all(k in successful_runs for k in pr_test_keys):
+#        bot.mark_as_ready()
+#    else:
+#        bot.mark_as_draft()

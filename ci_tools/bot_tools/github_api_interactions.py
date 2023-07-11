@@ -590,6 +590,30 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         return self._post_request("GET", url).json()
 
+    def get_events(self, pr_id):
+        """
+        Get a timeline of events which occured on a given pull request.
+
+        Use the API to get a list of events on a pull request as described
+        here:
+        https://docs.github.com/en/rest/issues/timeline?apiVersion=2022-11-28
+
+        These events are described here:
+        https://docs.github.com/en/webhooks-and-events/events/issue-event-types
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        Returns
+        -------
+        dict
+            A dictionary describing the events.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/timeline"
+        return self._post_request("GET", url).json()
+
     def get_headers(self):
         """
         Get the header which is always passed to the API.
