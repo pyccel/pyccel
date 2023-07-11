@@ -11,7 +11,7 @@ Different ndarrays can share the same data, so that changes made in one ndarray 
 
 Pyccel uses the same implementation as NumPy ndarrays with some rules due to the difference between the host language (Python) "dynamically typed / internal garbage collector" and the target languages such as C and Fortran which are statically typed languages and don't have a garbage collector.
 
-Im Folgenden zeigen wir einige Regeln, die Pyccel festgelegt hat, um diese Unterschiede zu behandeln.
+Below we will show some rules that Pyccel has set to handles those differences.
 
 ### Dynamically and statically typed languages ###
 
