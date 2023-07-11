@@ -26,7 +26,7 @@ def find_all_words(file_path, search_word):
     """
     results = []
 
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding="utf-8) as file:
         lines = file.readlines()
         for line_number, line in enumerate(lines, start=1):
             matches = re.finditer(r"\b" + re.escape(search_word) + r"\b", line)
@@ -120,7 +120,7 @@ if errors:
         "summary":md,
         "annotations": annotations
     }
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding="utf-8) as f:
         json.dump(json_ouput,f)
     sys.exit(1)
 else:
