@@ -45,9 +45,9 @@ if __name__ == '__main__':
             output += f"-  On line {m.line} : {m.message}\n"
             annotations.append({
                                 'path':m.file,
-                                'start_line':m.line,
-                                'end_line':m.line,
-                                'start_column':m.position,
+                                'start_line':int(m.line),
+                                'end_line':int(m.line),
+                                'start_column':int(m.position),
                                 'annotation_level':'failure',
                                 'message':m.message})
 
