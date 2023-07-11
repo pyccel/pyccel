@@ -611,7 +611,7 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the events.
         """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/timeline"
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
         return self._post_request("GET", url).json()
 
     def get_headers(self):
