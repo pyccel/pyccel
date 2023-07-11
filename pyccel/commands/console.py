@@ -30,10 +30,10 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     """
     Pyccel console command.
 
-    Der Pyccel-Konsolenbefehl ermöglicht die Übersetzung von Python-Dateien mit Pyccel in einer Befehlszeilenumgebung. Es bietet
-    Optionen zum Angeben der zu übersetzenden Dateien, zum Aktivieren der Unterstützung für MPI, OpenMP und OpenACC und zum Festlegen der Ausgabe
-    Verzeichnis für die übersetzten Dateien und wählen Sie den Compiler aus, der für die Übersetzung verwendet werden soll. Standardmäßig alle Parameter
-    sind auf „Keine“ gesetzt und der Befehl verwendet das von Pyccel definierte Standardverhalten.
+    The Pyccel console command allows translating Python files using Pyccel in a command-line environment. It provides
+    options to specify the files to be translated, enable support for MPI, OpenMP, and OpenACC, specify the output
+    directory for the translated files, and choose the compiler to be used for translation. By default, all parameters
+    are set to None, and the command will use the default behavior defined by Pyccel.
 
     Parameters
     ----------
