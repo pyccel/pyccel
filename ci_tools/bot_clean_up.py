@@ -57,6 +57,8 @@ if not draft:
     print(events)
 
     shas = [e.get('sha', None) for e in events]
+    print(shas)
+    print(event['check_run']['head_sha'])
     start_idx = next(s == event['check_run']['head_sha'] for s in shas)
     try:
         end_idx = next(s is not None for s in shas[start_idx+1:])
@@ -64,6 +66,7 @@ if not draft:
         end_idx = len(shas)
 
     relevant_events = events[:end_idx]
+    print(start_idx, end_idx)
 
     print()
     print("---------------------------------------------------------------------------")
