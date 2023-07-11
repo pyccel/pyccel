@@ -12,7 +12,7 @@ In this example the argument **a**, could either be an integer or float, and the
 def f(a,b):
 	pass
 ```
-In this example The Argumente **a** and **b**, should both be integers or floats at the same time:
+In this example The arguments **a** and **b**, should both be integers or floats at the same time:
 ```python
 #$ header template T(int|real)
 #$ header function f(T, T)
@@ -23,7 +23,7 @@ When a function is declared using a header comment as above:
 -   The function can access the templates declared in its parent's scopes.
 -   A template declared in the same scope as the function overrides any template with the same name in the parent's scopes.
 #### Examples
-In this example the template **T** can be used to define the arguments types of the verschachtelt function **f2**:
+In this example the template **T** can be used to define the arguments types of the nested function **f2**:
 ```python
 #$ header template T(int|real)
 def f1():
@@ -32,7 +32,7 @@ def f1():
 		pass
 	pass
 ```
-In this example the arguments of **f2** can either be boolean or complex, Sie can not be integer or float:
+In this example the arguments of **f2** can either be boolean or complex, they can not be integer or float:
 ```python
 #$ header template T(int|real)
 def f1():
