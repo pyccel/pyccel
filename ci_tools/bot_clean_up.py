@@ -59,9 +59,9 @@ if not draft:
     shas = [e.get('sha', None) for e in events]
     print(shas)
     print(event['check_run']['head_sha'])
-    start_idx = next(s == event['check_run']['head_sha'] for s in shas)
+    start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
     try:
-        end_idx = next(s is not None for s in shas[start_idx+1:])
+        end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
     except StopIteration:
         end_idx = len(shas)
 
