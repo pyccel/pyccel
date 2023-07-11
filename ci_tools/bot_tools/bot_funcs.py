@@ -44,6 +44,12 @@ tests_with_base = ('coverage', 'docs', 'pyccel_lint')
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling')
 
+review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
+
+senior_reviewer = ['yguclu', 'EmilyBourne']
+
+trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
+
 comment_folder = os.path.join(os.path.dirname(__file__), '..', 'bot_messages')
 
 github_cli = shutil.which('gh')
@@ -90,7 +96,6 @@ class Bot:
     commit : str
         The SHA of the current commit.
     """
-    trust_givers = ['yguclu', 'EmilyBourne', 'ratnania', 'saidctb', 'bauom']
 
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
@@ -336,6 +341,17 @@ class Bot:
             _, err = p.communicate()
         print(err)
 
+    def draft_due_to_failure(self):
+        """
+        Mark the pull request as a draft following test failures.
+
+        Mark the pull request specified in the constructor as a draft.
+        This function should be called when one of the pull request
+        check runs has failed.
+        """
+        self.mark_as_draft()
+        self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
+
     def request_mark_as_ready(self):
         """
         Remove the draft status from the pull request.
@@ -348,8 +364,56 @@ class Bot:
             _, err = p.communicate()
         print(err)
 
-    def mark_as_ready(self):
-        pass
+    def mark_as_ready(self, following_review):
+        """
+        Mark a pull request as ready for review  by adding the appropriate labels.
+
+        Mark a pull request as ready for review  by adding the appropriate labels.
+        The review stage is determined via the function check_review_stage. If
+        the stage has changed then a comment is left to indicate who should pay
+        attention to the next stage.
+
+        Parameters
+        ----------
+        following_review : bool
+            True if the stage changed following a review, False if it changed
+            due to exiting draft status.
+        """
+        pr_id = self._pr_id
+        current_labels = self._GAI.get_current_labels(pr_id)
+        stage_labels = [l["name"] for l in current_labels if l["name"] in review_stage_labels]
+        assert len(stage_labels) <= 1
+        if stage_labels:
+            current_stage = stage_labels[0]
+        else:
+            current_stage = None
+
+        self._GAI.clear_labels(pr_id, stage_labels)
+        new_stage, reviews = self.check_review_stage(pr_id)
+        self._GAI.add_labels(pr_id, [new_stage])
+        author = self._pr_details["user"]["login"]
+        approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
+        requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
+
+        if following_review:
+            if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
+                if new_stage = "needs_initial_review":
+                    message = message_from_file('new_pr.txt').format(author=author)
+                    leave_comment(pr_id, message)
+                elif new_stage = 'Ready_for_review':
+                    names = ', '.join(f'@{r}' for r in senior_reviewer)
+                    approved = ', '.join(f'@{a}' for a in approving_reviewers)
+                    message = message_from_file('senior_review.txt').format(
+                                    reviewers=names, author=author, approved=approving_reviewers)
+                    leave_comment(pr_id, message)
+        elif reviews:
+            requested = ', '.join(f'@{r}' for r in requested_changes)
+            message = message_from_file('rerequest_review.txt').format(
+                                            reviewers=requested, author=author)
+            leave_comment(pr_id, message)
+        else:
+            message = message_from_file('new_pr.txt').format(author=author)
+            leave_comment(pr_id, message)
 
     def post_coverage_review(self, comments, approve):
         """
@@ -437,7 +501,11 @@ class Bot:
         Find the review stage.
 
         Use the GitHub CLI to examine the reviews left on the pull request
-        and determine the current stage of the review process.
+        and determine the current stage of the review process. If a senior
+        reviewer has approved then the stage is "Ready_to_merge". Otherwise
+        if everyone else who has left a review (excluding a bot) has approved
+        then the stage is "Ready_for_review". If not then the stage is simply
+        "needs_initial_review".
 
         Parameters
         ----------
@@ -446,27 +514,24 @@ class Bot:
 
         Results
         -------
-        bool : Indicates if the PR is ready to merge.
+        str
+            The review stage.
 
-        bool : Assuming the PR is not ready to merge, indicates if the PR is
-                ready for a review from a senior reviewer.
-
-        requested_changes : List of authors who requested changes.
-
-        reviews : Summary of all reviews left on the PR.
+        list of dict
+            A list of the dictionaries describing the reviews left by users (non-bots)
+            which either approved or requested changes.
         """
-        reviews, _ = get_review_status(pr_id)
-        senior_review = [r for a,r in reviews.items() if a in senior_reviewer]
+        reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        if any(r['user']['login'] in senior_reviewer and r["state"] == 'APPROVED' for r in reviews):
+            return "Ready_to_merge", reviews
 
-        other_review = [r for a,r in reviews.items() if a not in senior_reviewer]
+        non_senior_reviews = [r for r in reviews if r['user']['login'] not in senior_reviewer]
 
-        ready_to_merge = any(r.state == 'APPROVED' for r in senior_review) and not any(r.state == 'CHANGES_REQUESTED' for r in senior_review)
+        if non_senior_reviews and all(r["state"] == 'APPROVED' for r in non_senior_reviews):
+            return "Ready_for_review", reviews
 
-        ready_for_senior_review = any(r.state == 'APPROVED' for r in other_review) and not any(r.state == 'CHANGES_REQUESTED' for r in other_review)
-
-        requested_changes = [a for a,r in reviews.items() if r.state == 'CHANGES_REQUESTED']
-
-        return ready_to_merge, ready_for_senior_review, requested_changes, reviews
+        else:
+            return "needs_initial_review", reviews
 
     def get_check_runs(self):
         """
