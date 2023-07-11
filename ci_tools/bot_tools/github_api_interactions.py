@@ -95,6 +95,25 @@ class GitHubAPIInteractions:
         reply = requests.request(method, url, json=json, headers=self.get_headers(), **kwargs)
         return reply
 
+    def get_branch_details(self, branch_name):
+        """
+        Get the details of the specified branch.
+
+        Use the GitHub API to get information about the mentioned branch.
+
+        Parameters
+        ----------
+        branch_name : str
+            The name of the branch
+
+        Returns
+        -------
+        dict
+            A dictionary containing information about the branch.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/branches/{branch_name}"
+        return self._post_request("GET", url).json()
+
     def check_runs(self, commit):
         """
         Get a list of all check runs which were run on the commit.
