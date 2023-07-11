@@ -8,6 +8,7 @@ See the developer docs for more details
 """
 
 from itertools import chain
+import numpy
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -3842,6 +3843,8 @@ class SemanticParser(BasicParser):
         var = self._visit(expr.args_var)
         assert(var.rank==1)
         size = var.shape[0]
+        for i in range(len(size)):
+            var+1
         return StarredArguments([var[i] for i in range(size)])
 
     def _visit_NumpyMatmul(self, expr):
@@ -3864,6 +3867,7 @@ class SemanticParser(BasicParser):
         args = [a.value for a in func_call_args if not a.has_keyword]
         kwargs = {a.keyword: a.value for a in func_call.args if a.has_keyword}
         nargs = len(args)+len(kwargs)
+        unused_arg = 3
         if nargs == 1:
             return self._visit_NumpyNonZero(func_call)
         return NumpyWhere(*args, **kwargs)
