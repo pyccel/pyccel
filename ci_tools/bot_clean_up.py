@@ -63,7 +63,7 @@ if not draft:
     except StopIteration:
         end_idx = len(shas)
 
-    relevant_events = events[start_idx:end_idx]
+    relevant_events = events[:end_idx]
 
     print()
     print("---------------------------------------------------------------------------")
