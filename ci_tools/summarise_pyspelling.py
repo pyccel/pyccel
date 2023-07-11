@@ -120,7 +120,7 @@ if errors:
         "summary":md,
         "annotations": annotations
     }
-    with open(output_file, 'w', encoding="utf-8) as f:
+    with open(output_file, 'w', encoding="utf-8") as f:
         json.dump(json_ouput,f)
     sys.exit(1)
 else:
