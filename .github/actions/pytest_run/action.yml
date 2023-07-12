@@ -11,13 +11,13 @@ runs:
   steps:
     - name: Test with pytest
       run: |
-        if [ -z ${{ runner.debug }} ]
-        then
-          export DEBUG=1
-          FLAGS="-s --log-cli-level DEBUG"
-        else
+        #if [ -z ${{ runner.debug }} ]
+        #then
+        #  export DEBUG=1
+        #  FLAGS="-s --log-cli-level DEBUG"
+        #else
           FLAGS=""
-        fi
+        #fi
         which python
         python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays ${FLAGS} -x
         if [ -n "${SITE_DIR}" ]; then
