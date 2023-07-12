@@ -66,3 +66,8 @@ The associated bibtex can be found [here](./pyccel.bib).
 -   [Tips and Tricks](./developer_docs/tips_and_tricks.md)
 -   [Scope](./developer_docs/scope.md)
 -   [Array Ordering](./developer_docs/order_docs.md)
+
+## Contributors
+
+We would like to thank all of Pyccel's contributors:
+https://github.com/pyccel/pyccel/graphs/contributors
