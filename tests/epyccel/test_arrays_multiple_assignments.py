@@ -307,7 +307,7 @@ def test_Assign_between_nested_If(lang):
 def test_conda_flag_disable(language):
     def one():
         return True
-    with pytest.warns(None) as record1:
+    with pytest.catch_warnings() as record1:
         epyccel(one, language='c', conda_warnings = 'off')
     assert len(record1) == 0 # Equals 0 on every platform
 
@@ -315,7 +315,7 @@ def test_conda_flag_disable(language):
 def test_conda_flag_verbose(language):
     def one():
         return True
-    with pytest.warns(None) as record1:
+    with pytest.catch_warnings() as record1:
         epyccel(one, language='c', conda_warnings = 'verbose')
     if len(record1)>0:
         warn_message = record1[0].message
