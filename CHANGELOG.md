@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
+-   \[INTERNALS\] Removed benchmarks folder. Code is still available in benchmark repo.
+-   \[INTERNALS\] Removed bugs folder.
 
 ## \[1.8.1\] - 2023-07-07
 
