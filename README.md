@@ -21,7 +21,7 @@ Pyccel comes with a selection of **extensions** allowing you to convert calls to
 
 Pyccel's acceleration capabilities lead to much faster code. Comparisons of Python vs Pyccel or other tools can be found in the [benchmarks](https://github.com/pyccel/pyccel-benchmarks) repository.
 The results for the devel branch currently show the following performance on python 3.10:
-![Pyccel execution times for devel branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.svg)
+![Pyccel execution times for devel branch](https://raw.githubusercontent.com/pyccel/pyccel-benchmarks/main/version_specific_results/devel_performance_310_execution.svg)
 
 If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md).
 
