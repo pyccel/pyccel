@@ -267,4 +267,3 @@ docker run -it -v $PWD:/data:rw  pyccel/pyccel:v1.0.0 bash
 
 If you are using SELinux, you will need to set the right context for your host based volume.
 Alternatively you may have docker or podman set the context using `-v $PWD:/data:rwz` instead of `-v $PWD:/data:rw` .
-
