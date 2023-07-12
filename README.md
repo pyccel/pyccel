@@ -23,7 +23,15 @@ Pyccel's acceleration capabilities lead to much faster code. Comparisons of Pyth
 The results for the devel branch currently show the following performance on python 3.10:
 ![Pyccel execution times for devel branch](https://github.com/pyccel/pyccel-benchmarks/blob/main/version_specific_results/devel_performance_310_execution.svg)
 
-If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md)
+If you are eager to try Pyccel out, we recommend reading our [quick-start guide](./tutorial/quickstart.md).
+
+## Citing Pyccel
+
+If Pyccel has been significant in your research, and you would like to acknowledge the project in your academic publication, we would ask that you cite the following paper:
+
+Bourne et al., (2023). Pyccel: a Python-to-X transpiler for scientific high-performance computing. Journal of Open Source Software, 8(83), 4991, https://doi.org/10.21105/joss.04991
+
+The associated bibtex can be found [here](./pyccel.bib).
 
 ## User Documentation
 
