@@ -23,7 +23,7 @@ Pyccel's acceleration capabilities lead to much faster code. Comparisons of Pyth
 The results for the devel branch currently show the following performance on python 3.10:
 ![Pyccel execution times for devel branch](https://raw.githubusercontent.com/pyccel/pyccel-benchmarks/main/version_specific_results/devel_performance_310_execution.svg)
 
-If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://github.com/pyccel/pyccel/blob/devel/tutorial/quickstart.md).
+If you are eager to try Pyccel out, we recommend reading our [quick-start guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md).
 
 ## Citing Pyccel
 
@@ -35,29 +35,29 @@ The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/
 
 ## User Documentation
 
--   [Quick-start Guide](https://github.com/pyccel/pyccel/blob/devel/tutorial/quickstart.md)
+-   [Quick-start Guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md)
 
--   [Installation](https://github.com/pyccel/pyccel/blob/devel/tutorial/installation.md)
+-   [Installation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md)
 
--   [Contributing](https://github.com/pyccel/pyccel/blob/devel/tutorial/CONTRIBUTING.md)
+-   [Contributing](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
 
--   [C/Fortran Compilers](https://github.com/pyccel/pyccel/blob/devel/tutorial/compiler.md)
+-   [C/Fortran Compilers](https://github.com/pyccel/pyccel/blob/devel/docs/compiler.md)
 
--   [Decorators](https://github.com/pyccel/pyccel/blob/devel/tutorial/decorators.md)
+-   [Decorators](https://github.com/pyccel/pyccel/blob/devel/docs/decorators.md)
 
--   [Header Files](https://github.com/pyccel/pyccel/blob/devel/tutorial/header-files.md)
+-   [Header Files](https://github.com/pyccel/pyccel/blob/devel/docs/header-files.md)
 
--   [Templates](https://github.com/pyccel/pyccel/blob/devel/tutorial/templates.md)
+-   [Templates](https://github.com/pyccel/pyccel/blob/devel/docs/templates.md)
 
--   [N-dimensional Arrays](https://github.com/pyccel/pyccel/blob/devel/tutorial/ndarrays.md)
+-   [N-dimensional Arrays](https://github.com/pyccel/pyccel/blob/devel/docs/ndarrays.md)
 
--   [Function-pointers as arguments](https://github.com/pyccel/pyccel/blob/devel/tutorial/function-pointers-as-arguments.md)
+-   [Function-pointers as arguments](https://github.com/pyccel/pyccel/blob/devel/docs/function-pointers-as-arguments.md)
 
--   [Const keyword](https://github.com/pyccel/pyccel/blob/devel/tutorial/const_keyword.md)
+-   [Const keyword](https://github.com/pyccel/pyccel/blob/devel/docs/const_keyword.md)
 
 -   Supported libraries/APIs
-    -   [OpenMP](https://github.com/pyccel/pyccel/blob/devel/tutorial/openmp.md)
-    -   [NumPy](https://github.com/pyccel/pyccel/blob/devel/tutorial/numpy-functions.md)
+    -   [OpenMP](https://github.com/pyccel/pyccel/blob/devel/docs/openmp.md)
+    -   [NumPy](https://github.com/pyccel/pyccel/blob/devel/docs/numpy-functions.md)
 
 ## Developer Documentation
 
