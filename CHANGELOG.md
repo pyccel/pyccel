@@ -11,6 +11,10 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   \[INTERNALS\] Removed `obsolete` folder.
+-   \[INTERNALS\] Removed out of date `samples` folder.
+-   \[INTERNALS\] Removed out of date `doc` folder.
+
 ## \[1.8.1\] - 2023-07-07
 
 ### Added
