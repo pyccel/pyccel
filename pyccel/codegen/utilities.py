@@ -10,6 +10,7 @@ This file contains some useful functions to compile the generated fortran code
 
 import os
 import shutil
+import time
 from filelock import FileLock
 import pyccel.stdlib as stdlib_folder
 
@@ -17,6 +18,8 @@ from .compiling.basic     import CompileObj
 
 # get path to pyccel/stdlib/lib_name
 stdlib_path = os.path.dirname(stdlib_folder.__file__)
+
+start_time = time.time()
 
 __all__ = ['copy_internal_library','recompile_object']
 
@@ -77,6 +80,8 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     lib_dest_path  : str
                      The location that the files were copied to
     """
+    print(lib_folder)
+    assert time.time() - start_time < 60
     # get lib path (stdlib_path/lib_name)
     lib_path = os.path.join(stdlib_path, lib_folder)
     # remove library folder to avoid missing files and copy
