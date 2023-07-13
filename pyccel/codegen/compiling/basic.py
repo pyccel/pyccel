@@ -224,9 +224,7 @@ class CompileObj:
         self._dependencies.update({a.module_target:a for a in args})
 
     def __enter__(self):
-        self.acquire_simple_lock()
-        for d in self.dependencies:
-            d.acquire_simple_lock()
+        self.acquire_lock()
 
     def acquire_lock(self):
         """
@@ -245,9 +243,7 @@ class CompileObj:
             self._lock_target.acquire()
 
     def __exit__(self, exc_type, value, traceback):
-        self.release_simple_lock()
-        for d in self.dependencies:
-            d.release_simple_lock()
+        self.release_lock()
 
     def release_lock(self):
         """
