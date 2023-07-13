@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
 from numpy import iinfo
@@ -85,6 +85,20 @@ def test_array_int32_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_scalar_add_stride(language):
+
+    f1 = arrays.array_int32_1d_scalar_add
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1,2,3,4,5,6,7,8], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[::3], a)
+    f2(x2[::3], a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_1d_scalar_sub(language):
 
     f1 = arrays.array_int32_1d_scalar_sub
@@ -99,6 +113,20 @@ def test_array_int32_1d_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_1d_scalar_sub_stride(language):
+
+    f1 = arrays.array_int32_1d_scalar_sub
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[::2], a)
+    f2(x2[::2], a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_1d_scalar_mul(language):
 
     f1 = arrays.array_int32_1d_scalar_mul
@@ -110,6 +138,20 @@ def test_array_int32_1d_scalar_mul(language):
 
     f1(x1, a)
     f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int32_1d_scalar_mul_stride(language):
+
+    f1 = arrays.array_int32_1d_scalar_mul
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[3:7:2], a)
+    f2(x2[3:7:2], a)
 
     assert np.array_equal( x1, x2 )
 
@@ -138,6 +180,20 @@ def test_array_int32_1d_scalar_idiv(language):
 
     f1(x1, a)
     f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+def test_array_int32_1d_scalar_idiv_stride(language):
+
+    f1 = arrays.array_int32_1d_scalar_idiv
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = 1, high = 1e9, dtype = np.int32)
+
+    f1(x1[:3:2], a)
+    f2(x2[:3:2], a)
 
     assert np.array_equal( x1, x2 )
 
@@ -264,6 +320,20 @@ def test_array_int32_2d_C_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_2d_C_scalar_add_stride(language):
+
+    f1 = arrays.array_int32_2d_C_scalar_add
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[::2,:], a)
+    f2(x2[::2,:], a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_2d_C_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_C_scalar_sub
@@ -275,6 +345,30 @@ def test_array_int32_2d_C_scalar_sub(language):
 
     f1(x1, a)
     f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_array_int32_2d_C_scalar_sub_stride(language):
+
+    f1 = arrays.array_int32_2d_C_scalar_sub
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3,7], [4,5,6,8]], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[:,::2], a)
+    f2(x2[:,::2], a)
 
     assert np.array_equal( x1, x2 )
 
@@ -292,6 +386,20 @@ def test_array_int32_2d_C_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
+def test_array_int32_2d_C_scalar_mul_stride(language):
+
+    f1 = arrays.array_int32_2d_C_scalar_mul
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[1:,:], a)
+    f2(x2[1:,:], a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_2d_C_scalar_idiv(language):
 
     f1 = arrays.array_int32_2d_C_scalar_idiv
@@ -303,6 +411,30 @@ def test_array_int32_2d_C_scalar_idiv(language):
 
     f1(x1, a)
     f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_array_int32_2d_C_scalar_idiv_stride(language):
+
+    f1 = arrays.array_int32_2d_C_scalar_idiv
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3], [4,5,6]], dtype=np.int32 )
+    x2 = np.copy(x1)
+    a = randint(low = 1, high = 1e9, dtype = np.int32)
+
+    f1(x1[:,1:], a)
+    f2(x2[:,1:], a)
 
     assert np.array_equal( x1, x2 )
 
@@ -380,6 +512,30 @@ def test_array_int32_2d_F_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_array_int32_2d_F_scalar_add_stride(language):
+
+    f1 = arrays.array_int32_2d_F_scalar_add
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3], [4,5,6], [7,8,9]], dtype=np.int32, order='F' )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[1::2,::2], a)
+    f2(x2[1::2,::2], a)
+
+    assert np.array_equal( x1, x2 )
+
 def test_array_int32_2d_F_scalar_sub(language):
 
     f1 = arrays.array_int32_2d_F_scalar_sub
@@ -391,6 +547,30 @@ def test_array_int32_2d_F_scalar_sub(language):
 
     f1(x1, a)
     f2(x2, a)
+
+    assert np.array_equal( x1, x2 )
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Ordering is unknown on non-contiguous array"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_array_int32_2d_F_scalar_sub_stride(language):
+
+    f1 = arrays.array_int32_2d_F_scalar_sub
+    f2 = epyccel( f1 , language = language)
+
+    x1 = np.array( [[1,2,3], [4,5,6], [7,8,9]], dtype=np.int32, order='F' )
+    x2 = np.copy(x1)
+    a = randint(low = -1e9, high = 1e9, dtype = np.int32)
+
+    f1(x1[::2,1::2], a)
+    f2(x2[::2,1::2], a)
 
     assert np.array_equal( x1, x2 )
 

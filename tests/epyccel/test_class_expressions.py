@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
 from numpy.random import randint
@@ -75,7 +75,7 @@ def test_complex_conjugate(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
-def test_complex_conjugate64(language):
+def test_complex64_conjugate(language):
     def f(a : 'complex64', b : 'complex64'):
         return (a+b).conj()
 
@@ -83,6 +83,82 @@ def test_complex_conjugate64(language):
 
     a = np.complex64(randint(20)+1j*randint(20))
     b = np.complex64(randint(20)+1j*randint(20))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_float_conjugate(language):
+    def f(a : 'float', b : 'float'):
+        return (a+b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = float(randint(20))
+    b = float(randint(20))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_float64_conjugate(language):
+    def f(a : 'float64', b : 'float64'):
+        return (a+b).conj()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = np.float64(randint(20))
+    b = np.float64(randint(20))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_int_conjugate(language):
+    def f(a : 'int', b : 'int'):
+        return (a+b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = randint(20)
+    b = randint(20)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_int32_conjugate(language):
+    def f(a : 'int32', b : 'int32'):
+        return (a+b).conj()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = randint(20, dtype=np.int32)
+    b = randint(20, dtype=np.int32)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+@pytest.mark.xfail(reason="Class inheritance not fully implemented")
+def test_bool_conjugate(language):
+    def f(a : 'bool', b : 'bool'):
+        return (a or b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = bool(randint(2))
+    b = bool(randint(2))
 
     r = f(a,b)
     epyc_r = epyc_f(a,b)

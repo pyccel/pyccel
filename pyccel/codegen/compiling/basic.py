@@ -13,37 +13,46 @@ from filelock import FileLock
 
 class CompileObj:
     """
-    Class containing all information necessary for compiling
+    Class containing all information necessary for compiling.
+
+    A class which stores all information which may be needed in order to
+    compile an object. This includes its name, location, and all dependencies
+    and flags which may need to be passed to the compiler.
 
     Parameters
     ----------
-    file_name     : str
-                    Name of file to be compiled
+    file_name : str
+        Name of file to be compiled.
 
-    folder        : str
-                    Name of the folder where the file is found
+    folder : str
+        Name of the folder where the file is found.
 
-    flags         : str
-                    Any non-default flags passed to the compiler
+    flags : str
+        Any non-default flags passed to the compiler.
 
-    includes      : iterable of strs
-                    include directories paths
+    includes : iterable of strs
+        Include directories paths.
 
-    libs          : iterable of strs
-                    required libraries
+    libs : iterable of strs
+        Required libraries.
 
-    libdirs       : iterable of strs
-                    paths to directories containing the required libraries
+    libdirs : iterable of strs
+        Paths to directories containing the required libraries.
 
-    dependencies  : iterable of CompileObjs
-                    objects which must also be compiled in order to compile this module/program
+    dependencies : iterable of CompileObjs
+        Objects which must also be compiled in order to compile this module/program.
 
-    accelerators  : str
-                    Tool used to accelerate the code (e.g. openmp openacc)
+    accelerators : iterable of str
+        Tool used to accelerate the code (e.g. openmp openacc).
 
-    has_target_file : bool
-                    If set to false then this flag indicates that the file has no target.
-                    Eg an interface for a library
+    has_target_file : bool, default : True
+        If set to false then this flag indicates that the file has no target.
+        Eg an interface for a library.
+
+    prog_target : str, default: None
+        The name of the executable that should be generated if this file is a
+        program. If no name is provided then the module name deduced from the file
+        name is used.
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_lock','_flags','_includes','_libs','_libdirs','_accelerators',
@@ -87,9 +96,7 @@ class CompileObj:
         self._libs         = list(libs)
         self._libdirs      = set(libdirs)
         self._accelerators = set(accelerators)
-        self._dependencies = dict()
-        if dependencies:
-            self.add_dependencies(*dependencies)
+        self._dependencies = {a.module_target:a for a in dependencies}
         self._has_target_file = has_target_file
 
     def reset_folder(self, folder):
@@ -150,21 +157,34 @@ class CompileObj:
 
     @property
     def includes(self):
-        """ Returns the additional include directories required to compile the file
         """
-        return self._includes
+        Get the additional include directories required to compile the file.
+
+        Return a set containing all the directories which must be passed to the
+        compiler via the include flag `-I`.
+        """
+        return self._includes.union([di for d in self._dependencies.values() for di in d.includes])
 
     @property
     def libs(self):
-        """ Returns the additional libraries required to compile the file
         """
-        return self._libs
+        Get the additional libraries required to compile the file.
+
+        Return a list containing all the libraries which must be passed to the
+        compiler via the library flag `-l`.
+        """
+        return self._libs+[dl for d in self._dependencies.values() for dl in d.libs]
 
     @property
     def libdirs(self):
-        """ Returns the additional library directories required to compile the file
         """
-        return self._libdirs
+        Get the additional library directories required to compile the file.
+
+        Return a set containing all the directories which must be passed to the
+        compiler via the library directory flag `-L` so that the necessary
+        libraries can be correctly located.
+        """
+        return self._libdirs.union([dld for d in self._dependencies.values() for dld in d.libdirs])
 
     @property
     def extra_modules(self):
@@ -199,11 +219,6 @@ class CompileObj:
         if not all(isinstance(d, CompileObj) for d in args):
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update({a.module_target:a for a in args})
-        for a in args:
-            self._includes.update(a.includes)
-            self._libs.extend(a.libs)
-            self._libdirs.update(a.libdirs)
-            self._accelerators.update(a.accelerators)
 
     def acquire_lock(self):
         """
@@ -237,9 +252,17 @@ class CompileObj:
 
     @property
     def accelerators(self):
-        """ Returns the names of the accelerators required to compile the file
         """
-        return self._accelerators
+        Get the names of the accelerators required to compile the file.
+
+        Return a set containing the name of all accelerators required
+        to compile the file. An accelerator is a tool used to add a new
+        capacity to the code. Such an addition requires multiple flags
+        (includes/libs/libdirs/etc) and is therefore specified separately
+        in the compiler configuration file. Examples of 'accelerators' are:
+        openmp, openacc, python.
+        """
+        return self._accelerators.union([da for d in self._dependencies.values() for da in d.accelerators])
 
     def __eq__(self, other):
         return self.module_target == other.module_target

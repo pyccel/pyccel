@@ -3,7 +3,6 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
@@ -18,7 +17,7 @@ from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
-from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -54,7 +53,18 @@ import_source_swap = {
         }
 
 class PythonCodePrinter(CodePrinter):
-    """A printer to convert pyccel expressions to strings of Python code"""
+    """
+    A printer for printing code in Python.
+
+    A printer to convert Pyccel's AST to strings of Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being pyccelised.
+    """
     printmethod = "_pycode"
     language = "python"
 
@@ -166,13 +176,20 @@ class PythonCodePrinter(CodePrinter):
         return self._print(expr.name)
 
     def _print_FunctionDefArgument(self, expr):
+        name = self._print(expr.name)
+        type_annotation = ''
+        default = ''
+
+        if expr.annotation:
+            type_annotation = f' : {expr.annotation}'
+
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value.name))
+                default = f' = {self._print(expr.value.name)}'
             else:
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-        else:
-            return self._print(expr.name)
+                default = f' = {self._print(expr.value)}'
+
+        return f'{name}{type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -483,8 +500,8 @@ class PythonCodePrinter(CodePrinter):
                 target = [AsName(i.object, import_target_swap[source].get(i.target,i.target)) for i in target]
 
             target = list(set(target))
-            if source in pyccel_builtin_import_registery:
-                self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
+            if source in pyccel_builtin_import_registry:
+                self._aliases.update([(pyccel_builtin_import_registry[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
             if expr.source_module:
                 if expr.source_module.init_func:

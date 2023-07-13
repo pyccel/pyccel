@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
 # This example is the python implementation of ploop.1.f from OpenMP 4.5 examples

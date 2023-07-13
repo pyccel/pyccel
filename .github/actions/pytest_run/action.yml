@@ -3,7 +3,11 @@ inputs:
   shell_cmd:
     description: 'Specifies the shell command (different for anaconda)'
     required: false
-    default: "bash"
+    default: 'bash'
+  pytest_mark:
+    description: 'Mark expression to exclude additional tests'
+    required: false
+    default: ''
 
 
 runs:
@@ -19,17 +23,17 @@ runs:
           FLAGS=""
         #fi
         which python
-        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c" --ignore=symbolic --ignore=ndarrays ${FLAGS} -x
+        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays ${FLAGS} -x
         if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -m pytest -n auto -rXx -v -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py ${FLAGS}
         fi
-        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and c" --ignore=symbolic --ignore=ndarrays ${FLAGS}
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays ${FLAGS}
         pyccel-clean
-        python -m pytest -n auto -rXx -v -m "not (parallel or xdist_incompatible) and not (c or python)" --ignore=symbolic --ignore=ndarrays ${FLAGS}
-        python -m pytest -rXx -v -m "xdist_incompatible and not parallel and not (c or python)" --ignore=symbolic --ignore=ndarrays ${FLAGS}
+        python -m pytest -n auto -rXx -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays ${FLAGS}
+        python -m pytest -rXx -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays ${FLAGS}
         pyccel-clean
         python -m pytest ndarrays/ -rXx -v ${FLAGS}
         pyccel-clean

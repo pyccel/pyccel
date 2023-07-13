@@ -1,12 +1,15 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import subprocess
 import json
 import os
 import shutil
 import sys
 import re
+import random
 import pytest
 import numpy as np
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.ast.utilities import python_builtin_libs
 
 #==============================================================================
 # UTILITIES
@@ -135,8 +138,12 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=None):
 
     if dtype is str:
-        p_list = [e.strip() for e in re.split('\n', p_output)]
-        f_list = [e.strip() for e in re.split('\n', f_output)]
+        p_output_split = re.split('\n', p_output)
+        f_output_split = re.split('\n', f_output)
+        p_list = p_output_split[0].strip()
+        f_list = f_output_split[0].strip()
+        p_output = '\n'.join(p_output_split[1:])
+        f_output = '\n'.join(f_output_split[1:])
         assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
@@ -953,6 +960,12 @@ def test_function_aliasing():
             language = 'fortran')
 
 #------------------------------------------------------------------------------
+
+def test_function(language):
+    pyccel_test("scripts/functions.py",
+            language = language, output_dtype=[str]+[int]*7 )
+
+#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
@@ -985,3 +998,10 @@ def test_json():
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_reserved_file_name():
+    with pytest.raises(ValueError) as exc_info:
+        libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
+        execute_pyccel(fname=libname)
+    assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"

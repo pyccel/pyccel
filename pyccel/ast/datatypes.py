@@ -21,7 +21,6 @@ __all__ = (
 #
     'CustomDataType',
     'DataType',
-    'FunctionType',
     'NativeBool',
     'NativeComplex',
     'NativeGeneric',
@@ -34,7 +33,6 @@ __all__ = (
     'NativeSymbol',
     'NativeVoid',
     'UnionType',
-    'VariableType',
     'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
@@ -196,36 +194,6 @@ class NativeGeneric(DataType):
     __slots__ = ()
     _name = 'Generic'
 
-
-# ...
-class VariableType(DataType):
-    __slots__ = ('_alias','_rhs','_name')
-
-    def __init__(self, rhs, alias):
-        self._alias = alias
-        self._rhs = rhs
-        self._name = rhs._name
-
-    @property
-    def alias(self):
-        return self._alias
-
-class FunctionType(DataType):
-    __slots__ = ('_domain','_codomain','_domains','_name')
-
-    def __init__(self, domains):
-        self._domain = domains[0]
-        self._codomain = domains[1:]
-        self._domains = domains
-        self._name = ' -> '.join('{}'.format(V) for V in self._domains)
-
-    @property
-    def domain(self):
-        return self._domain
-
-    @property
-    def codomain(self):
-        return self._codomain
 # ...
 
 
