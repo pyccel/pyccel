@@ -345,9 +345,8 @@ class Compiler:
                 compile_obj.source, '-o', compile_obj.module_target,
                 *j_code]
 
-        with FileLock('.lock_acquisition.lock'):
-            with compile_obj:
-                self.run_command(cmd, verbose)
+        with compile_obj:
+            self.run_command(cmd, verbose)
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
@@ -382,9 +381,8 @@ class Compiler:
                 '-o', compile_obj.program_target,
                 *libs_flags, *j_code]
 
-        with FileLock('.lock_acquisition.lock'):
-            with compile_obj:
-                self.run_command(cmd, verbose)
+        with compile_obj:
+            self.run_command(cmd, verbose)
 
         return compile_obj.program_target
 
@@ -432,9 +430,8 @@ class Compiler:
                 compile_obj.module_target, *m_code,
                 '-o', file_out, *libs_flags]
 
-        with FileLock('.lock_acquisition.lock'):
-            with compile_obj:
-                self.run_command(cmd, verbose)
+        with compile_obj:
+            self.run_command(cmd, verbose)
 
         return file_out
 

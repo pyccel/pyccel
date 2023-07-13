@@ -54,6 +54,7 @@ class CompileObj:
         program. If no name is provided then the module name deduced from the file
         name is used.
     """
+    compilation_in_progress = FileLock('.lock_acquisition.lock')
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
                  '_lock_target','_lock_source','_flags','_includes','_libs',
                  '_libdirs','_accelerators','_dependencies','_has_target_file')
@@ -224,14 +225,15 @@ class CompileObj:
         self._dependencies.update({a.module_target:a for a in args})
 
     def __enter__(self):
+        self.compilation_in_progress.acquire()
         self.acquire_lock()
 
     def acquire_lock(self):
         """
         Lock the file and its dependencies to prevent race conditions
         """
-        self.acquire_simple_lock()
         self._lock_source.acquire()
+        self.acquire_simple_lock()
         for d in self.dependencies:
             d.acquire_simple_lock()
 
@@ -244,15 +246,16 @@ class CompileObj:
 
     def __exit__(self, exc_type, value, traceback):
         self.release_lock()
+        self.compilation_in_progress.release()
 
     def release_lock(self):
         """
         Unlock the file and its dependencies
         """
-        self._lock_source.release()
-        self.release_simple_lock()
         for d in self.dependencies:
             d.release_simple_lock()
+        self._lock_source.release()
+        self.release_simple_lock()
 
     def release_simple_lock(self):
         """
