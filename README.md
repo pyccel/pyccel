@@ -29,7 +29,7 @@ If you are eager to try Pyccel out, we recommend reading our [quick-start guide]
 
 If Pyccel has been significant in your research, and you would like to acknowledge the project in your academic publication, we would ask that you cite the following paper:
 
-Bourne et al., (2023). Pyccel: a Python-to-X transpiler for scientific high-performance computing. Journal of Open Source Software, 8(83), 4991, https://doi.org/10.21105/joss.04991
+Bourne, Güçlü, Hadjout and Ratnani (2023). Pyccel: a Python-to-X transpiler for scientific high-performance computing. Journal of Open Source Software, 8(83), 4991, https://doi.org/10.21105/joss.04991
 
 The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/devel/pyccel.bib).
 
