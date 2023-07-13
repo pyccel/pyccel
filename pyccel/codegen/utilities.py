@@ -76,13 +76,13 @@ def not_a_copy(src_folder, dst_folder, filename):
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
-    Copy an internal library to the specified pyccel directory.
+    Copy an internal library to the specified Pyccel directory.
 
-    Copy an internal library from its specified stdlib folder to the pyccel
+    Copy an internal library from its specified stdlib folder to the Pyccel
     directory. The copy is only done if the files are not already present or
     if the files have changed since they were last copied. Extra files can be
     added to the folder if and when the copy occurs (e.g. for specifying
-    the numpy version compatibility).
+    the NumPy version compatibility).
 
     Parameters
     ----------
@@ -183,7 +183,7 @@ def recompile_object(compile_obj,
         The compiler used.
 
     verbose : bool
-        Indicates whethere additional information should be printed.
+        Indicates whether additional information should be printed.
     """
 
     # compile library source files
