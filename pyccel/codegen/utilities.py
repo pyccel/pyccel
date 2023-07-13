@@ -49,8 +49,8 @@ def not_a_copy(src_folder, dst_folder, filename):
     """
     abs_src_file = os.path.join(src_folder, filename)
     abs_dst_file = os.path.join(dst_folder, filename)
-    src_mod_time = os.path.getatime(abs_src_file)
-    dst_mod_time = os.path.getatime(abs_dst_file)
+    src_mod_time = os.path.getmtime(abs_src_file)
+    dst_mod_time = os.path.getmtime(abs_dst_file)
     return src_mod_time > dst_mod_time
 
 #==============================================================================
@@ -119,7 +119,12 @@ def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
             # Remove all files in destination directory
             for d in dst_files:
                 d_file = os.path.join(lib_dest_path, d)
-                os.remove(d_file)
+                try:
+                    os.remove(d_file)
+                except FileNotFoundError:
+                    # Don't call error in case of temporary compilation file that has disappeared
+                    # since reading the folder
+                    pass
             # Copy all files from the source to the destination
             for s in src_files:
                 shutil.copyfile(os.path.join(lib_path, s),
@@ -155,15 +160,14 @@ def recompile_object(compile_obj,
     """
 
     # compile library source files
-    compile_obj.acquire_simple_lock()
-    if os.path.exists(compile_obj.module_target):
-        # Check if source file has changed since last compile
-        o_file_age   = os.path.getmtime(compile_obj.module_target)
-        src_file_age = os.path.getmtime(compile_obj.source)
-        outdated     = o_file_age < src_file_age
-    else:
-        outdated = True
-    compile_obj.release_simple_lock()
+    with compile_obj:
+        if os.path.exists(compile_obj.module_target):
+            # Check if source file has changed since last compile
+            o_file_age   = os.path.getmtime(compile_obj.module_target)
+            src_file_age = os.path.getmtime(compile_obj.source)
+            outdated     = o_file_age < src_file_age
+        else:
+            outdated = True
     if outdated:
         compiler.compile_module(compile_obj=compile_obj,
                 output_folder=compile_obj.source_folder,
