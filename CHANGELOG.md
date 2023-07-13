@@ -9,7 +9,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   Updating stdlib files if they are modified not just accessed.
+-   Updating `stdlib` files if they are modified not just accessed.
 
 ### Deprecated
 
