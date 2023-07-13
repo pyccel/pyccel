@@ -269,27 +269,30 @@ class Compiler:
 
     def _get_compile_components(self, compile_obj, accelerators = ()):
         """
-        Provide all components required for compiling
+        Provide all components required for compiling.
+
+        Provide all the different componenets (include directories, libraries, etc
+        which are needed in order to compile any file.
 
         Parameters
         ----------
-        compile_obj  : CompileObj
-                       Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
         accelerators : iterable of str
-                       Name of all tools used by the code which require additional flags/includes/etc
+            Name of all tools used by the code which require additional flags/includes/etc.
 
-        Results
+        Returns
         -------
-        exec_cmd      : str
-                        The command required to run the executable
-        inc_flags     : iterable of strs
-                        The include directories required to compile
-        libs_flags    : iterable of strs
-                        The libraries required to compile
-        libdirs_flags : iterable of strs
-                        The directories containing libraries required to compile
-        m_code        : iterable of strs
-                        The objects required to compile
+        str
+            The command required to run the executable.
+        iterable of strs
+            The include directories required to compile.
+        iterable of strs
+            The libraries required to compile.
+        iterable of strs
+            The directories containing libraries required to compile.
+        iterable of strs
+            The objects required to compile.
         """
 
         # get includes
@@ -459,14 +462,27 @@ class Compiler:
     @staticmethod
     def run_command(cmd, verbose):
         """
-        Run the provided command and collect the output
+        Run the provided command and collect the output.
+
+        Run the provided compilation command, collect the output and raise any
+        necessary errors if the file does not compile.
 
         Parameters
         ----------
-        cmd     : iterable
-                  The command to run
+        cmd : list of str
+            The command to run.
         verbose : bool
-                  Indicates whether additional output should be shown
+            Indicates whether additional output should be shown.
+
+        Returns
+        -------
+        str
+            The exact command that was run.
+
+        Raises
+        ------
+        RuntimeError
+            Raises `RuntimeError` if the file does not compile.
         """
         cmd = [os.path.expandvars(c) for c in cmd]
         if verbose:
