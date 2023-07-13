@@ -108,7 +108,7 @@ class CompileObj:
         Change the folder in which the source file is saved. Normally the location
         of the source file should not change during the execution, however when
         working with the stdlib, the `CompileObj` is created with the folder set
-        to the file's location in the Pyccel instal directory. When the file is
+        to the file's location in the Pyccel install directory. When the file is
         used it is copied to the user's folder, at which point the folder of the
         `CompileObj` must be updated.
 
