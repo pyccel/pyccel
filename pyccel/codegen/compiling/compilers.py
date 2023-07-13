@@ -13,7 +13,6 @@ import shutil
 import subprocess
 import platform
 import warnings
-from filelock import FileLock
 from pyccel.compilers.default_compilers import available_compilers, vendors
 from pyccel.errors.errors import Errors
 
@@ -22,10 +21,10 @@ errors = Errors()
 if platform.system() == 'Darwin':
     # Collect version using mac tools to avoid unexpected results on Big Sur
     # https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps
-    p = subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE)
-    result, err = p.communicate()
+    with subprocess.Popen([shutil.which("sw_vers"), "-productVersion"], stdout=subprocess.PIPE) as p:
+        result, err = p.communicate()
     mac_version_tuple = result.decode("utf-8").strip().split('.')
-    mac_target = '{}.{}'.format(*mac_version_tuple[:2])
+    mac_target = '.'.join(mac_version_tuple[:2])
     os.environ['MACOSX_DEPLOYMENT_TARGET'] = mac_target
 
 
@@ -94,7 +93,7 @@ class Compiler:
                 self._info = available_compilers[('GNU',language)]
         else:
             if vendor not in vendors:
-                raise NotImplementedError("Unrecognised compiler vendor : {}".format(vendor))
+                raise NotImplementedError(f"Unrecognised compiler vendor : {vendor}")
             try:
                 self._info = available_compilers[(vendor,language)]
             except KeyError as e:
@@ -138,7 +137,7 @@ class Compiler:
         os.environ['PATH'] = current_path
 
         if exec_loc is None:
-            errors.report("Could not find compiler ({})".format(exec_cmd),
+            errors.report(f"Could not find compiler ({exec_cmd})",
                     severity='fatal')
 
         return exec_loc
@@ -302,7 +301,7 @@ class Compiler:
 
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
-        libs_flags = [s if s.startswith('-l') else '-l{}'.format(s) for s in libs]
+        libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
         libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
@@ -473,9 +472,9 @@ class Compiler:
         if verbose:
             print(' '.join(cmd))
 
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                universal_newlines=True)
-        out, err = p.communicate()
+        with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                universal_newlines=True) as p:
+            out, err = p.communicate()
 
         if verbose and out:
             print(out)
