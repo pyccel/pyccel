@@ -42,10 +42,30 @@ internal_libs["cwrapper_ndarrays"] = ("cwrapper_ndarrays", CompileObj("cwrapper_
 #==============================================================================
 
 def not_a_copy(src_folder, dst_folder, filename):
-    """ Check if the file filename present in src_folder
-    is a copy of the file filename present in dst_folder
-    or if the source file has been updated since the last
-    copy
+    """
+    Check if the file is different between the source and destination folders.
+
+    Check if the file filename present in src_folder is different (not a copy)
+    from the file filename present in dst_folder. This is done by checking if
+    the source file has been modified more recently than the destination file.
+    This would imply that it has been modified since the last copy.
+
+    Parameters
+    ----------
+    src_folder : str
+        The folder where the file was defined.
+
+    dst_folder : str
+        The folder where the file is being used.
+
+    filename : str
+        The name of the file.
+
+    Returns
+    -------
+    bool
+        False if the file in the destination folder is a copy of the file in the
+        source folder, True otherwise.
     """
     abs_src_file = os.path.join(src_folder, filename)
     abs_dst_file = os.path.join(dst_folder, filename)
@@ -56,26 +76,30 @@ def not_a_copy(src_folder, dst_folder, filename):
 #==============================================================================
 def copy_internal_library(lib_folder, pyccel_dirpath, extra_files = None):
     """
+    Copy an internal library to the specified pyccel directory.
+
     Copy an internal library from its specified stdlib folder to the pyccel
     directory. The copy is only done if the files are not already present or
     if the files have changed since they were last copied. Extra files can be
     added to the folder if and when the copy occurs (e.g. for specifying
-    the numpy version compatibility)
+    the numpy version compatibility).
 
     Parameters
     ----------
-    lib_folder     : str
-                     The name of the folder to be copied, relative to the stdlib folder
-    pyccel_dirpath : str
-                     The location that the folder should be copied to
-    extra_files    : dict
-                     A dictionary whose keys are the names of any files to be created
-                     in the folder and whose values are the contents of the file
+    lib_folder : str
+        The name of the folder to be copied, relative to the stdlib folder.
 
-    Results
+    pyccel_dirpath : str
+        The location that the folder should be copied to.
+
+    extra_files : dict
+        A dictionary whose keys are the names of any files to be created
+        in the folder and whose values are the contents of the file.
+
+    Returns
     -------
-    lib_dest_path  : str
-                     The location that the files were copied to
+    str
+        The location that the files were copied to.
     """
     # get lib path (stdlib_path/lib_name)
     lib_path = os.path.join(stdlib_path, lib_folder)
@@ -145,18 +169,21 @@ def recompile_object(compile_obj,
                    compiler,
                    verbose = False):
     """
-    Compile the provided file.
-    If the file has already been compiled then it will only be recompiled
-    if the source has been modified
+    Compile the provided file if necessary.
+
+    Check if the file has already been compiled, if it hasn't or if the source has
+    been modified then compile the file.
 
     Parameters
     ----------
     compile_obj : CompileObj
-                  The object to compile
-    compiler    : str
-                  The compiler used
-    verbose     : bool
-                  Indicates whethere additional information should be printed
+        The object to compile.
+
+    compiler : str
+        The compiler used.
+
+    verbose : bool
+        Indicates whethere additional information should be printed.
     """
 
     # compile library source files

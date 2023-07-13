@@ -312,7 +312,9 @@ class Compiler:
 
     def compile_module(self, compile_obj, output_folder, verbose = False):
         """
-        Compile a module
+        Compile a module.
+
+        Compile a file containing a module to a .o file.
 
         Parameters
         ----------
@@ -350,16 +352,25 @@ class Compiler:
 
     def compile_program(self, compile_obj, output_folder, verbose = False):
         """
-        Compile a program
+        Compile a program.
+
+        Compile a file containing a program to an executable.
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
+
+        Returns
+        -------
+        str
+            The name of the generated executable.
         """
         accelerators = compile_obj.accelerators
 
@@ -388,21 +399,26 @@ class Compiler:
 
     def compile_shared_library(self, compile_obj, output_folder, verbose = False, sharedlib_modname=None):
         """
-        Compile a module to a shared library
+        Compile a module to a shared library.
+
+        Compile a file containing a module with C-API calls to a shared library which can
+        be called from Python.
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
 
         Returns
         -------
-        file_out : str
-                   Generated library name
+        str
+            Generated library name.
         """
         # Ensure python options are collected
         accelerators = set(compile_obj.accelerators)
