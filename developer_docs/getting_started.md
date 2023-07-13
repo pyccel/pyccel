@@ -1,7 +1,7 @@
 # Getting Started
 
 In order to get started contributing to Pyccel it is important to first ensure that you have installed Pyccel from source with an editable installation as described in the [installation docs](../docs/installation.md#from-sources).
-If successful you should be able to add a print inside a function that is always used (e.g. in `pyccel/codegen/pipeline.py`) and see that it is correctly printed when the pyccel command line tool is used to translate an example file.
+If successful you should be able to add a print inside a function that is always used (e.g. in `pyccel/codegen/pipeline.py`) and see that it is correctly printed when the `pyccel` command line tool is used to translate an example file.
 
 Once you have confirmed that you have a working editable installation you should be able to make changes to the code in a branch or fork to fix your chosen issue.
 
