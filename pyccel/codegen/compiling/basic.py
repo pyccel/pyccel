@@ -221,6 +221,11 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update({a.module_target:a for a in args})
 
+    def __enter__(self):
+        self.acquire_simple_lock()
+        for d in self.dependencies:
+            d.acquire_simple_lock()
+
     def acquire_lock(self):
         """
         Lock the file and its dependencies to prevent race conditions
@@ -235,6 +240,11 @@ class CompileObj:
         """
         if self.has_target_file:
             self._lock.acquire()
+
+    def __exit__(self):
+        self.release_simple_lock()
+        for d in self.dependencies:
+            d.release_simple_lock()
 
     def release_lock(self):
         """
