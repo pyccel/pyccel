@@ -415,6 +415,10 @@ class Compiler:
         verbose : bool
             Indicates whether additional output should be shown.
 
+        sharedlib_modname : str, optional
+            The name of the library that should be generated. If none is provided then it
+            defaults to matching the name of the file.
+
         Returns
         -------
         str

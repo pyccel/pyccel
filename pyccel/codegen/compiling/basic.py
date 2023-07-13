@@ -270,7 +270,7 @@ class CompileObj:
 
     def release_lock(self):
         """
-        Unlock the file and its dependencies
+        Unlock the file and its dependencies.
 
         Release the file locks for the file being compiled, all dependencies needed
         to compile it and the target file which will be generated.
