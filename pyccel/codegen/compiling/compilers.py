@@ -283,15 +283,15 @@ class Compiler:
 
         Returns
         -------
-        str
+        exec_cmd : str
             The command required to run the executable.
-        iterable of strs
+        inc_flags : iterable of strs
             The include directories required to compile.
-        iterable of strs
+        libs_flags : iterable of strs
             The libraries required to compile.
-        iterable of strs
+        libdirs_flags : iterable of strs
             The directories containing libraries required to compile.
-        iterable of strs
+        m_code : iterable of strs
             The objects required to compile.
         """
 
