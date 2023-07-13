@@ -271,7 +271,7 @@ class Compiler:
         """
         Provide all components required for compiling.
 
-        Provide all the different componenets (include directories, libraries, etc
+        Provide all the different componenets (include directories, libraries, etc)
         which are needed in order to compile any file.
 
         Parameters
