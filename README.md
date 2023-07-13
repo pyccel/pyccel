@@ -51,7 +51,9 @@ Alternative installation methods such as installing from source, or installing w
 We welcome any and all contributions.
 
 There are many ways to help with the pyccel project which are more or less involved.
-A summary can be found in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
+A summary can be found in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md).
+
+We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6hwjfFVb).
 
 ## User Documentation
 
