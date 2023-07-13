@@ -55,8 +55,8 @@ class CompileObj:
         name is used.
     """
     __slots__ = ('_file','_folder','_module_name','_module_target','_prog_target',
-                 '_lock','_flags','_includes','_libs','_libdirs','_accelerators',
-                 '_dependencies','_has_target_file')
+                 '_lock_target','_lock_source','_flags','_includes','_libs',
+                 '_libdirs','_accelerators','_dependencies','_has_target_file')
     def __init__(self,
                  file_name,
                  folder,
@@ -86,7 +86,8 @@ class CompileObj:
         self._prog_target   = self._prog_target
         self._module_target = self._module_target
 
-        self._lock         = FileLock(self.module_target+'.lock')
+        self._lock_target  = FileLock(self.module_target+'.lock')
+        self._lock_source  = FileLock(self.source+'.lock')
 
         self._flags        = list(flags)
         if has_target_file:
@@ -108,6 +109,7 @@ class CompileObj:
             self._includes.add(folder)
 
         self._file = os.path.join(folder, os.path.basename(self._file))
+        self._lock_source  = FileLock(self.source+'.lock')
         self._folder = folder
         self._includes.add(self._folder)
 
@@ -118,7 +120,7 @@ class CompileObj:
         if sys.platform == "win32":
             self._prog_target += '.exe'
 
-        self._lock         = FileLock(self.module_target+'.lock')
+        self._lock_target         = FileLock(self.module_target+'.lock')
 
     @property
     def source(self):
@@ -238,10 +240,11 @@ class CompileObj:
         """
         Lock the file to prevent race conditions but not its dependencies
         """
+        self._lock_source.acquire()
         if self.has_target_file:
-            self._lock.acquire()
+            self._lock_target.acquire()
 
-    def __exit__(self):
+    def __exit__(self, exc_type, value, traceback):
         self.release_simple_lock()
         for d in self.dependencies:
             d.release_simple_lock()
@@ -258,8 +261,9 @@ class CompileObj:
         """
         Unlock the file
         """
+        self._lock_source.release()
         if self.has_target_file:
-            self._lock.release()
+            self._lock_target.release()
 
     @property
     def accelerators(self):
