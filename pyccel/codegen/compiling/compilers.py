@@ -318,12 +318,14 @@ class Compiler:
 
         Parameters
         ----------
-        compile_obj   : CompileObj
-                        Object containing all information about the object to be compiled
+        compile_obj : CompileObj
+            Object containing all information about the object to be compiled.
+
         output_folder : str
-                        The folder where the result should be saved
-        verbose       : bool
-                        Indicates whether additional output should be shown
+            The folder where the result should be saved.
+
+        verbose : bool
+            Indicates whether additional output should be shown.
         """
         accelerators = compile_obj.accelerators
 
