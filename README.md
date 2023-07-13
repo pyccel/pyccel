@@ -33,6 +33,26 @@ Bourne, Güçlü, Hadjout and Ratnani (2023). Pyccel: a Python-to-X transpiler f
 
 The associated bibtex can be found [here](https://github.com/pyccel/pyccel/blob/devel/pyccel.bib).
 
+## Installation
+
+Pyccel has a few system requirements to ensure that the system where it is installed is capable of compiling Fortran code.
+These requirements are detailed in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+Once all requirements are satisfied, the simplest way to install Pyccel is using PyPI.
+Simply run:
+
+```sh
+python3 -m pip install --user pyccel
+```
+
+Alternative installation methods such as installing from source, or installing with a docker are described in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/installation.md).
+
+## Contributing
+
+We welcome any and all contributions.
+
+There are many ways to help with the pyccel project which are more or less involved.
+A summary can be found in the [documentation](https://github.com/pyccel/pyccel/blob/devel/docs/CONTRIBUTING.md)
+
 ## User Documentation
 
 -   [Quick-start Guide](https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md)
