@@ -175,6 +175,14 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_DottedVariable(self, expr):
+        rhs_code = self._print_Variable(expr)
+        lhs_code = self._print(expr.lhs)
+        return f"{lhs_code}.{rhs_code}"
+
+    def _print_DottedFunctionCall(self, expr):
+        return (f"{str(expr.func_name)}({', '.join([str(arg) for arg in expr.args])})\n")
+
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
         type_annotation = ''
@@ -996,6 +1004,19 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
+
+    def _print_ClassDef(self, expr):
+        classDefName = 'class {}:'.format(expr.name)
+        methods = ''.join([self._print(method) for method in expr.methods])
+        methods = self._indent_codestring(methods)
+        classDef = '\n'.join([classDefName, methods]) + '\n'
+        return classDef
+
+    def _print_ConstructorCall(self, expr):
+        return f"{expr.func.cls_name}({', '.join(str(arg) for arg in expr.arguments)})"
+
+    def _print_Del(self, expr):
+        return ''.join([f'del {var}\n' for var in expr.variables])
 
     #------------------OmpAnnotatedComment Printer------------------
 
