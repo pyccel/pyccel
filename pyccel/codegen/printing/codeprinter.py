@@ -119,7 +119,6 @@ class CodePrinter:
         """ Basic print functionality for strings """
         return expr
 
-
     def _print_not_supported(self, expr):
         """ Print an error message if the print function for the type
         is not implemented """
