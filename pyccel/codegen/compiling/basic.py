@@ -233,6 +233,7 @@ class CompileObj:
         Lock the file and its dependencies to prevent race conditions
         """
         self.acquire_simple_lock()
+        self._lock_source.acquire()
         for d in self.dependencies:
             d.acquire_simple_lock()
 
@@ -240,7 +241,6 @@ class CompileObj:
         """
         Lock the file to prevent race conditions but not its dependencies
         """
-        self._lock_source.acquire()
         if self.has_target_file:
             self._lock_target.acquire()
 
@@ -253,6 +253,7 @@ class CompileObj:
         """
         Unlock the file and its dependencies
         """
+        self._lock_source.release()
         self.release_simple_lock()
         for d in self.dependencies:
             d.release_simple_lock()
@@ -261,7 +262,6 @@ class CompileObj:
         """
         Unlock the file
         """
-        self._lock_source.release()
         if self.has_target_file:
             self._lock_target.release()
 
