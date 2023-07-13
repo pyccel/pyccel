@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   Updating stdlib files if they are modified not just accessed.
+
 ### Deprecated
 
 ## \[1.8.1\] - 2023-07-07
