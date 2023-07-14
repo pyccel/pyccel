@@ -1004,9 +1004,11 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
+    
+    #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}:'.format(expr.name)
+        classDefName = 'class {}({}):'.format(expr.name,', '.join(str(arg) for arg in  expr.superclass))
         methods = ''.join([self._print(method) for method in expr.methods])
         methods = self._indent_codestring(methods)
         classDef = '\n'.join([classDefName, methods]) + '\n'
