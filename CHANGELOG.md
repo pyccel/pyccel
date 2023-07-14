@@ -9,7 +9,17 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   Updating `stdlib` files if they are modified not just accessed.
+
 ### Deprecated
+
+-   \[INTERNALS\] Removed `obsolete` folder.
+-   \[INTERNALS\] Removed out of date `samples` folder.
+-   \[INTERNALS\] Removed out of date `doc` folder.
+-   \[INTERNALS\] Removed `benchmarks` folder. Code is still available in benchmark repository.
+-   \[INTERNALS\] Removed `bugs` folder.
+-   \[INTERNALS\] Removed `inprogress` folder.
+-   \[INTERNALS\] Remove old Travis configuration file.
 
 ## \[1.8.1\] - 2023-07-07
 
