@@ -181,7 +181,7 @@ class PythonCodePrinter(CodePrinter):
         return f"{lhs_code}.{rhs_code}"
 
     def _print_DottedFunctionCall(self, expr):
-        return (f"{str(expr.func_name)}({', '.join([str(arg) for arg in expr.args])})\n")
+        return (f"{self._print(expr.func_name)}({', '.join(self._print(arg) for arg in expr.args)})\n")
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
@@ -1008,17 +1008,17 @@ class PythonCodePrinter(CodePrinter):
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}({}):'.format(expr.name,', '.join(str(arg) for arg in  expr.superclass))
-        methods = ''.join([self._print(method) for method in expr.methods])
+        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclass))
+        methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
         classDef = '\n'.join([classDefName, methods]) + '\n'
         return classDef
 
     def _print_ConstructorCall(self, expr):
-        return f"{expr.func.cls_name}({', '.join(str(arg) for arg in expr.arguments)})"
+        return f"{expr.func.cls_name}({', '.join(self._print(arg) for arg in expr.arguments)})"
 
     def _print_Del(self, expr):
-        return ''.join([f'del {var}\n' for var in expr.variables])
+        return ''.join(f'del {var}\n' for var in expr.variables)
 
     #------------------OmpAnnotatedComment Printer------------------
 
