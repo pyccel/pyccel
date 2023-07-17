@@ -483,7 +483,7 @@ class GitHubAPIInteractions:
             A dictionary describing the pull requests.
         """
         url = f'https://api.github.com/repos/{self._org}/{self._repo}/pulls'
-        return self._post_request("GET", url).json()
+        return self._post_request("GET", url, params={'state':state}).json()
 
     def get_check_runs(self, commit):
         """
@@ -590,7 +590,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         return self._post_request("GET", url).json()
 
-    def get_events(self, pr_id):
+    def get_events(self, pr_id, page = 1):
         """
         Get a timeline of events which occured on a given pull request.
 
@@ -612,7 +612,8 @@ class GitHubAPIInteractions:
             A dictionary describing the events.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
-        return self._post_request("GET", url).json()
+        configs = {'per_page':100, 'page': page}
+        return self._post_request("GET", url, params=configs).json()
 
     def clear_labels(self, pr_id, labels):
         """
