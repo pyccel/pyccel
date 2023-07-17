@@ -1,8 +1,22 @@
-import sys
-import re
-import json
+"""
+Command-line script for generating a test summary and saving it as a JSON file.
+
+This script parses command-line arguments to generate a test summary based on the provided inputs.
+It processes test outcomes, then generates a Markdown summary using the 'mini_md_summary' function.
+The resulting summary is printed to the console and saved as a JSON file.
+
+Usage:
+    -t, --title (str): The title of the test summary.
+    -test, --tests (list): Test specifications in the format 'Test title:outcome:output_file'.
+
+Example:
+    python script.py -t "Test Summary" --tests "Test 1:success:output.txt" "Test 2:failure:error.txt"
+"""
 import argparse
+import json
 import os
+import re
+import sys
 
 def     mini_md_summary(title, outcome, c, f, py):
     """
@@ -49,20 +63,6 @@ def     mini_md_summary(title, outcome, c, f, py):
     return(md)
 
 if __name__ == '__main__':
-    """
-    Command-line script for generating a test summary and saving it as a JSON file.
-
-    This script parses command-line arguments to generate a test summary based on the provided inputs.
-    It processes test outcomes, then generates a Markdown summary using the 'mini_md_summary' function.
-    The resulting summary is printed to the console and saved as a JSON file.
-
-    Usage:
-        -t, --title (str): The title of the test summary.
-        -test, --tests (list): Test specifications in the format 'Test title:outcome:output_file'.
-
-    Example:
-        python script.py -t "Test Summary" --tests "Test 1:success:output.txt" "Test 2:failure:error.txt"
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('-t', '--title', nargs='?', required=True, help='Tests summary title')
     parser.add_argument('-test', '--tests', nargs='+', help="'Test title':outcome{success, failure, cancelled, or skipped}:output_file")
