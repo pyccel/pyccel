@@ -54,14 +54,9 @@ if not draft:
 
     events = bot.GAI.get_events(bot._pr_id)
 
-    #print(events)
-
     shas = [e.get('sha', None) for e in events]
     print(shas)
-    print(event['check_run']['head_sha'])
     print([e.get('event', None) for e in events])
-    print(len(events))
-    print([s for s,e in zip(shas, events) if e.get('event', None) == 'committed'])
     page = 1
     start_idx = -1
     while start_idx == -1:
@@ -80,13 +75,6 @@ if not draft:
         end_idx = len(shas)
 
     relevant_events = events[:end_idx]
-    print(start_idx, end_idx)
-
-    print()
-    print("---------------------------------------------------------------------------")
-    print()
-
-    print(relevant_events)
 
     event_types = [e['event'] for e in events]
 
