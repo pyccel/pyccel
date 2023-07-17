@@ -169,7 +169,7 @@ class Bot:
             An assertion error is raised if the check run was not successfully updated.
         """
         if rerequest:
-            return self._GAI.rerequest_run(self._check_run_id, inputs).json()
+            return self._GAI.rerequest_run(self._check_run_id).json()
         inputs = {
                 "status":"in_progress",
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
