@@ -19,7 +19,7 @@ Any help answering these questions is appreciated as it helps our users find sol
 ## Reporting issues
 
 When reporting issues please include as much detail as possible about your
-operating system, and python version. Whenever possible, please
+operating system, and Python version. Whenever possible, please
 also include a brief, self-contained code example that demonstrates the problem.
 
 ## Requesting features
