@@ -1,7 +1,7 @@
 name: Bot rerun
 
 on:
-  check_run:
+  check_suite:
     types: rerequested
 
 jobs:

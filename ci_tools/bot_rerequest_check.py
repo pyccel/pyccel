@@ -12,9 +12,12 @@ with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
 
 
 # Collect id from an issue_comment event with a created action
-pr_id = event['check_run']['pull_requests']['number']
+pr_id = event['check_suite']['pull_requests'][0]['number']
 
 bot = Bot(pr_id = pr_id)
+
+print(event['check_suite']['check_runs_url'])
+print(event['check_suite']['url'])
 
 workflow_url = event['check_run']['details_url']
 
