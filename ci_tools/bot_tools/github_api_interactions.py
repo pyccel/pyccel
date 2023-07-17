@@ -674,7 +674,7 @@ class GitHubAPIInteractions:
             A list of dictionaries describing each of the labels.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
-        return self._post_request("POST", url).json()
+        return self._post_request("GET", url).json()
 
     def get_headers(self):
         """
