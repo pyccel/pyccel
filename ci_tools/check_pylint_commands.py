@@ -80,10 +80,8 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
         for flags, line_number in disabled_copy:
             if flag in flags:
                 new_flags = tuple(value for value in flags if value != flag)
-                if new_flags == ('',):
-                    disabled.remove((flags, line_number))
-                else:
-                    disabled.remove((flags, line_number))
+                disabled.remove((flags, line_number))
+                if new_flags:
                     disabled.add((new_flags, line_number))
             else:
                 run_pylint(file, flag, messages)
