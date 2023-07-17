@@ -402,21 +402,21 @@ class Bot:
             if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
                 if new_stage == "needs_initial_review":
                     message = message_from_file('new_pr.txt').format(author=author)
-                    leave_comment(pr_id, message)
+                    self._GAI.create_comment(pr_id, message)
                 elif new_stage == 'Ready_for_review':
                     names = ', '.join(f'@{r}' for r in senior_reviewer)
                     approved = ', '.join(f'@{a}' for a in approving_reviewers)
                     message = message_from_file('senior_review.txt').format(
                                     reviewers=names, author=author, approved=approving_reviewers)
-                    leave_comment(pr_id, message)
+                    self._GAI.create_comment(pr_id, message)
         elif reviews:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
-            leave_comment(pr_id, message)
+            self._GAI.create_comment(pr_id, message)
         else:
             message = message_from_file('new_pr.txt').format(author=author)
-            leave_comment(pr_id, message)
+            self._GAI.create_comment(pr_id, message)
 
     def post_coverage_review(self, comments, approve):
         """
