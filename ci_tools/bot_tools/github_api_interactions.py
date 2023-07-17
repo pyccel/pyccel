@@ -258,7 +258,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully rerequested.
         """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}/rerequest"
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs/{run_id}/rerun"
         run = self._post_request("PATCH", url)
         print(run.text)
         assert run.status_code == 201
@@ -524,7 +524,7 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the events.
         """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/events"
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/timeline"
         return self._post_request("GET", url).json()
 
     def get_artifacts(self, name):
