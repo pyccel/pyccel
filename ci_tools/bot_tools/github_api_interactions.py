@@ -148,7 +148,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-suites"
         configs = {"head_sha": commit,
                    "rerequestable": False}
-        run = self._post_request("POST", url, json)
+        run = self._post_request("POST", url, configs)
 
         print(run.text)
 
