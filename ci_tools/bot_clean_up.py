@@ -84,7 +84,11 @@ if not draft:
     was_examined = relevant_ready_events and relevant_ready_events[-1] == 'ready_for_review'
     result_ignored = bool(later_ready_events)
 
+    print(was_examined, result_ignored)
+
     if was_examined and not result_ignored:
+        print(all(k in completed_runs for k in pr_test_keys),
+             all(k in successful_runs for k in pr_test_keys))
         if event['check_run']['conclusion'] not in ('success', 'skipped'):
             bot.draft_due_to_failure()
         elif all(k in completed_runs for k in pr_test_keys) and \
