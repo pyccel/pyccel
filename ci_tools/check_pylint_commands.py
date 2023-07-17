@@ -55,14 +55,14 @@ def run_pylint(file, flag, messages):
         })
         messages.append(output_item)
 
-def check_expected_pylint_disable(file, disabled, flag, messages):
+def check_expected_pylint_disable(file, disabled, flag, messages, file_changed):
     """
     Check for an expected pylint disable flag.
 
     Check for an expected pylint disable flag. If the flag is present
-    then it is ignored by removing it from the list. Otherwise if the
-    file raises the error a message is saved recommending that the
-    flag be disabled in the file.
+    then it is ignored by removing it from the list. Otherwise, if the
+    file is modified in this pull request, and it raises the error, a
+    message is saved recommending that the flag be disabled in the file.
 
     Parameters
     ----------
@@ -74,6 +74,8 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
         The name of the flag being investigated.
     messages : list
         The list of messages which should be printed.
+    in_diff : bool
+        Indicates whether the file was changed in this diff.
     """
     disabled_copy = disabled.copy()
     if disabled:
@@ -83,9 +85,9 @@ def check_expected_pylint_disable(file, disabled, flag, messages):
                 disabled.remove((flags, line_number))
                 if new_flags:
                     disabled.add((new_flags, line_number))
-            else:
+            elif file_changed:
                 run_pylint(file, flag, messages)
-    else:
+    elif file_changed:
         run_pylint(file, flag, messages)
 
 if __name__ == '__main__':
@@ -128,12 +130,13 @@ if __name__ == '__main__':
                             disabled.discard(item)
                             if strings_list:
                                 disabled.update([(tuple(strings_list), num)])
+        file_changed = f in diff
         p = pathlib.Path(f)
         if p.parts[0] == 'tests':
             msg = []
-            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg)
-            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg)
+            check_expected_pylint_disable(f, disabled, 'missing-function-docstring', msg, file_changed)
+            check_expected_pylint_disable(f, disabled, 'missing-module-docstring', msg, file_changed)
+            check_expected_pylint_disable(f, disabled, 'missing-class-docstring', msg, file_changed)
             first_iteration = True
             for item in msg:
                 if first_iteration:
@@ -158,7 +161,6 @@ if __name__ == '__main__':
                         if strings_list:
                             disabled.update([(tuple(strings_list), num)])
         if disabled:
-            file_changed = f in diff
             first_iteration = True
             if file_changed:
                 summary_template = f"-  New unexpected pylint disables found in `{f}`: "
