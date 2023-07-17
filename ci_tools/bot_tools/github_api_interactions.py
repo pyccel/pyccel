@@ -258,6 +258,7 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully rerequested.
         """
+        print("Rerequesting : ", run_id)
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/runs/{run_id}/rerun"
         run = self._post_request("PATCH", url)
         print(run.text)
