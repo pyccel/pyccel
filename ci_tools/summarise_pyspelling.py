@@ -9,7 +9,10 @@ import re
 
 
 def find_all_words(file_path, search_word):
-    """Find all occurrences of a word in a file.
+    """
+    Find all occurrences of a word in a file.
+
+    Find all occurrences of a word in a file and return the line number and column of each occurrence of the search word.
 
     Parameters
     ----------
