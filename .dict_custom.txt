@@ -84,3 +84,11 @@ uniformise
 incrementation
 Pylint
 templated
+et
+al
+transpiler
+bibtex
+Bourne
+Güçlü
+Hadjout
+Ratnani

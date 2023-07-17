@@ -54,25 +54,27 @@ if not draft:
 
     events = bot.GAI.get_events(bot._pr_id)
 
-    print(events)
-
     shas = [e.get('sha', None) for e in events]
     print(shas)
-    print(event['check_run']['head_sha'])
-    start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+    print([e.get('event', None) for e in events])
+    page = 1
+    start_idx = -1
+    while start_idx == -1:
+        try:
+            start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+        except StopIteration:
+            start_idx = -1
+            page += 1
+            new_events = bot.GAI.get_events(bot._pr_id, page)
+            events.extend(new_events)
+            shas.extend([e.get('sha', None) for e in new_events])
+            print(shas)
     try:
         end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
     except StopIteration:
         end_idx = len(shas)
 
     relevant_events = events[:end_idx]
-    print(start_idx, end_idx)
-
-    print()
-    print("---------------------------------------------------------------------------")
-    print()
-
-    print(relevant_events)
 
     event_types = [e['event'] for e in events]
 
@@ -82,7 +84,11 @@ if not draft:
     was_examined = relevant_ready_events and relevant_ready_events[-1] == 'ready_for_review'
     result_ignored = bool(later_ready_events)
 
+    print(was_examined, result_ignored)
+
     if was_examined and not result_ignored:
+        print(all(k in completed_runs for k in pr_test_keys),
+             all(k in successful_runs for k in pr_test_keys))
         if event['check_run']['conclusion'] not in ('success', 'skipped'):
             bot.draft_due_to_failure()
         elif all(k in completed_runs for k in pr_test_keys) and \

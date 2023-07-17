@@ -1,0 +1,32 @@
+name: Bot rerun
+
+on:
+  check_suite:
+    types: rerequested
+
+jobs:
+  Bot:
+    runs-on: ubuntu-latest
+    name: Rerequest a job that failed
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests
+      - name: "Generate token"
+        id: token
+        uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: "${{ secrets.BOT_PEM }}"
+      - id: run_bot
+        run: |
+          python ci_tools/bot_rerequest_check.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          installation_token: ${{ steps.token.outputs.installation_token }}
+          installation_token_exp: ${{ steps.token.outputs.installation_token_expiry }}
