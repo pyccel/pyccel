@@ -1,6 +1,6 @@
 # Contributing to Pyccel
 
-Firstly, thanks for your interest in contributing code to pyccel!
+Firstly, thanks for your interest in contributing code to Pyccel!
 
 We welcome any and all contributions.
 
@@ -48,4 +48,4 @@ The review process is described in the [developer docs](https://github.com/pycce
 
 Before contributing we strongly recommend you check out the [developer docs](https://github.com/pyccel/pyccel/tree/master/developer_docs).
 We try to flag `good-first-issue`s.
-These are either issues which can be fixed by following the example provided by a similar solution which is already implemented, or issues which only concern one of the pyccel [stages](https://github.com/pyccel/pyccel/blob/master/developer_docs/overview.md).
+These are either issues which can be fixed by following the example provided by a similar solution which is already implemented, or issues which only concern one of the Pyccel [stages](https://github.com/pyccel/pyccel/blob/master/developer_docs/overview.md).
