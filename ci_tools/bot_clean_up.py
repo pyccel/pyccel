@@ -48,8 +48,43 @@ for q in queued_runs:
         elif all(d in completed_runs for d in deps):
             bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
-if all(k in completed_runs for k in pr_test_keys):
-    if all(k in successful_runs for k in pr_test_keys):
-        bot.mark_as_ready()
-    else:
-        bot.mark_as_draft()
+draft = bot.is_pr_draft()
+
+if not draft:
+
+    events = bot.GAI.get_events(bot._pr_id)
+
+    print(events)
+
+    shas = [e.get('sha', None) for e in events]
+    print(shas)
+    print(event['check_run']['head_sha'])
+    start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+    try:
+        end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
+    except StopIteration:
+        end_idx = len(shas)
+
+    relevant_events = events[:end_idx]
+    print(start_idx, end_idx)
+
+    print()
+    print("---------------------------------------------------------------------------")
+    print()
+
+    print(relevant_events)
+
+    event_types = [e['event'] for e in events]
+
+    relevant_ready_events = [e for e in event_types[:end_idx] if e in ('ready_for_review', 'convert_to_draft')]
+    later_ready_events = [e for e in event_types[end_idx:] if e in ('ready_for_review', 'convert_to_draft')]
+
+    was_examined = relevant_ready_events and relevant_ready_events[-1] == 'ready_for_review'
+    result_ignored = bool(later_ready_events)
+
+    if was_examined and not result_ignored:
+        if event['check_run']['conclusion'] not in ('success', 'skipped'):
+            bot.draft_due_to_failure()
+        elif all(k in completed_runs for k in pr_test_keys) and \
+             all(k in successful_runs for k in pr_test_keys):
+            bot.mark_as_ready(following_review = False)
