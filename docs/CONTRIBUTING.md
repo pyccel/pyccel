@@ -42,7 +42,7 @@ There are many pull requests and reviewing them is a great way to help things ge
 This is also a really good way to get to grips with the code base as you will see examples of many different areas of the code.
 It's incredibly helpful to have pull requests go through as many reviews as possible, to make sure the code change makes sense, is documented, and is efficient and clear.
 As the clarity is subjective, more eyes can only improve the code base.
-The review process is described in the [developer docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md), keep an eye out for PRs tagged `needs_initial_review`.
+The review process is described in the [developer docs](https://github.com/pyccel/pyccel/blob/master/developer_docs/review_process.md), keep an eye out for pull requests tagged `needs_initial_review`.
 
 ## Contributing code
 
