@@ -82,6 +82,10 @@ with open(args.report, 'r', encoding='utf-8') as f:
                 if idx < nsections:
                     end = start + sections[idx+1][1] - 1
                 start += sections[idx][1]
+            if code.startswith('SS'):
+                idx = 0 if any(c != '"' for c in lines[0]) else 1
+                start += start + idx
+                end = start
             annotations.append({
                 "annotation_level":level,
                 "start_line":start,
