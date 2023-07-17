@@ -1,10 +1,10 @@
-# Contributing to pyccel
+# Contributing to Pyccel
 
 Firstly, thanks for your interest in contributing code to pyccel!
 
 We welcome any and all contributions.
 
-There are many ways to help with the pyccel project which are more or less involved.
+There are many ways to help with the Pyccel project which are more or less involved.
 The following is a summary of how you can do this.
 
 ## Asking questions
