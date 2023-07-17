@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-from numpy import ones
 #$ header class Point(public)
 #$ header method __init__(Point, [double])
 #$ header method __del__(Point)

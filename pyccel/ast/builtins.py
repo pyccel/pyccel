@@ -16,8 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeString, str_dtype,
-                        NativeGeneric, default_precision)
+                        NativeComplex, NativeString, NativeGeneric)
 from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value

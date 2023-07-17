@@ -20,9 +20,9 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
-from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
-from .literals  import LiteralInteger, Nil, LiteralFalse
+from .literals  import Nil, LiteralFalse
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational

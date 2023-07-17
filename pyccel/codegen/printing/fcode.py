@@ -21,14 +21,14 @@ from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import ErrorExit, FunctionAddress
+from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module
 from pyccel.ast.core import Import
-from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
+from pyccel.ast.internals    import get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
-                             If, IfSection, For, Deallocate)
+                             For, Deallocate)
 
 from pyccel.ast.variable  import (Variable,
                              IndexedElement,
