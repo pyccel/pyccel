@@ -30,6 +30,7 @@ def test_array_assigned_dtype(language):
     f_integer_output = epyccel_func(integer, integer)
     test_int_output  = arrays.array_return_first_element(integer, integer)
     assert isinstance(f_integer_output, type(test_int_output))
+
     f_integer8_output = epyccel_func(integer8, integer8)
     test_int8_output = arrays.array_return_first_element(integer8, integer8)
     assert isinstance(f_integer8_output, type(test_int8_output))
