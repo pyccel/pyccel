@@ -263,7 +263,8 @@ class GitHubAPIInteractions:
         run = self._post_request("POST", url)
         print(run.text)
         assert run.status_code == 201
-        return run
+        run_url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
+        return self._post_request("GET", run_url)
 
     def get_pr_details(self, pr_id):
         """
