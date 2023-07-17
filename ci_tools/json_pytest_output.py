@@ -5,7 +5,10 @@ import argparse
 import os
 
 def     mini_md_summary(title, outcome, c, f, py):
-    """Generates a Markdown summary based on the provided information.
+    """
+    Generate Markdown
+
+    Generate a Markdown summary based on the provided information.
 
     Parameters
     ----------
