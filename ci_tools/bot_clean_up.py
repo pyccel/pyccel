@@ -54,12 +54,26 @@ if not draft:
 
     events = bot.GAI.get_events(bot._pr_id)
 
-    print(events)
+    #print(events)
 
     shas = [e.get('sha', None) for e in events]
     print(shas)
     print(event['check_run']['head_sha'])
-    start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+    print([e.get('event', None) for e in events])
+    print(len(events))
+    print([s for s,e in zip(shas, events) if e.get('event', None) == 'committed'])
+    page = 1
+    start_idx = -1
+    while start_idx == -1:
+        try:
+            start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+        except StopIteration:
+            start_idx = -1
+            page += 1
+            new_events = bot.GAI.get_events(bot._pr_id, page)
+            events.extend(new_events)
+            shas.extend([e.get('sha', None) for e in new_events])
+            print(shas)
     try:
         end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
     except StopIteration:
