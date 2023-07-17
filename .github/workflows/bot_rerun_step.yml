@@ -2,11 +2,13 @@ name: Bot rerun
 
 on:
   check_run:
-    types: [ rerequested ]
+    types: rerequested
 
 jobs:
   Bot:
     runs-on: ubuntu-latest
+    name: Rerequest a job that failed
+
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.9
