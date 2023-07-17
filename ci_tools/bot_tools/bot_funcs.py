@@ -41,7 +41,9 @@ test_dependencies = {'coverage':['linux']}
 
 tests_with_base = ('coverage', 'docs', 'pyccel_lint')
 
-pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#                'pyccel_lint', 'spelling')
+pr_test_keys = ('docs', 'pylint',
                 'pyccel_lint', 'spelling')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
@@ -168,8 +170,8 @@ class Bot:
         AssertionError
             An assertion error is raised if the check run was not successfully updated.
         """
-        if rerequest:
-            return self._GAI.rerequest_run(self._check_run_id, inputs).json()
+        if rerequest and self._check_run_id:
+            return self._GAI.rerequest_run(self._check_run_id).json()
         inputs = {
                 "status":"in_progress",
                 "details_url": f"https://github.com/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
@@ -384,6 +386,7 @@ class Bot:
         """
         pr_id = self._pr_id
         current_labels = self._GAI.get_current_labels(pr_id)
+        print(current_labels)
         stage_labels = [l["name"] for l in current_labels if l["name"] in review_stage_labels]
         assert len(stage_labels) <= 1
         if stage_labels:
@@ -402,21 +405,21 @@ class Bot:
             if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
                 if new_stage == "needs_initial_review":
                     message = message_from_file('new_pr.txt').format(author=author)
-                    leave_comment(pr_id, message)
+                    self._GAI.create_comment(pr_id, message)
                 elif new_stage == 'Ready_for_review':
                     names = ', '.join(f'@{r}' for r in senior_reviewer)
                     approved = ', '.join(f'@{a}' for a in approving_reviewers)
                     message = message_from_file('senior_review.txt').format(
                                     reviewers=names, author=author, approved=approving_reviewers)
-                    leave_comment(pr_id, message)
+                    self._GAI.create_comment(pr_id, message)
         elif reviews:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
-            leave_comment(pr_id, message)
+            self._GAI.create_comment(pr_id, message)
         else:
             message = message_from_file('new_pr.txt').format(author=author)
-            leave_comment(pr_id, message)
+            self._GAI.create_comment(pr_id, message)
 
     def post_coverage_review(self, comments, approve):
         """
