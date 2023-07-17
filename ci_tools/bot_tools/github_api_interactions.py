@@ -134,24 +134,6 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/commits/{commit}/check-runs"
         return self._post_request("GET", url).json()
 
-    def create_suite(self, commit):
-        """
-        Try to create a new check suite which is not rerequestable.
-
-        Create a new check suite on the specified commit and make it non-rerequestable.
-        
-        Parameters
-        ----------
-        commit : str
-            The commit to be tested.
-        """
-        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-suites"
-        configs = {"head_sha": commit,
-                   "rerequestable": False}
-        run = self._post_request("POST", url, configs)
-
-        print(run.text)
-
     def create_run(self, commit, name):
         """
         Create a new check run.
@@ -178,7 +160,6 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
-        self.create_suite(commit)
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         workflow_url = f"https://github.com/{self._org}/{self._repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
         print("create_run:", url)
@@ -215,7 +196,6 @@ class GitHubAPIInteractions:
         AssertionError
             An assertion error is raised if the check run was not successfully posted.
         """
-        self.create_suite(commit)
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
         json = {"name": name,
                 "head_sha": commit,
