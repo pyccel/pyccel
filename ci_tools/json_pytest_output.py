@@ -6,7 +6,7 @@ import os
 
 def     mini_md_summary(title, outcome, c, f, py):
     """
-    Generate Markdown
+    Generate Markdown.
 
     Generate a Markdown summary based on the provided information.
 
