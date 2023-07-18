@@ -129,7 +129,7 @@ class ErrorInfo:
 
         if self.symbol:
             if self.traceback:
-                info['symbol'] = f' ({repr(symbol)})'
+                info['symbol'] = f' ({repr(self.symbol)})'
             else:
                 info['symbol'] = f' ({self.symbol})'
 

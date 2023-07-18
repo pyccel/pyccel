@@ -79,11 +79,11 @@ class PyccelArraySize(PyccelInternalFunction):
         if not isinstance(arg, (list,
                                 tuple,
                                 PyccelAstNode)):
-            raise TypeError(f'Unknown type of type(arg).')
+            raise TypeError(f'Unknown type of {type(arg)}.')
         if isinstance(index, int):
             index = LiteralInteger(index)
         elif not isinstance(index, PyccelAstNode):
-            raise TypeError(f'Unknown type of type(index).')
+            raise TypeError(f'Unknown type of {type(index)}.')
 
         self._arg   = arg
         self._index = index
