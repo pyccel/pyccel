@@ -51,7 +51,7 @@ with open(args.report, 'r', encoding='utf-8') as f:
         else:
             level = None
             parsing_errors.append(line)
-        if level:
+        if level == 'failure':
             file, start, end = get_code_file_and_lines(file_name, pyccel_folder = pyccel_folder)
             with open(os.path.join(pyccel_folder, file), 'r', encoding='utf-8') as code_file:
                 lines = code_file.readlines()[start-1:end+2]
