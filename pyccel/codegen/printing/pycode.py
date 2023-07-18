@@ -783,7 +783,7 @@ class PythonCodePrinter(CodePrinter):
                 lines.append("else:\n")
 
             else:
-                lines.append("elif {self._print(c)}:\n" % )
+                lines.append("elif {self._print(c)}:\n")
 
             if isinstance(e, CodeBlock):
                 body = self._indent_codestring(self._print(e))
