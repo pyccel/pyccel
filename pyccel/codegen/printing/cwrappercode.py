@@ -1380,7 +1380,7 @@ class CWrapperCodePrinter(CCodePrinter):
         arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
-                        '}};\n')
+                        f'}};\n')
 
     def _print_PyModule_AddObject(self, expr):
         name = self._print(expr.name)
@@ -1569,51 +1569,54 @@ class CWrapperCodePrinter(CCodePrinter):
         cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                        for f in self._cast_functions_dict.values())
 
-        name = self.get_python_name(expr.scope, f)
-        wrapper_name = self._function_wrapper_names[f.name]
-        doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                        if f.doc_string else '""'
-
-        method_def_func = ''.join(('{{\n'
+        method_def_funcs = []
+        for f in funcs:
+            if f is not expr.init_func:
+                name = self.get_python_name(expr.scope, f)
+                wrapper_name = self._function_wrapper_names[f.name]
+                doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                                if f.doc_string else '""'
+                method_def_funcs.append(f'{{\n'
                                      f'"{name}",\n'
                                      f'(PyCFunction){wrapper_name},\n'
-                                     'METH_VARARGS | METH_KEYWORDS,\n'
+                                     f'METH_VARARGS | METH_KEYWORDS,\n'
                                      f'{doc_string}\n'
-                                     '}},\n')
-                                     for f in funcs if f is not expr.init_func)
+                                     f'}},\n')
+
+        method_def_func = ''.join(method_def_funcs)
 
         slots_name = self.scope.get_new_name(f'{expr.name}_slots')
         exec_func_name = self.scope.get_new_name('exec_func')
         slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
                      f'{{Py_mod_exec, {exec_func_name}}},\n'
-                      '{{0, NULL}},\n'
-                      '}};\n')
+                     f'{{0, NULL}},\n'
+                     f'}};\n')
 
         method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                       f'{method_def_func}'
-                       '{{ NULL, NULL, 0, NULL}}\n'
-                       '}};\n')
+                      f'{{ NULL, NULL, 0, NULL}}\n'
+                      f'}};\n')
 
-        module_def_name = self.scope.get_new_name('{expr.name}_module')
+        module_def_name = self.scope.get_new_name(f'{expr.name}_module')
         module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
-                 'PyModuleDef_HEAD_INIT,\n'
-                 '/* name of module */\n'
+                f'PyModuleDef_HEAD_INIT,\n'
+                f'/* name of module */\n'
                 f'\"{self._module_name}\",\n'
-                 '/* module documentation, may be NULL */\n'
-                 'NULL,\n' #TODO: Add documentation
-                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
-                 '0,\n'
+                f'/* module documentation, may be NULL */\n'
+                f'NULL,\n' #TODO: Add documentation
+                f'/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
+                f'0,\n'
                 f'{method_def_name},\n'
                 f'{slots_name}\n'
-                 '}};\n')
+                f'}};\n')
 
         exec_func = self.get_module_exec_function(expr, exec_func_name)
 
         init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
-                 'import_array();\n'
+                f'import_array();\n'
                 f'return PyModuleDef_Init(&{module_def_name});\n'
-                 '}}\n')
+                f'}}\n')
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = module_imports.copy()

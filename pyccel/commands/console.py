@@ -59,8 +59,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     import pyccel
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
-    py_version = '.'.join(sys.version_info)
-    python  = f'python {py_version}'
+    py_version = sys.version_info
+    python  = f'python {py_version.major}.{py_version.minor}'
     message = f"pyccel {version} from {libpath} ({python})"
     parser.add_argument('-V', '--version', action='version', version=message)
     # ...

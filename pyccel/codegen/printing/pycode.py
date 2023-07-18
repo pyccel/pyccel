@@ -749,7 +749,7 @@ class PythonCodePrinter(CodePrinter):
 
         arg = f'{arr}, {axis}{keep_dims}'
 
-        return "{name}({arg})"
+        return f"{name}({arg})"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
@@ -766,24 +766,24 @@ class PythonCodePrinter(CodePrinter):
     def _print_PyccelIs(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return '{lhs} is {rhs}'
+        return f'{lhs} is {rhs}'
 
     def _print_PyccelIsNot(self, expr):
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
-        return '{lhs} is not {rhs}'
+        return f'{lhs} is not {rhs}'
 
     def _print_If(self, expr):
         lines = []
         for i, (c, e) in enumerate(expr.blocks):
             if i == 0:
-                lines.append("if {self._print(c):\n")
+                lines.append(f"if {self._print(c)}:\n")
 
             elif i == len(expr.blocks) - 1 and isinstance(c, LiteralTrue):
                 lines.append("else:\n")
 
             else:
-                lines.append("elif {self._print(c)}:\n")
+                lines.append(f"elif {self._print(c)}:\n")
 
             if isinstance(e, CodeBlock):
                 body = self._indent_codestring(self._print(e))
