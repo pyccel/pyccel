@@ -109,6 +109,7 @@ class Bot:
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
             self._base = self._pr_details["base"]["sha"]
+            self._source_repo = self._pr_details["base"]["repo"]["full_name"]
         if commit:
             self._ref = commit
             if '/' in self._ref:
@@ -318,7 +319,11 @@ class Bot:
         workflow_ids : list of int, optional
             The ids of any workflows which may provide the necessary artifacts.
         """
-        inputs = {'python_version': python_version, 'ref': self._ref, 'check_run_id': str(check_run_id)}
+        inputs = {'python_version' : python_version,
+                  'ref' : self._ref,
+                  'check_run_id' : str(check_run_id),
+                  'pr_repo' : self._source_repo
+                 }
         if test in tests_with_base:
             inputs['base'] = self._base
         if test == 'coverage':
