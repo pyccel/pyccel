@@ -28,11 +28,12 @@ def find_all_words(file_path, search_word):
         column number of an occurrence of the search word.
     """
     results = []
+    regex = re.compile(r"\b" + re.escape(search_word) + r"\b")
 
     with open(file_path, 'r', encoding="utf-8") as file:
         lines = file.readlines()
         for line_number, line in enumerate(lines, start=1):
-            matches = re.finditer(r"\b" + re.escape(search_word) + r"\b", line)
+            matches = regex.finditer(line)
             for match in matches:
                 column = match.start() + 1
                 results.append((line_number, column))
@@ -85,7 +86,7 @@ if __name__ == '__main__':
             for name, words in errors.items():
                 print("## `", name, "`", file=f)
                 for w in words:
-                    words_list = find_all_words("../"+name.strip(":"), w)
+                    words_list = find_all_words(os.path.join("..",name.strip(":")), w)
                     suggestions = difflib.get_close_matches(w, internal_dict)
                     for line_no, column in words_list:
                         if suggestions:
