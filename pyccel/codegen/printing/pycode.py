@@ -976,9 +976,7 @@ class PythonCodePrinter(CodePrinter):
         return f'{lhs} & {rhs}'
 
     def _print_Duplicate(self, expr):
-        lhs = self._print(expr.args[0])
-        rhs = self._print(expr.args[1])
-        return f'{lhs} * {rhs}'
+        return f'{self._print(expr.val)} * {self._print(expr.length)}'
 
     def _print_Concatenate(self, expr):
         return ' + '.join(self._print(a) for a in expr.args)
