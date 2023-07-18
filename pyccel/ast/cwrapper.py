@@ -502,13 +502,13 @@ def generate_datatype_error(variable):
     elif isinstance(dtype, NativeBool):
         precision = ''
     elif isinstance(dtype, NativeComplex):
-        precision = '{} bit '.format(variable.precision * 2 * 8)
+        nbit = variable.precision * 2 * 8
+        precision = f'{nbit} bit '
     else:
-        precision = '{} bit '.format(variable.precision * 8)
+        nbit = variable.precision * 8
+        precision = f'{nbit} bit '
 
-    message = '"Argument must be {precision}{dtype}"'.format(
-            precision = precision,
-            dtype     = variable.dtype)
+    message = f'"Argument must be {precision}{variable.dtype}"'
     return set_python_error_message('PyExc_TypeError', message)
 
 

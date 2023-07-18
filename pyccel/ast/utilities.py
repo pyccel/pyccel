@@ -198,7 +198,7 @@ def get_function_from_ast(ast, func_name):
             break
 
     if node is None:
-        print('> could not find {}'.format(func_name))
+        print(f'> could not find {func_name}')
 
     return node
 
@@ -345,7 +345,7 @@ def insert_index(expr, pos, index_var):
         return expr[index_var]
 
     else:
-        raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
+        raise NotImplementedError(f"Expansion not implemented for type : {type(expr)}")
 
 #==============================================================================
 

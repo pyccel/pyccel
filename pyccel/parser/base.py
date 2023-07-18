@@ -69,8 +69,8 @@ def get_filename_from_import(module,input_folder=''):
     while filename.startswith('/'):
         filename = folder_above + filename[1:]
 
-    filename_pyh = '{}.pyh'.format(filename)
-    filename_py  = '{}.py'.format(filename)
+    filename_pyh = f'{filename}.pyh'
+    filename_py  = f'{filename}.py'
     folders = input_folder.split(""".""")
     for i in range(len(folders)):
         poss_dirname      = os.path.join( *folders[:i+1] )
@@ -88,8 +88,8 @@ def get_filename_from_import(module,input_folder=''):
 
         source = """.""".join(i for i in module.split(""".""")[:-1])
         _module = module.split(""".""")[-1]
-        filename_pyh = '{}.pyh'.format(_module)
-        filename_py = '{}.py'.format(_module)
+        filename_pyh = f'{_module}.pyh'
+        filename_py  = f'{_module}.py'
 
     try:
         package = importlib.import_module(source)
@@ -405,7 +405,7 @@ class BasicParser(object):
             if ext != '.pyh':
                 return
 
-            name     = '{}.pyccel'.format(name)
+            name     = f'{name}.pyccel'
             filename = os.path.join(path, name)
         # check extension
 
@@ -455,7 +455,7 @@ class BasicParser(object):
             if ext != '.pyh':
                 return
 
-            name     = '{}.pyccel'.format(name)
+            name     = f'{name}.pyccel'
             filename = os.path.join(path, name)
 
         if not filename.split(""".""")[-1] == 'pyccel':

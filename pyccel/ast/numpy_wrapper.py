@@ -58,8 +58,8 @@ def get_numpy_max_acceptable_version_file():
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
     numpy_api_acceptable_version = min(numpy_max_acceptable_version, numpy_current_version)
-    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION\n'.format(
-        *numpy_api_acceptable_version)
+    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_' + \
+                      f'{numpy_api_acceptable_version[0]}_{numpy_api_acceptable_version[1]}_API_VERSION\n'
 
     return '#ifndef NPY_NO_DEPRECATED_API\n'+ \
             numpy_api_macro+\
@@ -227,7 +227,7 @@ def find_in_numpy_dtype_registry(var):
         return numpy_dtype_registry[(dtype, prec)]
     except KeyError:
         return errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol = "{}[kind = {}]".format(dtype, prec),
+                symbol = f"{dtype}[kind = {prec}]",
                 severity='fatal')
 
 def array_type_check(py_variable, c_variable, raise_error):

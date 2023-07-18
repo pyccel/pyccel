@@ -261,10 +261,10 @@ class AsName(Basic):
         return self._obj
 
     def __repr__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
+        return f'{self.name} as {self.target}'
 
     def __str__(self):
-        return '{0} as {1}'.format(str(self.name), str(self.target))
+        return f'{self.name} as {self.target}'
 
     def __eq__(self, string):
         if isinstance(string, str):
@@ -315,10 +315,10 @@ class Duplicate(PyccelAstNode):
         return self._length
 
     def __str__(self):
-        return '{} * {}'.format(str(self.val), str(self.length))
+        return f'{self.val} * {self.length}'
 
     def __repr__(self):
-        return '{} * {}'.format(repr(self.val), repr(self.length))
+        return f'{repr(self.val)} * {repr(self.length)}'
 
 class Concatenate(PyccelAstNode):
 
@@ -417,10 +417,10 @@ class Assign(Basic):
             self.set_fst(fst)
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     def __repr__(self):
-        return '({0} := {1})'.format(repr(self.lhs), repr(self.rhs))
+        return f'({repr(self.lhs)} := {repr(self.rhs)})'
 
     @property
     def lhs(self):
@@ -513,14 +513,14 @@ class Allocate(Basic):
     def __init__(self, variable, *, shape, order, status):
 
         if not isinstance(variable, Variable):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError(f"Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         if variable.on_stack:
             # Variable may only be a pointer in the wrapper
             raise ValueError("Variable must be allocatable")
 
         if shape and not isinstance(shape, (int, tuple, list)):
-            raise TypeError("Cannot understand 'shape' parameter of type '{}'".format(type(shape)))
+            raise TypeError(f"Cannot understand 'shape' parameter of type '{type(shape)}'")
 
         if variable.rank != len(shape):
             raise ValueError("Incompatible rank in variable allocation")
@@ -530,10 +530,10 @@ class Allocate(Basic):
             raise ValueError("Incompatible order in variable allocation")
 
         if not isinstance(status, str):
-            raise TypeError("Cannot understand 'status' parameter of type '{}'".format(type(status)))
+            raise TypeError(f"Cannot understand 'status' parameter of type '{type(status)}'")
 
         if status not in ('allocated', 'unallocated', 'unknown'):
-            raise ValueError("Value of 'status' not allowed: '{}'".format(status))
+            raise ValueError(f"Value of 'status' not allowed: '{status}'")
 
         self._variable = variable
         self._shape    = shape
@@ -559,8 +559,7 @@ class Allocate(Basic):
         return self._status
 
     def __str__(self):
-        return 'Allocate({}, shape={}, order={}, status={})'.format(
-                str(self.variable), str(self.shape), str(self.order), str(self.status))
+        return 'Allocate({self.variable}, shape={self.shape}, order={self.order}, status={self.status})'
 
     def __eq__(self, other):
         if isinstance(other, Allocate):
@@ -599,7 +598,7 @@ class Deallocate(Basic):
     def __init__(self, variable):
 
         if not isinstance(variable, Variable):
-            raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
+            raise TypeError("Can only allocate a 'Variable' object, got {type(variable)} instead")
 
         self._variable = variable
         super().__init__()
@@ -674,7 +673,7 @@ class CodeBlock(Basic):
             self._body = tuple([*obj, *self.body])
 
     def __repr__(self):
-        return 'CodeBlock({})'.format(self.body)
+        return f'CodeBlock({self.body})'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -745,7 +744,7 @@ class AliasAssign(Basic):
         super().__init__()
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     @property
     def lhs(self):
@@ -786,7 +785,7 @@ class SymbolicAssign(Basic):
         super().__init__()
 
     def __str__(self):
-        return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
+        return f'{self.lhs} := {self.rhs}'
 
     @property
     def lhs(self):
@@ -864,10 +863,10 @@ class AugAssign(Assign):
         super().__init__(lhs, rhs, status, like, fst=fst)
 
     def __repr__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
+        return f'{self.lhs} {self.op}= {self.rhs}'
 
     def __str__(self):
-        return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
+        return f'{self.lhs} {self.op}= {self.rhs}'
 
     @property
     def op(self):
@@ -1523,7 +1522,7 @@ class Iterable(Basic):
         elif hasattr(iterable, 'n_indices') and hasattr(iterable, 'to_range'):
             self._num_indices_required = iterable.n_indices
         else:
-            raise TypeError("Unknown iterator type {}".format(type(iterable)))
+            raise TypeError(f"Unknown iterator type {type(iterable)}")
 
         super().__init__()
 
@@ -1805,7 +1804,7 @@ class ConstructorCall(Basic):
         args = ''
         if not self.arguments is None:
             args = ', '.join(str(i) for i in self.arguments)
-        return '{0}({1})'.format(name, args)
+        return f'{name}({args})'
 
     @property
     def func(self):
@@ -1865,15 +1864,15 @@ class FunctionCallArgument(Basic):
 
     def __repr__(self):
         if self.has_keyword:
-            return 'FunctionCallArgument({} = {})'.format(self.keyword, repr(self.value))
+            return f'FunctionCallArgument({self.keyword} = {repr(self.value)})'
         else:
-            return 'FunctionCallArgument({})'.format(repr(self.value))
+            return f'FunctionCallArgument({repr(self.value)})'
 
     def __str__(self):
         if self.has_keyword:
-            return '{} = {}'.format(self.keyword, str(self.value))
+            return f'{self.keyword} = {self.value}'
         else:
-            return '{}'.format(str(self.value))
+            return str(self.value)
 
 class FunctionDefArgument(PyccelAstNode):
     """
@@ -2000,19 +1999,15 @@ class FunctionDefArgument(PyccelAstNode):
 
     def __str__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return '{0}={1}'.format(argument, value)
+            return f'{self.name}={self.value}'
         else:
             return str(self.name)
 
     def __repr__(self):
         if self.has_default:
-            argument = str(self.name)
-            value = str(self.value)
-            return 'FunctionDefArgument({0}={1})'.format(argument, value)
+            return f'FunctionDefArgument({self.name}={self.value})'
         else:
-            return 'FunctionDefArgument({})'.format(repr(self.name))
+            return f'FunctionDefArgument({repr(self.name)})'
 
 class FunctionDefResult(PyccelAstNode):
     """
@@ -2090,7 +2085,7 @@ class FunctionDefResult(PyccelAstNode):
         return self._is_argument
 
     def __repr__(self):
-        return 'FunctionDefResult({})'.format(repr(self.var))
+        return f'FunctionDefResult({repr(self.var)})'
 
     def __str__(self):
         return str(self.var)
@@ -2225,7 +2220,8 @@ class FunctionCall(PyccelAstNode):
         return self._interface_name
 
     def __repr__(self):
-        return '{}({})'.format(self.func_name, ', '.join(str(a) for a in self.args))
+        args = ', '.join(str(a) for a in self.args)
+        return f'{self.func_name}({args})'
 
     @classmethod
     def _ignore(cls, c):
@@ -2315,7 +2311,8 @@ class Return(Basic):
             code = repr(self.stmt)+';'
         else:
             code = ''
-        return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
+        expr = ','.join(repr(e) for e in self.expr)
+        return code+f"Return({expr})"
 
 class FunctionDef(ScopedNode):
 
@@ -2786,10 +2783,7 @@ class FunctionDef(ScopedNode):
         result = 'None' if len(self.results) == 0 else \
                     ', '.join(str(r) for r in self.results)
         args = ', '.join(str(a) for a in self.arguments)
-        return '{name}({args}) -> {result}'.format(
-                name   = self.name,
-                args   = args,
-                result = result)
+        return f'{self.name}({args}) -> {result}'
 
     @property
     def is_unused(self):
@@ -3020,7 +3014,7 @@ class Interface(Basic):
         if found:
             return  self._functions[j]
         else:
-            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+            errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
 
 class FunctionAddress(FunctionDef):
@@ -3335,8 +3329,7 @@ class ClassDef(ScopedNode):
             attributes[i.name] = i
 
         if not attr in attributes:
-            raise ValueError('{0} is not an attribute of {1}'.format(attr,
-                             str(self)))
+            raise ValueError(f'{attr} is not an attribute of {self}')
 
         var = attributes[attr]
         name = DottedName(cls_name, var.name)
@@ -3459,7 +3452,7 @@ class Import(Basic):
         if isinstance(i, (DottedName, AsName, PyccelSymbol)):
             return i
         else:
-            raise TypeError('Expecting a string, PyccelSymbol DottedName, given {}'.format(type(i)))
+            raise TypeError(f'Expecting a string, PyccelSymbol DottedName, given {type(i)}')
 
     @property
     def target(self):
@@ -3482,11 +3475,10 @@ class Import(Basic):
     def __str__(self):
         source = str(self.source)
         if len(self.target) == 0:
-            return 'import {source}'.format(source=source)
+            return f'import {source}'
         else:
-            target = ', '.join([str(i) for i in self.target])
-            return 'from {source} import {target}'.format(source=source,
-                    target=target)
+            target = ', '.join(str(i) for i in self.target)
+            return f'from {source} import {target}'
 
     def define_target(self, new_target):
         """
@@ -3559,7 +3551,7 @@ class FuncAddressDeclare(Basic):
         ):
 
         if not isinstance(variable, FunctionAddress):
-            raise TypeError('variable must be of type FunctionAddress, given {0}'.format(variable))
+            raise TypeError(f'variable must be of type FunctionAddress, given {variable}')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3655,7 +3647,7 @@ class Declare(Basic):
             raise TypeError('datatype must be an instance of DataType.')
 
         if not isinstance(variable, Variable):
-            raise TypeError('var must be of type Variable, given {0}'.format(variable))
+            raise TypeError(f'var must be of type Variable, given {variable}')
         if variable.dtype != dtype:
             raise ValueError('All variables must have the same dtype')
 
@@ -3723,7 +3715,7 @@ class Declare(Basic):
         return self._module_variable
 
     def __repr__(self):
-        return 'Declare({})'.format(repr(self.variable))
+        return f'Declare({repr(self.variable)})'
 
 class Break(Basic):
 
@@ -3774,7 +3766,7 @@ class SymbolicPrint(Basic):
         for i in expr:
             if not isinstance(i, (Lambda, SymbolicAssign,
                               SympyFunction)):
-                raise TypeError('Expecting Lambda, SymbolicAssign, SympyFunction for {}'.format(i))
+                raise TypeError(f'Expecting Lambda, SymbolicAssign, SympyFunction for {i}')
 
         self._expr = expr
 
@@ -3872,7 +3864,7 @@ class Comment(Basic):
         return self._text
 
     def __str__(self):
-        return '# {0}'.format(str(self.text))
+        return f'# {self.text}'
 
     def __reduce_ex__(self, i):
         """ Used by pickle to create an object of this class.
@@ -4086,7 +4078,7 @@ class IfSection(Basic):
         return iter((self.condition, self.body))
 
     def __str__(self):
-        return "IfSec({},{})".format(str(self.condition), str(self.body))
+        return f"IfSec({self.condition},{self.body})"
 
 class If(Basic):
 
@@ -4130,7 +4122,8 @@ class If(Basic):
         return [b.body for b in self._blocks]
 
     def __str__(self):
-        return "If({})".format(','.join(str(b) for b in self.blocks))
+        blocks = ','.join(str(b) for b in self.blocks)
+        return f"If({blocks})"
 
 class StarredArguments(Basic):
     __slots__ = ('_starred_obj',)
@@ -4189,14 +4182,13 @@ def get_iterable_ranges(it, var_name=None):
 
     if isinstance(it, Variable):
         if it.cls_base is None:
-            raise TypeError('iterable must be an iterable Variable object'
-                            )
+            raise TypeError('iterable must be an iterable Variable object')
 
         # ...
 
         def _construct_arg_Range(name):
             if not isinstance(name, DottedName):
-                raise TypeError('Expecting a DottedName, given  {0}'.format(type(name)))
+                raise TypeError(f'Expecting a DottedName, given {type(name)}')
 
             if not var_name:
                 return DottedName(it.name.name[0], name.name[1])
@@ -4209,7 +4201,7 @@ def get_iterable_ranges(it, var_name=None):
 
         if isinstance(cls_base, PythonRange):
             if not isinstance(it.name, DottedName):
-                raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
+                raise TypeError(f'Expecting a DottedName, given {type(it.name)}')
 
             args = []
             for i in [cls_base.start, cls_base.stop, cls_base.step]:
@@ -4222,7 +4214,7 @@ def get_iterable_ranges(it, var_name=None):
                     indices = i.indices
                     arg = base[indices]
                 else:
-                    raise TypeError('Wrong type, given {0}'.format(type(i)))
+                    raise TypeError(f'Wrong type, given {type(i)}')
                 args += [arg]
 
             return [PythonRange(*args)]
@@ -4239,7 +4231,7 @@ def get_iterable_ranges(it, var_name=None):
 
                 # we add '_' tp be conform with the private variables convention
 
-                kwargs['{0}'.format(a['key'])] = a['value']
+                kwargs[str(a['key'])] = a['value']
             else:
                 args.append(a)
 

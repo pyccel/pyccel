@@ -18,7 +18,7 @@ class MyParser(argparse.ArgumentParser):
     See http://stackoverflow.com/questions/4042452/display-help-message-with-python-argparse-when-script-is-called-without-any-argu
     """
     def error(self, message):
-        sys.stderr.write('error: %s\n' % message)
+        sys.stderr.write(f'error: {message}\n')
         self.print_help()
         sys.exit(2)
 
@@ -59,8 +59,9 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     import pyccel
     version = pyccel.__version__
     libpath = pyccel.__path__[0]
-    python  = 'python {}.{}'.format(*sys.version_info)
-    message = "pyccel {} from {} ({})".format(version, libpath, python)
+    py_version = '.'.join(sys.version_info)
+    python  = f'python {py_version}'
+    message = f"pyccel {version} from {libpath} ({python})"
     parser.add_argument('-V', '--version', action='version', version=message)
     # ...
 

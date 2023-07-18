@@ -207,7 +207,7 @@ class Parser(object):
         not_treated = [i for i in source_to_filename.values() if i not in treated]
         for filename in not_treated:
             if verbose:
-                print ('>>> treating :: {}'.format(filename))
+                print ('>>> treating :: ', filename)
 
             # get the absolute path corresponding to source
             if filename in d_parsers_by_filename:
@@ -237,7 +237,7 @@ class Parser(object):
         for p in self.sons:
             if not p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
+                    print ('>>> treating :: ', p.filename)
                 p.annotate(**settings)
 
         # finally we treat the remaining sons recursively
@@ -245,7 +245,7 @@ class Parser(object):
         for p in self.sons:
             if p.sons:
                 if verbose:
-                    print ('>>> treating :: {}'.format(p.filename))
+                    print ('>>> treating :: ', p.filename)
                 p.annotate(**settings)
 
 #==============================================================================

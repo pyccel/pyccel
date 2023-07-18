@@ -70,7 +70,7 @@ class Basic:
                 setattr(self, c_name, c)
 
             elif not isinstance(c, Basic):
-                raise TypeError("Basic child must be a Basic or a tuple not {}".format(type(c)))
+                raise TypeError(f"Basic child must be a Basic or a tuple not {type(c)}")
 
 
             if isinstance(c, tuple):
@@ -310,7 +310,7 @@ class Basic:
     def set_fst(self, fst):
         """Sets the python.ast fst."""
         if not isinstance(fst, ast.AST):
-            raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
+            raise TypeError(f"Fst must be an AST object, not {type(fst)}")
 
         if self.fst:
             if hasattr(fst, 'lineno'):

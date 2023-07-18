@@ -79,11 +79,11 @@ class PyccelArraySize(PyccelInternalFunction):
         if not isinstance(arg, (list,
                                 tuple,
                                 PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of type(arg).')
         if isinstance(index, int):
             index = LiteralInteger(index)
         elif not isinstance(index, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(index))
+            raise TypeError(f'Unknown type of type(index).')
 
         self._arg   = arg
         self._index = index
@@ -102,7 +102,7 @@ class PyccelArraySize(PyccelInternalFunction):
         return self._index
 
     def __str__(self):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+        return f'Shape({self.arg},{self.index})'
 
     def __eq__(self, other):
         if isinstance(other, PyccelArraySize):
@@ -196,7 +196,7 @@ class Slice(Basic):
             stop = ''
         else:
             stop = str(self.stop)
-        return '{0} : {1}'.format(start, stop)
+        return f'{start} : {stop}'
 
 class PyccelSymbol(str, Immutable):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.

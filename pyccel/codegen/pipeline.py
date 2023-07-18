@@ -139,7 +139,7 @@ def execute_pyccel(fname, *,
     # Unified way to handle errors: print formatted error message, then move
     # to original working directory. Caller should then raise exception.
     def handle_error(stage):
-        print('\nERROR at {} stage'.format(stage))
+        print(f'\nERROR at {stage} stage')
         errors.check()
         os.chdir(base_dirpath)
 
@@ -261,7 +261,7 @@ def execute_pyccel(fname, *,
         output_file = (output_name + '.py') if output_name else os.path.basename(fname)
         new_location = os.path.join(folder, output_file)
         if verbose:
-            print("cp {} {}".format(fname, new_location))
+            print(f"cp {fname} {new_location}")
         shutil.copyfile(fname, new_location)
 
         # Change working directory back to starting point
@@ -399,7 +399,7 @@ def execute_pyccel(fname, *,
     shutil.move(generated_filepath, target)
     generated_filepath = target
     if verbose:
-        print( '> Shared library has been created: {}'.format(generated_filepath))
+        print( '> Shared library has been created:', generated_filepath)
 
     if codegen.is_program:
         generated_program_filename = os.path.basename(generated_program_filepath)
@@ -408,7 +408,7 @@ def execute_pyccel(fname, *,
         generated_program_filepath = target
 
         if verbose:
-            print( '> Executable has been created: {}'.format(generated_program_filepath))
+            print( '> Executable has been created:', generated_program_filepath)
 
     # Print all warnings now
     if errors.has_warnings():

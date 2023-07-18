@@ -47,14 +47,14 @@ class PyccelInvert(PyccelUnaryOperator):
         dtype = NativeInteger()
         a = args[0]
         if a.dtype not in (NativeInteger(), NativeBool()):
-            raise TypeError('unsupported operand type(s): {}'.format(args))
+            raise TypeError(f'unsupported operand type(s): {args}')
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
         precision = a.precision
         return dtype, precision
 
     def __repr__(self):
-        return '~{}'.format(repr(self.args[0]))
+        return f'~{repr(self.args[0])}'
 
 #==============================================================================
 
@@ -93,11 +93,11 @@ class PyccelBitOperator(PyccelOperator):
         strs      = [a for a in args if a.dtype is NativeString()]
 
         if strs or complexes or floats:
-            raise TypeError('unsupported operand type(s): {}'.format(args))
+            raise TypeError(f'unsupported operand type(s): {args}')
         elif integers:
             return self._handle_integer_type(integers)
         else:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'cannot determine the type of {args}')
 
     def _set_shape_rank(self):
         pass
@@ -135,7 +135,7 @@ class PyccelRShift(PyccelBitOperator):
     _precedence = 11
 
     def __repr__(self):
-        return '{} >> {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} >> {self.args[1]}'
 
 #==============================================================================
 
@@ -158,7 +158,7 @@ class PyccelLShift(PyccelBitOperator):
     _precedence = 11
 
     def __repr__(self):
-        return '{} << {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} << {self.args[1]}'
 
 #==============================================================================
 
@@ -206,7 +206,7 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     _precedence = 9
 
     def __repr__(self):
-        return '{} ^ {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} ^ {self.args[1]}'
 
 #==============================================================================
 
@@ -229,7 +229,7 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     _precedence = 8
 
     def __repr__(self):
-        return '{} | {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} | {self.args[1]}'
 
 #==============================================================================
 
@@ -252,4 +252,4 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
     _precedence = 10
 
     def __repr__(self):
-        return '{} & {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} & {self.args[1]}'

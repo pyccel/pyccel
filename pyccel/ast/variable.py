@@ -148,7 +148,7 @@ class Variable(PyccelAstNode):
             raise ValueError("Variable name can't be empty")
 
         if not isinstance(name, (str, DottedName)):
-            raise TypeError('Expecting a string or DottedName, given {0}'.format(type(name)))
+            raise TypeError(f'Expecting a string or DottedName, given {type(name)}')
         self._name = name
 
         if memory_handling not in ('heap', 'stack', 'alias'):
@@ -412,7 +412,8 @@ class Variable(PyccelAstNode):
         return str(self.name)
 
     def __repr__(self):
-        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.name), repr(self.dtype))
+        type_name = type(self).__name__
+        return f'{type_name}({repr(self.name)}, dtype={repr(self.dtype)})'
 
     def __eq__(self, other):
         if type(self) is type(other):
@@ -426,16 +427,16 @@ class Variable(PyccelAstNode):
         """inspects the variable."""
 
         print('>>> Variable')
-        print( '  name               = {}'.format(self.name))
-        print( '  dtype              = {}'.format(self.dtype))
-        print( '  precision          = {}'.format(get_final_precision(self)))
-        print( '  rank               = {}'.format(self.rank))
-        print( '  order              = {}'.format(self.order))
-        print( '  memory_handling    = {}'.format(self.memory_handling))
-        print( '  shape              = {}'.format(self.shape))
-        print( '  cls_base           = {}'.format(self.cls_base))
-        print( '  is_target          = {}'.format(self.is_target))
-        print( '  is_optional        = {}'.format(self.is_optional))
+        print(f'  name               = {self.name}')
+        print(f'  dtype              = {self.dtype}')
+        print(f'  precision          = {get_final_precision(self)}')
+        print(f'  rank               = {self.rank}')
+        print(f'  order              = {self.order}')
+        print(f'  memory_handling    = {self.memory_handling}')
+        print(f'  shape              = {self.shape}')
+        print(f'  cls_base           = {self.cls_base}')
+        print(f'  is_target          = {self.is_target}')
+        print(f'  is_optional        = {self.is_optional}')
         print( '<<<')
 
     def use_exact_precision(self):
@@ -767,9 +768,7 @@ class Constant(Variable):
         return self._value
 
     def __str__(self):
-        name = str(self.name)
-        value = str(self.value)
-        return '{0}={1}'.format(name, value)
+        return f'{self.name}={self.value}'
 
 
 
@@ -874,10 +873,12 @@ class IndexedElement(PyccelAstNode):
         return self._indices
 
     def __str__(self):
-        return '{}[{}]'.format(self.base, ','.join(str(i) for i in self.indices))
+        indices = ','.join(str(i) for i in self.indices)
+        return f'{self.base}[{indices}]'
 
     def __repr__(self):
-        return '{}[{}]'.format(repr(self.base), ','.join(repr(i) for i in self.indices))
+        indices = ','.join(repr(i) for i in self.indices)
+        return f'{repr(self.base)}[{indices}]'
 
     def __getitem__(self, *args):
 

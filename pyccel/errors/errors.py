@@ -123,15 +123,15 @@ class ErrorInfo:
 
         if self.line:
             if self.column:
-                info['location'] = ' [{line},{column}]'.format(line=self.line, column=self.column)
+                info['location'] = f' [{self.line},{self.column}]'
             else:
-                info['location'] = ' [{line}]'.format(line=self.line)
+                info['location'] = f' [{self.line}]'
 
         if self.symbol:
             if self.traceback:
-                info['symbol'] = ' ({})'.format(repr(self.symbol))
+                info['symbol'] = f' ({repr(symbol)})'
             else:
-                info['symbol'] = ' ({})'.format(self.symbol)
+                info['symbol'] = f' ({self.symbol})'
 
         return pattern.format(**info)
 
@@ -348,11 +348,11 @@ class Errors(metaclass = Singleton):
 
     def __str__(self):
         print_path = (len(self.error_info_map.keys()) > 1)
-        text = '{}:\n'.format(PYCCEL)
+        text = f'{PYCCEL}:\n'
 
         for path in self.error_info_map.keys():
             errors = self.error_info_map[path]
-            if print_path: text += ' filename :: {path}\n'.format(path=path)
+            if print_path: text += f' filename :: {path}\n'
             for err in errors:
                 text += ' ' + str(err) + '\n'
 

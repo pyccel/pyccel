@@ -123,7 +123,7 @@ class Scope(object):
         """
         ps = kwargs.pop('parent_scope', self)
         if ps is not self:
-            raise ValueError("A child of {} cannot have a parent {}".format(self, ps))
+            raise ValueError(f"A child of {self} cannot have a parent {ps}")
 
         child = Scope(**kwargs, parent_scope = self)
 
@@ -293,7 +293,7 @@ class Scope(object):
             self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals['variables']:
-                raise RuntimeError('New variable {} already exists in scope'.format(name))
+                raise RuntimeError(f'New variable {name} already exists in scope')
             if name == '_':
                 self._temporary_variables.append(var)
             else:
@@ -528,7 +528,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_expected_name(start_name)
         else:
-            raise RuntimeError("{} does not exist in scope".format(start_name))
+            raise RuntimeError(f"{start_name} does not exist in scope")
 
     def create_product_loop_scope(self, inner_scope, n_loops):
         """ Create a n_loops loop scopes such that the innermost loop
@@ -608,7 +608,7 @@ class Scope(object):
         elif self.parent_scope:
             return self.parent_scope.get_python_name(name)
         else:
-            raise RuntimeError("Can't find {} in scope".format(name))
+            raise RuntimeError(f"Can't find {name} in scope")
 
     @property
     def python_names(self):

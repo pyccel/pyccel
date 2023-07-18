@@ -52,7 +52,7 @@ class Literal(PyccelAstNode):
         """ Get python literal represented by this instance """
 
     def __repr__(self):
-        return "Literal({})".format(repr(self.python_value))
+        return f"Literal({repr(self.python_value)})"
 
     def __str__(self):
         return str(self.python_value)
@@ -209,7 +209,7 @@ class LiteralString(Literal):
         return self._string
 
     def __repr__(self):
-        return "'{}'".format(str(self.python_value))
+        return f"'{self.python_value}'"
 
     def __str__(self):
         return str(self.python_value)

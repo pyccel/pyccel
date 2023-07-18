@@ -201,7 +201,7 @@ def change_to_lib_flag(lib):
             end = end-3
         if lib.endswith('.dylib'):
             end = end-5
-        return '-l{}'.format(lib[3:end])
+        return '-l'+lib[3:end]
     else:
         return lib
 

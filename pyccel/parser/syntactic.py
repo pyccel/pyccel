@@ -303,7 +303,7 @@ class SyntaxParser(BasicParser):
         elif isinstance(val, complex):
             return LiteralComplex(val.real, val.imag)
         else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
+            raise NotImplementedError(f'Num type {type(val)} not recognised')
 
     def _visit_Assign(self, stmt):
 
@@ -398,7 +398,7 @@ class SyntaxParser(BasicParser):
             return self._visit_Str(stmt)
 
         else:
-            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+            raise NotImplementedError(f'Constant type {type(stmt.value)} not recognised')
 
     def _visit_NameConstant(self, stmt):
         if stmt.value is None:
@@ -411,7 +411,7 @@ class SyntaxParser(BasicParser):
             return LiteralFalse()
 
         else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
+            raise NotImplementedError(f"Unknown NameConstant : {stmt.value}")
 
 
     def _visit_Name(self, stmt):
@@ -633,7 +633,7 @@ class SyntaxParser(BasicParser):
                     arg = arg.strip("'").strip('"')
                     container.append(arg)
                 else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
+                    msg = f'Invalid argument of type {type(arg)} passed to types decorator'
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='error')
@@ -710,7 +710,7 @@ class SyntaxParser(BasicParser):
                 txt  = '#$ header template ' + tp_name
                 txt += '(' + '|'.join(types) + ')'
                 if tp_name in template['template_dict']:
-                    msg = 'The template "{}" is duplicated'.format(tp_name)
+                    msg = f'The template "{tp_name}" is duplicated'
                     errors.report(msg,
                                 bounding_box = (stmt.lineno, stmt.col_offset),
                                 severity='warning')
@@ -733,7 +733,7 @@ class SyntaxParser(BasicParser):
                 if len(ls) > 0 and ls[-1].has_keyword:
                     arg_name = ls[-1].keyword
                     if not arg_name == 'results':
-                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
+                        msg = f'Argument "{arg_name}" provided to the types decorator is not valid'
                         errors.report(msg,
                                     symbol = comb_types,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
@@ -922,7 +922,7 @@ class SyntaxParser(BasicParser):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
-            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
+            raise NotImplementedError(f' Unknown function type {type(func)}')
 
         return func
 

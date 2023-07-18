@@ -101,7 +101,7 @@ class PythonReal(PythonComplexProperty):
             return super().__new__(cls)
 
     def __str__(self):
-        return 'Real({0})'.format(str(self.internal_var))
+        return f'Real({self.internal_var})'
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
@@ -123,7 +123,7 @@ class PythonImag(PythonComplexProperty):
             return super().__new__(cls)
 
     def __str__(self):
-        return 'Imag({0})'.format(str(self.internal_var))
+        return f'Imag({self.internal_var})'
 
 #==============================================================================
 class PythonConjugate(PyccelInternalFunction):
@@ -169,7 +169,7 @@ class PythonConjugate(PyccelInternalFunction):
         return self._args[0]
 
     def __str__(self):
-        return 'Conjugate({0})'.format(str(self.internal_var))
+        return f'Conjugate({self.internal_var})'
 
 #==============================================================================
 class PythonBool(PyccelAstNode):
@@ -201,7 +201,7 @@ class PythonBool(PyccelAstNode):
         return self._arg
 
     def __str__(self):
-        return 'Bool({})'.format(str(self.arg))
+        return f'Bool({self.arg})'
 
 #==============================================================================
 class PythonComplex(PyccelAstNode):
@@ -303,7 +303,7 @@ class PythonComplex(PyccelAstNode):
         return self._internal_var
 
     def __str__(self):
-        return "complex({}, {})".format(str(self.real), str(self.imag))
+        return f"complex({self.real}, {self.imag})"
 
 #==============================================================================
 class PythonEnumerate(Basic):
@@ -373,7 +373,7 @@ class PythonFloat(PyccelAstNode):
         return self._arg
 
     def __str__(self):
-        return 'float({0})'.format(str(self.arg))
+        return f'float({self.arg})'
 
 #==============================================================================
 class PythonInt(PyccelAstNode):
@@ -458,7 +458,7 @@ class PythonTuple(PyccelAstNode):
                     self._dtype     = NativeBool()
                     self._precision  = max_precision(bools)
                 else:
-                    raise TypeError('cannot determine the type of {}'.format(self))
+                    raise TypeError(f'cannot determine the type of {self}')
 
 
                 inner_shape = [() if a.rank == 0 else a.shape for a in args]
@@ -499,7 +499,7 @@ class PythonTuple(PyccelAstNode):
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:
-            raise NotImplementedError("Can't index PythonTuple with type {}".format(type(i)))
+            raise NotImplementedError(f"Can't index PythonTuple with type {type(i)}")
 
     def __add__(self,other):
         return PythonTuple(*(self._args + other._args))
@@ -511,10 +511,12 @@ class PythonTuple(PyccelAstNode):
         return len(self._args)
 
     def __str__(self):
-        return '({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'({args})'
 
     def __repr__(self):
-        return 'PythonTuple({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'PythonTuple({args})'
 
     @property
     def is_homogeneous(self):
@@ -560,7 +562,7 @@ class PythonLen(PyccelInternalFunction):
         return self._args[0]
 
     def __str__(self):
-        return 'len({})'.format(str(self.arg))
+        return f'len({self.arg})'
 
 #==============================================================================
 class PythonList(PythonTuple):
@@ -766,7 +768,7 @@ class PythonSum(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.' )
         self._dtype = arg.dtype
         self._precision = -1
         super().__init__(arg)
@@ -794,11 +796,11 @@ class PythonMax(PyccelInternalFunction):
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
         elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError('Unknown type of  %s.' % type(x))
+            raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
-            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
+            types = ', '.join('{xi.dtype}({xi.precision})' for xi in x)
             raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
-                             "types ({}). Please cast arguments to the desired dtype".format(types))
+                             f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
@@ -822,11 +824,11 @@ class PythonMin(PyccelInternalFunction):
         if isinstance(x, (list, tuple)):
             x = PythonTuple(*x)
         elif not isinstance(x, (PythonTuple, PythonList)):
-            raise TypeError('Unknown type of  %s.' % type(x))
+            raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
-            types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
+            types = ', '.join(f'{xi.dtype}({xi.precision})' for xi in x)
             raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
-                              "types ({}). Please cast arguments to the desired dtype".format(types))
+                              f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
         super().__init__(x)
@@ -871,8 +873,7 @@ class Lambda(Basic):
         return self.expr.subs(self.variables, args)
 
     def __str__(self):
-        return "{args} -> {expr}".format(args=self.variables,
-                expr = self.expr)
+        return f"{self.variables} -> {self.expr}"
 
 #==============================================================================
 class PythonType(Basic):
@@ -896,7 +897,7 @@ class PythonType(Basic):
 
     def __init__(self, obj):
         if not isinstance (obj, PyccelAstNode):
-            raise PyccelError("Python's type function is not implemented for {} object".format(type(obj)))
+            raise PyccelError(f"Python's type function is not implemented for {type(obj)} object")
         self._dtype = obj.dtype
         self._precision = obj.precision
         self._obj = obj

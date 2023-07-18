@@ -278,7 +278,7 @@ class PyccelUnary(PyccelUnaryOperator):
         return args
 
     def __repr__(self):
-        return '+{}'.format(repr(self.args[0]))
+        return f'+{repr(self.args[0])}'
 
 #==============================================================================
 
@@ -298,7 +298,7 @@ class PyccelUnarySub(PyccelUnary):
     __slots__ = ()
 
     def __repr__(self):
-        return '-{}'.format(repr(self.args[0]))
+        return f'-{repr(self.args[0])}'
 
 #==============================================================================
 
@@ -339,7 +339,7 @@ class PyccelNot(PyccelUnaryOperator):
         return shape, rank
 
     def __repr__(self):
-        return 'not {}'.format(repr(self.args[0]))
+        return f'not {repr(self.args[0])}'
 
 #==============================================================================
 
@@ -358,7 +358,7 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
         return args
 
     def __repr__(self):
-        return '({})'.format(repr(self.args[0]))
+        return f'({repr(self.args[0])})'
 
 #==============================================================================
 
@@ -404,7 +404,7 @@ class PyccelBinaryOperator(PyccelOperator):
         elif integers:
             return cls._handle_integer_type(args)
         else:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'cannot determine the type of {args}')
 
     @staticmethod
     def _handle_str_type(strs):
@@ -507,7 +507,7 @@ class PyccelPow(PyccelArithmeticOperator):
     _precedence  = 15
 
     def __repr__(self):
-        return '{} ** {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} ** {self.args[1]}'
 
     def _handle_precedence(self, args):
         precedence = [getattr(a, 'precedence', 17) for a in args]
@@ -578,7 +578,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         return dtype, precision
 
     def __repr__(self):
-        return '{} + {}'.format(self.args[0], self.args[1])
+        return f'{self.args[0]} + {self.args[1]}'
 
 #==============================================================================
 
@@ -592,9 +592,9 @@ class PyccelMul(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1 : PyccelAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2 : PyccelAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -620,7 +620,7 @@ class PyccelMul(PyccelArithmeticOperator):
         return super().__new__(cls)
 
     def __repr__(self):
-        return '{} * {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} * {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -662,7 +662,7 @@ class PyccelMinus(PyccelArithmeticOperator):
             return super().__new__(cls)
 
     def __repr__(self):
-        return '{} - {}'.format(repr(self.args[0]), repr(self.args[1]))
+        return f'{repr(self.args[0])} - {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -676,9 +676,9 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1 : PyccelAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2 : PyccelAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -697,7 +697,7 @@ class PyccelDiv(PyccelArithmeticOperator):
         return dtype, precision
 
     def __repr__(self):
-        return '{} / {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} / {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -711,16 +711,16 @@ class PyccelMod(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1 : PyccelAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2 : PyccelAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
-        return '{} % {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} % {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -734,16 +734,16 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1 : PyccelAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2 : PyccelAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
     _precedence = 13
 
     def __repr__(self):
-        return '{} // {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} // {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -753,9 +753,9 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1 : PyccelAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2 : PyccelAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -792,7 +792,7 @@ class PyccelEq(PyccelComparisonOperator):
             return super().__new__(cls)
 
     def __repr__(self):
-        return '{} == {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} == {repr(self.args[1])}'
 
 class PyccelNe(PyccelComparisonOperator):
     """
@@ -818,7 +818,7 @@ class PyccelNe(PyccelComparisonOperator):
             return super().__new__(cls)
 
     def __repr__(self):
-        return '{} != {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} != {repr(self.args[1])}'
 
 class PyccelLt(PyccelComparisonOperator):
     """
@@ -838,7 +838,7 @@ class PyccelLt(PyccelComparisonOperator):
     __slots__ = ()
 
     def __repr__(self):
-        return '{} < {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} < {repr(self.args[1])}'
 
 class PyccelLe(PyccelComparisonOperator):
     """
@@ -858,7 +858,7 @@ class PyccelLe(PyccelComparisonOperator):
     __slots__ = ()
 
     def __repr__(self):
-        return '{} <= {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} <= {repr(self.args[1])}'
 
 class PyccelGt(PyccelComparisonOperator):
     """
@@ -878,7 +878,7 @@ class PyccelGt(PyccelComparisonOperator):
     __slots__ = ()
 
     def __repr__(self):
-        return '{} > {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} > {repr(self.args[1])}'
 
 class PyccelGe(PyccelComparisonOperator):
     """
@@ -898,7 +898,7 @@ class PyccelGe(PyccelComparisonOperator):
     __slots__ = ()
 
     def __repr__(self):
-        return '{} >= {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} >= {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -955,7 +955,7 @@ class PyccelAnd(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return '{} and {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} and {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -982,7 +982,7 @@ class PyccelOr(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return '{} or {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} or {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -1013,7 +1013,7 @@ class PyccelIs(PyccelBooleanOperator):
         return self._args[1]
 
     def __repr__(self):
-        return '{} is {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} is {repr(self.args[1])}'
 
     def eval(self):
         """ Determines the value of the expression `x is None` when `x` is known.
@@ -1049,7 +1049,7 @@ class PyccelIsNot(PyccelIs):
     __slots__ = ()
 
     def __repr__(self):
-        return '{} is not {}'.format(self.args[0], self.args[1])
+        return f'{repr(self.args[0])} is not {repr(self.args[1])}'
 
     def eval(self):
         """ Determines the value of the expression `x is not None` when `x` is known.

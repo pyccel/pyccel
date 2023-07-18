@@ -102,8 +102,8 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    wrapper_filename_root = '{}_wrapper'.format(module_name)
-    wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_filename_root = f'{module_name}_wrapper'
+    wrapper_filename = f'{wrapper_filename_root}.c'
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
             flags        = wrapper_flags,
@@ -115,7 +115,7 @@ def create_shared_library(codegen,
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
         bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
-        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
+        bind_c_filename = f'{bind_c_mod.name}.f90'
 
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)

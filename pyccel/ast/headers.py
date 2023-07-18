@@ -407,11 +407,11 @@ class FunctionHeader(Header):
                         _name, _count = create_incremented_string(used_names, 'out', _count)
                         var, annotation = build_argument(_name, dc)
                         results.append(FunctionDefResult(var, annotation=annotation))
-                    arg_name = 'arg_{0}'.format(str(i))
+                    arg_name = f'arg_{i}'
                     arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
 
                 else:
-                    arg_name = 'arg_{0}'.format(str(i))
+                    arg_name = f'arg_{i}'
                     var, annotation = build_argument(arg_name, d)
                     arg = FunctionDefArgument(var, annotation=annotation)
                 args.append(arg)
@@ -421,7 +421,7 @@ class FunctionHeader(Header):
             for i,d_var in enumerate(self.results):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
+                var = Variable(dtype, f'res_{i}', **d_var, is_temp = True)
                 results.append(FunctionDefResult(var, annotation = str(dtype)))
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition

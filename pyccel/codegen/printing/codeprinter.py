@@ -42,8 +42,7 @@ class CodePrinter:
         if isinstance(assign_to, str):
             assign_to = PyccelSymbol(assign_to)
         elif not isinstance(assign_to, (Basic, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
-                    type(self).__name__, type(assign_to)))
+            raise TypeError(f"{type(self).__name__} cannot assign to object of type {type(assign_to)}")
 
         if assign_to:
             expr = Assign(assign_to, expr)
@@ -122,7 +121,7 @@ class CodePrinter:
     def _print_not_supported(self, expr):
         """ Print an error message if the print function for the type
         is not implemented """
-        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
+        msg = f'_print_{type(expr).__name__} is not yet implemented for language : {self.language}\n'
         errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 

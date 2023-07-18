@@ -44,7 +44,7 @@ def get_source_function(func):
             line = a[leading_spaces:]
         else:
             line = a
-        code = '{code}{line}'.format(code=code, line=line)
+        code = f'{code}{line}'
 
     return code
 
@@ -191,7 +191,7 @@ def epyccel_seq(function_or_module, *,
 
     # Try is necessary to ensure lock is released
     try:
-        pymod_filename = '{}.py'.format(module_name)
+        pymod_filename = f'{module_name}.py'
         pymod_filepath = os.path.join(dirpath, pymod_filename)
         # ...
 

@@ -81,5 +81,5 @@ class FortranNameClashChecker(LanguageNameClashChecker):
             name = 'private'+name
         name = self._get_collisionless_name(name, symbols)
         if len(name) > 96:
-            warnings.warn("Name {} is too long for Fortran. This may cause compiler errors".format(name))
+            warnings.warn(f"Name {name} is too long for Fortran. This may cause compiler errors")
         return name

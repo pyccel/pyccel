@@ -415,7 +415,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
         order = str(order).strip('\'"')
         if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+            raise ValueError(f'unrecognized order = {order}')
         return order
 
 #==============================================================================
@@ -436,7 +436,7 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='C'):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
 
         is_homogeneous_tuple = isinstance(arg, (PythonTuple, PythonList, HomogeneousTupleVariable)) and arg.is_homogeneous
         is_array = isinstance(arg, Variable) and arg.is_ndarray
@@ -566,7 +566,7 @@ class NumpySum(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         if isinstance(arg.dtype, NativeBool):
             self._dtype = NativeInteger()
@@ -592,7 +592,7 @@ class NumpyProduct(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.' )
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
@@ -620,9 +620,9 @@ class NumpyMatmul(PyccelInternalFunction):
             return
 
         if not isinstance(a, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
         if not isinstance(b, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
         integers  = [e for e in args if e.dtype is NativeInteger()]
@@ -643,7 +643,7 @@ class NumpyMatmul(PyccelInternalFunction):
             self._dtype     = NativeBool()
             self._precision = max_precision(booleans, allow_native = False)
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError(f'cannot determine the type of {self}')
 
         if not (a.shape is None or b.shape is None):
 
@@ -745,7 +745,7 @@ class NumpyLinspace(NumpyNewArray):
                 self._dtype     = NativeFloat()
                 self._precision = default_precision['float']
             else:
-                raise TypeError('cannot determine the type of {}'.format(self))
+                raise TypeError(f'cannot determine the type of {self}')
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -866,7 +866,7 @@ class NumpyWhere(PyccelInternalFunction):
             self._dtype     = NativeInteger()
             self._precision = max_precision(args, allow_native = False)
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError(f'cannot determine the type of {self}')
 
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
@@ -1411,7 +1411,7 @@ class NumpyMod(NumpyUfuncBinary):
         others    = [a for a in args if a not in integers+floats]
 
         if others:
-            raise TypeError('{} not supported'.format(others[0].dtype))
+            raise TypeError(f'{others[0].dtype} not supported')
 
         if floats:
             self._dtype     = NativeFloat()
@@ -1424,7 +1424,7 @@ class NumpyMod(NumpyUfuncBinary):
             else:
                 self._precision = 1
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError(f'cannot determine the type of {self}')
 
 class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the amin function in the Numpy library"""
@@ -1707,7 +1707,7 @@ class NumpyArraySize(PyccelInternalFunction):
         elif not isinstance(a, (list,
                                     tuple,
                                     PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
         elif all(isinstance(s, LiteralInteger) for s in a.shape):
             return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
         else:
@@ -1724,7 +1724,7 @@ class NumpyArraySize(PyccelInternalFunction):
         return self._arg
 
     def __str__(self):
-        return 'Size({})'.format(str(self.arg))
+        return f'Size({self.arg})'
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following

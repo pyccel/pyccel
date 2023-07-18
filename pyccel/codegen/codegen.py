@@ -141,7 +141,7 @@ class Codegen(object):
 
         # Set language
         if not language in ['fortran', 'c', 'python']:
-            raise ValueError('{} language is not available'.format(language))
+            raise ValueError(f'{language} language is not available')
         self._language = language
 
         # instantiate codePrinter
@@ -191,8 +191,8 @@ class Codegen(object):
         header_ext = _header_extension_registry[self._language]
 
         if filename is None: filename = self.name
-        header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
-        filename = '{name}.{ext}'.format(name=filename, ext=ext)
+        header_filename = f'{filename}.{header_ext}'
+        filename = f'{filename}.{ext}'
 
         # print module header
         if header_ext is not None:

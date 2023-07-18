@@ -275,7 +275,7 @@ class CWrapperCodePrinter(CCodePrinter):
         elif isinstance(arg.dtype, PyccelPyObject):
             return AliasAssign(arg, Py_None)
         else:
-            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
+            raise NotImplementedError(f'Default values are not implemented for this datatype : {func_arg.dtype}')
 
     def static_function_signature(self, expr):
         """
@@ -1356,29 +1356,19 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
+        args    = ', '.join(f'&{a.name}' for a in expr.args)
 
         if expr.args:
-            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
-                            name=name,
-                            pyarg=pyarg,
-                            pykwarg=pykwarg,
-                            flags = flags,
-                            kwlist = expr.arg_names.name,
-                            args = args)
+            code = f'{name}({pyarg}, {pykwarg}, "{flags}", {expr.arg_names.name}, {args})'
         else :
-            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
-                    name=name,
-                    pyarg=pyarg,
-                    pykwarg=pykwarg,
-                    kwlist = expr.arg_names.name)
+            code =f'{name}({pyarg}, {pykwarg}, "", {expr.arg_names.name})'
 
         return code
 
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
-        args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
+        args  = ', '.join(self._print(a) for a in expr.args)
         #to change for args rank 1 +
         if expr.args:
             code = f'(*{name}("{flags}", {args}))'
@@ -1387,16 +1377,15 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
-        return ('static char *{name}[] = {{\n'
-                        '{arg_names}\n'
-                        '}};\n'.format(name=expr.name, arg_names = arg_names))
+        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
+        return (f'static char *{expr.name}[] = {{\n'
+                        f'{arg_names}\n'
+                        '}};\n')
 
     def _print_PyModule_AddObject(self, expr):
-        return 'PyModule_AddObject({}, {}, {})'.format(
-                expr.mod_name,
-                self._print(expr.name),
-                self._print(expr.variable))
+        name = self._print(expr.name)
+        var = self._print(expr.variable)
+        return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
     def _print_FunctionDef(self, expr):
         self.set_scope(self.scope.new_child_scope(expr.name))
@@ -1579,56 +1568,52 @@ class CWrapperCodePrinter(CCodePrinter):
         function_defs = '\n'.join(self._print(f) for f in funcs)
         cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)
                                        for f in self._cast_functions_dict.values())
+
+        name = self.get_python_name(expr.scope, f)
+        wrapper_name = self._function_wrapper_names[f.name]
+        doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                        if f.doc_string else '""'
+
         method_def_func = ''.join(('{{\n'
-                                     '"{name}",\n'
-                                     '(PyCFunction){wrapper_name},\n'
+                                     f'"{name}",\n'
+                                     f'(PyCFunction){wrapper_name},\n'
                                      'METH_VARARGS | METH_KEYWORDS,\n'
-                                     '{doc_string}\n'
-                                     '}},\n').format(
-                                            name = self.get_python_name(expr.scope, f),
-                                            wrapper_name = self._function_wrapper_names[f.name],
-                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                        if f.doc_string else '""')
+                                     f'{doc_string}\n'
+                                     '}},\n')
                                      for f in funcs if f is not expr.init_func)
 
-        slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
+        slots_name = self.scope.get_new_name(f'{expr.name}_slots')
         exec_func_name = self.scope.get_new_name('exec_func')
-        slots_def = ('static PyModuleDef_Slot {name}[] = {{\n'
-                     '{{Py_mod_exec, {exec_func}}},\n'
-                     '{{0, NULL}},\n'
-                     '}};\n').format(name = slots_name,
-                             exec_func = exec_func_name)
+        slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
+                     f'{{Py_mod_exec, {exec_func_name}}},\n'
+                      '{{0, NULL}},\n'
+                      '}};\n')
 
-        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
-        method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
-                        '{method_def_func}'
-                        '{{ NULL, NULL, 0, NULL}}\n'
-                        '}};\n'.format(method_def_name = method_def_name,
-                            method_def_func = method_def_func))
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
+        method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
+                      f'{method_def_func}'
+                       '{{ NULL, NULL, 0, NULL}}\n'
+                       '}};\n')
 
-        module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
-        module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
-                'PyModuleDef_HEAD_INIT,\n'
-                '/* name of module */\n'
-                '\"{mod_name}\",\n'
-                '/* module documentation, may be NULL */\n'
-                'NULL,\n' #TODO: Add documentation
-                '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
-                '0,\n'
-                '{method_def_name},\n'
-                '{slots_name}\n'
-                '}};\n'.format(module_def_name = module_def_name,
-                    mod_name = self._module_name,
-                    method_def_name = method_def_name,
-                    slots_name = slots_name))
+        module_def_name = self.scope.get_new_name('{expr.name}_module')
+        module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
+                 'PyModuleDef_HEAD_INIT,\n'
+                 '/* name of module */\n'
+                f'\"{self._module_name}\",\n'
+                 '/* module documentation, may be NULL */\n'
+                 'NULL,\n' #TODO: Add documentation
+                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
+                 '0,\n'
+                f'{method_def_name},\n'
+                f'{slots_name}\n'
+                 '}};\n')
 
         exec_func = self.get_module_exec_function(expr, exec_func_name)
 
-        init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
-                'import_array();\n'
-                'return PyModuleDef_Init(&{module_def_name});\n'
-                '}}\n'.format(mod_name=self._module_name,
-                    module_def_name = module_def_name))
+        init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
+                 'import_array();\n'
+                f'return PyModuleDef_Init(&{module_def_name});\n'
+                 '}}\n')
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = module_imports.copy()
@@ -1638,33 +1623,22 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
-                '{imports}\n'
-                '{variable_declarations}\n'
-                '{function_signatures}\n'
-                '{sep}\n'
-                '{cast_functions}\n'
-                '{sep}\n'
-                '{function_defs}\n'
-                '{exec_func}\n'
-                '{sep}\n'
-                '{method_def}\n'
-                '{sep}\n'
-                '{slots_def}\n'
-                '{sep}\n'
-                '{module_def}\n'
-                '{sep}\n'
-                '{init_func}'.format(
-                    imports = imports,
-                    variable_declarations = decs,
-                    function_signatures = function_signatures,
-                    sep = sep,
-                    cast_functions = cast_functions,
-                    function_defs = function_defs,
-                    exec_func = exec_func,
-                    method_def = method_def,
-                    slots_def  = slots_def,
-                    module_def = module_def,
-                    init_func = init_func))
+                f'{imports}\n'
+                f'{decs}\n'
+                f'{function_signatures}\n'
+                f'{sep}\n'
+                f'{cast_functions}\n'
+                f'{sep}\n'
+                f'{function_defs}\n'
+                f'{exec_func}\n'
+                f'{sep}\n'
+                f'{method_def}\n'
+                f'{sep}\n'
+                f'{slots_def}\n'
+                f'{sep}\n'
+                f'{module_def}\n'
+                f'{sep}\n'
+                f'{init_func}')
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
