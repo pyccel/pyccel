@@ -368,6 +368,23 @@ class Bot:
 
         Remove the draft status from the pull request specified in the constructor.
         """
+        description = self._pr_details['body']
+        words = description.split()
+
+        if len(words) < 3:
+            self._GAI.create_comment(self._pr_id, message_from_file('set_draft_no_description.txt'))
+            self.mark_as_draft()
+            return
+
+        welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['user']['type'] != 'Bot' and c['body'].startswith('Hello'))
+        if '- [ ]' in welcome_comment['body']:
+            self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['url']))
+            self.mark_as_draft()
+            return
+
+        outputs['cleanup_trigger'] = 'request_review_status'
+        run_tests(pr_id, ['pr_tests'], outputs, event)
+
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
         with subprocess.Popen(cmds) as p:
