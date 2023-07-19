@@ -1,6 +1,5 @@
 """ Functions for comparing coverage output and git diff output
 """
-import os
 import sys
 import defusedxml.ElementTree as ET
 

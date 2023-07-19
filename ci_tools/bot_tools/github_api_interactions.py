@@ -1,6 +1,6 @@
-import jwt
 import os
 import time
+import jwt
 import requests
 
 def get_authorization():
@@ -550,7 +550,7 @@ class GitHubAPIInteractions:
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/actions/artifacts"
         query= {'name': name}
-        return self._post_request("GET", url).json()
+        return self._post_request("GET", url, query).json()
 
     def download_artifact(self, name, url):
         """

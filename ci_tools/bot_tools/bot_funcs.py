@@ -202,7 +202,7 @@ class Bot:
             An assertion error is raised if the check run was not successfully updated.
         """
         if os.path.exists('test_json_result.json'):
-            with open('test_json_result.json', 'r') as f:
+            with open('test_json_result.json', 'r', encoding='utf-8') as f:
                 result = json.load(f)
         else:
             result = {}
@@ -393,7 +393,6 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        outputs['cleanup_trigger'] = 'request_review_status'
         self.run_tests(pr_test_keys)
 
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]

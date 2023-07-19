@@ -79,10 +79,10 @@ if __name__ == '__main__':
         outcome = values[1] if len(values) >= 2 else None
         out_file = values[2] if len(values) >= 3 else None
 
-        if out_file != None and os.path.exists(out_file):
-            with open(out_file , 'r') as f:
+        if out_file is not None and os.path.exists(out_file):
+            with open(out_file , 'r', encoding='utf-8') as f:
                 outfile = f.read()
-            
+
             c_tests = []
             f_tests = []
             py_tests = []
@@ -116,5 +116,5 @@ if __name__ == '__main__':
         "summary":summary
     }
 
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(json_ouput,f)
