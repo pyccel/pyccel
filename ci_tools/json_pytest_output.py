@@ -93,7 +93,6 @@ if __name__ == '__main__':
 
             failed_matches = re.findall(failed_pattern, outfile, re.MULTILINE)
             failed_matches = [re.sub(r'.*FAILED ', "- ``", string) for string in failed_matches]
-            
 
             r = re.compile(c_pattern)
             c_failed = list(filter(r.match, failed_matches))
@@ -109,7 +108,7 @@ if __name__ == '__main__':
 
 
         summary = summary + mini_md_summary(mini_title, outcome, c_failed, f_failed, py_failed)
-    
+
     print(summary)
     json_ouput = {
         "title":p_args.title,
