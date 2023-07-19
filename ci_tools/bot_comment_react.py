@@ -24,6 +24,8 @@ if __name__ == '__main__':
     # Collect id from an issue_comment event with a created action
     pr_id = event['issue']['number']
 
+    bla
+
     comment = event['comment']['body']
     command = comment.split('/bot')[1].strip()
     command_words = command.split()
