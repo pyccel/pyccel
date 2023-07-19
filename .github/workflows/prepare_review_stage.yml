@@ -1,7 +1,7 @@
 name: Bot
 
 on:
-  pull_request:
+  pull_request_target:
     branches: [ devel ]
     types: [ ready_for_review ]
 
