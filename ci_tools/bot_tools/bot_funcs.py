@@ -672,6 +672,19 @@ class Bot:
         print(self._pr_details)
         return self._pr_details['draft']
 
+    def leave_comment(self, comment):
+        """
+        Leave a comment on the pull request.
+
+        Leave the specified comment on the pull request.
+
+        Parameters
+        ----------
+        comment : str
+            The comment to be left on the pull request.
+        """
+        self._GAI.create_comment(self._pr_id, comment)
+
     @property
     def GAI(self):
         """
