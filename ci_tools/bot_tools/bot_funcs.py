@@ -369,6 +369,8 @@ class Bot:
         Remove the draft status from the pull request specified in the constructor.
         """
         description = self._pr_details['body']
+        print(self._pr_details)
+        print(description)
         words = description.split()
 
         if len(words) < 3:
