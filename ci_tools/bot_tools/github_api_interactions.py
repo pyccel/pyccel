@@ -1,3 +1,5 @@
+""" File containing all functions useful for handling interactions with the GitHub API.
+"""
 import os
 import time
 import jwt
