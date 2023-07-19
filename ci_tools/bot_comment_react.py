@@ -15,6 +15,11 @@ def get_unique_test_list(keys):
     ----------
     keys : list of str
         The list of tests requested by the user.
+
+    Returns
+    -------
+    set
+        A set of tests to run.
     """
     tests = set(keys)
     if 'pr_tests' in tests:

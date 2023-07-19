@@ -23,6 +23,8 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
 
 def run_pylint(file, flag, messages):
     """
+    Check for an expected pylint disable flag.
+
     Check for an expected pylint disable flag. If the flag is present
     then it is ignored by removing it from the list. Otherwise if the
     file raises the error a message is saved recommending that the
@@ -74,7 +76,7 @@ def check_expected_pylint_disable(file, disabled, flag, messages, file_changed):
         The name of the flag being investigated.
     messages : list
         The list of messages which should be printed.
-    in_diff : bool
+    file_changed : bool
         Indicates whether the file was changed in this diff.
     """
     disabled_copy = disabled.copy()

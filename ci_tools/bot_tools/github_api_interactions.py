@@ -604,10 +604,17 @@ class GitHubAPIInteractions:
         These events are described here:
         https://docs.github.com/en/webhooks-and-events/events/issue-event-types
 
+        The events are loaded in pages of 100 events. If the full history is
+        required then this function must be called multiple times increasing
+        the page argument each time.
+
         Parameters
         ----------
         pr_id : int
             The id of the pull request.
+
+        page : int
+            The page to load.
 
         Returns
         -------

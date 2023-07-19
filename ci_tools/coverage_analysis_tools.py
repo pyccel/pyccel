@@ -6,26 +6,28 @@ import defusedxml.ElementTree as ET
 
 def get_untested_lines(coverage_filename):
     """
+    Get all untested lines from a coverage output.
+
     Parse a coverage xml file and return a dictionary containing the files and lines
-    which are untested
+    which are untested.
 
     Parameters
     ----------
     coverage_filename : str
-        The name of the xml file containing the coverage information
+        The name of the xml file containing the coverage information.
 
     Returns
     -------
     no_coverage : dict
             A dictionary whose keys are the files in pyccel
             and whose values are lists containing the line numbers
-            where coverage is lacking in that file
+            where coverage is lacking in that file.
     content_lines : dict
             A dictionary whose keys are the files in pyccel
             and whose values are lists containing the line numbers
             where a python command starts (this excludes comments,
             empty lines, and lines which are continuations of
-            previous lines)
+            previous lines).
     """
     tree = ET.parse(coverage_filename)
     root = tree.getroot()
@@ -85,6 +87,8 @@ def compare_coverage_to_diff(coverage, diff):
 
 def allow_untested_debug_code(untested):
     """
+    Remove `str` and `repr` functions from dictionary of untested lines.
+
     Takes a dictionary describing untested lines and returns an
     equivalent dictionary without lines designed to print a class
     (should only be used for debugging).
@@ -190,7 +194,10 @@ def print_markdown_summary(untested, commit, output, repo):
 
 def get_json_summary(untested, content_lines, existing_comments):
     """
-    Print the results neatly in json in a provided file
+    Print the results neatly in json in a provided file.
+
+    Print the results neatly in json in a provided file such that
+    each error can be described by a GitHub annotation.
 
     Parameters
     ----------
@@ -198,16 +205,23 @@ def get_json_summary(untested, content_lines, existing_comments):
         Dictionary whose keys are the files in pyccel with untested
         lines which have been added in this branch and whose values
         are lists containing the line numbers where coverage is
-        lacking in that file
+        lacking in that file.
     content_lines : dict
         Dictionary whose keys are the files in pyccel and whose
         values are lists containing the line numbers where python
-        commands begin
+        commands begin.
 
     Returns
     -------
-    list of dict
-        A list of dictionaries describing all lines with unacceptable coverage.
+    old_comments : list of dict
+        The coverage issues which were present before this commit and
+        had already been commented on.
+    new_comments : list of dict
+        The coverage issues which were not present before this commit
+        and have never been commented on.
+    fixed_comments : list of dict
+        The coverage issues which were present before this commit and
+        had already been commented on but are no longer present.
     """
     message = "This code isn't tested. Please can you take a look"
     new_comments = []
@@ -241,7 +255,10 @@ def get_json_summary(untested, content_lines, existing_comments):
 
 def show_results(untested):
     """
-    Print the results and fail if coverage is lacking
+    Print the results and fail if coverage is lacking.
+
+    Print a list of all untested lines and exit the program
+    with exit code 1 if the coverage is incomplete.
 
     Parameters
     ----------
@@ -249,7 +266,7 @@ def show_results(untested):
         Dictionary whose keys are the files in pyccel with untested
         lines which have been added in this branch and whose values
         are lists containing the line numbers where coverage is
-        lacking in that file
+        lacking in that file.
     """
     for f, lines in untested.items():
         print(f"In file {f} the following lines are untested : {lines}")
