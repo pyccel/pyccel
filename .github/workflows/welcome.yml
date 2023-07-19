@@ -25,5 +25,5 @@ jobs:
           python ci_tools/bot_hello.py
         env:
           GH_TOKEN: ${{ github.token }}
-          bot_pem: "${{ secrets.BOT_PEM }}"
+          PEM: "${{ secrets.BOT_PEM }}"
 
