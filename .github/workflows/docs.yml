@@ -79,11 +79,16 @@ jobs:
           cd compare
           git fetch
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
+          python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt ci_objects.txt
           touch report.txt
           while read line; do
             python -m numpydoc --validate $line >> report.txt 2>&1 || true 
           done < objects.txt
+          cd ci_tools
+          while read line; do
+            python -m numpydoc --validate $line >> ../report.txt 2>&1 || true 
+          done < ../ci_objects.txt
+          cd ..
           cat report.txt
           cd ..
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
