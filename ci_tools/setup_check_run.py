@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     print(f"check_run_id={run_id}", sep='')
     print(os.environ["GITHUB_ENV"])
-    with open(os.environ["GITHUB_ENV"], "a") as f:
+    with open(os.environ["GITHUB_ENV"], "a", encoding='utf-8') as f:
         print(f"CHECK_RUN_ID={run_id}", sep='', file=f)
         print(f"PR_ID={pr_id}", sep='', file=f)
         print(f"HEAD_SHA={sha}", sep='', file=f)

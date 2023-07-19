@@ -24,5 +24,5 @@ if __name__ == '__main__':
         "summary":summary
     }
 
-    with open(output_file, 'w') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         json.dump(json_ouput,f)

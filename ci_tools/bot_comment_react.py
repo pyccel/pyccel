@@ -24,7 +24,7 @@ def get_unique_test_list(keys):
     tests = set(keys)
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
-    t = tests.discard('pr_tests')
+    tests.discard('pr_tests')
     if 'coverage' in tests:
         tests.add('linux')
     return tests

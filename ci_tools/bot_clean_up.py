@@ -23,7 +23,7 @@ if __name__ == '__main__':
     except StopIteration:
         pr_id = 0
     bot = Bot(pr_id = pr_id, commit = event['check_run']['head_sha'])
-    bot.get_pr_id()
+    pr_id = bot.get_pr_id()
 
     name_key = bot.get_name_key(name)
 
@@ -57,7 +57,7 @@ if __name__ == '__main__':
 
     if not draft:
 
-        events = bot.GAI.get_events(bot._pr_id)
+        events = bot.GAI.get_events(pr_id)
 
         shas = [e.get('sha', None) for e in events]
         print(shas)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
             except StopIteration:
                 start_idx = -1
                 page += 1
-                new_events = bot.GAI.get_events(bot._pr_id, page)
+                new_events = bot.GAI.get_events(pr_id, page)
                 events.extend(new_events)
                 shas.extend([e.get('sha', None) for e in new_events])
                 print(shas)

@@ -111,7 +111,6 @@ def locate_code_blocks(lines):
     code_block_indexes = [i for i, l in enumerate(stripped_lines,1) if l.startswith('```')]
     nblock_indexes = len(code_block_indexes)
     assert nblock_indexes % 2 == 0
-    nblocks = nblock_indexes // 2
     return [b for b in zip(code_block_indexes[::2], code_block_indexes[1::2])]
 
 def is_text(line, start, end, line_number, code_blocks):

@@ -394,7 +394,7 @@ class Bot:
             return False
 
         outputs['cleanup_trigger'] = 'request_review_status'
-        run_tests(pr_id, ['pr_tests'], outputs, event)
+        self.run_tests(pr_test_keys)
 
         cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
@@ -444,7 +444,7 @@ class Bot:
                     names = ', '.join(f'@{r}' for r in senior_reviewer)
                     approved = ', '.join(f'@{a}' for a in approving_reviewers)
                     message = message_from_file('senior_review.txt').format(
-                                    reviewers=names, author=author, approved=approving_reviewers)
+                                    reviewers=names, author=author, approved=approved)
                     self._GAI.create_comment(pr_id, message)
         elif reviews:
             requested = ', '.join(f'@{r}' for r in requested_changes)
@@ -511,7 +511,7 @@ class Bot:
             return has_merged_pr
         print("User has no merged PRs")
         comments = self._GAI.get_comments(self._pr_id)
-        comments_from_trust_givers = [c['body'].split() for c in comments if c['user']['login'] in self.trust_givers]
+        comments_from_trust_givers = [c['body'].split() for c in comments if c['user']['login'] in trust_givers]
         expected_trust_command = ['/bot', 'trust', 'user', user]
         awarded_trust = any(c[:4] == expected_trust_command for c in comments_from_trust_givers)
         return awarded_trust

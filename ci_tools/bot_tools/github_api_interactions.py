@@ -36,7 +36,7 @@ def get_authorization():
     token  = reply.json()["token"]
     expiry = reply.json()["expires_at"]
 
-    with open(os.environ["GITHUB_ENV"], "r") as f:
+    with open(os.environ["GITHUB_ENV"], "r", encoding='utf-8') as f:
         output = f.read()
 
     if "installation_token" in output:
@@ -44,7 +44,7 @@ def get_authorization():
         print("Parsed : ", lines)
         output = '\n'.join(l for l in lines if "installation_token" not in l)
 
-    with open(os.environ["GITHUB_ENV"], "w") as f:
+    with open(os.environ["GITHUB_ENV"], "w", encoding='utf-8') as f:
         f.write(output)
         print(f"installation_token={token}", file=f)
         print(f"installation_token_exp={expiry}", file=f)
@@ -662,7 +662,7 @@ class GitHubAPIInteractions:
             A list containing the names of the labels to be added.
         """
         assert labels
-        url = f"https://api.github.com/repos/OWNER/REPO/issues/ISSUE_NUMBER/labels"
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
         self._post_request("POST", url, {"labels":labels})
 
     def get_current_labels(self, pr_id):
