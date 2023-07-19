@@ -29,6 +29,7 @@ def post_first_time_message(event, bot):
     print("Current user trust level is : ", event['pull_request']['author_association'])
     if trusted_user:
         merged_prs = bot.GAI.get_prs('all')
+        print(merged_prs)
         has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
         new_user = has_merged_pr
     else:
