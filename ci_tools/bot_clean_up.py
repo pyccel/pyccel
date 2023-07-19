@@ -2,10 +2,8 @@ import json
 import os
 from bot_tools.bot_funcs import Bot, test_dependencies
 
-#pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-#                'pyccel_lint', 'spelling', 'Codacy']
-pr_test_keys = ['docs', 'pylint',
-                'pyccel_lint', 'spelling']
+pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+                'pyccel_lint', 'spelling', 'Codacy']
 
 
 # Parse event payload from $GITHUB_EVENT_PATH variable
