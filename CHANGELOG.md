@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   Allow interfaces in classes.
+-   Python support for a simple class.
 
 ### Fixed
 
