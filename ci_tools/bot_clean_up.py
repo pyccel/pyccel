@@ -18,7 +18,11 @@ name = event['check_run']['name']
 print(event)
 
 print(event['check_run']['pull_requests'])
-bot = Bot(pr_id = 0, commit = event['check_run']['head_sha'])
+try:
+    pr_id = next(p['number'] for p in event['check_run']['pull_requests'])
+except StopIteration:
+    pr_id = 0
+bot = Bot(pr_id = pr_id, commit = event['check_run']['head_sha'])
 bot.get_pr_id()
 
 name_key = bot.get_name_key(name)
