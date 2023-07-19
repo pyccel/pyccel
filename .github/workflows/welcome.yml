@@ -20,14 +20,10 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install requests
-      - name: "Generate token"
-        id: token
-        uses: ./.github/actions/generate_bot_token
-        with:
-          bot_pem: "${{ secrets.BOT_PEM }}"
       - id: run_bot
         run: |
           python ci_tools/bot_hello.py
         env:
           GH_TOKEN: ${{ github.token }}
+          bot_pem: "${{ secrets.BOT_PEM }}"
 
