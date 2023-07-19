@@ -3,6 +3,22 @@ import sys
 from bot_tools.bot_funcs import Bot
 
 def get_final_status(statuses : set):
+    """
+    Get the final status from results of each stage.
+
+    Combine the status output of each stage of the
+    test to determine the final combined status.
+
+    Parameters
+    ----------
+    statuses : set
+        The status of each stage.
+
+    Returns
+    -------
+    str
+        The final status.
+    """
     statuses.discard('skipped')
     if len(statuses) == 0:
         return 'cancelled'

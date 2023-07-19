@@ -165,16 +165,21 @@ def allow_untested_error_calls(untested):
 
 def print_markdown_summary(untested, commit, output, repo):
     """
-    Print the results neatly in markdown in a provided file
+    Print the results neatly in markdown in a provided file.
+
+    Print the results neatly in markdown in a provided file such that they can
+    be printed in a GitHub output file.
 
     Parameters
     ----------
     untested : list of dict
         A list of dictionaries describing all lines with unacceptable coverage.
     commit : str
-        The commit being tested
+        The commit being tested.
     output : str
-        The file where the markdown summary should be printed
+        The file where the markdown summary should be printed.
+    repo : str
+        The repository where the pull request can be found.
     """
     if len(untested) == 0:
         md_string = "## Congratulations! All new python code in the pyccel package is fully tested! :tada:"
@@ -210,6 +215,9 @@ def get_json_summary(untested, content_lines, existing_comments):
         Dictionary whose keys are the files in pyccel and whose
         values are lists containing the line numbers where python
         commands begin.
+    existing_comments : list of dict
+        A list describing all comments previously left about the
+        coverage results.
 
     Returns
     -------
