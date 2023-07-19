@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   Python support for a simple class
+
 ### Fixed
 
 ### Changed

@@ -773,8 +773,17 @@ def test_basic_header():
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_5.py",
                                         ] )
-def test_classes( test_file ):
-    pyccel_test(test_file, compile_with_pyccel = False)
+@pytest.mark.parametrize( 'language', (
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
+
+def test_classes( test_file , language):
+    if language == "python":
+        pyccel_test(test_file, language=language)
+    else:
+        pyccel_test(test_file, compile_with_pyccel = False, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
