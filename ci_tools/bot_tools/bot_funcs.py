@@ -497,10 +497,13 @@ class Bot:
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
         if in_team["message"] != "Not found":
             return True
+        print("User not in team")
         merged_prs = self._GAI.get_prs('all')
+        print(merged_prs, user)
         has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
         if has_merged_pr:
             return has_merged_pr
+        print("User has no merged PRs")
         comments = self._GAI.get_comments(self._pr_id)
         comments_from_trust_givers = [c['body'].split() for c in comments if c['user']['login'] in self.trust_givers]
         expected_trust_command = ['/bot', 'trust', 'user', user]
