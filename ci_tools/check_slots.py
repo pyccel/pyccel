@@ -11,13 +11,19 @@ from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
 def extract_dict_elements(input_dict):
     """
-    Extracts specific elements from the input dictionary based on the given keys and returns a new dictionary.
+    Write a dictionary as a dictionary compatible with GitHub's check runs output.
 
-    Args:
-        input_dict (dict): The input dictionary from which elements will be extracted.
+    Extract specific elements from the input dictionary based on the given keys and returns a new dictionary.
 
-    Returns:
-        dict: A new dictionary containing the extracted elements.
+    Parameters
+    ----------
+    input_dict : dict
+        The input dictionary from which elements will be extracted.
+
+    Returns
+    -------
+    dict
+        A new dictionary containing the extracted elements.
     """
     output_dict = {'title':"Pyccel_lint", 'summary':"## Check Slots:\n\n",'annotations':[]}
     for values in input_dict.items():
@@ -31,15 +37,38 @@ def extract_dict_elements(input_dict):
 
 def fill_dictionary(title, message, file, start_line, end_line, annotation_level, annotation_msg):
     """
-    Fills a dictionary with the provided data.
+    Fill a dictionary with the provided data.
 
-    Args:
-        data (dict): The data to populate the dictionary. It should be a dictionary
-                     where the keys represent the dictionary keys, and the values
-                     represent the corresponding values.
+    Fill a dictionary with the provided data to describe an annotation on a GitHub
+    check run.
 
-    Returns:
-        dict: A dictionary filled with the provided data.
+    Parameters
+    ----------
+    title : str
+        The title of the check run output.
+
+    message : str
+        A description of the output.
+
+    file : str
+        The file to be annotated.
+
+    start_line : int
+        The line at the start of the annotation.
+
+    end_line : int
+        The line at the end of the annotation.
+
+    annotation_level : str
+        The level of the anntoation [failure/warning].
+
+    annotation_msg : str
+        The message in the annotation.
+
+    Returns
+    -------
+    dict
+        A dictionary filled with the provided data.
     """
     index = file.find("site-packages")
     filled_dict = {
