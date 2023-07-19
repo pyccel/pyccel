@@ -23,6 +23,7 @@ def post_first_time_message(event, bot):
         repository.
     """
     user = event['pull_request']['user']['login']
+    print("Checking trust")
     # Check whether user is new and/or trusted
     trusted_user = bot.is_user_trusted(user)
     print("Current user trust level is : ", event['pull_request']['author_association'])

@@ -494,14 +494,17 @@ class Bot:
         bool
             True if the user is trusted, false otherwise.
         """
+        print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
         if in_team["message"] != "Not found":
+            print("In team")
             return True
         print("User not in team")
         merged_prs = self._GAI.get_prs('all')
         print(merged_prs, user)
         has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
         if has_merged_pr:
+            print("Merged PR")
             return has_merged_pr
         print("User has no merged PRs")
         comments = self._GAI.get_comments(self._pr_id)
