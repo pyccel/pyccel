@@ -60,7 +60,7 @@ if __name__ == '__main__':
             else:
                 changes = pkg_changes
             for line_no in upds['addition']:
-                if file in save_changes:
+                if file in changes:
                     changes[file].append(int(line_no))
                 else:
                     changes[file] = [int(line_no)]
