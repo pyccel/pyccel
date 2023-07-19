@@ -66,11 +66,12 @@ def message_from_file(filename):
     Parameters
     ----------
     filename : str
-        The name of the file to be read
+        The name of the file to be read.
 
-    Results
+    Returns
     -------
-    str : The message to be printed.
+    str
+        The message to be printed.
     """
     with open(os.path.join(comment_folder, filename), encoding="utf-8") as msg_file:
         comment = msg_file.read()
@@ -159,6 +160,11 @@ class Bot:
         Update an existing check run using the id specified at the construction
         to indicate that the run is in progress.
 
+        Parameters
+        ----------
+        rerequest : bool
+            True if the post is due to a test being rerun, False otherwise.
+
         Returns
         -------
         dict
@@ -238,9 +244,6 @@ class Bot:
         """
         self._GAI.create_comment(self._pr_id, message_from_file('bot_commands.txt'))
 
-    def trust_user(self):
-        pass
-
     def run_tests(self, tests, python_version = None):
         """
         Run the specified tests on the requested python version.
@@ -251,7 +254,7 @@ class Bot:
 
         Parameters
         ----------
-        tests : list of strings
+        tests : list of str
             A list of keys for the tests. The keys must be in `default_python_versions`
             and `test_names`. They should also be the names of yml files in
             the folder .github/workflows.
@@ -259,7 +262,7 @@ class Bot:
         python_version : str, optional
             The requested python version.
 
-        See also
+        See Also
         --------
         Bot.run_test
             Called by this function. It runs individual tests but requires more information.
@@ -477,7 +480,7 @@ class Bot:
 
     def is_user_trusted(self, user):
         """
-        Is the indicated user is trusted by the App.
+        Indicate if the user is trusted by the App.
 
         Detect whether the indicated user is trusted by the App.
         A user is considered trustworthy if they are in the pyccel-dev
@@ -533,7 +536,6 @@ class Bot:
         ----------
         user : str
             The id of the user of interest.
-
         """
         if user.startswith('@'):
             user = user[1:]
@@ -555,7 +557,7 @@ class Bot:
         pr_id : int
             The number of the PR.
 
-        Results
+        Returns
         -------
         str
             The review stage.
@@ -701,7 +703,16 @@ class Bot:
         print(reply.text)
 
     def is_pr_draft(self):
-        print(self._pr_details)
+        """
+        Indicate whether the pull request is a draft.
+
+        Indicate whether the pull request is a draft.
+
+        Returns
+        -------
+        bool
+            True if draft, False otherwise.
+        """
         return self._pr_details['draft']
 
     def leave_comment(self, comment):
@@ -744,8 +755,8 @@ class Bot:
         default_python_versions from the full name reported in the check
         run.
 
-        Parameter
-        ---------
+        Parameters
+        ----------
         name : str
             The name saved in the check run.
 

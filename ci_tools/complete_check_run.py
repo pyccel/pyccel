@@ -18,5 +18,6 @@ def get_final_status(statuses : set):
 
     return statuses.pop()
 
-bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ["COMMIT"])
-bot.post_completed(get_final_status(set(sys.argv[1:])))
+if __name__ == '__main__':
+    bot = Bot(pr_id = os.environ["PR_ID"], check_run_id = os.environ["CHECK_RUN_ID"], commit = os.environ["COMMIT"])
+    bot.post_completed(get_final_status(set(sys.argv[1:])))

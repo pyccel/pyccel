@@ -47,23 +47,23 @@ def post_first_time_message(event, bot):
     if not trusted_user:
         bot.leave_comment(", ".join(f'@{r}' for r in senior_reviewer)+", please can you check if I can trust this user. If you are happy, let me know with `/bot trust user`")
 
+if __name__ == '__main__':
+    # Parse event payload from $GITHUB_EVENT_PATH variable
+    # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
+    # The contents of this json file depend on the triggering event and are
+    # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
+    with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
+        event = json.load(event_file)
 
-# Parse event payload from $GITHUB_EVENT_PATH variable
-# (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
-# The contents of this json file depend on the triggering event and are
-# described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
-with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
-    event = json.load(event_file)
+    # Collect id from a pull request event with an opened action
+    pr_id = event['number']
 
-# Collect id from a pull request event with an opened action
-pr_id = event['number']
+    bot = Bot(pr_id = pr_id)
 
-bot = Bot(pr_id = pr_id)
-
-if event['action'] == 'reopened':
-    old_comments = [c for c in bot.GAI.get_comments(pr_id) if c['user']['type'] == 'Bot' and c['body'].startswith('Hello')]
-    print(old_comments)
-    if not old_comments:
+    if event['action'] == 'reopened':
+        old_comments = [c for c in bot.GAI.get_comments(pr_id) if c['user']['type'] == 'Bot' and c['body'].startswith('Hello')]
+        print(old_comments)
+        if not old_comments:
+            post_first_time_message(event, bot)
+    else:
         post_first_time_message(event, bot)
-else:
-    post_first_time_message(event, bot)

@@ -3,6 +3,19 @@ import os
 from bot_tools.bot_funcs import Bot, pr_test_keys
 
 def get_unique_test_list(keys):
+    """
+    Get a list of unique tests which should be run.
+
+    Get a list of all the tests which should be run. The treatments to
+    obtain this list remove duplicate tests. It also expands the `pr_tests`
+    key to all tests necessary for a pull request. Finally if coverage is
+    requested, it additionally requests linux.
+
+    Parameters
+    ----------
+    keys : list of str
+        The list of tests requested by the user.
+    """
     tests = set(keys)
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
