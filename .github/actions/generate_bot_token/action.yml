@@ -7,13 +7,6 @@ inputs:
     description: "The directory where the code is found"
     required: false
     default: "."
-outputs:
-  installation_token:
-    description: "The token which will allow you to authentificate as the GitHub app for 1 hour"
-    value: ${{ steps.get_token.outputs.token }}
-  installation_token_expiry:
-    description: "The expiration date of the token"
-    value: ${{ steps.get_token.outputs.token_exp }}
 
 runs:
   using: "composite"
@@ -23,7 +16,7 @@ runs:
       shell: bash
     - run: |
         cd ${{ inputs.dir }}
-        python -c "from ci_tools.bot_tools.github_api_interactions import get_authorization; t,d=get_authorization(); print('token=',t,sep=''); print('token_exp=',d,sep='')" >> ${{ github.output }}
+        python -c "from ci_tools.bot_tools.github_api_interactions import get_authorization; t,d=get_authorization(); print('token=',t,sep=''); print('token_exp=',d,sep='')"
       shell: bash
       id: get_token
       env:

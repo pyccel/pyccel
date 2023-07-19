@@ -28,6 +28,4 @@ jobs:
           python ci_tools/bot_ready_for_review.py
         env:
           GH_TOKEN: ${{ github.token }}
-          installation_token: ${{ steps.token.outputs.installation_token }}
-          installation_token_exp: ${{ steps.token.outputs.installation_token_expiry }}
 
