@@ -66,7 +66,7 @@ if __name__ == '__main__':
                     changes[file] = [int(line_no)]
 
     for changes, output in zip([pkg_changes, ci_changes], [args.output, args.ci_output]):
-        with open(args.output, 'w', encoding="utf-8") as f:
+        with open(output, 'w', encoding="utf-8") as f:
             for file, line_nos in changes.items():
                 with open(file, 'r', encoding="utf-8") as ast_file:
                     tree = ast.parse(ast_file.read())
