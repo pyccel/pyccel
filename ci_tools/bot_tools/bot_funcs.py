@@ -366,7 +366,14 @@ class Bot:
         """
         Remove the draft status from the pull request.
 
-        Remove the draft status from the pull request specified in the constructor.
+        Remove the draft status from the pull request specified in the constructor. This
+        action is only carried out if the pull request has a description and all items
+        on the checklist have been ticked off.
+
+        Returns
+        -------
+        bool
+            Indicates if the pull request could be marked as ready.
         """
         description = self._pr_details['body']
         if description:
@@ -377,13 +384,13 @@ class Bot:
         if len(words) < 3:
             self._GAI.create_comment(self._pr_id, message_from_file('set_draft_no_description.txt'))
             self.mark_as_draft()
-            return
+            return False
 
         welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['user']['type'] != 'Bot' and c['body'].startswith('Hello'))
         if '- [ ]' in welcome_comment['body']:
             self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['url']))
             self.mark_as_draft()
-            return
+            return False
 
         outputs['cleanup_trigger'] = 'request_review_status'
         run_tests(pr_id, ['pr_tests'], outputs, event)
@@ -393,6 +400,7 @@ class Bot:
         with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
+        return True
 
     def mark_as_ready(self, following_review):
         """

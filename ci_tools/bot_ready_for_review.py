@@ -16,9 +16,8 @@ pr_id = event['number']
 
 bot = Bot(pr_id = pr_id)
 
-bot.request_mark_as_ready()
-
 if bot.is_user_trusted(event['sender']['login']):
-    bot.run_tests(pr_test_keys)
+    if bot.request_mark_as_ready():
+        bot.run_tests(pr_test_keys)
 else:
     bot.warn_untrusted()
