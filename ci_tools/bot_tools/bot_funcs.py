@@ -369,9 +369,10 @@ class Bot:
         Remove the draft status from the pull request specified in the constructor.
         """
         description = self._pr_details['body']
-        print(self._pr_details)
-        print(description)
-        words = description.split()
+        if description:
+            words = description.split()
+        else:
+            words = []
 
         if len(words) < 3:
             self._GAI.create_comment(self._pr_id, message_from_file('set_draft_no_description.txt'))
