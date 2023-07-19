@@ -9,33 +9,6 @@ import json
 from pyccel import ast
 from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
-parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
-parser.add_argument('output', metavar='output', type=str,
-                        help='File where the markdown output will be printed')
-
-args = parser.parse_args()
-
-# Get ast modules
-ast_folder = os.path.dirname(ast.__file__)
-ast_modules = [mod[:-3] for mod in os.listdir(ast_folder) if mod != '__init__.py' and mod.endswith('.py')]
-
-# Prepare error collection
-missing_all = []
-non_alphabetical_all = []
-missing_slots = []
-overridden_slots = []
-missing_attribute_nodes = []
-missing_from_all = []
-
-error_collection = {
-    'missing_all':[],
-    'non_alphabetical_all':[],
-    'missing_slots':[],
-    'overridden_slots':[],
-    'missing_attribute_nodes':[],
-    'missing_from_all':[]
-}
-
 def extract_dict_elements(input_dict):
     """
     Extracts specific elements from the input dictionary based on the given keys and returns a new dictionary.
@@ -82,78 +55,106 @@ def fill_dictionary(title, message, file, start_line, end_line, annotation_level
     }
     return filled_dict
 
-for mod_name in ast_modules:
-    mod = importlib.import_module('pyccel.ast.'+mod_name)
-    all_attr = getattr(mod, '__all__', None)
-    if all_attr:
-        sorted_all = list(all_attr)
-        sorted_all.sort()
-        if sorted_all != list(all_attr):
-            lines = inspect.getsource(mod).splitlines()
-            start_line = -1
-            end_line = -1
-            for line_num, line in enumerate(lines):
-                if '__all__' in line:
-                    start_line = line_num + 1
-                    while ')' not in line:
-                        line_num += 1
-                        line = lines[line_num]
-                        end_line = line_num + 1
-                    error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", f"pyccel.ast.{mod_name}",
-                        inspect.getfile(mod), start_line, end_line, "warning", f"Sort the __all__ attribute of `{mod_name}`"))
-                    break
-    else:
-        error_collection['missing_all'].append(fill_dictionary("Missing `__all__`", f"pyccel.ast.{mod_name}",
-            inspect.getfile(mod), 1, 1, "failure", f"Missing __all__ attribute in: `{mod_name}`"))
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Check that all new lines in the python files in the pyccel/ code folder are used in the tests')
+    parser.add_argument('output', metavar='output', type=str,
+                            help='File where the markdown output will be printed')
 
-    classes = inspect.getmembers(mod, inspect.isclass)
-    for cls_name, cls_obj in classes:
-        if inspect.getmodule(cls_obj) is not mod:
-            continue
-        super_classes = cls_obj.mro()[1:]
-        if '__slots__' not in cls_obj.__dict__:
-            sourceline = inspect.getsourcelines(cls_obj)[1]
-            error_collection['missing_slots'].append(fill_dictionary("Classes with no `__slots__`", f"pyccel.ast.{mod_name}.{cls_name}",
-                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` class with no `__slots__`"))
+    args = parser.parse_args()
+
+    # Get ast modules
+    ast_folder = os.path.dirname(ast.__file__)
+    ast_modules = [mod[:-3] for mod in os.listdir(ast_folder) if mod != '__init__.py' and mod.endswith('.py')]
+
+    # Prepare error collection
+    missing_all = []
+    non_alphabetical_all = []
+    missing_slots = []
+    overridden_slots = []
+    missing_attribute_nodes = []
+    missing_from_all = []
+
+    error_collection = {
+        'missing_all':[],
+        'non_alphabetical_all':[],
+        'missing_slots':[],
+        'overridden_slots':[],
+        'missing_attribute_nodes':[],
+        'missing_from_all':[]
+    }
+
+    for mod_name in ast_modules:
+        mod = importlib.import_module('pyccel.ast.'+mod_name)
+        all_attr = getattr(mod, '__all__', None)
+        if all_attr:
+            sorted_all = list(all_attr)
+            sorted_all.sort()
+            if sorted_all != list(all_attr):
+                lines = inspect.getsource(mod).splitlines()
+                start_line = -1
+                end_line = -1
+                for line_num, line in enumerate(lines):
+                    if '__all__' in line:
+                        start_line = line_num + 1
+                        while ')' not in line:
+                            line_num += 1
+                            line = lines[line_num]
+                            end_line = line_num + 1
+                        error_collection['non_alphabetical_all'].append(fill_dictionary("Non-alphabetical `__all__`", f"pyccel.ast.{mod_name}",
+                            inspect.getfile(mod), start_line, end_line, "warning", f"Sort the __all__ attribute of `{mod_name}`"))
+                        break
         else:
-            slots = cls_obj.__slots__
-            for c in super_classes:
-                if '__slots__' not in c.__dict__:
-                    continue
-                elif any(s in slots for s in c.__slots__):
-                    sourceline = inspect.getsourcelines(cls_obj)[1]
-                    error_collection['overridden_slots'].append(fill_dictionary("Overwritten slot values", f"pyccel.ast.{mod_name}.{cls_name}",
-                        inspect.getfile(mod), sourceline, sourceline, "failure", f"Slot values are overwritten between `{mod_name}.{cls_name}` and `{c.__name__}`"))
+            error_collection['missing_all'].append(fill_dictionary("Missing `__all__`", f"pyccel.ast.{mod_name}",
+                inspect.getfile(mod), 1, 1, "failure", f"Missing __all__ attribute in: `{mod_name}`"))
 
-        if Basic in super_classes:
-            if cls_obj not in (PyccelAstNode, ScopedNode) and not isinstance(cls_obj._attribute_nodes, tuple): #pylint: disable=W0212
+        classes = inspect.getmembers(mod, inspect.isclass)
+        for cls_name, cls_obj in classes:
+            if inspect.getmodule(cls_obj) is not mod:
+                continue
+            super_classes = cls_obj.mro()[1:]
+            if '__slots__' not in cls_obj.__dict__:
                 sourceline = inspect.getsourcelines(cls_obj)[1]
-                error_collection['missing_attribute_nodes'].append(fill_dictionary("Classes with no `_attribute_nodes`", f"pyccel.ast.{mod_name}.{cls_name}",
-                        inspect.getfile(mod), sourceline, sourceline, "failure", f"Missing attribute nodes in : `{mod_name}.{cls_name}`"))
+                error_collection['missing_slots'].append(fill_dictionary("Classes with no `__slots__`", f"pyccel.ast.{mod_name}.{cls_name}",
+                    inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` class with no `__slots__`"))
+            else:
+                slots = cls_obj.__slots__
+                for c in super_classes:
+                    if '__slots__' not in c.__dict__:
+                        continue
+                    elif any(s in slots for s in c.__slots__):
+                        sourceline = inspect.getsourcelines(cls_obj)[1]
+                        error_collection['overridden_slots'].append(fill_dictionary("Overwritten slot values", f"pyccel.ast.{mod_name}.{cls_name}",
+                            inspect.getfile(mod), sourceline, sourceline, "failure", f"Slot values are overwritten between `{mod_name}.{cls_name}` and `{c.__name__}`"))
 
-        if all_attr and cls_name not in all_attr:
-            sourceline = inspect.getsourcelines(cls_obj)[1]
-            error_collection['missing_from_all'].append(fill_dictionary("Classes missing from `__all__`", f"pyccel.ast.{mod_name}.{cls_name}",
-                inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` is missing from `__all__`"))
+            if Basic in super_classes:
+                if cls_obj not in (PyccelAstNode, ScopedNode) and not isinstance(cls_obj._attribute_nodes, tuple): #pylint: disable=W0212
+                    sourceline = inspect.getsourcelines(cls_obj)[1]
+                    error_collection['missing_attribute_nodes'].append(fill_dictionary("Classes with no `_attribute_nodes`", f"pyccel.ast.{mod_name}.{cls_name}",
+                            inspect.getfile(mod), sourceline, sourceline, "failure", f"Missing attribute nodes in : `{mod_name}.{cls_name}`"))
 
-messages = extract_dict_elements(error_collection)
-if not messages['annotations']:
-    messages['summary'] = "Check Slots\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
-    messages.pop('annotations')
-with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
-    json.dump(messages, json_file)
+            if all_attr and cls_name not in all_attr:
+                sourceline = inspect.getsourcelines(cls_obj)[1]
+                error_collection['missing_from_all'].append(fill_dictionary("Classes missing from `__all__`", f"pyccel.ast.{mod_name}.{cls_name}",
+                    inspect.getfile(mod), sourceline, sourceline, "failure", f"`{mod_name}.{cls_name}` is missing from `__all__`"))
 
-with open(args.output, "w", encoding="utf-8") as md_file:
-    # Report error
-    md_file.write("# " + messages['title'] + '\n\n')
-    md_file.write(messages['summary'])
+    messages = extract_dict_elements(error_collection)
+    if not messages['annotations']:
+        messages['summary'] = "Check Slots\n\n**Success**:The operation was successfully completed. All necessary tasks have been executed without any errors or warnings.\n\n"
+        messages.pop('annotations')
+    with open('test_json_result.json', mode='w', encoding="utf-8") as json_file:
+        json.dump(messages, json_file)
 
-failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
-          bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or
-          bool(error_collection['overridden_slots']))
+    with open(args.output, "w", encoding="utf-8") as md_file:
+        # Report error
+        md_file.write("# " + messages['title'] + '\n\n')
+        md_file.write(messages['summary'])
+
+    failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
+              bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or
+              bool(error_collection['overridden_slots']))
 
 
-if failure:
-    sys.exit(1)
-else:
-    sys.exit(0)
+    if failure:
+        sys.exit(1)
+    else:
+        sys.exit(0)
