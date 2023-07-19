@@ -1,3 +1,5 @@
+""" Script run when a pull request is marked as ready for review.
+"""
 import json
 import os
 from bot_tools.bot_funcs import Bot, pr_test_keys

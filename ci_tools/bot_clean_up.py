@@ -1,3 +1,5 @@
+""" Script run after a check run to trigger coverage tests if necessary, and change the draft status if necessary.
+"""
 import json
 import os
 from bot_tools.bot_funcs import Bot, test_dependencies

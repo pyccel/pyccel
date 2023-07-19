@@ -1,3 +1,5 @@
+""" Script run as a reaction to a comment left on a pull request.
+"""
 import json
 import os
 from bot_tools.bot_funcs import Bot, pr_test_keys

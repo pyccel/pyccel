@@ -1,3 +1,5 @@
+""" Summarise the outcome of multiple tests.
+"""
 import argparse
 import json
 

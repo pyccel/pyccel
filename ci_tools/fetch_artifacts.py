@@ -1,3 +1,5 @@
+""" Script to find all artifacts that can be passed to the coverage test.
+"""
 import os
 import shutil
 import subprocess

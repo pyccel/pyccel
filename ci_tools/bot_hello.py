@@ -1,3 +1,5 @@
+""" Script run following the creation of a new pull request.
+"""
 import json
 import os
 from bot_tools.bot_funcs import Bot, message_from_file

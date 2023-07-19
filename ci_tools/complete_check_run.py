@@ -1,3 +1,5 @@
+""" Script that can be used to calculate the final combined status from results of multiple stages.
+"""
 import os
 import sys
 from bot_tools.bot_funcs import Bot

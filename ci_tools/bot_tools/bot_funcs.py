@@ -1,3 +1,5 @@
+""" File containing the class Bot and all functions useful for bot reactions.
+"""
 import json
 import os
 import platform
