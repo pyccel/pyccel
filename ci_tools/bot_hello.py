@@ -30,9 +30,9 @@ def post_first_time_message(event, bot):
     if trusted_user:
         merged_prs = bot.GAI.get_prs('all')
         for pr in merged_prs:
-            print(pr['merged_at'], pr['user']['login'], pr['user']['login'] == user, pr['user']['login'] == user and pr['merged_at'])
+            print(pr['merged_at'], pr['user']['login'], pr['user']['login'] == user, pr['user']['login'] == user and (pr['merged_at'] is not None))
         print(user)
-        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
+        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and (pr['merged_at'] is not None))
         new_user = has_merged_pr
     else:
         new_user = True
