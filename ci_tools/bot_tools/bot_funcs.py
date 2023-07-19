@@ -388,7 +388,7 @@ class Bot:
 
         welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['user']['type'] == 'Bot' and c['body'].startswith('Hello'))
         if '- [ ]' in welcome_comment['body']:
-            self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['url']))
+            self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['html_url']))
             self.mark_as_draft()
             return False
 
