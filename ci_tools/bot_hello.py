@@ -14,6 +14,8 @@ with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
 # Collect id from a pull request event with an opened action
 pr_id = event['number']
 
+print(event)
+
 bot = Bot(pr_id = pr_id)
 
 user = event['pull_request']['user']['login']
