@@ -181,9 +181,9 @@ class PythonCodePrinter(CodePrinter):
         return f"{lhs_code}.{rhs_code}"
 
     def _print_DottedFunctionCall(self, expr):
-        func = self._print(expr.func_name)
-        args = ', '.join(self._print(arg) for arg in expr.args)
-        return (f"{func}({args})\n")
+        prefix = self._print(expr.prefix)
+        func_call = self._print_FunctionCall(expr)
+        return f"{prefix}.{func_call}"
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
