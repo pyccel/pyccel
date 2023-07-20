@@ -344,7 +344,7 @@ class Scope(object):
             self.parent_scope.insert_class(cls)
         else:
             if name in self._locals['classes']:
-                raise RuntimeError('New class already exists in scope')
+                raise RuntimeError(f"A class with name '{name}' already exists in the scope")
             self._locals['classes'][name] = cls
 
     def update_class(self, cls):
