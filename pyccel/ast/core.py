@@ -3165,8 +3165,8 @@ class ClassDef(ScopedNode):
     imports : list, tuple
         A list of required imports.
 
-    superclass : str
-        The name of all superclasses.
+    superclasses : iterable
+        The definition of all classes from which this class inherits.
 
     interfaces : iterable
         The interface methods.
@@ -3192,7 +3192,7 @@ class ClassDef(ScopedNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclass','_interfaces')
+                 '_imports','_superclasses','_interfaces')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
 
     def __init__(
@@ -3202,7 +3202,7 @@ class ClassDef(ScopedNode):
         methods=(),
         options=('public',),
         imports=(),
-        superclass=(),
+        superclasses=(),
         interfaces=(),
         scope = None
         ):
@@ -3235,10 +3235,10 @@ class ClassDef(ScopedNode):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(superclass):
-            raise TypeError('superclass must be iterable')
+        if not iterable(superclasses):
+            raise TypeError('superclasses must be iterable')
         if pyccel_stage != 'syntactic':
-            for s in superclass:
+            for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
 
@@ -3286,7 +3286,7 @@ class ClassDef(ScopedNode):
         self._methods = methods
         self._options = options
         self._imports = imports
-        self._superclass  = superclass
+        self._superclasses  = superclasses
         self._interfaces = interfaces
 
         super().__init__(scope = scope)
@@ -3312,8 +3312,14 @@ class ClassDef(ScopedNode):
         return self._imports
 
     @property
-    def superclass(self):
-        return self._superclass
+    def superclasses(self):
+        """
+        Get the superclasses.
+
+        Get the class definitions for the classes from which this class
+        inherits.
+        """
+        return self._superclasses
 
     @property
     def interfaces(self):
