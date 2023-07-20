@@ -1598,7 +1598,7 @@ class SemanticParser(BasicParser):
                             severity='error')
             parent = {s:c for s,c in parent.items() if c is not None}
 
-        return list(parent)
+        return list(parent.values())
 
 
     #====================================================
