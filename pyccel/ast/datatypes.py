@@ -282,10 +282,10 @@ def DataTypeFactory(name, argnames=["_name"],
         prefix = 'Pyccel{0}'.format(prefix)
 
     newclass = type(prefix + name, (BaseClass,),
-                    {"__init__":          __init__,
-                     "_name":             name,
-                     "prefix":            prefix,
-                     "alias":             name})
+                    {"__init__": __init__,
+                     "_name": name,
+                     "prefix": prefix,
+                     "alias": name})
     return newclass
 
 def is_pyccel_datatype(expr):
