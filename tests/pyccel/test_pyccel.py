@@ -772,6 +772,7 @@ def test_basic_header():
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_5.py",
+                                        "scripts/classes/generic_methods.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
@@ -1014,3 +1015,8 @@ def test_reserved_file_name():
         libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
         execute_pyccel(fname=libname)
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
+
+def test_concatentation():
+    pyccel_test("scripts/concatenation.py",
+                language = 'fortran',
+                output_dtype=[int]*15+[str])
