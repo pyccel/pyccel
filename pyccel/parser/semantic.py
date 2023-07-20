@@ -1581,7 +1581,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        dict_values
+        list
             An iterable containing the defintions of all the superclasses.
 
         Raises
@@ -1596,9 +1596,9 @@ class SemanticParser(BasicParser):
                 if c is None:
                     errors.report(f"Couldn't find class {s} in scope", symbol=expr,
                             severity='error')
-            parent = {s:c for s,c in parent if c is not None}
+            parent = {s:c for s,c in parent.items() if c is not None}
 
-        return parent
+        return list(parent)
 
 
     #====================================================
