@@ -3495,8 +3495,8 @@ class SemanticParser(BasicParser):
         name = name.replace("'", '')
 
         parent = {s: self.scope.find(s, 'classes') for s in expr.superclasses}
-        if any(s is None for s in parent.values()):
-            for s,c in parent:
+        if any(c is None for c in parent.values()):
+            for s,c in parent.items():
                 if c is None:
                     errors.report(f"Couldn't find class {s} in scope", symbol=expr,
                             severity='error')
