@@ -3494,15 +3494,15 @@ class SemanticParser(BasicParser):
         # remove quotes for str representation
         name = name.replace("'", '')
 
-        parent = [self.scope.find(s, 'classes') for s in expr.superclasses]
-        if any(s is None for s in parent):
-            for s in parent:
-                if s is None:
-                    errors.report("Couldn't find class {s} in scope", symbol=expr,
+        parent = {s: self.scope.find(s, 'classes') for s in expr.superclasses}
+        if any(s is None for s in parent.values()):
+            for s,c in parent:
+                if c is None:
+                    errors.report(f"Couldn't find class {s} in scope", symbol=expr,
                             severity='error')
-            parent = [s for s in parent if s is not None]
+            parent = {s:c for s,c in parent if c is not None}
 
-        cls = ClassDef(name, [], [], superclasses=parent)
+        cls = ClassDef(name, [], [], superclasses=parent.values())
         self.scope.insert_class(cls)
 
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
@@ -3552,7 +3552,7 @@ class SemanticParser(BasicParser):
         self.exit_class_scope()
 
         cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, superclasses=parent, scope=scope)
+              interfaces=interfaces, superclasses=parent.values(), scope=scope)
         self.scope.update_class(cls)
 
         return EmptyNode()
