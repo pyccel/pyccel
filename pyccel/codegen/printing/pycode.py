@@ -8,7 +8,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection, FunctionDef, Module
+from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -179,11 +179,6 @@ class PythonCodePrinter(CodePrinter):
         rhs_code = self._print_Variable(expr)
         lhs_code = self._print(expr.lhs)
         return f"{lhs_code}.{rhs_code}"
-
-    def _print_DottedFunctionCall(self, expr):
-        prefix = self._print(expr.prefix)
-        func_call = self._print_FunctionCall(expr)
-        return f"{prefix}.{func_call}"
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
@@ -468,9 +463,12 @@ class PythonCodePrinter(CodePrinter):
         if expr.interface:
             func_name = expr.interface_name
         else:
-            func_name = expr.funcdef.name
-        args = ', '.join(self._print(i) for i in expr.args)
-        code = '{func}({args})'.format(func=func_name, args=args)
+            func_name = expr.func_name
+        args = expr.args
+        if isinstance(expr, DottedFunctionCall):
+            args = args[1:]
+        args_str = ', '.join(self._print(i) for i in args)
+        code = f'{func_name}({args_str})'
         if expr.funcdef.results:
             return code
         else:
@@ -1013,7 +1011,9 @@ class PythonCodePrinter(CodePrinter):
         classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclass))
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
-        classDef = '\n'.join([classDefName, methods]) + '\n'
+        interfaces = ''.join(self._print(method) for method in expr.interfaces)
+        interfaces = self._indent_codestring(interfaces)
+        classDef = '\n'.join([classDefName, methods, interfaces]) + '\n'
         return classDef
 
     def _print_ConstructorCall(self, expr):
