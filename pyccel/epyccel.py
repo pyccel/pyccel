@@ -51,25 +51,25 @@ def get_source_function(func):
 #==============================================================================
 def get_unique_name(prefix, path):
     """
-    Get a unique name based on the prefix
-    which does not coincide with a module which
-    already exists and is not being created by
-    another thread
+    Get a unique module name.
+
+    Get a unique name based on the prefix which does not coincide with a
+    module which already exists and is not being created by another thread.
 
     Parameters
     ----------
     prefix : str
-             The starting string of the random name
+             The starting string of the random name.
     path   : str
-             The folder where the lock file should be saved
+             The folder where the lock file should be saved.
 
     Returns
     -------
     module_name : str
-                  A unique name for the new module
+                  A unique name for the new module.
     module_lock : FileLock
                   A file lock preventing other threads
-                  from creating a module with the same name
+                  from creating a module with the same name.
     """
     module_import_prefix = prefix + '_'
 
