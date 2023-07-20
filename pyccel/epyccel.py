@@ -59,9 +59,9 @@ def get_unique_name(prefix, path):
     Parameters
     ----------
     prefix : str
-             The starting string of the random name.
-    path   : str
-             The folder where the lock file should be saved.
+        The starting string of the random name.
+    path : str
+        The folder where the lock file should be saved.
 
     Returns
     -------
