@@ -72,7 +72,7 @@ IntegerClass = ClassDef('integer',
 #=======================================================================================
 
 BooleanClass = ClassDef('boolean',
-        superclass=(IntegerClass,))
+        superclasses=(IntegerClass,))
 
 #=======================================================================================
 

@@ -1246,7 +1246,7 @@ class SemanticParser(BasicParser):
                 cls      = self.scope.find(cls_name, 'classes')
 
                 attributes = cls.attributes
-                parent     = cls.superclass
+                parent     = cls.superclasses
                 attributes = list(attributes)
                 n_name     = str(lhs.name[-1])
 
@@ -1265,7 +1265,7 @@ class SemanticParser(BasicParser):
 
                 # update the attributes of the class and push it to the scope
                 attributes += [member]
-                new_cls = ClassDef(cls_name, attributes, [], superclass=parent)
+                new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
                 self.scope.parent_scope.update_class(new_cls)
             else:
                 lhs = self._visit(lhs)
@@ -3409,15 +3409,15 @@ class SemanticParser(BasicParser):
 
                 # update the class methods
 
-                superclass = [self.scope.find(s, 'classes') for s in cls.superclass]
-                if any(s is None for s in superclass):
-                    for s in superclass:
+                superclasses = [self.scope.find(s, 'classes') for s in cls.superclasses]
+                if any(s is None for s in superclasses):
+                    for s in superclasses:
                         if s is None:
                             errors.report("Couldn't find class {s} in scope", symbol=expr,
                                     severity='error')
-                    superclass = [s for s in superclass if s is not None]
+                    superclasses = [s for s in superclasses if s is not None]
                 self.scope.update_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclass=superclass))
+                        methods, superclasses=superclasses))
 
             funcs += [func]
 
@@ -3494,7 +3494,7 @@ class SemanticParser(BasicParser):
         # remove quotes for str representation
         name = name.replace("'", '')
 
-        parent = [self.scope.find(s, 'classes') for s in expr.superclass]
+        parent = [self.scope.find(s, 'classes') for s in expr.superclasses]
         if any(s is None for s in parent):
             for s in parent:
                 if s is None:
@@ -3502,7 +3502,7 @@ class SemanticParser(BasicParser):
                             severity='error')
             parent = [s for s in parent if s is not None]
 
-        cls = ClassDef(name, [], [], superclass=parent)
+        cls = ClassDef(name, [], [], superclasses=parent)
         self.scope.insert_class(cls)
 
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
@@ -3552,7 +3552,7 @@ class SemanticParser(BasicParser):
         self.exit_class_scope()
 
         cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, superclass=parent, scope=scope)
+              interfaces=interfaces, superclasses=parent, scope=scope)
         self.scope.update_class(cls)
 
         return EmptyNode()

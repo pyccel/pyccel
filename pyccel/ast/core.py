@@ -3407,10 +3407,10 @@ class ClassDef(ScopedNode):
         except StopIteration:
             method = None
             i = 0
-            n_classes = len(self.superclass)
+            n_classes = len(self.superclasses)
             while method is None and i<n_classes:
                 try:
-                    method = self.superclass[i].get_method(name)
+                    method = self.superclasses[i].get_method(name)
                 except StopIteration:
                     method = None
 
