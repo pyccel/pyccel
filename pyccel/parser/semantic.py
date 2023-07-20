@@ -1582,7 +1582,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         list
-            An iterable containing the defintions of all the superclasses.
+            An iterable containing the definitions of all the superclasses.
 
         Raises
         ------
