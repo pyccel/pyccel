@@ -771,20 +771,25 @@ def test_basic_header():
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
+                                        "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_5.py",
                                         "scripts/classes/generic_methods.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = pytest.mark.fortran)
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
     )
 )
 
 def test_classes( test_file , language):
-    if language == "python":
-        pyccel_test(test_file, language=language)
-    else:
+    if language == "fortran":
         pyccel_test(test_file, compile_with_pyccel = False, language=language)
+    else:
+        if language == "c": # Note: Temporary condition until issue 1439 is resolved.
+            pyccel_test("scripts/classes/classes_2.py", language=language)
+        else:
+            pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
