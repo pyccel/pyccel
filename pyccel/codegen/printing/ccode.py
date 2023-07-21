@@ -27,6 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
+from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision
 
@@ -344,6 +345,8 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
+        if isinstance(a.dtype, CustomDataType) and a.is_argument:
+            return True
 
         if not isinstance(a, Variable):
             return False
@@ -2162,7 +2165,8 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_ClassDef(self, expr):
-        return ""
+        methods = ''.join(self._print(method) for method in expr.methods)
+        return methods
 
     #=================== MACROS ==================
 
