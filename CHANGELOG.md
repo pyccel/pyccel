@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 -   Allow interfaces in classes.
 -   Python support for a simple class.
 -   #1430 : Added conjugate support to booleans.
+-   #1452 : Added C support for a class containing only functions
 
 ### Fixed
 
