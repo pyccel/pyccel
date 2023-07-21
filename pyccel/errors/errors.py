@@ -103,7 +103,7 @@ class ErrorInfo:
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = (ErrorsMode().value == 'developer' and severity != 'warning') \
+        self.blocker = (ErrorsMode().value == 'developer' and severity != 'warning' and 'raise ' not in traceback) \
                 or (severity == 'fatal')
         # The traceback at the moment that the error was raised
         self.traceback = traceback
@@ -216,6 +216,7 @@ class Errors(metaclass = Singleton):
                severity = 'error',
                symbol = None,
                filename = None,
+               traceback = None,
                verbose = False):
         """
         Report message at the given line using the current error context.
@@ -276,9 +277,13 @@ class Errors(metaclass = Singleton):
             line   = getattr(fst, 'lineno', None)
             column = getattr(fst, 'col_offset', None)
 
-        traceback = None
         if self.mode == 'developer':
-            traceback = ''.join(tb.format_stack(limit=5))
+            if traceback:
+                traceback = ''.join(tb.format_tb(traceback, limit=-5))
+            else:
+                traceback = ''.join(tb.format_stack(limit=5))
+        else:
+            traceback = None
 
         info = ErrorInfo(stage=self._parser_stage,
                          filename=filename,
