@@ -20,6 +20,7 @@ from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
+from pyccel.ast.core      import ConstructorCall
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
@@ -1848,6 +1849,9 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
+        if isinstance(rhs, ConstructorCall):
+            args = (FunctionCallArgument(lhs),) + rhs.arguments
+            return self._print(FunctionCall(rhs.func, args))
         if isinstance(lhs, Variable) and lhs.is_optional:
             if lhs in self._optional_partners:
                 # Collect temporary variable which provides
