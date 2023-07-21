@@ -203,7 +203,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -222,7 +223,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('annotation (semantic)')
         # Raise a new error to avoid a large traceback
@@ -247,7 +249,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('code generation')
         # Raise a new error to avoid a large traceback
@@ -378,7 +381,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
         handle_error('code generation (wrapping)')
         raise PyccelCodegenError(msg) from None
     except PyccelError:
