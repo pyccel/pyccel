@@ -5,13 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   Python support for a simple class
+-   Allow interfaces in classes.
+-   Python support for a simple class.
+-   #1430 : Added conjugate support to booleans.
 
 ### Fixed
+
+-   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
 
 -   Updating `stdlib` files if they are modified not just accessed.
+-   \[INTERNALS\] Add class object to class function call arguments.
 
 ### Deprecated
 
