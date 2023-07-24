@@ -23,7 +23,9 @@ if __name__ == '__main__':
 
     warning_codes = ['EX01', 'SA01']
 
-    pyccel_folder = os.path.abspath('compare')
+    #pyccel_folder = os.path.abspath('compare')
+    pyccel_folder = '/home/emily/Code/pyccel'
+
 
     errors = {}
     warnings = {}
@@ -61,7 +63,12 @@ if __name__ == '__main__':
                     with open(os.path.join(pyccel_folder, file), 'r', encoding='utf-8') as code_file:
                         lines = code_file.readlines()[start-1:end+2]
                     lines = [l.strip() for l in lines]
-                    doc_openings = [i for i,l in enumerate(lines) if l.startswith('"""') or l.endswith('"""')]
+                    doc_openings = []
+                    for i,l in enumerate(lines):
+                        if l.startswith('"""'):
+                            doc_openings.append(i)
+                        if l.endswith('"""'):
+                            doc_openings.append(i)
                     lines = lines[doc_openings[0]:doc_openings[1]+1]
                     end = start + doc_openings[1]
                     start = start + doc_openings[0]
