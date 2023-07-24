@@ -6,6 +6,7 @@ on:
 
 jobs:
   Bot:
+    if: (! github.event.pull_request.draft && github.event.review.user.type != 'Bot' )
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
