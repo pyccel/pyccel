@@ -69,6 +69,7 @@ def test_semantic_blocking_errors(f):
 
     assert(errors.has_blockers())
 
+@pytest.mark.xdist_incompatible
 def test_traceback():
     f = 'semantic/blocking/INHOMOG_LIST.py'
     print('> testing {0}'.format(str(f)))
@@ -111,6 +112,7 @@ def test_semantic_non_blocking_errors(f):
 
     assert(errors.has_errors())
 
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
 def test_semantic_non_blocking_developer_errors(f):
     print('> testing {0}'.format(str(f)))
