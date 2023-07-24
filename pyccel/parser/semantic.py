@@ -2349,11 +2349,11 @@ class SemanticParser(BasicParser):
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error')
             args = expr.args
+            cls_variable = expr.get_user_nodes(Assign)[0].lhs
 
             # TODO check compatibility
             # TODO treat parametrized arguments.
-
-            expr = ConstructorCall(method, args, cls_variable=None)
+            expr = ConstructorCall(method, args, cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
