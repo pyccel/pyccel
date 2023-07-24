@@ -23,8 +23,7 @@ if __name__ == '__main__':
 
     warning_codes = ['EX01', 'SA01']
 
-    #pyccel_folder = os.path.abspath('compare')
-    pyccel_folder = '/home/emily/Code/pyccel'
+    pyccel_folder = os.path.abspath('compare')
 
     errors = {}
     warnings = {}
