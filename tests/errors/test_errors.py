@@ -52,7 +52,7 @@ def test_syntax_errors(f):
 
     assert(errors.has_errors())
 
-@pytest.mark.parametrize("f",get_files_from_folder("semantic/blocking"))
+@pytest.mark.parametrize("f", get_files_from_folder("semantic/blocking"))
 def test_semantic_blocking_errors(f):
     print('> testing {0}'.format(str(f)))
 
@@ -68,6 +68,31 @@ def test_semantic_blocking_errors(f):
         ast = pyccel.annotate(**settings)
 
     assert(errors.has_blockers())
+
+def test_traceback():
+    f = 'semantic/blocking/INHOMOG_LIST.py'
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+    error_mode.set_mode('developer')
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    try:
+        ast = pyccel.annotate(**settings)
+    except PyccelSemanticError as e:
+        msg = str(e)
+        errors.report(msg,
+            severity='error',
+            traceback=e.__traceback__)
+
+    assert(errors.has_blockers())
+    assert errors.num_messages() == 2
+    error_mode.set_mode('user')
 
 semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/non_blocking")]
 @pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
