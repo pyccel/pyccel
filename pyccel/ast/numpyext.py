@@ -352,7 +352,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType | PyccelFunctionDef | String
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
 
     Returns
@@ -979,24 +979,28 @@ class NumpyRandint(PyccelInternalFunction):
 #==============================================================================
 class NumpyFull(NumpyNewArray):
     """
-    Represents a call to numpy.full for code generation.
+    Represents a call to `numpy.full` for code generation.
+
+    Represents a call to the NumPy function `full` which creates an array
+    of a specified size and shape filled with a specified value.
 
     Parameters
     ----------
-    shape : int or sequence of ints
+    shape : PyccelAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`
 
-    fill_value : scalar
+    fill_value : PyccelAstNode
         Fill value.
 
-    dtype: str, DataType
-        datatype for the constructed array
-        The default, `None`, means `np.array(fill_value).dtype`.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Datatype for the constructed array.
+        If `None` the dtype of the fill value is used.
 
     order : {'C', 'F'}, optional
         Whether to store multidimensional data in C- or Fortran-contiguous
         (row- or column-wise) order in memory.
-
     """
     __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
     name = 'full'
@@ -1113,13 +1117,13 @@ class NumpyFullLike(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : Variable
         Numpy array which is used as a template.
 
-    fill_value : ??
+    fill_value : PyccelAstNode
         Scalar value which will be assigned to each entry of the new array.
 
-    dtype : ??, default=None
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
         Type of the data contained in the new array. If None, a.dtype is used.
 
     order : str, default='K'
@@ -1128,13 +1132,15 @@ class NumpyFullLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of ??
+    shape : PythonTuple of PyccelAstNode
         Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
     See Also
     --------
-    https://numpy.org/doc/stable/reference/generated/numpy.full_like.html
-
+    numpy.full_like :
+        See documentation of `numpy.full_like`: <https://numpy.org/doc/stable/reference/generated/numpy.full_like.html>.
     """
     __slots__ = ()
     name = 'full_like'
@@ -1158,10 +1164,10 @@ class NumpyEmptyLike(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : Variable
         Numpy array which is used as a template.
 
-    dtype : ??, default=None
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
         Type of the data contained in the new array. If None, a.dtype is used.
 
     order : str, default='K'
@@ -1170,13 +1176,15 @@ class NumpyEmptyLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of ??
+    shape : PythonTuple of PyccelAstNode
         Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
     See Also
     --------
-    https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html
-
+    numpy.empty_like :
+        See documentation of `numpy.empty_like`: <https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html>.
     """
     __slots__ = ()
     name = 'empty_like'
@@ -1202,10 +1210,10 @@ class NumpyOnesLike(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : Variable
         Numpy array which is used as a template.
 
-    dtype : ??, default=None
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
         Type of the data contained in the new array. If None, a.dtype is used.
 
     order : str, default='K'
@@ -1214,13 +1222,15 @@ class NumpyOnesLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of ??
+    shape : PythonTuple of PyccelAstNode
         Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
     See Also
     --------
-    https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html
-
+    numpy.ones_like :
+        See documentation of `numpy.ones_like`: <https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html>.
     """
     __slots__ = ()
     name = 'ones_like'
@@ -1245,10 +1255,10 @@ class NumpyZerosLike(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : Variable
         Numpy array which is used as a template.
 
-    dtype : ??, default=None
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
         Type of the data contained in the new array. If None, a.dtype is used.
 
     order : str, default='K'
@@ -1257,13 +1267,15 @@ class NumpyZerosLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of ??
+    shape : PythonTuple of PyccelAstNode
         Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
     See Also
     --------
-    https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html
-
+    numpy.zeros_like :
+        See documentation of `numpy.zeros_like`: <https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html>
     """
     __slots__ = ()
     name = 'zeros_like'
