@@ -675,10 +675,30 @@ class NumpyMatmul(PyccelInternalFunction):
 #==============================================================================
 
 class NumpyShape(PyccelInternalFunction):
-    """ Represents a call to numpy.shape for code generation
     """
+    Represents a call to numpy.shape for code generation.
+
+    This wrapper class represents calls to the function `numpy.shape` in the
+    user code, or equivalently to the `shape` property of a `numpy.ndarray`.
+
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns a PythonTuple with the required shape.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The Numpy array whose shape is being investigated.
+
+    Returns
+    -------
+    PythonTuple
+        The shape of the Numpy array, i.e. its size along each dimension.
+
+    """
+
     __slots__ = ()
     name = 'shape'
+
     def __new__(cls, arg):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
