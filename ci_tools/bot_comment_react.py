@@ -68,8 +68,7 @@ if __name__ == '__main__':
 
     elif command_words[:3] == ['mark', 'as', 'ready']:
         if bot.is_user_trusted(event['comment']['user']['login']):
-            if bot.request_mark_as_ready():
-                bot.run_tests(pr_test_keys)
+            bot.request_mark_as_ready()
         else:
             bot.warn_untrusted()
 
