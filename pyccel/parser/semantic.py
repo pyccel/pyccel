@@ -2368,6 +2368,7 @@ class SemanticParser(BasicParser):
         rhs = expr.rhs
         lhs = expr.lhs
         # Steps before visiting
+
         if isinstance(rhs, GeneratorComprehension):
             rhs.substitute(rhs.lhs, lhs)
             genexp = self._assign_GeneratorComprehension(_get_name(lhs), rhs)
@@ -2486,6 +2487,7 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs)
+
         if isinstance(rhs, ConstructorCall):
             return rhs
         elif isinstance(rhs, FunctionDef):
