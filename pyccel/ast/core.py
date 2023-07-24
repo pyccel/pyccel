@@ -4,6 +4,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+from itertools import chain
 
 from sympy.logic.boolalg      import And as sp_And
 
@@ -2153,8 +2154,6 @@ class FunctionCall(PyccelAstNode):
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
-        if func.cls_name:
-            f_args = f_args[1:]
         if not len(args) == len(f_args):
             # Collect dict of keywords and values (initialised as default)
             f_args_dict = {a.name: (a.name, a.value) if a.has_default \
@@ -2352,8 +2351,9 @@ class FunctionDef(ScopedNode):
     imports : list, tuple
         A list of needed imports.
 
-    decorators : list, tuple
-        A list of properties.
+    decorators : dict
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
 
     headers : list,tuple
         A list of headers describing the function.
@@ -2905,26 +2905,35 @@ class InlineFunctionDef(FunctionDef):
         return self._global_funcs
 
 class PyccelFunctionDef(FunctionDef):
-    """ Class inheriting from FunctionDef which can store a pointer
+    """
+    Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
+
+    Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
-    This is useful for importing builtin functions
+    This is useful for importing builtin functions and for defining
+    classes which have `PyccelInternalFunction`s as attributes or methods.
 
     Parameters
     ----------
     name : str
-           The name of the function
+           The name of the function.
+
     func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
-                 The class which should be instantiated upon a FunctionCall
-                 to this FunctionDef object
+         The class which should be instantiated upon a FunctionCall
+         to this FunctionDef object.
+
+    decorators : dictionary
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
     """
     __slots__ = ()
-    def __init__(self, name, func_class):
+    def __init__(self, name, func_class, *, decorators = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
         arguments = ()
         results = ()
         body = ()
-        super().__init__(name, arguments, results, body)
+        super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
 
 class Interface(Basic):
@@ -3132,28 +3141,38 @@ class SympyFunction(FunctionDef):
 
 
 class ClassDef(ScopedNode):
+    """
+    Represents a class definition.
 
-    """Represents a class definition.
+    Class representing a class definition in the code. It holds all objects
+    which may be defined in a class including methods, interfaces, attributes,
+    etc. It also handles inheritance.
 
     Parameters
     ----------
     name : str
         The name of the class.
 
-    attributes: iterable
+    attributes : iterable
         The attributes to the class.
 
-    methods: iterable
-        Class methods
+    methods : iterable
+        Class methods.
 
-    options: list, tuple
-        list of options ('public', 'private', 'abstract')
+    options : list, tuple
+        A list of options ('public', 'private', 'abstract').
 
-    imports: list, tuple
-        list of needed imports
+    imports : list, tuple
+        A list of required imports.
 
-    superclass : str
-        superclass's class name
+    superclasses : iterable
+        The definition of all classes from which this class inherits.
+
+    interfaces : iterable
+        The interface methods.
+
+    scope : Scope
+        The scope for the class contents.
 
     Examples
     --------
@@ -3173,7 +3192,7 @@ class ClassDef(ScopedNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclass','_interfaces')
+                 '_imports','_superclasses','_interfaces')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
 
     def __init__(
@@ -3183,7 +3202,7 @@ class ClassDef(ScopedNode):
         methods=(),
         options=('public',),
         imports=(),
-        superclass=(),
+        superclasses=(),
         interfaces=(),
         scope = None
         ):
@@ -3216,8 +3235,12 @@ class ClassDef(ScopedNode):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(superclass):
-            raise TypeError('superclass must be iterable')
+        if not iterable(superclasses):
+            raise TypeError('superclasses must be iterable')
+        if pyccel_stage != 'syntactic':
+            for s in superclasses:
+                if not isinstance(s, ClassDef):
+                    raise TypeError('superclass item must be a ClassDef')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3263,7 +3286,7 @@ class ClassDef(ScopedNode):
         self._methods = methods
         self._options = options
         self._imports = imports
-        self._superclass  = superclass
+        self._superclasses  = superclasses
         self._interfaces = interfaces
 
         super().__init__(scope = scope)
@@ -3289,8 +3312,14 @@ class ClassDef(ScopedNode):
         return self._imports
 
     @property
-    def superclass(self):
-        return self._superclass
+    def superclasses(self):
+        """
+        Get the superclasses.
+
+        Get the class definitions for the classes from which this class
+        inherits.
+        """
+        return self._superclasses
 
     @property
     def interfaces(self):
@@ -3348,6 +3377,48 @@ class ClassDef(ScopedNode):
             shape=var.shape,
             cls_base=var.cls_base,
             )
+
+    def get_method(self, name):
+        """
+        Get the method `name` of the current class.
+
+        Look through all methods and interfaces of the current class to
+        find a method called `name`. If this class inherits from another
+        class, that class is also searched to ensure that the inherited
+        methods are available.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute we are looking for.
+
+        Returns
+        -------
+        FunctionDef
+            The definition of the method.
+
+        Raises
+        ------
+        ValueError
+            Raised if the method cannot be found.
+        """
+        try:
+            method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
+        except StopIteration:
+            method = None
+            i = 0
+            n_classes = len(self.superclasses)
+            while method is None and i<n_classes:
+                try:
+                    method = self.superclasses[i].get_method(name)
+                except StopIteration:
+                    method = None
+
+        if method is None:
+            errors.report(f"Can't find method {name} in class {self.name}",
+                    severity='fatal', symbol=self)
+
+        return method
 
     @property
     def is_iterable(self):

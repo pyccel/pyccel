@@ -12,6 +12,7 @@ import pytest
 
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
+from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors   import Errors, PyccelSyntaxError, PyccelSemanticError, PyccelCodegenError, PyccelError
 
 
@@ -110,18 +111,8 @@ def test_neat_errors_for_known_bugs(f):
     errors = Errors()
     errors.reset()
 
-    pyccel = Parser(f)
     with pytest.raises(PyccelError):
-        ast = pyccel.parse()
-
-        settings = {}
-        ast = pyccel.annotate(**settings)
-
-        name = os.path.basename(f)
-        name = os.path.splitext(name)[0]
-
-        codegen = Codegen(ast, name)
-        codegen.doprint()
+        execute_pyccel(f)
 
     assert(errors.has_errors())
 
