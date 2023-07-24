@@ -2367,7 +2367,6 @@ class SemanticParser(BasicParser):
 
         rhs = expr.rhs
         lhs = expr.lhs
-
         # Steps before visiting
         if isinstance(rhs, GeneratorComprehension):
             rhs.substitute(rhs.lhs, lhs)
@@ -2487,8 +2486,9 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs)
-
-        if isinstance(rhs, FunctionDef):
+        if isinstance(rhs, ConstructorCall):
+            return rhs
+        elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
 
