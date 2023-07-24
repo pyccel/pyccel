@@ -30,26 +30,40 @@ __all__ = (
 
 
 class PyccelInternalFunction(PyccelAstNode):
-    """ Abstract class used by function calls
-    which are translated to Pyccel objects
+    """
+    Abstract class for function calls translated to Pyccel objects.
+
+    A subclass of this base class represents calls to a specific internal
+    function of Pyccel, which may be simplified at a later stage, or made
+    available in the target language when printing the generated code.
+
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
     name = None
+
     def __init__(self, *args):
-        self._args   = tuple(args)
+        self._args = tuple(args)
         super().__init__()
 
     @property
     def args(self):
-        """ The arguments passed to the function
+        """
+        The arguments passed to the function.
+
+        Tuple containing all the arguments passed to the function call.
+
         """
         return self._args
 
     @property
     def is_elemental(self):
-        """ Indicates whether the function should be
-        called elementwise for an array argument
+        """
+        Whether the function acts elementwise on an array argument.
+
+        Bool indicating whether the (scalar) function should be called
+        elementwise on an array argument. Here we set the default to False.
+
         """
         return False
 
@@ -131,13 +145,23 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
     @property
     def arg(self):
-        """ Object whose size is investigated
+        """
+        Object whose size is investigated.
+
+        The first argument of the function call, i.e. the array whose size is
+        investigated.
+
         """
         return self._args[0]
 
     @property
     def index(self):
-        """ Dimension along which the size is calculated
+        """
+        Dimension along which the size is calculated.
+
+        The second argument of the function call, i.e. the dimension along
+        which the array size is calculated.
+
         """
         return self._args[1]
 
