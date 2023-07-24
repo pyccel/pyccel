@@ -1,4 +1,4 @@
-""" Look for instances of python which are not capitalised and report errors
+""" Look for instances of Python which are not capitalised and report errors
 """
 import argparse
 import json
