@@ -16,6 +16,8 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   Updating `stdlib` files if they are modified not just accessed.
+-   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
+-   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
 -   \[INTERNALS\] Add class object to class function call arguments.
 
 ### Deprecated

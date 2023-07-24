@@ -20,7 +20,6 @@ if __name__ == '__main__':
     bot = Bot(pr_id = pr_id)
 
     if bot.is_user_trusted(event['sender']['login']):
-        if bot.request_mark_as_ready():
-            bot.run_tests(pr_test_keys)
+        bot.request_mark_as_ready()
     else:
         bot.warn_untrusted()
