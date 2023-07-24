@@ -1812,9 +1812,15 @@ class NumpyCountNonZero(PyccelInternalFunction):
 
 class NumpySize(PyccelInternalFunction):
     """
-    Class representing a call to the Numpy size function which returns
-    the total number of elements in a multidimensional array, or the
+    Represent a call to numpy.size in the user code.
+
+    This wrapper class represents a call to the Numpy size function, which
+    returns the total number of elements in a multidimensional array, or the
     number of elements along a given dimension.
+
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor returns objects of type `PyccelArraySize`, `Literal`, or
+    `PyccelArrayShapeElement`.
 
     Parameters
     ----------
@@ -1823,6 +1829,11 @@ class NumpySize(PyccelInternalFunction):
 
     axis : int, optional
         The dimension along which the size is requested.
+
+    See Also
+    --------
+    https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html
+
     """
     __slots__ = ()
     name = 'size'
