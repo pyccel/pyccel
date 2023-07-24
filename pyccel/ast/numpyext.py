@@ -1149,10 +1149,38 @@ class NumpyFullLike(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyEmptyLike(PyccelInternalFunction):
-    """ Represents a call to numpy.empty_like for code generation.
+    """
+    Represents a call to numpy.empty_like for code generation.
+
+    This wrapper class represents calls to the function numpy.empty_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyEmpty`.
+
+    Parameters
+    ----------
+    a : PyccelAstNode
+        Numpy array which is used as a template.
+
+    dtype : ??, default=None
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of ??
+        Overrides the shape of the array.
+
+    See Also
+    --------
+    https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html
+
     """
     __slots__ = ()
     name = 'empty_like'
+
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
