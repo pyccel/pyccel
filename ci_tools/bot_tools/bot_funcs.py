@@ -353,7 +353,7 @@ class Bot:
         with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
-        self._GAI.clear_labels(pr_id, review_stage_labels)
+        self._GAI.clear_labels(self._pr_id, review_stage_labels)
 
     def draft_due_to_failure(self):
         """
