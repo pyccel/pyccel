@@ -1104,7 +1104,37 @@ class NumpyOnes(NumpyAutoFill):
 
 #=======================================================================================
 class NumpyFullLike(PyccelInternalFunction):
-    """ Represents a call to numpy.full_like for code generation.
+    """
+    Represents a call to numpy.full_like for code generation.
+
+    This wrapper class represents calls to the function numpy.full_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyFull`.
+
+    Parameters
+    ----------
+    a : PyccelAstNode
+        Numpy array which is used as a template.
+
+    fill_value : ??
+        Scalar value which will be assigned to each entry of the new array.
+
+    dtype : ??, default=None
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of ??
+        Overrides the shape of the array.
+
+    See Also
+    --------
+    https://numpy.org/doc/stable/reference/generated/numpy.full_like.html
+
     """
     __slots__ = ()
     name = 'full_like'
