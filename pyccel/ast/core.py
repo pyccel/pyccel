@@ -2244,23 +2244,10 @@ class ConstructorCall(DottedFunctionCall):
         arguments = (FunctionCallArgument(cls_variable),) + arguments
         super().__init__(func, arguments, self._cls_variable)
 
-    def __str__(self):
-        name = str(self.name)
-        args = ''
-        if not self.arguments is None:
-            args = ', '.join(str(i) for i in self.arguments)
-        return '{0}({1})'.format(name, args)
-
     @property
     def cls_variable(self):
         return self._cls_variable
 
-    @property
-    def name(self):
-        if isinstance(self.func, FunctionDef):
-            return self.func.name
-        else:
-            return self.func
 
 class Return(Basic):
 
