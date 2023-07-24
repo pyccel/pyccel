@@ -71,7 +71,8 @@ def test_semantic_blocking_errors(f):
 
 @pytest.mark.xdist_incompatible
 def test_traceback():
-    f = 'semantic/blocking/INHOMOG_LIST.py'
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    f = os.path.join(base_dir, 'semantic/blocking/INHOMOG_LIST.py')
     print('> testing {0}'.format(str(f)))
 
     # reset Errors singleton
