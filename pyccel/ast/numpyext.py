@@ -1102,7 +1102,7 @@ class NumpyOnes(NumpyAutoFill):
             raise TypeError('Unknown type')
         return value
 
-#=======================================================================================
+#==============================================================================
 class NumpyFullLike(PyccelInternalFunction):
     """
     Represents a call to numpy.full_like for code generation.
@@ -1147,7 +1147,7 @@ class NumpyFullLike(PyccelInternalFunction):
         shape = NumpyShape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyEmptyLike(PyccelInternalFunction):
     """ Represents a call to numpy.empty_like for code generation.
     """
@@ -1163,7 +1163,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
 
         return NumpyEmpty(shape, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyOnesLike(PyccelInternalFunction):
     """ Represents a call to numpy.ones_like for code generation.
     """
@@ -1179,7 +1179,7 @@ class NumpyOnesLike(PyccelInternalFunction):
 
         return NumpyOnes(shape, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyZerosLike(PyccelInternalFunction):
     """ Represents a call to numpy.zeros_like for code generation.
     """
@@ -1195,7 +1195,7 @@ class NumpyZerosLike(PyccelInternalFunction):
 
         return NumpyZeros(shape, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
@@ -1391,7 +1391,7 @@ class NumpyArctanh(NumpyUfuncUnary):
 #     __slots__ = ()
 #     name = 'rad2deg'
 
-#=======================================================================================
+#==============================================================================
 
 
 class NumpySign(NumpyUfuncUnary):
