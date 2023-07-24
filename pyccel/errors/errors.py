@@ -91,25 +91,32 @@ class ErrorInfo:
     filename : str
         The file where the error was detected.
 
-    line : int
+    message : str
+        The message to be displayed to the user.
+
+    line : int, optional
         The line where the error was detected.
 
-    column : int
+    column : int, optional
         The column in the line of code where the error was detected.
 
-    severity : str
+    severity : str, optional
         The severity of the error. This is one of : [warning/error/fatal].
 
-    traceback : str
+    symbol : pyccel.ast.basic.Basic, optional
+        The Basic object which caused the error to need to be raised.
+        This object is printed in the error message.
+
+    traceback : str, optional
         The traceback describing the execution of the code when the error
         was raised.
     """
 
     def __init__(self, *, stage, filename,
+                 message,
                  line=None,
                  column=None,
                  severity=None,
-                 message='',
                  symbol=None,
                  traceback=None):
         # The parser stage
@@ -281,6 +288,9 @@ class Errors(metaclass = Singleton):
         filename : str, optional
             The file which was being treated when the error was found.
 
+        traceback : types.TracebackType
+            The traceback that was raised when the error appeared.
+
         verbose : bool, default=False
             Flag to add verbosity.
         """
@@ -322,10 +332,10 @@ class Errors(metaclass = Singleton):
 
         info = ErrorInfo(stage=self._parser_stage,
                          filename=filename,
+                         message=message,
                          line=line,
                          column=column,
                          severity=severity,
-                         message=message,
                          symbol=symbol,
                          traceback=traceback)
 
