@@ -219,15 +219,24 @@ class Variable(PyccelAstNode):
             self._order = None
 
     def process_shape(self, shape):
-        """ Simplify the provided shape and ensure it
-        has the expected format
+        """
+        Simplify the provided shape and ensure it has the expected format.
 
-        The provided shape is the shape used to create
-        the object. In most cases where the shape is
-        required we do not require this expression
-        (which can be quite long). This function therefore
-        replaces those expressions with calls to
-        PyccelArrayShapeElement
+        The provided shape is the shape used to create the object. In most
+        cases where the shape is required we do not require this expression
+        (which can be quite long). This function therefore replaces those
+        expressions with calls to PyccelArrayShapeElement.
+
+        Parameters
+        ----------
+        shape : iterable of integers
+            The array shape to be simplified.
+
+        Returns
+        -------
+        tuple
+            The simplified array shape.
+
         """
         if self.rank == 0:
             return None
@@ -235,7 +244,7 @@ class Variable(PyccelAstNode):
             shape = [shape]
 
         new_shape = []
-        for i,s in enumerate(shape):
+        for i, s in enumerate(shape):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
                 new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
@@ -252,14 +261,17 @@ class Variable(PyccelAstNode):
 
     def shape_can_change(self, i):
         """
-        Indicates if the shape can change in the i-th dimension
+        Indicates if the shape can change in the i-th dimension.
         """
         return self.is_alias
 
     def set_changeable_shape(self):
         """
+        Indicate that the Variable's shape is unknown at compilation time.
+
         Indicate that the exact shape is unknown, e.g. if the allocate is done in
         an If block.
+
         """
         self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
 
