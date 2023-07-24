@@ -236,7 +236,6 @@ class Variable(PyccelAstNode):
         -------
         tuple
             The simplified array shape.
-
         """
         if self.rank == 0:
             return None
@@ -261,7 +260,20 @@ class Variable(PyccelAstNode):
 
     def shape_can_change(self, i):
         """
-        Indicates if the shape can change in the i-th dimension.
+        Indicate if the shape can change in the i-th dimension.
+
+        Indicate whether the Variable's shape can change in the i-th dimension
+        at run time.
+
+        Parameters
+        ----------
+        i : int
+            The dimension over which the shape can change at runtime.
+
+        Returns
+        -------
+        bool
+            Whether or not the variable shape can change in the i-th dimension.
         """
         return self.is_alias
 
@@ -271,7 +283,6 @@ class Variable(PyccelAstNode):
 
         Indicate that the exact shape is unknown, e.g. if the allocate is done in
         an If block.
-
         """
         self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
 
