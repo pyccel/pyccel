@@ -693,7 +693,6 @@ class NumpyShape(PyccelInternalFunction):
     -------
     PythonTuple
         The shape of the Numpy array, i.e. its size along each dimension.
-
     """
 
     __slots__ = ()
@@ -1844,8 +1843,8 @@ class NumpySize(PyccelInternalFunction):
 
     See Also
     --------
-    https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html
-
+    numpy.size :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html>.
     """
     __slots__ = ()
     name = 'size'
