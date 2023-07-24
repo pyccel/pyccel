@@ -50,7 +50,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeRange
+from pyccel.ast.datatypes import NativeRange, NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -433,16 +433,19 @@ class FCodePrinter(CodePrinter):
             name = '{prefix}_{name}'.format(prefix=self.prefix_module,
                                             name=name)
 
-        # ARA : issue-999
-        #       we look for external functions and declare their result type
-        external_decs = self._get_external_declarations()
-
         imports = ''.join(self._print(i) for i in expr.imports)
 
-        decs    = ''.join(self._print(i) for i in expr.declarations)
-        # ARA : issue-999
-        decs   += ''.join(self._print(i) for i in external_decs.values())
-        body    = ''
+        # Define declarations
+        decs = ''
+        # ...
+        class_decs_and_methods = [self._print(i) for i in expr.classes]
+        decs += '\n'.join(c[0] for c in class_decs_and_methods)
+        # ...
+
+        decs += ''.join(self._print(i) for i in expr.declarations)
+        # look for external functions and declare their result type
+        external_decs = self._get_external_declarations()
+        decs += ''.join(self._print(i) for i in external_decs.values())
 
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
@@ -460,20 +463,13 @@ class FCodePrinter(CodePrinter):
         if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
-        func_strings = []
+        # Get class functions
+        func_strings = [c[1] for c in class_decs_and_methods]
         if expr.funcs:
-            func_strings = [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+            func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
         if isinstance(expr, BindCModule):
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
-        body += '\n'.join(func_strings)
-        # ...
-
-        # ...
-        for i in expr.classes:
-            # update decs with declarations from ClassDef
-            c_decs, c_funcs = self._print(i)
-            decs = '{0}\n{1}'.format(decs, c_decs)
-            body = '{0}\n{1}\n'.format(body, c_funcs)
+        body = '\n'.join(func_strings)
         # ...
 
         contains = 'contains\n' if (expr.funcs or expr.classes or expr.interfaces) else ''
@@ -1327,13 +1323,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         # ... ignored declarations
-        # we don't print the declaration if iterable object
-        if is_iterable_datatype(expr.dtype):
-            return ''
-
-        if is_with_construct_datatype(expr.dtype):
-            return ''
-
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
@@ -1377,7 +1366,7 @@ class FCodePrinter(CodePrinter):
             prefix = expr_dtype.prefix
             alias  = expr_dtype.alias
 
-            if expr_dtype.is_polymorphic or expr.passed_from_dotted:
+            if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
@@ -1481,7 +1470,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         mod_str = ''
-        if expr.module_variable and not is_private and (rank == 0):
+        if expr.module_variable and not is_private and (rank == 0) and expr_dtype in NativeNumeric:
             mod_str = ', bind(c)'
 
         # Construct declaration
@@ -2036,7 +2025,7 @@ class FCodePrinter(CodePrinter):
                     'contains\n'
                     '{1}').format(code, methods)
         decs = ('{0}\n'
-                'end type {1}').format(code, name)
+                'end type {1}\n').format(code, name)
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
@@ -2957,6 +2946,9 @@ class FCodePrinter(CodePrinter):
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
+        if isinstance(expr, DottedFunctionCall):
+            args = args[1:]
+
         if (not self._additional_code):
             self._additional_code = ''
         if parent_assign:
@@ -2965,8 +2957,8 @@ class FCodePrinter(CodePrinter):
                 lhs_vars = {func_results[0]:lhs}
             else:
                 lhs_vars = dict(zip(func_results,lhs))
-            args = []
-            for a in expr.args:
+            assign_args = []
+            for a in args:
                 key = a.keyword
                 arg = a.value
                 if arg in lhs_vars.values():
@@ -2976,7 +2968,8 @@ class FCodePrinter(CodePrinter):
                     newarg = var
                 else:
                     newarg = arg
-                args.append(FunctionCallArgument(newarg, key))
+                assign_args.append(FunctionCallArgument(newarg, key))
+            args = assign_args
             results = list(lhs_vars.values())
             if is_function:
                 results_strs = []
