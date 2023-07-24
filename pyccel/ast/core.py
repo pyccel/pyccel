@@ -2224,8 +2224,8 @@ class ConstructorCall(DottedFunctionCall):
         a list of arguments.
 
     """
-    __slots__ = ('_cls_variable', '_func', '_arguments')
-    _attribute_nodes = ('_func', '_arguments')
+    __slots__ = ('_cls_variable')
+    _attribute_nodes = ()
 
     is_commutative = True
 
@@ -2241,9 +2241,8 @@ class ConstructorCall(DottedFunctionCall):
             raise TypeError('Expecting func to be a FunctionDef or str')
 
         self._cls_variable = cls_variable
-        self._func = func
-        self._arguments = (FunctionCallArgument(cls_variable),) + arguments
-        super().__init__(self._func, self._arguments, self._cls_variable)
+        arguments = (FunctionCallArgument(cls_variable),) + arguments
+        super().__init__(func, arguments, self._cls_variable)
 
     def __str__(self):
         name = str(self.name)
@@ -2251,14 +2250,6 @@ class ConstructorCall(DottedFunctionCall):
         if not self.arguments is None:
             args = ', '.join(str(i) for i in self.arguments)
         return '{0}({1})'.format(name, args)
-
-    @property
-    def func(self):
-        return self._func
-
-    @property
-    def arguments(self):
-        return self._arguments
 
     @property
     def cls_variable(self):
