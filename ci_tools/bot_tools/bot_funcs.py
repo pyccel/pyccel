@@ -377,6 +377,7 @@ class Bot:
         bool
             True if the test should be run, False otherwise.
         """
+        print("Checking : ", name)
         if key in ('linux', 'windows', 'macosx', 'coverage'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') for f in diff)
@@ -394,9 +395,11 @@ class Bot:
         for c in commits:
             diff = bot.get_diff(c)
             if has_relevant_change(diff):
+                print("Contains relevant change : ", c)
                 return True
             else:
                 check_runs = bot.get_check_runs(c)
+                print(c,':', check_runs)
                 try:
                     previous_state = next(c for c in check_runs if c['name'] == name)
                 except StopIteration:
