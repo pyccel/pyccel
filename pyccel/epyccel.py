@@ -87,7 +87,7 @@ def get_unique_name(prefix, path):
     os.makedirs(path, exist_ok=True)
 
     # Ensure that the name is not in use by another thread
-    lock = FileLock(os.path.join(path, module_name)+'.lock')
+    lock = FileLock(os.path.join(path, module_name) + '.lock')
     try:
         lock.acquire(timeout=0.1)
         if module_name in sys.modules.keys():
@@ -183,7 +183,7 @@ def epyccel_seq(function_or_module, *,
         folder = os.path.abspath(folder)
 
     # Define directory name and path for epyccel files
-    epyccel_dirname = '__epyccel__'+os.environ.get('PYTEST_XDIST_WORKER','')
+    epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
     # ... get the module source code

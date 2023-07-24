@@ -46,7 +46,7 @@ def get_exe(filename, language=None):
 def insert_pyccel_folder(abs_path):
     base_dir = os.path.dirname(abs_path)
     base_name = os.path.basename(abs_path)
-    return os.path.join(base_dir, "__pyccel__"+os.environ.get('PYTEST_XDIST_WORKER', ''), base_name)
+    return os.path.join(base_dir, "__pyccel__" + os.environ.get('PYTEST_XDIST_WORKER', ''), base_name)
 
 #------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
