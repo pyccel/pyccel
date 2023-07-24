@@ -1,7 +1,7 @@
 name: "Generate bot token"
 inputs:
   bot_pem:
-    description: "The private key which identfies the bot"
+    description: "The private key which identifies the bot"
     required: true
   dir:
     description: "The directory where the code is found"
