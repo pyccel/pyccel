@@ -78,7 +78,9 @@ if __name__ == '__main__':
     if errors:
         all_words = set()
 
-        with open(os.path.join(os.path.dirname(__file__),'..','.dict_custom.txt'), encoding="utf-8") as d:
+        pyccel_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..'))
+
+        with open(os.path.join(pyccel_folder,'.dict_custom.txt'), encoding="utf-8") as d:
             internal_dict = [w.strip() for w in d.readlines()]
 
         with open(args.output, 'w', encoding="utf-8") as f:
@@ -86,7 +88,7 @@ if __name__ == '__main__':
             for name, words in errors.items():
                 print("## `", name, "`", file=f)
                 for w in words:
-                    words_list = find_all_words(os.path.join("..",name.strip(":")), w)
+                    words_list = find_all_words(os.path.join(pyccel_folder,name.strip(":")), w)
                     suggestions = difflib.get_close_matches(w, internal_dict)
                     for line_no, column in words_list:
                         if suggestions:
