@@ -2473,7 +2473,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, ConstructorCall):
             return rhs
-        if isinstance(rhs, FunctionDef):
+        elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
 
