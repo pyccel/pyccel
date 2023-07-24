@@ -453,7 +453,7 @@ In the future we plan to support GPU programming with [CUDA](https://en.wikipedi
 
 ## Cleaning up the environment
 
-Pyccel generates various files, in order to help clean up the environment after using it, we therefore also provide the command line tool: `pyccel_clean`.
+Pyccel generates various files, in order to help clean up the environment after using it, we therefore also provide the command line tool: `pyccel-clean`.
 This tool removes all folders whose name begins with `__pyccel__` or `__epyccel__` and can also be used to remove shared libraries and programs.
 
 ## Getting Help
