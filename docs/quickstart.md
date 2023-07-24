@@ -44,10 +44,10 @@ It is the programmer's responsibility to explicitly declare the type of every va
 
 ### Further Reading
 
--   https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects
--   https://docs.python.org/3/reference/datamodel.html#objects-values-and-types
--   https://en.wikipedia.org/wiki/Type_system
--   https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b
+-   <https://docs.python.org/3/tutorial/classes.html#a-word-about-names-and-objects>
+-   <https://docs.python.org/3/reference/datamodel.html#objects-values-and-types>
+-   <https://en.wikipedia.org/wiki/Type_system>
+-   <https://android.jlelse.eu/magic-lies-here-statically-typed-vs-dynamically-typed-languages-d151c7f95e2b>
 
 ## How Pyccel works
 
@@ -388,7 +388,7 @@ from mod import f
 
 f_fast = epyccel(f)
 ```
-In practice `epyccel` copies the contents of `f` into a temporary python file in the `__epyccel__` directory.
+In practice `epyccel` copies the contents of `f` into a temporary Python file in the `__epyccel__` directory.
 As a result it is important that all imports are written inside the function when using `epyccel`.
 Once the file has been copied, `epyccel` calls the `pyccel` command to generate a Python C extension module that contains a single pyccelised function.
 Then finally, it imports this function and returns it to the caller.
