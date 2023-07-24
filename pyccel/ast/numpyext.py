@@ -988,7 +988,7 @@ class NumpyFull(NumpyNewArray):
     shape : PyccelAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
     fill_value : PyccelAstNode
         Fill value.
@@ -1274,7 +1274,7 @@ class NumpyZerosLike(PyccelInternalFunction):
     See Also
     --------
     numpy.zeros_like :
-        See documentation of `numpy.zeros_like`: <https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html>
+        See documentation of `numpy.zeros_like`: <https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html>.
     """
     __slots__ = ()
     name = 'zeros_like'
@@ -1835,7 +1835,7 @@ class NumpySize(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    a : PyccelAstNode
         An array of unknown size.
 
     axis : int, optional

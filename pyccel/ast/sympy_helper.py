@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,
-by providing translations between the sympy representation and the pyccel nodes
+Module containing functions which allow us to treat expressions expressed as Pyccel nodes with SymPy,
+by providing translations between the SymPy representation and the Pyccel nodes
 """
 
 import sympy as sp
@@ -29,19 +29,23 @@ __all__ = ('sympy_to_pyccel',
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
     """
-    Convert a sympy expression to a pyccel expression replacing sympy symbols with
-    pyccel expressions provided in a symbol_map
+    Convert a SymPy expression to a Pyccel expression.
 
-      Parameters
-      ----------
-      expr       : PyccelAstNode
-                   The pyccel node to be translated
-      symbol_map : dict
-                   Dictionary mapping sympy symbols to pyccel objects
+    Convert a SymPy expression to a Pyccel expression replacing SymPy symbols with
+    Pyccel expressions provided in a symbol_map
 
-      Returns
-      ----------
-      expr       : pyccel Object
+    Parameters
+    ----------
+    expr : SymPy object
+        The SymPy expression to be translated.
+
+    symbol_map : dict
+        Dictionary mapping SymPy symbols to Pyccel objects.
+
+    Returns
+    -------
+    PyccelAstNode
+        The Pyccel equivalent of the SymPy object `expr`.
     """
 
     #Constants
@@ -110,23 +114,28 @@ def sympy_to_pyccel(expr, symbol_map):
 #==============================================================================
 def pyccel_to_sympy(expr, symbol_map, used_names):
     """
-    Convert a pyccel expression to a sympy expression saving any pyccel objects
-    converted to sympy symbols in a dictionary to allow the reverse conversion
-    to be carried out later
+    Convert a Pyccel expression to a SymPy expression.
 
-      Parameters
-      ----------
-      expr       : PyccelAstNode
-                   The pyccel node to be translated
-      symbol_map : dict
-                   Dictionary containing any pyccel objects converted to sympy symbols
-      used_names : Set
-                   A set of all the names which already exist and therefore cannot
-                   be used to create new symbols
+    Convert a Pyccel expression to a SymPy expression saving any Pyccel objects
+    converted to SymPy symbols in a dictionary to allow the reverse conversion
+    to be carried out later.
 
-      Returns
-      ----------
-      expr       : sympy Object
+    Parameters
+    ----------
+    expr : PyccelAstNode
+        The Pyccel node to be translated.
+
+    symbol_map : dict
+        Dictionary containing any Pyccel objects converted to SymPy symbols.
+
+    used_names : Set
+        A set of all the names which already exist and therefore cannot
+        be used to create new symbols.
+
+    Returns
+    -------
+    SymPy Object
+        The SymPy equivalent of the `expr` argument.
     """
 
     #Constants
