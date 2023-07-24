@@ -269,6 +269,49 @@ class GitHubAPIInteractions:
         run_url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         return self._post_request("GET", run_url)
 
+    def create_run_from_old(self, commit, name, workflow_url, conclusion):
+        """
+        Create a new check run.
+
+        Create a new check run with the specified name which tests the mentioned commit.
+        The check run is marked as in progress. The details url is pointed at the
+        run summary page for this run.
+
+        Parameters
+        ----------
+        commit : str
+            The commit to be reported on.
+
+        name : str
+            The name of the check run.
+
+        workflow_url : str
+            The url where the run details can be found.
+
+        conclusion : str
+            The conclusion of the previous test.
+
+        Returns
+        -------
+        dict
+            A dictionary describing all properties of the new check run.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully posted.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
+        print("create_run:", url)
+        json = {"name": name,
+                "head_sha": commit,
+                "status": "completed",
+                "conclusion": conclusion,
+                "details_url": workflow_url}
+        run = self._post_request("POST", url, json)
+        assert run.status_code == 201
+        return run.json()
+
     def get_pr_details(self, pr_id):
         """
         Get the details of a pull request.
