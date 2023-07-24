@@ -56,6 +56,8 @@ jobs:
       - name: Collect diff information
         run: |
           git fetch
+          git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
+          git checkout ${{ env.COMMIT }}
           git diff ${{ inputs.base }}..${COMMIT} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
