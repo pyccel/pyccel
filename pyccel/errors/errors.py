@@ -77,7 +77,33 @@ class PyccelCodegenError(PyccelError):
 
 
 class ErrorInfo:
-    """Representation of a single error message."""
+    """
+    Representation of a single error message.
+
+    A class which holds all of the information necessary to describe
+    an error message raised by Pyccel.
+
+    Parameters
+    ----------
+    stage : str
+        The parser stage when the error occured.
+
+    filename : str
+        The file where the error was detected.
+
+    line : int
+        The line where the error was detected.
+
+    column : int
+        The column in the line of code where the error was detected.
+
+    severity : str
+        The severity of the error. This is one of : [warning/error/fatal].
+
+    traceback : str
+        The traceback describing the execution of the code when the error
+        was raised.
+    """
 
     def __init__(self, *, stage, filename,
                  line=None,
@@ -153,7 +179,11 @@ class ErrorsMode(metaclass = Singleton):
 
 
 class Errors(metaclass = Singleton):
-    """Container for compile errors.
+    """
+    Container for compile errors.
+
+    A singleton class which contains all functions necessary to
+    raise neat user-friendly errors in Pyccel.
     """
 
     def __init__(self):
@@ -219,35 +249,40 @@ class Errors(metaclass = Singleton):
                traceback = None,
                verbose = False):
         """
+        Report an error.
+
         Report message at the given line using the current error context.
-        stage: 'syntax', 'semantic' or 'codegen'
+        stage: 'syntax', 'semantic' or 'codegen'.
 
         Parameters
         ----------
         message : str
-                  The message to be displayed to the user
-        line    : int
-                  The line at which the error can be found
-                  Default: If a symbol is provided with a known line number
-                  then this line number is used
-        column  : int
-                  The column at which the error can be found
-                  Default: If a symbol is provided with a known column
-                  then this column is used
-        bounding_box : tuple
-                  An optional tuple containing the line and column
-        severity : str
-                  Indicates the seriousness of the error. Should be one of:
-                  'warning', 'error', 'fatal'
-                  Default: 'error'
-        symbol   : pyccel.ast.Basic
-                  The Basic object which caused the error to need to be raised.
-                  This object is printed in the error message
-        filename : str
-                  The file which was being treated when the error was found
-        verbose  : bool
-                  Flag to add verbosity
-                  Default: False
+            The message to be displayed to the user.
+
+        line : int, optional
+            The line at which the error can be found.
+            Default: If a symbol is provided with a known line number then this line number is used.
+
+        column : int, optional
+            The column at which the error can be found.
+            Default: If a symbol is provided with a known column then this column is used.
+
+        bounding_box : tuple, optional
+            An optional tuple containing the line and column.
+
+        severity : str, default='error'
+            Indicates the seriousness of the error. Should be one of: 'warning', 'error', 'fatal'.
+            Default: 'error'.
+
+        symbol : pyccel.ast.Basic, optional
+            The Basic object which caused the error to need to be raised.
+            This object is printed in the error message.
+
+        filename : str, optional
+            The file which was being treated when the error was found.
+
+        verbose : bool, default=False
+            Flag to add verbosity.
         """
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
