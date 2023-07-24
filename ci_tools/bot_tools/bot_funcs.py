@@ -647,7 +647,7 @@ class Bot:
         else:
             return "needs_initial_review", reviews
 
-    def get_check_runs(self, commit = self._ref):
+    def get_check_runs(self, commit = None):
         """
         Get a list of all check runs which have run on this commit.
 
@@ -656,7 +656,7 @@ class Bot:
 
         Parameters
         ----------
-        commit : str, default=current commit
+        commit : str, optional
             The commit for which we wish to get check run information.
             The default value is the most recent commit associated with this
             pull request.
@@ -666,6 +666,8 @@ class Bot:
         dict
             A dictionary describing the check runs.
         """
+        if commit is None:
+            commit = self._ref
         return self._GAI.get_check_runs(commit)['check_runs']
 
     def get_bot_review_comments(self):
@@ -725,7 +727,7 @@ class Bot:
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
 
-    def get_diff(self, base_commit = self._base):
+    def get_diff(self, base_commit):
         """
         Get the diff between the base and the current commit.
 
@@ -736,7 +738,7 @@ class Bot:
 
         Parameters
         ----------
-        base_commit : str, default=target branch commit
+        base_commit : str, optional
             The commit against which the current commit should be compared.
             The default value is the base commit of the pull request.
 
@@ -746,6 +748,8 @@ class Bot:
             A dictionary whose keys are files and whose values are lists of
             lines which appear in the diff including code and blob headers.
         """
+        if base_commit is None:
+            base_commit = self._base
         cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
         print(cmd)
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
