@@ -2867,20 +2867,28 @@ class FCodePrinter(CodePrinter):
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
         """
-        Create new slice with informations collected from old slice and decorators.
+        Create new slice with information collected from old slice and decorators.
+
+        Create a new slice where the original `start`, `stop`, and `step` have
+        been processed using basic simplifications, as well as additional rules
+        identified by the function decorators.
 
         Parameters
         ----------
         _slice : Slice
             Slice needed to collect (start, stop, step).
+
         array_size : PyccelArrayShapeElement
             Call to function size().
-        allow_negative_index : Bool
+
+        allow_negative_index : bool
             True when the decorator allow_negative_index is present.
 
         Returns
         -------
         Slice
+            The new slice with processed arguments (start, stop, step).
+
         """
         start = _slice.start
         stop = _slice.stop
