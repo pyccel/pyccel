@@ -66,7 +66,7 @@ if __name__ == '__main__':
                     for i,l in enumerate(lines):
                         if l.startswith('"""'):
                             doc_openings.append(i)
-                        if l.endswith('"""'):
+                        if l != '"""' and l.endswith('"""'):
                             doc_openings.append(i)
                     lines = lines[doc_openings[0]:doc_openings[1]+1]
                     end = start + doc_openings[1]
