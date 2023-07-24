@@ -5,12 +5,59 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   Allow interfaces in classes.
+-   Python support for a simple class.
+-   #1430 : Added conjugate support to booleans.
+
 ### Fixed
 
--   #1302 : Raise error message in case of empty class
+-   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
+
+-   Updating `stdlib` files if they are modified not just accessed.
+-   \[INTERNALS\] Add class object to class function call arguments.
+
+### Deprecated
+
+-   \[INTERNALS\] Removed `obsolete` folder.
+-   \[INTERNALS\] Removed out of date `samples` folder.
+-   \[INTERNALS\] Removed out of date `doc` folder.
+-   \[INTERNALS\] Removed `benchmarks` folder. Code is still available in benchmark repository.
+-   \[INTERNALS\] Removed `bugs` folder.
+-   \[INTERNALS\] Removed `inprogress` folder.
+-   \[INTERNALS\] Remove old Travis configuration file.
+
+## \[1.8.1\] - 2023-07-07
+
+### Added
+
+-   #1430 : Added conjugate support to integers and floats.
+
+### Fixed
+
+-   #1427 : Fix augmented assignment with a literal right hand side in templated code.
+
+## \[1.8.0\] - 2023-06-20
+
+### Added
+-   #1400 : Added flags to Pyccel for managing conda PATH warnings.
+
+### Fixed
+
+-   #1404 : Bug preventing printing of some functions in a `print()` call.
+-   #1302 : Raise error message in case of empty class.
+-   #1407 : Raise an error if file name matches a Python built-in module.
+-   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
+-   #1415 : Fix incorrect handling of assignments augmented by function calls.
+-   #1418 : Fix `itertools.product` implementation.
+
+### Changed
+
 -   #1355 : Remove unused `BasicParser` arguments.
+-   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
+
 ## \[1.7.4\] - 2023-05-02
 
 ### Added
@@ -32,8 +79,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Enforce the use of `FunctionDefArgument` in `FunctionDef`.
 -   \[INTERNALS\] Use `FunctionDefResult` to store all result specific properties.
 
-### Deprecated
-
 ## \[1.7.3\] - 2023-03-07
 
 ### Added
@@ -48,8 +93,6 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   \[INTERNALS\] Add validation of docstrings to CI.
-
-### Deprecated
 
 ## \[1.7.2\] - 2023-02-02
 
@@ -66,8 +109,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add human-readable summaries to tests.
 -   \[INTERNALS\] Add tests to ensure Pyccel conventions are followed.
 -   \[INTERNALS\] Add tests to check spelling.
-
-### Deprecated
 
 ## \[1.7.1\] - 2023-01-26
 
@@ -91,5 +132,3 @@ All notable changes to this project will be documented in this file.
 -   #1272 : Remove use of deprecated NumPy syntax in tests.
 -   #1253 : Provide minimum requirements.
 -   \[INTERNALS\]  #1385 : Remove unused settings keyword arguments from `_visit` function.
-
-### Deprecated

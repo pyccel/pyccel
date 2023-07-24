@@ -1,0 +1,31 @@
+name: Bot
+
+on:
+  pull_request_target:
+    branches: [ devel ]
+    types: [ ready_for_review ]
+
+jobs:
+  Bot:
+    name: Preparing Pull Request for review stage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests
+      - name: "Generate token"
+        id: token
+        uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: "${{ secrets.BOT_PEM }}"
+      - id: run_bot
+        run: |
+          python ci_tools/bot_ready_for_review.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+
