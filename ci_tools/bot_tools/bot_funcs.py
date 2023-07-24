@@ -277,12 +277,23 @@ class Bot:
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
+
+            # Get a list of all commits on this branch
+            cmds = [git, 'log', '--oneline', '--first-parent']
+            with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+                out, err = p.communicate()
+                assert p.returncode == 0
+
+            commit_log = [o.split(' ')[0] for o in out.split('\n')]
+
             for t in tests:
                 pv = python_version or default_python_versions[t]
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
+                if not self.is_test_required(commit_log, name, t):
+                    continue
                 if key not in already_programmed:
                     posted = self._GAI.prepare_run(self._ref, name)
                 else:
@@ -341,6 +352,63 @@ class Bot:
             test = "pickle"
             inputs["editable_string"] = "-e"
         self._GAI.run_workflow(f'{test}.yml', inputs)
+
+    def is_test_required(self, commit_log, name, key):
+        """
+        Check if a costly test is required.
+
+        Check amongst previous commits. If no Python files have been changed since a
+        commit where the check was run then post the result of the previous check.
+        Otherwise indicate that the test should be run.
+
+        Parameters
+        ----------
+        commit_log : list of str
+            A list of all commits on this branch.
+
+        name : str
+            The name of the test we want to run.
+
+        key : str
+            The key which identifies the test.
+
+        Returns
+        -------
+        bool
+            True if the test should be run, False otherwise.
+        """
+        print("Checking : ", name)
+        if key in ('linux', 'windows', 'macosx', 'coverage'):
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
+                                                    and f.endswith('.py') for f in diff)
+        elif key in ('pyccel_lint'):
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
+        elif key in ('pylint'):
+            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff)
+        elif key in ('docs'):
+            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff)
+        elif key in ('spelling'):
+            has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff)
+        else:
+            raise NotImplementedError("Please update for new has_relevant_change")
+
+        for c in commits:
+            diff = bot.get_diff(c)
+            if has_relevant_change(diff):
+                print("Contains relevant change : ", c)
+                return True
+            else:
+                check_runs = bot.get_check_runs(c)
+                print(c,':', check_runs)
+                try:
+                    previous_state = next(c for c in check_runs if c['name'] == name)
+                except StopIteration:
+                    continue
+                conclusion = previous_state['conclusion']
+                if conclusion in ('failure', 'success'):
+                    self._GAI.create_run_from_old(self._ref, name, c['details_url'], conclusion)
+                    return False
+        return True
 
     def mark_as_draft(self):
         """
@@ -579,19 +647,28 @@ class Bot:
         else:
             return "needs_initial_review", reviews
 
-    def get_check_runs(self):
+    def get_check_runs(self, commit = None):
         """
         Get a list of all check runs which have run on this commit.
 
         Get a dictionary containing all information about check runs which have run
         on the commit specified at the constructor.
 
+        Parameters
+        ----------
+        commit : str, optional
+            The commit for which we wish to get check run information.
+            The default value is the most recent commit associated with this
+            pull request.
+
         Returns
         -------
         dict
             A dictionary describing the check runs.
         """
-        return self._GAI.get_check_runs(self._ref)['check_runs']
+        if commit is None:
+            commit = self._ref
+        return self._GAI.get_check_runs(commit)['check_runs']
 
     def get_bot_review_comments(self):
         """
@@ -650,14 +727,20 @@ class Bot:
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
 
-    def get_diff(self):
+    def get_diff(self, base_commit):
         """
         Get the diff between the base and the current commit.
 
         Get the git description of the difference between the current
-        commit and the base commit of the pull request. This output
+        commit and the specified base commit. This output
         shows how github organises the files tab and allows line
         numbers do be calculated from git blob positions.
+
+        Parameters
+        ----------
+        base_commit : str, optional
+            The commit against which the current commit should be compared.
+            The default value is the base commit of the pull request.
 
         Returns
         -------
@@ -665,7 +748,9 @@ class Bot:
             A dictionary whose keys are files and whose values are lists of
             lines which appear in the diff including code and blob headers.
         """
-        cmd = [git, 'diff', f"{self._base}..{self._ref}"]
+        if base_commit is None:
+            base_commit = self._base
+        cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
         print(cmd)
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
