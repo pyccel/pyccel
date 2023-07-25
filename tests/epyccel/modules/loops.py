@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types
 
 #==============================================================================
@@ -94,6 +94,19 @@ def product_loop_on_2d_array_F( z ):
 
     for i,j in product( x, y ):
         z[i,j] = i-j
+
+# ...
+def product_loop( z : 'float[:]', m : int, n : int ):
+
+    from itertools import product
+
+    x = [i*3+2 for i in range(m)]
+    y = [j*7+6 for j in range(n)]
+
+    k = 0
+    for i,j in product( x, y ):
+        z[k] = i-j
+        k += 1
 
 # ...
 @types( 'int[:]' )
@@ -244,3 +257,17 @@ def for_loop3():
     for i in range(10, 1, -2):
         x += i
     return x
+
+def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
+    import numpy as np
+    c = np.zeros_like(a)
+    d1 = np.zeros_like(a)
+    d2 = np.zeros_like(a)
+    for _ in range(1):
+        for d in range(2):
+            b[d] += d
+        c[:] = b - a
+        d1[:] = np.abs(c)
+        d2[:] = np.abs(b - a)
+    return d1, d2
+

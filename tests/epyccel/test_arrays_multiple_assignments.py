@@ -1,4 +1,7 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
+import os
+import sys
+import warnings
 import pytest
 
 from pyccel.epyccel import epyccel
@@ -300,6 +303,27 @@ def test_Assign_between_nested_If(lang):
     assert f(True,True) == f2(True,True)
     assert f(True,False) == f2(True,False)
     assert f(False,True) == f2(False,True)
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="NumPy compilation raises warnings on Windows. See issue #1405")
+def test_conda_flag_disable(language):
+    def one():
+        return True
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        epyccel(one, language='c', conda_warnings = 'off')
+
+@pytest.mark.skipif(sys.platform == 'win32', reason="NumPy compilation raises warnings on Windows. See issue #1405")
+def test_conda_flag_verbose(language):
+    def one():
+        return True
+    #with pytest.warns(Warning) as record1:
+    with warnings.catch_warnings(record=True) as record1:
+        warnings.simplefilter("always")
+        epyccel(one, language='c', conda_warnings = 'verbose')
+    if len(record1)>0:
+        warn_message = record1[0].message
+        p = str(warn_message).split(":")[2].strip()
+        assert p in os.environ['PATH']
 
 #==============================================================================
 

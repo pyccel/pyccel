@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 #$ header class Point2d(public)
 #$ header method __init__(Point2d, double, double)
 #$ header method translate(Point2d, double, double)

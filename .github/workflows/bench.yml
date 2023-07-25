@@ -2,13 +2,14 @@ name: Benchmarks
 
 on:
   push:
-    branches: [ pyccel/master ]
+    branches: devel
 
 jobs:
 
   Benchmark:
 
     runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
 
     steps:
       - name: Set up ssh

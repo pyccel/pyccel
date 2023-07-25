@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
 
@@ -100,6 +100,18 @@ def test_product_loop_on_2d_array_F(language):
     f2( y )
     assert np.array_equal( x, y )
 
+def test_product_loop(language):
+
+    f1 = loops.product_loop
+    f2 = epyccel(f1, language=language)
+
+    x = np.zeros( (44), dtype=float )
+    y = np.zeros( (44), dtype=float )
+
+    f1( x, 4, 11 )
+    f2( y, 4, 11 )
+    assert np.array_equal( x, y )
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
@@ -199,6 +211,24 @@ def test_continue(language):
     out2 = f2(fizz, buzz, max_val)
 
     assert( out1 == out2 )
+
+def test_temp_array_in_loop(language):
+    f1 = loops.temp_array_in_loop
+    f2 = epyccel( f1, language = language )
+
+    a = np.zeros(6, dtype=int)
+    b = np.zeros(6, dtype=int)
+
+    c_py,d_py = f1(a,b)
+
+    a[:] = 0
+    b[:] = 0
+
+    c_ep,d_ep = f2(a,b)
+
+    assert np.array_equal(c_py, c_ep)
+    assert np.array_equal(d_py, d_ep)
+
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS

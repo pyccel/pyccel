@@ -4,6 +4,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+from itertools import chain
 
 from sympy.logic.boolalg      import And as sp_And
 
@@ -71,6 +72,7 @@ __all__ = (
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
+    'FunctionDefResult',
     'If',
     'IfSection',
     'Import',
@@ -1079,59 +1081,68 @@ class Block(ScopedNode):
 
 
 class Module(ScopedNode):
+    """
+    Represents a module in the code.
 
-    """Represents a module in the code. A block consists of the following inputs
+    The Pyccel node representing a Python module. A module consists of everything
+    inside a given Python file.
 
     Parameters
     ----------
-    name: str
-        name of the module
+    name : str
+        Name of the module.
 
-    variables: list
-        list of the variables that appear in the block.
+    variables : list
+        List of the variables that appear in the block.
 
-    funcs: list
-        a list of FunctionDef instances
+    funcs : list
+        A list of FunctionDef instances.
 
-    init_func: FunctionDef
+    init_func : FunctionDef, default: None
         The function which initialises the module (expressions in the
-        python module which are executed on import)
-        Default : None
+        python module which are executed on import).
 
-    free_func: FunctionDef
-        The function which frees any variables allocated in the module
-        Default : None
+    free_func : FunctionDef, default: None
+        The function which frees any variables allocated in the module.
 
-    program: Program/CodeBlock
+    program : Program/CodeBlock
         CodeBlock containing any expressions which are only executed
-        when the module is executed directly
+        when the module is executed directly.
 
-    interfaces: list
-        a list of Interface instances
+    interfaces : list
+        A list of Interface instances.
 
-    classes: list
-        a list of ClassDef instances
+    classes : list
+        A list of ClassDef instances.
 
-    imports: list, tuple
-        list of needed imports
+    imports : list, tuple
+        List of needed imports.
+
+    scope : Scope
+        The scope of the module.
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, Assign, FunctionDefResult
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
     >>> z = Variable('float', 'z')
     >>> t = Variable('float', 't')
     >>> a = Variable('float', 'a')
     >>> b = Variable('float', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> body = [Assign(z,PyccelAdd(x,a))]
+    >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
+    >>> results = [FunctionDefResult(res) for res in [z,t]]
+    >>> translate = FunctionDef('translate', args, results, body)
     >>> attributes   = [x,y]
     >>> methods     = [translate]
     >>> Point = ClassDef('Point', attributes, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
+    >>> incr = FunctionDef('incr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelAdd(x,LiteralInteger(1)))])
+    >>> decr = FunctionDef('decr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelMinus(x,LiteralInteger(1)))])
     >>> Module('my_module', [], [incr, decr], classes = [Point])
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
@@ -1222,10 +1233,12 @@ class Module(ScopedNode):
 
         if init_func:
             init_if = init_func.body.body[0]
-            init_cond = init_if.blocks[0].condition
-            init_var = init_cond.args[0]
-            self._variables.append(init_var)
-            self._variable_inits.append(LiteralFalse())
+            # The init function should always contain an If block unless it is part of a wrapper
+            if isinstance(init_if, If):
+                init_cond = init_if.blocks[0].condition
+                init_var = init_cond.args[0]
+                self._variables.append(init_var)
+                self._variable_inits.append(LiteralFalse())
 
         super().__init__(scope)
 
@@ -1338,32 +1351,44 @@ class Module(ScopedNode):
         return self._internal_dictionary.keys()
 
 class ModuleHeader(Basic):
+    """
+    Represents the header file for a module.
 
-    """Represents the header file for a module
+    This class is simply a wrapper around a module. It is helpful to differentiate
+    between headers and sources when printing.
 
     Parameters
     ----------
-    module: Module
-        the module
+    module : Module
+        The module described by the header.
+
+    See Also
+    --------
+    Module : The module itself.
 
     Examples
     --------
-    >>> from pyccel.ast.core import Variable, Assign
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, Assign, FunctionDefResult
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
+    >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
     >>> z = Variable('float', 'z')
     >>> t = Variable('float', 't')
     >>> a = Variable('float', 'a')
     >>> b = Variable('float', 'b')
-    >>> body = [Assign(y,x+a)]
-    >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
+    >>> body = [Assign(z,PyccelAdd(x,a))]
+    >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
+    >>> results = [FunctionDefResult(res) for res in [z,t]]
+    >>> translate = FunctionDef('translate', args, results, body)
     >>> attributes   = [x,y]
     >>> methods     = [translate]
     >>> Point = ClassDef('Point', attributes, methods)
-    >>> incr = FunctionDef('incr', [x], [y], [Assign(y,x+1)])
-    >>> decr = FunctionDef('decr', [x], [y], [Assign(y,x-1)])
-    >>> mod = Module('my_module', [], [incr, decr], classes = [Point])
+    >>> incr = FunctionDef('incr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelAdd(x,LiteralInteger(1)))])
+    >>> decr = FunctionDef('decr', [FunctionDefArgument(x)], [FunctionDefResult(y)], [Assign(y,PyccelMinus(x,LiteralInteger(1)))])
+    >>> Module('my_module', [], [incr, decr], classes = [Point])
     >>> ModuleHeader(mod)
     Module(my_module, [], [FunctionDef(), FunctionDef()], [], [ClassDef(Point, (x, y), (FunctionDef(),), [public], (), [], [])], ())
     """
@@ -1900,6 +1925,9 @@ class FunctionDefArgument(PyccelAstNode):
         self._kwonly     = kwonly
         self._annotation = annotation
 
+        if isinstance(name, Variable):
+            name.declare_as_argument()
+
         if pyccel_stage != "syntactic":
             self._inout = self.var.rank>0 and not self.var.is_const if isinstance(self.var, Variable) else False
 
@@ -1987,9 +2015,104 @@ class FunctionDefArgument(PyccelAstNode):
         else:
             return 'FunctionDefArgument({})'.format(repr(self.name))
 
-class FunctionCall(PyccelAstNode):
+class FunctionDefResult(PyccelAstNode):
+    """
+    Node describing the result of a function.
 
-    """Represents a function call in the code.
+    An object describing the result of a function described
+    by a FunctionDef. This object stores all the information
+    which describes an result but is superfluous for a Variable.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable which represents the returned value.
+
+    annotation : str, default: None
+        The type annotation describing the argument.
+
+    See Also
+    --------
+    FunctionDef : The class where these objects will be stored.
+
+    Examples
+    --------
+    >>> from pyccel.ast.core import FunctionDefResult
+    >>> n = FunctionDefResult('n')
+    >>> n
+    n
+    """
+    __slots__ = ('_var','_is_argument','_annotation')
+    _attribute_nodes = ('_var',)
+
+    def __init__(self, var, *, annotation=None):
+        self._var        = var
+        self._annotation = annotation
+
+        if pyccel_stage == 'syntactic':
+            if not isinstance(var, PyccelSymbol):
+                raise TypeError("Var must be a PyccelSymbol")
+        elif not isinstance(var, Variable):
+            raise TypeError("Var must be a Variable")
+        else:
+            self._is_argument = var.is_argument
+
+        super().__init__()
+
+    @property
+    def var(self):
+        """
+        The variable representing the result.
+
+        The variable which represents the result. This variable is only
+        available after the semantic stage.
+        """
+        return self._var
+
+    @property
+    def annotation(self):
+        """
+        The result annotation providing dtype information.
+
+        The annotation which provides all information about the data
+        types, precision, etc, necessary to fully define the result.
+        """
+        return self._annotation
+
+    @property
+    def is_argument(self):
+        """
+        Indicates if the result was declared as an argument.
+
+        Indicates if the result of the function was initially declared
+        as an argument of the same function. If this is the case then
+        the result may be printed simply as an inout argument.
+        """
+        return self._is_argument
+
+    def __repr__(self):
+        return 'FunctionDefResult({})'.format(repr(self.var))
+
+    def __str__(self):
+        return str(self.var)
+
+class FunctionCall(PyccelAstNode):
+    """
+    Represents a function call in the code.
+
+    A node which holds all information necessary to represent a function
+    call in the code.
+
+    Parameters
+    ----------
+    func : FunctionDef
+        The function being called.
+
+    args : list of FunctionCallArgument
+        The arguments passed to the function.
+
+    current_function : FunctionDef, default: None
+        The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
                  '_dtype','_precision','_shape','_rank','_order')
@@ -2031,8 +2154,6 @@ class FunctionCall(PyccelAstNode):
 
         # add the missing argument in the case of optional arguments
         f_args = func.arguments
-        if func.cls_name:
-            f_args = f_args[1:]
         if not len(args) == len(f_args):
             # Collect dict of keywords and values (initialised as default)
             f_args_dict = {a.name: (a.name, a.value) if a.has_default \
@@ -2063,11 +2184,11 @@ class FunctionCall(PyccelAstNode):
 
         self._funcdef       = func
         self._arguments     = args
-        self._dtype         = func.results[0].dtype     if len(func.results) == 1 else NativeTuple()
-        self._rank          = func.results[0].rank      if len(func.results) == 1 else None
-        self._shape         = func.results[0].shape     if len(func.results) == 1 else None
-        self._precision     = func.results[0].precision if len(func.results) == 1 else None
-        self._order         = func.results[0].order     if len(func.results) == 1 else None
+        self._dtype         = func.results[0].var.dtype     if len(func.results) == 1 else NativeTuple()
+        self._rank          = func.results[0].var.rank      if len(func.results) == 1 else None
+        self._shape         = func.results[0].var.shape     if len(func.results) == 1 else None
+        self._precision     = func.results[0].var.precision if len(func.results) == 1 else None
+        self._order         = func.results[0].var.order     if len(func.results) == 1 else None
         self._func_name     = func.name
         super().__init__()
 
@@ -2230,8 +2351,9 @@ class FunctionDef(ScopedNode):
     imports : list, tuple
         A list of needed imports.
 
-    decorators : list, tuple
-        A list of properties.
+    decorators : dict
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
 
     headers : list,tuple
         A list of headers describing the function.
@@ -2272,14 +2394,18 @@ class FunctionDef(ScopedNode):
 
     Examples
     --------
-    >>> from pyccel.ast.core import Assign, Variable, FunctionDef
+    >>> from pyccel.ast.variable import Variable
+    >>> from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
+    >>> from pyccel.ast.core import Assign, FunctionDef
+    >>> from pyccel.ast.operators import PyccelAdd
+    >>> from pyccel.ast.literals import LiteralInteger
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-    >>> args        = [x]
-    >>> results     = [y]
-    >>> body        = [Assign(y,x+1)]
+    >>> args        = [FunctionDefArgument(x)]
+    >>> results     = [FunctionDefResult(y)]
+    >>> body        = [Assign(y,PyccelAdd(x,LiteralInteger(1)))]
     >>> FunctionDef('incr', args, results, body)
-    FunctionDef(incr, (x,), (y,), [y := 1 + x], [], [], None, False, function)
+    FunctionDef(incr, (x,), (y,), [y := x + 1], [], [], None, False, function)
 
     One can also use parametrized argument, using FunctionDefArgument
 
@@ -2345,8 +2471,10 @@ class FunctionDef(ScopedNode):
 
         if not iterable(arguments):
             raise TypeError('arguments must be an iterable')
+        if not all(isinstance(a, FunctionDefArgument) for a in arguments):
+            raise TypeError('arguments must be all be FunctionDefArguments')
 
-        arguments = tuple(a if isinstance(a, FunctionDefArgument) else FunctionDefArgument(a) for a in arguments)
+        arg_vars = [a.var for a in arguments]
 
         # body
 
@@ -2360,7 +2488,8 @@ class FunctionDef(ScopedNode):
 
         if not iterable(results):
             raise TypeError('results must be an iterable')
-        results = tuple(results)
+        if not all(isinstance(r, FunctionDefResult) for r in results):
+            raise TypeError('results must be all be FunctionDefResults')
 
         # if method
 
@@ -2446,10 +2575,17 @@ class FunctionDef(ScopedNode):
 
     @property
     def local_vars(self):
-        """ List of variables defined in the function """
+        """
+        List of variables defined in the function.
+
+        A list of all variables which are local to the function. This
+        includes arguments, results, and variables defined inside the
+        function.
+        """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        return tuple(l for l in local_vars if l not in self.results and l not in argument_vars)
+        result_vars = [r.var for r in self.results]
+        return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property
     def global_vars(self):
@@ -2769,26 +2905,35 @@ class InlineFunctionDef(FunctionDef):
         return self._global_funcs
 
 class PyccelFunctionDef(FunctionDef):
-    """ Class inheriting from FunctionDef which can store a pointer
+    """
+    Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
+
+    Class inheriting from `FunctionDef` which can store a pointer
     to a class type defined by pyccel for treating internal functions.
-    This is useful for importing builtin functions
+    This is useful for importing builtin functions and for defining
+    classes which have `PyccelInternalFunction`s as attributes or methods.
 
     Parameters
     ----------
     name : str
-           The name of the function
+           The name of the function.
+
     func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
-                 The class which should be instantiated upon a FunctionCall
-                 to this FunctionDef object
+         The class which should be instantiated upon a FunctionCall
+         to this FunctionDef object.
+
+    decorators : dictionary
+        A dictionary whose keys are the names of decorators and whose values
+        contain their implementation.
     """
     __slots__ = ()
-    def __init__(self, name, func_class):
+    def __init__(self, name, func_class, *, decorators = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
         arguments = ()
         results = ()
         body = ()
-        super().__init__(name, arguments, results, body)
+        super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
 
 class Interface(Basic):
@@ -2996,28 +3141,38 @@ class SympyFunction(FunctionDef):
 
 
 class ClassDef(ScopedNode):
+    """
+    Represents a class definition.
 
-    """Represents a class definition.
+    Class representing a class definition in the code. It holds all objects
+    which may be defined in a class including methods, interfaces, attributes,
+    etc. It also handles inheritance.
 
     Parameters
     ----------
     name : str
         The name of the class.
 
-    attributes: iterable
+    attributes : iterable
         The attributes to the class.
 
-    methods: iterable
-        Class methods
+    methods : iterable
+        Class methods.
 
-    options: list, tuple
-        list of options ('public', 'private', 'abstract')
+    options : list, tuple
+        A list of options ('public', 'private', 'abstract').
 
-    imports: list, tuple
-        list of needed imports
+    imports : list, tuple
+        A list of required imports.
 
-    superclass : str
-        superclass's class name
+    superclasses : iterable
+        The definition of all classes from which this class inherits.
+
+    interfaces : iterable
+        The interface methods.
+
+    scope : Scope
+        The scope for the class contents.
 
     Examples
     --------
@@ -3037,7 +3192,7 @@ class ClassDef(ScopedNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclass','_interfaces')
+                 '_imports','_superclasses','_interfaces')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
 
     def __init__(
@@ -3047,7 +3202,7 @@ class ClassDef(ScopedNode):
         methods=(),
         options=('public',),
         imports=(),
-        superclass=(),
+        superclasses=(),
         interfaces=(),
         scope = None
         ):
@@ -3080,8 +3235,12 @@ class ClassDef(ScopedNode):
         if not iterable(imports):
             raise TypeError('imports must be an iterable')
 
-        if not iterable(superclass):
-            raise TypeError('superclass must be iterable')
+        if not iterable(superclasses):
+            raise TypeError('superclasses must be iterable')
+        if pyccel_stage != 'syntactic':
+            for s in superclasses:
+                if not isinstance(s, ClassDef):
+                    raise TypeError('superclass item must be a ClassDef')
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3127,7 +3286,7 @@ class ClassDef(ScopedNode):
         self._methods = methods
         self._options = options
         self._imports = imports
-        self._superclass  = superclass
+        self._superclasses  = superclasses
         self._interfaces = interfaces
 
         super().__init__(scope = scope)
@@ -3153,8 +3312,14 @@ class ClassDef(ScopedNode):
         return self._imports
 
     @property
-    def superclass(self):
-        return self._superclass
+    def superclasses(self):
+        """
+        Get the superclasses.
+
+        Get the class definitions for the classes from which this class
+        inherits.
+        """
+        return self._superclasses
 
     @property
     def interfaces(self):
@@ -3212,6 +3377,48 @@ class ClassDef(ScopedNode):
             shape=var.shape,
             cls_base=var.cls_base,
             )
+
+    def get_method(self, name):
+        """
+        Get the method `name` of the current class.
+
+        Look through all methods and interfaces of the current class to
+        find a method called `name`. If this class inherits from another
+        class, that class is also searched to ensure that the inherited
+        methods are available.
+
+        Parameters
+        ----------
+        name : str
+            The name of the attribute we are looking for.
+
+        Returns
+        -------
+        FunctionDef
+            The definition of the method.
+
+        Raises
+        ------
+        ValueError
+            Raised if the method cannot be found.
+        """
+        try:
+            method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
+        except StopIteration:
+            method = None
+            i = 0
+            n_classes = len(self.superclasses)
+            while method is None and i<n_classes:
+                try:
+                    method = self.superclasses[i].get_method(name)
+                except StopIteration:
+                    method = None
+
+        if method is None:
+            errors.report(f"Can't find method {name} in class {self.name}",
+                    severity='fatal', symbol=self)
+
+        return method
 
     @property
     def is_iterable(self):

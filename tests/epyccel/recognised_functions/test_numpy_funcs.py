@@ -5277,22 +5277,42 @@ def test_numpy_matmul_array_like_2x2d(language):
 
     bl = randint(0, 2, size=size, dtype= bool)
 
-    integer8 = randint(min_int8, max_int8, size=size, dtype=np.int8)
-    integer16 = randint(min_int16, max_int16, size=size, dtype=np.int16)
-    integer = randint(min_int, max_int, size=size, dtype=int)
-    integer32 = randint(min_int32, max_int32, size=size, dtype=np.int32)
-    integer64 = randint(min_int64, max_int64, size=size, dtype=np.int64)
+    def calculate_max_values(min_for_type, max_for_type):
+        cast = type(min_for_type)
+        min_test = -np.sqrt(abs(min_for_type) / size[0])
+        max_test = np.sqrt(abs(max_for_type) / size[0])
+        print(min_test, max_test, cast(min_test), cast(max_test))
+        return cast(min_test), cast(max_test)
 
-    fl = uniform(-((abs(min_float) / size[0])**(1/2)), (abs(max_float) / size[0])**(1/2), size = size)
-    fl32 = uniform(-((abs(min_float32) / size[0])**(1/2)), (abs(max_float32) / size[0])**(1/2), size = size)
+    integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
+    integer16 = randint(*calculate_max_values(min_int16, max_int16), size=size, dtype=np.int16)
+    integer = randint(*calculate_max_values(min_int, max_int), size=size, dtype=int)
+    integer32 = randint(*calculate_max_values(min_int32, max_int32), size=size, dtype=np.int32)
+    integer64 = randint(*calculate_max_values(min_int64, max_int64), size=size, dtype=np.int64)
+
+    fl = uniform(*calculate_max_values(min_float, max_float), size = size)
+    fl32 = uniform(*calculate_max_values(min_float32, max_float32), size = size)
     fl32 = np.float32(fl32)
-    fl64 = uniform(-((abs(min_float64) / size[0])**(1/2)), (abs(max_float64) / size[0])**(1/2), size = size)
+    fl64 = uniform(*calculate_max_values(min_float64, max_float64), size = size)
 
-    cmplx128_from_float32 = uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) + uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) * 1j
+    cmplx128_from_float32 = uniform(*calculate_max_values(min_int, max_int), size=size) + uniform(*calculate_max_values(min_int, max_int), size=size) * 1j
     # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
     # that's why we need to convert it to a numpy.complex64 the needed type.
     cmplx64 = np.complex64(cmplx128_from_float32)
-    cmplx128 = uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) + uniform(low=-((abs(min_int) / size[0] * 2)**(1/2)), high=(max_int / size[0] * 2)**(1/2), size=size) * 1j
+    cmplx128 = uniform(*calculate_max_values(min_int, max_int), size=size) + uniform(*calculate_max_values(min_int, max_int), size=size) * 1j
+
+    integer8  = np.full(size, calculate_max_values(min_int8, max_int8)[1])
+    integer16 = np.full(size, calculate_max_values(min_int16, max_int16)[1])
+    integer   = np.full(size, calculate_max_values(min_int, max_int)[1])
+    integer32 = np.full(size, calculate_max_values(min_int32, max_int32)[1])
+    integer64 = np.full(size, calculate_max_values(min_int64, max_int64)[1])
+
+    fl   = np.full(size, calculate_max_values(min_float, max_float)[1])
+    fl32 = np.full(size, calculate_max_values(min_float32, max_float32)[1])
+    fl64 = np.full(size, calculate_max_values(min_float64, max_float64)[1])
+
+    cmplx64  = np.full(size, np.complex64(integer + integer * 1j))
+    cmplx128 = np.full(size, integer + integer * 1j)
 
     epyccel_func = epyccel(get_matmul, language=language)
 

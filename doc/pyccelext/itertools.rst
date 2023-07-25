@@ -1,4 +1,0 @@
-itertools
-=========
-
-* product(A,B)
