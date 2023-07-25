@@ -480,7 +480,7 @@ class Assign(Basic):
         return False
 
 #------------------------------------------------------------------------------
-class  Allocate(Basic):
+class Allocate(Basic):
     """
     Represents memory allocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
