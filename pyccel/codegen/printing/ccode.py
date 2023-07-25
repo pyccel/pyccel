@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpyArraySize
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -458,7 +458,7 @@ class CCodePrinter(CodePrinter):
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
                 if i < num_elements - 1:
-                    operations += self._print(AugAssign(offset_var, NumpyArraySize(flattened_list[i])))
+                    operations += self._print(AugAssign(offset_var, '+', NumpyArraySize(flattened_list[i])))
                 i += 1
 
             # Copy multiple scalar elements
@@ -476,7 +476,7 @@ class CCodePrinter(CodePrinter):
                 operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
 
                 if i + lenSubset < num_elements:
-                    operations += self._print(AugAssign(offset_var, LiteralInteger(lenSubset)))
+                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
                 i += lenSubset
 
         if order == "F":
