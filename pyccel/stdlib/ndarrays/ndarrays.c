@@ -454,18 +454,18 @@ int get_dimension_stride(int64_t *shape, int nd, int max_nd)
 **  returns the element's index depending on its required memory layout (order_f/column major or order_c/row major)
 */
 
-int element_index(t_ndarray arr, uint32_t element_num, int nd)
+int element_index(t_ndarray arr, uint32_t flat_c_idx, int nd)
 {
     if (arr.order == order_c)
-        return element_num;
+        return flat_c_idx;
     if (nd == 0)
         return (0);
     if (nd == arr.nd)
-        return (element_num % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1);
-    int true_index = (element_num / (get_dimension_stride(arr.shape, nd, arr.nd)));
+        return (flat_c_idx % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1);
+    int true_index = (flat_c_idx / (get_dimension_stride(arr.shape, nd, arr.nd)));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
-    return (true_index * arr.strides[nd - 1] + element_index(arr, element_num, nd - 1));
+    return (true_index * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1));
 }
 
 bool is_same_shape(t_ndarray a, t_ndarray b)
