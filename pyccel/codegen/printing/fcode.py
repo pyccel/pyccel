@@ -2888,7 +2888,6 @@ class FCodePrinter(CodePrinter):
         -------
         Slice
             The new slice with processed arguments (start, stop, step).
-
         """
         start = _slice.start
         stop = _slice.stop

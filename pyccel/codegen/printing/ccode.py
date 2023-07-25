@@ -1288,7 +1288,6 @@ class CCodePrinter(CodePrinter):
         -------
         Slice
             The new slice with processed arguments (start, stop, step).
-
         """
         start = LiteralInteger(0) if _slice.start is None else _slice.start
         stop = array_size if _slice.stop is None else _slice.stop
