@@ -512,7 +512,24 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
+        if isinstance(expr, ConstructorCall):
+            cls_name = expr.funcdef.cls_name
+            cls = self.scope.find(cls_name, 'classes')
+
+            dtype = self.get_class_construct(cls_name)()
+
+            d_var['datatype'   ] = dtype
+            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
+            d_var['shape'      ] = None
+            d_var['rank'       ] = 0
+            d_var['is_target'  ] = False
+
+            # set target  to True if we want the class objects to be pointers
+
+            d_var['cls_base'      ] = cls
+            return d_var
+
+        elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
                       NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
@@ -620,23 +637,6 @@ class SemanticParser(BasicParser):
             d_var['datatype'   ] = NativeSymbol()
             d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
             d_var['rank'       ] = 0
-            return d_var
-
-        elif isinstance(expr, ConstructorCall):
-            cls_name = expr.func.cls_name
-            cls = self.scope.find(cls_name, 'classes')
-
-            dtype = self.get_class_construct(cls_name)()
-
-            d_var['datatype'   ] = dtype
-            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = None
-            d_var['rank'       ] = 0
-            d_var['is_target'  ] = False
-
-            # set target  to True if we want the class objects to be pointers
-
-            d_var['cls_base'      ] = cls
             return d_var
 
         else:
@@ -2472,7 +2472,31 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs)
 
         if isinstance(rhs, ConstructorCall):
-            return rhs
+            d_var  = self._infer_type(rhs)
+            d_list = d_var if isinstance(d_var, list) else [d_var]
+            for d in d_list:
+                name = d['datatype'].__class__.__name__
+
+                if name.startswith('Pyccel'):
+                    name = name[6:]
+                    d['cls_base'] = self.scope.find(name, 'classes')
+                    #TODO: Avoid writing the default variables here
+                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
+                        d['memory_handling'] = 'alias'
+                    else:
+                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
+            if isinstance(d_var, list):
+                if len(d_var) == 1:
+                    d_var = d_var[0]
+                else:
+                    errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
+                    return None
+            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, True)
+            args = [lhs] + rhs.args[:1]
+            new_expr = ConstructorCall(rhs.funcdef, args, lhs)
+            return new_expr
         elif isinstance(rhs, FunctionDef):
 
             # case of lambdify

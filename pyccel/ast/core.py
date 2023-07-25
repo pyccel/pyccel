@@ -2241,7 +2241,6 @@ class ConstructorCall(DottedFunctionCall):
             raise TypeError('Expecting func to be a FunctionDef or str')
 
         self._cls_variable = cls_variable
-        arguments = (FunctionCallArgument(cls_variable),) + arguments
         super().__init__(func, arguments, self._cls_variable)
 
     @property
