@@ -1,7 +1,8 @@
+import os
 from bot_tools.bot_funcs import Bot, default_python_versions
 
 if __name__ == '__main__':
-    bot = Bot(pr_id = 0)
+    bot = Bot(pr_id = 0, commit = os.environ['GITHUB_REF'])
     for python_version in ('3.7', '3.8', '3.9', '3.10', '3.11'):
         bot.run_tests(['linux'], python_version)
     bot.run_tests(['windows'], '3.7')
