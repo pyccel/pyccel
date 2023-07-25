@@ -1,3 +1,5 @@
+""" A script to run the `devel` branch tests.
+"""
 import os
 from bot_tools.bot_funcs import Bot, default_python_versions
 
