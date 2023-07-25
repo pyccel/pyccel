@@ -315,13 +315,13 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     va_list  va;
     t_slice slice;
     int32_t start = 0;
-    int32_t j;
+    int32_t j = 0;
 
     view.nd = n;
     view.type = arr.type;
     view.type_size = arr.type_size;
-    view.shape = malloc(sizeof(int64_t) * arr.nd);
-    view.strides = malloc(sizeof(int64_t) * arr.nd);
+    view.shape = malloc(sizeof(int64_t) * view.nd);
+    view.strides = malloc(sizeof(int64_t) * view.nd);
     view.is_view = true;
     va_start(va, n);
     for (int32_t i = 0; i < arr.nd ; i++)
@@ -504,7 +504,9 @@ void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
     if (!src.is_view && dest->order == src.order
         && (src.order == order_c
             || (src.order == order_f && is_same_shape(*dest, src))))
+    {
         memcpy(d + offset * dest->type_size, s, src.buffer_size);
+    }
     else
     {
         for (int32_t element_num = 0; element_num < src.length; ++element_num)
