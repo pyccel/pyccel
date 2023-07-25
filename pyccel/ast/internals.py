@@ -64,7 +64,7 @@ class PyccelInternalFunction(PyccelAstNode):
         """
         Whether the function acts elementwise on an array argument.
 
-        Bool indicating whether the (scalar) function should be called
+        Boolean indicating whether the (scalar) function should be called
         elementwise on an array argument. Here we set the default to False.
         """
         return False
