@@ -406,12 +406,12 @@ class Bot:
                 check_runs = self.get_check_runs(c)
                 print(c,':', check_runs)
                 try:
-                    previous_state = next(c for c in check_runs if c['name'] == name)
+                    previous_state = next(cr for cr in check_runs if cr['name'] == name)
                 except StopIteration:
                     continue
                 conclusion = previous_state['conclusion']
                 if conclusion in ('failure', 'success'):
-                    self._GAI.create_run_from_old(self._ref, name, c['details_url'], conclusion)
+                    self._GAI.create_run_from_old(self._ref, name, previous_state['details_url'], conclusion)
                     return False
         return True
 
