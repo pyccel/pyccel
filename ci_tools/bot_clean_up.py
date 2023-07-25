@@ -25,7 +25,10 @@ if __name__ == '__main__':
     except StopIteration:
         pr_id = 0
     bot = Bot(pr_id = pr_id, commit = event['check_run']['head_sha'])
-    pr_id = bot.get_pr_id()
+    try:
+        pr_id = bot.get_pr_id()
+    except StopIteration:
+        pr_id = 0
 
     name_key = bot.get_name_key(name)
 
@@ -55,51 +58,52 @@ if __name__ == '__main__':
             elif all(d in completed_runs for d in deps):
                 bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
-    draft = bot.is_pr_draft()
+    if pr_id != 0:
+        draft = bot.is_pr_draft()
 
-    if not draft:
+        if not draft:
 
-        events = bot.GAI.get_events(pr_id)
+            events = bot.GAI.get_events(pr_id)
 
-        shas = [e.get('sha', None) for e in events]
-        print(shas)
-        print([e.get('event', None) for e in events])
-        page = 1
-        start_idx = -1
-        while start_idx == -1:
+            shas = [e.get('sha', None) for e in events]
+            print(shas)
+            print([e.get('event', None) for e in events])
+            page = 1
+            start_idx = -1
+            while start_idx == -1:
+                try:
+                    start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+                except StopIteration:
+                    start_idx = -1
+                    page += 1
+                    new_events = bot.GAI.get_events(pr_id, page)
+                    events.extend(new_events)
+                    shas.extend([e.get('sha', None) for e in new_events])
+                    print(shas)
             try:
-                start_idx = next(i for i,s in enumerate(shas) if s == event['check_run']['head_sha'])
+                end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
             except StopIteration:
-                start_idx = -1
-                page += 1
-                new_events = bot.GAI.get_events(pr_id, page)
-                events.extend(new_events)
-                shas.extend([e.get('sha', None) for e in new_events])
-                print(shas)
-        try:
-            end_idx = next(i for i,s in enumerate(shas[start_idx+1:], start_idx+1) if s is not None)
-        except StopIteration:
-            end_idx = len(shas)
+                end_idx = len(shas)
 
-        relevant_events = events[:end_idx]
+            relevant_events = events[:end_idx]
 
-        event_types = [e['event'] for e in events]
+            event_types = [e['event'] for e in events]
 
-        relevant_ready_events = [e for e in event_types[:end_idx] if e in ('ready_for_review', 'convert_to_draft')]
-        later_ready_events = [e for e in event_types[end_idx:] if e in ('ready_for_review', 'convert_to_draft')]
+            relevant_ready_events = [e for e in event_types[:end_idx] if e in ('ready_for_review', 'convert_to_draft')]
+            later_ready_events = [e for e in event_types[end_idx:] if e in ('ready_for_review', 'convert_to_draft')]
 
-        was_examined = relevant_ready_events and relevant_ready_events[-1] == 'ready_for_review'
-        result_ignored = bool(later_ready_events)
+            was_examined = relevant_ready_events and relevant_ready_events[-1] == 'ready_for_review'
+            result_ignored = bool(later_ready_events)
 
-        print(was_examined, result_ignored)
+            print(was_examined, result_ignored)
 
-        if was_examined and not result_ignored:
-            print(all(k in completed_runs for k in pr_test_keys),
-                 all(k in successful_runs for k in pr_test_keys))
-            if event['check_run']['conclusion'] == 'failure':
-                bot.draft_due_to_failure()
-            elif event['check_run']['conclusion'] not in ('success', 'skipped'):
-                bot.mark_as_draft()
-            elif all(k in completed_runs for k in pr_test_keys) and \
-                 all(k in successful_runs for k in pr_test_keys):
-                bot.mark_as_ready(following_review = False)
+            if was_examined and not result_ignored:
+                print(all(k in completed_runs for k in pr_test_keys),
+                     all(k in successful_runs for k in pr_test_keys))
+                if event['check_run']['conclusion'] == 'failure':
+                    bot.draft_due_to_failure()
+                elif event['check_run']['conclusion'] not in ('success', 'skipped'):
+                    bot.mark_as_draft()
+                elif all(k in completed_runs for k in pr_test_keys) and \
+                     all(k in successful_runs for k in pr_test_keys):
+                    bot.mark_as_ready(following_review = False)
