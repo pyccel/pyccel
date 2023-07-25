@@ -1010,7 +1010,7 @@ class SemanticParser(BasicParser):
             is_temp = False
 
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
+                ((isinstance(rhs, FunctionCall) and not isinstance(name, PyccelSymbol)) and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
@@ -1168,7 +1168,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
+                                            and hasattr(rhs.funcdef, 'is_elemental') and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1225,7 +1225,6 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -2348,12 +2347,18 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error')
-            args = expr.args
-
+            d_var = {'datatype': self.get_class_construct(method.cls_name)(),
+                    'memory_handling':'stack',
+                    'shape' : None,
+                    'rank' : 0,
+                    'is_target' : False,
+                    'cls_base' : self.scope.find(method.cls_name, 'classes')}
+            cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
+            args = (FunctionCallArgument(cls_variable), ) + expr.args if expr.args else (FunctionCallArgument(cls_variable), )
             # TODO check compatibility
             # TODO treat parametrized arguments.
 
-            expr = ConstructorCall(method, args, cls_variable=None)
+            expr = ConstructorCall(method, args, cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -2472,11 +2477,7 @@ class SemanticParser(BasicParser):
             rhs = self._visit(rhs)
 
         if isinstance(rhs, ConstructorCall):
-            d_var  = self._infer_type(rhs)
-            lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, True)
-            args = [lhs] + rhs.args[:1]
-            new_expr = ConstructorCall(rhs.funcdef, args, lhs)
-            return new_expr
+            return rhs
         elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
