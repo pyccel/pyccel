@@ -532,8 +532,8 @@ class Bot:
         new_stage, reviews = self.check_review_stage(pr_id)
         self._GAI.add_labels(pr_id, [new_stage])
         author = self._pr_details["user"]["login"]
-        approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
-        requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
+        approving_reviewers = [reviewer for reviewer, r in reviews.items() if r["state"] == 'APPROVED']
+        requested_changes = [reviewer for reviewer, r in reviews.items() if r["state"] == 'CHANGES_REQUESTED']
 
         current_stage_index = review_stage_labels.index(current_stage)
         try:
@@ -667,15 +667,16 @@ class Bot:
         str
             The review stage.
 
-        list of dict
-            A list of the dictionaries describing the reviews left by users (non-bots)
-            which either approved or requested changes.
+        dict
+            A dictionary whose keys are users (non-bots) who left reviews and
+            whose values are dictionaries describing the reviews which either
+            approved or requested changes.
         """
-        reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
-        if any(r['user']['login'] in senior_reviewer and r["state"] == 'APPROVED' for r in reviews):
+        reviews = {r['user']['login'] : r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')}
+        if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 
-        non_senior_reviews = [r for r in reviews if r['user']['login'] not in senior_reviewer]
+        non_senior_reviews = [r for reviewer, r in reviews if reviewer not in senior_reviewer]
 
         if non_senior_reviews and all(r["state"] == 'APPROVED' for r in non_senior_reviews):
             return "Ready_for_review", reviews
