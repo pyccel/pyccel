@@ -19,6 +19,9 @@ All notable changes to this project will be documented in this file.
 -   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
 -   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
 -   \[INTERNALS\] Add class object to class function call arguments.
+-   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
+-   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
+-   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
 
 ### Deprecated
 
@@ -59,9 +62,6 @@ All notable changes to this project will be documented in this file.
 
 -   #1355 : Remove unused `BasicParser` arguments.
 -   \[INTERNALS\] Re-write bind-c wrapping stage (#1388)
--   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
--   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
--   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
 
 ## \[1.7.4\] - 2023-05-02
 
