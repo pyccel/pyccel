@@ -180,12 +180,12 @@ int32_t test_indexing_int64(void)
 
 int32_t test_indexing_int64_order_f(void)
 {
-    int64_t m_1[] = {1, 6, 6, 2, 4, 0, 1, 5,
-                    7, 1, 3, 5, 3, 6, 4, 9,
-                    7, 6, 7, 1, 7, 7, 4, 4,
-                    7, 1, 9, 0, 1, 2, 4, 5,
-                    6, 1, 7, 3, 1, 5, 9, 6};
-    int64_t m_1_shape[] = {5, 8};
+    int64_t m_1[] = {1, 6, 6, 2, 4, 1, 5,
+                    7, 1, 3, 5, 3, 4, 9,
+                    7, 6, 7, 1, 7, 4, 4,
+                    7, 1, 9, 0, 1, 4, 5,
+                    6, 1, 7, 3, 1, 9, 6};
+    int64_t m_1_shape[] = {5, 7};
     t_ndarray x;
     int32_t index;
     int32_t c_index;
@@ -201,7 +201,7 @@ int32_t test_indexing_int64_order_f(void)
     my_assert(get_index(x, 3, 2) , c_index, "testing the indexing function");
     // testing the value with the index [3, 2]
     value = x.nd_int64[index];
-    c_value = 6;
+    c_value = 9;
     my_assert(value , c_value, "testing the value");
     free_array(x);
     return (0);
@@ -622,7 +622,7 @@ int32_t test_slicing_int64_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2)); // [5, 7, 9] is the resulting view
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE)); // [[5, 7, 9]] is the resulting view
     c_index = 1; 
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -701,21 +701,18 @@ int32_t test_slicing_int32_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, ELEMENT), new_slice(0, 5, 2, RANGE));
     c_index = 1; 
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
-        for (int32_t j = 0; j < xview.shape[1]; j++)
-        {
-            value = xview.nd_int32[get_index(xview, i, j)];
-            c_value = m_1[c_index];
-            c_index+=16;
-            if (value != c_value)
-                my_assert(value , c_value, "testing xview values");
-        }
+        value = xview.nd_int32[get_index(xview, i)];
+        c_value = m_1[c_index];
+        c_index+=16;
+        if (value != c_value)
+            my_assert(value , c_value, "testing xview values");
     }
     c_value = 1337;
-    xview.nd_int32[get_index(xview, 0, 1)] = c_value;
+    xview.nd_int32[get_index(xview, 1)] = c_value;
     value = x.nd_int32[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
     free_array(x);
@@ -780,7 +777,7 @@ int32_t test_slicing_int16_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 1; 
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -859,7 +856,7 @@ int32_t test_slicing_int8_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 1; 
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -938,7 +935,7 @@ int32_t test_slicing_double_order_f(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 1;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -1014,7 +1011,7 @@ int32_t test_slicing_cdouble_order_f(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 1;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
