@@ -201,10 +201,10 @@ class Slice(Basic):
     stop : PyccelSymbol or int
         Ending index.
 
-    step : PyccelSymbol or int default None
+    step : PyccelSymbol or int, default=None
         The step between indices.
 
-    slice_type : Literal
+    slice_type : LiteralInteger
         The type of the slice. Either Slice.Range or Slice.Element.
 
     Examples

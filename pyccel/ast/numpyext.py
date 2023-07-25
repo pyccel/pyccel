@@ -1825,12 +1825,12 @@ class NumpySize(PyccelInternalFunction):
     """
     Represent a call to numpy.size in the user code.
 
-    This wrapper class represents a call to the Numpy size function, which
+    This wrapper class represents a call to the NumPy `size` function, which
     returns the total number of elements in a multidimensional array, or the
     number of elements along a given dimension.
 
     Objects of this class are never present in the Pyccel AST, because the
-    class constructor returns objects of type `PyccelArraySize`, `Literal`, or
+    class constructor returns objects of type `PyccelArraySize`, `LiteralInteger`, or
     `PyccelArrayShapeElement`.
 
     Parameters
