@@ -512,24 +512,7 @@ class SemanticParser(BasicParser):
         d_var = {}
         # TODO improve => put settings as attribut of Parser
 
-        if isinstance(expr, ConstructorCall):
-            cls_name = expr.funcdef.cls_name
-            cls = self.scope.find(cls_name, 'classes')
-
-            dtype = self.get_class_construct(cls_name)()
-
-            d_var['datatype'   ] = dtype
-            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = None
-            d_var['rank'       ] = 0
-            d_var['is_target'  ] = False
-
-            # set target  to True if we want the class objects to be pointers
-
-            d_var['cls_base'      ] = cls
-            return d_var
-
-        elif expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
+        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
                       NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
                       NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
 
