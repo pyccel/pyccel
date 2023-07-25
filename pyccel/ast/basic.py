@@ -11,12 +11,16 @@ They are:
 """
 import ast
 
-__all__ = ('Basic', 'PyccelAstNode')
+from pyccel.utilities.stage   import PyccelStage
+
+__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
 iterable_types = (list, tuple, dict_keys, dict_values, set)
 iterable = lambda x : isinstance(x, iterable_types)
+
+pyccel_stage = PyccelStage()
 
 #==============================================================================
 class Immutable:
@@ -26,12 +30,20 @@ class Immutable:
 
 #==============================================================================
 class Basic:
-    """Basic class for Pyccel AST."""
-    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress')
+    """
+    Basic class from which all objects in the Pyccel AST inherit.
+
+    This foundational class provides all the functionalities that are common to
+    objects in the Pyccel AST. This includes the construction and navigation of
+    the AST tree as well as an indication of the stage in which the object is
+    valid (syntactic/semantic/etc).
+    """
+    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress' ,'_pyccel_staging')
     _ignored_types = (Immutable, type)
     _attribute_nodes = None
 
     def __init__(self):
+        self._pyccel_staging = pyccel_stage.current_stage
         self._user_nodes = []
         self._fst = []
         self._recursion_in_progress = False
@@ -361,12 +373,16 @@ class Basic:
         assert len(self._user_nodes) == 1
         return self._user_nodes[0]
 
-    def clear_user_nodes(self):
-        """ Delete all information about user nodes. This is useful
-        if the same node is used for the syntactic and semantic
-        stages, and it should only have 1 user.
+    def clear_syntactic_user_nodes(self):
         """
-        self._user_nodes = []
+        Delete all information about syntactic user nodes.
+
+        Delete all user nodes which are only valid for the syntactic
+        stage from the list of user nodes. This is useful
+        if the same node is used for the syntactic and semantic
+        stages.
+        """
+        self._user_nodes = [u for u in self._user_nodes if u.pyccel_staging != 'syntactic']
 
     def remove_user_node(self, user_node, invalidate = True):
         """ Indicate that the current node is no longer used
@@ -400,6 +416,24 @@ class Basic:
         if it isn't
         """
         return self._attribute_nodes # pylint: disable=no-member
+
+    @property
+    def pyccel_staging(self):
+        """
+        Indicate the stage at which the object was created.
+
+        Indicate the stage at which the object was created [syntactic/semantic/codegen/cwrapper].
+        """
+        return self._pyccel_staging
+
+    def update_pyccel_staging(self):
+        """
+        Indicate that an object has been updated and is now valid in the current pyccel stage.
+
+        Indicate that an object has been updated and is now valid in the current pyccel stage.
+        This results in the pyccel_staging being updated to match the current stage.
+        """
+        self._pyccel_staging = pyccel_stage.current_stage
 
 class PyccelAstNode(Basic):
     """Class from which all nodes containing objects inherit

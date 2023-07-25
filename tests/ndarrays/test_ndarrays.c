@@ -584,7 +584,7 @@ int32_t test_slicing_int64(void)
 
     x = array_create(2, m_1_shape, nd_int64, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -663,7 +663,7 @@ int32_t test_slicing_int32(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -742,7 +742,7 @@ int32_t test_slicing_int16(void)
 
     x = array_create(2, m_1_shape, nd_int16, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -821,7 +821,7 @@ int32_t test_slicing_int8(void)
 
     x = array_create(2, m_1_shape, nd_int8, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -900,7 +900,7 @@ int32_t test_slicing_double(void)
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -975,7 +975,7 @@ int32_t test_slicing_cdouble(void)
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1), new_slice(0, 5, 2));
+    xview = array_slicing(x, 2, new_slice(1, 2, 1, RANGE), new_slice(0, 5, 2, RANGE));
     c_index = 5;
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {

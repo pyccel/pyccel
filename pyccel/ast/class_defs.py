@@ -6,9 +6,9 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .core      import ClassDef, FunctionDef
+from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString)
+                        NativeComplex, NativeString, NativeNumeric)
 from .numpyext  import (Shape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpyArraySize)
@@ -27,23 +27,24 @@ __all__ = ('BooleanClass',
 
 ComplexClass = ClassDef('complex',
         methods=[
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonReal}),
-            FunctionDef('conjugate',[],[],body=[],
-                decorators={'numpy_wrapper':PythonConjugate}),
+            PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
+            PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
             ])
 
 #=======================================================================================
 
 FloatClass = ClassDef('float',
         methods=[
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonReal}),
-            #conjugate
+            PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
             #as_integer_ratio
             #fromhex
             #hex
@@ -54,13 +55,14 @@ FloatClass = ClassDef('float',
 
 IntegerClass = ClassDef('integer',
         methods=[
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':PythonReal}),
+            PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
             #as_integer_ratio
             #bit_length
-            #conjugate
             #denominator
             #from_bytes
             #numerator
@@ -70,7 +72,7 @@ IntegerClass = ClassDef('integer',
 #=======================================================================================
 
 BooleanClass = ClassDef('boolean',
-        superclass=(IntegerClass,))
+        superclasses=(IntegerClass,))
 
 #=======================================================================================
 
@@ -135,28 +137,28 @@ TupleClass = ClassDef('tuple',
 
 NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
-            FunctionDef('shape',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':Shape}),
-            FunctionDef('size',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyArraySize}),
-            FunctionDef('T',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyTranspose}),
-            FunctionDef('transpose',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyTranspose}),
-            FunctionDef('sum',[],[],body=[],
-                decorators={'numpy_wrapper':NumpySum}),
-            FunctionDef('min',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmin}),
-            FunctionDef('max',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyAmax}),
-            FunctionDef('imag',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyImag}),
-            FunctionDef('real',[],[],body=[],
-                decorators={'property':'property', 'numpy_wrapper':NumpyReal}),
-            FunctionDef('conj',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyConjugate}),
-            FunctionDef('conjugate',[],[],body=[],
-                decorators={'numpy_wrapper':NumpyConjugate})])
+            PyccelFunctionDef('shape', func_class = Shape,
+                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
+            PyccelFunctionDef('size', func_class = NumpyArraySize,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('T', func_class = NumpyTranspose,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('transpose', func_class = NumpyTranspose,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('sum', func_class = NumpySum,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('min', func_class = NumpyAmin,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('max', func_class = NumpyAmax,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('imag', func_class = NumpyImag,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('real', func_class = NumpyReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('conj', func_class = NumpyConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'})])
 
 #=======================================================================================
 
@@ -172,10 +174,39 @@ literal_classes = {
 
 def get_cls_base(dtype, precision, rank):
     """
-    From the dtype and rank, determine the base class of an object
+    Determine the base class of an object.
+
+    From the dtype and rank, determine the base class of an object.
+
+    Parameters
+    ----------
+    dtype : DataType
+        The data type of the object.
+
+    precision : int
+        The precision of the object.
+
+    rank : int
+        The rank of the object.
+
+    Returns
+    -------
+    ClassDef
+        A class definition describing the base class of an object.
+
+    Raises
+    ------
+    NotImplementedError
+        Raised if the base class cannot be found.
     """
-    if precision == -1 and rank == 0:
+    if precision in (-1, 0, None) and rank == 0:
         return literal_classes[dtype]
-    else:
+    elif dtype in NativeNumeric:
         return NumpyArrayClass
+    else:
+        type_name = f"{dtype}({precision})"
+        if rank:
+            dims = ','.join(':' for _ in range(rank))
+            type_name += f"[{dims}]"
+        raise NotImplementedError(f"No class definition found for type {type_name}")
 

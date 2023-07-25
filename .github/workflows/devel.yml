@@ -1,0 +1,70 @@
+name: devel_tests
+
+on:
+  push:
+    branches: [ pyccel/devel ]
+
+jobs:
+
+  Linux-Master:
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9, '3.10', 3.11]
+    uses:
+      ./.github/workflows/linux.yml
+    with:
+      python_version: ${{ matrix.python-version }}
+    secrets:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
+
+  Windows:
+
+    uses:
+      ./.github/workflows/windows.yml
+    with:
+      python_version: 3.7
+
+  MacOSX:
+
+    uses:
+      ./.github/workflows/macosx.yml
+    with:
+      python_version: '3.9'
+
+  Pickled-installation:
+
+    uses:
+      ./.github/workflows/pickle.yml
+    with:
+      python_version: '3.7'
+
+  Editable-pickled-installation:
+
+    uses:
+      ./.github/workflows/pickle.yml
+    with:
+      python_version: '3.7'
+      editable_string: '-e'
+
+  Wheel-pickled-installation:
+
+    uses:
+      ./.github/workflows/pickle_wheel.yml
+    with:
+      python_version: '3.7'
+
+
+  Anaconda-Linux:
+    uses:
+      ./.github/workflows/anaconda_linux.yml
+    with:
+      python_version: '3.10'
+
+  Anaconda-Windows:
+
+    uses:
+      ./.github/workflows/anaconda_windows.yml
+    with:
+      python_version: '3.10'
