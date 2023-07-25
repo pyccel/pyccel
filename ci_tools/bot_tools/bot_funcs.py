@@ -107,8 +107,10 @@ class Bot:
             self._pr_id = os.environ["PR_ID"]
         else:
             self._pr_id = pr_id
+        print("PR ID =", pr_id)
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
+            print(self._pr_details)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
         if commit:
