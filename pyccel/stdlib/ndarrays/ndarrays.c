@@ -588,4 +588,3 @@ NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
->>>>>>> origin/devel
