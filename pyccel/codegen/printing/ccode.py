@@ -430,7 +430,8 @@ class CCodePrinter(CodePrinter):
                 offset = offset_name if offset_name else "0"
                 operations += f"array_copy_data({self._print(ObjectAddress(copy_to))}, {elem_name}, {offset});\n"
                 if i < num_elements - 1:
-                    operations += f"{offset_name} += {elem_name}.length;\n"
+                    arr_length = self._print(NumpyArraySize(flattened_list[i]))
+                    operations += f"{offset_name} += {arr_length};\n"
                 i += 1
             else:
                 lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
