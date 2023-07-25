@@ -676,7 +676,7 @@ class Bot:
         if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 
-        non_senior_reviews = [r for reviewer, r in reviews if reviewer not in senior_reviewer]
+        non_senior_reviews = [r for reviewer, r in reviews.items() if reviewer not in senior_reviewer]
 
         if non_senior_reviews and all(r["state"] == 'APPROVED' for r in non_senior_reviews):
             return "Ready_for_review", reviews
