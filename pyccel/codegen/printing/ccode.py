@@ -413,54 +413,72 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(str(expr))
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
         lhs_address = self._print(ObjectAddress(lhs))
+
+        # If the data is copied from a Variable rather than a list or tuple
+        # use the function array_copy_data directly
         if isinstance(arg, Variable):
             return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
+
         order = lhs.order
         rhs_dtype = self._print(rhs.dtype)
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
         dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
+
         flattened_list = self._flatten_list(arg)
-        i = 0
         operations = ""
+
+        # Get the variable where the data will be copied
         if order == "F":
-            temp_array_name = self.scope.get_new_name('temp_array')
-            temp_var = lhs.clone(name=temp_array_name, order="C")
-            temp_var_declare = Declare(temp_var.dtype, temp_var)
+            # If the order is F then the data should be copied non-contiguously so a temporary
+            # variable is required to pass to array_copy_data
+            temp_var = self.scope.get_temporary_variable(lhs, order='C')
             temp_var_allocate = Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated")
-            operations += self._print(temp_var_declare) + self._print(temp_var_allocate)
+            operations += self._print(temp_var_allocate)
             copy_to = temp_var
         else:
             copy_to = lhs
+        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
+
         num_elements = len(flattened_list)
+        # Get the offset variable if it is needed
         if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
-        and num_elements != 1:
-            offset_name = self.scope.get_new_name('offset')
-            operations += f"uint32_t {offset_name} = 0;\n"
+                and num_elements != 1:
+            offset_var = self.scope.get_temporary_variable(NativeInteger(), 'offset')
+            operations += self._print(Assign(offset_var, LiteralInteger(0)))
         else:
-            offset_name = ""
+            offset_var = LiteralInteger(0)
+        offset_str = self._print(offset_var)
+
+        # Copy each of the elements
+        i = 0
         while i < num_elements:
+            # Copy an array element
             if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
                 elem_name = self._print(flattened_list[i])
-                offset = offset_name if offset_name else "0"
-                operations += f"array_copy_data({self._print(ObjectAddress(copy_to))}, {elem_name}, {offset});\n"
+                target = self._print(ObjectAddress(copy_to))
+                operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
                 if i < num_elements - 1:
-                    arr_length = self._print(NumpyArraySize(flattened_list[i]))
-                    operations += f"{offset_name} += {arr_length};\n"
+                    operations += self._print(AugAssign(offset_var, NumpyArraySize(flattened_list[i])))
                 i += 1
+
+            # Copy multiple scalar elements
             else:
-                lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
                 subset = self._get_starting_consecutive_scalars(flattened_list[i:])
                 lenSubset = len(subset)
+
+                # Declare list of consecutive elements
                 subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
-                dummy_array_name = self.scope.get_new_name('array_dummy')
-                dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
-                offset = f" + {offset_name}" if offset_name else ""
+                dummy_array_name = self.scope.get_new_name()
+                operations += f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
+
+                copy_to_data = self._print(copy_to_data_var)
                 type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
-                cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {lenSubset} * {type_size});\n"
-                operations += dummy_array + cpy_data
+                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+
                 if i + lenSubset < num_elements:
-                    operations += f"{offset_name} += {lenSubset};\n"
+                    operations += self._print(AugAssign(offset_var, LiteralInteger(lenSubset)))
                 i += lenSubset
+
         if order == "F":
             operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\n" + f"free_array({copy_to});\n"
         return operations
