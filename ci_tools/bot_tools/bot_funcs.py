@@ -102,6 +102,7 @@ class Bot:
 
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
+        self._source_repo = None
         self._GAI = GitHubAPIInteractions()
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
@@ -309,6 +310,7 @@ class Bot:
                     if t == 'coverage':
                         print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
                         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                    print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
@@ -336,10 +338,11 @@ class Bot:
         workflow_ids : list of int, optional
             The ids of any workflows which may provide the necessary artifacts.
         """
+        source_repo = self._source_repo or self._repo
         inputs = {'python_version' : python_version,
                   'ref' : self._ref,
                   'check_run_id' : str(check_run_id),
-                  'pr_repo' : self._source_repo
+                  'pr_repo' : source_repo
                  }
         if test in tests_with_base:
             inputs['base'] = self._base
@@ -354,6 +357,7 @@ class Bot:
         elif test == "editable_pickle":
             test = "pickle"
             inputs["editable_string"] = "-e"
+        print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
     def is_test_required(self, commit_log, name, key):
