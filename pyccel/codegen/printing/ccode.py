@@ -353,11 +353,21 @@ class CCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
     def _get_starting_consecutive_scalars(self, flattened_list):
         """
-        Returns all consecutive scalars at the start of the list.
+        Get all consecutive scalars at the start of the list.
 
         Returns a list which is a subset of the list passed as an argument.
         The new list contains only scalars which were consecutive in the
         original list and appeared at the beginning.
+
+        Parameters
+        ----------
+        flattened_list : list
+            List to search in.
+
+        Returns
+        -------
+        list
+            Starting consecutive scalars.
 
         Examples
         --------
@@ -367,16 +377,6 @@ class CCodePrinter(CodePrinter):
         >>>                 Variable('s_2', rank=0), Variable('arr_1', rank=1), \
         >>>                 Variable('s_3', rank=0)])
         [Variable('s_1', rank=0), Variable('s_2', rank=0)]
-
-        Parameters
-        ----------
-        flattened_list: list
-            List to search in.
-
-        Returns
-        -------
-        list
-            Starting consecutive scalars.
         """
 
         starting_consecutive_scalars = []
