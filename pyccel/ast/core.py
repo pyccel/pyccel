@@ -700,7 +700,7 @@ class CodeBlock(Basic):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    @ast.setter
+    @Basic.ast.setter
     def ast(self, ast_node):
         super().ast(ast_node)
         for l in self.body:
