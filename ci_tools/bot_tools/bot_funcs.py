@@ -381,7 +381,9 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'coverage'):
+        if key == 'coverage':
+            return True
+        if key in ('linux', 'windows', 'macosx'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') for f in diff)
         elif key in ('pyccel_lint'):
