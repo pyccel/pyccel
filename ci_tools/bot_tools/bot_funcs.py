@@ -535,11 +535,11 @@ class Bot:
         approving_reviewers = [reviewer for reviewer, r in reviews.items() if r["state"] == 'APPROVED']
         requested_changes = [reviewer for reviewer, r in reviews.items() if r["state"] == 'CHANGES_REQUESTED']
 
-        current_stage_index = review_stage_labels.index(current_stage)
         try:
-            review_stage_index = review_stage_labels.index(new_stage)
+            current_stage_index = review_stage_labels.index(current_stage)
         except ValueError:
-            review_stage_index = -1
+            current_stage_index = -1
+        review_stage_index = review_stage_labels.index(new_stage)
 
         if following_review and current_stage_index < review_stage_index:
             if new_stage == 'Ready_for_review':
