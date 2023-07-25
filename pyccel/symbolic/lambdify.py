@@ -96,7 +96,7 @@ def lambdify(expr, args):
     if isinstance(args, Lambda):
         new_expr = args.expr
         new_expr = Return(new_expr)
-        new_expr.set_fst(expr)
+        new_expr.ast = expr
         f_arguments = args.variables
         func = FunctionDef('lambda', f_arguments, [], [new_expr])
         return func
@@ -117,7 +117,7 @@ def lambdify(expr, args):
         var  = create_variable(expr)
         stmts[-1] = Assign(var, stmts[-1])
     stmts += [Return([var])]
-    set_fst(stmts, args.fst)
+    set_fst(stmts, args.ast)
     func = FunctionDef(f_name, new_args, [], stmts ,decorators = args.decorators)
     return func
 
@@ -127,8 +127,8 @@ def set_fst(expr, fst):
     elif isinstance(expr, For):
         set_fst(expr.body, fst)
     elif isinstance(expr, (Assign, AugAssign)):
-        expr.set_fst(fst)
+        expr.ast = fst
     elif isinstance(expr, GC):
-        expr.set_fst(fst)
+        expr.ast = fst
         set_fst(expr.loops, fst)
 

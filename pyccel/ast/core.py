@@ -159,7 +159,7 @@ def subs(expr, new_elements):
 
     elif isinstance(expr, Assign):
         new_expr = expr.subs(new_elements)
-        new_expr.set_fst(expr.fst)
+        new_expr.ast = expr.ast
         return new_expr
     elif isinstance(expr, PyccelAstNode):
         return expr.subs(new_elements)
@@ -377,6 +377,9 @@ class Assign(Basic):
     like: None, Variable
         contains the name of the variable from which the lhs will be cloned.
 
+    ast : ast.AST
+        The AST node where the object appeared in the original code.
+
     Examples
     --------
     >>> from pyccel.ast.internals import symbols
@@ -403,7 +406,7 @@ class Assign(Basic):
         status=None,
         like=None,
         *,
-        fst = None
+        ast = None
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
@@ -414,8 +417,8 @@ class Assign(Basic):
         self._status = status
         self._like = like
         super().__init__()
-        if fst is not None:
-            self.set_fst(fst)
+        if ast is not None:
+            self.ast = ast
 
     def __str__(self):
         return f'{self.lhs} := {self.rhs}'
@@ -697,11 +700,12 @@ class CodeBlock(Basic):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    def set_fst(self, fst):
-        super().set_fst(fst)
+    @ast.setter
+    def ast(self, ast_node):
+        super().ast(ast_node)
         for l in self.body:
-            if not l.fst:
-                l.set_fst(fst)
+            if not l.ast:
+                l.ast = ast_node
 
 class AliasAssign(Basic):
 
@@ -853,7 +857,7 @@ class AugAssign(Assign):
         status=None,
         like=None,
         *,
-        fst = None
+        ast = None
         ):
 
         if op not in self._accepted_operators.keys():
@@ -861,7 +865,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, fst=fst)
+        super().__init__(lhs, rhs, status, like, ast=ast)
 
     def __repr__(self):
         return f'{self.lhs} {self.op}= {self.rhs}'

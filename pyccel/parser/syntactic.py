@@ -204,7 +204,7 @@ class SyntaxParser(BasicParser):
             txt = line[1:].lstrip()
             expr = Comment(txt)
 
-        expr.set_fst(stmt)
+        expr.ast = stmt
         return expr
 
     #====================================================
@@ -223,8 +223,8 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
-                result.set_fst(stmt)
+            if isinstance(result, Basic) and result.ast is None and isinstance(stmt, ast.AST):
+                result.ast = stmt
             self._context.pop()
             return result
 
@@ -318,8 +318,6 @@ class SyntaxParser(BasicParser):
         rhs = self._visit(stmt.value)
 
         expr = Assign(lhs, rhs)
-
-        # we set the fst to keep track of needed information for errors
 
         return expr
 
@@ -439,7 +437,7 @@ class SyntaxParser(BasicParser):
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
-            import_line.set_fst(stmt)
+            import_line.ast = stmt
             self.insert_import(import_line)
             expr.append(import_line)
 
@@ -761,7 +759,7 @@ class SyntaxParser(BasicParser):
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.set_fst(stmt)
+            func.ast = stmt
             self.insert_function(func)
             return EmptyNode()
 
@@ -854,8 +852,6 @@ class SyntaxParser(BasicParser):
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope)
-
-        # we set the fst to keep track of needed information for errors
 
         return expr
 
@@ -985,11 +981,11 @@ class SyntaxParser(BasicParser):
         target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
-        assign1.set_fst(stmt)
-        target.set_fst(stmt)
+        assign1.ast = stmt
+        target.ast = stmt
         generators[-1].insert2body(target)
         assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.set_fst(stmt)
+        assign2.ast = stmt
         generators[-1].insert2body(assign2)
 
         indices = [generators[-1].target]
@@ -1028,7 +1024,7 @@ class SyntaxParser(BasicParser):
             body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
-        body.set_fst(parent)
+        body.ast = parent
         indices = []
         generators = list(generators)
         while len(generators) > 0:
@@ -1050,7 +1046,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
 
-        expr.set_fst(parent)
+        expr.ast = parent
 
         return expr
 

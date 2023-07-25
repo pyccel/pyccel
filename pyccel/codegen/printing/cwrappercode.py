@@ -976,10 +976,10 @@ class CWrapperCodePrinter(CCodePrinter):
                     # Ensure correct name
                     w = v.clone(scope.get_expected_name(v.name.lower()))
                     assign = v.get_user_nodes(Assign)[0]
-                    # assign.fst should always exist, but is not always set when the
+                    # assign.ast should always exist, but is not always set when the
                     # Assign is created in the codegen stage
-                    if assign.fst:
-                        w.set_fst(assign.fst)
+                    if assign.ast:
+                        w.ast = assign.ast
                     vars_to_wrap.append(w)
         else:
             orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]

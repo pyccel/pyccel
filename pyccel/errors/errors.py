@@ -260,21 +260,21 @@ class Errors(metaclass = Singleton):
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        fst = None
+        ast_node = None
 
         if symbol is not None:
             if isinstance(symbol, ast.AST):
-                fst = symbol
+                ast_node = symbol
                 if sys.version_info < (3, 9):
-                    symbol = ast.dump(fst)
+                    symbol = ast.dump(ast_node)
                 else:
-                    symbol = ast.unparse(fst) # pylint: disable=no-member
+                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
             elif isinstance(symbol, Basic):
-                fst = symbol.fst
+                ast_node = symbol.ast
 
-        if fst:
-            line   = getattr(fst, 'lineno', None)
-            column = getattr(fst, 'col_offset', None)
+        if ast_node:
+            line   = getattr(ast_node, 'lineno', None)
+            column = getattr(ast_node, 'col_offset', None)
 
         traceback = None
         if self.mode == 'developer':
