@@ -1248,7 +1248,7 @@ def test_size_property(language):
 
 
     from numpy import empty
-    f1 = epyccel(test_size_1d ,language = language)
+    f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
     f3 = epyccel(test_size_axis, language = language)
     n1 = randint(20)
