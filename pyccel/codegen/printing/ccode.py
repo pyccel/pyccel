@@ -353,16 +353,30 @@ class CCodePrinter(CodePrinter):
     #========================== Numpy Elements ===============================#
     def _get_starting_consecutive_scalars(self, flattened_list):
         """
-        Returns all consecutive scalars at the start of the list
+        Returns all consecutive scalars at the start of the list.
 
-        parameters
+        Returns a list which is a subset of the list passed as an argument.
+        The new list contains only scalars which were consecutive in the
+        original list and appeared at the beginning.
+
+        Examples
+        --------
+        >>> self._get_starting_consecutive_scalars([Variable('arr_1', rank=1)])
+        []
+        >>> self._get_starting_consecutive_scalars([Variable('s_1', rank=0), \
+        >>>                 Variable('s_2', rank=0), Variable('arr_1', rank=1), \
+        >>>                 Variable('s_3', rank=0)])
+        [Variable('s_1', rank=0), Variable('s_2', rank=0)]
+
+        Parameters
         ----------
+        flattened_list: list
+            List to search in.
 
-        flattened_list: list to search in
-
-        Return
-        ------
-            starting_consecutive_scalars: starting consecutive scalars
+        Returns
+        -------
+        list
+            Starting consecutive scalars.
         """
 
         starting_consecutive_scalars = []
@@ -385,7 +399,7 @@ class CCodePrinter(CodePrinter):
         Parameters
         ----------
         expr : PyccelAstNode
-            The Assign Node used to get the lhs and rhs
+            The Assign Node used to get the lhs and rhs.
 
         Returns
         -------
