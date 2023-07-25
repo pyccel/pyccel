@@ -433,6 +433,25 @@ class Bot:
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
+    def draft_due_to_changes_requested(self, author, reviewer):
+        """
+        Mark the pull request as a draft following requested changes.
+
+        Mark the pull request specified in the constructor as a draft.
+        This function should be called when a review is left on a pull
+        request by a user (non-bot) requesting changes.
+
+        Parameters
+        ----------
+        author : str
+            The login id of the author of the pull request.
+
+        reviewer : str
+            The login id of the reviewer of the pull request.
+        """
+        self.mark_as_draft()
+        self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
+
     def request_mark_as_ready(self):
         """
         Remove the draft status from the pull request.
@@ -504,25 +523,24 @@ class Bot:
         approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
         requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
 
-        if following_review:
-            if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
-                if new_stage == "needs_initial_review":
-                    message = message_from_file('new_pr.txt').format(author=author)
-                    self._GAI.create_comment(pr_id, message)
-                elif new_stage == 'Ready_for_review':
-                    names = ', '.join(f'@{r}' for r in senior_reviewer)
-                    approved = ', '.join(f'@{a}' for a in approving_reviewers)
-                    message = message_from_file('senior_review.txt').format(
-                                    reviewers=names, author=author, approved=approved)
-                    self._GAI.create_comment(pr_id, message)
+        if following_review and review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
+            if new_stage == 'Ready_for_review':
+                names = ', '.join(f'@{r}' for r in senior_reviewer)
+                approved = ', '.join(f'@{a}' for a in approving_reviewers)
+                message = message_from_file('senior_review.txt').format(
+                                reviewers=names, author=author, approved=approved)
+                self._GAI.create_comment(pr_id, message)
+                self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
         elif reviews:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
             self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, reviewers=requested_changes)
         else:
             message = message_from_file('new_pr.txt').format(author=author)
             self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, request_team = True)
 
     def post_coverage_review(self, comments, approve):
         """
@@ -853,5 +871,7 @@ class Bot:
         """
         if '(' in name:
             return name.split('(')[1].split(',')[0]
+        elif 'Codacy' in name:
+            return 'Codacy'
         else:
             return name
