@@ -284,7 +284,7 @@ class Bot:
             # Get a list of all commits on this branch
             cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                out, err = p.communicate()
+                out, _ = p.communicate()
                 assert p.returncode == 0
 
             commit_log = [o.split(' ')[0] for o in out.split('\n')]
@@ -386,18 +386,24 @@ class Bot:
         """
         print("Checking : ", name)
         if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
+            def has_relevant_change(diff):
+                return any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') for f in diff)
         elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
+            def has_relevant_change(diff):
+                return any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
         elif key in ('pylint'):
-            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff)
+            def has_relevant_change(diff):
+                return any(f.endswith('parser/semantic.py') for f in diff)
         elif key in ('docs'):
-            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff)
+            def has_relevant_change(diff):
+                return any(f.endswith('.py') for f in diff)
         elif key in ('spelling'):
-            has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff)
+            def has_relevant_change(diff):
+                return any(f.endswith('.md') for f in diff)
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
+            def has_relevant_change(diff):
+                return any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
