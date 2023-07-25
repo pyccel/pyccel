@@ -107,8 +107,8 @@ class Bot:
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
         else:
-            self._pr_id = pr_id
-        print("PR ID =", pr_id)
+            self._pr_id = int(pr_id)
+        print("PR ID =", self._pr_id)
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
             print(self._pr_details)
@@ -385,9 +385,7 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name)
-        if key == 'coverage':
-            return True
-        elif key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows'):
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') for f in diff)
         elif key in ('pyccel_lint'):
@@ -417,6 +415,8 @@ class Bot:
                     continue
                 conclusion = previous_state['conclusion']
                 if conclusion in ('failure', 'success'):
+                    if key == 'coverage' and conclusion == 'failure':
+                        return True
                     self._GAI.create_run_from_old(self._ref, name, previous_state['details_url'], conclusion)
                     return False
         return True
