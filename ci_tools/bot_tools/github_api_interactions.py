@@ -730,6 +730,37 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
         return self._post_request("GET", url).json()
 
+    def request_reviewers(self, pr_id, request_team = False, reviewers = ()):
+        """
+        Request reviewers for a pull request.
+
+        Use the API to request reviews for a pull request as described here:
+        https://docs.github.com/en/rest/pulls/review-requests?apiVersion=2022-11-28#request-reviewers-for-a-pull-request
+
+        Both the pyccel/pyccel-dev team and individuals can be requested, but
+        at least one or the other must be chosen.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        request_team : bool
+            Indicate whether the pyccel/pyccel-dev team should be requested.
+
+        reviewers : iterable
+            A list of individual reviewers to be requested.
+        """
+        assert request_team or reviewers
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
+        review_requests = {}
+        if request_team:
+            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+        if reviewers:
+            review_requests['reviewers'] = list(reviewers)
+
+        self._post_request("POST", url, review_requests)
+
     def get_headers(self):
         """
         Get the header which is always passed to the API.
