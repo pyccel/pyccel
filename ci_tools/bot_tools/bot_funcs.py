@@ -864,6 +864,6 @@ class Bot:
         if '(' in name:
             return name.split('(')[1].split(',')[0]
         elif 'Codacy' in name:
-￼            return 'Codacy'
+￼           return 'Codacy'
         else:
             return name
