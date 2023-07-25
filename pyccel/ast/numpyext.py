@@ -671,9 +671,7 @@ class NumpyMatmul(PyccelInternalFunction):
     def b(self):
         return self._args[1]
 
-
 #==============================================================================
-
 class NumpyShape(PyccelInternalFunction):
     """
     Represents a call to numpy.shape for code generation.
@@ -1062,7 +1060,6 @@ class NumpyEmpty(NumpyAutoFill):
     def fill_value(self):
         return None
 
-
 #==============================================================================
 class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
@@ -1290,7 +1287,6 @@ class NumpyZerosLike(PyccelInternalFunction):
         return NumpyZeros(shape, dtype, order)
 
 #==============================================================================
-
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
@@ -1333,9 +1329,6 @@ class NumpyNorm(PyccelInternalFunction):
         and dim argument of Norm2 in Fortran.
         """
         return self._args[1]
-
-#====================================================
-
 
 #==============================================================================
 # Numpy universal functions
@@ -1486,8 +1479,6 @@ class NumpyArctanh(NumpyUfuncUnary):
 #     name = 'rad2deg'
 
 #==============================================================================
-
-
 class NumpySign(NumpyUfuncUnary):
     """Represent a call to the sign function in the Numpy library"""
     __slots__ = ()
@@ -1838,8 +1829,8 @@ class NumpySize(PyccelInternalFunction):
     a : PyccelAstNode
         An array of unknown size.
 
-    axis : int, optional
-        The dimension along which the size is requested.
+    axis : PyccelAstNode, optional
+        The integer dimension along which the size is requested.
 
     See Also
     --------
