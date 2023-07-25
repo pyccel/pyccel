@@ -387,7 +387,7 @@ class Bot:
         print("Checking : ", name)
         if key == 'coverage':
             return True
-        if key in ('linux', 'windows', 'macosx'):
+        elif key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') for f in diff)
         elif key in ('pyccel_lint'):
@@ -398,8 +398,10 @@ class Bot:
             has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff)
         elif key in ('spelling'):
             has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff)
+        elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff)
         else:
-            raise NotImplementedError("Please update for new has_relevant_change")
+            raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
         for c in commit_log:
             diff = self.get_diff(c)
