@@ -393,12 +393,12 @@ class Bot:
             raise NotImplementedError("Please update for new has_relevant_change")
 
         for c in commit_log:
-            diff = bot.get_diff(c)
+            diff = self.get_diff(c)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
                 return True
             else:
-                check_runs = bot.get_check_runs(c)
+                check_runs = self.get_check_runs(c)
                 print(c,':', check_runs)
                 try:
                     previous_state = next(c for c in check_runs if c['name'] == name)
