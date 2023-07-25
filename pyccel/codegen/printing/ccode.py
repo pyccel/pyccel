@@ -456,7 +456,7 @@ class CCodePrinter(CodePrinter):
                 dummy_array = f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
                 offset = f" + {offset_name}" if offset_name else ""
                 type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
-                cpy_data = f"memcpy(lhs_data, {dummy_array_name}, {lenSubset} * {type_size});\n"
+                cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {lenSubset} * {type_size});\n"
                 operations += dummy_array + cpy_data
                 if i + lenSubset < num_elements:
                     operations += f"{offset_name} += {lenSubset};\n"
