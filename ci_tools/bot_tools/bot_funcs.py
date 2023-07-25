@@ -535,7 +535,13 @@ class Bot:
         approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
         requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
 
-        if following_review and review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
+        current_stage_index = review_stage_labels.index(current_stage)
+        try:
+            review_stage_index = review_stage_labels.index(new_stage)
+        except ValueError:
+            review_stage_index = -1
+
+        if following_review and current_stage_index < review_stage_index:
             if new_stage == 'Ready_for_review':
                 names = ', '.join(f'@{r}' for r in senior_reviewer)
                 approved = ', '.join(f'@{a}' for a in approving_reviewers)
