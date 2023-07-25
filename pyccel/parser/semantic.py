@@ -1207,6 +1207,7 @@ class SemanticParser(BasicParser):
                         severity='fatal')
 
             # Variable already exists
+
             else:
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
