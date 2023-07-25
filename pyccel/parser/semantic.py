@@ -2473,26 +2473,6 @@ class SemanticParser(BasicParser):
 
         if isinstance(rhs, ConstructorCall):
             d_var  = self._infer_type(rhs)
-            d_list = d_var if isinstance(d_var, list) else [d_var]
-            for d in d_list:
-                name = d['datatype'].__class__.__name__
-
-                if name.startswith('Pyccel'):
-                    name = name[6:]
-                    d['cls_base'] = self.scope.find(name, 'classes')
-                    #TODO: Avoid writing the default variables here
-                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
-                        d['memory_handling'] = 'alias'
-                    else:
-                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
-            if isinstance(d_var, list):
-                if len(d_var) == 1:
-                    d_var = d_var[0]
-                else:
-                    errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                        severity='error')
-                    return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, True)
             args = [lhs] + rhs.args[:1]
             new_expr = ConstructorCall(rhs.funcdef, args, lhs)
