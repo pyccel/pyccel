@@ -5,12 +5,15 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #752 : Allow passing array variables to `numpy.array`.
+-   #1280 : Allow copying arrays using `numpy.array`.
 -   Allow interfaces in classes.
 -   Python support for a simple class.
 -   #1430 : Added conjugate support to booleans.
 
 ### Fixed
 
+-   #682 : Wrong data layout when copying a slice of an array.
 -   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
