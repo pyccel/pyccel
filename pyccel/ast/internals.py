@@ -139,7 +139,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg, index):
-        if not isinstance(arg, (list, tuple, PyccelAstNode)):
+        if not isinstance(arg, PyccelAstNode):
             raise TypeError(f'Unknown type {type(arg)} of {arg}.')
 
         if isinstance(index, int):
