@@ -337,22 +337,6 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     }
     va_end(va);
 
-    j = arr.nd - view.nd;
-    if (j)
-    {
-        int64_t *tmp_strides = malloc(sizeof(int32_t) * view.nd);
-        int64_t *tmp_shape = malloc(sizeof(int32_t) * view.nd);
-        for (int32_t i = 0; i < view.nd; i++)
-        {
-            tmp_strides[i] = view.strides[j];
-            tmp_shape[i] = view.shape[j];
-            j++;
-        }
-        free(view.shape);
-        free(view.strides);
-        view.strides = tmp_strides;
-        view.shape = tmp_shape;
-    }
     view.raw_data = arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
