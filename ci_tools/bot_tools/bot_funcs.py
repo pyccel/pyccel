@@ -392,7 +392,7 @@ class Bot:
         else:
             raise NotImplementedError("Please update for new has_relevant_change")
 
-        for c in commits:
+        for c in commit_log:
             diff = bot.get_diff(c)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
