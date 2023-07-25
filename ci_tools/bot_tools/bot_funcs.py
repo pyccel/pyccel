@@ -392,7 +392,7 @@ class Bot:
         else:
             raise NotImplementedError("Please update for new has_relevant_change")
 
-        for c in commits:
+        for c in commit_log:
             diff = bot.get_diff(c)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
@@ -421,6 +421,7 @@ class Bot:
         with subprocess.Popen(cmds) as p:
             _, err = p.communicate()
         print(err)
+        self._GAI.clear_labels(self._pr_id, review_stage_labels)
 
     def draft_due_to_failure(self):
         """
@@ -745,7 +746,7 @@ class Bot:
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
 
-    def get_diff(self, base_commit):
+    def get_diff(self, base_commit = None):
         """
         Get the diff between the base and the current commit.
 
