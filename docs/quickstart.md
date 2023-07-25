@@ -451,6 +451,11 @@ We are also working on supporting [MPI](https://en.wikipedia.org/wiki/Open_MPI),
 
 In the future we plan to support GPU programming with [CUDA](https://en.wikipedia.org/wiki/CUDA) and [task-based parallelism](https://en.wikipedia.org/wiki/Task_parallelism).
 
+## Cleaning up the environment
+
+Pyccel generates various files, in order to help clean up the environment after using it, we therefore also provide the command line tool: `pyccel-clean`.
+This tool removes all folders whose name begins with `__pyccel__` or `__epyccel__` and can also be used to remove shared libraries and programs.
+
 ## Getting Help
 
 If you face problems with Pyccel, please take the following steps:

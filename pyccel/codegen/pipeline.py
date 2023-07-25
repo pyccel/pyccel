@@ -159,7 +159,7 @@ def execute_pyccel(fname, *,
         folder = os.path.abspath(folder)
 
     # Define directory name and path for pyccel & cpython build
-    pyccel_dirname = '__pyccel__'
+    pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
     # Create new directories if not existing
@@ -320,7 +320,7 @@ def execute_pyccel(fname, *,
     # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
+        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
         mod_base = os.path.basename(parser.filename)
 
         # Stop conditions
