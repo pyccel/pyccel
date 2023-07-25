@@ -229,7 +229,7 @@ class Variable(PyccelAstNode):
 
         Parameters
         ----------
-        shape : iterable of integers
+        shape : iterable of int
             The array shape to be simplified.
 
         Returns
