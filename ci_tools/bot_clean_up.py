@@ -97,8 +97,10 @@ if __name__ == '__main__':
             print(completed_runs, pr_test_keys, successful_runs)
             print(all(k in completed_runs for k in pr_test_keys),
                  all(k in successful_runs for k in pr_test_keys))
-            if event['check_run']['conclusion'] not in ('success', 'skipped'):
+            if event['check_run']['conclusion'] == 'failure':
                 bot.draft_due_to_failure()
+            elif event['check_run']['conclusion'] not in ('success', 'skipped'):
+                bot.mark_as_draft()
             elif all(k in completed_runs for k in pr_test_keys) and \
                  all(k in successful_runs for k in pr_test_keys):
                 bot.mark_as_ready(following_review = False)
