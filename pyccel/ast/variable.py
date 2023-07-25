@@ -544,6 +544,14 @@ class DottedName(Basic):
     """
     Represents a dotted object.
 
+    Represents an object accessed via a dot. This usually means that
+    the object belongs to a class or module.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelSymbol
+        The different symbols making up the dotted name.
+
     Examples
     --------
     >>> from pyccel.ast.core import DottedName
@@ -569,6 +577,9 @@ class DottedName(Basic):
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
+
+    def __repr__(self):
+        return """.""".join(repr(n) for n in self.name)
 
     def __eq__(self, other):
         return str(self) == str(other)

@@ -64,4 +64,7 @@ To avoid these problems, Pyccel ignores Conda paths when searching for compilers
 
 By using the expected compiler, the expected libraries are correctly linked.
 
-Pyccel offers ``--conda-warnings`` flag with options ``off``, ``basic``, and ``verbose`` to control the visibility of Conda-related warnings.
+Pyccel offers the `--conda-warnings` flag which takes one of the following options : `off`, `basic`, `verbose`.
+This controls the visibility of Conda-related warnings. The default value is `basic` which indicates when folders are ignored.
+The `verbose` option additionally outputs a list of all ignored folders. If these folders should not be ignored then this can be avoided by using a user-defined compiler file as described above.
+The `off` option suppresses all Conda-related warnings.
