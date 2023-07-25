@@ -451,6 +451,25 @@ class Bot:
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
+    def draft_due_to_changes_requested(self, author, reviewer):
+        """
+        Mark the pull request as a draft following requested changes.
+
+        Mark the pull request specified in the constructor as a draft.
+        This function should be called when a review is left on a pull
+        request by a user (non-bot) requesting changes.
+
+        Parameters
+        ----------
+        author : str
+            The login id of the author of the pull request.
+
+        reviewer : str
+            The login id of the reviewer of the pull request.
+        """
+        self.mark_as_draft()
+        self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
+
     def request_mark_as_ready(self):
         """
         Remove the draft status from the pull request.
@@ -519,28 +538,33 @@ class Bot:
         new_stage, reviews = self.check_review_stage(pr_id)
         self._GAI.add_labels(pr_id, [new_stage])
         author = self._pr_details["user"]["login"]
-        approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
-        requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
+        approving_reviewers = [reviewer for reviewer, r in reviews.items() if r["state"] == 'APPROVED']
+        requested_changes = [reviewer for reviewer, r in reviews.items() if r["state"] == 'CHANGES_REQUESTED']
 
-        if following_review:
-            if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
-                if new_stage == "needs_initial_review":
-                    message = message_from_file('new_pr.txt').format(author=author)
-                    self._GAI.create_comment(pr_id, message)
-                elif new_stage == 'Ready_for_review':
-                    names = ', '.join(f'@{r}' for r in senior_reviewer)
-                    approved = ', '.join(f'@{a}' for a in approving_reviewers)
-                    message = message_from_file('senior_review.txt').format(
-                                    reviewers=names, author=author, approved=approved)
-                    self._GAI.create_comment(pr_id, message)
+        try:
+            current_stage_index = review_stage_labels.index(current_stage)
+        except ValueError:
+            current_stage_index = -1
+        review_stage_index = review_stage_labels.index(new_stage)
+
+        if following_review and current_stage_index < review_stage_index:
+            if new_stage == 'Ready_for_review':
+                names = ', '.join(f'@{r}' for r in senior_reviewer)
+                approved = ', '.join(f'@{a}' for a in approving_reviewers)
+                message = message_from_file('senior_review.txt').format(
+                                reviewers=names, author=author, approved=approved)
+                self._GAI.create_comment(pr_id, message)
+                self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
         elif reviews:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
             self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, reviewers=requested_changes)
         else:
             message = message_from_file('new_pr.txt').format(author=author)
             self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, request_team = True)
 
     def post_coverage_review(self, comments, approve):
         """
@@ -649,15 +673,16 @@ class Bot:
         str
             The review stage.
 
-        list of dict
-            A list of the dictionaries describing the reviews left by users (non-bots)
-            which either approved or requested changes.
+        dict
+            A dictionary whose keys are users (non-bots) who left reviews and
+            whose values are dictionaries describing the reviews which either
+            approved or requested changes.
         """
-        reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
-        if any(r['user']['login'] in senior_reviewer and r["state"] == 'APPROVED' for r in reviews):
+        reviews = {r['user']['login'] : r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')}
+        if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 
-        non_senior_reviews = [r for r in reviews if r['user']['login'] not in senior_reviewer]
+        non_senior_reviews = [r for reviewer, r in reviews.items() if reviewer not in senior_reviewer]
 
         if non_senior_reviews and all(r["state"] == 'APPROVED' for r in non_senior_reviews):
             return "Ready_for_review", reviews

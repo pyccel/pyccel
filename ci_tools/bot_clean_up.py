@@ -98,6 +98,7 @@ if __name__ == '__main__':
             print(was_examined, result_ignored)
 
             if was_examined and not result_ignored:
+                print(completed_runs, pr_test_keys, successful_runs)
                 print(all(k in completed_runs for k in pr_test_keys),
                      all(k in successful_runs for k in pr_test_keys))
                 if event['check_run']['conclusion'] == 'failure':
