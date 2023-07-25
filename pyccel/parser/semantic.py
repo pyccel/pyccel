@@ -1151,7 +1151,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and hasattr(rhs.funcdef, 'is_elemental') and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -2338,7 +2338,7 @@ class SemanticParser(BasicParser):
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
             cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
-            args = (FunctionCallArgument(cls_variable), ) + expr.args if expr.args else (FunctionCallArgument(cls_variable), )
+            args = (FunctionCallArgument(cls_variable), *expr.args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
 
