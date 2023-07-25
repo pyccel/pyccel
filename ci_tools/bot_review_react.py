@@ -2,7 +2,7 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, pr_test_keys
+from bot_tools.bot_funcs import Bot
 
 
 if __name__ == '__main__':
