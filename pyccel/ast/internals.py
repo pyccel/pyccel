@@ -41,7 +41,6 @@ class PyccelInternalFunction(PyccelAstNode):
     ----------
     *args : iterable
         The arguments passed to the function call.
-
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
