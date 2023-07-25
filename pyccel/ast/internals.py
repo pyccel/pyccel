@@ -37,6 +37,11 @@ class PyccelInternalFunction(PyccelAstNode):
     function of Pyccel, which may be simplified at a later stage, or made
     available in the target language when printing the generated code.
 
+    Parameters
+    ----------
+    *args : iterable
+        The arguments passed to the function call.
+
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
@@ -52,7 +57,6 @@ class PyccelInternalFunction(PyccelAstNode):
         The arguments passed to the function.
 
         Tuple containing all the arguments passed to the function call.
-
         """
         return self._args
 
@@ -63,7 +67,6 @@ class PyccelInternalFunction(PyccelAstNode):
 
         Bool indicating whether the (scalar) function should be called
         elementwise on an array argument. Here we set the default to False.
-
         """
         return False
 
@@ -94,7 +97,11 @@ class PyccelArraySize(PyccelInternalFunction):
 
     @property
     def arg(self):
-        """ Object whose size is investigated.
+        """
+        Object whose size is investigated.
+
+        The argument of the function call, i.e. the object whose size is
+        investigated.
         """
         return self._args[0]
 
@@ -150,7 +157,6 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
         The first argument of the function call, i.e. the array whose size is
         investigated.
-
         """
         return self._args[0]
 
@@ -161,7 +167,6 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
         The second argument of the function call, i.e. the dimension along
         which the array size is calculated.
-
         """
         return self._args[1]
 
