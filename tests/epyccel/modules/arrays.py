@@ -452,14 +452,14 @@ def array_real_nested_F_array_initialization_3(a, e, x):
 ##==============================================================================
 
 @types('int[:]')
-def test_array_view_steps_C_1D_1(a):
+def array_view_steps_C_1D_1(a):
     from numpy import array
     tmp = a[::2]
     b = array(tmp)
     return b
 
 @types('int[:]')
-def test_array_view_steps_C_1D_2(a):
+def array_view_steps_C_1D_2(a):
     from numpy import array
     tmp = a[1:10:2]
     b = array(tmp)
@@ -470,21 +470,21 @@ def test_array_view_steps_C_1D_2(a):
 ##==============================================================================
 
 @types('int[:,:]')
-def test_array_view_steps_C_2D_1(a):
+def array_view_steps_C_2D_1(a):
     from numpy import array
     tmp = a[::2]
     b = array(tmp)
     return b
 
 @types('int[:,:]')
-def test_array_view_steps_C_2D_2(a):
+def array_view_steps_C_2D_2(a):
     from numpy import array
     tmp = a[1:10:2]
     b = array(tmp)
     return b
 
 @types('int[:,:]')
-def test_array_view_steps_C_2D_3(a):
+def array_view_steps_C_2D_3(a):
     from numpy import array
     tmp = a[1:10:2, 1::2]
     b = array(tmp)
@@ -495,14 +495,14 @@ def test_array_view_steps_C_2D_3(a):
 ##==============================================================================
 
 @types('int[:](order=F)')
-def test_array_view_steps_F_1D_1(a):
+def array_view_steps_F_1D_1(a):
     from numpy import array
     tmp = a[::2]
     b = array(tmp, order="F")
     return b
 
 @types('int[:](order=F)')
-def test_array_view_steps_F_1D_2(a):
+def array_view_steps_F_1D_2(a):
     from numpy import array
     tmp = a[1:10:2]
     b = array(tmp, order="F")
@@ -513,21 +513,21 @@ def test_array_view_steps_F_1D_2(a):
 ##==============================================================================
 
 @types('int[:,:](order=F)')
-def test_array_view_steps_F_2D_1(a):
+def array_view_steps_F_2D_1(a):
     from numpy import array
     tmp = a[::2]
     b = array(tmp, order="F")
     return b
 
 @types('int[:,:](order=F)')
-def test_array_view_steps_F_2D_2(a):
+def array_view_steps_F_2D_2(a):
     from numpy import array
     tmp = a[1:10:2]
     b = array(tmp, order="F")
     return b
 
 @types('int[:,:](order=F)')
-def test_array_view_steps_F_2D_3(a):
+def array_view_steps_F_2D_3(a):
     from numpy import array
     tmp = a[1:10:2, 1::2]
     b = array(tmp, order="F")
