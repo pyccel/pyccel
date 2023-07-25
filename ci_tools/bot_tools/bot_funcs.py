@@ -281,7 +281,7 @@ class Bot:
             print(already_triggered)
 
             # Get a list of all commits on this branch
-            cmds = [git, 'log', '--pretty=oneline', '--first-parent']
+            cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
                 assert p.returncode == 0
