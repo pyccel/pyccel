@@ -51,25 +51,25 @@ def get_source_function(func):
 #==============================================================================
 def get_unique_name(prefix, path):
     """
-    Get a unique name based on the prefix
-    which does not coincide with a module which
-    already exists and is not being created by
-    another thread
+    Get a unique module name.
+
+    Get a unique name based on the prefix which does not coincide with a
+    module which already exists and is not being created by another thread.
 
     Parameters
     ----------
     prefix : str
-             The starting string of the random name
-    path   : str
-             The folder where the lock file should be saved
+        The starting string of the random name.
+    path : str
+        The folder where the lock file should be saved.
 
     Returns
     -------
     module_name : str
-                  A unique name for the new module
+                  A unique name for the new module.
     module_lock : FileLock
                   A file lock preventing other threads
-                  from creating a module with the same name
+                  from creating a module with the same name.
     """
     module_import_prefix = prefix + '_'
 
@@ -83,13 +83,11 @@ def get_unique_name(prefix, path):
 
     module_name = module_name.split('.')[-1] + '_' + tag
 
-    save_path = os.path.join(path, '__epyccel__')
-
     # Create new directories if not existing
-    os.makedirs(save_path, exist_ok=True)
+    os.makedirs(path, exist_ok=True)
 
     # Ensure that the name is not in use by another thread
-    lock = FileLock(os.path.join(save_path, module_name)+'.lock')
+    lock = FileLock(os.path.join(path, module_name) + '.lock')
     try:
         lock.acquire(timeout=0.1)
         if module_name in sys.modules.keys():
@@ -111,24 +109,96 @@ def epyccel_seq(function_or_module, *,
                 libdirs       = (),
                 modules       = (),
                 libs          = (),
-                folder        = None):
+                folder        = None,
+                conda_warnings= 'basic',
+                comm          = None,
+                root          = None,
+                bcast         = None):
+    """
+    Accelerate Python function or module using Pyccel in "embedded" mode.
+
+    This function accelerates a Python function or module using Pyccel in "embedded" mode.
+    It generates optimized code in the specified language (default is 'fortran')
+    and compiles it for improved performance.
+
+    Parameters
+    ----------
+    function_or_module : function | module
+        Python function or module to be accelerated.
+    language : {'fortran', 'c', 'python'}
+        Language of generated code (default: 'fortran').
+    compiler : str, optional
+        User-defined command for compiling generated source code.
+    fflags : iterable of str, optional
+        Compiler flags.
+    wrapper_flags : iterable of str, optional
+        Flags to be passed to the wrapper code generator.
+    accelerators : iterable of str, optional
+        Parallel multi-threading acceleration strategy
+        (currently supported: 'mpi', 'openmp', 'openacc').
+    verbose : bool
+        Print additional information (default: False).
+    debug : bool, optional
+        Enable debug mode.
+    includes : tuple, optional
+        Additional include directories for the compiler.
+    libdirs : tuple, optional
+        Additional library directories for the compiler.
+    modules : tuple, optional
+        Additional modules to be imported.
+    libs : tuple, optional
+        Additional libraries.
+    folder : str, optional
+        Output folder for the compiled code.
+    conda_warnings : {off, basic, verbose}
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
+
+    Returns
+    -------
+    object
+        Return accelerated Python module and function.
+
+    Other Parameters
+    ----------------
+    comm : mpi4py.MPI.Comm, optional
+        MPI communicator for calling Pyccel in parallel mode (default: None) (for parallel mode).
+    root : int, optional
+        MPI rank of process in charge of accelerating code (default: 0) (for parallel mode).
+    bcast : {True, False}
+        If False, only root process loads accelerated function/module (default: True) (for parallel mode). 
+    """
+    # Store current directory
+    base_dirpath = os.getcwd()
+
+    if isinstance(function_or_module, FunctionType):
+        dirpath = os.getcwd()
+
+    elif isinstance(function_or_module, ModuleType):
+        dirpath = os.path.dirname(function_or_module.__file__)
+
+    # Define working directory 'folder'
+    if folder is None:
+        folder = os.path.dirname(dirpath)
+    else:
+        folder = os.path.abspath(folder)
+
+    # Define directory name and path for epyccel files
+    epyccel_dirname = '__epyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
+    epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
     # ... get the module source code
     if isinstance(function_or_module, FunctionType):
         pyfunc = function_or_module
         code = get_source_function(pyfunc)
 
-        dirpath = os.getcwd()
-
-        module_name, module_lock = get_unique_name('mod', dirpath)
+        module_name, module_lock = get_unique_name('mod', epyccel_dirpath)
 
     elif isinstance(function_or_module, ModuleType):
         pymod = function_or_module
-        dirpath = os.path.dirname(pymod.__file__)
         lines = inspect.getsourcelines(pymod)[0]
         code = ''.join(lines)
 
-        module_name, module_lock = get_unique_name(pymod.__name__, dirpath)
+        module_name, module_lock = get_unique_name(pymod.__name__, epyccel_dirpath)
 
     else:
         raise TypeError('> Expecting a FunctionType or a ModuleType')
@@ -138,19 +208,6 @@ def epyccel_seq(function_or_module, *,
         pymod_filename = '{}.py'.format(module_name)
         pymod_filepath = os.path.join(dirpath, pymod_filename)
         # ...
-
-        # Store current directory
-        base_dirpath = os.getcwd()
-
-        # Define working directory 'folder'
-        if folder is None:
-            folder = os.path.dirname(pymod_filepath)
-        else:
-            folder = os.path.abspath(folder)
-
-        # Define directory name and path for epyccel files
-        epyccel_dirname = '__epyccel__'
-        epyccel_dirpath = os.path.join(folder, epyccel_dirname)
 
         # Create new directories if not existing
         os.makedirs(folder, exist_ok=True)
@@ -177,7 +234,8 @@ def epyccel_seq(function_or_module, *,
                            libs          = libs,
                            debug         = debug,
                            accelerators  = accelerators,
-                           output_name   = module_name)
+                           output_name   = module_name,
+                           conda_warnings= conda_warnings)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
@@ -215,41 +273,27 @@ def epyccel( python_function_or_module, **kwargs ):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
+    This function accelerates a Python function or module using Pyccel in "embedded" mode.
+    It generates optimized code in the specified language (default is 'fortran')
+    and compiles it for improved performance
+
     Parameters
     ----------
     python_function_or_module : function | module
         Python function or module to be accelerated.
-
-    verbose : bool
-        Print additional information (default: False).
-
-    language : {'fortran', 'c', 'python'}
-        Language of generated code (default: 'fortran').
-
-    accelerators : iterable of str, optional
-        Parallel multi-threading acceleration strategy
-        (currently supported: 'mpi', 'openmp', 'openacc').
-
-    Options for parallel mode
-    -------------------------
-    comm : mpi4py.MPI.Comm, optional
-        MPI communicator for calling Pyccel in parallel mode (default: None).
-
-    root : int, optional
-        MPI rank of process in charge of accelerating code (default: 0).
-
-    bcast : {True, False}
-        If False, only root process loads accelerated function/module (default: True).
-
-    Other options
-    -------------
-    compiler : str, optional
-        User-defined command for compiling generated source code.
+    **kwargs :
+        Additional keyword arguments for configuring the compilation and acceleration process.
+        Available options are defined in epyccel_seq.
 
     Returns
     -------
-    res : object
+    object
         Accelerated function or module.
+
+    See Also 
+    -------- 
+    epyccel_seq
+        The version of this function called in a sequential context.
 
     Examples
     --------
@@ -257,7 +301,6 @@ def epyccel( python_function_or_module, **kwargs ):
     >>> from pyccel.epyccel import epyccel
     >>> one_f = epyccel(one, language='fortran')
     >>> one_c = epyccel(one, language='c')
-
     """
     assert isinstance( python_function_or_module, (FunctionType, ModuleType) )
 

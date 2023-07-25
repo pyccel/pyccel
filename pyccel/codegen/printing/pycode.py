@@ -3,13 +3,12 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
-# pylint: disable=missing-function-docstring
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection, FunctionDef, Module
+from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -18,7 +17,7 @@ from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
-from pyccel.ast.utilities  import builtin_import_registery as pyccel_builtin_import_registery
+from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
@@ -54,7 +53,18 @@ import_source_swap = {
         }
 
 class PythonCodePrinter(CodePrinter):
-    """A printer to convert pyccel expressions to strings of Python code"""
+    """
+    A printer for printing code in Python.
+
+    A printer to convert Pyccel's AST to strings of Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being pyccelised.
+    """
     printmethod = "_pycode"
     language = "python"
 
@@ -165,14 +175,26 @@ class PythonCodePrinter(CodePrinter):
     def _print_Variable(self, expr):
         return self._print(expr.name)
 
+    def _print_DottedVariable(self, expr):
+        rhs_code = self._print_Variable(expr)
+        lhs_code = self._print(expr.lhs)
+        return f"{lhs_code}.{rhs_code}"
+
     def _print_FunctionDefArgument(self, expr):
+        name = self._print(expr.name)
+        type_annotation = ''
+        default = ''
+
+        if expr.annotation:
+            type_annotation = f' : {expr.annotation}'
+
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value.name))
+                default = f' = {self._print(expr.value.name)}'
             else:
-                return '{} = {}'.format(self._print(expr.name), self._print(expr.value))
-        else:
-            return self._print(expr.name)
+                default = f' = {self._print(expr.value)}'
+
+        return f'{name}{type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -441,9 +463,12 @@ class PythonCodePrinter(CodePrinter):
         if expr.interface:
             func_name = expr.interface_name
         else:
-            func_name = expr.funcdef.name
-        args = ', '.join(self._print(i) for i in expr.args)
-        code = '{func}({args})'.format(func=func_name, args=args)
+            func_name = expr.func_name
+        args = expr.args
+        if isinstance(expr, DottedFunctionCall):
+            args = args[1:]
+        args_str = ', '.join(self._print(i) for i in args)
+        code = f'{func_name}({args_str})'
         if expr.funcdef.results:
             return code
         else:
@@ -483,8 +508,8 @@ class PythonCodePrinter(CodePrinter):
                 target = [AsName(i.object, import_target_swap[source].get(i.target,i.target)) for i in target]
 
             target = list(set(target))
-            if source in pyccel_builtin_import_registery:
-                self._aliases.update([(pyccel_builtin_import_registery[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
+            if source in pyccel_builtin_import_registry:
+                self._aliases.update([(pyccel_builtin_import_registry[source][t.name].cls_name, t.target) for t in target if t.name != t.target])
 
             if expr.source_module:
                 if expr.source_module.init_func:
@@ -979,6 +1004,25 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
+    
+    #-----------------Class Printer---------------------------------
+
+    def _print_ClassDef(self, expr):
+        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        methods = ''.join(self._print(method) for method in expr.methods)
+        methods = self._indent_codestring(methods)
+        interfaces = ''.join(self._print(method) for method in expr.interfaces)
+        interfaces = self._indent_codestring(interfaces)
+        classDef = '\n'.join([classDefName, methods, interfaces]) + '\n'
+        return classDef
+
+    def _print_ConstructorCall(self, expr):
+        cls_name = expr.func.cls_name
+        args = ', '.join(self._print(arg) for arg in expr.arguments)
+        return f"{cls_name}({args})"
+
+    def _print_Del(self, expr):
+        return ''.join(f'del {var}\n' for var in expr.variables)
 
     #------------------OmpAnnotatedComment Printer------------------
 

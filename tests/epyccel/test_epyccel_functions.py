@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
 import pytest
@@ -16,7 +16,7 @@ def test_func_no_args_1(language):
         gift = 10
         return gift
 
-    c_gift = epyccel(free_gift, language=language)
+    c_gift = epyccel(free_gift, language=language, folder='__pyccel__test_folder__')
     assert c_gift() == free_gift()
     assert isinstance(c_gift(), type(free_gift()))
     unexpected_arg = 0

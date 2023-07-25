@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, disable=unused-variable, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 from pyccel.decorators import types
 
@@ -29,3 +29,4 @@ k = single_return() + 1
 
 if __name__ == '__main__':
     print(a, b, c, d, e, h, g, k)
+    print(np.array([1,2,3,4]), np.array([1, 3]), np.array([1., 3.]), np.array([False, True]), np.array([1+2j, 3+4j]))

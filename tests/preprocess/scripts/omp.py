@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
 # this tests shows that OpenMP directives are moved to the appropriate parent

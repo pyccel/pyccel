@@ -1,7 +1,7 @@
 name: Wheel-pickled-installation
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python_version:
         required: true
@@ -9,6 +9,19 @@ on:
       ref:
         required: false
         type: string
+      check_run_id:
+        required: false
+        type: string
+      pr_repo:
+        required: false
+        type: string
+
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
   Wheel-pickled-installation:
@@ -18,14 +31,21 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
+      - name: "Setup"
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel from wheel
+        id: pickle
         run: |
           python -m pip install --upgrade pip
           python -m pip install --upgrade build
@@ -33,4 +53,10 @@ jobs:
           python -m pip install dist/*.whl
         shell: bash
       - name: Check for existence of pickled files
+        id: pickle_check
         uses: ./.github/actions/check_for_pickled
+      - name: "Post completed"
+        if: always()
+        run: |
+          python ci_tools/basic_json_check_output.py --statuses ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }} --reasons "Installation failed." "Pickled files were not found in installaion."
+          python ci_tools/complete_check_run.py ${{ steps.pickle.outcome }} ${{ steps.pickle_check.outcome }}

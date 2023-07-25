@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
 import modules.generic_functions as mod
@@ -244,6 +244,28 @@ def test_mix_types_3(language):
 #--------------------------------------------------------------------
 # TEST ARRAYS
 #--------------------------------------------------------------------
+
+def test_mix_array_scalar(language):
+    f1 = epyccel(mod2.mix_array_scalar, language = language)
+    f2 = mod2.mix_array_scalar
+
+    x1 = np.array( [1,2,3], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array( [1.0,2.0,3.0], dtype=np.float64)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2)
+
+    x1 = np.array( [1+ 2j,5 +2j,3.0 + 3j], dtype=np.complex128)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2)
 
 def test_mix_array_1(language):
     f1 = epyccel(mod2.mix_array_1, language = language)
