@@ -1,7 +1,7 @@
 """ A script to run the `devel` branch tests.
 """
 import os
-from bot_tools.bot_funcs import Bot, default_python_versions
+from bot_tools.bot_funcs import Bot
 
 if __name__ == '__main__':
     bot = Bot(pr_id = 0, commit = os.environ['GITHUB_REF'])
