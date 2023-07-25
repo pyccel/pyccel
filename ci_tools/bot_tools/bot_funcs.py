@@ -279,7 +279,7 @@ class Bot:
             print(already_triggered)
 
             # Get a list of all commits on this branch
-            cmds = [git, 'log', '--oneline', '--first-parent']
+            cmds = [git, 'log', '--pretty=oneline', '--first-parent']
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
                 assert p.returncode == 0
@@ -670,7 +670,10 @@ class Bot:
         """
         if commit is None:
             commit = self._ref
-        return self._GAI.get_check_runs(commit)
+        result = self._GAI.get_check_runs(commit)
+        print("get_check_runs")
+        print(result)
+        return result['check_runs']
 
     def get_bot_review_comments(self):
         """
