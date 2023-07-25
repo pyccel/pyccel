@@ -183,9 +183,9 @@ class Slice(Basic):
     """
     Represents a slice in the code.
 
-    Objects of this class represent the slicing of a Numpy array along one of
-    its dimensions, and they are mostly created during the syntactic stage
-    from objects of the corresponding class `python.ast.Slice`.
+    An object of this class represents the slicing of a Numpy array along one of
+    its dimensions. In most cases this corresponds to a Python slice in the user
+    code, where it is represented by a `python.ast.Slice` object.
 
     In addition, at the wrapper and code generation stages, an integer index
     `i` used to create a view of a Numpy array is converted to an object
