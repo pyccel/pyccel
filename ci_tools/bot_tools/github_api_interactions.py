@@ -269,7 +269,7 @@ class GitHubAPIInteractions:
         run_url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         return self._post_request("GET", run_url)
 
-    def create_run_from_old(self, commit, name, workflow_url, conclusion):
+    def create_run_from_old(self, commit, name, old_check_run):
         """
         Create a new check run.
 
@@ -285,11 +285,8 @@ class GitHubAPIInteractions:
         name : str
             The name of the check run.
 
-        workflow_url : str
-            The url where the run details can be found.
-
-        conclusion : str
-            The conclusion of the previous test.
+        old_check_run : dict
+            A dictionary describing the commit run that this run is created from.
 
         Returns
         -------
@@ -305,9 +302,9 @@ class GitHubAPIInteractions:
         print("create_run:", url)
         json = {"name": name,
                 "head_sha": commit,
-                "status": "completed",
-                "conclusion": conclusion,
-                "details_url": workflow_url}
+                "status": "completed"}
+        for key in ('conclusion', 'details_url', 'started_at', 'completed_at'):
+            json[key] = old_check_run[key]
         run = self._post_request("POST", url, json)
         assert run.status_code == 201
         return run.json()
