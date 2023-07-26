@@ -294,7 +294,7 @@ class Bot:
 
                 commit_log = [o.split(' ')[0] for o in out.split('\n')]
                 print(commit_log)
-                idx = commit_log.find(self._base)
+                idx = commit_log.index(self._base)
                 commit_log = commit_log[idx:]
 
             for t in tests:

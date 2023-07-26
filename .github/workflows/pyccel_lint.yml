@@ -36,6 +36,7 @@ jobs:
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -55,8 +56,7 @@ jobs:
         shell: bash
       - name: Collect diff information
         run: |
-          git fetch
-          git diff ${{ inputs.base }} -- ${COMMIT} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
+          git diff ${{ inputs.base }} --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
         shell: bash
       - name: Lint
         id: lint
