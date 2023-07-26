@@ -1,8 +1,9 @@
-""" Script run when a pull request is marked as ready for review.
+""" Script run as a reaction to a review left on a pull request.
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, pr_test_keys
+from bot_tools.bot_funcs import Bot
+
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -14,12 +15,16 @@ if __name__ == '__main__':
 
     # If bot called explicitly (comment event)
 
-    # Collect id from an issue_comment event with a created action
-    pr_id = event['number']
+    # Collect id from a pull_request_review event with a created action
+    pr_id = event['pull_request']['number']
+
+    decision = event['review']['state']
 
     bot = Bot(pr_id = pr_id)
 
-    if bot.is_user_trusted(event['sender']['login']):
-        bot.request_mark_as_ready()
+    if decision == 'changes_requested':
+        author = event['pull_request']['user']['login']
+        reviewer = event['review']['user']['login']
+        bot.draft_due_to_changes_requested(author, reviewer)
     else:
-        bot.warn_untrusted()
+        bot.mark_as_ready(following_review = True)

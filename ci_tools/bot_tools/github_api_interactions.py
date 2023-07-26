@@ -26,15 +26,14 @@ def get_authorization():
     # Issued at time
     # JWT expiration time (10 minutes maximum)
     # GitHub App's identifier
-    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
+    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 364561}
 
     jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
 
     headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
 
     # Create JWT
-    reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
-    print(reply.text)
+    reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers)
 
     token  = reply.json()["token"]
     expiry = reply.json()["expires_at"]
@@ -269,6 +268,49 @@ class GitHubAPIInteractions:
         assert run.status_code == 201
         run_url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs/{run_id}"
         return self._post_request("GET", run_url)
+
+    def create_run_from_old(self, commit, name, workflow_url, conclusion):
+        """
+        Create a new check run.
+
+        Create a new check run with the specified name which tests the mentioned commit.
+        The check run is marked as in progress. The details url is pointed at the
+        run summary page for this run.
+
+        Parameters
+        ----------
+        commit : str
+            The commit to be reported on.
+
+        name : str
+            The name of the check run.
+
+        workflow_url : str
+            The url where the run details can be found.
+
+        conclusion : str
+            The conclusion of the previous test.
+
+        Returns
+        -------
+        dict
+            A dictionary describing all properties of the new check run.
+
+        Raises
+        ------
+        AssertionError
+            An assertion error is raised if the check run was not successfully posted.
+        """
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/check-runs"
+        print("create_run:", url)
+        json = {"name": name,
+                "head_sha": commit,
+                "status": "completed",
+                "conclusion": conclusion,
+                "details_url": workflow_url}
+        run = self._post_request("POST", url, json)
+        assert run.status_code == 201
+        return run.json()
 
     def get_pr_details(self, pr_id):
         """
@@ -687,6 +729,37 @@ class GitHubAPIInteractions:
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/issues/{pr_id}/labels"
         return self._post_request("GET", url).json()
+
+    def request_reviewers(self, pr_id, request_team = False, reviewers = ()):
+        """
+        Request reviewers for a pull request.
+
+        Use the API to request reviews for a pull request as described here:
+        https://docs.github.com/en/rest/pulls/review-requests?apiVersion=2022-11-28#request-reviewers-for-a-pull-request
+
+        Both the pyccel/pyccel-dev team and individuals can be requested, but
+        at least one or the other must be chosen.
+
+        Parameters
+        ----------
+        pr_id : int
+            The id of the pull request.
+
+        request_team : bool
+            Indicate whether the pyccel/pyccel-dev team should be requested.
+
+        reviewers : iterable
+            A list of individual reviewers to be requested.
+        """
+        assert request_team or reviewers
+        url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
+        review_requests = {}
+        if request_team:
+            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+        if reviewers:
+            review_requests['reviewers'] = list(reviewers)
+
+        self._post_request("POST", url, review_requests)
 
     def get_headers(self):
         """

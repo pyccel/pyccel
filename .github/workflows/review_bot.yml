@@ -1,4 +1,4 @@
-name: Pull Request
+name: Bot
 
 on:
   pull_request_review:
@@ -6,7 +6,8 @@ on:
 
 jobs:
   Bot:
-    if: (! github.event.pull_request.draft && github.event.review.user.type != 'Bot' )
+    name: Update Review Stage
+    if: ((! github.event.pull_request.draft) && (github.event.review.user.type != 'Bot' ))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -14,8 +15,16 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests
+      - name: "Generate token"
+        id: token
+        uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: "${{ secrets.BOT_PEM }}"
       - id: run_bot
         run: |
-          python ci_tools/bot_interaction.py $GITHUB_EVENT_PATH $GITHUB_OUTPUT ${{ github.run_id }}
+          python ci_tools/bot_review_react.py
         env:
           GH_TOKEN: ${{ github.token }}
