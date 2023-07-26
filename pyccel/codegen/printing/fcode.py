@@ -2654,8 +2654,6 @@ class FCodePrinter(CodePrinter):
 
     def _print_ConstructorCall(self, expr):
         code = self._print_FunctionCall(expr)
-        for k, m in list(_default_methods.items()):
-                code = code.replace(k, m)
         return self._get_statement(code)
 
     def _print_SysExit(self, expr):
@@ -2941,6 +2939,8 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
+        for k, m in _default_methods.items():
+            f_name = f_name.replace(k, m)
         args   = expr.args
         func_results  = [r.var for r in func.results]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
