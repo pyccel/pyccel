@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1453 : Fix error-level developer mode output.
 -   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
