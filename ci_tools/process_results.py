@@ -25,7 +25,6 @@ if __name__ == '__main__':
 
     pyccel_folder = os.path.abspath('compare')
 
-
     errors = {}
     warnings = {}
     parsing_errors = []
