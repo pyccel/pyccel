@@ -417,7 +417,7 @@ class Bot:
                 if conclusion in ('failure', 'success'):
                     if key == 'coverage' and conclusion == 'failure':
                         return True
-                    self._GAI.create_run_from_old(self._ref, name, previous_state['details_url'], conclusion)
+                    self._GAI.create_run_from_old(self._ref, name, previous_state)
                     return False
         return True
 
