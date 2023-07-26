@@ -2247,6 +2247,14 @@ class ConstructorCall(DottedFunctionCall):
 
     @property
     def cls_variable(self):
+        """
+        Get the class variable associated with the constructor.
+
+        Returns
+        -------
+        CustumDataType or None
+            The class variable associated with the constructor, or None if not provided.
+        """
         return self._cls_variable
 
 
