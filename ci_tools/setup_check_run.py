@@ -23,7 +23,10 @@ if __name__ == '__main__':
         posted = bot.post_in_progress(int(os.environ['GITHUB_RUN_ATTEMPT']) > 1)
 
     run_id = posted['id']
-    pr_id = bot.get_pr_id()
+    try:
+        pr_id = bot.get_pr_id()
+    except StopIteration:
+        pr_id = 0
     sha = posted['head_sha']
 
     print(f"check_run_id={run_id}", sep='')
