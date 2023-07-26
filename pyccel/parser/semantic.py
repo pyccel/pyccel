@@ -993,7 +993,7 @@ class SemanticParser(BasicParser):
             is_temp = False
 
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                ((isinstance(rhs, FunctionCall) and not isinstance(name, PyccelSymbol)) and len(rhs.funcdef.results)>1):
+                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
