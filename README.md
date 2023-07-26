@@ -1,6 +1,6 @@
 # Pyccel : write Python code,  get Fortran speed
 
- [![devel_tests](https://github.com/pyccel/pyccel/actions/workflows/devel.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/devel.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991)
+ [![devel_tests](https://github.com/pyccel/pyccel/actions/workflows/devel.yml/badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/devel.yml) [![codacy](https://app.codacy.com/project/badge/Grade/9723f47b95db491886a0e78339bd4698)](https://www.codacy.com/gh/pyccel/pyccel?utm_source=github.com&utm_medium=referral&utm_content=pyccel/pyccel&utm_campaign=Badge_Grade) [![DOI](https://joss.theoj.org/papers/10.21105/joss.04991/status.svg)](https://doi.org/10.21105/joss.04991) [![doc_coverage](https://raw.githubusercontent.com/pyccel/pyccel/devel/badges/docstr_coverage_badge.svg)](https://github.com/pyccel/pyccel/actions/workflows/overall_doc_coverage.yml) [![discord](https://img.shields.io/badge/Discord-7289DA?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/2Q6hwjfFVb)
 
 **Pyccel** stands for Python extension language using accelerators.
 
