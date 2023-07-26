@@ -1211,7 +1211,7 @@ def test_full_basic_int(language):
     assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
 def test_size(language):
-    def test_size_1d(f, 'int[:]'):
+    def test_size_1d(f: 'int[:]'):
         from numpy import size
         return size(f)
 
@@ -1247,10 +1247,10 @@ def test_size(language):
 
 
 def test_size_property(language):
-    def test_size_1d(f, 'int[:]'):
+    def test_size_1d(f: 'int[:]'):
         return f.size
 
-    def test_size_2d(f, 'int[:,:]'):
+    def test_size_2d(f: 'int[:,:]'):
         return f.size
 
     def test_size_3d(f: 'int[:,:,:]'):
