@@ -325,7 +325,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     view.strides = malloc(sizeof(int64_t) * view.nd);
     view.is_view = true;
     va_start(va, n);
-    for (int32_t i = 0; i < arr.nd ; i++)
+    for (int32_t i = 0; i < arr.nd; i++)
     {
         slice = va_arg(va, t_slice);
         if (slice.type == RANGE)
@@ -338,7 +338,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     }
     va_end(va);
 
-    view.raw_data = (char*)arr.raw_data + start * arr.type_size;
+    view.raw_data = (unsigned char*)arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
             view.length *= view.shape[i];
@@ -439,7 +439,7 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 ** returns the stride (number of single elements to jump in a dimension to get to this dimension's next element) of the 'nd`th dimension
 */
 
-int get_dimension_stride(int64_t *shape, int nd, int max_nd)
+int get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
 {
     int product = 1;
 
@@ -455,7 +455,7 @@ int get_dimension_stride(int64_t *shape, int nd, int max_nd)
 **  returns the element's index depending on its required memory layout (order_f/column major or order_c/row major)
 */
 
-int element_index(t_ndarray arr, uint32_t flat_c_idx, int nd)
+int element_index(t_ndarray arr, uint32_t flat_c_idx, int32_t nd)
 {
     if (arr.order == order_c)
         return flat_c_idx;

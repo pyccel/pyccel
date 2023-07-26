@@ -351,42 +351,6 @@ class CCodePrinter(CodePrinter):
                 any(a is bi for b in self._additional_args for bi in b)
 
     #========================== Numpy Elements ===============================#
-    def _get_starting_consecutive_scalars(self, flattened_list):
-        """
-        Get all consecutive scalars at the start of the list.
-
-        Returns a list which is a subset of the list passed as an argument.
-        The new list contains only scalars which were consecutive in the
-        original list and appeared at the beginning.
-
-        Parameters
-        ----------
-        flattened_list : list
-            List to search in.
-
-        Returns
-        -------
-        list
-            Starting consecutive scalars.
-
-        Examples
-        --------
-        >>> self._get_starting_consecutive_scalars([Variable('arr_1', rank=1)])
-        []
-        >>> self._get_starting_consecutive_scalars([Variable('s_1', rank=0), \
-        >>>                 Variable('s_2', rank=0), Variable('arr_1', rank=1), \
-        >>>                 Variable('s_3', rank=0)])
-        [Variable('s_1', rank=0), Variable('s_2', rank=0)]
-        """
-
-        starting_consecutive_scalars = []
-        for i in flattened_list:
-            if i.rank == 0:
-                starting_consecutive_scalars.append(i)
-            else:
-                return starting_consecutive_scalars
-        return starting_consecutive_scalars
-
     def copy_NumpyArray_Data(self, expr):
         """
         Get code which copies data from a Ndarray or a homogeneous tuple into a Ndarray.
@@ -406,7 +370,6 @@ class CCodePrinter(CodePrinter):
         str
             A string containing the code which allocates and copies the data.
         """
-        self.add_import(c_imports['string'])
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
@@ -432,8 +395,7 @@ class CCodePrinter(CodePrinter):
             # If the order is F then the data should be copied non-contiguously so a temporary
             # variable is required to pass to array_copy_data
             temp_var = self.scope.get_temporary_variable(lhs, order='C')
-            temp_var_allocate = Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated")
-            operations += self._print(temp_var_allocate)
+            operations += self._print(Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated"))
             copy_to = temp_var
         else:
             copy_to = lhs
@@ -441,8 +403,7 @@ class CCodePrinter(CodePrinter):
 
         num_elements = len(flattened_list)
         # Get the offset variable if it is needed
-        if num_elements != len(self._get_starting_consecutive_scalars(flattened_list))\
-                and num_elements != 1:
+        if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
             offset_var = self.scope.get_temporary_variable(NativeInteger(), 'offset')
             operations += self._print(Assign(offset_var, LiteralInteger(0)))
         else:
@@ -452,35 +413,38 @@ class CCodePrinter(CodePrinter):
         # Copy each of the elements
         i = 0
         while i < num_elements:
+            current_element = flattened_list[i]
             # Copy an array element
-            if isinstance(flattened_list[i], Variable) and flattened_list[i].rank >= 1:
-                elem_name = self._print(flattened_list[i])
+            if isinstance(current_element, Variable) and current_element.rank >= 1:
+                elem_name = self._print(current_element)
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
-                if i < num_elements - 1:
-                    operations += self._print(AugAssign(offset_var, '+', NumpyArraySize(flattened_list[i])))
                 i += 1
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', NumpyArraySize(current_element)))
 
             # Copy multiple scalar elements
             else:
-                subset = self._get_starting_consecutive_scalars(flattened_list[i:])
-                lenSubset = len(subset)
+                self.add_import(c_imports['string'])
+                remaining_elements = flattened_list[i:]
+                lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                subset = remaining_elements[:lenSubset]
 
                 # Declare list of consecutive elements
-                subset = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
+                subset_str = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
                 dummy_array_name = self.scope.get_new_name()
-                operations += f"{declare_dtype} {dummy_array_name}[] = {subset};\n"
+                operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
 
                 copy_to_data = self._print(copy_to_data_var)
                 type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
                 operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
 
-                if i + lenSubset < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
                 i += lenSubset
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
         if order == "F":
-            operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\n" + f"free_array({copy_to});\n"
+            operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\nfree_array({copy_to});\n"
         return operations
 
     def arrayFill(self, expr):
@@ -1432,7 +1396,7 @@ class CCodePrinter(CodePrinter):
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if expr.variable.on_heap else 'true'
         order = "order_f" if expr.order == "F" else "order_c"
-        alloc_code = f"{self._print(expr.variable)} = array_create({len(expr.shape)}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        alloc_code = f"{self._print(expr.variable)} = array_create({expr.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
