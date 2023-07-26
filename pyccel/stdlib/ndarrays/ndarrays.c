@@ -9,6 +9,7 @@
 # include <stdlib.h>
 # include <stdio.h>
 # include <stdbool.h>
+# include <inttypes.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -23,16 +24,16 @@ void print_ndarray_memory(t_ndarray nd)
         switch (nd.type)
         {
             case nd_int8:
-                printf("[%hhd]", nd.nd_int8[i]);
+                printf("[%"PRId8"]", nd.nd_int8[i]);
                 break;
             case nd_int16:
-                printf("[%hd]", nd.nd_int16[i]);
+                printf("[%"PRId16"]", nd.nd_int16[i]);
                 break;
             case nd_int32:
-                printf("[%d]", nd.nd_int32[i]);
+                printf("[%"PRId32"]", nd.nd_int32[i]);
                 break;
             case nd_int64:
-                printf("[%ld]", nd.nd_int64[i]);
+                printf("[%"PRId64"]", nd.nd_int64[i]);
                 break;
             case nd_float:
                 printf("[%f]", nd.nd_float[i]);
