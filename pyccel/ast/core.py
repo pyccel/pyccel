@@ -2225,11 +2225,6 @@ class ConstructorCall(DottedFunctionCall):
 
     cls_variable : CustumDataType, optional
         An instance of `CustumDataType` representing the class variable associated with the constructor.
-
-    See Also
-    --------
-    DottedFunctionCall
-        The parent class of ConstructorCall, representing a dotted function call.
     """
     __slots__ = ('_cls_variable')
     _attribute_nodes = ()
