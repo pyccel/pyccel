@@ -823,7 +823,7 @@ class Bot:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
-                n = next(i for i,l in enumerate(lines) if '@@' in l, len(lines))
+                n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
         return {f:l for f,l in diff.items() if l is not None}
 
