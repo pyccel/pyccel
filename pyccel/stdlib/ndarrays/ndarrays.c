@@ -337,7 +337,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     }
     va_end(va);
 
-    view.raw_data = arr.raw_data + start * arr.type_size;
+    view.raw_data = (char*)arr.raw_data + start * arr.type_size;
     view.length = 1;
     for (int32_t i = 0; i < view.nd; i++)
             view.length *= view.shape[i];
