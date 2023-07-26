@@ -1,0 +1,63 @@
+name: Overall Doc Coverage
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      check_run_id:
+        required: false
+        type: string
+
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+
+jobs:
+
+  DocumentationChecker:
+
+    runs-on: ubuntu-latest
+    name: Documentation Format
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.COMMIT }}
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: "Setup"
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
+      - name: Install python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install docstr-coverage
+        shell: bash
+      - name: Check doc coverage
+        id: doc_coverage
+        run: |
+          docstr-coverage
+        shell: bash
+      - name: Add & Commit
+        id: commit
+        uses: EndBug/add-and-commit@v9
+        with:
+          message: 'Update docstring coverage badge'
+          add: "['badges/docstr_coverage_badge.svg']"
+          default_author: github_actions
+          pull: '--rebase --autostash'
+      - name: "Post completed"
+        if: always()
+        run:
+          python base/ci_tools/complete_check_run.py ${{ steps.doc_coverage.outcome }} ${{ steps.commit.outcome }}
