@@ -1242,7 +1242,7 @@ def test_size(language):
     x4 = empty((n1, n2, n3), dtype = int)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
-    assert f3(x3) == test_size_axis_variable_2d(x3, axis)
+    assert f3(x3, axis) == test_size_axis_variable_2d(x3, axis)
     assert f4(x4) == test_size_axis_literal_3d(x4)
 
 
