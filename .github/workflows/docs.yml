@@ -43,6 +43,7 @@ jobs:
           path: compare
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -51,7 +52,9 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python base/ci_tools/setup_check_run.py
+          cd compare
+          python ../base/ci_tools/setup_check_run.py
+          cd ..
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
