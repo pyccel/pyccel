@@ -288,7 +288,8 @@ class Bot:
                 # Get a list of all commits on this branch
                 cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
                 with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                    out, _ = p.communicate()
+                    out, err = p.communicate()
+                    print(err)
                     assert p.returncode == 0
 
                 commit_log = [o.split(' ')[0] for o in out.split('\n')]
@@ -768,16 +769,16 @@ class Bot:
             cmds = [git, 'branch', '-a', '--contains', self._ref]
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
+                print(err)
                 assert p.returncode == 0
-            print(err)
             branches = out.split('\n')
             if len(branches) == 1:
                 branch = branches[0].split('/')[-1]
                 cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
                 with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                     out, err = p.communicate()
+                    print(err)
                     assert p.returncode == 0
-                print(err)
                 self._pr_id = json.loads(out)[0]['number']
             else:
                 possible_prs = self._GAI.get_prs()
