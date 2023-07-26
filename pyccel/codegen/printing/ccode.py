@@ -1381,22 +1381,23 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
+        variable = expr.variable
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            shape_var = DottedVariable(NativeVoid(), 'shape', lhs=expr.variable)
+            shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
             free_code = f'if ({self._print(shape_var)} != NULL)\n'
-            free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
+            free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
         elif (expr.status == 'allocated'):
-            free_code += self._print(Deallocate(expr.variable))
+            free_code += self._print(Deallocate(variable))
         self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self._print(expr.variable.dtype)
-        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        dtype = self._print(variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.on_heap else 'true'
+        is_view = 'false' if variable.on_heap else 'true'
         order = "order_f" if expr.order == "F" else "order_c"
-        alloc_code = f"{self._print(expr.variable)} = array_create({expr.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+        alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
