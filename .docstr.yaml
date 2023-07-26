@@ -1,0 +1,21 @@
+paths: # list or string
+  - pyccel
+  - ci_tools
+badge: badges # Path
+verbose: 3 # int (0-4)
+skip_magic: True # Boolean
+skip_file_doc: False # Boolean
+skip_init: True # Boolean
+skip_class_def: False # Boolean
+skip_private: False # Boolean
+follow_links: True # Boolean
+accept_empty: True # Boolean
+fail_under: 0 # int 
+percentage_only: False # Boolean
+ignore_patterns: # Dict with key/value pairs of file-pattern/node-pattern
+  pyccel/parser/syntactic.py:
+    - _visit_.*
+  pyccel/parser/semantic.py:
+    - _visit_.*
+  pyccel/codegen/printing/.*.py:
+    - _print_.*
