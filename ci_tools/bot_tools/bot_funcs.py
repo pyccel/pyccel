@@ -556,7 +556,7 @@ class Bot:
                                 reviewers=names, author=author, approved=approved)
                 self._GAI.create_comment(pr_id, message)
                 self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
-        elif reviews:
+        elif requested_changes:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
