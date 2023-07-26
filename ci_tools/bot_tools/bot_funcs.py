@@ -548,8 +548,8 @@ class Bot:
             current_stage_index = -1
         review_stage_index = review_stage_labels.index(new_stage)
 
-        if following_review and current_stage_index < review_stage_index:
-            if new_stage == 'Ready_for_review':
+        if following_review:
+            if current_stage_index < review_stage_index and new_stage == 'Ready_for_review':
                 names = ', '.join(f'@{r}' for r in senior_reviewer)
                 approved = ', '.join(f'@{a}' for a in approving_reviewers)
                 message = message_from_file('senior_review.txt').format(
