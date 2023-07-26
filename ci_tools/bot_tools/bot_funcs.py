@@ -294,8 +294,8 @@ class Bot:
 
                 commit_log = [o.split(' ')[0] for o in out.split('\n')]
                 print(commit_log)
-                idx = commit_log.index(self._base)
-                commit_log = commit_log[idx:]
+                idx = next((i for i,c in enumerate(commit_log) if c ==self._base), len(commit_log))
+                commit_log = commit_log[:idx+1]
 
             for t in tests:
                 pv = python_version or default_python_versions[t]
