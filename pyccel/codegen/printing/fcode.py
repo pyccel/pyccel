@@ -2654,16 +2654,8 @@ class FCodePrinter(CodePrinter):
         return ''
 
     def _print_ConstructorCall(self, expr):
-        func = expr.func
-        name = str(func.name)
-        if name == "__init__":
-            name = "create"
-        name = self._print(name)
-
-        code_args = ''
-        if expr.arguments is not None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
-        code = '{0}({1})'.format(name, code_args)
+        func = self._print_FunctionCall(expr)
+        code = func.replace("__init__", "create")
         return self._get_statement(code)
 
     def _print_SysExit(self, expr):
