@@ -24,7 +24,6 @@ from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
 from pyccel.ast.core import Return, Module
 from pyccel.ast.core import Import
-from pyccel.ast.internals    import PyccelInternalFunction, get_final_precision
 from pyccel.ast.itertoolsext import Product
 from pyccel.ast.core import (Assign, AliasAssign, Declare,
                              CodeBlock, AsName, EmptyNode,
@@ -33,7 +32,7 @@ from pyccel.ast.core import (Assign, AliasAssign, Declare,
 from pyccel.ast.variable  import (Variable,
                              IndexedElement,
                              InhomogeneousTupleVariable,
-                             DottedName, PyccelArraySize)
+                             DottedName, )
 
 from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators      import PyccelMod
@@ -54,7 +53,8 @@ from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeRange, NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
-from pyccel.ast.internals import Slice, PrecomputedCode
+from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
+from pyccel.ast.internals import PyccelInternalFunction, get_final_precision
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
@@ -69,7 +69,6 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
-from pyccel.ast.numpyext import Shape
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -1145,15 +1144,18 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyMod(self, expr):
         return self._print(PyccelMod(*expr.args))
 
-    def _print_NumpyArraySize(self, expr):
-        init_value = self._print(expr.arg)
-        prec = self.print_kind(expr)
-        return 'size({0}, kind={1})'.format(init_value, prec)
-
     # ======================================================================= #
     def _print_PyccelArraySize(self, expr):
         init_value = self._print(expr.arg)
         prec = self.print_kind(expr)
+        return f'size({init_value}, kind={prec})'
+
+    def _print_PyccelArrayShapeElement(self, expr):
+        init_value = self._print(expr.arg)
+        prec = self.print_kind(expr)
+
+        if expr.arg.rank == 1:
+            return f'size({init_value}, kind={prec})'
 
         if expr.arg.order == 'C':
             index = PyccelMinus(LiteralInteger(expr.arg.rank), expr.index, simplify = True)
@@ -1162,10 +1164,7 @@ class FCodePrinter(CodePrinter):
             index = PyccelAdd(expr.index, LiteralInteger(1), simplify = True)
             index = self._print(index)
 
-        if expr.arg.rank == 1:
-            return 'size({0}, kind={1})'.format(init_value, prec)
-
-        return 'size({0}, {1}, {2})'.format(init_value, index, prec)
+        return f'size({init_value}, {index}, {prec})'
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
@@ -2845,11 +2844,10 @@ class FCodePrinter(CodePrinter):
         inds = list(expr.indices)
         if expr.base.order == 'C':
             inds = inds[::-1]
-        base_shape = Shape(expr.base)
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
-            _shape = PyccelArraySize(base, i if expr.base.order != 'C' else len(inds) - i - 1)
+            _shape = PyccelArrayShapeElement(base, i if expr.base.order != 'C' else len(inds) - i - 1)
             if isinstance(ind, Slice):
                 inds[i] = self._new_slice_with_processed_arguments(ind, _shape, allow_negative_indexes)
             elif isinstance(ind, PyccelUnarySub) and isinstance(ind.args[0], LiteralInteger):
@@ -2868,19 +2866,28 @@ class FCodePrinter(CodePrinter):
 
     @staticmethod
     def _new_slice_with_processed_arguments(_slice, array_size, allow_negative_index):
-        """ Create new slice with informations collected from old slice and decorators
+        """
+        Create new slice with information collected from old slice and decorators.
+
+        Create a new slice where the original `start`, `stop`, and `step` have
+        been processed using basic simplifications, as well as additional rules
+        identified by the function decorators.
 
         Parameters
         ----------
-            _slice : Slice
-                slice needed to collect (start, stop, step)
-            array_size : PyccelArraySize
-                call to function size()
-            allow_negative_index : Bool
-                True when the decorator allow_negative_index is present
+        _slice : Slice
+            Slice needed to collect (start, stop, step).
+
+        array_size : PyccelArrayShapeElement
+            Call to function size().
+
+        allow_negative_index : bool
+            True when the decorator allow_negative_index is present.
+
         Returns
         -------
-            Slice
+        Slice
+            The new slice with processed arguments (start, stop, step).
         """
         start = _slice.start
         stop = _slice.stop
