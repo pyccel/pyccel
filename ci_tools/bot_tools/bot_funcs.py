@@ -562,7 +562,14 @@ class Bot:
                                             reviewers=requested, author=author)
             self._GAI.create_comment(pr_id, message)
             self._GAI.request_reviewers(pr_id, reviewers=requested_changes)
-        else:
+        elif new_stage == 'Ready_for_review':
+            names = ', '.join(f'@{r}' for r in senior_reviewer)
+            approved = ', '.join(f'@{a}' for a in approving_reviewers)
+            message = message_from_file('senior_review.txt').format(
+                            reviewers=names, author=author, approved=approved)
+            self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
+        elif new_stage == "needs_initial_review":
             message = message_from_file('new_pr.txt').format(author=author)
             self._GAI.create_comment(pr_id, message)
             self._GAI.request_reviewers(pr_id, request_team = True)
