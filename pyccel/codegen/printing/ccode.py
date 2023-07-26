@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpyArraySize
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -421,7 +421,7 @@ class CCodePrinter(CodePrinter):
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
                 i += 1
                 if i < num_elements:
-                    operations += self._print(AugAssign(offset_var, '+', NumpyArraySize(current_element)))
+                    operations += self._print(AugAssign(offset_var, '+', NumpySize(current_element)))
 
             # Copy multiple scalar elements
             else:
