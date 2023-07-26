@@ -13,9 +13,9 @@ accept_empty: True # Boolean
 fail_under: 0 # int 
 percentage_only: False # Boolean
 ignore_patterns: # Dict with key/value pairs of file-pattern/node-pattern
-  pyccel/parser/syntactic.py:
-    - _visit_.*
-  pyccel/parser/semantic.py:
-    - _visit_.*
-  pyccel/codegen/printing/.*.py:
+  syntactic:
+    - SyntaxParser._visit_.*
+  semantic:
+    - SemanticParser._visit_.*
+  .*code:
     - _print_.*
