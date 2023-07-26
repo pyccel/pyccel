@@ -249,7 +249,7 @@ class Bot:
         """
         self._GAI.create_comment(self._pr_id, message_from_file('bot_commands.txt'))
 
-    def run_tests(self, tests, python_version = None):
+    def run_tests(self, tests, python_version = None, force_run = False):
         """
         Run the specified tests on the requested python version.
 
@@ -267,6 +267,9 @@ class Bot:
         python_version : str, optional
             The requested python version.
 
+        force_run : bool, default=False
+            Force the tests to run even if they are not necessary.
+
         See Also
         --------
         Bot.run_test
@@ -281,14 +284,18 @@ class Bot:
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
 
-            # Get a list of all commits on this branch
-            cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
-            with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                out, _ = p.communicate()
-                assert p.returncode == 0
+            if not force_run:
+                # Get a list of all commits on this branch
+                cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
+                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+                    out, err = p.communicate()
+                    print(err)
+                    assert p.returncode == 0
 
-            commit_log = [o.split(' ')[0] for o in out.split('\n')]
-            print(commit_log)
+                commit_log = [o.split(' ')[0] for o in out.split('\n')]
+                print(commit_log)
+                idx = next((i for i,c in enumerate(commit_log) if c ==self._base), len(commit_log))
+                commit_log = commit_log[:idx+1]
 
             for t in tests:
                 pv = python_version or default_python_versions[t]
@@ -296,7 +303,7 @@ class Bot:
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
-                if not self.is_test_required(commit_log, name, t):
+                if not force_run and not self.is_test_required(commit_log, name, t):
                     continue
                 if key not in already_programmed:
                     posted = self._GAI.prepare_run(self._ref, name)
@@ -762,16 +769,16 @@ class Bot:
             cmds = [git, 'branch', '-a', '--contains', self._ref]
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
+                print(err)
                 assert p.returncode == 0
-            print(err)
             branches = out.split('\n')
             if len(branches) == 1:
                 branch = branches[0].split('/')[-1]
                 cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
                 with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                     out, err = p.communicate()
+                    print(err)
                     assert p.returncode == 0
-                print(err)
                 self._pr_id = json.loads(out)[0]['number']
             else:
                 possible_prs = self._GAI.get_prs()
@@ -816,7 +823,7 @@ class Bot:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
-                n = next(i for i,l in enumerate(lines) if '@@' in l)
+                n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
         return {f:l for f,l in diff.items() if l is not None}
 
