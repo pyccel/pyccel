@@ -327,10 +327,10 @@ int32_t test_indexing_int16_order_f(void)
 int32_t test_indexing_int8(void)
 {
     int8_t m_1[] = {2, 3, 5, 5, 6, 7, 10, 11,
-                12, 250, 6, 8, 8, 0, 45, 0,
-                1, 0, 0, 1, 200, 33, 5, 57,
-                62, 70, 103, 141, 122, 26, 36, 82,
-                8, 10, 251, 22, 1, 11, 1, 19};
+                12, -6, 6, 8, 8, 0, 45, 0,
+                1, 0, 0, 1, -22, 33, 5, 57,
+                62, 70, 103, -115, 122, 26, 36, 82,
+                8, 10, -100, 22, 1, 11, 1, 19};
     int64_t m_1_shape[] = {5, 8};
     t_ndarray x;
     int32_t index;
@@ -701,7 +701,7 @@ int32_t test_slicing_int32_order_f(void)
 
     x = array_create(2, m_1_shape, nd_int32, false, order_f);
     memcpy(x.raw_data, m_1, x.buffer_size);
-    xview = array_slicing(x, 2, new_slice(1, 2, 1, ELEMENT), new_slice(0, 5, 2, RANGE));
+    xview = array_slicing(x, 1, new_slice(1, 2, 1, ELEMENT), new_slice(0, 5, 2, RANGE));
     c_index = 1; 
     for (int32_t i = 0; i < xview.shape[0]; i++)
     {
@@ -802,12 +802,12 @@ int32_t test_slicing_int16_order_f(void)
 int32_t test_slicing_int8(void)
 {
     int8_t m_1[] = {2, 3, 5, 5, 6,
-                7, 10, 11, 12, 250,
+                7, 10, 11, 12, -22,
                 6, 8, 8, 0, 45,
                 0, 1, 0, 0, 1,
-                200, 33, 5, 57, 62,
-                70, 103, 141, 122, 26,
-                36, 82, 8, 10, 251,
+                -100, 33, 5, 57, 62,
+                70, 103, -40, 122, 26,
+                36, 82, 8, 10, -1,
                 22, 1, 11, 1, 19};
     int64_t m_1_shape[] = {8, 5};
     t_ndarray x;
@@ -831,7 +831,7 @@ int32_t test_slicing_int8(void)
                 my_assert(value , c_value, "testing xview values");
         }
     }
-    c_value = 133;
+    c_value = -99;
     xview.nd_int8[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int8[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
@@ -869,7 +869,7 @@ int32_t test_slicing_int8_order_f(void)
                 my_assert(value , c_value, "testing xview values");
         }
     }
-    c_value = 254;
+    c_value = -10;
     xview.nd_int8[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int8[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
