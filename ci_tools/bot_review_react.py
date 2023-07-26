@@ -26,5 +26,5 @@ if __name__ == '__main__':
         author = event['pull_request']['user']['login']
         reviewer = event['review']['user']['login']
         bot.draft_due_to_changes_requested(author, reviewer)
-    else:
+    elif decision == 'approved':
         bot.mark_as_ready(following_review = True)
