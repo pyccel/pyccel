@@ -1196,73 +1196,79 @@ def test_full_basic_int(language):
 
     size = randint(10)
 
-    f_shape_1d  = epyccel(create_full_shape_1d, language = language)
-    assert(f_shape_1d(size) == create_full_shape_1d(size))
+    f_shape_1d = epyccel(create_full_shape_1d, language = language)
+    assert f_shape_1d(size) == create_full_shape_1d(size)
 
-    f_shape_2d  = epyccel(create_full_shape_2d, language = language)
-    assert(f_shape_2d(size) == create_full_shape_2d(size))
+    f_shape_2d = epyccel(create_full_shape_2d, language = language)
+    assert f_shape_2d(size) == create_full_shape_2d(size)
 
-    f_val       = epyccel(create_full_val, language = language)
-    assert(f_val(size)      == create_full_val(size))
+    f_val = epyccel(create_full_val, language = language)
+    assert f_val(size) == create_full_val(size)
     assert matching_types(f_val(size)[0], create_full_val(size)[0])
 
     f_arg_names = epyccel(create_full_arg_names, language = language)
-    assert(f_arg_names(size) == create_full_arg_names(size))
+    assert f_arg_names(size) == create_full_arg_names(size)
     assert matching_types(f_arg_names(size)[0], create_full_arg_names(size)[0])
 
 def test_size(language):
-    @types('int[:]')
-    def test_size_1d(f):
+    def test_size_1d(f, 'int[:]'):
         from numpy import size
         return size(f)
 
-    @types('int[:,:]')
-    def test_size_2d(f):
+    def test_size_2d(f: 'int[:,:]'):
         from numpy import size
         return size(f)
+
+    def test_size_axis_variable_2d(f: 'int[:,:]', axis :'int'):
+        from numpy import size
+        return size(f, axis)
+
+    def test_size_axis_literal_3d(f: 'int[:,:,:]'):
+        from numpy import size
+        return size(f, 2)
 
     from numpy import empty
     f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
+    f3 = epyccel(test_size_axis_variable_2d, language = language)
+    f4 = epyccel(test_size_axis_literal_3d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    x1 = empty(n1,dtype = int)
-    x2 = empty((n2,n3), dtype = int)
+    axis = randint(2)
+    x1 = empty(n1, dtype = int)
+    x2 = empty((n1, n2), dtype = int)
+    x3 = empty((n1, n3), dtype = int)
+    x4 = empty((n1, n2, n3), dtype = int)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
+    assert f3(x3) == test_size_axis_variable_2d(x3, axis)
+    assert f4(x4) == test_size_axis_literal_3d(x4)
+
 
 def test_size_property(language):
-    @types('int[:]')
-    def test_size_1d(f):
+    def test_size_1d(f, 'int[:]'):
         return f.size
 
-    @types('int[:,:]')
-    def test_size_2d(f):
+    def test_size_2d(f, 'int[:,:]'):
         return f.size
 
-    @types('int[:,:]','int')
-    def test_size_axis(f, axis):
-        from numpy import size
-        return size(f,axis)
-
+    def test_size_3d(f: 'int[:,:,:]'):
+        return f.size
 
     from numpy import empty
     f1 = epyccel(test_size_1d, language = language)
     f2 = epyccel(test_size_2d, language = language)
-    f3 = epyccel(test_size_axis, language = language)
+    f3 = epyccel(test_size_3d, language = language)
     n1 = randint(20)
     n2 = randint(20)
     n3 = randint(20)
-    n4 = randint(20)
-    n5 = randint(20)
-    x1 = empty(n1,dtype = int)
-    x2 = empty((n2,n3), dtype = int)
-    x3 = empty((n4,n5), dtype = int)
-    axis = randint(2)
+    x1 = empty(n1, dtype = int)
+    x2 = empty((n1, n2), dtype = int)
+    x3 = empty((n1, n2, n3), dtype = int)
     assert f1(x1) == test_size_1d(x1)
     assert f2(x2) == test_size_2d(x2)
-    assert f3(x3,axis) == test_size_axis(x3,axis)
+    assert f3(x3) == test_size_3d(x3)
 
 
 def test_full_basic_real(language):
