@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${COMMIT}
+          ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
       - uses: conda-incubator/setup-miniconda@v2
         with:
