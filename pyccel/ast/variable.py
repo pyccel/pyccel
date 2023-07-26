@@ -223,9 +223,9 @@ class Variable(PyccelAstNode):
         Simplify the provided shape and ensure it has the expected format.
 
         The provided shape is the shape used to create the object, and it can
-	be a long expression. In most cases where the shape is required the
+        be a long expression. In most cases where the shape is required the
         provided shape is inconvenient, or it might have become invalid. This
-	function therefore replaces those expressions with calls to the function
+        function therefore replaces those expressions with calls to the function
         `PyccelArrayShapeElement`.
 
         Parameters
