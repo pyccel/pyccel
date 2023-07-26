@@ -2213,7 +2213,11 @@ class DottedFunctionCall(FunctionCall):
 class ConstructorCall(DottedFunctionCall):
 
     """
-    It  represents a constructor for undefined function classes.
+    It represents a constructor for undefined function classes.
+
+    This class is used to create instances of undefined function classes, providing the ability to
+    pass specific arguments to the constructor and associate a class variable. It is a subclass of
+    the DottedFunctionCall and inherits its properties and behavior.
 
     Parameters
     ----------
@@ -2249,6 +2253,9 @@ class ConstructorCall(DottedFunctionCall):
     def cls_variable(self):
         """
         Get the class variable associated with the constructor.
+
+        The `cls_variable` property allows accessing the class
+        variable associated with the constructor
 
         Returns
         -------
