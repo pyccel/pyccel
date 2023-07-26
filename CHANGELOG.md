@@ -23,7 +23,7 @@ All notable changes to this project will be documented in this file.
 -   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
 -   \[INTERNALS\] Add class object to class function call arguments.
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
--   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
+-   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
 
 ### Deprecated
