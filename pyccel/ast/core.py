@@ -2213,16 +2213,23 @@ class DottedFunctionCall(FunctionCall):
 class ConstructorCall(DottedFunctionCall):
 
     """
-    It  serves as a constructor for undefined function classes.
+    It  represents a constructor for undefined function classes.
 
     Parameters
     ----------
-    func: FunctionDef, str
-        an instance of FunctionDef or function name
+    func : FunctionDef, str
+        An instance of FunctionDef or function name.
 
-    arguments: list, tuple, None
-        a list of arguments.
+    arguments : list, tuple, None
+        A list of arguments.
 
+    cls_variable : CustumDataType, optional
+        An instance of `CustumDataType` representing the class variable associated with the constructor.
+
+    See Also
+    --------
+    DottedFunctionCall
+        The parent class of ConstructorCall, representing a dotted function call.
     """
     __slots__ = ('_cls_variable')
     _attribute_nodes = ()
