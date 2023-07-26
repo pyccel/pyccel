@@ -2654,8 +2654,9 @@ class FCodePrinter(CodePrinter):
         return ''
 
     def _print_ConstructorCall(self, expr):
-        func = self._print_FunctionCall(expr)
-        code = func.replace("__init__", "create")
+        code = self._print_FunctionCall(expr)
+        for k, m in list(_default_methods.items()):
+                code = code.replace(k, m)
         return self._get_statement(code)
 
     def _print_SysExit(self, expr):
