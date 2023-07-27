@@ -2213,11 +2213,10 @@ class DottedFunctionCall(FunctionCall):
 class ConstructorCall(DottedFunctionCall):
 
     """
-    It represents a constructor for undefined function classes.
+    Represents a Constructor call in the code.
 
-    This class is used to create instances of undefined function classes, providing the ability to
-    pass specific arguments to the constructor and associate a class variable. It is a subclass of
-    the DottedFunctionCall and inherits its properties and behavior.
+    A node which holds all information necessary to represent a Constructor
+    call in the code.
 
     Parameters
     ----------
