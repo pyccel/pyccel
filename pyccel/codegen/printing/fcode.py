@@ -2652,10 +2652,6 @@ class FCodePrinter(CodePrinter):
     def _print_Header(self, expr):
         return ''
 
-    def _print_ConstructorCall(self, expr):
-        code = self._print_FunctionCall(expr)
-        return self._get_statement(code)
-
     def _print_SysExit(self, expr):
         code = ""
         if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
