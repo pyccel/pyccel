@@ -2338,11 +2338,11 @@ class SemanticParser(BasicParser):
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
             cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
-            args = (FunctionCallArgument(cls_variable), *expr.args)
+            args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
 
-            expr = ConstructorCall(method, args)
+            expr = ConstructorCall(method, args, cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
