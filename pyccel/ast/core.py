@@ -2227,8 +2227,8 @@ class ConstructorCall(DottedFunctionCall):
     arguments : list, tuple, None
         A list of arguments.
 
-    cls_variable : CustumDataType, optional
-        An instance of `CustumDataType` representing the class variable associated with the constructor.
+    cls_variable : CustomDataType, optional
+        An instance of `CustomDataType` representing the class variable associated with the constructor.
     """
     __slots__ = ('_cls_variable')
     _attribute_nodes = ()
@@ -2259,7 +2259,7 @@ class ConstructorCall(DottedFunctionCall):
 
         Returns
         -------
-        CustumDataType or None
+        CustomDataType or None
             The class variable associated with the constructor, or None if not provided.
         """
         return self._cls_variable
