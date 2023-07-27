@@ -679,7 +679,9 @@ class Bot:
             whose values are dictionaries describing the reviews which either
             approved or requested changes.
         """
-        reviews = {r['user']['login'] : r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')}
+        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
+        reviews = {r['user']['login'] : r for r in all_reviews}
         if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 
