@@ -2255,7 +2255,7 @@ class ConstructorCall(DottedFunctionCall):
         Get the class variable associated with the constructor.
 
         The `cls_variable` property allows accessing the class
-        variable associated with the constructor
+        variable associated with the constructor.
 
         Returns
         -------
