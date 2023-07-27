@@ -8,7 +8,6 @@ All notable changes to this project will be documented in this file.
 -   Allow interfaces in classes.
 -   Python support for a simple class.
 -   #1430 : Added conjugate support to booleans.
--   #1455 : Improve the class Constructor Call
 
 ### Fixed
 
@@ -17,6 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   Make `ConstructorCall` inherit from `FunctionCall`.
 -   Updating `stdlib` files if they are modified not just accessed.
 -   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
 -   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
