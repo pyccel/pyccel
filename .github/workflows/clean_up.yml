@@ -1,0 +1,23 @@
+name: Clean up
+
+on:
+  check_run:
+    types: completed
+
+jobs:
+  Post:
+    runs-on: ubuntu-latest
+    name: Report result
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Clean up
+        run: |
+          pip install jwt requests
+          python ci_tools/bot_clean_up.py
+        shell: bash
+        env:
+          PEM: ${{ secrets.BOT_PEM }}
+          GH_TOKEN: ${{ github.token }}

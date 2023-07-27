@@ -7,9 +7,6 @@
 """ Module containing objects from the numpy module understood by pyccel
 """
 
-from functools import reduce
-import operator
-
 import numpy
 
 from pyccel.errors.errors import Errors
@@ -30,14 +27,14 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
-from .internals      import PyccelArraySize
+from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .variable       import (Variable, Constant, HomogeneousTupleVariable)
+from .variable       import Variable, Constant, HomogeneousTupleVariable
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -75,7 +72,7 @@ __all__ = (
     'NumpyAmin',
     'NumpyArange',
     'NumpyArray',
-    'NumpyArraySize',
+    'NumpySize',
     'NumpyBool',
     'NumpyCountNonZero',
     'NumpyComplex',
@@ -115,7 +112,7 @@ __all__ = (
     'NumpyWhere',
     'NumpyZeros',
     'NumpyZerosLike',
-    'Shape',
+    'NumpyShape',
 )
 
 #=======================================================================================
@@ -355,7 +352,7 @@ def process_dtype(dtype):
 
     Parameters
     ----------
-    dtype : PythonType | PyccelFunctionDef | String
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
 
     Returns
@@ -674,14 +671,31 @@ class NumpyMatmul(PyccelInternalFunction):
     def b(self):
         return self._args[1]
 
-
 #==============================================================================
-
-class Shape(PyccelInternalFunction):
-    """ Represents a call to numpy.shape for code generation
+class NumpyShape(PyccelInternalFunction):
     """
+    Represents a call to numpy.shape for code generation.
+
+    This wrapper class represents calls to the function `numpy.shape` in the
+    user code, or equivalently to the `shape` property of a `numpy.ndarray`.
+
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns a PythonTuple with the required shape.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The Numpy array whose shape is being investigated.
+
+    Returns
+    -------
+    PythonTuple
+        The shape of the Numpy array, i.e. its size along each dimension.
+    """
+
     __slots__ = ()
     name = 'shape'
+
     def __new__(cls, arg):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
@@ -962,24 +976,28 @@ class NumpyRandint(PyccelInternalFunction):
 #==============================================================================
 class NumpyFull(NumpyNewArray):
     """
-    Represents a call to numpy.full for code generation.
+    Represents a call to `numpy.full` for code generation.
+
+    Represents a call to the NumPy function `full` which creates an array
+    of a specified size and shape filled with a specified value.
 
     Parameters
     ----------
-    shape : int or sequence of ints
+    shape : PyccelAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
-    fill_value : scalar
+    fill_value : PyccelAstNode
         Fill value.
 
-    dtype: str, DataType
-        datatype for the constructed array
-        The default, `None`, means `np.array(fill_value).dtype`.
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Datatype for the constructed array.
+        If `None` the dtype of the fill value is used.
 
     order : {'C', 'F'}, optional
         Whether to store multidimensional data in C- or Fortran-contiguous
         (row- or column-wise) order in memory.
-
     """
     __slots__ = ('_fill_value','_dtype','_precision','_shape','_rank','_order')
     name = 'full'
@@ -1042,7 +1060,6 @@ class NumpyEmpty(NumpyAutoFill):
     def fill_value(self):
         return None
 
-
 #==============================================================================
 class NumpyZeros(NumpyAutoFill):
     """ Represents a call to numpy.zeros for code generation.
@@ -1085,9 +1102,41 @@ class NumpyOnes(NumpyAutoFill):
             raise TypeError('Unknown type')
         return value
 
-#=======================================================================================
+#==============================================================================
 class NumpyFullLike(PyccelInternalFunction):
-    """ Represents a call to numpy.full_like for code generation.
+    """
+    Represents a call to numpy.full_like for code generation.
+
+    This wrapper class represents calls to the function numpy.full_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyFull`.
+
+    Parameters
+    ----------
+    a : Variable
+        Numpy array which is used as a template.
+
+    fill_value : PyccelAstNode
+        Scalar value which will be assigned to each entry of the new array.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of PyccelAstNode
+        Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+
+    See Also
+    --------
+    numpy.full_like :
+        See documentation of `numpy.full_like`: <https://numpy.org/doc/stable/reference/generated/numpy.full_like.html>.
     """
     __slots__ = ()
     name = 'full_like'
@@ -1097,28 +1146,87 @@ class NumpyFullLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyEmptyLike(PyccelInternalFunction):
-    """ Represents a call to numpy.empty_like for code generation.
+    """
+    Represents a call to numpy.empty_like for code generation.
+
+    This wrapper class represents calls to the function numpy.empty_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyEmpty`.
+
+    Parameters
+    ----------
+    a : Variable
+        Numpy array which is used as a template.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of PyccelAstNode
+        Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+
+    See Also
+    --------
+    numpy.empty_like :
+        See documentation of `numpy.empty_like`: <https://numpy.org/doc/stable/reference/generated/numpy.empty_like.html>.
     """
     __slots__ = ()
     name = 'empty_like'
+
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyEmpty(shape, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyOnesLike(PyccelInternalFunction):
-    """ Represents a call to numpy.ones_like for code generation.
+    """
+    Represents a call to numpy.ones_like for code generation.
+
+    This wrapper class represents calls to the function numpy.ones_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyOnes`.
+
+    Parameters
+    ----------
+    a : Variable
+        Numpy array which is used as a template.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of PyccelAstNode
+        Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+
+    See Also
+    --------
+    numpy.ones_like :
+        See documentation of `numpy.ones_like`: <https://numpy.org/doc/stable/reference/generated/numpy.ones_like.html>.
     """
     __slots__ = ()
     name = 'ones_like'
@@ -1128,28 +1236,57 @@ class NumpyOnesLike(PyccelInternalFunction):
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyOnes(shape, dtype, order)
 
-#=======================================================================================
+#==============================================================================
 class NumpyZerosLike(PyccelInternalFunction):
-    """ Represents a call to numpy.zeros_like for code generation.
+    """
+    Represents a call to numpy.zeros_like for code generation.
+
+    This wrapper class represents calls to the function numpy.zeros_like.
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor always returns an object of type `NumpyZeros`.
+
+    Parameters
+    ----------
+    a : Variable
+        Numpy array which is used as a template.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
+        Type of the data contained in the new array. If None, a.dtype is used.
+
+    order : str, default='K'
+        Ordering used for the indices of a multi-dimensional array.
+
+    subok : bool, default=True
+        This parameter is currently ignored.
+
+    shape : PythonTuple of PyccelAstNode
+        Overrides the shape of the array.
+        For a 1D array this is either a `LiteralInteger` or an expression.
+        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+
+    See Also
+    --------
+    numpy.zeros_like :
+        See documentation of `numpy.zeros_like`: <https://numpy.org/doc/stable/reference/generated/numpy.zeros_like.html>.
     """
     __slots__ = ()
     name = 'zeros_like'
+
     def __new__(cls, a, dtype=None, order='K', subok=True, shape=None):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
             dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
-        shape = Shape(a) if shape is None else shape
+        shape = NumpyShape(a) if shape is None else shape
 
         return NumpyZeros(shape, dtype, order)
 
-#=======================================================================================
-
+#==============================================================================
 class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
@@ -1192,9 +1329,6 @@ class NumpyNorm(PyccelInternalFunction):
         and dim argument of Norm2 in Fortran.
         """
         return self._args[1]
-
-#====================================================
-
 
 #==============================================================================
 # Numpy universal functions
@@ -1344,9 +1478,7 @@ class NumpyArctanh(NumpyUfuncUnary):
 #     __slots__ = ()
 #     name = 'rad2deg'
 
-#=======================================================================================
-
-
+#==============================================================================
 class NumpySign(NumpyUfuncUnary):
     """Represent a call to the sign function in the Numpy library"""
     __slots__ = ()
@@ -1679,52 +1811,44 @@ class NumpyCountNonZero(PyccelInternalFunction):
         """
         return self._keep_dims
 
-class NumpyArraySize(PyccelInternalFunction):
+
+class NumpySize(PyccelInternalFunction):
     """
-    Class representing a call to the numpy size function which
-    returns the shape of an object in a given dimension
+    Represent a call to numpy.size in the user code.
+
+    This wrapper class represents a call to the NumPy `size` function, which
+    returns the total number of elements in a multidimensional array, or the
+    number of elements along a given dimension.
+
+    Objects of this class are never present in the Pyccel AST, because the
+    class constructor returns objects of type `PyccelArraySize`, `LiteralInteger`, or
+    `PyccelArrayShapeElement`.
 
     Parameters
-    ==========
-    arg   : PyccelAstNode
-            A PyccelAstNode of unknown shape
-    axis  : int
-            The dimension along which the size is
-            requested
+    ----------
+    a : PyccelAstNode
+        An array of unknown size.
+
+    axis : PyccelAstNode, optional
+        The integer dimension along which the size is requested.
+
+    See Also
+    --------
+    numpy.size :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.ma.size.html>.
     """
-    __slots__ = ('_arg',)
-    _attribute_nodes = ('_arg',)
-    name   = 'size'
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    __slots__ = ()
+    name = 'size'
 
     def __new__(cls, a, axis = None):
-        if axis is not None:
-            return PyccelArraySize(a, axis)
-        elif not isinstance(a, (list,
-                                    tuple,
-                                    PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(a))
-        elif all(isinstance(s, LiteralInteger) for s in a.shape):
-            return LiteralInteger(reduce(operator.mul, [s.python_value for s in a.shape]))
-        else:
-            return super().__new__(cls)
 
-    def __init__(self, a, axis = None):
-        self._arg   = a
-        super().__init__(a)
+        if axis is None:
+            return PyccelArraySize(a)
 
-    @property
-    def arg(self):
-        """ Object whose size is investigated
-        """
-        return self._arg
+        if isinstance(axis, LiteralInteger) and a.shape is not None:
+            return a.shape[axis.python_value]
 
-    def __str__(self):
-        return 'Size({})'.format(str(self.arg))
+        return PyccelArrayShapeElement(a, axis)
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
@@ -1755,8 +1879,8 @@ numpy_funcs = {
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
     # ...
-    'shape'     : PyccelFunctionDef('shape'     , Shape),
-    'size'      : PyccelFunctionDef('size'      , NumpyArraySize),
+    'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
+    'size'      : PyccelFunctionDef('size'      , NumpySize),
     'norm'      : PyccelFunctionDef('norm'      , NumpyNorm),
     'int'       : PyccelFunctionDef('int'       , NumpyInt),
     'real'      : PyccelFunctionDef('real'      , NumpyReal),
