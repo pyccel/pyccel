@@ -2225,11 +2225,8 @@ class ConstructorCall(DottedFunctionCall):
 
     arguments : list, tuple, None
         A list of arguments.
-
-    cls_variable : CustomDataType, optional
-        An instance of `CustomDataType` representing the class variable associated with the constructor.
     """
-    __slots__ = ('_cls_variable')
+    __slots__ = ('_cls_variable',)
     _attribute_nodes = ()
 
     is_commutative = True
@@ -2240,12 +2237,11 @@ class ConstructorCall(DottedFunctionCall):
         self,
         func,
         arguments,
-        cls_variable=None,
         ):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
 
-        self._cls_variable = cls_variable
+        self._cls_variable = arguments[0]
         super().__init__(func, arguments, self._cls_variable)
 
     @property

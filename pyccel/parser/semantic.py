@@ -2342,7 +2342,7 @@ class SemanticParser(BasicParser):
             # TODO check compatibility
             # TODO treat parametrized arguments.
 
-            expr = ConstructorCall(method, args, cls_variable)
+            expr = ConstructorCall(method, args)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
