@@ -2229,8 +2229,6 @@ class ConstructorCall(DottedFunctionCall):
     __slots__ = ('_cls_variable',)
     _attribute_nodes = ()
 
-    is_commutative = True
-
     # TODO improve
 
     def __init__(
