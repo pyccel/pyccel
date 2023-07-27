@@ -2296,10 +2296,6 @@ class Return(Basic):
         super().__init__()
 
     @property
-    def expr(self):
-        return self._expr
-
-    @property
     def stmt(self):
         return self._stmt
 
