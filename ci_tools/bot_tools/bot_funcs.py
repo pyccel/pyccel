@@ -1,6 +1,6 @@
 """ File containing the class Bot and all functions useful for bot reactions.
 """
-import datetime
+from datetime import datetime
 import json
 import os
 import platform
