@@ -3,6 +3,7 @@
 /* or go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details. */
 /* --------------------------------------------------------------------------------------- */
 
+#include <string.h>
 #include "cwrapper_ndarrays.h"
 
 /*
@@ -83,30 +84,30 @@ static npy_intp *_ndarray_to_numpy_shape(int64_t *nd_shape, int nd)
  *		a 	  : python array object
  *      dtype : desired data type enum
  * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_TYPE
  */
-bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
+static char*	_check_pyarray_dtype(PyArrayObject *a, int dtype)
 {
 	int current_dtype;
 
 	if (dtype == NO_TYPE_CHECK)
-		return true;
+		return NULL;
 
 	current_dtype = PyArray_TYPE(a);
 	if (current_dtype != dtype)
 	{
-		PyErr_Format(PyExc_TypeError,
-			"argument dtype must be %s, not %s",
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument dtype must be %s, not %s",
 			dataTypes[dtype],
 			dataTypes[current_dtype]);
-		return false;
+		return error;
 	}
 
-	return true;
+	return NULL;
 }
 
 /*
@@ -118,26 +119,27 @@ bool	check_pyarray_dtype(PyArrayObject *a, int dtype)
  *		a 	  : python array object
  *      rank  : desired rank
  * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_NDIM
  */
-static bool _check_pyarray_rank(PyArrayObject *a, int rank)
+static char* _check_pyarray_rank(PyArrayObject *a, int rank)
 {
 	int	current_rank;
 
 	current_rank = PyArray_NDIM(a);
 	if (current_rank != rank)
 	{
-		PyErr_Format(PyExc_TypeError, "argument rank must be %d, not %d",
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument rank must be %d, not %d",
 			rank,
 			current_rank);
-		return false;
+		return error;
 	}
 
-	return true;
+	return NULL;
 }
 
 /*
@@ -149,27 +151,27 @@ static bool _check_pyarray_rank(PyArrayObject *a, int rank)
  *		a 	  : python array object
  *      flag  : desired order
  * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise NotImplementedError exception
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_CHKFLAGS
  */
-static bool _check_pyarray_order(PyArrayObject *a, int flag)
+static char* _check_pyarray_order(PyArrayObject *a, int flag)
 {
 
 	if (flag == NO_ORDER_CHECK)
-		return true;
+		return NULL;
 
 	if (!PyArray_CHKFLAGS(a, flag))
 	{
 		char order = (flag == NPY_ARRAY_C_CONTIGUOUS ? 'C' : (flag == NPY_ARRAY_F_CONTIGUOUS ? 'F' : '?'));
-		PyErr_Format(PyExc_NotImplementedError,
-			"argument does not have the expected ordering (%c)", order);
-		return false;
+        char* error = (char *)malloc(200);
+		sprintf(error, "argument does not have the expected ordering (%c)", order);
+		return error;
 	}
 
-	return true;
+	return NULL;
 }
 
 
@@ -182,23 +184,23 @@ static bool _check_pyarray_order(PyArrayObject *a, int flag)
  *		a 	  : python array object
  *
  * 	Returns		:
- *		return true if no error occurred otherwise it will return false
- *      and raise TypeError exception
+ *		return NULL if no error occurred otherwise it will return the
+ *      message to be reported in a TypeError exception
  * reference of the used c/python api function
  * -------------------------------------------
  * https://numpy.org/doc/stable/reference/c-api/array.html#c.PyArray_Check
  */
-static bool _check_pyarray_type(PyObject *a)
+static char* _check_pyarray_type(PyObject *a)
 {
 	if (!PyArray_Check(a))
 	{
-		PyErr_Format(PyExc_TypeError,
-			"argument must be numpy.ndarray, not %s",
+        char* error = (char *)malloc(200);
+        sprintf(error, "argument must be numpy.ndarray, not %s",
 			 a == Py_None ? "None" : Py_TYPE(a)->tp_name);
-		return false;
+        return error;
 	}
 
-	return true;
+	return NULL;
 }
 
 enum NPY_TYPES get_numpy_type(t_ndarray *o)
@@ -282,8 +284,9 @@ enum e_types get_ndarray_type(PyArrayObject *a)
 }
 
 /* converting numpy array to c nd array*/
-t_ndarray	pyarray_to_ndarray(PyArrayObject *a)
+t_ndarray	pyarray_to_ndarray(PyObject *o)
 {
+    PyArrayObject* a = (PyArrayObject*) o;
 	t_ndarray		array;
 
 	array.nd          = PyArray_NDIM(a);
@@ -352,20 +355,83 @@ PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
  * 	Returns		:
  *		return true if no error occurred otherwise it will return false
  */
-bool	pyarray_check(PyArrayObject *o, int dtype, int rank, int flag)
+bool	pyarray_check(PyObject *o, int dtype, int rank, int flag)
 {
-	if (!_check_pyarray_type((PyObject *)o)) return false;
+    char* array_type = _check_pyarray_type(o);
+	if (array_type != NULL) {
+		PyErr_Format(PyExc_TypeError, array_type);
+        free(array_type);
+        return false;
+    }
+
+    PyArrayObject* a = (PyArrayObject*)o;
+
+    char error[600];
+    error[0] = '\0';
 
 	// check array element type / rank / order
-	if(!check_pyarray_dtype(o, dtype)) return false;
+    char* array_dtype = _check_pyarray_dtype(a, dtype);
+    if (array_dtype != NULL) {
+        strcat(error, array_dtype);
+        free(array_dtype);
+    }
 
-	if(!_check_pyarray_rank(o, rank)) return false;
+    char* array_rank = _check_pyarray_rank(a, rank);
+    if (array_rank != NULL) {
+        strcat(error, array_rank);
+        free(array_rank);
+    }
 
-	if(rank > 1 && !_check_pyarray_order(o, flag)) return false;
+    if (rank > 1) {
+        char* array_order = _check_pyarray_order(a, flag);
+        if (array_order != NULL) {
+            strcat(error, array_order);
+            free(array_order);
+        }
+    }
+
+    if (error[0] != '\0') {
+		PyErr_Format(PyExc_TypeError, error);
+        return false;
+    }
+    else {
+        return true;
+    }
+}
+
+bool	is_numpy_array(PyObject *o, int dtype, int rank, int flag)
+{
+    char* array_type = _check_pyarray_type(o);
+	if (array_type != NULL) {
+        free(array_type);
+        return false;
+    }
+
+    PyArrayObject* a = (PyArrayObject*)o;
+
+	// check array element type / rank / order
+    char* array_dtype = _check_pyarray_dtype(a, dtype);
+	if(array_dtype != NULL) {
+        free(array_dtype);
+        return false;
+    }
+
+    char* array_rank = _check_pyarray_rank(a, rank);
+	if(array_rank != NULL) {
+        free(array_rank);
+        return false;
+    }
+
+    if (rank > 1) {
+        char* array_order = _check_pyarray_order(a, flag);
+        if(array_order != NULL) {
+            free(array_order);
+            return false;
+        }
+    }
 
 	return true;
 }
-
 
 /*
  * Function: nd_ndim
@@ -397,7 +463,6 @@ int     nd_ndim(t_ndarray *a, int n)
  *
  * 	Parameters	:
  *		a 	  : python array object
- *      index : dimension index
  * 	Returns		:
  *		return NULL if object is NULL or the data of the array
  * reference of the used c/numpy api function
@@ -410,4 +475,49 @@ void    *nd_data(t_ndarray *a)
 		return NULL;
 
 	return a->raw_data;
+}
+
+/*
+ * Function: nd_step_C
+ * --------------------
+ * Return the step in the nth dimension for a C-ordered array (decreasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_C(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = n+1; i<a->nd; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
+}
+/*
+ * Function: nd_step_F
+ * --------------------
+ * Return the step in the nth dimension for a F-ordered array (increasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_F(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = 0; i<n; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
 }

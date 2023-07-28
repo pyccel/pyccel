@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # TODO not working yet
 from pyccel.stdlib.internal.blas import dnrm2
 from numpy import zeros

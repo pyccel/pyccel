@@ -5,7 +5,7 @@
 
 """
 Module representing objects (functions/variables etc) required for the interface
-between python code and C code (using Python/C Api and cwrapper.c).
+between Python code and C code (using Python/C Api and cwrapper.c).
 """
 
 from ..errors.errors import Errors
@@ -15,9 +15,9 @@ from .basic     import Basic, PyccelAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeGeneric
+from .datatypes import NativeBool, NativeString
 
-from .core      import FunctionDefArgument
+from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionCall, FunctionDef, FunctionAddress
 
 from .internals import get_final_precision
@@ -34,10 +34,10 @@ __all__ = (
 # --------- CLASSES -----------
 #
     'PyccelPyObject',
-    'PyccelPyArrayObject',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyModule_AddObject',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -45,7 +45,7 @@ __all__ = (
     'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
     'Py_DECREF',
-    'PyErr_SetString',
+    'set_python_error_message',
 #----- CHECK FUNCTIONS ---
     'generate_datatype_error',
     'scalar_object_check',
@@ -59,14 +59,6 @@ class PyccelPyObject(DataType):
     class used to hold python objects"""
     __slots__ = ()
     _name = 'pyobject'
-
-class PyccelPyArrayObject(DataType):
-    """ Datatype representing a PyArrayObject which is the
-    class used to hold numpy objects"""
-    __slots__ = ()
-    _name = 'pyarrayobject'
-
-PyArray_Type = Variable(NativeGeneric(), 'PyArray_Type')
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -119,7 +111,6 @@ pytype_parse_registry = {
     (NativeBool(), 4)          : 'p',
     (NativeString(), 0)        : 's',
     (PyccelPyObject(), 0)      : 'O',
-    (PyccelPyArrayObject(), 0) : 'O!',
     }
 
 class PyArg_ParseTupleNode(Basic):
@@ -177,10 +168,6 @@ class PyArg_ParseTupleNode(Basic):
             errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
                           symbol=c_func_args, severity='warning')
 
-        parse_args = [[PyArray_Type, a] if isinstance(a, Variable) and a.dtype is PyccelPyArrayObject()
-                else [a] for a in parse_args]
-        parse_args = [a for arg in parse_args for a in arg]
-
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
@@ -236,12 +223,17 @@ class PyArg_ParseTupleNode(Basic):
 
 class PyBuildValueNode(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which create a new value based on a format string
+    Represents a call to the function PyBuildValueNode.
+
+    The function PyBuildValueNode can be found in Python.h.
+    It describes the creation of a new Python object based
+    on a format string. More details can be found in Python's
+    docs.
 
     Parameters
-    ---------
-    parse_args: list of Variable
-        List of arguments which the result will be buit from
+    ----------
+    result_args : list of Variable
+        List of arguments which the result will be built from.
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
@@ -269,17 +261,20 @@ class PyBuildValueNode(PyccelAstNode):
 #-------------------------------------------------------------------
 class PyModule_AddObject(PyccelAstNode):
     """
-    Represents a call to the function from Python.h which adds a
-    PythonObject to a module
+    Represents a call to the PyModule_AddObject function.
+
+    The PyModule_AddObject function can be found in Python.h.
+    It adds a PythonObject to a module. More information about
+    this function can be found in Python's documentation.
 
     Parameters
-    ---------
+    ----------
     mod_name : str
-                The name of the variable containing the module
+                The name of the variable containing the module.
     name : str
-                The name of the variable being added to the module
+                The name of the variable being added to the module.
     variable : Variable
-                The variable containing the PythonObject
+                The variable containing the PythonObject.
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
@@ -292,7 +287,7 @@ class PyModule_AddObject(PyccelAstNode):
         if not isinstance(name, str):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
-                variable.dtype not in (PyccelPyObject(), PyccelPyArrayObject()):
+                variable.dtype is not PyccelPyObject():
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
@@ -331,7 +326,7 @@ Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
-                        arguments = [Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias')],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
 
 #-------------------------------------------------------------------
@@ -340,14 +335,21 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
 
 def Python_to_C(c_object):
     """
-    Create FunctionDef responsible for casting python argument to C
-    Parameters:
+    Create a FunctionDef responsible for casting scalar Python argument to C.
+
+    Creates a FunctionDef node which contains all the code necessary
+    for casting a PythonObject to a C object whose characteristics
+    match that of the object passed as an argument.
+
+    Parameters
     ----------
-    c_object  : Variable
-        The variable needed for the generation of the cast_function
+    c_object : Variable
+        The variable needed for the generation of the cast_function.
+
     Returns
     -------
-    FunctionDef : cast type FunctionDef
+    FunctionDef
+        The function which casts the Python object to C.
     """
     dtype = c_object.dtype
     prec  = get_final_precision(c_object)
@@ -357,8 +359,8 @@ def Python_to_C(c_object):
         errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')],
-                       results   = [Variable(dtype=dtype, name = 'v', precision = prec)])
+                       arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                       results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
 
     return cast_func
 
@@ -376,14 +378,21 @@ py_to_c_registry = {
 
 def C_to_Python(c_object):
     """
-    Create FunctionDef responsible for casting c argument to python
-    Parameters:
+    Create a FunctionDef responsible for casting scalar C results to Python.
+
+    Creates a FunctionDef node which contains all the code necessary
+    for casting a C object, whose characteristics match that of the object
+    passed as an argument, to a PythonObject which can be used in Python code.
+
+    Parameters
     ----------
-    c_object  : Variable
-        The variable needed for the generation of the cast_function
+    c_object : Variable
+        The variable needed for the generation of the cast_function.
+
     Returns
     -------
-    FunctionDef : cast type FunctionDef
+    FunctionDef
+        The function which casts the C object to Python.
     """
     if c_object.rank != 0:
         if c_object.order == 'C':
@@ -400,8 +409,8 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision)],
-                       results   = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')])
+                       arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))],
+                       results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
 
@@ -429,28 +438,39 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias')],
+                             results   = [FunctionDefResult(Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias'))],
                              body      = [])
 
-def PyErr_SetString(exception, message):
+PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
+              body      = [],
+              arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
+                           FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
+              results   = [])
+
+def set_python_error_message(exception, message):
     """
-    Generate function Call of c/python api PyErr_SetString
+    Generate a function call which sets the Python error.
+
+    Generate a function call of C/Python API PyErr_SetString
     https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
     with a defined error message used to set the error indicator.
 
-    Parameters:
+    Parameters
     ----------
-    exception  : str
-        The exception type
-    message    : str
-        Error message
+    exception : str
+        The error exception type.
+    message : str
+        The message which will be shown.
+
     Returns
-    FunctionCall : raise error FunctionCall
+    -------
+    FunctionCall
+        The FunctionCall which raises the error.
     """
     func = FunctionDef(name = 'PyErr_SetString',
                   body      = [],
-                  arguments = [Variable(dtype = PyccelPyObject(), name = 'o'),
-                               Variable(dtype = NativeString(), name = 's')],
+                  arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
+                               FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
                   results   = [])
 
     exception = Variable(PyccelPyObject(), name = exception)
@@ -460,15 +480,20 @@ def PyErr_SetString(exception, message):
 
 def generate_datatype_error(variable):
     """
-    Generate TypeError exception from the variable information (datatype, precision)
-    Parameters:
+    Generate TypeError exception from the variable information.
+
+    Generate a TypeError exception indicated that the variable passed
+    as an argument does not have the right datatype/precision.
+
+    Parameters
     ----------
     variable : Variable
+        The variable which indicates the correct datatype/precision.
 
-    Returns:
+    Returns
     -------
-    func     : FunctionCall
-        call to PyErr_SetString with TypeError as exception and custom message
+    FunctionCall
+        Call to PyErr_SetString with TypeError as exception and custom message.
     """
     dtype     = variable.dtype
 
@@ -484,7 +509,7 @@ def generate_datatype_error(variable):
     message = '"Argument must be {precision}{dtype}"'.format(
             precision = precision,
             dtype     = variable.dtype)
-    return PyErr_SetString('PyExc_TypeError', message)
+    return set_python_error_message('PyExc_TypeError', message)
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
@@ -505,18 +530,23 @@ check_type_registry = {
 
 def scalar_object_check(py_object, c_object):
     """
-    Create FunctionCall responsible for checking python argument data type
-    Parameters:
+    Create FunctionCall responsible for checking Python argument data type.
+
+    Create a FunctionCall which checks whether the Python argument
+    passed as an argument is a scalar with a type which matches the
+    type of the C object.
+
+    Parameters
     ----------
-    py_object  : Variable
-        The python argument of the check function
-    c_object   : Variable
-        The variable needed for the generation of the type check
-    precision_check : Boolean
-        True if checking the exact precision is needed
+    py_object : Variable
+        The Python argument of the check function.
+    c_object : Variable
+        The variable needed for the generation of the type check.
+
     Returns
     -------
-    FunctionCall : Check type FunctionCall
+    FunctionCall
+        Check type FunctionCall.
     """
 
     try :
@@ -526,27 +556,7 @@ def scalar_object_check(py_object, c_object):
 
     check_func = FunctionDef(name = check_type,
                     body      = [],
-                    arguments = [Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias')],
-                    results   = [Variable(dtype=NativeBool(), name = 'r')])
+                    arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias'))],
+                    results   = [FunctionDefResult(Variable(dtype=NativeBool(), name = 'r'))])
 
     return FunctionCall(check_func, [py_object])
-
-# This registry is used for interface management,
-# mapping each data type to a given flag
-# Those flags are used in a bitset #TODO
-flags_registry = {
-    (NativeInteger(), 4)       : 1,
-    (NativeInteger(), 8)       : 2,
-    (NativeInteger(), 2)       : 3,
-    (NativeInteger(), 1)       : 4,
-    (NativeInteger(), -1)      : 5,
-    (NativeFloat(), 8)         : 6,
-    (NativeFloat(), 4)         : 7,
-    (NativeFloat(), -1)        : 8,
-    (NativeComplex(), 4)       : 9,
-    (NativeComplex(), 8)       : 10,
-    (NativeComplex(), -1)      : 11,
-    (NativeBool(), 4)          : 12,
-    (NativeBool(), -1)         : 12,
-    (NativeString(), 0)        : 13
-}

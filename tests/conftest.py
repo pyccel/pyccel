@@ -1,13 +1,15 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
+import logging
 import os
 import shutil
 import pytest
 from mpi4py import MPI
 from pyccel.commands.pyccel_clean import pyccel_clean
 
-# Uncomment to debug  pytest-xdist errors
-#import sys
-#sys.stdout = sys.stderr
+github_debugging = 'DEBUG' in os.environ
+if github_debugging:
+    import sys
+    sys.stdout = sys.stderr
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -45,13 +47,17 @@ def pytest_runtest_teardown(item, nextitem):
             comm.Barrier()
 
 def pytest_addoption(parser):
-    parser.addoption("--developer-mode", action="store_true", default=False, help="Show tracebacks when pyccel errors are raised")
+    parser.addoption("--developer-mode", action="store_true", default=github_debugging, help="Show tracebacks when pyccel errors are raised")
 
 def pytest_sessionstart(session):
     # setup_stuff
     if session.config.option.developer_mode:
         from pyccel.errors.errors import ErrorsMode
         ErrorsMode().set_mode('developer')
+
+    if github_debugging:
+        logging.basicConfig()
+        logging.getLogger("filelock").setLevel(logging.DEBUG)
 
     # Clean path before beginning but never delete anything in parallel mode
     path_dir = os.path.dirname(os.path.realpath(__file__))
