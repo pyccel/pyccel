@@ -806,7 +806,15 @@ def test_c_array_return(language):
         assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
 
-
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
 def test_f_array_return(language):
     @types('int')
     @types('int8')
