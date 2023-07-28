@@ -70,7 +70,7 @@ void print_ndarray_memory(t_ndarray nd)
 */
 
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view, enum e_order order)
+        t_types type, bool is_view, t_order order)
 {
     t_ndarray arr;
 
@@ -299,7 +299,7 @@ int32_t free_pointer(t_ndarray arr)
 ** slices
 */
 
-t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type)
+t_slice new_slice(int32_t start, int32_t end, int32_t step, t_slice_type type)
 {
     t_slice slice;
 

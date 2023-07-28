@@ -21,14 +21,14 @@
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
 
-enum e_slice_type { ELEMENT, RANGE };
+typedef enum e_slice_type { ELEMENT, RANGE } t_slice_type;
 
 typedef struct  s_slice
 {
     int32_t             start;
     int32_t             end;
     int32_t             step;
-    enum e_slice_type   type;
+    t_slice_type   type;
 }               t_slice;
 
 #define GET_INDEX_EXP1(t, arr, a) t(arr, 0, a)
@@ -60,7 +60,7 @@ typedef struct  s_slice
 ** Map e_types enum to numpy NPY_TYPES enum
 ** ref: numpy_repo: numpy/numpy/core/include/numpy/ndarraytypes.h
 */
-enum e_types
+typedef enum e_types
 {
         nd_bool     = 0,
         nd_int8     = 1,
@@ -71,13 +71,13 @@ enum e_types
         nd_double   = 12,
         nd_cfloat   = 14,
         nd_cdouble  = 15
-};
+} t_types;
 
-enum e_order
+typedef enum e_order
 {
     order_f,
     order_c,
-};
+} t_order;
 
 typedef struct  s_ndarray
 {
@@ -101,7 +101,7 @@ typedef struct  s_ndarray
     /* strides 'number of elements to skip to get the next element' */
     int64_t                 *strides;
     /* type of the array elements */
-    enum e_types            type;
+    t_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
     /* number of element in the array */
@@ -111,7 +111,7 @@ typedef struct  s_ndarray
     /* True if the array does not own the data */
     bool                    is_view;
     /* stores the order of the array: order_f or order_c */
-    enum e_order            order;
+    t_order            order;
 }               t_ndarray;
 
 /* functions prototypes */
@@ -119,7 +119,7 @@ typedef struct  s_ndarray
 /* allocations */
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view, enum e_order order);
+        t_types type, bool is_view, t_order order);
 void        _array_fill_int8(int8_t c, t_ndarray arr);
 void        _array_fill_int16(int16_t c, t_ndarray arr);
 void        _array_fill_int32(int32_t c, t_ndarray arr);
@@ -132,7 +132,7 @@ void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
                 /* creating a Slice object */
-t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type);
+t_slice new_slice(int32_t start, int32_t end, int32_t step, t_slice_type type);
                 /* creating an array view */
 t_ndarray   array_slicing(t_ndarray arr, int n, ...);
 
