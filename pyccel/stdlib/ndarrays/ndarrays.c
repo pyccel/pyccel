@@ -434,11 +434,12 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
     return nd_shape;
 }
 
-/*
-** takes an array containing the shape of an array 'shape', number of a certain dimension 'nd', and the number of the array's dimensions
-** returns the stride (number of single elements to jump in a dimension to get to this dimension's next element) of the 'nd`th dimension
+/**
+** takes an array containing the shape of an array 'shape', number of a 
+** certain dimension 'nd', and the number of the array's dimensions
+** returns the stride (number of single elements to jump in a dimension
+** to get to this dimension's next element) of the 'nd`th dimension
 */
-
 int get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
 {
     int product = 1;
@@ -448,13 +449,15 @@ int get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
     return (product);
 }
 
-/*
-**  Takes an array needed to do the calculations
-**  An element number, representing an element's index if it were in a flattened (order_c/row major) array
-**  nd, representing the number of dimensions
-**  returns the element's index depending on its required memory layout (order_f/column major or order_c/row major)
+/**
+**  arr : Takes an array needed to do the calculations
+**  flat_c_idx : An element number, representing an element's index if it were
+**              in a flattened (order_c/row major) array
+**  nd : representing the number of dimensions
+**
+**  Returns the element's index depending on its required memory layout
+**          (order_f/column major or order_c/row major)
 */
-
 int element_index(t_ndarray arr, uint32_t flat_c_idx, int32_t nd)
 {
     if (arr.order == order_c)
