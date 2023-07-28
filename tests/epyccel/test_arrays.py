@@ -3707,8 +3707,6 @@ def test_multiple_np_linspace(language):
 ##==============================================================================
 
 def test_array_real_nested_F_array_initialization(language):
-
-
     f1 = arrays.array_real_nested_F_array_initialization
     f2 = epyccel(f1, language = language)
 
@@ -3825,7 +3823,7 @@ def test_array_view_steps_F_1D_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
                                         pytest.mark.fortran])
     ]
 )
@@ -3839,7 +3837,7 @@ def test_array_view_steps_F_2D_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
                                         pytest.mark.fortran])
     ]
 )
@@ -3853,7 +3851,7 @@ def test_array_view_steps_F_2D_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1241"),
+        pytest.param("fortran", marks = [pytest.mark.skip(reason="fortran bug, issue #1257"),
                                         pytest.mark.fortran])
     ]
 )
