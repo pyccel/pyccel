@@ -43,6 +43,7 @@ jobs:
           path: compare
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -51,7 +52,9 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python base/ci_tools/setup_check_run.py
+          cd compare
+          python ../base/ci_tools/setup_check_run.py
+          cd ..
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -71,6 +74,7 @@ jobs:
           echo "${{ github.event.pull_request.base.sha }}"
           docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=base/.docstr_coverage base/pyccel base/ci_tools 2>&1 | tee base_cov
           docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=compare/.docstr_coverage compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
+          export PYTHONPATH=compare
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
         shell: bash
       - name: Check doc format
@@ -78,6 +82,8 @@ jobs:
         run: |
           cd compare
           git fetch
+          git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
+          git checkout ${{ env.COMMIT }}
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt ci_objects.txt
           touch report.txt
@@ -91,7 +97,7 @@ jobs:
           cd ..
           cat report.txt
           cd ..
-          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
+          python base/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()

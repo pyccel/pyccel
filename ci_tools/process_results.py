@@ -55,14 +55,22 @@ if __name__ == '__main__':
             print(code, msg)
             if level == 'failure':
                 file, start, end = get_code_file_and_lines(file_name, pyccel_folder = pyccel_folder)
-                if not code.startswith('GL'):
+                # if code isn't "The object does not have a docstring"
+                if code != 'GL08':
+                    # Restrict error reporting line to docstring
                     with open(os.path.join(pyccel_folder, file), 'r', encoding='utf-8') as code_file:
                         lines = code_file.readlines()[start-1:end+2]
                     lines = [l.strip() for l in lines]
-                    doc_openings = [i for i,l in enumerate(lines) if l.startswith('"""') or l.endswith('"""')]
+                    doc_openings = []
+                    for i,l in enumerate(lines):
+                        if l.startswith('"""'):
+                            doc_openings.append(i)
+                        if l != '"""' and l.endswith('"""'):
+                            doc_openings.append(i)
                     lines = lines[doc_openings[0]:doc_openings[1]+1]
                     end = start + doc_openings[1]
                     start = start + doc_openings[0]
+
                     sections = [(l,i) for i,l in enumerate(lines[:-1]) if lines[i+1] != '' and all(c in ('-','=') for c in lines[i+1])]
                     nsections = len(sections)
                     if code.startswith('PR'):
