@@ -5162,15 +5162,8 @@ def test_where_combined_types(language):
 def test_numpy_linspace_scalar(language):
     from numpy import linspace
 
-    @types('int', 'int', 'int')
-    @types('int8', 'int', 'int')
-    @types('int16', 'int', 'int')
-    @types('int32', 'int', 'int')
-    @types('int64', 'int', 'int')
-    @types('float', 'int', 'int')
-    @types('float32', 'int', 'int')
-    @types('float64', 'int', 'int')
-    def get_linspace(start, steps, num):
+    @template(name='T', types=['int','int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
+    def get_linspace(start : 'T', steps : int, num : int):
         from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)
@@ -5292,9 +5285,8 @@ def test_numpy_linspace_array_like_1d(language):
             for j in range(len(out[i])):
                 out[i][j] = a[i][j]
 
-    @types('int[:]', 'int', 'int32[:,:]', 'bool')
-    @types('float64[:]', 'int', 'int32[:,:]', 'bool')
-    def test_linspace_dtype(start, stop, out, endpoint):
+    @template('T', ['int[:]', 'float64[:]'])
+    def test_linspace_dtype(start :'T', stop : int, out : 'int32[:,:]', endpoint : bool):
         from numpy import linspace
         import numpy as np
         numberOfSamplesToGenerate = 7

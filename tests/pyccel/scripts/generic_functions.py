@@ -1,14 +1,14 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-#$ header function gen_2(real, int)
-#$ header function gen_2(int, real)
+#$ header function gen_2(float, int)
+#$ header function gen_2(int, float)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, real)
-#$ header template T(int|real)
-#$ header template R(int|real)
+#$ header function tmplt_head_1(int, float)
+#$ header template T(int|float)
+#$ header template R(int|float)
 #$ header template O(bool|complex)
-#$ header template S(int|real)
+#$ header template S(int|float)
 
 def gen_1(a : 'float'):
     return a * 10
@@ -32,28 +32,28 @@ def gen_7(x : 'T', y : 'T', z : 'R'):
     return x + y + z
 
 @types('int', 'int')
-@types('int', 'real')
+@types('int', 'float')
 def multi_heads_1(x, y):
     return x + y
 
-@template('z', types=['int', 'real'])
+@template('z', types=['int', 'float'])
 def tmplt_1(x : 'z', y : 'z'):
     return x + y
 
-@template('z', types=['int', 'real'])
-@template('y', types=['int', 'real'])
+@template('z', types=['int', 'float'])
+@template('y', types=['int', 'float'])
 def multi_tmplt_1(x : 'z', y : 'z', z : 'y'):
     return x + y + z
 
-@template('z', types=['int', 'real'])
+@template('z', types=['int', 'float'])
 def tmplt_head_1(x : 'z', y : 'z'):
     return x + y
 
-@template('O', types=['int', 'real'])
+@template('O', types=['int', 'float'])
 def local_overide_1(x : 'O', y : 'O'):
     return x + y
 
-@template('z', types=['int', 'real'])
+@template('z', types=['int', 'float'])
 def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
     return x + y + z
 
@@ -62,7 +62,7 @@ def array_elem1(x):
     return x[0]
 
 @template('k', types=['int'])
-@template('g', types=['int', 'real'])
+@template('g', types=['int', 'float'])
 def multi_tmplt_2(y : 'k', z : 'g'):
     return y + z
 

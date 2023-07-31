@@ -7,22 +7,12 @@ from recognised_functions.test_numpy_funcs import (min_int, max_int, min_int8, m
                                 min_int16, max_int16, min_int32, max_int32, max_int64, min_int64)
 from recognised_functions.test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
+from pyccel.decorators import template
 
 
 def test_single_return(language):
-    @types('bool', 'bool')
-    @types('int', 'int')
-    @types('int8', 'int8')
-    @types('int16', 'int16')
-    @types('int32', 'int32')
-    @types('int64', 'int64')
-    @types('float', 'float')
-    @types('float32', 'float32')
-    @types('float64', 'float64')
-    @types('complex64', 'complex64')
-    @types('complex128', 'complex128')
-    def return_array(a, b):
+    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
+    def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         return x
@@ -120,18 +110,8 @@ def test_single_return(language):
 
 
 def test_multi_returns(language):
-    @types('bool', 'bool')
-    @types('int', 'int')
-    @types('int8', 'int8')
-    @types('int16', 'int16')
-    @types('int32', 'int32')
-    @types('int64', 'int64')
-    @types('float', 'float')
-    @types('float32', 'float32')
-    @types('float64', 'float64')
-    @types('complex64', 'complex64')
-    @types('complex128', 'complex128')
-    def return_array(a, b):
+    @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
+    def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         y = array([a,b], dtype=type(a))
@@ -230,17 +210,8 @@ def test_multi_returns(language):
 
 def test_return_array_array_op(language):
 
-    @types('int', 'int')
-    @types('int8', 'int8')
-    @types('int16', 'int16')
-    @types('int32', 'int32')
-    @types('int64', 'int64')
-    @types('float', 'float')
-    @types('float32', 'float32')
-    @types('float64', 'float64')
-    @types('complex64', 'complex64')
-    @types('complex128', 'complex128')
-    def return_array(a, b):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
+    def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         y = array([a,b], dtype=type(a))
@@ -327,17 +298,8 @@ def test_return_array_array_op(language):
 
 def test_return_multi_array_array_op(language):
 
-    @types('int', 'int')
-    @types('int8', 'int8')
-    @types('int16', 'int16')
-    @types('int32', 'int32')
-    @types('int64', 'int64')
-    @types('float', 'float')
-    @types('float32', 'float32')
-    @types('float64', 'float64')
-    @types('complex64', 'complex64')
-    @types('complex128', 'complex128')
-    def return_array(a, b):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64', 'complex64', 'complex128'])
+    def return_array(a : 'T', b : 'T'):
         from numpy import array
         x = array([a,b], dtype=type(a))
         y = array([a,b], dtype=type(a))
