@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def fact(n : int):
+def fact(n : int) -> int:
     if n == 0:
        z = 1
        return z
