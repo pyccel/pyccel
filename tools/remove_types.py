@@ -55,12 +55,14 @@ if __name__ == '__main__':
                     else:
                         new_lines.extend(current_types)
                         new_lines.append(lines[i])
-                        uses_types = True
+                        if len(current_types) != 0:
+                            uses_types = True
                     current_types = []
                 elif '@' in lines[i]:
-                    while ')' not in lines[i]:
-                        new_lines.append(lines[i])
-                        i+=1
+                    if '(' in lines[i]:
+                        while ')' not in lines[i]:
+                            new_lines.append(lines[i])
+                            i+=1
                     new_lines.append(lines[i])
                 elif 'from pyccel.decorators import' in lines[i] and 'types' in lines[i]:
                     import_types_line = i
