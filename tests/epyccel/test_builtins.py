@@ -5,7 +5,7 @@ from numpy import iinfo, finfo
 import numpy as np
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types, template
+from pyccel.decorators import template
 
 ATOL = 1e-15
 RTOL = 2e-14
@@ -18,8 +18,7 @@ min_float = finfo('float').min
 max_float = finfo('float').max
 
 def test_abs_i(language):
-    @types('int')
-    def f1(x):
+    def f1(x : 'int'):
         return abs(x)
 
     f2 = epyccel(f1, language=language)
@@ -32,8 +31,7 @@ def test_abs_i(language):
     assert np.isclose(f1(positive_test), f2(positive_test), rtol=RTOL, atol=ATOL)
 
 def test_abs_r(language):
-    @types('real')
-    def f1(x):
+    def f1(x : 'float'):
         return abs(x)
 
     f2 = epyccel(f1, language=language)
@@ -48,8 +46,7 @@ def test_abs_r(language):
 
 
 def test_abs_c(language):
-    @types('complex')
-    def f1(x):
+    def f1(x : 'complex'):
         return abs(x)
 
     f2 = epyccel(f1, language=language)
@@ -73,8 +70,7 @@ def test_abs_c(language):
     assert np.isclose(f1(0j + 0), f2(0j + 0), rtol=RTOL, atol=ATOL)
 
 def test_min_2_args_i(language):
-    @types('int','int')
-    def f(x, y):
+    def f(x : 'int', y : 'int'):
         return min(x, y)
 
     epyc_f = epyccel(f, language=language)
@@ -104,8 +100,7 @@ def test_min_2_args_f_adhoc(language):
     assert np.isclose(epyc_f(float_arg), f(float_arg), rtol=RTOL, atol=ATOL)
 
 def test_min_2_args_f(language):
-    @types('float','float')
-    def f(x, y):
+    def f(x : 'float', y : 'float'):
         return min(x, y)
 
     epyc_f = epyccel(f, language=language)
@@ -184,8 +179,7 @@ def test_min_tuple(language):
     assert np.isclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
 
 def test_max_2_args_i(language):
-    @types('int','int')
-    def f(x, y):
+    def f(x : 'int', y : 'int'):
         return max(x, y)
 
     epyc_f = epyccel(f, language=language)
@@ -195,8 +189,7 @@ def test_max_2_args_i(language):
     assert epyc_f(*int_args) == f(*int_args)
 
 def test_max_2_args_f(language):
-    @types('float','float')
-    def f(x, y):
+    def f(x : 'float', y : 'float'):
         return max(x, y)
 
     epyc_f = epyccel(f, language=language)
@@ -285,8 +278,7 @@ def test_max_tuple(language):
 )
 def test_sum_matching_types(language):
     @template('T',['int','float','complex'])
-    @types('T','T')
-    def f(x, y):
+    def f(x : 'T', y : 'T'):
         return sum([x, y])
 
     epyc_f = epyccel(f, language=language)

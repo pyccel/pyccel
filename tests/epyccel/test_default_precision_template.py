@@ -12,10 +12,8 @@ ATOL = 1e-16
 
 def test_default_precision_template(language):
 
-    @types('int[:]')
-    @types('float[:]')
-    @types('complex[:]')
-    def return_array_element(array):
+    @template('T', ['int[:]', 'float[:]', 'complex[:]'])
+    def return_array_element(array : 'T'):
         return array[0]
 
     test_types = ['int', 'float', 'complex']

@@ -1,13 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
-@types(int)
-def set_num_threads(n):
+def set_num_threads(n : int):
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
     omp_set_num_threads(np.int32(n))
 
-@types()
 def get_num_threads():
     from pyccel.stdlib.internal.openmp import omp_get_num_threads
     #$ omp parallel
@@ -21,8 +18,7 @@ def get_max_threads():
 
     return max_threads
 
-@types('int')
-def f1(i):
+def f1(i : 'int'):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
     out = -1
     #$ omp parallel private(idx)
@@ -64,14 +60,12 @@ def test_omp_in_parallel2():
     #$ omp end parallel
     return in_parallel
 
-@types ('bool')
-def test_omp_set_get_dynamic(dynamic_theads):
+def test_omp_set_get_dynamic(dynamic_theads : 'bool'):
     from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
     omp_set_dynamic(dynamic_theads)
     return omp_get_dynamic()
 
-@types ('bool')
-def test_omp_set_get_nested(nested):
+def test_omp_set_get_nested(nested : 'bool'):
     from pyccel.stdlib.internal.openmp import omp_set_nested, omp_get_nested
     omp_set_nested(nested)
     return omp_get_nested()
@@ -88,8 +82,7 @@ def test_omp_get_thread_limit():
     #$ omp end parallel
     return maximum_threads_available
 
-@types ('int')
-def test_omp_get_set_max_active_levels(max_active_levels):
+def test_omp_get_set_max_active_levels(max_active_levels : 'int'):
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels
     omp_set_max_active_levels(np.int32(max_active_levels))
@@ -173,8 +166,7 @@ def test_omp_get_proc_bind():
 #     num_places = omp_get_num_places()
 #     return place_num
 
-@types ('int')
-def test_omp_set_get_default_device(device_num):
+def test_omp_set_get_default_device(device_num : 'int'):
     from pyccel.stdlib.internal.openmp import omp_get_default_device
     from pyccel.stdlib.internal.openmp import omp_set_default_device
     omp_set_default_device(device_num)
@@ -193,8 +185,7 @@ def test_omp_get_num_teams():
     #$ omp end teams
     return num_teams
 
-@types('int')
-def test_omp_get_team_num(i):
+def test_omp_get_team_num(i : 'int'):
     from pyccel.stdlib.internal.openmp import omp_get_team_num
     out = -1
     #$ omp teams num_teams(2)
@@ -270,8 +261,7 @@ def test_omp_get_max_task_priority():
     #$ omp end parallel
     return max_task_priority_var
 
-@types('real[:,:], real[:,:], real[:,:]')
-def omp_matmul(A, x, out):
+def omp_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -282,8 +272,7 @@ def omp_matmul(A, x, out):
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
 
-@types('real[:,:], real[:,:], real[:,:]')
-def omp_matmul_single(A, x, out):
+def omp_matmul_single(A : 'float[:,:], float[:,:], float[:,:]'):
     from numpy import matmul
     #$ omp parallel
     #$ omp single
@@ -294,8 +283,7 @@ def omp_matmul_single(A, x, out):
     "bypass issue #468" # pylint: disable=W0105
 
 
-@types('int[:]', 'int[:]', 'real[:]')
-def omp_nowait(x, y, z):
+def omp_nowait(x : 'int[:]', y : 'int[:]', z : 'float[:]'):
     #$ omp parallel
     #$ omp for nowait
     for i in range(0, 1000):
@@ -306,8 +294,7 @@ def omp_nowait(x, y, z):
     #$ omp end parallel
     "bypass issue #468" # pylint: disable=W0105
 
-@types('int[:]')
-def omp_arraysum(x):
+def omp_arraysum(x : 'int[:]'):
     func_result = 0
     #$ omp parallel private(i)
     #$ omp for reduction (+:func_result)
@@ -316,16 +303,14 @@ def omp_arraysum(x):
     #$ omp end parallel
     return func_result
 
-@types('int[:]')
-def omp_arraysum_combined(x):
+def omp_arraysum_combined(x : 'int[:]'):
     func_result = 0
     #$ omp parallel for reduction (+:func_result)
     for i in range(0, 5):
         func_result += x[i]
     return func_result
 
-@types('int')
-def omp_range_sum_critical(x):
+def omp_range_sum_critical(x : 'int'):
     func_result = 0
     #$ omp parallel for num_threads(4) shared(func_result)
     for i in range(0, x):
@@ -335,8 +320,7 @@ def omp_range_sum_critical(x):
     return func_result
 
 
-@types('int[:]')
-def omp_arraysum_single(x):
+def omp_arraysum_single(x : 'int[:]'):
     func_result = 0
     #$ omp parallel
     #$ omp single
@@ -355,8 +339,7 @@ def omp_master():
     #$omp end parallel
     return func_result
 
-@types('int')
-def omp_taskloop(n):
+def omp_taskloop(n : 'int'):
     func_result = 0
     #$omp parallel num_threads(n)
     #$omp taskloop
@@ -366,10 +349,8 @@ def omp_taskloop(n):
     #$omp end parallel
     return func_result
 
-@types('int')
-def omp_tasks(x):
-    @types('int', results='int')
-    def fib(n):
+def omp_tasks(x : 'int'):
+    def fib(n : 'int'):
         if n < 2:
             return n
         #$ omp task shared(i) firstprivate(n)
@@ -387,8 +368,7 @@ def omp_tasks(x):
     #$ omp end parallel
     return m
 
-@types('int')
-def omp_simd(n):
+def omp_simd(n : 'int'):
     from numpy import zeros
     func_result = 0
     arr = zeros(n, dtype=int)
@@ -476,8 +456,7 @@ def omp_sections():
 
     return (sum1 + sum2 + sum3)
 
-@types('int[:]', 'int[:]', 'int[:]', 'int[:]', 'int[:]')
-def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35):
+def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm : 'int[:]', long_variable_2_oiwedqwrnoij2asxaxnjkna : 'int[:]', long_variable_3_oiweqxhnoijaqed34023423 : 'int[:]', long_variable_4_oiweaxaijaqedqd34023423 : 'int[:]', long_variable_5_oiwed423rnoic3242ewdx35 : 'int[:]'):
     func_result = 0
     n1     = long_variable_1_oiwed423rnoij21d4kojklm.shape[0]
     n2     = long_variable_2_oiwedqwrnoij2asxaxnjkna.shape[0]

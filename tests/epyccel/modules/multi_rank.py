@@ -1,76 +1,59 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
-@types('real[:,:]','real[:,:](order=F)')
-def add_mixed_order(a,b):
+def add_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] = a + b
 
-@types('real[:,:]','real[:,:](order=F)')
-def mul_mixed_order(a,b):
+def mul_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] = a * b
 
-@types('real[:,:]','real[:,:](order=F)')
-def sub_mixed_order(a,b):
+def sub_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] = a - b
 
-@types('real[:,:]','real[:,:](order=F)')
-def div_mixed_order(a,b):
+def div_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] = a / b
 
-@types('real[:,:]','real[:,:](order=F)')
-def augadd_mixed_order(a,b):
+def augadd_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] += b
 
-@types('real[:,:]','real[:,:](order=F)')
-def augmul_mixed_order(a,b):
+def augmul_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] *= b
 
-@types('real[:,:]','real[:,:](order=F)')
-def augsub_mixed_order(a,b):
+def augsub_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] -= b
 
-@types('real[:,:]','real[:,:](order=F)')
-def augdiv_mixed_order(a,b):
+def augdiv_mixed_order(a : 'float[:,:]', b : 'float[:):
     a[:] /= b
 
-@types('int[:,:]','int[:]')
-def mul_by_vector_C(a,b):
+def mul_by_vector_C(a : 'int[:,:]', b : 'int[:]'):
     a[:] *= b
 
-@types('int[:,:](order=F)','int[:]')
-def mul_by_vector_F(a,b):
+def mul_by_vector_F(a : 'int[:, b : :]):
     a[:] *= b
 
-@types('int[:,:]')
-def mul_by_vector_dim_1_C_C(a):
+def mul_by_vector_dim_1_C_C(a : 'int[:,:]'):
     import numpy as np
     b = np.array([[1],[2],[3]])
     a[:] *= b
 
-@types('int[:,:]')
-def mul_by_vector_dim_1_C_F(a):
+def mul_by_vector_dim_1_C_F(a : 'int[:,:]'):
     import numpy as np
     b = np.array([[1],[2],[3]], order = 'F')
     a[:] *= b
 
-@types('int[:,:](order=F)')
-def mul_by_vector_dim_1_F_C(a):
+def mul_by_vector_dim_1_F_C(a : 'int[:):
     import numpy as np
     b = np.array([[1],[2],[3]])
     a[:] *= b
 
-@types('int[:,:](order=F)')
-def mul_by_vector_dim_1_F_F(a):
+def mul_by_vector_dim_1_F_F(a : 'int[:):
     import numpy as np
     b = np.array([[1],[2],[3]], order = 'F')
     a[:] *= b
 
-@types('int[:,:,:]','int[:,:,:]','int[:,:]','int[:]','int')
-def multi_dim_sum(result, a, b, c, d):
+def multi_dim_sum(result : 'int[:,:,:]', a : 'int[:,:,:]', b : 'int[:,:]', c : 'int[:]', d : 'int'):
     result[:,:,:] = a + b + c + d
 
-@types('int[:,:,:]','int[:,:,:]')
-def multi_dim_sum_ones(result, a):
+def multi_dim_sum_ones(result : 'int[:,:,:]', a : 'int[:,:,:]'):
     import numpy as np
     s = np.shape(a)
     b = np.empty((1,s[1],s[2]),dtype=int)
@@ -80,8 +63,7 @@ def multi_dim_sum_ones(result, a):
     d = a[0,0,0]
     result[:,:,:] = a + b + c + d
 
-@types('int[:,:]','int[:]')
-def multi_expression_assign(a,b):
+def multi_expression_assign(a : 'int[:,:]', b : 'int[:]'):
     import numpy as np
     a[:] = a * b
     a[:] = a * 2
@@ -89,8 +71,7 @@ def multi_expression_assign(a,b):
     a[:] = a - b
     a += np.sum(b)
 
-@types('int[:,:]','int[:]')
-def multi_expression_augassign(a,b):
+def multi_expression_augassign(a : 'int[:,:]', b : 'int[:]'):
     import numpy as np
     a[:] *= b
     a[:] *= 2
@@ -98,8 +79,7 @@ def multi_expression_augassign(a,b):
     a[:] -= b
     a += np.sum(b)
 
-@types('int[:,:](order=F)','int[:,:]','int[:]')
-def grouped_expressions(a,b,c):
+def grouped_expressions(a : 'int[:, b : :]):
     import numpy as np
     a[:] = a - c
     a[:] = a * b
@@ -107,8 +87,7 @@ def grouped_expressions(a,b,c):
     a[:] = a + c
     a += np.sum(b)
 
-@types('int[:,:,:]','int[:,:]','int[:]')
-def grouped_expressions2(a,b,c):
+def grouped_expressions2(a : 'int[:,:,:]', b : 'int[:,:]', c : 'int[:]'):
     import numpy as np
     a[:] = a - c
     a[:] = a * b
@@ -116,8 +95,7 @@ def grouped_expressions2(a,b,c):
     a[:] = a + c
     a += np.sum(b)
 
-@types('int[:,:]','int[:]')
-def dependencies(a,b):
+def dependencies(a : 'int[:,:]', b : 'int[:]'):
     import numpy as np
 
     c = np.zeros_like(a)
@@ -127,8 +105,7 @@ def dependencies(a,b):
 
     a[:] = c[:]
 
-@types('int[:,:]','int[:]')
-def auto_dependencies(a,b):
+def auto_dependencies(a : 'int[:,:]', b : 'int[:]'):
     import numpy as np
 
     c = np.ones_like(a)
