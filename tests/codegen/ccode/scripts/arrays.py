@@ -1,7 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 #==============================================================================
 
-def double_loop_on_2d_array_C(z : 'int[:):
+@types( 'int[:,:](order=C)' )
+def double_loop_on_2d_array_C( z ):
 
     from numpy import shape
 
@@ -11,7 +13,8 @@ def double_loop_on_2d_array_C(z : 'int[:):
         for j in range( n ):
             z[i,j] = i-j
 # ...
-def double_loop_on_2d_array_F(z : 'int[:):
+@types( 'int[:,:](order=F)' )
+def double_loop_on_2d_array_F( z ):
 
     from numpy import shape
 
@@ -21,7 +24,8 @@ def double_loop_on_2d_array_F(z : 'int[:):
         for j in range( n ):
             z[i,j] = i-j
 # ...
-def product_loop_on_real_array(z : 'float[:], float[:]'):
+@types( 'real[:], real[:]' )
+def product_loop_on_real_array( z, out ):
 
     from numpy     import shape
 

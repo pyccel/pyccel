@@ -1,64 +1,84 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types
 
-def right_shift_b_b(a : 'bool', b : 'bool'):
+@types('bool', 'bool')
+def right_shift_b_b(a, b):
     return a >> b
 
-def right_shift_i_i(a : 'int', b : 'int'):
+@types('int', 'int')
+def right_shift_i_i(a, b):
     return a >> b
 
-def right_shift_b_i(a : 'bool', b : 'int'):
+@types('bool', 'int')
+def right_shift_b_i(a, b):
     return a >> b
 
-def left_shift_b_i(a : 'bool', b : 'int'):
+@types('bool', 'int')
+def left_shift_b_i(a, b):
     return a >> b
 
-def left_shift_i_i(a : 'int', b : 'int'):
+@types('int', 'int')
+def left_shift_i_i(a, b):
     return a >> b
 
-def left_shift_b_b(a : 'bool', b : 'bool'):
+@types('bool', 'bool')
+def left_shift_b_b(a, b):
     return a >> b
 
-def bit_xor_b_b(a : 'bool', b : 'bool'):
+@types('bool', 'bool')
+def bit_xor_b_b(a, b):
    return a ^ b
 
-def bit_xor_b_b_b(a : 'bool', b : 'bool', c : 'bool'):
+@types('bool', 'bool', 'bool')
+def bit_xor_b_b_b(a, b, c):
     return a ^ b ^ c
 
-def bit_xor_i_i(a : 'int', b : 'int'):
+@types('int', 'int')
+def bit_xor_i_i(a, b):
    return a ^ b
 
-def bit_xor_b_i(a : 'bool', b : 'int'):
+@types('bool', 'int')
+def bit_xor_b_i(a, b):
    return a ^ b
 
-def bit_or_i_b(a : 'int', b : 'bool'):
+@types('int', 'bool')
+def bit_or_i_b(a, b):
    return a | b
 
-def bit_or_i_i(a : 'int', b : 'int'):
+@types('int', 'int')
+def bit_or_i_i(a, b):
    return a | b
 
-def bit_or_b_b(a : 'bool', b : 'bool'):
+@types('bool', 'bool')
+def bit_or_b_b(a, b):
    return a | b
 
-def bit_and_i_b(a : 'int', b : 'bool'):
+@types('int', 'bool')
+def bit_and_i_b(a, b):
    return a & b
 
-def bit_and_i_i(a : 'int', b : 'int'):
+@types('int', 'int')
+def bit_and_i_i(a, b):
    return a & b
 
-def bit_and_b_b(a : 'bool', b : 'bool'):
+@types('bool', 'bool')
+def bit_and_b_b(a, b):
    return a & b
 
-def bit_and_i_i_i(a : 'int', b : 'int', c : 'int'):
+@types('int', 'int', 'int')
+def bit_and_i_i_i(a, b, c):
         return a & b & c
 
-def bit_and_b_b_i(a : 'bool', b : 'bool', c : 'int'):
+@types('bool', 'bool', 'int')
+def bit_and_b_b_i(a, b, c):
         return a & b & c
 
-def invert_b(a : 'bool'):
+@types('bool')
+def invert_b(a):
    return ~a
 
-def invert_i(a : 'int'):
+@types('int')
+def invert_i(a):
    return ~a
 
 def or_ints(n : int):

@@ -5,7 +5,6 @@ import pytest
 
 from pyccel.epyccel import epyccel
 from modules        import mpi_point_to_point as pmod
-from pyccel.decorators import types
 
 #==============================================================================
 # IMPORT MODULE TO BE TESTED, EPYCCELIZE IT, AND MAKE IT AVAILABLE TO ALL PROCS

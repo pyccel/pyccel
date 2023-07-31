@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from pyccel.decorators import types
 
 from modules import base
 from utilities import epyccel_test

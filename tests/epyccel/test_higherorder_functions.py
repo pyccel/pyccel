@@ -3,7 +3,6 @@ import pytest
 import numpy as np
 import modules.highorder_functions as mod
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
 
 @pytest.fixture(scope="module")
 def modnew(language):

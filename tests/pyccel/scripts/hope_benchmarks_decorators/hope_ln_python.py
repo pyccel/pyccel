@@ -1,9 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def ln_python (X : 'double') :
+@types('double')
+def ln_python (X) :
     return (X-1) - (X-1)**2 / 2 + (X-1)**3 / 3 - (X-1)**4 / 4 + (X-1)**5 / 5 - (X-1)**6 / 6 + (X-1)**7 / 7 - (X-1)**8 / 8 + (X-1)**9 / 9
 
-def ln_python_exp (Y : 'double') :
+@types('double')
+def ln_python_exp (Y) :
     x = (Y - 1)
     x2 = x*x
     x4 = x2*x2

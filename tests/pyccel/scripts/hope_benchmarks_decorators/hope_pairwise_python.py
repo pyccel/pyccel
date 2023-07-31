@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def pairwise_python (X : 'double[:,:]', D : 'double[:,:]') :
+@types('double[:,:]','double[:,:]')
+def pairwise_python (X, D) :
     from numpy import sqrt, shape
 
     M, N = shape( X )

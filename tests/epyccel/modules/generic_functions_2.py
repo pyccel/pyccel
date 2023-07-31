@@ -4,12 +4,14 @@ from pyccel.decorators import template
 
 
 @template('Z', types=['int', 'float'])
-def tmplt_1(x : 'Z', y : 'Z'):
+@types('Z', 'Z')
+def tmplt_1(x, y):
     return x + y
 
 @template('Z', types=['int', 'float'])
 @template('Y', types=['int', 'float'])
-def multi_tmplt_1(x : 'Z', y : 'Z', z : 'Y'):
+@types('Z', 'Z', 'Y')
+def multi_tmplt_1(x, y, z):
     return x + y + z
 
 @types('int', 'int')
@@ -18,12 +20,14 @@ def multi_heads_1(x, y):
     return x + y
 
 @template(types=['int', 'float'], name = 'Z')
-def tmplt_2(x : 'Z', y : 'Z'):
+@types('Z', 'Z')
+def tmplt_2(x, y):
     return x + y
 
 @template('K', types=['int'])
 @template('G', types=['int', 'float'])
-def multi_tmplt_2(y : 'K', z : 'G'):
+@types('K', 'G')
+def multi_tmplt_2(y, z):
     return y + z
 
 
@@ -31,18 +35,21 @@ def multi_tmplt_2(y : 'K', z : 'G'):
 
 @template('K', types=['int'])
 @template('G', types=['int', 'float'])
-def default_var_1(x : 'G', y  : 'K' =  5):
+@types('G', 'K')
+def default_var_1(x , y = 5):
     return x + y
 
 
 @template('K', types=['complex'])
 @template('G', types=['int', 'float'])
-def default_var_2(x : 'G', y  : 'K' =  5j):
+@types('G', 'K')
+def default_var_2(x , y = 5j):
     return x + y
 
 @template('K', types=['bool'])
 @template('G', types=['int', 'float'])
-def default_var_3(x : 'G', y  : 'K' =  False):
+@types('G', 'K')
+def default_var_3(x , y = False):
     if y is True:
         return x
     return x - 1
@@ -55,7 +62,8 @@ def default_var_4(x, y = 5):
 
 @template('K', types=['int'])
 @template('G', types=['int', 'float'])
-def optional_var_1(x : 'G', y  : 'K' =  None):
+@types('G', 'K')
+def optional_var_1(x , y = None):
     if y is None :
         return x
     return x + y
@@ -63,7 +71,8 @@ def optional_var_1(x : 'G', y  : 'K' =  None):
 
 @template('K', types=['complex'])
 @template('G', types=['int', 'float'])
-def optional_var_2(x : 'G', y  : 'K' =  None):
+@types('G', 'K')
+def optional_var_2(x , y = None):
     if y is None :
         return x + 1j
     return x + y
@@ -86,48 +95,56 @@ def optional_var_4(x, y = None):
 #-------------------------------------------------
 
 @template('T', types=['int', 'int32', 'int8', 'int16', 'int64'])
-def int_types(x : 'T', y : 'T'):
+@types('T', 'T')
+def int_types(x, y):
     return x + y
 
 
 @template('T', types=['float', 'float32', 'float64'])
-def float_types(x : 'T', y : 'T'):
+@types('T', 'T')
+def float_types(x, y):
     return x + y
 
 @template('T', types=['complex', 'complex64', 'complex128'])
-def complex_types(x : 'T', y : 'T'):
+@types('T', 'T')
+def complex_types(x, y):
     return x + y
 
 
 @template('G', types=['complex', 'int'])
 @template('H', types=['int', 'float64'])
 @template('K', types=['int16', 'bool'])
-def mix_types_1(x : 'G', y : 'H', z : 'K'):
+@types('G', 'H', 'K')
+def mix_types_1(x, y, z):
     if z :
         return x + y
     return x - y
 
 
 @template('T', types=['int64', 'int32', 'int16', 'float', 'complex', 'float32'])
-def mix_types_2(x : 'T', y : 'T'):
+@types('T', 'T')
+def mix_types_2(x, y):
     if y != x:
         return y - x
     return -x
 
 
 @template('T', types=['int', 'int32'])
-def mix_types_3(x : 'T', y : 'T'):
+@types('T', 'T')
+def mix_types_3(x, y):
     if y != x:
         return y - x
     return -x
 
 
 @template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
-def mix_array_scalar(x : 'T'):
+@types('T')
+def mix_array_scalar(x):
     x[:] += 1
 
 @template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
-def mix_array_1(x : 'T', a : 'int'):
+@types('T', 'int')
+def mix_array_1(x, a):
     x[:] += a
 
 
@@ -138,19 +155,23 @@ def mix_array_2(x, y, a):
     y[:] -= a
 
 @template('T', types=['int32[:]', 'int8[:]', 'int16[:]', 'int64[:]'])
-def mix_int_array_1(x : 'T', a : 'int'):
+@types('T', 'int')
+def mix_int_array_1(x, a):
     x[:] += a
 
 @template('T', types=['int[:]', 'int32[:]', 'int64[:]'])
-def mix_int_array_2(x : 'T', a : 'int'):
+@types('T', 'int')
+def mix_int_array_2(x, a):
     x[:] += a
 
 @template('T', types=['float[:]', 'float32[:]'])
-def mix_float_array_1(x : 'T', a : 'float'):
+@types('T', 'float')
+def mix_float_array_1(x, a):
     x[:] *= a
 
 @template('T', types=['complex[:]', 'complex64[:]'])
-def mix_complex_array_1(x : 'T', a : 'float'):
+@types('T', 'float')
+def mix_complex_array_1(x, a):
     x[:] *= a
 
 #$ header function dup_header(float)

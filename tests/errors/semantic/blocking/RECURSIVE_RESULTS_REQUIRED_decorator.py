@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def fib(n : 'int') :
+@types('int')
+def fib(n) :
     if n < 2:
         result = n
         return result

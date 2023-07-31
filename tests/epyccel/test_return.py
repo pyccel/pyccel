@@ -11,7 +11,8 @@ def test_single_return_var_assign(language):
     assert (epyc_single_return_var_assign() == single_return_var_assign())
 
 def test_assign_vars_return(language):
-    def assign_vars_return(a : 'int', b : 'int'):
+    @types('int', 'int')
+    def assign_vars_return(a,b):
         c = a+b
         d = a-b
         return c+d
@@ -20,20 +21,23 @@ def test_assign_vars_return(language):
 
 
 def test_sum_in_single_return(language):
-    def sum_in_single_return(a : 'int', b : 'int'):
+    @types('int', 'int')
+    def sum_in_single_return(a,b):
         c = a + b
         return c
     epyc_sum_in_single_return = epyccel(sum_in_single_return, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_sum_in_single_return(7, 2) == sum_in_single_return(7, 2))
 
 def test_return_expr(language):
-    def return_expr(x : 'int', y : 'int'):
+    @types('int', 'int')
+    def return_expr(x, y):
         return x + y
     epyc_return_expr = epyccel(return_expr, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_return_expr(7, 2) == return_expr(7, 2))
 
 def test_return_single_var(language):
-    def return_single_var(x : 'int'):
+    @types('int')
+    def return_single_var(x):
         return x
     epyc_return_single_var = epyccel(return_single_var, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_return_single_var(7) == return_single_var(7))
@@ -51,19 +55,22 @@ def test_multi_return_scalare(language):
     assert (epyc_multi_return_scalare() == multi_return_scalare())
 
 def test_multi_return_vars(language):
-    def multi_return_vars(a : 'int', b : 'int'):
+    @types('int', 'int')
+    def multi_return_vars(a, b):
         return a, b
     epyc_multi_return_vars = epyccel(multi_return_vars, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_multi_return_vars(7, 2) == multi_return_vars(7, 2))
 
 def test_multi_return_vars_expr(language):
-    def multi_return_vars_expr(a : 'int', b : 'int'):
+    @types('int', 'int')
+    def multi_return_vars_expr(a, b):
         return (a-b), (a+b)
     epyc_multi_return_vars_expr = epyccel(multi_return_vars_expr, language=language, fflags="-Werror -Wunused-variable")
     assert (epyc_multi_return_vars_expr(7, 2) == multi_return_vars_expr(7, 2))
 
 def test_scalare_multi_return_stmts(language):
-    def scalare_multi_return_stmts(a : 'int'):
+    @types('int')
+    def scalare_multi_return_stmts(a):
         a = 7
         if a:
             return 1

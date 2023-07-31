@@ -13,7 +13,8 @@ ATOL = 1e-15
 # -----------------------------------------------------------------------------
 
 def test_call_gcd(language):
-    def call_gcd():
+    @types(int, int)
+    def call_gcd(x, y):
         from math import gcd
         return gcd(x, y)
 
@@ -26,7 +27,8 @@ def test_call_gcd(language):
 # -----------------------------------------------------------------------------
 
 def test_call_factorial(language):
-    def call_factorial(x : 'int'):
+    @types('int')
+    def call_factorial(x):
         from math import factorial
         return factorial(x)
 
@@ -40,7 +42,8 @@ def test_call_factorial(language):
 # New in version 3.9.
 @pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
 def test_call_lcm(language):
-    def call_lcm():
+    @types(int, int)
+    def call_lcm(x, y):
         from math import lcm
         return lcm(x, y)
 
@@ -53,7 +56,8 @@ def test_call_lcm(language):
 # -----------------------------------------------------------------------------
 
 def test_call_radians(language):
-    def call_radians(x : 'float'):
+    @types('real')
+    def call_radians(x):
         from math import radians
         return radians(x)
 
@@ -66,7 +70,8 @@ def test_call_radians(language):
 # -----------------------------------------------------------------------------
 
 def test_call_degrees(language):
-    def call_degrees(x : 'float'):
+    @types('real')
+    def call_degrees(x):
         from math import degrees
         return degrees(x)
 
@@ -78,7 +83,8 @@ def test_call_degrees(language):
 # -----------------------------------------------------------------------------
 
 def test_call_degrees_i(language):
-    def call_degrees_i(x : 'int'):
+    @types('int')
+    def call_degrees_i(x):
         from math import degrees
         return degrees(x)
 

@@ -19,7 +19,8 @@ def language(request):
 #==============================================================================
 
 def test_import(language):
-    def f1(x : 'int[:]'):
+    @types('int[:]')
+    def f1(x):
         import numpy
         s = numpy.shape(x)[0]
         return s
@@ -29,7 +30,8 @@ def test_import(language):
     assert f(x) == f1(x)
 
 def test_import_from(language):
-    def f2(x : 'int[:]'):
+    @types('int[:]')
+    def f2(x):
         from numpy import shape
         s = shape(x)[0]
         return s
@@ -40,7 +42,8 @@ def test_import_from(language):
     assert f(x) == f2(x)
 
 def test_import_as(language):
-    def f3(x : 'int[:]'):
+    @types('int[:]')
+    def f3(x):
         import numpy as np
         s = np.shape(x)[0]
         return s
@@ -54,7 +57,8 @@ def test_import_as(language):
     ]
 )
 def test_import_collision(language):
-    def f4(x : 'int'):
+    @types('int')
+    def f4(x):
         import modules.Module_3 as mod
         add_one = mod.add_one(x)
         return add_one
@@ -63,7 +67,8 @@ def test_import_collision(language):
     assert f(5) == f4(5)
 
 def test_import_method(language):
-    def f5(x : 'int[:]'):
+    @types('int[:]')
+    def f5(x):
         s = x.shape[0]
         return s
 

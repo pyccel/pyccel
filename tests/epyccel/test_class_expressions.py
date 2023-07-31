@@ -3,7 +3,6 @@ import numpy as np
 import pytest
 from numpy.random import randint
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
 
 def test_complex_imag(language):
     def f():

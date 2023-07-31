@@ -3,21 +3,24 @@ from pyccel.decorators import types
 
 #==============================================================================
 
-def sum_natural_numbers():
+@types( int )
+def sum_natural_numbers( n ):
     x = 0
     for i in range( 1, n+1 ):
         x += i
     return x
 
 # ...
-def factorial():
+@types( int )
+def factorial( n ):
     x = 1
     for i in range( 2, n+1 ):
         x *= i
     return x
 
 # ...
-def fibonacci():
+@types( int )
+def fibonacci( n ):
     x = 0
     y = 1
     for i in range( n ): # pylint: disable=unused-variable
@@ -27,7 +30,8 @@ def fibonacci():
     return x
 
 # ...
-def double_loop():
+@types( int )
+def double_loop( n ):
     x = 0
     for i in range( 3, 10 ): # pylint: disable=unused-variable
         x += 1
@@ -37,7 +41,8 @@ def double_loop():
     return z
 
 # ...
-def double_loop_on_2d_array_C():
+@types( 'int[:,:](order=C)' )
+def double_loop_on_2d_array_C( z ):
 
     from numpy import shape
 
@@ -49,7 +54,8 @@ def double_loop_on_2d_array_C():
 
 
 # ...
-def double_loop_on_2d_array_F():
+@types( 'int[:,:](order=F)' )
+def double_loop_on_2d_array_F( z ):
 
     from numpy import shape
 
@@ -60,7 +66,8 @@ def double_loop_on_2d_array_F():
             z[i,j] = i-j
 
 # ...
-def product_loop_on_2d_array_C():
+@types( 'int[:,:](order=C)' )
+def product_loop_on_2d_array_C( z ):
 
     from numpy     import shape
     from itertools import product
@@ -74,7 +81,8 @@ def product_loop_on_2d_array_C():
         z[i,j] = i-j
 
 # ...
-def product_loop_on_2d_array_F():
+@types( 'int[:,:](order=F)' )
+def product_loop_on_2d_array_F( z ):
 
     from numpy     import shape
     from itertools import product
@@ -101,9 +109,11 @@ def product_loop( z : 'float[:]', m : int, n : int ):
         k += 1
 
 # ...
-def map_on_1d_array(z : 'int[:]'):
+@types( 'int[:]' )
+def map_on_1d_array( z ):
 
-    def f():
+    @types( int )
+    def f( x ):
         return x+5
 
     res = 0
@@ -113,7 +123,8 @@ def map_on_1d_array(z : 'int[:]'):
     return res
 
 # ...
-def enumerate_on_1d_array(z : 'int[:]'):
+@types( 'int[:]' )
+def enumerate_on_1d_array( z ):
 
     res = 0
     for i,v in enumerate( z ):
@@ -122,7 +133,8 @@ def enumerate_on_1d_array(z : 'int[:]'):
     return res
 
 # ...
-def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
+@types( 'int[:]', 'int' )
+def enumerate_on_1d_array_with_start( z, k ):
 
     res = 0
     for i,v in enumerate( z, k ):
@@ -131,7 +143,8 @@ def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
     return res
 
 # ...
-def zip_prod():
+@types( int )
+def zip_prod( m ):
 
     x = [  i for i in range(m)]
     y = [2*j for j in range(m)]
@@ -143,7 +156,8 @@ def zip_prod():
     return res
 
 # ...
-def product_loop_on_real_array(z : 'float[:], float[:]'):
+@types( 'real[:], real[:]' )
+def product_loop_on_real_array( z, out ):
 
     from numpy     import shape
 
@@ -153,14 +167,16 @@ def product_loop_on_real_array(z : 'float[:], float[:]'):
         out[i] = z[i]**2
 
 # ...
-def fizzbuzz_search_with_breaks(fizz : 'int,int,int'):
+@types('int,int,int')
+def fizzbuzz_search_with_breaks( fizz, buzz, max_val ):
     for i in range(1,max_val+1):
         if i%fizz == 0 and i%buzz == 0:
             break
     return i
 
 # ...
-def fizzbuzz_sum_with_continue(fizz : 'int,int,int'):
+@types('int,int,int')
+def fizzbuzz_sum_with_continue( fizz, buzz, max_val ):
     fizzbuzz_sum = 0
     for i in range(1,max_val+1):
         if i%fizz != 0:
@@ -171,7 +187,8 @@ def fizzbuzz_sum_with_continue(fizz : 'int,int,int'):
     return fizzbuzz_sum
 
 # ...
-def fibonacci_while():
+@types(int)
+def fibonacci_while(n):
     x = 0
     y = 1
     i = 1
@@ -183,7 +200,8 @@ def fibonacci_while():
     return x
 
 # ...
-def sum_nat_numbers_while():
+@types(int)
+def sum_nat_numbers_while(n):
     x = 0
     i = 0
     while i <= n:
@@ -192,7 +210,8 @@ def sum_nat_numbers_while():
     return x
 
 # ...
-def double_while_sum():
+@types(int,int)
+def double_while_sum(n, m):
     x = 0
     y = 0
     i = 0
@@ -205,7 +224,8 @@ def double_while_sum():
     return i
 
 # ...
-def factorial_while():
+@types( int )
+def factorial_while( n ):
     x = 1
     i = 1
     while i <= n:
@@ -213,12 +233,14 @@ def factorial_while():
         i = i + 1
     return x
 
-def while_not_0():
+@types( int )
+def while_not_0( n ):
     while n:
         n -= 1
     return n
 
-def for_loop1():
+@types( int, int, int )
+def for_loop1(start, stop, step):
     x = 0
     for i in range(start, stop, step):
         x += i

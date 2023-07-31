@@ -12,25 +12,30 @@ from pyccel.decorators import template
 #$ header template O(bool|complex)
 #$ header template S(int|real)
 
-def gen_1(a : 'float'):
+@types('real')
+def gen_1(a):
     return a * 10
 
 def gen_2(y, x):
     return y * x
 
-def gen_3(x : 'T', y : 'T'):
+@types('T', 'T')
+def gen_3(x, y):
     return x - y
 
 def gen_4(x, y):
     return x + y
 
-def gen_5(x : 'T', y : 'R'):
+@types('T', 'R')
+def gen_5(x, y):
     return x + y
 
-def gen_6(x : 'S', y : 'S'):
+@types('S', 'S')
+def gen_6(x, y):
     return x + y
 
-def gen_7(x : 'T', y : 'T', z : 'R'):
+@types('T', 'T', 'R')
+def gen_7(x, y, z):
     return x + y + z
 
 @types('int', 'int')
@@ -39,24 +44,29 @@ def multi_heads_1(x, y):
     return x + y
 
 @template('z', types=['int', 'real'])
-def tmplt_1(x : 'z', y : 'z'):
+@types('z', 'z')
+def tmplt_1(x, y):
     return x + y
 
 @template('z', types=['int', 'real'])
 @template('y', types=['int', 'real'])
-def multi_tmplt_1(x : 'z', y : 'z', z : 'y'):
+@types('z', 'z', 'y')
+def multi_tmplt_1(x, y, z):
     return x + y + z
 
 @template('z', types=['int', 'real'])
-def tmplt_head_1(x : 'z', y : 'z'):
+@types('z', 'z')
+def tmplt_head_1(x, y):
     return x + y
 
 @template('O', types=['int', 'real'])
-def local_overide_1(x : 'O', y : 'O'):
+@types('O', 'O')
+def local_overide_1(x, y):
     return x + y
 
 @template('z', types=['int', 'real'])
-def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
+@types('z', 'z', 'R')
+def tmplt_tmplt_1(x, y, z):
     return x + y + z
 
 #$ header function array_elem1(int64 [:]|float64[:])
@@ -65,14 +75,17 @@ def array_elem1(x):
 
 @template('k', types=['int'])
 @template('g', types=['int', 'real'])
-def multi_tmplt_2(y : 'k', z : 'g'):
+@types('k', 'g')
+def multi_tmplt_2(y, z):
     return y + z
 
 @template('g', types=['int', 'int'])
-def dup_types_1(a : 'g'):
+@types('g')
+def dup_types_1(a):
     return a
 
-def dup_types_2():
+@types('int|int')
+def dup_types_2(a):
     return a
 
 def tst_gen_1():

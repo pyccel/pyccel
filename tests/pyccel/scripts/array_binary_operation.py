@@ -1,7 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
+from pyccel.decorators import types
 
-def my_pow(n : 'int', m : 'int'):
+@types('int', 'int')
+def my_pow(n, m):
     return n ** m
 
 def array_func_mult():

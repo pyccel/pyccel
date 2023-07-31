@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 @pure
-def square(x : float):
+@types(float)
+def square(x):
     s = x*x
     return s
 

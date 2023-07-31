@@ -1,9 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def add_one(x : 'int'):
+@types('int')
+def add_one(x):
     return x + 1
 
-def func(x  : 'int' =  None):
+@types('int')
+def func(x = None):
     if x is None:
         return 2
     return add_one(x)

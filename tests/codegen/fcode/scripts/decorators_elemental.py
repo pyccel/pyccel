@@ -3,7 +3,8 @@ from numpy import array
 from numpy import zeros_like
 
 @elemental
-def square(x : float):
+@types(float)
+def square(x):
     s = x*x
     return s
 

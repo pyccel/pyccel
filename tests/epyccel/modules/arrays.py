@@ -1,17 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-from pyccel.decorators import types
-from pyccel.decorators import template, stack_array, allow_negative_index
+from pyccel.decorators import types, template, stack_array, allow_negative_index
+
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
 a_1d_overflow = np.array([(1 << i) - 1 for i in range(32)], dtype=int)
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
 
 
+@types('T', 'T')
 @template(name='T' , types=['int', 'int8', 'int16', 'int32', 'int64', 'float',
                             'float32', 'float64', 'complex64', 'complex128'])
-def array_return_first_element(a : 'T', b : 'T'):
+def array_return_first_element(a, b):
     from numpy import array
     x = array([a,b])
     return x[0]
@@ -20,37 +21,48 @@ def array_return_first_element(a : 'T', b : 'T'):
 # 1D ARRAYS OF INT-32
 #==============================================================================
 
-def array_int32_1d_scalar_add(x : 'int32[:]', a : 'int32'):
+@types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_add( x, a ):
     x[:] += a
 
-def array_int32_1d_scalar_sub(x : 'int32[:]', a : 'int32'):
+@types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_sub( x, a ):
     x[:] -= a
 
-def array_int32_1d_scalar_mul(x : 'int32[:]', a : 'int32'):
+@types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_mul( x, a ):
     x[:] *= a
 
-def array_int32_1d_scalar_div(x : 'int32[:]', a : 'int32'):
+@types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_div( x, a ):
     x[:] = x / a
 
-def array_int32_1d_scalar_idiv(x : 'int32[:]', a : 'int32'):
+@types( 'int32[:]', 'int32' )
+def array_int32_1d_scalar_idiv( x, a ):
     x[:] = x // a
 
-def array_int32_1d_add(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_add( x, y ):
     x[:] += y
 
-def array_int32_1d_sub(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_sub( x, y ):
     x[:] -= y
 
-def array_int32_1d_mul(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_mul( x, y ):
     x[:] *= y
 
-def array_int32_1d_idiv(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_idiv( x, y ):
     x[:] = x // y
 
-def array_int32_1d_add_augassign(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_add_augassign( x, y ):
     x += y
 
-def array_int32_1d_sub_augassign(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_sub_augassign( x, y ):
     x -= y
 
 def array_int_1d_initialization_1():
@@ -75,56 +87,72 @@ def array_int_1d_initialization_3():
 # 2D ARRAYS OF INT-32 WITH C ORDERING
 #==============================================================================
 
-def array_int32_2d_C_scalar_add(x : 'int32[:,:]', a : 'int32'):
+@types( 'int32[:,:]', 'int32' )
+def array_int32_2d_C_scalar_add( x, a ):
     x[:,:] += a
 
-def array_int32_2d_C_scalar_sub(x : 'int32[:,:]', a : 'int32'):
+@types( 'int32[:,:]', 'int32' )
+def array_int32_2d_C_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_int32_2d_C_scalar_mul(x : 'int32[:,:]', a : 'int32'):
+@types( 'int32[:,:]', 'int32' )
+def array_int32_2d_C_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_int32_2d_C_scalar_idiv(x : 'int32[:,:]', a : 'int32'):
+@types( 'int32[:,:]', 'int32' )
+def array_int32_2d_C_scalar_idiv( x, a ):
     x[:,:] = x // a
 
-def array_int32_2d_C_add(x : 'int32[:,:]', y : 'int32[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_add( x, y ):
     x[:,:] += y
 
-def array_int32_2d_C_sub(x : 'int32[:,:]', y : 'int32[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_sub( x, y ):
     x[:,:] -= y
 
-def array_int32_2d_C_mul(x : 'int32[:,:]', y : 'int32[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_mul( x, y ):
     x[:,:] *= y
 
-def array_int32_2d_C_idiv(x : 'int32[:,:]', y : 'int32[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_idiv( x, y ):
     x[:,:] = x // y
 
 #==============================================================================
 # 2D ARRAYS OF INT-32 WITH F ORDERING
 #==============================================================================
 
-def array_int32_2d_F_scalar_add():
+@types( 'int32[:,:](order=F)', 'int32' )
+def array_int32_2d_F_scalar_add( x, a ):
     x[:,:] += a
 
-def array_int32_2d_F_scalar_sub():
+@types( 'int32[:,:](order=F)', 'int32' )
+def array_int32_2d_F_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_int32_2d_F_scalar_mul():
+@types( 'int32[:,:](order=F)', 'int32' )
+def array_int32_2d_F_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_int32_2d_F_scalar_idiv():
+@types( 'int32[:,:](order=F)', 'int32' )
+def array_int32_2d_F_scalar_idiv( x, a ):
     x[:,:] = x // a
 
-def array_int32_2d_F_add():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_add( x, y ):
     x[:,:] += y
 
-def array_int32_2d_F_sub():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_sub( x, y ):
     x[:,:] -= y
 
-def array_int32_2d_F_mul():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_mul( x, y ):
     x[:,:] *= y
 
-def array_int32_2d_F_idiv():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_idiv( x, y ):
     x[:,:] = x // y
 
 
@@ -132,59 +160,76 @@ def array_int32_2d_F_idiv():
 # 1D ARRAYS OF INT-64
 #==============================================================================
 
-def array_int_1d_scalar_add(x : 'int[:]', a : 'int'):
+@types( 'int[:]', 'int' )
+def array_int_1d_scalar_add( x, a ):
     x[:] += a
 
-def array_int_1d_scalar_sub(x : 'int[:]', a : 'int'):
+@types( 'int[:]', 'int' )
+def array_int_1d_scalar_sub( x, a ):
     x[:] -= a
 
-def array_int_1d_scalar_mul(x : 'int[:]', a : 'int'):
+@types( 'int[:]', 'int' )
+def array_int_1d_scalar_mul( x, a ):
     x[:] *= a
 
-def array_int_1d_scalar_idiv(x : 'int[:]', a : 'int'):
+@types( 'int[:]', 'int' )
+def array_int_1d_scalar_idiv( x, a ):
     x[:] = x // a
 
-def array_int_1d_add(x : 'int[:]', y : 'int[:]'):
+@types( 'int[:]', 'int[:]' )
+def array_int_1d_add( x, y ):
     x[:] += y
 
-def array_int_1d_sub(x : 'int[:]', y : 'int[:]'):
+@types( 'int[:]', 'int[:]' )
+def array_int_1d_sub( x, y ):
     x[:] -= y
 
-def array_int_1d_mul(x : 'int[:]', y : 'int[:]'):
+@types( 'int[:]', 'int[:]' )
+def array_int_1d_mul( x, y ):
     x[:] *= y
 
-def array_int_1d_idiv(x : 'int[:]', y : 'int[:]'):
+@types( 'int[:]', 'int[:]' )
+def array_int_1d_idiv( x, y ):
     x[:] = x // y
 
 #==============================================================================
 # 2D ARRAYS OF INT-64 WITH C ORDERING
 #==============================================================================
 
-def array_int_2d_C_scalar_add(x : 'int[:,:]', a : 'int'):
+@types( 'int[:,:]', 'int' )
+def array_int_2d_C_scalar_add( x, a ):
     x[:,:] += a
 
-def array_int_2d_C_scalar_sub(x : 'int[:,:]', a : 'int'):
+@types( 'int[:,:]', 'int' )
+def array_int_2d_C_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_int_2d_C_scalar_mul(x : 'int[:,:]', a : 'int'):
+@types( 'int[:,:]', 'int' )
+def array_int_2d_C_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_int_2d_C_scalar_idiv(x : 'int[:,:]', a : 'int'):
+@types( 'int[:,:]', 'int' )
+def array_int_2d_C_scalar_idiv( x, a ):
     x[:,:] = x // a
 
-def array_int_2d_C_add(x : 'int[:,:]', y : 'int[:,:]'):
+@types( 'int[:,:]', 'int[:,:]' )
+def array_int_2d_C_add( x, y ):
     x[:,:] += y
 
-def array_int_2d_C_sub(x : 'int[:,:]', y : 'int[:,:]'):
+@types( 'int[:,:]', 'int[:,:]' )
+def array_int_2d_C_sub( x, y ):
     x[:,:] -= y
 
-def array_int_2d_C_mul(x : 'int[:,:]', y : 'int[:,:]'):
+@types( 'int[:,:]', 'int[:,:]' )
+def array_int_2d_C_mul( x, y ):
     x[:,:] *= y
 
-def array_int_2d_C_idiv(x : 'int[:,:]', y : 'int[:,:]'):
+@types( 'int[:,:]', 'int[:,:]' )
+def array_int_2d_C_idiv( x, y ):
     x[:,:] = x // y
 
-def array_int_2d_C_initialization(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_int_2d_C_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]])
     a[:,:] = tmp[:,:]
@@ -193,31 +238,40 @@ def array_int_2d_C_initialization(a : 'int[:,:]'):
 # 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
 
-def array_int_2d_F_scalar_add():
+@types( 'int[:,:](order=F)', 'int' )
+def array_int_2d_F_scalar_add( x, a ):
     x[:,:] += a
 
-def array_int_2d_F_scalar_sub():
+@types( 'int[:,:](order=F)', 'int' )
+def array_int_2d_F_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_int_2d_F_scalar_mul():
+@types( 'int[:,:](order=F)', 'int' )
+def array_int_2d_F_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_int_2d_F_scalar_idiv():
+@types( 'int[:,:](order=F)', 'int' )
+def array_int_2d_F_scalar_idiv( x, a ):
     x[:,:] = x // a
 
-def array_int_2d_F_add():
+@types( 'int[:,:](order=F)', 'int[:,:](order=F)' )
+def array_int_2d_F_add( x, y ):
     x[:,:] += y
 
-def array_int_2d_F_sub():
+@types( 'int[:,:](order=F)', 'int[:,:](order=F)' )
+def array_int_2d_F_sub( x, y ):
     x[:,:] -= y
 
-def array_int_2d_F_mul():
+@types( 'int[:,:](order=F)', 'int[:,:](order=F)' )
+def array_int_2d_F_mul( x, y ):
     x[:,:] *= y
 
-def array_int_2d_F_idiv():
+@types( 'int[:,:](order=F)', 'int[:,:](order=F)' )
+def array_int_2d_F_idiv( x, y ):
     x[:,:] = x // y
 
-def array_int_2d_F_initialization():
+@types('int[:,:](order=F)')
+def array_int_2d_F_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='int', order='F')
     a[:,:] = tmp[:,:]
@@ -227,93 +281,119 @@ def array_int_2d_F_initialization():
 # 1D ARRAYS OF REAL
 #==============================================================================
 
-def array_real_1d_scalar_add(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_add( x, a ):
     x[:] += a
 
-def array_real_1d_scalar_sub(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_sub( x, a ):
     x[:] -= a
 
-def array_real_1d_scalar_mul(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_mul( x, a ):
     x[:] *= a
 
-def array_real_1d_scalar_div(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_div( x, a ):
     x[:] /= a
 
-def array_real_1d_scalar_mod(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real')
+def array_real_1d_scalar_mod( x, a ):
     x[:] %= a
 
-def array_real_1d_scalar_idiv(x : 'float[:]', a : 'float'):
+@types( 'real[:]', 'real' )
+def array_real_1d_scalar_idiv( x, a ):
     x[:] = x // a
 
-def array_real_1d_add(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_add( x, y ):
     x[:] += y
 
-def array_real_1d_sub(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_sub( x, y ):
     x[:] -= y
 
-def array_real_1d_mul(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_mul( x, y ):
     x[:] *= y
 
-def array_real_1d_div(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_div( x, y ):
     x[:] /= y
 
-def array_real_1d_mod(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]')
+def array_real_1d_mod( x, y ):
     x[:] %= y
 
-def array_real_1d_idiv(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_idiv( x, y ):
     x[:] = x // y
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH C ORDERING
 #==============================================================================
 
-def array_real_2d_C_scalar_add(x : 'float[:,:]', a : 'float'):
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_add( x, a ):
     x[:,:] += a
 
-def array_real_2d_C_scalar_sub(x : 'float[:,:]', a : 'float'):
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_real_2d_C_scalar_mul(x : 'float[:,:]', a : 'float'):
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_real_2d_C_scalar_div(x : 'float[:,:]', a : 'float'):
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_div( x, a ):
     x[:,:] /= a
 
-def array_real_2d_C_scalar_mod(x : 'float[:,:]', a : 'float'):
+@types( 'real[:,:]', 'real' )
+def array_real_2d_C_scalar_mod( x, a ):
     x[:,:] %= a
 
-def array_real_2d_C_add(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_add( x, y ):
     x[:,:] += y
 
-def array_real_2d_C_sub(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_sub( x, y ):
     x[:,:] -= y
 
-def array_real_2d_C_mul(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_mul( x, y ):
     x[:,:] *= y
 
-def array_real_2d_C_div(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_div( x, y ):
     x[:,:] /= y
 
-def array_real_2d_C_mod(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_mod( x, y ):
     x[:,:] %= y
 
-def array_real_2d_C_array_initialization(a : 'float[:,:]'):
+@types('real[:,:]')
+def array_real_2d_C_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float')
     a[:,:] = tmp[:,:]
 
-def array_real_3d_C_array_initialization_1(x : 'float[:,:]', y : 'float[:,:]', a : 'float[:,:,:]'):
+@types('real[:,:]','real[:,:]', 'real[:,:,:]')
+def array_real_3d_C_array_initialization_1(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float')
     a[:,:,:] = tmp[:,:,:]
 
-def array_real_3d_C_array_initialization_2(a : 'float[:,:,:]'):
+@types('real[:,:,:]')
+def array_real_3d_C_array_initialization_2(a):
     from numpy import array
     x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
               [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='C')
     a[:,:,:] = x[:,:,:]
 
-def array_real_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]', a : 'float[:,:,:,:]'):
+@types('real[:,:,:]','real[:,:,:]', 'real[:,:,:,:]')
+def array_real_4d_C_array_initialization(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
@@ -323,58 +403,73 @@ def array_real_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]',
 # 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
 
-def array_real_2d_F_scalar_add():
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_add( x, a ):
     x[:,:] += a
 
-def array_real_2d_F_scalar_sub():
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_sub( x, a ):
     x[:,:] -= a
 
-def array_real_2d_F_scalar_mul():
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_mul( x, a ):
     x[:,:] *= a
 
-def array_real_2d_F_scalar_div():
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_div( x, a ):
     x[:,:] /= a
 
-def array_real_2d_F_scalar_mod():
+@types( 'real[:,:](order=F)', 'real' )
+def array_real_2d_F_scalar_mod( x, a ):
     x[:,:] %= a
 
-def array_real_2d_F_add():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_add( x, y ):
     x[:,:] += y
 
-def array_real_2d_F_sub():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_sub( x, y ):
     x[:,:] -= y
 
-def array_real_2d_F_mul():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_mul( x, y ):
     x[:,:] *= y
 
-def array_real_2d_F_div():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_div( x, y ):
     x[:,:] /= y
 
-def array_real_2d_F_mod():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_mod( x, y ):
     x[:,:] %= y
 
-def array_real_2d_F_array_initialization():
+@types('real[:,:](order=F)')
+def array_real_2d_F_array_initialization(a):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
     a[:,:] = tmp[:,:]
 
-def array_real_3d_F_array_initialization_1():
+@types('real[:,:](order=F)','real[:,:](order=F)', 'real[:,:,:](order=F)')
+def array_real_3d_F_array_initialization_1(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:] = tmp[:,:,:]
 
-def array_real_3d_F_array_initialization_2():
+@types('real[:,:,:](order=F)')
+def array_real_3d_F_array_initialization_2(a):
     from numpy import array
     x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
                  [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='F')
     a[:,:,:] = x[:,:,:]
 
-def array_real_4d_F_array_initialization():
+@types('real[:,:,:](order=F)','real[:,:,:](order=F)', 'real[:,:,:,:](order=F)')
+def array_real_4d_F_array_initialization(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:,:] = tmp[:,:,:,:]
 
-def array_real_4d_F_array_initialization_mixed_ordering():
+@types('real[:,:](order=F)', 'real[:,:,:,:](order=F)')
+def array_real_4d_F_array_initialization_mixed_ordering(x, a):
     import numpy as np
     tmp      = np.array(((((0., 1.), (2., 3.)),
                           ((4., 5.), (6., 7.)),
@@ -391,47 +486,56 @@ def array_real_4d_F_array_initialization_mixed_ordering():
 #==============================================================================
 
 
-def array_int32_1d_complex_3d_expr(x : 'int32[:]', y : 'int32[:]'):
+@types( 'int32[:]', 'int32[:]' )
+def array_int32_1d_complex_3d_expr( x, y ):
     from numpy import full, int32
     z = full(3,5, dtype=int32)
     x[:] = (x // y) * x + z
 
-def array_int32_2d_C_complex_3d_expr(x : 'int32[:,:]', y : 'int32[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]' )
+def array_int32_2d_C_complex_3d_expr( x, y ):
     from numpy import full, int32
     z = full((2,3),5, dtype=int32)
     x[:] = (x // y) * x + z
 
-def array_int32_2d_F_complex_3d_expr():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)' )
+def array_int32_2d_F_complex_3d_expr( x, y ):
     from numpy import full, int32
     z = full((2,3),5,order='F', dtype=int32)
     x[:] = (x // y) * x + z
 
-def array_real_1d_complex_3d_expr(x : 'float[:]', y : 'float[:]'):
+@types( 'real[:]', 'real[:]' )
+def array_real_1d_complex_3d_expr( x, y ):
     from numpy import full
     z = full(3,5)
     x[:] = (x // y) * x + z
 
-def array_real_2d_C_complex_3d_expr(x : 'float[:,:]', y : 'float[:,:]'):
+@types( 'real[:,:]', 'real[:,:]' )
+def array_real_2d_C_complex_3d_expr( x, y ):
     from numpy import full
     z = full((2,3),5)
     x[:] = (x // y) * x + z
 
-def array_real_2d_F_complex_3d_expr():
+@types( 'real[:,:](order=F)', 'real[:,:](order=F)' )
+def array_real_2d_F_complex_3d_expr( x, y ):
     from numpy import full
     z = full((2,3),5,order='F')
     x[:] = (x // y) * x + z
 
-def array_int32_in_bool_out_1d_complex_3d_expr(x : 'int32[:]', y : 'int32[:]', ri : 'bool[:]'):
+@types( 'int32[:]', 'int32[:]', 'bool[:]' )
+def array_int32_in_bool_out_1d_complex_3d_expr( x, y, ri ):
     from numpy import full, int32, empty
     z = full(3,5, dtype=int32)
     ri[:] = (x // y) * x > z
 
-def array_int32_in_bool_out_2d_C_complex_3d_expr(x : 'int32[:,:]', y : 'int32[:,:]', ri : 'bool[:,:]'):
+@types( 'int32[:,:]', 'int32[:,:]', 'bool[:,:]' )
+def array_int32_in_bool_out_2d_C_complex_3d_expr( x, y, ri ):
     from numpy import full, int32
     z = full((2,3),5, dtype=int32)
     ri[:] = (x // y) * x > z
 
-def array_int32_in_bool_out_2d_F_complex_3d_expr():
+@types( 'int32[:,:](order=F)', 'int32[:,:](order=F)', 'bool[:,:](order=F)' )
+def array_int32_in_bool_out_2d_F_complex_3d_expr( x, y, ri ):
     from numpy import full, int32
     z = full((2,3),5,order='F', dtype=int32)
     ri[:] = (x // y) * x > z
@@ -535,41 +639,50 @@ def multiple_2d_stack_array_2():
 # TEST: Product and matrix multiplication
 #==============================================================================
 
-def array_real_1d_1d_prod(x : 'float[:], float[:]'):
+@types('real[:], real[:]')
+def array_real_1d_1d_prod(x, out):
     from numpy import prod
     out[:] = prod(x)
 
-def array_real_2d_1d_matmul(A : 'float[:,:], float[:], float[:]'):
+@types('real[:,:], real[:], real[:]')
+def array_real_2d_1d_matmul(A, x, out):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_2d_1d_matmul_creation(A : 'float[:,:], float[:]'):
+@types('real[:,:], real[:]')
+def array_real_2d_1d_matmul_creation(A, x):
     from numpy import matmul
     out = matmul(A, x)
     return out.sum()
 
-def array_real_2d_1d_matmul_order_F():
+@types('real[:,:](order=F), real[:], real[:]')
+def array_real_2d_1d_matmul_order_F(A, x, out):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_1d_2d_matmul(x : 'float[:], float[:,:], float[:]'):
+@types('real[:], real[:,:], real[:]')
+def array_real_1d_2d_matmul(x, A, out):
     from numpy import matmul
     out[:] = matmul(x, A)
 
-def array_real_2d_2d_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
+@types('real[:,:], real[:,:], real[:,:]')
+def array_real_2d_2d_matmul(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_F_F():
+@types('real[:,:](order=F), real[:,:](order=F), real[:,:](order=F)')
+def array_real_2d_2d_matmul_F_F(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
 # Mixed order, not supported currently, see #244
-def array_real_2d_2d_matmul_mixorder():
+@types('real[:,:], real[:,:](order=F), real[:,:]')
+def array_real_2d_2d_matmul_mixorder(A, B, out):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_operator(A : 'float[:,:], float[:,:], float[:,:]'):
+@types('real[:,:], real[:,:], real[:,:]')
+def array_real_2d_2d_matmul_operator(A, B, out):
     out[:,:] = A @ B
 
 @types('real[:], real[:], real[:]')
@@ -620,7 +733,8 @@ def array_kwargs_ones():
 # NEGATIVE INDEXES
 #==============================================================================
 
-def constant_negative_index(n : 'int'):
+@types('int')
+def constant_negative_index(n):
     import numpy as np
     a = np.empty(n, dtype=int)
 
@@ -629,7 +743,8 @@ def constant_negative_index(n : 'int'):
 
     return a[-1], a[-2]
 
-def almost_negative_index(n : 'int'):
+@types('int')
+def almost_negative_index(n):
     import numpy as np
     a = np.empty(n, dtype=int)
 
@@ -640,7 +755,8 @@ def almost_negative_index(n : 'int'):
     return a[-j]
 
 @allow_negative_index('a')
-def var_negative_index(n : 'int', idx : 'int'):
+@types('int', 'int')
+def var_negative_index(n, idx):
     import numpy as np
     a = np.empty(n, dtype=int)
 
@@ -650,7 +766,8 @@ def var_negative_index(n : 'int', idx : 'int'):
     return a[idx]
 
 @allow_negative_index('a')
-def expr_negative_index(n : 'int', idx_1 : 'int', idx_2 : 'int'):
+@types('int', 'int', 'int')
+def expr_negative_index(n, idx_1, idx_2):
     import numpy as np
     a = np.empty(n, dtype=int)
 
@@ -661,7 +778,8 @@ def expr_negative_index(n : 'int', idx_1 : 'int', idx_2 : 'int'):
 
 @allow_negative_index('a')
 @allow_negative_index('b')
-def test_multiple_negative_index(c : 'int', d : 'int'):
+@types('int', 'int')
+def test_multiple_negative_index(c, d):
     import numpy as np
     a = np.array([1, 2, 3, 4, 5, 6])
     b = np.array([1, 2, 3])
@@ -671,7 +789,8 @@ def test_multiple_negative_index(c : 'int', d : 'int'):
     return x, y
 
 @allow_negative_index('a', 'b')
-def test_multiple_negative_index_2(c : 'int', d : 'int'):
+@types('int', 'int')
+def test_multiple_negative_index_2(c, d):
     import numpy as np
     a = np.array([1.2, 2.2, 3.2, 4.2])
     b = np.array([1, 5, 9, 13])
@@ -683,7 +802,8 @@ def test_multiple_negative_index_2(c : 'int', d : 'int'):
 
 @allow_negative_index('a')
 @allow_negative_index('b', 'c')
-def test_multiple_negative_index_3(d : 'int', e : 'int', f : 'int'):
+@types('int', 'int', 'int')
+def test_multiple_negative_index_3(d, e, f):
     import numpy as np
     a = np.array([1.2, 2.2, 3.2, 4.2])
     b = np.array([1])
@@ -692,25 +812,29 @@ def test_multiple_negative_index_3(d : 'int', e : 'int', f : 'int'):
     return a[d], b[e], c[f]
 
 @allow_negative_index('a')
-def test_argument_negative_index_1(a : 'int[:]'):
+@types('int[:]')
+def test_argument_negative_index_1(a):
     c = -2
     d = 5
     return a[c], a[d]
 
 @allow_negative_index('a', 'b')
-def test_argument_negative_index_2(a : 'int[:]', b : 'int[:]'):
+@types('int[:]', 'int[:]')
+def test_argument_negative_index_2(a, b):
     c = -2
     d = 3
     return a[c], a[d], b[c], b[d]
 
 @allow_negative_index('a', 'b')
-def test_c_order_argument_negative_index(a : 'int[:,:]', b : 'int[:,:]'):
+@types('int[:,:]', 'int[:,:]')
+def test_c_order_argument_negative_index(a, b):
     c = -2
     d = 2
     return a[c,0], a[1,d], b[c,1], b[d,0]
 
 @allow_negative_index('a', 'b')
-def test_f_order_argument_negative_index():
+@types('int[:,:](order=F)', 'int[:,:](order=F)')
+def test_f_order_argument_negative_index(a, b):
     c = -2
     d = 3
     return a[c,0], a[1,d], b[c,1], b[0,d]
@@ -725,7 +849,8 @@ def array_random_size():
     c = np.zeros_like(a)
     return np.shape(a)[0], np.shape(c)[0]
 
-def array_variable_size(n : 'int', m : 'int'):
+@types('int','int')
+def array_variable_size(n,m):
     import numpy as np
     s = n
     a = np.zeros(s)
@@ -737,67 +862,79 @@ def array_variable_size(n : 'int', m : 'int'):
 # 1D ARRAY SLICING
 #==============================================================================
 
-def array_1d_slice_1(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_1(a):
     import numpy as np
     b = a[:]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_2(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_2(a):
     import numpy as np
     b = a[5:]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_3(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_3(a):
     import numpy as np
     b = a[:5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_4(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_4(a):
     import numpy as np
     b = a[5:15]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_5(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_5(a):
     import numpy as np
     b = a[:-5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_6(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_6(a):
     import numpy as np
     b = a[-5:]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_7(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_7(a):
     import numpy as np
     b = a[-15:-5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_8(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_8(a):
     import numpy as np
     b = a[5:-5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_9(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_9(a):
     import numpy as np
     b = a[-15:15]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_10(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_10(a):
     import numpy as np
     c = -15
     b = a[c:]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_11(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_11(a):
     import numpy as np
     c = -5
     b = a[:c]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_12(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_12(a):
     import numpy as np
     c = -15
     d = -5
@@ -808,109 +945,130 @@ def array_1d_slice_12(a : 'int[:]'):
 # 2D ARRAY SLICE ORDER F
 #==============================================================================
 
-def array_2d_F_slice_1():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_1(a):
     import numpy as np
     b = a[:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_2():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_2(a):
     import numpy as np
     b = a[5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_3():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_3(a):
     import numpy as np
     b = a[:5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_4():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_4(a):
     import numpy as np
     b = a[-15:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_5():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_5(a):
     import numpy as np
     b = a[:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_6():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_6(a):
     import numpy as np
     b = a[5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_7():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_7(a):
     import numpy as np
     b = a[-15:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_8():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_8(a):
     import numpy as np
     b = a[::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_9():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_9(a):
     import numpy as np
     b = a[5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_10():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_10(a):
     import numpy as np
     b = a[:5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_11():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_11(a):
     import numpy as np
     b = a[:, 5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_12():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_12(a):
     import numpy as np
     b = a[:, :5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_13():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_13(a):
     import numpy as np
     b = a[:-5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_14():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_14(a):
     import numpy as np
     b = a[-5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_15():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_15(a):
     import numpy as np
     b = a[:, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_16():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_16(a):
     import numpy as np
     b = a[:, :-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_17():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_17(a):
     import numpy as np
     b = a[:, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_18():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_18(a):
     import numpy as np
     b = a[5:15, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 
-def array_2d_F_slice_19():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_19(a):
     import numpy as np
     b = a[5:15, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_20():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_20(a):
     import numpy as np
     b = a[5:15, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_21():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_21(a):
     import numpy as np
     c = -5
     d = 5
@@ -918,7 +1076,8 @@ def array_2d_F_slice_21():
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_22():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_22(a):
     import numpy as np
     c = -5
     d = -15
@@ -926,7 +1085,8 @@ def array_2d_F_slice_22():
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_23():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_23(a):
     import numpy as np
     c = -5
     b = a[:c, :c]
@@ -935,109 +1095,130 @@ def array_2d_F_slice_23():
 #==============================================================================
 # 2D ARRAY SLICE ORDER C
 #==============================================================================
-def array_2d_C_slice_1(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_1(a):
     import numpy as np
     b = a[:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_2(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_2(a):
     import numpy as np
     b = a[5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_3(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_3(a):
     import numpy as np
     b = a[:5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_4(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_4(a):
     import numpy as np
     b = a[-15:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_5(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_5(a):
     import numpy as np
     b = a[:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_6(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_6(a):
     import numpy as np
     b = a[5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_7(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_7(a):
     import numpy as np
     b = a[-15:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_8(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_8(a):
     import numpy as np
     b = a[::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_9(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_9(a):
     import numpy as np
     b = a[5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_10(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_10(a):
     import numpy as np
     b = a[:5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_11(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_11(a):
     import numpy as np
     b = a[:, 5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_12(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_12(a):
     import numpy as np
     b = a[:, :5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_13(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_13(a):
     import numpy as np
     b = a[:-5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_14(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_14(a):
     import numpy as np
     b = a[-5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_15(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_15(a):
     import numpy as np
     b = a[:, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_16(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_16(a):
     import numpy as np
     b = a[:, :-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_17(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_17(a):
     import numpy as np
     b = a[:, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_18(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_18(a):
     import numpy as np
     b = a[5:15, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 
-def array_2d_C_slice_19(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_19(a):
     import numpy as np
     b = a[5:15, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_20(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_20(a):
     import numpy as np
     b = a[5:15, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_21(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_21(a):
     import numpy as np
     c = -5
     d = 5
@@ -1045,7 +1226,8 @@ def array_2d_C_slice_21(a : 'int[:,:]'):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_22(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_22(a):
     import numpy as np
     c = -5
     d = -15
@@ -1053,7 +1235,8 @@ def array_2d_C_slice_22(a : 'int[:,:]'):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_23(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_23(a):
     import numpy as np
     c = -5
     b = a[:c, :c]
@@ -1062,121 +1245,144 @@ def array_2d_C_slice_23(a : 'int[:,:]'):
 #==============================================================================
 # 1D ARRAY SLICE STRIDE
 #==============================================================================
-def array_1d_slice_stride_1(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_1(a):
     import numpy as np
     b = a[::1]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_2(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_2(a):
     import numpy as np
     b = a[::-1]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_3(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_3(a):
     import numpy as np
     b = a[::2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_4(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_4(a):
     import numpy as np
     b = a[::-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_5(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_5(a):
     import numpy as np
     b = a[5::2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_6(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_6(a):
     import numpy as np
     b = a[5::-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_7(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_7(a):
     import numpy as np
     b = a[:15:2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_8(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_8(a):
     import numpy as np
     b = a[:15:-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_9(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_9(a):
     import numpy as np
     b = a[5:15:2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_10(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_10(a):
     import numpy as np
     b = a[15:5:-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_11(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_11(a):
     import numpy as np
     b = a[-15:-5:2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_12(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_12(a):
     import numpy as np
     b = a[-5:-15:-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_13(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_13(a):
     import numpy as np
     b = a[-5::2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_14(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_14(a):
     import numpy as np
     b = a[:-5:-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_15(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_15(a):
     import numpy as np
     b = a[::-5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_16(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_16(a):
     import numpy as np
     b = a[-15::2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_17(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_17(a):
     import numpy as np
     b = a[:-15:-2]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_18(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_18(a):
     import numpy as np
     b = a[5::-5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_19(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_19(a):
     import numpy as np
     b = a[5:-5:5]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_20(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_20(a):
     import numpy as np
     b = a[-5:5:-5]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_stride_21(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_21(a):
     import numpy as np
     c = -5
     b = a[-5:5:c]
     return np.sum(b), b[0], b[-1], len(b)
 
-def array_1d_slice_stride_22(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_22(a):
     import numpy as np
     c = 5
     b = a[5:-5:c]
     return np.sum(b), b[0], b[-1], len(b)
 
 @allow_negative_index('a')
-def array_1d_slice_stride_23(a : 'int[:]'):
+@types('int[:]')
+def array_1d_slice_stride_23(a):
     import numpy as np
     c = -5
     b = a[::c]
@@ -1186,115 +1392,137 @@ def array_1d_slice_stride_23(a : 'int[:]'):
 # 2D ARRAY SLICE STRIDE ORDER F
 #==============================================================================
 
-def array_2d_F_slice_stride_1():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_1(a):
     import numpy as np
     b = a[::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_2():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_2(a):
     import numpy as np
     b = a[::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_3():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_3(a):
     import numpy as np
     b = a[::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_4():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_4(a):
     import numpy as np
     b = a[::, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_5():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_5(a):
     import numpy as np
     b = a[::, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_6():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_6(a):
     import numpy as np
     b = a[::2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_7():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_7(a):
     import numpy as np
     b = a[::-2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_8():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_8(a):
     import numpy as np
     b = a[::2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_9():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_9(a):
     import numpy as np
     b = a[::-2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_10():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_10(a):
     import numpy as np
     b = a[::2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_11():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_11(a):
     import numpy as np
     b = a[::-2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_12():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_12(a):
     import numpy as np
     b = a[5:15:2, 15:5:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_13():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_13(a):
     import numpy as np
     b = a[15:5:-2, 5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_14():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_14(a):
     import numpy as np
     b = a[-15:-5:2, -5:-15:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_15():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_15(a):
     import numpy as np
     b = a[-5:-15:-2, -15:-5:2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_16():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_16(a):
     import numpy as np
     b = a[::-5, ::5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_17():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_17(a):
     import numpy as np
     b = a[::5, ::-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_18():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_18(a):
     import numpy as np
     b = a[::-1, ::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_19():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_19(a):
     import numpy as np
     b = a[5:15:3, 15:5:-3]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_20():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_20(a):
     import numpy as np
     b = a[::-10, ::-10]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_21():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_21(a):
     import numpy as np
     c = -5
     b = a[::c, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_22():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_22(a):
     import numpy as np
     c = 5
     d = -10
@@ -1302,7 +1530,8 @@ def array_2d_F_slice_stride_22():
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_23():
+@types('int[:,:](order=F)')
+def array_2d_F_slice_stride_23(a):
     import numpy as np
     c = 10
     d = -5
@@ -1313,115 +1542,137 @@ def array_2d_F_slice_stride_23():
 # 2D ARRAY SLICE STRIDE ORDER C
 #==============================================================================
 
-def array_2d_C_slice_stride_1(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_1(a):
     import numpy as np
     b = a[::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_2(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_2(a):
     import numpy as np
     b = a[::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_3(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_3(a):
     import numpy as np
     b = a[::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_4(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_4(a):
     import numpy as np
     b = a[::, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_5(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_5(a):
     import numpy as np
     b = a[::, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_6(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_6(a):
     import numpy as np
     b = a[::2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_7(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_7(a):
     import numpy as np
     b = a[::-2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_8(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_8(a):
     import numpy as np
     b = a[::2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_9(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_9(a):
     import numpy as np
     b = a[::-2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_10(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_10(a):
     import numpy as np
     b = a[::2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_11(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_11(a):
     import numpy as np
     b = a[::-2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_12(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_12(a):
     import numpy as np
     b = a[5:15:2, 15:5:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_13(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_13(a):
     import numpy as np
     b = a[15:5:-2, 5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_14(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_14(a):
     import numpy as np
     b = a[-15:-5:2, -5:-15:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_15(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_15(a):
     import numpy as np
     b = a[-5:-15:-2, -15:-5:2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_16(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_16(a):
     import numpy as np
     b = a[::-5, ::5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_17(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_17(a):
     import numpy as np
     b = a[::5, ::-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_18(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_18(a):
     import numpy as np
     b = a[::-1, ::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_19(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_19(a):
     import numpy as np
     b = a[5:15:3, 15:5:-3]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_C_slice_stride_20(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_20(a):
     import numpy as np
     b = a[::-10, ::-10]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_stride_21(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_21(a):
     import numpy as np
     c = -5
     b = a[::c, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_stride_22(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_22(a):
     import numpy as np
     c = -5
     d = 10
@@ -1429,7 +1680,8 @@ def array_2d_C_slice_stride_22(a : 'int[:,:]'):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_C_slice_stride_23(a : 'int[:,:]'):
+@types('int[:,:]')
+def array_2d_C_slice_stride_23(a):
     import numpy as np
     c = -10
     d = 5

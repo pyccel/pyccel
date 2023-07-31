@@ -5,18 +5,22 @@
 #
 
 import numpy as np
+from pyccel.decorators import types
 
-def kern_sqexp(x0 : 'float[:]', x1 : 'float[:]', h : 'float'):
+@types('real[:]', 'real[:]', 'real')
+def kern_sqexp(x0, x1, h):
     """Squared exponential kernel"""
     return np.real(np.exp(-0.5*np.sum(((x1 - x0)/h)**2)))
 
 
-def kern_sqexp_multiscale(x0 : 'float[:]', x1 : 'float[:]', h : 'float[:]'):
+@types('real[:]', 'real[:]', 'real[:]')
+def kern_sqexp_multiscale(x0, x1, h):
     """Squared exponential kernel with different scale in each direction"""
     return np.real(np.exp(-0.5*np.sum(((x1 - x0)/h)**2)))
 
 
-def kern_wendland4(x0 : 'float[:]', x1 : 'float[:]', h : 'float'):
+@types('real[:]', 'real[:]', 'real')
+def kern_wendland4(x0, x1, h):
     """Wendland kernel, positive definite for dimension <= 3"""
     r = np.real(np.sqrt(np.sum(((x1 - x0)/h)**2)))
     if r < 1.0:
@@ -26,7 +30,8 @@ def kern_wendland4(x0 : 'float[:]', x1 : 'float[:]', h : 'float'):
     return ret
 
 
-def kern_wendland4_multiscale(x0 : 'float[:]', x1 : 'float[:]', h : 'float[:]'):
+@types('real[:]', 'real[:]', 'real[:]')
+def kern_wendland4_multiscale(x0, x1, h):
     """Wendland kernel, positive definite for dimension <= 3,
        different scale in each direction"""
     r = np.real(np.sqrt(np.sum(((x1 - x0)/h)**2)))
@@ -37,7 +42,8 @@ def kern_wendland4_multiscale(x0 : 'float[:]', x1 : 'float[:]', h : 'float[:]'):
     return ret
 
 
-def gp_matrix(x0 : 'float[:,:]', x1 : 'float[:,:]', a : 'float[:]', K : 'float[:,:]'):
+@types('real[:,:]', 'real[:,:]', 'real[:]', 'real[:,:]')
+def gp_matrix(x0, x1, a, K):
     """Constructs GP covariance matrix between two point tuples x0 and x1"""
     n0 = len(x0)
     n1 = len(x1)

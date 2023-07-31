@@ -16,7 +16,8 @@ else:
     ATOL = 1e-15
 
 def test_modulo_int_int(language):
-    def modulo_i_i():
+    @types(int, int)
+    def modulo_i_i(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_i, language=language)
@@ -30,7 +31,8 @@ def test_modulo_int_int(language):
     assert isinstance(f_output, type(modulo_i_i_output))
 
 def test_modulo_real_real(language):
-    def modulo_r_r(x : 'float', y : 'float'):
+    @types('real', 'real')
+    def modulo_r_r(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_r, language=language)
@@ -43,7 +45,8 @@ def test_modulo_real_real(language):
     assert isinstance(f_output, type(modulo_r_r_output))
 
 def test_modulo_real_int(language):
-    def modulo_r_i(x : 'float', y : 'int'):
+    @types('real', 'int')
+    def modulo_r_i(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_i, language=language)
@@ -57,7 +60,8 @@ def test_modulo_real_int(language):
     assert isinstance(f_output, type(modulo_r_i_output))
 
 def test_modulo_int_real(language):
-    def modulo_i_r(x : 'int', y : 'float'):
+    @types('int', 'real')
+    def modulo_i_r(x, y):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_r, language=language)
@@ -70,7 +74,8 @@ def test_modulo_int_real(language):
     assert isinstance(f_output, type(modulo_i_r_output))
 
 def test_modulo_multiple(language):
-    def modulo_multiple(x : 'int', y : 'float', z : 'int'):
+    @types('int', 'real', 'int')
+    def modulo_multiple(x, y, z):
         return x % y % z, -x % y % z, -x % -y % z, -x % -y % -z, \
                x % -y % z, x % -y % -z, x % y % -z, -x % y % -z, \
                    -y % y % y, y % -y % y, y % y % -y

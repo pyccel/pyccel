@@ -1,29 +1,36 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def incr_(x : int):
-    def decr_(y : int): # pylint: disable=unused-variable
+@types(int)
+def incr_(x):
+    @types(int)
+    def decr_(y): # pylint: disable=unused-variable
         y = y-1
     x = x + 1
 
 def helloworld():
     print('hello world')
 
-def incr(x : int):
+@types(int)
+def incr(x):
     x = x + 1
 
-def decr(x : int):
+@types(int)
+def decr(x):
     y = x - 1
     return y
 
 # TODO [YG, 30.01.2020] function behavior in Python is not correct:
 #      must change to x += 1
 #
-def incr_array(x : 'int[:]'):
+@types('int[:]')
+def incr_array(x):
     x = x + 1
 
 y_=[1,2,3]
 
-#def decr_array(x : '[int]'):
+#@types('[int]')
+#def decr_array(x):
 #    y_[1] = 6
 #    z = y_
 #    t = y_+x
@@ -32,14 +39,17 @@ y_=[1,2,3]
 # TODO [YG, 30.01.2020] function behavior in Python is not correct:
 #      must change to x -= 1
 #
-def decr_array(x : 'int[:]'):
+@types('int[:]')
+def decr_array(x):
     x = x - 1
 
-def f1(x : int, n : int = 2, m : int = 3):
+@types(int,int,int)
+def f1(x, n=2, m=3):
     y = x - n*m
     return y
 
-def f2(x : int, m : int = None):
+@types(int,int)
+def f2(x, m=None):
     if m is None:
         y = x + 1
     else:

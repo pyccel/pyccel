@@ -2,6 +2,7 @@
 from mpi4py import MPI
 from numpy  import empty
 
+from pyccel.decorators import types
 
 # TODO: avoid declaration of integer variables 'ierr' and 'rank'
 # TODO: allow access to process rank through property 'comm.rank'
@@ -10,7 +11,8 @@ from numpy  import empty
 
 #==============================================================================
 
-def np_allreduce(sendbuf : 'int[:]', recvbuf : 'int[:]'):
+@types( 'int[:]', 'int[:]' )
+def np_allreduce( sendbuf, recvbuf ):
 
     comm = MPI.COMM_WORLD
     recvbuf[:] = 0
@@ -18,7 +20,8 @@ def np_allreduce(sendbuf : 'int[:]', recvbuf : 'int[:]'):
     comm.Allreduce( sendbuf, recvbuf, MPI.SUM )
 
 # ...
-def np_bcast(buf : 'int[:]'):
+@types( 'int[:]', int )
+def np_bcast( buf, root ):
 
     comm = MPI.COMM_WORLD
     rank = -1
@@ -30,7 +33,8 @@ def np_bcast(buf : 'int[:]'):
     comm.Bcast( buf, root )
 
 # ...
-def np_gather(sendbuf : 'int[:]', recvbuf : 'int[:]'):
+@types( 'int[:]', 'int[:]', int )
+def np_gather( sendbuf, recvbuf, root ):
 
     comm = MPI.COMM_WORLD
     rank = -1

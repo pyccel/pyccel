@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from mpi4py import MPI
 
+from pyccel.decorators import types
 
 #==============================================================================
 
@@ -8,7 +9,8 @@ from mpi4py import MPI
 # comm.Sendrecv( sendbuf, dest, sendtag, recvbuf, source, recvtag, status )
 #
 
-def np_sendrecv(sendbuf : 'int[:]', dest : int):
+@types( 'int[:]', int, int, 'int[:]', int, int )
+def np_sendrecv( sendbuf, dest, sendtag, recvbuf, source, recvtag ):
 
     comm = MPI.COMM_WORLD
     recvbuf[:] = 0

@@ -4,7 +4,6 @@ import pytest
 from pyccel.epyccel import epyccel
 from modules import bitwise
 
-from pyccel.decorators import types
 @pytest.mark.parametrize("a, b",[(True, False),(True, True)])
 def test_right_shift_b_b(language, a, b):
     f1 = bitwise.right_shift_b_b

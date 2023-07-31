@@ -4,7 +4,8 @@ from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
 def test_or_boolean(language):
-    def or_bool(a : 'bool', b : 'bool'):
+    @types('bool', 'bool')
+    def or_bool(a, b):
         c = False
         if (a):
             c = True
@@ -18,7 +19,8 @@ def test_or_boolean(language):
     assert(epyc_or_bool(False,False)==or_bool(False,False))
 
 def test_real_greater_bool(language):
-    def real_greater_bool(x0 : 'float', x1 : 'float'):
+    @types('float', 'float')
+    def real_greater_bool(x0, x1):
         greater = False
         if x0 > x1:
             greater = True
@@ -30,7 +32,8 @@ def test_real_greater_bool(language):
     assert(real_greater_bool(1.5,1.2)==epyc_real_greater_bool(1.5,1.2))
 
 def test_input_output_matching_types(language):
-    def add_real(a : 'float', b : 'float'):
+    @types('float', 'float')
+    def add_real(a, b):
         c = a+b
         return c
 
@@ -44,7 +47,8 @@ def test_input_output_matching_types(language):
     assert(add_real(1.0,2.0)==epyc_add_real(1.0,2.0))
 
 def test_output_types_1(language):
-    def cast_to_int(a : 'float'):
+    @types('float')
+    def cast_to_int(a):
         b = int(a)
         return b
 
@@ -52,7 +56,8 @@ def test_output_types_1(language):
     assert(type(cast_to_int(5.2)) == type(f(5.2))) # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_2(language):
-    def cast_to_float(a : 'int'):
+    @types('int')
+    def cast_to_float(a):
         b = float(a)
         return b
 
@@ -60,7 +65,8 @@ def test_output_types_2(language):
     assert(type(cast_to_float(5)) == type(f(5)))    # pylint: disable=unidiomatic-typecheck
 
 def test_output_types_3(language):
-    def cast_to_bool(a : 'int'):
+    @types('int')
+    def cast_to_bool(a):
         b = bool(a)
         return b
 

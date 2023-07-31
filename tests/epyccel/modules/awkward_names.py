@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 awkward_names = 4
-from pyccel.decorators import types
 
 def function():
     double = 3.0

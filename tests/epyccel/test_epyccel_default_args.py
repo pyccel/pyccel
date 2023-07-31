@@ -8,7 +8,8 @@ from pyccel.decorators import types
 
 #------------------------------------------------------------------------------
 def test_f1(language):
-    def f1(x  : 'int' =  1):
+    @types('int')
+    def f1(x = 1):
         y = x - 1
         return y
 
@@ -20,7 +21,8 @@ def test_f1(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f2(language):
-    def f5(x : 'float [:]', m1  : 'int' =  2):
+    @types('real [:]', 'int')
+    def f5(x, m1 = 2):
         x[:] = 0.
         for i in range(0, m1):
             x[i] = i * 1.
@@ -48,7 +50,8 @@ def test_f2(language):
 
 #------------------------------------------------------------------------------
 def test_f3(language):
-    def f3(x  : 'float' =  1.5, y  : 'float' =  2.5):
+    @types('real','real')
+    def f3(x = 1.5, y = 2.5):
         return x+y
 
     f = epyccel(f3, language=language)
@@ -62,7 +65,8 @@ def test_f3(language):
 
 #------------------------------------------------------------------------------
 def test_f4(language):
-    def f4(x  : 'bool' =  True):
+    @types('bool')
+    def f4(x = True):
         if x:
             return 1
         else:
@@ -78,7 +82,8 @@ def test_f4(language):
 
 #------------------------------------------------------------------------------
 def test_f5(language):
-    def f5(x  : 'complex' =  1j):
+    @types('complex')
+    def f5(x = 1j):
         y = x - 1
         return y
 

@@ -5,7 +5,6 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 
 
-from pyccel.decorators import types
 def test_transpose_shape(language):
 
     def f1(x : 'int[:,:]'):

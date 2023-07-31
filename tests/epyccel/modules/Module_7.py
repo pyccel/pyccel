@@ -3,7 +3,6 @@ import numpy as np
 
 def fill_a( r: float, a: 'int[:]' ):
 
-from pyccel.decorators import types
     if ( r == 0.0 ):
         return 0
 

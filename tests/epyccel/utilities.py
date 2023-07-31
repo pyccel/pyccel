@@ -4,7 +4,6 @@ from pyccel.epyccel import epyccel
 
 
 #==============================================================================
-from pyccel.decorators import types
 class epyccel_test:
     """
     Class which stores a pyccelized function

@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def fun(xi1 : 'double', xi2 : 'double', xi3 : 'double'):
+@types('double','double','double')
+def fun(xi1, xi2, xi3):
     import user_mod
     return user_mod.user_func(xi1, xi2, xi3)
 

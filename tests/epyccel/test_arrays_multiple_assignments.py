@@ -5,8 +5,8 @@ import warnings
 import pytest
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
-from pyccel.decorators import stack_arrayfrom pyccel.errors.errors import Errors, PyccelSemanticError
+from pyccel.decorators import stack_array, types
+from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     ARRAY_DEFINITION_IN_LOOP,
                                     INCOMPATIBLE_REDEFINITION_STACK_ARRAY,
@@ -148,7 +148,8 @@ def test_creation_in_loop_stack(language):
 #==============================================================================
 def test_creation_in_if_heap(language):
 
-    def f(c : 'float'):
+    @types('float')
+    def f(c):
         import numpy as np
         if c > 0.5:
             x = np.ones(2, dtype=int)

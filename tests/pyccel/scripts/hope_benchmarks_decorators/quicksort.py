@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def qsort_kernel (a : 'double[:]', lo : 'int', hi : 'int') :
+@types('double[:]','int','int')
+def qsort_kernel ( a , lo , hi ) :
     i = lo
     j = hi
     while i < hi :

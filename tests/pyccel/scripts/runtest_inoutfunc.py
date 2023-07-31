@@ -1,12 +1,15 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure
+from pyccel.decorators import pure, types
+
 @pure
-def mult_2(x : 'double[:]'):
+@types('double[:]')
+def mult_2(x):
     for i, xi in enumerate(x):
         x[i] = xi * 2
 
 @pure
-def add_2(a : 'double[:]', b : 'double[:]'):
+@types('double[:]','double[:]')
+def add_2(a,b):
     mult_2(a)
     b[:] = b[:] + a[:]
 

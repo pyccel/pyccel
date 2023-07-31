@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def fact(n : int):
+from pyccel.decorators import types
+@types(int, results=int)
+def fact(n):
     if n == 0:
        z = 1
        return z
@@ -7,7 +9,8 @@ def fact(n : int):
        z = n*fact(n-1)
        return z
 
-def qsort_kernel(a : "double[:]", lo : int, hi : int) :
+@types("double[:]", int, int)
+def qsort_kernel( a , lo , hi ) :
     i = lo
     j = hi
     while i < hi :

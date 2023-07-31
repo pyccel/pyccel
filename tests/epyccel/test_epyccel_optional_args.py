@@ -18,7 +18,8 @@ def Module_5(language):
 
 #------------------------------------------------------------------------------
 def test_f1(language):
-    def f1(x  : 'int' =  None):
+    @types('int')
+    def f1(x = None):
         if x is None :
             return 5
         return x + 5
@@ -33,7 +34,8 @@ def test_f1(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f2(language):
-    def f2(x  : 'float' =  None):
+    @types('real')
+    def f2(x = None):
         if x is None :
             return 2.5
         return x + 2.5
@@ -48,7 +50,8 @@ def test_f2(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
-    def f3(x  : 'complex' =  None):
+    @types('complex')
+    def f3(x = None):
         if x is None :
             return complex(2, 5.2)
         return x + complex(2.5, 2)
@@ -62,7 +65,8 @@ def test_f3(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f4(language):
-    def f4(x  : 'bool' =  None):
+    @types('bool')
+    def f4(x = None):
         if x is None :
             return True
         return False
@@ -136,7 +140,8 @@ def test_f11(Module_5):
 
 #------------------------------------------------------------------------------
 def test_optional_args_1d(language):
-    def f12(x : 'int[:]', y  : 'int[:]' =  None):
+    @types( 'int[:]', 'int[:]')
+    def f12(x, y = None):
         if y is None:
             x[:] *= 2
         else :
@@ -153,7 +158,8 @@ def test_optional_args_1d(language):
 
 #------------------------------------------------------------------------------
 def test_optional_2d_F(language):
-    def f13():
+    @types('int32[:,:](order=F)', 'int32[:,:](order=F)')
+    def f13(x, y = None):
         if y is None:
             x[:] *= 2
         else :
@@ -170,7 +176,8 @@ def test_optional_2d_F(language):
 #------------------------------------------------------------------------------
 
 def test_f14(language):
-    def f14(x  : 'int' =  None, y  : 'int' =  None):
+    @types('int', 'int')
+    def f14(x = None , y = None):
         if x is None :
             x = 3
         if y is not None :

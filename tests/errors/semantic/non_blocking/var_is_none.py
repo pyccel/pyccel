@@ -1,6 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def f(a : 'int'):
+@types('int')
+def f(a):
     b = 0
     if a is not None:
         b = b + a

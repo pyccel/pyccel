@@ -1,22 +1,26 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
 #==============================================================================
 
-def sum_natural_numbers(n : int):
+@types( int )
+def sum_natural_numbers( n ):
     x = 0
     for i in range( 1, n+1 ):
         x += i
     return x
 
 # ...
-def factorial(n : int):
+@types( int )
+def factorial( n ):
     x = 1
     for i in range( 2, n+1 ):
         x *= i
     return x
 
 # ...
-def fibonacci(n : int):
+@types( int )
+def fibonacci( n ):
     x = 0
     y = 1
     for i in range( n ): # pylint: disable=unused-variable
@@ -26,7 +30,8 @@ def fibonacci(n : int):
     return x
 
 # ...
-def double_loop(n : int):
+@types( int )
+def double_loop( n ):
     x = 0
     for i in range( 3, 10 ): # pylint: disable=unused-variable
         x += 1
@@ -36,7 +41,8 @@ def double_loop(n : int):
     return z
 
 # ...
-def double_loop_on_2d_array_C(z : 'int[:):
+@types( 'int[:,:](order=C)' )
+def double_loop_on_2d_array_C( z ):
 
     from numpy import shape
 
@@ -48,7 +54,8 @@ def double_loop_on_2d_array_C(z : 'int[:):
 
 
 # ...
-def double_loop_on_2d_array_F(z : 'int[:):
+@types( 'int[:,:](order=F)' )
+def double_loop_on_2d_array_F( z ):
 
     from numpy import shape
 
@@ -59,7 +66,8 @@ def double_loop_on_2d_array_F(z : 'int[:):
             z[i,j] = i-j
 
 # ...
-def product_loop_on_real_array(z : 'float[:], float[:]'):
+@types( 'real[:], real[:]' )
+def product_loop_on_real_array( z, out ):
 
     from numpy     import shape
 

@@ -3,7 +3,6 @@ from mpi4py import MPI
 import numpy as np
 import pytest
 
-from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 from modules        import mpi_collective as pmod
 

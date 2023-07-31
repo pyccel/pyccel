@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
-from pyccel.decorators import types
 import pytest
 import numpy as np
 import scipy.linalg.blas as sp_blas

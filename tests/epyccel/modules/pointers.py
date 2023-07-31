@@ -1,5 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 __all__ = [
         'slice_is_pointer_idx_0',
         'array_copy_is_pointer',

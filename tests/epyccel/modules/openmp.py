@@ -1,11 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types
 
-def set_num_threads():
+@types(int)
+def set_num_threads(n):
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_set_num_threads
     omp_set_num_threads(np.int32(n))
 
+@types()
 def get_num_threads():
     from pyccel.stdlib.internal.openmp import omp_get_num_threads
     #$ omp parallel
@@ -19,7 +21,8 @@ def get_max_threads():
 
     return max_threads
 
-def f1(i : 'int'):
+@types('int')
+def f1(i):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
     out = -1
     #$ omp parallel private(idx)
@@ -61,12 +64,14 @@ def test_omp_in_parallel2():
     #$ omp end parallel
     return in_parallel
 
-def test_omp_set_get_dynamic(dynamic_theads : 'bool'):
+@types ('bool')
+def test_omp_set_get_dynamic(dynamic_theads):
     from pyccel.stdlib.internal.openmp import omp_set_dynamic, omp_get_dynamic
     omp_set_dynamic(dynamic_theads)
     return omp_get_dynamic()
 
-def test_omp_set_get_nested(nested : 'bool'):
+@types ('bool')
+def test_omp_set_get_nested(nested):
     from pyccel.stdlib.internal.openmp import omp_set_nested, omp_get_nested
     omp_set_nested(nested)
     return omp_get_nested()
@@ -83,7 +88,8 @@ def test_omp_get_thread_limit():
     #$ omp end parallel
     return maximum_threads_available
 
-def test_omp_get_set_max_active_levels(max_active_levels : 'int'):
+@types ('int')
+def test_omp_get_set_max_active_levels(max_active_levels):
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_max_active_levels, omp_set_max_active_levels
     omp_set_max_active_levels(np.int32(max_active_levels))
@@ -167,7 +173,8 @@ def test_omp_get_proc_bind():
 #     num_places = omp_get_num_places()
 #     return place_num
 
-def test_omp_set_get_default_device(device_num : 'int'):
+@types ('int')
+def test_omp_set_get_default_device(device_num):
     from pyccel.stdlib.internal.openmp import omp_get_default_device
     from pyccel.stdlib.internal.openmp import omp_set_default_device
     omp_set_default_device(device_num)
@@ -186,7 +193,8 @@ def test_omp_get_num_teams():
     #$ omp end teams
     return num_teams
 
-def test_omp_get_team_num(i : 'int'):
+@types('int')
+def test_omp_get_team_num(i):
     from pyccel.stdlib.internal.openmp import omp_get_team_num
     out = -1
     #$ omp teams num_teams(2)
@@ -262,7 +270,8 @@ def test_omp_get_max_task_priority():
     #$ omp end parallel
     return max_task_priority_var
 
-def omp_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
+@types('real[:,:], real[:,:], real[:,:]')
+def omp_matmul(A, x, out):
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -273,7 +282,8 @@ def omp_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
 
-def omp_matmul_single(A : 'float[:,:], float[:,:], float[:,:]'):
+@types('real[:,:], real[:,:], real[:,:]')
+def omp_matmul_single(A, x, out):
     from numpy import matmul
     #$ omp parallel
     #$ omp single
@@ -284,7 +294,8 @@ def omp_matmul_single(A : 'float[:,:], float[:,:], float[:,:]'):
     "bypass issue #468" # pylint: disable=W0105
 
 
-def omp_nowait(x : 'int[:]', y : 'int[:]', z : 'float[:]'):
+@types('int[:]', 'int[:]', 'real[:]')
+def omp_nowait(x, y, z):
     #$ omp parallel
     #$ omp for nowait
     for i in range(0, 1000):
@@ -295,7 +306,8 @@ def omp_nowait(x : 'int[:]', y : 'int[:]', z : 'float[:]'):
     #$ omp end parallel
     "bypass issue #468" # pylint: disable=W0105
 
-def omp_arraysum(x : 'int[:]'):
+@types('int[:]')
+def omp_arraysum(x):
     func_result = 0
     #$ omp parallel private(i)
     #$ omp for reduction (+:func_result)
@@ -304,14 +316,16 @@ def omp_arraysum(x : 'int[:]'):
     #$ omp end parallel
     return func_result
 
-def omp_arraysum_combined(x : 'int[:]'):
+@types('int[:]')
+def omp_arraysum_combined(x):
     func_result = 0
     #$ omp parallel for reduction (+:func_result)
     for i in range(0, 5):
         func_result += x[i]
     return func_result
 
-def omp_range_sum_critical(x : 'int'):
+@types('int')
+def omp_range_sum_critical(x):
     func_result = 0
     #$ omp parallel for num_threads(4) shared(func_result)
     for i in range(0, x):
@@ -321,7 +335,8 @@ def omp_range_sum_critical(x : 'int'):
     return func_result
 
 
-def omp_arraysum_single(x : 'int[:]'):
+@types('int[:]')
+def omp_arraysum_single(x):
     func_result = 0
     #$ omp parallel
     #$ omp single
@@ -340,7 +355,8 @@ def omp_master():
     #$omp end parallel
     return func_result
 
-def omp_taskloop(n : 'int'):
+@types('int')
+def omp_taskloop(n):
     func_result = 0
     #$omp parallel num_threads(n)
     #$omp taskloop
@@ -350,8 +366,10 @@ def omp_taskloop(n : 'int'):
     #$omp end parallel
     return func_result
 
-def omp_tasks(x : 'int'):
-    def fib(n : 'int'):
+@types('int')
+def omp_tasks(x):
+    @types('int', results='int')
+    def fib(n):
         if n < 2:
             return n
         #$ omp task shared(i) firstprivate(n)
@@ -369,7 +387,8 @@ def omp_tasks(x : 'int'):
     #$ omp end parallel
     return m
 
-def omp_simd(n : 'int'):
+@types('int')
+def omp_simd(n):
     from numpy import zeros
     func_result = 0
     arr = zeros(n, dtype=int)
@@ -457,7 +476,8 @@ def omp_sections():
 
     return (sum1 + sum2 + sum3)
 
-def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm : 'int[:]', long_variable_2_oiwedqwrnoij2asxaxnjkna : 'int[:]', long_variable_3_oiweqxhnoijaqed34023423 : 'int[:]', long_variable_4_oiweaxaijaqedqd34023423 : 'int[:]', long_variable_5_oiwed423rnoic3242ewdx35 : 'int[:]'):
+@types('int[:]', 'int[:]', 'int[:]', 'int[:]', 'int[:]')
+def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35):
     func_result = 0
     n1     = long_variable_1_oiwed423rnoij21d4kojklm.shape[0]
     n2     = long_variable_2_oiwedqwrnoij2asxaxnjkna.shape[0]

@@ -11,39 +11,47 @@ from pyccel.decorators import template
 #$ header template O(real|complex)
 #$ header template S(int|real|complex)
 
-def gen_1(a : 'float'):
+@types('real')
+def gen_1(a):
     return a / 10
 
 def gen_2(y, x):
     return y / x
 
-def gen_3(x : 'T', y : 'T'):
+@types('T', 'T')
+def gen_3(x, y):
     return x / y
 
 def gen_4(x, y):
     return x / y
 
-def gen_5(x : 'T', y : 'R'):
+@types('T', 'R')
+def gen_5(x, y):
     return x / y
 
-def gen_6(x : 'S', y : 'S'):
+@types('S', 'S')
+def gen_6(x, y):
     return x + y
 
-def gen_7(x : 'T', y : 'T', z : 'R'):
+@types('T', 'T', 'R')
+def gen_7(x, y, z):
     return x + y + z
 
 
 
 @template('Z', types=['int', 'real'])
-def tmplt_head_1(x : 'Z', y : 'Z'):
+@types('Z', 'Z')
+def tmplt_head_1(x, y):
     return x + y
 
 @template('O', types=['int', 'real'])
-def local_overide_1(x : 'O', y : 'O'):
+@types('O', 'O')
+def local_overide_1(x, y):
     return x + y
 
 @template('Z', types=['int', 'real'])
-def tmplt_tmplt_1(x : 'Z', y : 'Z', z : 'R'):
+@types('Z', 'Z', 'R')
+def tmplt_tmplt_1(x, y, z):
     return x + y + z
 
 def tst_gen_1():

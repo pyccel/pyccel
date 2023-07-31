@@ -5,7 +5,6 @@ import modules.numpy_sign as mod
 
 from pyccel.epyccel import epyccel
 
-from pyccel.decorators import types
 def test_sign_complex(language):
     f_nul = mod.complex_nul
     f_pos = mod.complex_pos

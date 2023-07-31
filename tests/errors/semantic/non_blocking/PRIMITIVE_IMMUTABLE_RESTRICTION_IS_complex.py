@@ -1,3 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-def compare_is_complex(a : 'complex', b : 'complex'):
+@types('complex', 'complex')
+def compare_is_complex(a, b):
     return a is b

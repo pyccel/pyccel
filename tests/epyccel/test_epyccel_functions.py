@@ -38,7 +38,8 @@ def test_func_no_args_2(language):
 
 def test_func_no_return_1(language):
     '''Test function with args and no return '''
-    def p_func():
+    @types(int)
+    def p_func(x):
         x *= 2
 
     c_func = epyccel(p_func, language=language)
@@ -80,7 +81,8 @@ def test_func_return_constant(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f1(language):
-    def f1(x : 'int'):
+    @types('int')
+    def f1(x):
         y = x - 1
         return y
 
@@ -92,7 +94,8 @@ def test_decorator_f1(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f2(language):
-    def f2(x : 'int [:]'):
+    @types('int [:]')
+    def f2(x):
         y = x[0] - 1
         return y
 
@@ -110,7 +113,8 @@ def test_decorator_f2(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f3(language):
-    def f3(x : 'int [:]'):
+    @types('int [:]')
+    def f3(x):
         from numpy import empty_like
         y = empty_like(x)
         y[:] = x - 1
@@ -122,7 +126,8 @@ def test_decorator_f3(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f4(language):
-    def f4(x : 'float [:,:]'):
+    @types('real [:,:]')
+    def f4(x):
         from numpy import empty_like
         y = empty_like(x)
         y[:] = x - 1.0
@@ -134,7 +139,8 @@ def test_decorator_f4(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f5(language):
-    def f5(m1 : 'int', x : 'float [:]'):
+    @types('int', 'real [:]')
+    def f5(m1, x):
         x[:] = 0.
         for i in range(0, m1):
             x[i] = i * 1.
@@ -155,7 +161,8 @@ def test_decorator_f5(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f6(language):
-    def f6_1(m1 : 'int', m2 : 'int', x : 'float [:,:]'):
+    @types('int', 'int', 'real [:,:]')
+    def f6_1(m1, m2, x):
         x[:,:] = 0.
         for i in range(0, m1):
             for j in range(0, m2):
@@ -180,7 +187,8 @@ def test_decorator_f6(language):
 # Fortran ordering
 def test_decorator_f7(language):
 
-    def f7(m1 : 'int', m2 : 'int'):
+    @types('int', 'int', 'real [:,:](order=F)')
+    def f7(m1, m2, x):
         x[:,:] = 0.
         for i in range(0, m1):
             for j in range(0, m2):
@@ -201,7 +209,8 @@ def test_decorator_f7(language):
 
 #------------------------------------------------------------------------------
 def test_decorator_f8(language):
-    def f8(x : 'int', b : 'bool'):
+    @types('int','bool')
+    def f8(x,b):
         a = x if b else 2
         return a
 
@@ -214,7 +223,8 @@ def test_decorator_f8(language):
 
 
 def test_arguments_f9(language):
-    def f9(x : 'int64[:]'):
+    @types('int64[:]')
+    def f9(x):
         x += 1
 
     f = epyccel(f9, language = language)
@@ -227,7 +237,8 @@ def test_arguments_f9(language):
     assert np.array_equal(x, x_expected)
 
 def test_arguments_f10(language):
-    def f10(x : 'int64[:]'):
+    @types('int64[:]')
+    def f10(x):
         x[:] += 1
 
     f = epyccel(f10, language = language)
@@ -240,7 +251,8 @@ def test_arguments_f10(language):
     assert np.array_equal(x, x_expected)
 
 def test_multiple_returns_f11(language):
-    def ackermann(m : 'int', n : 'int'):
+    @types('int', 'int', results='int')
+    def ackermann(m, n):
         if m == 0:
             return n + 1
         elif n == 0:
@@ -252,7 +264,8 @@ def test_multiple_returns_f11(language):
     assert f(2,3) == ackermann(2,3)
 
 def test_multiple_returns_f12(language):
-    def non_negative(i : 'int'):
+    @types('int')
+    def non_negative(i):
         if i < 0:
             return False
         else:
@@ -263,7 +276,8 @@ def test_multiple_returns_f12(language):
     assert f(-1) == non_negative(-1)
 
 def test_multiple_returns_f13(language):
-    def get_min(a : 'int', b : 'int'):
+    @types('int', 'int')
+    def get_min(a, b):
         if a<b:
             return a
         else:
@@ -273,7 +287,8 @@ def test_multiple_returns_f13(language):
     assert f(2,3) == get_min(2,3)
 
 def test_multiple_returns_f14(language):
-    def g(x : 'int', y : 'int'):
+    @types('int', 'int')
+    def g(x, y):
         return x,y,y,y,x
 
     f = epyccel(g, language=language)
@@ -281,7 +296,8 @@ def test_multiple_returns_f14(language):
 
 
 def test_decorator_f15(language):
-    def f15(a : 'bool', b : 'int8', c : 'int16', d : 'int32', e : 'int64'):
+    @types('bool', 'int8', 'int16', 'int32', 'int64')
+    def f15(a,b,c,d,e):
         from numpy import int64
         if a:
             return int64(b + c)
@@ -296,49 +312,56 @@ def test_decorator_f15(language):
 
 
 def test_decorator_f16(language):
-    def f16(a : 'int16'):
+    @types('int16')
+    def f16(a):
         b = a
         return b
     f = epyccel(f16, language=language)
     assert f(np.int16(17)) == f16(np.int16(17))
 
 def test_decorator_f17(language):
-    def f17(a : 'int8'):
+    @types('int8')
+    def f17(a):
         b = a
         return b
     f = epyccel(f17, language=language)
     assert f(np.int8(2)) == f17(np.int8(2))
 
 def test_decorator_f18(language):
-    def f18(a : 'int32'):
+    @types('int32')
+    def f18(a):
         b = a
         return b
     f = epyccel(f18, language=language)
     assert f(np.int32(5)) == f18(np.int32(5))
 
 def test_decorator_f19(language):
-    def f19(a : 'int64'):
+    @types('int64')
+    def f19(a):
         b = a
         return b
     f = epyccel(f19, language=language)
     assert f(np.int64(1)) == f19(np.int64(1))
 
 def test_decorator_f20(language):
-    def f20(a : 'complex'):
+    @types('complex')
+    def f20(a):
         b = a
         return b
     f = epyccel(f20, language=language)
     assert f(complex(1, 2.2)) == f20(complex(1, 2.2))
 
 def test_decorator_f21(language):
-    def f21(a : 'complex64'):
+    @types('complex64')
+    def f21(a):
         b = a
         return b
     f = epyccel(f21, language=language)
     assert f(np.complex64(1+ 2.2j)) == f21(np.complex64(1+ 2.2j))
 
 def test_decorator_f22(language):
-    def f22(a : 'complex128'):
+    @types('complex128')
+    def f22(a):
         b = a
         return b
     f = epyccel(f22, language=language)
