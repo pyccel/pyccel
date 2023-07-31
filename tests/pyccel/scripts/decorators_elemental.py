@@ -1,11 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types, elemental
-from numpy import array
+from pyccel.decorators import elementalfrom numpy import array
 from numpy import zeros_like
 
 @elemental
-@types(float)
-def square(x):
+def square():
     s = x*x
     return s
 

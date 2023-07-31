@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import pure, types
-
+from pyccel.decorators import pure
 @pure
 def const_int_float():
     return 1, 3.4
@@ -21,8 +20,7 @@ if __name__ == '__main__':
     print(e)
 
 @pure
-@types('int')
-def expr_complex_int_bool(n):
+def expr_complex_int_bool(n : 'int'):
     return 0.5+n*1j, 2*n, n==3
 
 if __name__ == '__main__':
@@ -31,8 +29,7 @@ if __name__ == '__main__':
     print(g)
     print(h)
 
-@types('real','real')
-def f3(x = 1.5, y = 2.5):
+def f3(x  : 'float' =  1.5, y  : 'float' =  2.5):
     return x+y, x-y
 
 if __name__ == '__main__':
@@ -60,8 +57,7 @@ if __name__ == '__main__':
     #print(max(f3()))
 
 
-@types('real','real')
-def f4(x, y = 2.5):
+def f4(x : 'float', y  : 'float' =  2.5):
     x = x + y
     return x+y, x-y
 

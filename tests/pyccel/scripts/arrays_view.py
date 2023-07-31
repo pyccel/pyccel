@@ -1,7 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.decorators import allow_negative_index, types
-
+from pyccel.decorators import allow_negative_index
 def array_view():
     a = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 10]])
     b = a[:, :]
@@ -76,16 +75,13 @@ def array_view_3():
     for i in range(np.shape(c)[0]):
         print(c[i])
 
-@types('int[:]', 'int')
-def array_1d_view_assign(x, a):
+def array_1d_view_assign(x : 'int[:]', a : 'int'):
     x[:] = a
 
-@types('int[:, :]', 'int')
-def array_2d_view_assign(x, a):
+def array_2d_view_assign(x : 'int[:, :]', a : 'int'):
     x[:, :] = a
 
-@types('int[:, :, :]', 'int')
-def array_3d_view_assign(x, a):
+def array_3d_view_assign(x : 'int[:, :, :]', a : 'int'):
     x[:, :, :] = a
 
 def array_1d_view():
