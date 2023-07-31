@@ -1,14 +1,18 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from utilities import epyccel_test
+from pyccel.decorators import types
 
 #==============================================================================
-def mod_eq_pow(a : 'int, int, int'):
+@types('int, int, int')
+def mod_eq_pow(a, m, n):
     return a%m == n**2
 
-def mod_neq_pow(a : 'int, int, int'):
+@types('int, int, int')
+def mod_neq_pow(a, m, n):
     return a%m != n**2
 
-def idiv_gt_add(a : 'int, int, int'):
+@types('int, int, int')
+def idiv_gt_add(a, m, n):
     return a//m > n+1
 
 #==============================================================================
