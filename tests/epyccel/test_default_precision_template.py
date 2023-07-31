@@ -4,7 +4,7 @@ from numpy.random import randint
 from numpy import isclose
 import numpy as np
 
-from pyccel.decorators import types
+from pyccel.decorators import template
 from pyccel.epyccel import epyccel
 
 RTOL = 1e-12
