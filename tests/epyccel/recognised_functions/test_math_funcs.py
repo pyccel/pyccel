@@ -4,6 +4,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
+from pyccel.decorators import types
 
 import sys
 

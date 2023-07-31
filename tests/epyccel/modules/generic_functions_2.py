@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import template
+from pyccel.decorators import template, types
 
 
 @template('Z', types=['int', 'float'])
