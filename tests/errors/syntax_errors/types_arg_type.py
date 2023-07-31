@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def f(x : 3):
+@types(3)
+def f(x):
     pass

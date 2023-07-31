@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
-def f(x : x=None, y : y=None):
+@types(x='int',y='double')
+def f(x,y):
     pass
