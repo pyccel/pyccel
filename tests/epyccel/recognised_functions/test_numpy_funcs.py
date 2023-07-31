@@ -5,7 +5,7 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose, iinfo, finfo
 import numpy as np
 
-from pyccel.decorators import template
+from pyccel.decorators import template, types
 from pyccel.epyccel import epyccel
 
 min_int8 = iinfo('int8').min

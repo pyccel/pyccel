@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-def fib(n : 'int') :
+def fib(n : int) -> int:
     if n < 2:
         result = n
         return result
