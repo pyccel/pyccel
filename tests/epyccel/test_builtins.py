@@ -119,8 +119,9 @@ def test_min_2_args_f(language):
     )
 )
 def test_min_3_args(language):
-    @template('T', ['int', 'float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return min(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -141,8 +142,9 @@ def test_min_3_args(language):
     )
 )
 def test_min_list(language):
-    @template('T', ['int', 'float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return min([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -163,8 +165,9 @@ def test_min_list(language):
     )
 )
 def test_min_tuple(language):
-    @template('T', ['int', 'float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return min((x, y, z))
 
     epyc_f = epyccel(f, language=language)
@@ -205,8 +208,9 @@ def test_max_2_args_f(language):
     )
 )
 def test_max_3_args(language):
-    @template('T',['int','float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return min(x, y, z)
 
     epyc_f = epyccel(f, language=language)
@@ -227,8 +231,9 @@ def test_max_3_args(language):
     )
 )
 def test_max_list(language):
-    @template('T',['int','float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return max([x, y, z])
 
     epyc_f = epyccel(f, language=language)
@@ -249,8 +254,9 @@ def test_max_list(language):
     )
 )
 def test_max_tuple(language):
-    @template('T',['int','float'])
-    def f(x : 'T', y : 'T', z : 'T'):
+    @types('int','int','int')
+    @types('float','float','float')
+    def f(x, y, z):
         return max((x, y, z))
 
     epyc_f = epyccel(f, language=language)

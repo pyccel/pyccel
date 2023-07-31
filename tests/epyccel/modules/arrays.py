@@ -103,28 +103,28 @@ def array_int32_2d_C_idiv(x : 'int32[:,:]', y : 'int32[:,:]'):
 # 2D ARRAYS OF INT-32 WITH F ORDERING
 #==============================================================================
 
-def array_int32_2d_F_scalar_add(x : 'int32[:, a : :]):
+def array_int32_2d_F_scalar_add(x : 'int32[:,:](order=F)', a : 'int32'):
     x[:,:] += a
 
-def array_int32_2d_F_scalar_sub(x : 'int32[:, a : :]):
+def array_int32_2d_F_scalar_sub(x : 'int32[:,:](order=F)', a : 'int32'):
     x[:,:] -= a
 
-def array_int32_2d_F_scalar_mul(x : 'int32[:, a : :]):
+def array_int32_2d_F_scalar_mul(x : 'int32[:,:](order=F)', a : 'int32'):
     x[:,:] *= a
 
-def array_int32_2d_F_scalar_idiv(x : 'int32[:, a : :]):
+def array_int32_2d_F_scalar_idiv(x : 'int32[:,:](order=F)', a : 'int32'):
     x[:,:] = x // a
 
-def array_int32_2d_F_add(x : 'int32[:, y : :]):
+def array_int32_2d_F_add(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)'):
     x[:,:] += y
 
-def array_int32_2d_F_sub(x : 'int32[:, y : :]):
+def array_int32_2d_F_sub(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)'):
     x[:,:] -= y
 
-def array_int32_2d_F_mul(x : 'int32[:, y : :]):
+def array_int32_2d_F_mul(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)'):
     x[:,:] *= y
 
-def array_int32_2d_F_idiv(x : 'int32[:, y : :]):
+def array_int32_2d_F_idiv(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)'):
     x[:,:] = x // y
 
 
@@ -193,31 +193,31 @@ def array_int_2d_C_initialization(a : 'int[:,:]'):
 # 2D ARRAYS OF INT-64 WITH F ORDERING
 #==============================================================================
 
-def array_int_2d_F_scalar_add(x : 'int[:, a : :]):
+def array_int_2d_F_scalar_add(x : 'int[:,:](order=F)', a : 'int'):
     x[:,:] += a
 
-def array_int_2d_F_scalar_sub(x : 'int[:, a : :]):
+def array_int_2d_F_scalar_sub(x : 'int[:,:](order=F)', a : 'int'):
     x[:,:] -= a
 
-def array_int_2d_F_scalar_mul(x : 'int[:, a : :]):
+def array_int_2d_F_scalar_mul(x : 'int[:,:](order=F)', a : 'int'):
     x[:,:] *= a
 
-def array_int_2d_F_scalar_idiv(x : 'int[:, a : :]):
+def array_int_2d_F_scalar_idiv(x : 'int[:,:](order=F)', a : 'int'):
     x[:,:] = x // a
 
-def array_int_2d_F_add(x : 'int[:, y : :]):
+def array_int_2d_F_add(x : 'int[:,:](order=F)', y : 'int[:,:](order=F)'):
     x[:,:] += y
 
-def array_int_2d_F_sub(x : 'int[:, y : :]):
+def array_int_2d_F_sub(x : 'int[:,:](order=F)', y : 'int[:,:](order=F)'):
     x[:,:] -= y
 
-def array_int_2d_F_mul(x : 'int[:, y : :]):
+def array_int_2d_F_mul(x : 'int[:,:](order=F)', y : 'int[:,:](order=F)'):
     x[:,:] *= y
 
-def array_int_2d_F_idiv(x : 'int[:, y : :]):
+def array_int_2d_F_idiv(x : 'int[:,:](order=F)', y : 'int[:,:](order=F)'):
     x[:,:] = x // y
 
-def array_int_2d_F_initialization(a : 'int[:):
+def array_int_2d_F_initialization(a : 'int[:,:](order=F)'):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='int', order='F')
     a[:,:] = tmp[:,:]
@@ -323,58 +323,58 @@ def array_real_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]',
 # 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
 
-def array_real_2d_F_scalar_add(x : 'float[:, a : :]):
+def array_real_2d_F_scalar_add(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] += a
 
-def array_real_2d_F_scalar_sub(x : 'float[:, a : :]):
+def array_real_2d_F_scalar_sub(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] -= a
 
-def array_real_2d_F_scalar_mul(x : 'float[:, a : :]):
+def array_real_2d_F_scalar_mul(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] *= a
 
-def array_real_2d_F_scalar_div(x : 'float[:, a : :]):
+def array_real_2d_F_scalar_div(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] /= a
 
-def array_real_2d_F_scalar_mod(x : 'float[:, a : :]):
+def array_real_2d_F_scalar_mod(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] %= a
 
-def array_real_2d_F_add(x : 'float[:, y : :]):
+def array_real_2d_F_add(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] += y
 
-def array_real_2d_F_sub(x : 'float[:, y : :]):
+def array_real_2d_F_sub(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] -= y
 
-def array_real_2d_F_mul(x : 'float[:, y : :]):
+def array_real_2d_F_mul(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] *= y
 
-def array_real_2d_F_div(x : 'float[:, y : :]):
+def array_real_2d_F_div(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] /= y
 
-def array_real_2d_F_mod(x : 'float[:, y : :]):
+def array_real_2d_F_mod(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] %= y
 
-def array_real_2d_F_array_initialization(a : 'float[:):
+def array_real_2d_F_array_initialization(a : 'float[:,:](order=F)'):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
     a[:,:] = tmp[:,:]
 
-def array_real_3d_F_array_initialization_1(x : 'float[:, y : :]):
+def array_real_3d_F_array_initialization_1(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)', a : 'float[:,:,:](order=F)'):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:] = tmp[:,:,:]
 
-def array_real_3d_F_array_initialization_2(a : 'float[:):
+def array_real_3d_F_array_initialization_2(a : 'float[:,:,:](order=F)'):
     from numpy import array
     x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
                  [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='F')
     a[:,:,:] = x[:,:,:]
 
-def array_real_4d_F_array_initialization(x : 'float[:, y : :, a : :]):
+def array_real_4d_F_array_initialization(x : 'float[:,:,:](order=F)', y : 'float[:,:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:,:] = tmp[:,:,:,:]
 
-def array_real_4d_F_array_initialization_mixed_ordering(x : 'float[:, a : :]):
+def array_real_4d_F_array_initialization_mixed_ordering(x : 'float[:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
     import numpy as np
     tmp      = np.array(((((0., 1.), (2., 3.)),
                           ((4., 5.), (6., 7.)),
@@ -401,7 +401,7 @@ def array_int32_2d_C_complex_3d_expr(x : 'int32[:,:]', y : 'int32[:,:]'):
     z = full((2,3),5, dtype=int32)
     x[:] = (x // y) * x + z
 
-def array_int32_2d_F_complex_3d_expr(x : 'int32[:, y : :]):
+def array_int32_2d_F_complex_3d_expr(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)'):
     from numpy import full, int32
     z = full((2,3),5,order='F', dtype=int32)
     x[:] = (x // y) * x + z
@@ -416,7 +416,7 @@ def array_real_2d_C_complex_3d_expr(x : 'float[:,:]', y : 'float[:,:]'):
     z = full((2,3),5)
     x[:] = (x // y) * x + z
 
-def array_real_2d_F_complex_3d_expr(x : 'float[:, y : :]):
+def array_real_2d_F_complex_3d_expr(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     from numpy import full
     z = full((2,3),5,order='F')
     x[:] = (x // y) * x + z
@@ -431,7 +431,7 @@ def array_int32_in_bool_out_2d_C_complex_3d_expr(x : 'int32[:,:]', y : 'int32[:,
     z = full((2,3),5, dtype=int32)
     ri[:] = (x // y) * x > z
 
-def array_int32_in_bool_out_2d_F_complex_3d_expr(x : 'int32[:, y : :]):
+def array_int32_in_bool_out_2d_F_complex_3d_expr(x : 'int32[:,:](order=F)', y : 'int32[:,:](order=F)', ri : 'bool[:,:](order=F)'):
     from numpy import full, int32
     z = full((2,3),5,order='F', dtype=int32)
     ri[:] = (x // y) * x > z
@@ -535,44 +535,44 @@ def multiple_2d_stack_array_2():
 # TEST: Product and matrix multiplication
 #==============================================================================
 
-def array_real_1d_1d_prod(x : 'float[:], float[:]'):
+def array_real_1d_1d_prod(x : 'float[:]', out : 'float[:]'):
     from numpy import prod
     out[:] = prod(x)
 
-def array_real_2d_1d_matmul(A : 'float[:,:], float[:], float[:]'):
+def array_real_2d_1d_matmul(A : 'float[:,:]', x : 'float[:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_2d_1d_matmul_creation(A : 'float[:,:], float[:]'):
+def array_real_2d_1d_matmul_creation(A : 'float[:,:]', x : 'float[:]'):
     from numpy import matmul
     out = matmul(A, x)
     return out.sum()
 
-def array_real_2d_1d_matmul_order_F(A : 'float[:, x : :]):
+def array_real_2d_1d_matmul_order_F(A : 'float[:,:](order=F)', x : 'float[:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_1d_2d_matmul(x : 'float[:], float[:,:], float[:]'):
+def array_real_1d_2d_matmul(x : 'float[:]', A : 'float[:,:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(x, A)
 
-def array_real_2d_2d_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
+def array_real_2d_2d_matmul(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_F_F(A : 'float[:, B : :]):
+def array_real_2d_2d_matmul_F_F(A : 'float[:,:](order=F)', B : 'float[:,:](order=F)', out : 'float[:,:](order=F)'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
 # Mixed order, not supported currently, see #244
-def array_real_2d_2d_matmul_mixorder(A : 'float[:, B : :], out : float[:):
+def array_real_2d_2d_matmul_mixorder(A : 'float[:,:]', B : 'float[:,:](order=F)', out : 'float[:,:]'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_operator(A : 'float[:,:], float[:,:], float[:,:]'):
+def array_real_2d_2d_matmul_operator(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
     out[:,:] = A @ B
 
-def array_real_loopdiff(x : 'float[:], float[:], float[:]'):
+def array_real_loopdiff(x : 'float[:]', y : 'float[:]', out : 'float[:]'):
     dxy = x - y
     for k in range(len(x)):
         out[k] = dxy[k]
@@ -709,7 +709,7 @@ def test_c_order_argument_negative_index(a : 'int[:,:]', b : 'int[:,:]'):
     return a[c,0], a[1,d], b[c,1], b[d,0]
 
 @allow_negative_index('a', 'b')
-def test_f_order_argument_negative_index(a : 'int[:, b : :]):
+def test_f_order_argument_negative_index(a : 'int[:,:](order=F)', b : 'int[:,:](order=F)'):
     c = -2
     d = 3
     return a[c,0], a[1,d], b[c,1], b[0,d]
@@ -807,109 +807,109 @@ def array_1d_slice_12(a : 'int[:]'):
 # 2D ARRAY SLICE ORDER F
 #==============================================================================
 
-def array_2d_F_slice_1(a : 'int[:):
+def array_2d_F_slice_1(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_2(a : 'int[:):
+def array_2d_F_slice_2(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_3(a : 'int[:):
+def array_2d_F_slice_3(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_4(a : 'int[:):
+def array_2d_F_slice_4(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[-15:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_5(a : 'int[:):
+def array_2d_F_slice_5(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_6(a : 'int[:):
+def array_2d_F_slice_6(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_7(a : 'int[:):
+def array_2d_F_slice_7(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[-15:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_8(a : 'int[:):
+def array_2d_F_slice_8(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_9(a : 'int[:):
+def array_2d_F_slice_9(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_10(a : 'int[:):
+def array_2d_F_slice_10(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_11(a : 'int[:):
+def array_2d_F_slice_11(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:, 5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_12(a : 'int[:):
+def array_2d_F_slice_12(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:, :5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_13(a : 'int[:):
+def array_2d_F_slice_13(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:-5, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_14(a : 'int[:):
+def array_2d_F_slice_14(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[-5:, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_15(a : 'int[:):
+def array_2d_F_slice_15(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_16(a : 'int[:):
+def array_2d_F_slice_16(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:, :-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_17(a : 'int[:):
+def array_2d_F_slice_17(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[:, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_18(a : 'int[:):
+def array_2d_F_slice_18(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15, :]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 
-def array_2d_F_slice_19(a : 'int[:):
+def array_2d_F_slice_19(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15, -5:]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_20(a : 'int[:):
+def array_2d_F_slice_20(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15, 5:-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_21(a : 'int[:):
+def array_2d_F_slice_21(a : 'int[:,:](order=F)'):
     import numpy as np
     c = -5
     d = 5
@@ -917,7 +917,7 @@ def array_2d_F_slice_21(a : 'int[:):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_22(a : 'int[:):
+def array_2d_F_slice_22(a : 'int[:,:](order=F)'):
     import numpy as np
     c = -5
     d = -15
@@ -925,7 +925,7 @@ def array_2d_F_slice_22(a : 'int[:):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_23(a : 'int[:):
+def array_2d_F_slice_23(a : 'int[:,:](order=F)'):
     import numpy as np
     c = -5
     b = a[:c, :c]
@@ -1185,115 +1185,115 @@ def array_1d_slice_stride_23(a : 'int[:]'):
 # 2D ARRAY SLICE STRIDE ORDER F
 #==============================================================================
 
-def array_2d_F_slice_stride_1(a : 'int[:):
+def array_2d_F_slice_stride_1(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_2(a : 'int[:):
+def array_2d_F_slice_stride_2(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_3(a : 'int[:):
+def array_2d_F_slice_stride_3(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_4(a : 'int[:):
+def array_2d_F_slice_stride_4(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_5(a : 'int[:):
+def array_2d_F_slice_stride_5(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_6(a : 'int[:):
+def array_2d_F_slice_stride_6(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_7(a : 'int[:):
+def array_2d_F_slice_stride_7(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-2, ::]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_8(a : 'int[:):
+def array_2d_F_slice_stride_8(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_9(a : 'int[:):
+def array_2d_F_slice_stride_9(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-2, ::2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_10(a : 'int[:):
+def array_2d_F_slice_stride_10(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_11(a : 'int[:):
+def array_2d_F_slice_stride_11(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-2, ::-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_12(a : 'int[:):
+def array_2d_F_slice_stride_12(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15:2, 15:5:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_13(a : 'int[:):
+def array_2d_F_slice_stride_13(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[15:5:-2, 5:15]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_14(a : 'int[:):
+def array_2d_F_slice_stride_14(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[-15:-5:2, -5:-15:-2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_15(a : 'int[:):
+def array_2d_F_slice_stride_15(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[-5:-15:-2, -15:-5:2]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_16(a : 'int[:):
+def array_2d_F_slice_stride_16(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-5, ::5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_17(a : 'int[:):
+def array_2d_F_slice_stride_17(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::5, ::-5]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_18(a : 'int[:):
+def array_2d_F_slice_stride_18(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-1, ::-1]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_19(a : 'int[:):
+def array_2d_F_slice_stride_19(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[5:15:3, 15:5:-3]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
-def array_2d_F_slice_stride_20(a : 'int[:):
+def array_2d_F_slice_stride_20(a : 'int[:,:](order=F)'):
     import numpy as np
     b = a[::-10, ::-10]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_21(a : 'int[:):
+def array_2d_F_slice_stride_21(a : 'int[:,:](order=F)'):
     import numpy as np
     c = -5
     b = a[::c, ::c]
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_22(a : 'int[:):
+def array_2d_F_slice_stride_22(a : 'int[:,:](order=F)'):
     import numpy as np
     c = 5
     d = -10
@@ -1301,7 +1301,7 @@ def array_2d_F_slice_stride_22(a : 'int[:):
     return np.sum(b), b[0][0], b[-1][-1], len(b), len(b[0])
 
 @allow_negative_index('a')
-def array_2d_F_slice_stride_23(a : 'int[:):
+def array_2d_F_slice_stride_23(a : 'int[:,:](order=F)'):
     import numpy as np
     c = 10
     d = -5

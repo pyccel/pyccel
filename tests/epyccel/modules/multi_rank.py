@@ -1,33 +1,33 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-def add_mixed_order(a : 'float[:,:]', b : 'float[:):
+def add_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] = a + b
 
-def mul_mixed_order(a : 'float[:,:]', b : 'float[:):
+def mul_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] = a * b
 
-def sub_mixed_order(a : 'float[:,:]', b : 'float[:):
+def sub_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] = a - b
 
-def div_mixed_order(a : 'float[:,:]', b : 'float[:):
+def div_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] = a / b
 
-def augadd_mixed_order(a : 'float[:,:]', b : 'float[:):
+def augadd_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] += b
 
-def augmul_mixed_order(a : 'float[:,:]', b : 'float[:):
+def augmul_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] *= b
 
-def augsub_mixed_order(a : 'float[:,:]', b : 'float[:):
+def augsub_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] -= b
 
-def augdiv_mixed_order(a : 'float[:,:]', b : 'float[:):
+def augdiv_mixed_order(a : 'float[:,:]', b : 'float[:,:](order=F)'):
     a[:] /= b
 
 def mul_by_vector_C(a : 'int[:,:]', b : 'int[:]'):
     a[:] *= b
 
-def mul_by_vector_F(a : 'int[:, b : :]):
+def mul_by_vector_F(a : 'int[:,:](order=F)', b : 'int[:]'):
     a[:] *= b
 
 def mul_by_vector_dim_1_C_C(a : 'int[:,:]'):
@@ -40,12 +40,12 @@ def mul_by_vector_dim_1_C_F(a : 'int[:,:]'):
     b = np.array([[1],[2],[3]], order = 'F')
     a[:] *= b
 
-def mul_by_vector_dim_1_F_C(a : 'int[:):
+def mul_by_vector_dim_1_F_C(a : 'int[:,:](order=F)'):
     import numpy as np
     b = np.array([[1],[2],[3]])
     a[:] *= b
 
-def mul_by_vector_dim_1_F_F(a : 'int[:):
+def mul_by_vector_dim_1_F_F(a : 'int[:,:](order=F)'):
     import numpy as np
     b = np.array([[1],[2],[3]], order = 'F')
     a[:] *= b
@@ -79,7 +79,7 @@ def multi_expression_augassign(a : 'int[:,:]', b : 'int[:]'):
     a[:] -= b
     a += np.sum(b)
 
-def grouped_expressions(a : 'int[:, b : :]):
+def grouped_expressions(a : 'int[:,:](order=F)', b : 'int[:,:]', c : 'int[:]'):
     import numpy as np
     a[:] = a - c
     a[:] = a * b

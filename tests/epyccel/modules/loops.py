@@ -36,7 +36,7 @@ def double_loop(n : int):
     return z
 
 # ...
-def double_loop_on_2d_array_C(z : 'int[:):
+def double_loop_on_2d_array_C(z : 'int[:,:](order=C)'):
 
     from numpy import shape
 
@@ -48,7 +48,7 @@ def double_loop_on_2d_array_C(z : 'int[:):
 
 
 # ...
-def double_loop_on_2d_array_F(z : 'int[:):
+def double_loop_on_2d_array_F(z : 'int[:,:](order=F)'):
 
     from numpy import shape
 
@@ -59,7 +59,7 @@ def double_loop_on_2d_array_F(z : 'int[:):
             z[i,j] = i-j
 
 # ...
-def product_loop_on_2d_array_C(z : 'int[:):
+def product_loop_on_2d_array_C(z : 'int[:,:](order=C)'):
 
     from numpy     import shape
     from itertools import product
@@ -73,7 +73,7 @@ def product_loop_on_2d_array_C(z : 'int[:):
         z[i,j] = i-j
 
 # ...
-def product_loop_on_2d_array_F(z : 'int[:):
+def product_loop_on_2d_array_F(z : 'int[:,:](order=F)'):
 
     from numpy     import shape
     from itertools import product
@@ -142,7 +142,7 @@ def zip_prod(m : int):
     return res
 
 # ...
-def product_loop_on_real_array(z : 'float[:], float[:]'):
+def product_loop_on_real_array(z : 'float[:]', out : 'float[:]'):
 
     from numpy     import shape
 
@@ -152,14 +152,14 @@ def product_loop_on_real_array(z : 'float[:], float[:]'):
         out[i] = z[i]**2
 
 # ...
-def fizzbuzz_search_with_breaks(fizz : 'int,int,int'):
+def fizzbuzz_search_with_breaks(fizz : 'int', buzz : 'int', max_val : 'int'):
     for i in range(1,max_val+1):
         if i%fizz == 0 and i%buzz == 0:
             break
     return i
 
 # ...
-def fizzbuzz_sum_with_continue(fizz : 'int,int,int'):
+def fizzbuzz_sum_with_continue(fizz : int, buzz : int, max_val : int):
     fizzbuzz_sum = 0
     for i in range(1,max_val+1):
         if i%fizz != 0:

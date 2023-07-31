@@ -179,7 +179,7 @@ def test_decorator_f6(language):
 # Fortran ordering
 def test_decorator_f7(language):
 
-    def f7(m1 : 'int', m2 : 'int', x : 'float [:):
+    def f7(m1 : 'int', m2 : 'int', x : 'float [:,:](order=F)'):
         x[:,:] = 0.
         for i in range(0, m1):
             for j in range(0, m2):
@@ -239,7 +239,7 @@ def test_arguments_f10(language):
     assert np.array_equal(x, x_expected)
 
 def test_multiple_returns_f11(language):
-    def ackermann(m : 'int', n : 'int'):
+    def ackermann(m : 'int', n : 'int') -> int:
         if m == 0:
             return n + 1
         elif n == 0:

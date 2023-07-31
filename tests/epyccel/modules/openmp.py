@@ -261,7 +261,7 @@ def test_omp_get_max_task_priority():
     #$ omp end parallel
     return max_task_priority_var
 
-def omp_matmul(A : 'real[:,:]', x : 'real[:,:]', out : 'real[:,:]'):
+def omp_matmul(A : 'float[:,:]', x : 'float[:,:]', out : 'float[:,:]'):
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -272,7 +272,7 @@ def omp_matmul(A : 'real[:,:]', x : 'real[:,:]', out : 'real[:,:]'):
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
 
-def omp_matmul_single(A : 'real[:,:]', x : 'real[:,:]', out : 'real[:,:]'):
+def omp_matmul_single(A : 'float[:,:]', x : 'float[:,:]', out : 'float[:,:]'):
     from numpy import matmul
     #$ omp parallel
     #$ omp single
@@ -350,7 +350,7 @@ def omp_taskloop(n : 'int'):
     return func_result
 
 def omp_tasks(x : 'int'):
-    def fib(n : 'int'):
+    def fib(n : int) -> int:
         if n < 2:
             return n
         #$ omp task shared(i) firstprivate(n)

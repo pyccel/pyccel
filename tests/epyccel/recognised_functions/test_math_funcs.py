@@ -4,7 +4,6 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import template
 
 import sys
 
@@ -933,8 +932,9 @@ def test_log10_phrase(language):
 #--------------------------------- Pow function ------------------------------#
 
 def test_pow_call(language):
-    @template('T', ['int', 'float'])
-    def pow_call(x : float, y : 'T'):
+    @types('real', 'real')
+    @types('real', 'int')
+    def pow_call(x, y):
         from math import pow as my_pow
         return my_pow(x, y)
 

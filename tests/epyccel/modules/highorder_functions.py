@@ -76,7 +76,7 @@ def high_float_float_int_1(func1, func2, func3):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
-def high_float_4(function : '):
+def high_float_4(function : '(float)()'):
     x = function()
     return x
 
@@ -85,11 +85,11 @@ def high_float_5(function):
     x,y = function()
     return x+y
 
-def high_valuedarg_2(a : 'int', function : ' = f1):
+def high_valuedarg_2(a : 'int', function : '(int)(int)' = f1):
     x = function(a)
     return x
 
-def high_float_float_int_2(func1 : '):
+def high_float_float_int_2(func1 : '(float)(float, float)', func2 : '(float)(int, float)', func3 : '(int)(int)'):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
