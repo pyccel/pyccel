@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    type_annotation = re.compile(r"'[a-zA-Z0-9\[:,\] ]*'")
+    type_annotation = re.compile(r"'[a-zA-Z0-9\[:,\] =()]*'")
 
     for dirpath, dirnames, filenames in os.walk(args.folder):
         for name in filenames:
@@ -44,7 +44,7 @@ if __name__ == '__main__':
                     args, end = tmp.rsplit(')',1)
                     arguments = [a.strip() for a in args.split(',')]
                     if len(current_types) == 1:
-                        type_strs = current_types[0].split('(')[1].split(')')[0]
+                        type_strs = current_types[0].split('(',1)[1].rsplit(')',1)[0]
                         quoted_types = [q.strip() for q in type_annotation.findall(type_strs)]
                         type_strs = type_annotation.sub('None', type_strs)
                         all_types = []
@@ -62,6 +62,11 @@ if __name__ == '__main__':
                         else:
                             default_args = [a.split('=') for a in arguments]
                             arg_dict = {da[0] : "" if '=' not in a else f" = {da[1]}" for a,da in zip(arguments, default_args)}
+                            try:
+                                assert len(arg_dict) == len(type_annotations)
+                            except AssertionError as e:
+                                print("Error at line", i, ":", lines[i])
+                                raise e
                             new_args = [f"{key} : {annot}{default}" for (key,default), annot in zip(arg_dict.items(), type_annotations)]
                             new_lines.append(f"{start}({', '.join(new_args)}){end}")
                     elif len(arguments) == 1 and current_types:
