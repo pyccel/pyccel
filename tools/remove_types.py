@@ -30,11 +30,20 @@ if __name__ == '__main__':
             current_types = []
             new_lines = []
             uses_types = False
+            added_template = False
+            imported_template = False
             while i<n:
                 if '@types' in lines[i]:
                     assert ')' in lines[i]
                     current_types.append(lines[i])
                 elif 'def ' in lines[i]:
+                    def_line = lines[i]
+                    while ')' not in def_line:
+                        i+=1
+                        def_line += lines[i]
+                    start, tmp = def_line.split('(',1)
+                    args, end = tmp.rsplit(')',1)
+                    arguments = [a.strip() for a in args.split(',')]
                     if len(current_types) == 1:
                         type_strs = current_types[0].split('(')[1].split(')')[0]
                         quoted_types = [q.strip() for q in type_annotation.findall(type_strs)]
@@ -49,9 +58,6 @@ if __name__ == '__main__':
                             else:
                                 all_types.append(s)
                         type_annotations = [s.replace('real', 'float').strip() for s in all_types]
-                        start, tmp = lines[i].split('(')
-                        args, end = tmp.split(')')
-                        arguments = [a.strip() for a in args.split(',')]
                         if len(arguments) == 1 and arguments[0] == '':
                             new_lines.append(f"{start}(){end}")
                         else:
@@ -59,9 +65,18 @@ if __name__ == '__main__':
                             arg_dict = {da[0] : "" if '=' not in a else f" = {da[1]}" for a,da in zip(arguments, default_args)}
                             new_args = [f"{key} : {annot}{default}" for (key,default), annot in zip(arg_dict.items(), type_annotations)]
                             new_lines.append(f"{start}({', '.join(new_args)}){end}")
+                    elif len(arguments) == 1 and current_types:
+                        indent = len(current_types[0])-len(current_types[0].lstrip())
+                        type_strs = [t.split('(')[1].split(')')[0] for t in current_types]
+                        new_lines.append(" "*indent + f"@template('T', [{', '.join(type_strs)}])\n")
+                        added_template = True
+                        default_args = [a.split('=') for a in arguments]
+                        arg_dict = {da[0] : "" if '=' not in a else f" = {da[1]}" for a,da in zip(arguments, default_args)}
+                        new_args = [f"{key} : 'T'{default}" for key,default in arg_dict.items()]
+                        new_lines.append(f"{start}({', '.join(new_args)}){end}")
                     else:
                         new_lines.extend(current_types)
-                        new_lines.append(lines[i])
+                        new_lines.append(def_line)
                         uses_types = (len(current_types) != 0)
                     current_types = []
                 elif '@' in lines[i]:
@@ -70,10 +85,11 @@ if __name__ == '__main__':
                             new_lines.append(lines[i])
                             i+=1
                     new_lines.append(lines[i])
-                elif 'from pyccel.decorators import' in lines[i] and 'types' in lines[i]:
+                elif 'from pyccel.decorators import' in lines[i]:
                     import_types_line = i
                     if ',' in lines[i]:
                         imps = [i.strip() for i in lines[i].split('from pyccel.decorators import')[1].split(',')]
+                        imported_template = imported_template or ('template' in imps)
                         new_lines.append('from pyccel.decorators import '+', '.join(i for  i in imps if i != 'types')+'\n')
                 else:
                     assert len(current_types) == 0
@@ -81,6 +97,8 @@ if __name__ == '__main__':
                 i+=1
 
             if uses_types:
+                new_lines.insert(import_types_line, "from pyccel.decorators import types\n")
+            if added_template and not imported_template:
                 new_lines.insert(import_types_line, "from pyccel.decorators import types\n")
 
             with open(filename, 'w') as file:
