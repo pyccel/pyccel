@@ -71,7 +71,8 @@ if __name__ == '__main__':
                             new_lines.append(f"{start}({', '.join(new_args)}){end}")
                     elif len(arguments) == 1 and current_types:
                         indent = len(current_types[0])-len(current_types[0].lstrip())
-                        type_strs = [t.split('(')[1].split(')')[0] for t in current_types]
+                        type_strs = [t.split('(',1)[1].rsplit(')',1)[0] for t in current_types]
+                        print(type_strs)
                         new_lines.append(" "*indent + f"@template('T', [{', '.join(type_strs)}])\n")
                         added_template = True
                         default_args = [a.split('=') for a in arguments]
