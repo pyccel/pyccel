@@ -77,8 +77,7 @@ def high_float_float_int_1(func1, func2, func3):
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
-@types('(float)()')
-def high_float_4(function):
+def high_float_4():
     x = function()
     return x
 
@@ -87,13 +86,11 @@ def high_float_5(function):
     x,y = function()
     return x+y
 
-@types('int', '(int)(int)')
-def high_valuedarg_2(a, function=f1):
+def high_valuedarg_2(a : 'int'):
     x = function(a)
     return x
 
-@types('(float)(float, float)', '(float)(int, float)', '(int)(int)')
-def high_float_float_int_2(func1, func2, func3):
+def high_float_float_int_2():
     x = func1(1.1, 11.2) + func2(11, 10.2) + func3(10)
     return x
 
@@ -132,7 +129,6 @@ def test_float_float_int_1():
     x = high_float_float_int_1(f7, f4, f3)
     return x
 
-@types()
 def test_float_4():
     x = high_float_4(f8)
     return x
@@ -142,12 +138,10 @@ def test_float_5():
     x = high_float_5(f9)
     return x
 
-@types()
 def test_valuedarg_2():
     x = high_valuedarg_2(2)
     return x
 
-@types()
 def test_float_float_int_2():
     x = high_float_float_int_2(f7, f4, f3)
     return x

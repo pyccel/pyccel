@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from numpy.random import randint
+from pyccel.decorators import types
 from numpy import equal
 
 from pyccel.epyccel import epyccel

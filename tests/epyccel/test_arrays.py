@@ -5,6 +5,7 @@ from numpy import iinfo
 from numpy.random import randint
 
 from pyccel.epyccel import epyccel
+from pyccel.decorators import types
 from modules        import arrays
 
 #==============================================================================

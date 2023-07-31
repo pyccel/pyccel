@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
 def test_1_line_docstring(language):

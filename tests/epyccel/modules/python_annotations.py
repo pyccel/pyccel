@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def array_int32_1d_scalar_add( x:'int32[:]', a:'int32' ):
+from pyccel.decorators import types
     x[:] += a
 
 def array_int32_2d_C_scalar_add( x:'int32[:,:]', a:'int32' ):

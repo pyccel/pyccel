@@ -7,8 +7,7 @@ from pyccel.decorators import types
 # wp suffix means With Parentheses
 #------------------------------------------------------------------------------
 def test_f1(language):
-    @types('int')
-    def f1(x):
+    def f1(x : 'int'):
         a = 5 if x < 5 else x
         return a
 
@@ -21,8 +20,7 @@ def test_f1(language):
 #------------------------------------------------------------------------------
 
 def test_f2(language):
-    @types('int')
-    def f2(x):
+    def f2(x : 'int'):
         a = 5.5 if x < 5 else x
         return a
 
@@ -34,13 +32,11 @@ def test_f2(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
-    @types('int')
-    def f3(x):
+    def f3(x : 'int'):
         a = x if x < 5 else 5 + 2
         return a
 
-    @types('int')
-    def f3wp(x):
+    def f3wp(x : 'int'):
         a = (x if x < 5 else 5) + 2
         return a
 
@@ -57,13 +53,11 @@ def test_f3(language):
 #------------------------------------------------------------------------------
 
 def test_f4(language):
-    @types('int')
-    def f4(x):
+    def f4(x : 'int'):
         a = x if x < 5 else 5 >> 2
         return a
 
-    @types('int')
-    def f4wp(x):
+    def f4wp(x : 'int'):
         a = (x if x < 5 else 5) >> 2
         return a
 
@@ -79,13 +73,11 @@ def test_f4(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f5(language):
-    @types('int')
-    def f5(x):
+    def f5(x : 'int'):
         a = x if x < 5 else 5 if x == 5 else 5.5
         return a
 
-    @types('int')
-    def f5wp(x):
+    def f5wp(x : 'int'):
         a = x if x < 5 else (5 if x == 5 else 5.5)
         return a
 
@@ -103,14 +95,12 @@ def test_f5(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f6(language):
-    @types('int')
-    def f6(x):
+    def f6(x : 'int'):
         # a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         a = x if x < 0 else 1 if x < 5 else complex(0, 1) if x == 5 else 6.5
         return a
 
-    @types('int')
-    def f6wp(x):
+    def f6wp(x : 'int'):
         a = x if x < 0 else (1 if x < 5 else (complex(0, 1) if x == 5 else 6.5))
         return a
 
@@ -129,13 +119,11 @@ def test_f6(language):
 #------------------------------------------------------------------------------
 
 def test_f7(language):
-    @types('int')
-    def f7(x):
+    def f7(x : 'int'):
         a = [1.,2.,3.] if x < 5 else [1.5,6.5,7.5]
         return a[0]
 
-    @types('int')
-    def f7wp(x):
+    def f7wp(x : 'int'):
         a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8])
         return a[0]
 
@@ -152,13 +140,11 @@ def test_f7(language):
 #------------------------------------------------------------------------------
 
 def test_f8(language):
-    @types('int')
-    def f8(x):
+    def f8(x : 'int'):
         a = (1+0j, 2+0j) if x < 5 else (complex(5, 1), complex(2, 2))
         return a[0]
 
-    @types('int')
-    def f8wp(x):
+    def f8wp(x : 'int'):
         a = (1+0j, 2+0j) if x < 5 else ((complex(5, 1), complex(2, 2)) if x > 5 else (complex(7, 2), complex(3, 3)) )
         return a[0]
 
@@ -175,18 +161,15 @@ def test_f8(language):
 #------------------------------------------------------------------------------
 
 def test_f9(language):
-    @types('int')
-    def f9(x):
+    def f9(x : 'int'):
         a = 1 + 2 if x < 5 else 3
         return a
 
-    @types('int')
-    def f9wp1(x):
+    def f9wp1(x : 'int'):
         a = 1 + (2 if x < 5 else 3)
         return a
 
-    @types('int')
-    def f9wp2(x):
+    def f9wp2(x : 'int'):
         a = (1 + 2) if x < 5 else 3
         return a
 
@@ -206,18 +189,15 @@ def test_f9(language):
 #------------------------------------------------------------------------------
 
 def test_f10(language):
-    @types('int')
-    def f10(x):
+    def f10(x : 'int'):
         a = 2 if x < 5 else 3 + 1
         return a
 
-    @types('int')
-    def f10wp1(x):
+    def f10wp1(x : 'int'):
         a = (2 if x < 5 else 3) + 1
         return a
 
-    @types('int')
-    def f10wp2(x):
+    def f10wp2(x : 'int'):
         a = 2 if x < 5 else (3 + 1)
         return a
 
@@ -237,8 +217,7 @@ def test_f10(language):
 #------------------------------------------------------------------------------
 
 def test_f11(language):
-    @types('int')
-    def f11(x):
+    def f11(x : 'int'):
         a = 2 if (x + 2)*5 < 5 else 3
         return a
 
@@ -250,13 +229,11 @@ def test_f11(language):
 #------------------------------------------------------------------------------
 
 def test_f12(language):
-    @types('int')
-    def f12(x):
+    def f12(x : 'int'):
         a = [1.,2.,3.,4.] if x < 5 else [1.5,6.5,7.5]
         return a[0]
 
-    @types('int')
-    def f12wp(x):
+    def f12wp(x : 'int'):
         a = [1.,2.,3.] if x < 5 else ([1.5,6.5,7.5] if x > 5 else [3.1,9.5,2.8,2.9])
         return a[0]
 

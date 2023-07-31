@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types, pure
-
+from pyccel.decorators import types
+from pyccel.decorators import pure
 __all__ = [
         'homogenous_tuple_int',
         'homogenous_tuple_bool',

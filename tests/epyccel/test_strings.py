@@ -5,6 +5,7 @@ import pytest
 from pyccel.epyccel import epyccel
 from modules import strings as strings_module
 
+from pyccel.decorators import types
 string_funcs = [(f, getattr(strings_module,f)) for f in strings_module.__all__ if inspect.isfunction(getattr(strings_module,f))]
 
 #failing_tests = {

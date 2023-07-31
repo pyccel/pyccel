@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import types
 
 def set_i(x : 'float[:]', i : 'int', val : 'float'):
     x[i] = val

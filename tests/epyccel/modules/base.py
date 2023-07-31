@@ -1,187 +1,156 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from pyccel.decorators import types
 
-@types('bool')
-def is_false(a):
+def is_false(a : 'bool'):
     c = False
     if a is False:
         c = True
     return c
 
-@types('bool')
-def is_true(a):
+def is_true(a : 'bool'):
     c = False
     if a is True:
         c = True
     return c
 
-@types('bool', 'bool')
-def compare_is(a, b):
+def compare_is(a : 'bool', b : 'bool'):
     c = False
     if a is b:
         c = True
     return c
 
-@types('bool', 'bool')
-def compare_is_not(a, b):
+def compare_is_not(a : 'bool', b : 'bool'):
     c = False
     if a is not b:
         c = True
     return c
 
-@types('bool', 'int')
-def compare_is_int(a, b):
+def compare_is_int(a : 'bool', b : 'int'):
     c = False
     if a is bool(b):
         c = True
     return c
 
-@types('bool', 'int')
-def compare_is_not_int(a, b):
+def compare_is_not_int(a : 'bool', b : 'int'):
     c = False
     if a is not bool(b):
         c = True
     return c
 
-@types('bool')
-def not_false(a):
+def not_false(a : 'bool'):
     c = False
     if a is not False:
         c = True
     return c
 
-@types('bool')
-def not_true(a):
+def not_true(a : 'bool'):
     c = False
     if a is not True:
         c = True
     return c
 
-@types('bool')
-def eq_false(a):
+def eq_false(a : 'bool'):
     c = False
     if a == False:
         c = True
     return c
 
-@types('bool')
-def eq_true(a):
+def eq_true(a : 'bool'):
     c = False
     if a == True:
         c = True
     return c
 
-@types('bool')
-def neq_false(a):
+def neq_false(a : 'bool'):
     c = False
     if a != False:
         c = True
     return c
 
-@types('bool')
-def neq_true(a):
+def neq_true(a : 'bool'):
     c = False
     if a != True:
         c = True
     return c
 
-@types('bool')
-def not_val(a):
+def not_val(a : 'bool'):
     c = False
     if not a:
         c = True
     return c
 
-@types('int')
-def not_int(a):
+def not_int(a : 'int'):
     c = False
     if not a:
         c = True
     return c
 
-@types('bool')
-def is_nil(a = None):
+def is_nil(a  : 'bool' =  None):
     c = False
     if a is None:
         c = True
     return c
 
-@types('bool')
-def is_not_nil(a = None):
+def is_not_nil(a  : 'bool' =  None):
     c = False
     if a is not None:
         c = True
     return c
 
-@types('int')
-def cast_int(a):
+def cast_int(a : 'int'):
     b = int(a)
     return b
 
-@types('bool')
-def cast_bool(a):
+def cast_bool(a : 'bool'):
     b = bool(a)
     return b
 
-@types('float')
-def cast_float(a):
+def cast_float(a : 'float'):
     b = float(a)
     return b
 
-@types('float')
-def cast_float_to_int(a):
+def cast_float_to_int(a : 'float'):
     b = int(a)
     return b
 
-@types('int')
-def cast_int_to_float(a):
+def cast_int_to_float(a : 'int'):
     b = float(a)
     return b
 
-@types('int')
-def if_0_int(a):
+def if_0_int(a : 'int'):
     if a:
         return True
     else:
         return False
 
-@types('real')
-def if_0_real(a):
+def if_0_real(a : 'float'):
     if a:
         return True
     else:
         return False
 
-@types('int','float')
-def is_types(x,y):
+def is_types(x : 'int', y : 'float'):
     return x is y
 
-@types('int','float')
-def isnot_types(x,y):
+def isnot_types(x : 'int', y : 'float'):
     return x is not y
 
-@types('int')
-def is_same_int(x):
+def is_same_int(x : 'int'):
     return x is x
 
-@types('int')
-def isnot_same_int(x):
+def isnot_same_int(x : 'int'):
     return x is not x
 
-@types('float')
-def is_same_float(x):
+def is_same_float(x : 'float'):
     return x is x
 
-@types('float')
-def isnot_same_float(x):
+def isnot_same_float(x : 'float'):
     return x is not x
 
-@types('complex')
-def is_same_complex(x):
+def is_same_complex(x : 'complex'):
     return x is x
 
-@types('complex')
-def isnot_same_complex(x):
+def isnot_same_complex(x : 'complex'):
     return x is not x
 
 def is_same_string():
@@ -198,15 +167,13 @@ def none_is_none():
 def none_isnot_none():
     return None is not None
 
-@types('int')
-def pass_if(x):
+def pass_if(x : 'int'):
     if x > 0:
         pass
     x = x + 1
     return x
 
-@types('real')
-def pass2_if(b):
+def pass2_if(b : 'float'):
     c = 1
     if b:
         pass

@@ -11,8 +11,7 @@ ATOL = 1e-15
 # -------------------- simple division ---------------------- #
 
 def test_call_div_i_i(language):
-    @types(int, int)
-    def div_i_i(x, y):
+    def div_i_i():
         return x / y
 
     f = epyccel(div_i_i, language=language)
@@ -25,8 +24,7 @@ def test_call_div_i_i(language):
     assert isclose(f(-x, -y), div_i_i(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_i_r(language):
-    @types(int, 'real')
-    def div_i_r(x, y):
+    def div_i_r(x : int):
         return x / y
 
     f = epyccel(div_i_r, language=language)
@@ -38,8 +36,7 @@ def test_call_div_i_r(language):
     assert isclose(f(-x, -y), div_i_r(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_r_i(language):
-    @types('real', int)
-    def div_r_i(x, y):
+    def div_r_i(x : 'float'):
         return x / y
 
     f = epyccel(div_r_i, language=language)
@@ -51,8 +48,7 @@ def test_call_div_r_i(language):
     assert isclose(f(-x, -y), div_r_i(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_r_r(language):
-    @types('real', 'real')
-    def div_r_r(x, y):
+    def div_r_r(x : 'float', y : 'float'):
         return x / y
 
     f = epyccel(div_r_r, language=language)
@@ -66,8 +62,7 @@ def test_call_div_r_r(language):
 # -------------------- Complex division ---------------------- #
 
 def test_call_div_c_c(language):
-    @types('complex', 'complex')
-    def div_c_c(x, y):
+    def div_c_c(x : 'complex', y : 'complex'):
         return x / y
 
     f = epyccel(div_c_c, language=language)
@@ -79,8 +74,7 @@ def test_call_div_c_c(language):
     assert isclose(f(-x, -y), div_c_c(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_i_c(language):
-    @types(int, 'complex')
-    def div_i_c(x, y):
+    def div_i_c(x : int):
         return x / y
 
     f = epyccel(div_i_c, language=language)
@@ -92,8 +86,7 @@ def test_call_div_i_c(language):
     assert isclose(f(-x, -y), div_i_c(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_c_i(language):
-    @types('complex', int)
-    def div_c_i(x, y):
+    def div_c_i(x : 'complex'):
         return x / y
 
     f = epyccel(div_c_i, language=language)
@@ -105,8 +98,7 @@ def test_call_div_c_i(language):
     assert isclose(f(-x, -y), div_c_i(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_r_c(language):
-    @types('real', 'complex')
-    def div_r_c(x, y):
+    def div_r_c(x : 'float', y : 'complex'):
         return x / y
 
     f = epyccel(div_r_c, language=language)
@@ -118,8 +110,7 @@ def test_call_div_r_c(language):
     assert isclose(f(-x, -y), div_r_c(-x, -y), rtol=RTOL, atol=ATOL)
 
 def test_call_div_c_r(language):
-    @types('complex', 'real')
-    def div_c_r(x, y):
+    def div_c_r(x : 'complex', y : 'float'):
         return x / y
 
     f = epyccel(div_c_r, language=language)
@@ -133,8 +124,7 @@ def test_call_div_c_r(language):
 # -------------------- floor division ---------------------- #
 
 def test_call_fdiv_i_i_8(language):
-    @types('int8', 'int8')
-    def fdiv_i_i(x, y):
+    def fdiv_i_i(x : 'int8', y : 'int8'):
         return x // y
 
     fflags = "-Werror -Wconversion"
@@ -147,8 +137,7 @@ def test_call_fdiv_i_i_8(language):
     assert isinstance(f(x, y), type(fdiv_i_i(x, y)))
 
 def test_call_fdiv_i_i_16(language):
-    @types('int16', 'int16')
-    def fdiv_i_i(x, y):
+    def fdiv_i_i(x : 'int16', y : 'int16'):
         return x // y
 
     fflags = "-Werror -Wconversion"
@@ -164,8 +153,7 @@ def test_call_fdiv_i_i_16(language):
     assert isinstance(f(x, y), type(fdiv_i_i(x, y)))
 
 def test_call_fdiv_i_i_32(language):
-    @types('int32', 'int32')
-    def fdiv_i_i(x, y):
+    def fdiv_i_i(x : 'int32', y : 'int32'):
         return x // y
 
     fflags = "-Werror -Wconversion"
@@ -181,8 +169,7 @@ def test_call_fdiv_i_i_32(language):
     assert isinstance(f(x, y), type(fdiv_i_i(x, y)))
 
 def test_call_fdiv_i_i_i(language):
-    @types(int, int, int)
-    def fdiv_i_i_i(x, y, z):
+    def fdiv_i_i_i():
         return x // y // z
 
     fflags = "-Werror -Wconversion"
@@ -199,8 +186,7 @@ def test_call_fdiv_i_i_i(language):
     assert isinstance(f(x, y, z), type(fdiv_i_i_i(x, y, z)))
 
 def test_call_fdiv_i_r(language):
-    @types(int, 'real')
-    def fdiv_i_r(x, y):
+    def fdiv_i_r(x : int):
         return x // y
 
     fflags = "-Werror -Wconversion"
@@ -215,8 +201,7 @@ def test_call_fdiv_i_r(language):
     assert isinstance(f(x, y), type(fdiv_i_r(x, y)))
 
 def test_call_fdiv_r_i(language):
-    @types('real', int)
-    def fdiv_r_i(x, y):
+    def fdiv_r_i(x : 'float'):
         return x // y
 
     fflags = "-Werror -Wconversion"
@@ -231,8 +216,7 @@ def test_call_fdiv_r_i(language):
     assert isinstance(f(x, y), type(fdiv_r_i(x, y)))
 
 def test_call_fdiv_r_r(language):
-    @types('real', 'real')
-    def fdiv_r_r(x, y):
+    def fdiv_r_r(x : 'float', y : 'float'):
         return x // y
 
     fflags = "-Werror -Wconversion"

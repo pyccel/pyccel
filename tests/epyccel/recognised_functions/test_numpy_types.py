@@ -9,8 +9,8 @@ from test_numpy_funcs import (min_int, max_int, min_int8, max_int8,
 from test_numpy_funcs import max_float, min_float, max_float32, min_float32,max_float64, min_float64
 from test_numpy_funcs import matching_types
 
-from pyccel.decorators import types, template
-from pyccel.epyccel import epyccel
+from pyccel.decorators import types
+from pyccel.decorators import templatefrom pyccel.epyccel import epyccel
 
 numpy_basic_types_deprecated = tuple(int(v) for v in np.version.version.split('.'))>=(1,24,0)
 
@@ -90,10 +90,9 @@ def test_mult_numpy_python_type(language):
 
 def test_numpy_scalar_promotion(language):
 
-    @types('T', 'D')
     @template(name='T', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
     @template(name='D', types=['int32', 'int64', 'float32', 'float64', 'complex64', 'complex128'])
-    def add_numpy_to_numpy_type(np_s_l, np_s_r):
+    def add_numpy_to_numpy_type(np_s_l : 'T', np_s_r : 'D'):
         rs = np_s_l + np_s_r
         return rs
 

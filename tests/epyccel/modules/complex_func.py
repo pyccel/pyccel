@@ -42,48 +42,37 @@ def cast_complex_literal():
     a = complex(2.8+7j)
     return a
 
-@types('int','int')
-def create_complex_var__int_int(a,b):
+def create_complex_var__int_int(a : 'int', b : 'int'):
     return complex(a,b)
 
-@types('int','complex')
-def create_complex_var__int_complex(a,b):
+def create_complex_var__int_complex(a : 'int', b : 'complex'):
     return complex(a,b)
 
-@types('complex', 'float')
-def create_complex_var__complex_float(a,b):
+def create_complex_var__complex_float(a : 'complex', b : 'float'):
     return complex(a,b)
 
-@types('complex', 'complex')
-def create_complex_var__complex_complex(a,b):
+def create_complex_var__complex_complex(a : 'complex', b : 'complex'):
     return complex(a,b)
 
-@types('int')
-def create_complex__int_int(a):
+def create_complex__int_int(a : 'int'):
     return complex(a,1), complex(1,a)
 
-@types('int')
-def create_complex_0__int_int(a):
+def create_complex_0__int_int(a : 'int'):
     return complex(a,0), complex(0,a)
 
-@types('float')
-def create_complex__float_float(a):
+def create_complex__float_float(a : 'float'):
     return complex(a,1.5), complex(1.5, a)
 
-@types('float')
-def create_complex_0__float_float(a):
+def create_complex_0__float_float(a : 'float'):
     return complex(a,0.0), complex(0.0, a)
 
-@types('complex')
-def create_complex__complex_complex(a):
+def create_complex__complex_complex(a : 'complex'):
     return complex(a,1-2j), complex(1+2j,a)
 
-@types('complex64')
-def cast_complex_1(a):
+def cast_complex_1(a : 'complex64'):
     return complex(a)
 
-@types('complex128')
-def cast_complex_2(a):
+def cast_complex_2(a : 'complex128'):
     return complex(a)
 
 def cast_float_complex(a : float, b : complex):

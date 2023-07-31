@@ -3,6 +3,7 @@
 
 import pytest
 import numpy as np
+from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 from pyccel.decorators import private, inline
 
