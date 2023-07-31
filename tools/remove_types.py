@@ -72,7 +72,6 @@ if __name__ == '__main__':
                     elif len(arguments) == 1 and current_types:
                         indent = len(current_types[0])-len(current_types[0].lstrip())
                         type_strs = [t.split('(',1)[1].rsplit(')',1)[0] for t in current_types]
-                        print(type_strs)
                         new_lines.append(" "*indent + f"@template('T', [{', '.join(type_strs)}])\n")
                         added_template = True
                         default_args = [a.split('=') for a in arguments]
@@ -82,7 +81,7 @@ if __name__ == '__main__':
                     else:
                         new_lines.extend(current_types)
                         new_lines.append(def_line)
-                        uses_types = (len(current_types) != 0)
+                        uses_types = uses_types or (len(current_types) != 0)
                     current_types = []
                 elif '@' in lines[i]:
                     if '(' in lines[i]:
