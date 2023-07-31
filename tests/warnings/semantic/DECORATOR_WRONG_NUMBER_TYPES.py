@@ -1,6 +1,4 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
-@types('int', 'int')
-def func(n):
+def func(n : 'int'):
     return n
