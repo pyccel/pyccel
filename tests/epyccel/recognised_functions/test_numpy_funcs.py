@@ -4634,7 +4634,17 @@ def test_numpy_norm_array_like_2d(language):
 
 def test_numpy_norm_array_like_2d_fortran_order(language):
 
-    @template('T', ['bool[:,:](order=F)', 'int[:,:](order=F)', 'int8[:,:](order=F)', 'int16[:,:](order=F)', 'int32[:,:](order=F)', 'int64[:,:](order=F)', 'float[:,:](order=F)', 'float32[:,:](order=F)', 'float64[:,:](order=F)', 'complex64[:,:](order=F)', 'complex128[:,:](order=F)'])
+    @template('T', ['bool[:,:](order=F)',
+                    'int[:,:](order=F)',
+                    'int8[:,:](order=F)',
+                    'int16[:,:](order=F)',
+                    'int32[:,:](order=F)',
+                    'int64[:,:](order=F)',
+                    'float[:,:](order=F)',
+                    'float32[:,:](order=F)',
+                    'float64[:,:](order=F)',
+                    'complex64[:,:](order=F)',
+                    'complex128[:,:](order=F)'])
     def get_norm(arr : 'T'):
         from numpy.linalg import norm
         from numpy import shape
@@ -4711,7 +4721,17 @@ def test_numpy_norm_array_like_2d_fortran_order(language):
 
 def test_numpy_norm_array_like_3d(language):
 
-    @template('T', ['bool[:,:,:]', 'int[:,:,:]', 'int8[:,:,:]', 'int16[:,:,:]', 'int32[:,:,:]', 'int64[:,:,:]', 'float[:,:,:]', 'float32[:,:,:]', 'float64[:,:,:]', 'complex64[:,:,:]', 'complex128[:,:,:]'])
+    @template('T', ['bool[:,:,:]',
+                    'int[:,:,:]',
+                    'int8[:,:,:]',
+                    'int16[:,:,:]',
+                    'int32[:,:,:]',
+                    'int64[:,:,:]',
+                    'float[:,:,:]',
+                    'float32[:,:,:]',
+                    'float64[:,:,:]',
+                    'complex64[:,:,:]',
+                    'complex128[:,:,:]'])
     def get_norm(arr : 'T'):
         from numpy.linalg import norm
         a = norm(arr)
@@ -4771,7 +4791,10 @@ def test_numpy_norm_array_like_3d(language):
 
 def test_numpy_norm_array_like_3d_fortran_order(language):
 
-    @template('T', ['bool[:,:,:](order=F)', 'int[:,:,:](order=F)', 'int8[:,:,:](order=F)', 'int16[:,:,:](order=F)', 'int32[:,:,:](order=F)', 'int64[:,:,:](order=F)', 'float[:,:,:](order=F)', 'float32[:,:,:](order=F)', 'float64[:,:,:](order=F)', 'complex64[:,:,:](order=F)', 'complex128[:,:,:](order=F)'])
+    @template('T', ['bool[:,:,:](order=F)', 'int[:,:,:](order=F)', 'int8[:,:,:](order=F)',
+                    'int16[:,:,:](order=F)', 'int32[:,:,:](order=F)', 'int64[:,:,:](order=F)',
+                    'float[:,:,:](order=F)', 'float32[:,:,:](order=F)', 'float64[:,:,:](order=F)',
+                    'complex64[:,:,:](order=F)', 'complex128[:,:,:](order=F)'])
     def get_norm(arr : 'T'):
         from numpy.linalg import norm
         from numpy import shape
@@ -5807,7 +5830,15 @@ def test_numpy_count_non_zero_axis_keep_dims(language):
     )
 )
 def test_numpy_count_non_zero_axis_keep_dims_F(language):
-    @template('T', ['bool[:,:,:](order=F)', 'int[:,:,:](order=F)', 'int8[:,:,:](order=F)', 'int16[:,:,:](order=F)', 'int32[:,:,:](order=F)', 'int64[:,:,:](order=F)', 'float[:,:,:](order=F)', 'float32[:,:,:](order=F)', 'float64[:,:,:](order=F)'])
+    @template('T', ['bool[:,:,:](order=F)',
+                    'int[:,:,:](order=F)',
+                    'int8[:,:,:](order=F)',
+                    'int16[:,:,:](order=F)',
+                    'int32[:,:,:](order=F)',
+                    'int64[:,:,:](order=F)',
+                    'float[:,:,:](order=F)',
+                    'float32[:,:,:](order=F)',
+                    'float64[:,:,:](order=F)'])
     def count(arr : 'T'):
         from numpy import count_nonzero
         a = count_nonzero(arr, axis = 1, keepdims=True)
