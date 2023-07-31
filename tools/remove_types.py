@@ -2,7 +2,6 @@
 """
 import os
 import re
-import sys
 from argparse import ArgumentParser
 
 
@@ -21,7 +20,7 @@ if __name__ == '__main__':
             if not name.endswith('.py') or os.path.abspath(filename) == __file__ or '__pycache__' in dirpath:
                 continue
             print("Treating",filename)
-            with open(filename, 'r') as file:
+            with open(filename, 'r', encoding='utf-8') as file:
                 lines = file.readlines()
 
             n = len(lines)
@@ -101,6 +100,6 @@ if __name__ == '__main__':
             if added_template and not imported_template:
                 new_lines.insert(import_types_line, "from pyccel.decorators import types\n")
 
-            with open(filename, 'w') as file:
+            with open(filename, 'w', encoding='utf-8') as file:
                 file.write(''.join(new_lines))
 
