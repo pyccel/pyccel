@@ -90,6 +90,8 @@ if __name__ == '__main__':
                         imps = [i.strip() for i in lines[i].split('from pyccel.decorators import')[1].split(',')]
                         imported_template = imported_template or ('template' in imps)
                         new_lines.append('from pyccel.decorators import '+', '.join(i for  i in imps if i != 'types')+'\n')
+                    elif 'types' not in lines[i]:
+                        new_lines.append(lines[i])
                 else:
                     assert len(current_types) == 0
                     new_lines.append(lines[i])

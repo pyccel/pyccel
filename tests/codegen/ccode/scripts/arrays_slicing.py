@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 #==============================================================================
+from pyccel.decorators import allow_negative_index
 
 def array_view_C_literals():
 

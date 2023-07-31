@@ -261,7 +261,7 @@ def test_omp_get_max_task_priority():
     #$ omp end parallel
     return max_task_priority_var
 
-def omp_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
+def omp_matmul(A : 'real[:,:]', x : 'real[:,:]', out : 'real[:,:]'):
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -272,7 +272,7 @@ def omp_matmul(A : 'float[:,:], float[:,:], float[:,:]'):
     #to let the function compile using epyccel issue #468
     "bypass issue #468" # pylint: disable=W0105
 
-def omp_matmul_single(A : 'float[:,:], float[:,:], float[:,:]'):
+def omp_matmul_single(A : 'real[:,:]', x : 'real[:,:]', out : 'real[:,:]'):
     from numpy import matmul
     #$ omp parallel
     #$ omp single

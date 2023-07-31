@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from pyccel.decorators import template
 
 #$ header function gen_2(real, int)
 #$ header function gen_2(int, real)
