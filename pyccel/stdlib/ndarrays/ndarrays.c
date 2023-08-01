@@ -48,14 +48,14 @@ void print_ndarray_memory(t_ndarray nd)
             {
                 double real = creal(nd.nd_cfloat[i]);
                 double imag = cimag(nd.nd_cfloat[i]);
-                printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
+                printf("[%lf%+lfj]", real, imag);
                 break;
             }
             case nd_cdouble:
             {
                 double real = creal(nd.nd_cdouble[i]);
                 double imag = cimag(nd.nd_cdouble[i]);
-                printf("[%lf%s%lfj]", real, imag >= 0 ? "+" : "", imag);
+                printf("[%lf%+lfj]", real, imag);
                 break;
             }
         }
