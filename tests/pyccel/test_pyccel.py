@@ -788,6 +788,7 @@ def test_classes( test_file , language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2.py",
+                                        "scripts/classes/classes_3.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("c", marks = pytest.mark.c),
