@@ -340,6 +340,19 @@ DtypePrecisionToCastFunction = {
 #=======================================================================================
 
 class NumpyResultType(PyccelInternalFunction):
+    """
+    Class representing a call to the `numpy.result_type` function.
+
+    A class representing a call to the NumPy function `result_type` which returns
+    the datatype of an expression. This function can be used to access the `dtype`
+    property of a NumPy array.
+
+    Paramters
+    ---------
+    *arrays_and_dtypes : PyccelAstNode
+        Any arrays and dtypes passed to the function (currently only accepts one array
+        and no dtypes).
+    """
     __slots__ = ('_dtype','_precision')
     _rank = 0
     _shape = None
@@ -348,6 +361,8 @@ class NumpyResultType(PyccelInternalFunction):
     def __init__(self, *arrays_and_dtypes):
         if len(arrays_and_dtypes) != 1:
             raise TypeError("numpy.result_type is not yet supported for multiple arguments")
+        if not isinstance(arrays_and_dtypes[0], PyccelAstNode):
+            raise TypeError("Dtype arguments are not yet supported for the function numpy.result_type")
         self._dtype = arrays_and_dtypes[0].dtype
         self._precision = arrays_and_dtypes[0].precision
         super().__init__(*arrays_and_dtypes)
