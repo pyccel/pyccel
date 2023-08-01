@@ -6348,3 +6348,34 @@ def test_nonzero(language):
     assert epyccel_func(fl32) == nonzero_func(fl32)
     assert epyccel_func(fl64) == nonzero_func(fl64)
 
+def test_dtype(language):
+
+    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]',
+                    'float[:]', 'float32[:]', 'float64[:]'])
+    def func(a : 'T'):
+        from numpy import zeros
+        b = zeros(5, dtype=a.dtype)
+        return b[0]
+
+    bl = np.array([True, False, True, False, True])
+    integer8  = np.array([6,1,8,2,3], dtype = np.int8)
+    integer16 = np.array([6,1,8,2,3], dtype = np.int16)
+    integer   = np.array([6,1,8,2,3], dtype = int)
+    integer32 = np.array([6,1,8,2,3], dtype = np.int32)
+    integer64 = np.array([6,1,8,2,3], dtype = np.int64)
+
+    fl   = np.array([6,22,1,8,2,3], dtype = float)
+    fl32 = np.array([6,22,1,8,2,3], dtype = np.float32)
+    fl64 = np.array([6,22,1,8,2,3], dtype = np.float64)
+
+    epyccel_func = epyccel(func, language=language)
+
+    assert matching_types(epyccel_func(bl), func(bl))
+    assert matching_types(epyccel_func(integer8), func(integer8))
+    assert matching_types(epyccel_func(integer16), func(integer16))
+    assert matching_types(epyccel_func(integer), func(integer))
+    assert matching_types(epyccel_func(integer32), func(integer32))
+    assert matching_types(epyccel_func(integer64), func(integer64))
+    assert matching_types(epyccel_func(fl), func(fl))
+    assert matching_types(epyccel_func(fl32), func(fl32))
+    assert matching_types(epyccel_func(fl64), func(fl64))
