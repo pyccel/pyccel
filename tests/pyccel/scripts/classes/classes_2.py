@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     x = np.ones(4)
     y = np.full(4, 3.0)
-    
+
     a = p.addition(1.1, 2.0)
     b = p.subtraction(y, x)
 
