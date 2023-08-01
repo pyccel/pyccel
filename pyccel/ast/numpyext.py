@@ -337,6 +337,21 @@ DtypePrecisionToCastFunction = {
         4 : NumpyBool}
 }
 
+#=======================================================================================
+
+class NumpyResultType(PyccelInternalFunction):
+    __slots__ = ('_dtype','_precision')
+    _rank = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, *arrays_and_dtypes):
+        if len(arrays_and_dtypes) != 1:
+            raise TypeError("numpy.result_type is not yet supported for multiple arguments")
+        self._dtype = arrays_and_dtypes[0].dtype
+        self._precision = arrays_and_dtypes[0].precision
+        super().__init__(*arrays_and_dtypes)
+
 #==============================================================================
 
 def process_dtype(dtype):
@@ -373,6 +388,9 @@ def process_dtype(dtype):
             errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
                     symbol=dtype, severity="fatal")
         return dtype.dtype, get_final_precision(dtype)
+    if isinstance(dtype, NumpyResultType):
+        return dtype.dtype, dtype.precision
+
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
 
@@ -398,10 +416,33 @@ def process_dtype(dtype):
 
 #==============================================================================
 class NumpyNewArray(PyccelInternalFunction):
-    """ Class from which all numpy functions which imply a call to Allocate
-    inherit
     """
-    __slots__ = ()
+    Superclass for nodes representing NumPy array allocation functions.
+
+    Class from which all nodes representing a NumPy function which implies a call
+    to `Allocate` shoul inherit.
+
+    Parameters
+    ----------
+    init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The actual dtype passed to the NumPy function.
+    """
+    __slots__ = ('_init_dtype',)
+
+    def __init__(self, *args, init_dtype = None):
+        self._init_dtype = init_dtype
+
+        super().__init__(*args)
+
+    @property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -423,8 +464,18 @@ class NumpyArray(NumpyNewArray):
     """
     Represents a call to  numpy.array for code generation.
 
-    arg : list, tuple, PythonList
+    A class representing a call to the NumPy `array` function.
 
+    Parameters
+    ----------
+    arg : list, tuple, PythonList
+        The data from which the array is initialised.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The data type passed to the NumPy function.
+
+    order : str
+        The ordering of the array (C/Fortran).
     """
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arg',)
@@ -441,6 +492,8 @@ class NumpyArray(NumpyNewArray):
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
+
+        init_dtype = dtype
 
         # Verify dtype and get precision
         if dtype is None:
@@ -474,7 +527,7 @@ class NumpyArray(NumpyNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     def __str__(self):
         return str(self.arg)
@@ -487,6 +540,8 @@ class NumpyArray(NumpyNewArray):
 class NumpyArange(NumpyNewArray):
     """
     Represents a call to  numpy.arange for code generation.
+
+    A class representing a call to the NumPy `arange` function.
 
     Parameters
     ----------
@@ -519,6 +574,7 @@ class NumpyArange(NumpyNewArray):
             self._stop = stop
         self._step = step if step is not None else LiteralInteger(1)
 
+        init_dtype = dtype
         if dtype is None:
             self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
             self._precision = max_precision(self.arg, allow_native=False)
@@ -527,7 +583,7 @@ class NumpyArange(NumpyNewArray):
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     @property
     def arg(self):
@@ -706,21 +762,28 @@ class NumpyShape(PyccelInternalFunction):
 class NumpyLinspace(NumpyNewArray):
 
     """
-    Represents numpy.linspace which returns num evenly spaced samples, calculated over the interval [start, stop].
+    Represents a call to the function `numpy.linspace`.
+
+    A class representing a call to the NumPy `linspace` function which returns `num`
+    evenly spaced samples, calculated over the interval [start, stop].
 
     Parameters
       ----------
-      start           : list , tuple , PythonTuple, PythonList, Variable, Literals
-                        Represents the starting value of the sequence.
-      stop            : list , tuple , PythonTuple, PythonList, Variable, Literals
-                        Represents the ending value of the sequence (if endpoint is set to False).
-      num             : int, optional
-                        Number of samples to generate. Default is 50. Must be non-negative.
-      endpoint        : bool, optional
-                        If True, stop is the last sample. Otherwise, it is not included. Default is True.
-      dtype           : str, DataType
-                        The type of the output array. If dtype is not given, the data type is calculated
-                        from start and stop, the calculated dtype will never be an integer.
+      start : list , tuple , PythonTuple, PythonList, Variable, Literals
+           Represents the starting value of the sequence.
+
+      stop : list , tuple , PythonTuple, PythonList, Variable, Literals
+           Represents the ending value of the sequence (if endpoint is set to False).
+
+      num : int, optional
+           Number of samples to generate. Default is 50. Must be non-negative.
+
+      endpoint : bool, optional
+           If True, stop is the last sample. Otherwise, it is not included. Default is True.
+
+      dtype : str, DataType
+           The type of the output array. If dtype is not given, the data type is calculated
+           from start and stop, the calculated dtype will never be an integer.
     """
 
     __slots__ = ('_dtype','_precision','_index','_start','_stop',
@@ -741,6 +804,7 @@ class NumpyLinspace(NumpyNewArray):
         if any(not isinstance(arg, PyccelAstNode) for arg in (start, stop, num)):
             raise TypeError('Expecting valid args.')
 
+        init_dtype = dtype
         if dtype:
             self._dtype, self._precision = process_dtype(dtype)
         else:
@@ -790,7 +854,7 @@ class NumpyLinspace(NumpyNewArray):
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     @property
     def dtype(self):
@@ -1007,6 +1071,7 @@ class NumpyFull(NumpyNewArray):
         # Convert shape to PythonTuple
         shape = process_shape(False, shape)
 
+        init_dtype = dtype
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if dtype is None:
@@ -1026,7 +1091,7 @@ class NumpyFull(NumpyNewArray):
         self._order = NumpyNewArray._process_order(self._rank, order)
         self._precision = precision
 
-        super().__init__(fill_value)
+        super().__init__(fill_value, init_dtype = init_dtype)
 
     #--------------------------------------------------------------------------
     @property
@@ -1144,7 +1209,7 @@ class NumpyFullLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -1189,7 +1254,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1234,7 +1299,7 @@ class NumpyOnesLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1280,7 +1345,7 @@ class NumpyZerosLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1660,15 +1725,18 @@ class NumpyConjugate(PythonConjugate):
         return True
 
 class NumpyNonZeroElement(NumpyNewArray):
-    """ Represents an element of the tuple returned by
-    NumpyNonZero which represents a call to numpy.nonzero
+    """
+    Represents an element of the tuple returned by `NumpyNonZero`.
+
+    Represents an element of the tuple returned by `NumpyNonZero` which
+    represents a call to `numpy.nonzero`.
 
     Parameters
     ----------
-    a   : array_like
-          The argument which was passed to numpy.nonzero
+    a : PyccelAstNode
+        The argument which was passed to numpy.nonzero.
     dim : int
-          The index of the element in the tuple
+        The index of the element in the tuple.
     """
     __slots__ = ('_arr','_dim','_shape')
     _attribute_nodes = ('_arr',)
@@ -1699,16 +1767,21 @@ class NumpyNonZeroElement(NumpyNewArray):
 
 class NumpyNonZero(NumpyNewArray):
     """
-    Class representing a call to the function numpy.nonzero
+    Class representing a call to the function `numpy.nonzero`.
 
-    Example:
-    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
-    >>> np.nonzero(x)
-    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
+    Class representing a call to the NumPy function `nonzero` which indicates
+    which elements of an array are non-zero.
 
     Parameters
     ----------
-    a : array_like
+    a : PyccelAstNode
+        The array argument that was passed to the function.
+
+    Examples
+    --------
+    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+    >>> np.nonzero(x)
+    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
     """
     __slots__ = ('_elements','_arr','_shape')
     _attribute_nodes = ('_elements',)
@@ -1939,6 +2012,7 @@ numpy_funcs = {
     'transpose' : PyccelFunctionDef('transpose' , NumpyTranspose),
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
+    'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
 }
 
 numpy_mod = Module('numpy',
