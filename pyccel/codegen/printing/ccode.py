@@ -346,7 +346,7 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(a.dtype, CustomDataType) and a.is_argument:
+        if isinstance(a.dtype, CustomDataType) and (a.is_argument or a.get_user_nodes(FunctionDef)):
             return True
 
         if not isinstance(a, Variable):
@@ -685,6 +685,7 @@ class CCodePrinter(CodePrinter):
         funcs = ""
         for classDef in expr.module.classes:
             classes += "struct {} {{".format(classDef.name) + '\n'
+            classes += ''.join(self._print_Declare(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += "{};\n".format(self.function_signature(method))
