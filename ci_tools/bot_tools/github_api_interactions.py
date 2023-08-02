@@ -403,7 +403,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
         results = []
         page = 1
-        while exit_status == 200:
+        while exit_status == 200 and len(results)%100 == 0:
             request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
             results.extend(request.json())
             exit_status = request.status_code
