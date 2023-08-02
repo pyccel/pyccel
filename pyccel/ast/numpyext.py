@@ -1666,7 +1666,7 @@ class NumpyMod(NumpyUfuncBinary):
         if x1.dtype is NativeComplex() or x2.dtype is NativeComplex():
             raise TypeError("Complex modulo not supported")
         type_info = NumpyResultType(*args)
-        if type_info.dtype is NativeBo():
+        if type_info.dtype is NativeBool():
             self._dtype = NativeInteger()
             self._precision = 1
         else:
