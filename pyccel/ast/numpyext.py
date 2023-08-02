@@ -357,6 +357,7 @@ class NumpyResultType(PyccelInternalFunction):
     _rank = 0
     _shape = None
     _order = None
+    name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
         if len(arrays_and_dtypes) != 1:
