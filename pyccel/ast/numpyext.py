@@ -1659,8 +1659,12 @@ class NumpyMod(NumpyUfuncBinary):
         if x1.dtype is NativeComplex() or x2.dtype is NativeComplex():
             raise TypeError("Complex modulo not supported")
         type_info = NumpyResultType(*args)
-        self._dtype = type_info.dtype
-        self._precision = type_info.precision
+        if type_info.dtype is NativeBoolean():
+            self._dtype = NativeInteger()
+            self._precision = 1
+        else:
+            self._dtype = type_info.dtype
+            self._precision = type_info.precision
 
 class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the amin function in the Numpy library"""
