@@ -1654,12 +1654,19 @@ class NumpyMod(NumpyUfuncBinary):
 
         Set the datatype of the object by calculting how the types
         may be promoted.
+
+        Parameters
+        ----------
+        x1 : PyccelAstNode
+            The first argument which helps determine the datatype.
+        x2 : PyccelAstNode
+            The second argument which helps determine the datatype.
         """
         args      = (x1, x2)
         if x1.dtype is NativeComplex() or x2.dtype is NativeComplex():
             raise TypeError("Complex modulo not supported")
         type_info = NumpyResultType(*args)
-        if type_info.dtype is NativeBoolean():
+        if type_info.dtype is NativeBo():
             self._dtype = NativeInteger()
             self._precision = 1
         else:
