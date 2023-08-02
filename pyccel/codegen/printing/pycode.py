@@ -15,7 +15,7 @@ from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import NumpyShape, NumpySize, numpy_target_swap
-from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
+from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
@@ -157,7 +157,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_dtype_argument(self, expr, init_dtype):
         if init_dtype is None:
             return ''
-        elif isinstance(init_dtype, PythonType):
+        elif isinstance(init_dtype, (PythonType, NumpyResultType)):
             dtype = self._print(init_dtype)
             return "dtype = " + dtype
         else:
@@ -249,9 +249,8 @@ class PythonCodePrinter(CodePrinter):
             if not isinstance(func, FunctionAddress):
                 func.rename(expr.name)
             i_func_code = self._print(func)
-            _, i_body = func_code.split(':\n',1)
+            _, i_body = i_func_code.split(':\n',1)
             if i_body != body:
-                print(i_body, body)
                 warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
                 return func_code
         return func_code
@@ -681,25 +680,18 @@ class PythonCodePrinter(CodePrinter):
 
         arg   = self._print(expr.arg)
         dtype = self._print_dtype_argument(expr, expr.init_dtype)
-        order = "order='{}'".format(expr.order) if expr.order else ''
+        order = f"order='{expr.order}'" if expr.order else ''
         args  = ', '.join(a for a in [arg, dtype, order] if a!= '')
         return f"{name}({args})"
 
     def _print_NumpyAutoFill(self, expr):
         func_name = self._aliases.get(type(expr), expr.name)
 
-        dtype = self._print(expr.dtype)
-        if expr.precision != default_precision[str(expr.dtype)]:
-            factor = 16 if dtype == 'complex' else 8
-            dtype += str(expr.precision*factor)
-
+        dtype = self._print_dtype_argument(expr, expr.init_dtype)
         shape = self._print(expr.shape)
-        dtype = "dtype={}".format(dtype)
-        order = "order='{}'".format(expr.order) if expr.order else ''
-        args  = [shape, dtype, order]
-        return "{func_name}({args})".format(
-                func_name = func_name,
-                args  = ', '.join(a for a in args if a))
+        order = f"order='{expr.order}'" if expr.order else ''
+        args  = ', '.join(a for a in [shape, dtype, order] if a!='')
+        return f"{func_name}({args})"
 
     def _print_NumpyLinspace(self, expr):
         name = self._aliases.get(type(expr), expr.name)
