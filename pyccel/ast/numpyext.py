@@ -33,7 +33,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd, PyccelBinaryOperator
 from .variable       import Variable, Constant, HomogeneousTupleVariable
 
 errors = Errors()
@@ -108,6 +108,7 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
+    'NumpyResultType',
     'NumpyTranspose',
     'NumpyWhere',
     'NumpyZeros',
@@ -360,12 +361,38 @@ class NumpyResultType(PyccelInternalFunction):
     name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
-        if len(arrays_and_dtypes) != 1:
-            raise TypeError("numpy.result_type is not yet supported for multiple arguments")
-        if not isinstance(arrays_and_dtypes[0], PyccelAstNode):
-            raise TypeError("Dtype arguments are not yet supported for the function numpy.result_type")
-        self._dtype = arrays_and_dtypes[0].dtype
-        self._precision = arrays_and_dtypes[0].precision
+        dtype_and_precs = [process_dtype(a) if isinstance(a, PyccelFunctionDef) else (a.dtype, a.precision) \
+                            for a in arrays_and_dtypes]
+        dtypes = [d[0] for d in dtype_and_precs]
+        precisions = [d[1] for d in dtype_and_precs]
+
+        if any(d not in NativeNumeric for d in dtypes):
+            raise TypeError('cannot determine the type of {}'.format(self))
+        elif any(d is NativeComplex() for d in dtypes):
+            self._dtype     = NativeComplex()
+        elif any(d is NativeFloat() for d in dtypes):
+            self._dtype     = NativeFloat()
+        elif any(d is NativeInteger() for d in dtypes):
+            self._dtype     = NativeInteger()
+        else:
+            self._dtype     = NativeBool()
+
+        # An integer cannot be described accurately in a float of the same precision due to the mantissa
+        # If the user wants to store the maximum value of an integer they will need the next largest precision
+        if self._dtype in (NativeFloat(), NativeComplex()):
+            precisions = [p*2 if (isinstance(d, NativeInteger) and isinstance(a,PyccelFunctionDef)) else p \
+                            for a,d,p in zip(arrays_and_dtypes, dtypes, precisions)]
+
+        # Arrays and NumPy datatype objects have priority
+        dtype_array_precisions = [p for a,d,p in zip(arrays_and_dtypes, dtypes, precisions) \
+                                  if (getattr(a,'rank', 0) != 0 or isinstance(a,PyccelFunctionDef))]
+        if dtype_array_precisions:
+            self._precision = max(dtype_array_precisions)
+        else:
+            if -1 in precisions:
+                precisions.append(default_precision[str(self.dtype)])
+            self._precision = max(precisions)
+
         super().__init__(*arrays_and_dtypes)
 
 #==============================================================================
@@ -594,8 +621,9 @@ class NumpyArange(NumpyNewArray):
 
         init_dtype = dtype
         if dtype is None:
-            self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
-            self._precision = max_precision(self.arg, allow_native=False)
+            type_info = NumpyResultType(self.arg)
+            self._dtype = type_info.dtype
+            self._precision = type_info.precision
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
@@ -696,25 +724,9 @@ class NumpyMatmul(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(a))
 
         args      = (a, b)
-        integers  = [e for e in args if e.dtype is NativeInteger()]
-        booleans  = [e for e in args if e.dtype is NativeBool()]
-        floats    = [e for e in args if e.dtype is NativeFloat()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max_precision(complexs, allow_native = False)
-        elif floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(floats, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max_precision(integers, allow_native = False)
-        elif booleans:
-            self._dtype     = NativeBool()
-            self._precision = max_precision(booleans, allow_native = False)
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+        type_info = NumpyResultType(*args)
+        self._dtype = type_info.dtype
+        self._precision = type_info.precision
 
         if not (a.shape is None or b.shape is None):
 
@@ -827,21 +839,9 @@ class NumpyLinspace(NumpyNewArray):
             self._dtype, self._precision = process_dtype(dtype)
         else:
             args      = (start, stop)
-            integers  = [e for e in args if e.dtype is NativeInteger()]
-            floats    = [e for e in args if e.dtype is NativeFloat()]
-            complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-            if complexs:
-                self._dtype     = NativeComplex()
-                self._precision = max_precision(complexs, allow_native = False)
-            elif floats:
-                self._dtype     = NativeFloat()
-                self._precision = max_precision(floats, allow_native = False)
-            elif integers:
-                self._dtype     = NativeFloat()
-                self._precision = default_precision['float']
-            else:
-                raise TypeError('cannot determine the type of {}'.format(self))
+            type_info = NumpyResultType(*args)
+            self._dtype = type_info.dtype
+            self._precision = type_info.precision
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -948,21 +948,9 @@ class NumpyWhere(PyccelInternalFunction):
         self._value_false = y
 
         args      = (x, y)
-        integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
-        floats    = [e for e in args if e.dtype is NativeFloat()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max_precision(args, allow_native = False)
-        elif floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(args, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max_precision(args, allow_native = False)
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+        type_info = NumpyResultType(*args)
+        self._dtype = type_info.dtype
+        self._precision = type_info.precision
 
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
@@ -1621,25 +1609,9 @@ class NumpyMod(NumpyUfuncBinary):
 
     def _set_dtype_precision(self, x1, x2):
         args      = (x1, x2)
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        others    = [a for a in args if a not in integers+floats]
-
-        if others:
-            raise TypeError('{} not supported'.format(others[0].dtype))
-
-        if floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(floats, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            integers  = [a for a in args if a.dtype is NativeInteger()]
-            if integers:
-                self._precision = max_precision(integers, NativeInteger(), allow_native = False)
-            else:
-                self._precision = 1
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+        type_info = NumpyResultType(*args)
+        self._dtype = type_info.dtype
+        self._precision = type_info.precision
 
 class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the amin function in the Numpy library"""
