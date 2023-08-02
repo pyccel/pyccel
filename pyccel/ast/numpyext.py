@@ -621,7 +621,7 @@ class NumpyArange(NumpyNewArray):
 
         init_dtype = dtype
         if dtype is None:
-            type_info = NumpyResultType(self.arg)
+            type_info = NumpyResultType(*self.arg)
             self._dtype = type_info.dtype
             self._precision = type_info.precision
         else:
@@ -1652,6 +1652,8 @@ class NumpyMod(NumpyUfuncBinary):
         may be promoted.
         """
         args      = (x1, x2)
+        if x1.dtype is NativeComplex() or x2.dtype is NativeComplex():
+            raise TypeError("Complex modulo not supported")
         type_info = NumpyResultType(*args)
         self._dtype = type_info.dtype
         self._precision = type_info.precision
