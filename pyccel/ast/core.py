@@ -702,7 +702,7 @@ class CodeBlock(Basic):
 
     @Basic.ast.setter
     def ast(self, ast_node):
-        super().ast(ast_node)
+        Basic.ast.fset(self, ast_node)
         for l in self.body:
             if not l.ast:
                 l.ast = ast_node
