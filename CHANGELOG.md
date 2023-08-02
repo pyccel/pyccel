@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 -   Allow interfaces in classes.
 -   Python support for a simple class.
 -   #1430 : Added conjugate support to booleans.
+-   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
+-   #1260 : Add support for NumPy `result_type` function.
 
 ### Fixed
 
