@@ -9,7 +9,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall
+from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall, PyccelFunctionDef
 from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -152,6 +152,39 @@ class PythonCodePrinter(CodePrinter):
                 raise NotImplementedError("Type {} not handled in a FunctionalFor".format(type(body)))
         return body, iterables
 
+    def _get_numpy_name(self, expr):
+        """
+        Get the name of a NumPy function and ensure it is imported.
+
+        Get the name of a NumPy function from an instance of the class. The
+        name is saved in the class by default, however _aliases are checked
+        in case the function was imported explicitly with a different name
+        (e.g. `from numpy import int32 as i32`). If the name is not found in
+        aliases then it is added to the objects imported from NumPy.
+
+        Parameters
+        ----------
+        expr : PyccelInternalFunction
+            A pyccel node describing a NumPy function.
+
+        Returns
+        -------
+        str
+            The name that should be used in the code.
+        """
+        if isinstance(expr, type):
+            cls = expr
+        else:
+            cls = type(expr)
+        type_name = expr.name
+        name = self._aliases.get(cls, type_name)
+        import traceback as tb
+        if name == type_name:
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(cls, name))
+        return name
+
     #----------------------------------------------------------------------
 
     def _print_dtype_argument(self, expr, init_dtype):
@@ -160,11 +193,13 @@ class PythonCodePrinter(CodePrinter):
         elif isinstance(init_dtype, (PythonType, NumpyResultType)):
             dtype = self._print(init_dtype)
             return "dtype = " + dtype
+        elif isinstance(init_dtype, PyccelFunctionDef):
+            dtype = self._get_numpy_name(init_dtype.cls_name)
+            return "dtype={}".format(dtype)
         else:
             dtype = self._print(expr.dtype)
-            if expr.precision != default_precision[str(expr.dtype)]:
-                factor = 16 if dtype == 'complex' else 8
-                dtype += str(expr.precision*factor)
+            if expr.precision != -1:
+                name = self._get_numpy_name(expr)
             return "dtype={}".format(dtype)
 
     def _print_Header(self, expr):
@@ -375,25 +410,13 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonInt(self, expr):
         name = 'int'
         if expr.precision != -1:
-            type_name = name + str(expr.precision*8)
-            cls       = type(expr)
-            name = self._aliases.get(cls, type_name)
-            if name == type_name:
-                self.insert_new_import(
-                        source = 'numpy',
-                        target = AsName(cls, name))
+            name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         name = 'float'
         if expr.precision != -1:
-            type_name = name + str(expr.precision*8)
-            cls       = type(expr)
-            name = self._aliases.get(cls, type_name)
-            if name == type_name:
-                self.insert_new_import(
-                        source = 'numpy',
-                        target = AsName(cls, name))
+            name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonComplex(self, expr):
@@ -405,12 +428,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyComplex(self, expr):
         if expr.precision != -1:
-            cls       = type(expr)
-            name = self._aliases.get(cls, expr.name)
-            if name == expr.name:
-                self.insert_new_import(
-                        source = 'numpy',
-                        target = AsName(cls, expr.name))
+            name = self._get_numpy_name(expr)
         else:
             name = 'complex'
         if expr.is_cast:
@@ -456,22 +474,12 @@ class PythonCodePrinter(CodePrinter):
     def _print_PyccelArrayShapeElement(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
-        expected_name = NumpyShape.name
-        name = self._aliases.get(NumpyShape, expected_name)
-        if name == expected_name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(type(expr), expected_name))
+        name = self._get_numpy_name(expr)
         return f'{name}({arg})[{index}]'
 
     def _print_PyccelArraySize(self, expr):
         arg = self._print(expr.arg)
-        expected_name = NumpySize.name
-        name = self._aliases.get(NumpySize, expected_name)
-        if name == expected_name:
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(type(expr), expected_name))
+        name = self._get_numpy_name(expr)
         return f'{name}({arg})'
 
     def _print_Comment(self, expr):
@@ -584,11 +592,7 @@ class PythonCodePrinter(CodePrinter):
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        name = self._aliases.get(type(expr),'array')
-        if name == 'array':
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(NumpyArray, 'array'))
+        name = self._get_numpy_name(expr)
 
         return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
 
@@ -659,11 +663,10 @@ class PythonCodePrinter(CodePrinter):
         return'{0} {1}= {2}\n'.format(lhs,op,rhs)
 
     def _print_PythonRange(self, expr):
-        name = self._aliases.get(type(expr), expr.name)
         start = self._print(expr.start)
         stop  = self._print(expr.stop)
         step  = self._print(expr.step)
-        return '{}({}, {}, {})'.format(name,start,stop,step)
+        return f'range({start}, {stop}, {step})'
 
     def _print_Allocate(self, expr):
         return ''
@@ -672,11 +675,7 @@ class PythonCodePrinter(CodePrinter):
         return ''
 
     def _print_NumpyArray(self, expr):
-        name  = self._aliases.get(type(expr), expr.name)
-        if name == 'array':
-            self.insert_new_import(
-                    source = 'numpy',
-                    target = AsName(NumpyArray, 'array'))
+        name = self._get_numpy_name(expr)
 
         arg   = self._print(expr.arg)
         dtype = self._print_dtype_argument(expr, expr.init_dtype)
@@ -856,11 +855,7 @@ class PythonCodePrinter(CodePrinter):
             type_name = cast_func.__name__.lower()
             is_numpy  = type_name.startswith('numpy')
             cast_name = cast_func.name
-            name = self._aliases.get(cast_func, cast_name)
-            if is_numpy and name == cast_name:
-                self.insert_new_import(
-                        source = 'numpy',
-                        target = AsName(cast_func, cast_name))
+            name = self._get_numpy_name(expr)
             return '{}({})'.format(name, repr(expr.python_value))
 
     def _print_Print(self, expr):
