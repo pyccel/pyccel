@@ -13,7 +13,7 @@ from pyccel.ast.datatypes  import default_precision
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.numpyext   import Shape as NumpyShape, numpy_target_swap
+from pyccel.ast.numpyext   import NumpyShape, NumpySize, numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
@@ -428,15 +428,26 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(a) for a in expr.expr)
         return f'print({args})\n'
 
-    def _print_PyccelArraySize(self, expr):
+    def _print_PyccelArrayShapeElement(self, expr):
         arg = self._print(expr.arg)
         index = self._print(expr.index)
-        name = self._aliases.get(NumpyShape, expr.name)
-        if name == expr.name:
+        expected_name = NumpyShape.name
+        name = self._aliases.get(NumpyShape, expected_name)
+        if name == expected_name:
             self.insert_new_import(
                     source = 'numpy',
-                    target = AsName(type(expr),expr.name))
+                    target = AsName(type(expr), expected_name))
         return f'{name}({arg})[{index}]'
+
+    def _print_PyccelArraySize(self, expr):
+        arg = self._print(expr.arg)
+        expected_name = NumpySize.name
+        name = self._aliases.get(NumpySize, expected_name)
+        if name == expected_name:
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(type(expr), expected_name))
+        return f'{name}({arg})'
 
     def _print_Comment(self, expr):
         txt = self._print(expr.text)

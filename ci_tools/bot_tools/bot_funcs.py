@@ -1,10 +1,12 @@
 """ File containing the class Bot and all functions useful for bot reactions.
 """
+from datetime import datetime
 import json
 import os
 import platform
 import shutil
 import subprocess
+import time
 from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
@@ -102,13 +104,16 @@ class Bot:
 
     def __init__(self, pr_id = None, check_run_id = None, commit = None):
         self._repo = os.environ["GITHUB_REPOSITORY"]
+        self._source_repo = None
         self._GAI = GitHubAPIInteractions()
         if pr_id is None:
             self._pr_id = os.environ["PR_ID"]
         else:
-            self._pr_id = pr_id
+            self._pr_id = int(pr_id)
+        print("PR ID =", self._pr_id)
         if self._pr_id != 0:
             self._pr_details = self._GAI.get_pr_details(pr_id)
+            print(self._pr_details)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
         if commit:
@@ -246,7 +251,7 @@ class Bot:
         """
         self._GAI.create_comment(self._pr_id, message_from_file('bot_commands.txt'))
 
-    def run_tests(self, tests, python_version = None):
+    def run_tests(self, tests, python_version = None, force_run = False):
         """
         Run the specified tests on the requested python version.
 
@@ -264,6 +269,14 @@ class Bot:
         python_version : str, optional
             The requested python version.
 
+        force_run : bool, default=False
+            Force the tests to run even if they are not necessary.
+
+        Returns
+        -------
+        list of str
+            A list containing the state of each test.
+
         See Also
         --------
         Bot.run_test
@@ -271,18 +284,37 @@ class Bot:
         """
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
+            return []
         else:
             check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
             already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
+            states = []
+
+            if not force_run:
+                # Get a list of all commits on this branch
+                cmds = [git, 'log', '--pretty=oneline', '--first-parent', self._ref]
+                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+                    out, err = p.communicate()
+                    print(err)
+                    assert p.returncode == 0
+
+                commit_log = [o.split(' ')[0] for o in out.split('\n')]
+                print(commit_log)
+                idx = next((i for i,c in enumerate(commit_log) if c ==self._base), len(commit_log))
+                commit_log = commit_log[:idx+1]
+
             for t in tests:
                 pv = python_version or default_python_versions[t]
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
+                if not force_run and not self.is_test_required(commit_log, name, t, states):
+                    continue
+                states.append('queued')
                 if key not in already_programmed:
                     posted = self._GAI.prepare_run(self._ref, name)
                 else:
@@ -295,7 +327,9 @@ class Bot:
                     if t == 'coverage':
                         print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
                         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                    print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
+            return states
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
         """
@@ -322,10 +356,11 @@ class Bot:
         workflow_ids : list of int, optional
             The ids of any workflows which may provide the necessary artifacts.
         """
+        source_repo = self._source_repo or self._repo
         inputs = {'python_version' : python_version,
                   'ref' : self._ref,
                   'check_run_id' : str(check_run_id),
-                  'pr_repo' : self._source_repo
+                  'pr_repo' : source_repo
                  }
         if test in tests_with_base:
             inputs['base'] = self._base
@@ -334,13 +369,85 @@ class Bot:
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
             print("possible_artifacts : ", possible_artifacts)
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+            while len(acceptable_urls) == 0:
+                # Occasionally artifacts are not available immediately after linux concludes
+                time.sleep(10)
+                possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
+                print("possible_artifacts : ", possible_artifacts)
+                acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
         elif test == "editable_pickle":
             test = "pickle"
             inputs["editable_string"] = "-e"
+        print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', inputs)
+
+    def is_test_required(self, commit_log, name, key, state):
+        """
+        Check if a costly test is required.
+
+        Check amongst previous commits. If no Python files have been changed since a
+        commit where the check was run then post the result of the previous check.
+        Otherwise indicate that the test should be run.
+
+        Parameters
+        ----------
+        commit_log : list of str
+            A list of all commits on this branch.
+
+        name : str
+            The name of the test we want to run.
+
+        key : str
+            The key which identifies the test.
+
+        state : list of str
+            A list to which the state should be appended if found.
+
+        Returns
+        -------
+        bool
+            True if the test should be run, False otherwise.
+        """
+        print("Checking : ", name)
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
+                                                    and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('pyccel_lint'):
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('pylint'):
+            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('docs'):
+            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('spelling'):
+            has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+        else:
+            raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
+
+        for c in commit_log:
+            diff = self.get_diff(c)
+            if has_relevant_change(diff):
+                print("Contains relevant change : ", c)
+                return True
+            else:
+                check_runs = self.get_check_runs(c)
+                print(c,':', check_runs)
+                try:
+                    previous_state = next(cr for cr in check_runs if cr['name'] == name)
+                except StopIteration:
+                    continue
+                conclusion = previous_state['conclusion']
+                if conclusion in ('failure', 'success'):
+                    if key == 'coverage' and conclusion == 'failure':
+                        return True
+                    self._GAI.create_run_from_old(self._ref, name, previous_state)
+                    state.append(conclusion)
+                    return False
+        return True
 
     def mark_as_draft(self):
         """
@@ -365,6 +472,25 @@ class Bot:
         """
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
+
+    def draft_due_to_changes_requested(self, author, reviewer):
+        """
+        Mark the pull request as a draft following requested changes.
+
+        Mark the pull request specified in the constructor as a draft.
+        This function should be called when a review is left on a pull
+        request by a user (non-bot) requesting changes.
+
+        Parameters
+        ----------
+        author : str
+            The login id of the author of the pull request.
+
+        reviewer : str
+            The login id of the reviewer of the pull request.
+        """
+        self.mark_as_draft()
+        self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
 
     def request_mark_as_ready(self):
         """
@@ -396,14 +522,22 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        self.run_tests(pr_test_keys)
+        states = self.run_tests(pr_test_keys)
 
-        cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
+        if 'failure' in states:
+            self.draft_due_to_failure()
+            return False
+        else:
+            cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
-        with subprocess.Popen(cmds) as p:
-            _, err = p.communicate()
-        print(err)
-        return True
+            with subprocess.Popen(cmds) as p:
+                _, err = p.communicate()
+            print(err)
+
+            if all(s == 'success' for s in states):
+                self.mark_as_ready(False)
+
+            return True
 
     def mark_as_ready(self, following_review):
         """
@@ -434,28 +568,40 @@ class Bot:
         new_stage, reviews = self.check_review_stage(pr_id)
         self._GAI.add_labels(pr_id, [new_stage])
         author = self._pr_details["user"]["login"]
-        approving_reviewers = [r['user']['login'] for r in reviews if r["state"] == 'APPROVED']
-        requested_changes = [r['user']['login'] for r in reviews if r["state"] == 'CHANGES_REQUESTED']
+        approving_reviewers = [reviewer for reviewer, r in reviews.items() if r["state"] == 'APPROVED']
+        requested_changes = [reviewer for reviewer, r in reviews.items() if r["state"] == 'CHANGES_REQUESTED']
+
+        try:
+            current_stage_index = review_stage_labels.index(current_stage)
+        except ValueError:
+            current_stage_index = -1
+        review_stage_index = review_stage_labels.index(new_stage)
 
         if following_review:
-            if review_stage_labels.index(current_stage) < review_stage_labels.index(new_stage):
-                if new_stage == "needs_initial_review":
-                    message = message_from_file('new_pr.txt').format(author=author)
-                    self._GAI.create_comment(pr_id, message)
-                elif new_stage == 'Ready_for_review':
-                    names = ', '.join(f'@{r}' for r in senior_reviewer)
-                    approved = ', '.join(f'@{a}' for a in approving_reviewers)
-                    message = message_from_file('senior_review.txt').format(
-                                    reviewers=names, author=author, approved=approved)
-                    self._GAI.create_comment(pr_id, message)
-        elif reviews:
+            if current_stage_index < review_stage_index and new_stage == 'Ready_for_review':
+                names = ', '.join(f'@{r}' for r in senior_reviewer)
+                approved = ', '.join(f'@{a}' for a in approving_reviewers)
+                message = message_from_file('senior_review.txt').format(
+                                reviewers=names, author=author, approved=approved)
+                self._GAI.create_comment(pr_id, message)
+                self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
+        elif requested_changes:
             requested = ', '.join(f'@{r}' for r in requested_changes)
             message = message_from_file('rerequest_review.txt').format(
                                             reviewers=requested, author=author)
             self._GAI.create_comment(pr_id, message)
-        else:
+            self._GAI.request_reviewers(pr_id, reviewers=requested_changes)
+        elif new_stage == 'Ready_for_review':
+            names = ', '.join(f'@{r}' for r in senior_reviewer)
+            approved = ', '.join(f'@{a}' for a in approving_reviewers)
+            message = message_from_file('senior_review.txt').format(
+                            reviewers=names, author=author, approved=approved)
+            self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, reviewers=senior_reviewer)
+        elif new_stage == "needs_initial_review":
             message = message_from_file('new_pr.txt').format(author=author)
             self._GAI.create_comment(pr_id, message)
+            self._GAI.request_reviewers(pr_id, request_team = True)
 
     def post_coverage_review(self, comments, approve):
         """
@@ -564,15 +710,18 @@ class Bot:
         str
             The review stage.
 
-        list of dict
-            A list of the dictionaries describing the reviews left by users (non-bots)
-            which either approved or requested changes.
+        dict
+            A dictionary whose keys are users (non-bots) who left reviews and
+            whose values are dictionaries describing the reviews which either
+            approved or requested changes.
         """
-        reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
-        if any(r['user']['login'] in senior_reviewer and r["state"] == 'APPROVED' for r in reviews):
+        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
+        reviews = {r['user']['login'] : r for r in all_reviews}
+        if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 
-        non_senior_reviews = [r for r in reviews if r['user']['login'] not in senior_reviewer]
+        non_senior_reviews = [r for reviewer, r in reviews.items() if reviewer not in senior_reviewer]
 
         if non_senior_reviews and all(r["state"] == 'APPROVED' for r in non_senior_reviews):
             return "Ready_for_review", reviews
@@ -580,19 +729,31 @@ class Bot:
         else:
             return "needs_initial_review", reviews
 
-    def get_check_runs(self):
+    def get_check_runs(self, commit = None):
         """
         Get a list of all check runs which have run on this commit.
 
         Get a dictionary containing all information about check runs which have run
         on the commit specified at the constructor.
 
+        Parameters
+        ----------
+        commit : str, optional
+            The commit for which we wish to get check run information.
+            The default value is the most recent commit associated with this
+            pull request.
+
         Returns
         -------
         dict
             A dictionary describing the check runs.
         """
-        return self._GAI.get_check_runs(self._ref)['check_runs']
+        if commit is None:
+            commit = self._ref
+        result = self._GAI.get_check_runs(commit)
+        print("get_check_runs")
+        print(result)
+        return result['check_runs']
 
     def get_bot_review_comments(self):
         """
@@ -643,22 +804,43 @@ class Bot:
         if self._pr_id:
             return self._pr_id
         else:
-            possible_prs = self._GAI.get_prs()
-            print(possible_prs)
-            self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+            cmds = [git, 'branch', '-a', '--contains', self._ref]
+            with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+                out, err = p.communicate()
+                print(err)
+                assert p.returncode == 0
+            branches = out.split('\n')
+            if len(branches) == 1:
+                branch = branches[0].split('/')[-1]
+                cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
+                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
+                    out, err = p.communicate()
+                    print(err)
+                    assert p.returncode == 0
+                self._pr_id = json.loads(out)[0]['number']
+            else:
+                possible_prs = self._GAI.get_prs()
+                print(possible_prs)
+                self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
             self._pr_details = self._GAI.get_pr_details(self._pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
             return self._pr_id
 
-    def get_diff(self):
+    def get_diff(self, base_commit = None):
         """
         Get the diff between the base and the current commit.
 
         Get the git description of the difference between the current
-        commit and the base commit of the pull request. This output
+        commit and the specified base commit. This output
         shows how github organises the files tab and allows line
         numbers do be calculated from git blob positions.
+
+        Parameters
+        ----------
+        base_commit : str, optional
+            The commit against which the current commit should be compared.
+            The default value is the base commit of the pull request.
 
         Returns
         -------
@@ -666,7 +848,10 @@ class Bot:
             A dictionary whose keys are files and whose values are lists of
             lines which appear in the diff including code and blob headers.
         """
-        cmd = [git, 'diff', f"{self._base}..{self._ref}"]
+        if base_commit is None:
+            base_commit = self._base
+        assert bool(base_commit)
+        cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
         print(cmd)
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
@@ -676,7 +861,7 @@ class Bot:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
-                n = next(i for i,l in enumerate(lines) if '@@' in l)
+                n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
         return {f:l for f,l in diff.items() if l is not None}
 
@@ -769,5 +954,7 @@ class Bot:
         """
         if '(' in name:
             return name.split('(')[1].split(',')[0]
+        elif 'Codacy' in name:
+            return 'Codacy'
         else:
             return name

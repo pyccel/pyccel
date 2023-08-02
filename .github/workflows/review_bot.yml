@@ -1,19 +1,17 @@
 name: Bot
 
 on:
-  pull_request_target:
-    branches: [ devel ]
-    types: [ ready_for_review ]
+  pull_request_review:
+    types: [ submitted ]
 
 jobs:
   Bot:
-    name: Preparing Pull Request for review stage
+    name: Update Review Stage
+    if: ((! github.event.pull_request.draft) && (github.event.review.user.type != 'Bot' ))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-      - name: Set up Python 3.9
+      - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
@@ -27,7 +25,6 @@ jobs:
           bot_pem: "${{ secrets.BOT_PEM }}"
       - id: run_bot
         run: |
-          python ci_tools/bot_ready_for_review.py
+          python ci_tools/bot_review_react.py
         env:
           GH_TOKEN: ${{ github.token }}
-
