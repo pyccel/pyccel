@@ -1,23 +1,21 @@
 # pylint: disable=missing-class-docstring,  missing-function-docstring, missing-module-docstring
 #$ header class Point(public)
-#$ header method __init__(Point, double, double)
+#$ header method __init__(Point, double[:])
+#$ header method translate(Point, double[:])
+import numpy as np
 
 class Point:
-    def __init__(self, x, y):
+    def __init__(self, x):
         self.x = x
-        self.y = y
+
+    def translate(self, a):
+        self.x[:]   =  self.x + a
 
 if __name__ == '__main__':
-    p = Point(0.0, 0.0)
-    x=p.x
-    p.x=4
-    a = p.x
-    a = p.x - 2
-    a = 2 * p.x - 2
-    a = 2 * (p.x + 6) - 2
+    x = np.array([0.,0.,0.])
+    p = Point(x)
 
-    p.y = a + 5
-    p.y = p.x + 5
+    a = np.array([1.,1.,1.])
 
-    print(p.x, p.y)
-    print(x)
+    p.translate(a)
+    print(p.x)
