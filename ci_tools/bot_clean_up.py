@@ -2,10 +2,10 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, test_dependencies
+from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'pyccel_lint', 'spelling', 'Codacy']
+#pr_all_test_keys = pr_test_keys.copy() + ['Codacy']
+pr_all_test_keys = pr_test_keys.copy()
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -98,13 +98,13 @@ if __name__ == '__main__':
             print(was_examined, result_ignored)
 
             if was_examined and not result_ignored:
-                print(completed_runs, pr_test_keys, successful_runs)
-                print(all(k in completed_runs for k in pr_test_keys),
-                     all(k in successful_runs for k in pr_test_keys))
+                print(completed_runs, pr_all_test_keys, successful_runs)
+                print(all(k in completed_runs for k in pr_all_test_keys),
+                     all(k in successful_runs for k in pr_all_test_keys))
                 if event['check_run']['conclusion'] == 'failure':
                     bot.draft_due_to_failure()
                 elif event['check_run']['conclusion'] not in ('success', 'skipped'):
                     bot.mark_as_draft()
-                elif all(k in completed_runs for k in pr_test_keys) and \
-                     all(k in successful_runs for k in pr_test_keys):
+                elif all(k in completed_runs for k in pr_all_test_keys) and \
+                     all(k in successful_runs for k in pr_all_test_keys):
                     bot.mark_as_ready(following_review = False)
