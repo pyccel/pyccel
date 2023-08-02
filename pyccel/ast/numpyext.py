@@ -33,7 +33,7 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
-from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd, PyccelBinaryOperator
+from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .variable       import Variable, Constant, HomogeneousTupleVariable
 
 errors = Errors()
