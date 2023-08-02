@@ -408,6 +408,7 @@ class GitHubAPIInteractions:
             request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
             results.extend(request.json())
             exit_status = request.status_code
+            page += 1
         return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
@@ -646,6 +647,7 @@ class GitHubAPIInteractions:
             request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
             results.extend(request.json())
             exit_status = request.status_code
+            page += 1
         return results
 
     def get_events(self, pr_id, page = 1):
