@@ -717,8 +717,10 @@ class Bot:
             whose values are dictionaries describing the reviews which either
             approved or requested changes.
         """
-        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
         print("------------------- REVIEWS ---------------------------")
+        unfiltered_revs = self._GAI.get_reviews(self._pr_id)
+        all_reviews = [r for r in unfiltered_revs if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        print(len(unfiltered_revs))
         print(len(all_reviews))
         print("-------------------------------------------------------")
         all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
