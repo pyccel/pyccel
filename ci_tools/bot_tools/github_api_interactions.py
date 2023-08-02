@@ -409,6 +409,7 @@ class GitHubAPIInteractions:
             results.extend(request.json())
             exit_status = request.status_code
             page += 1
+            print(exit_status, page, len(results), results[-1])
         return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
@@ -648,6 +649,7 @@ class GitHubAPIInteractions:
             results.extend(request.json())
             exit_status = request.status_code
             page += 1
+            print(exit_status, page, len(results), results[-1])
         return results
 
     def get_events(self, pr_id, page = 1):
