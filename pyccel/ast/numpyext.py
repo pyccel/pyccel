@@ -26,7 +26,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
+from .internals      import PyccelInternalFunction, Slice, get_final_precision
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
@@ -380,7 +380,7 @@ class NumpyResultType(PyccelInternalFunction):
         # An integer cannot be described accurately in a float of the same precision due to the mantissa
         # If the user wants to store the maximum value of an integer they will need the next largest precision
         if self._dtype in (NativeFloat(), NativeComplex()):
-            precisions = [p*2 if (isinstance(d, NativeInteger) and isinstance(a,PyccelFunctionDef)) else p \
+            precisions = [p*2 if (isinstance(d, NativeInteger) and isinstance(a,PyccelFunctionDef) and p!=-1) else p \
                             for a,d,p in zip(arrays_and_dtypes, dtypes, precisions)]
 
         # Arrays and NumPy datatype objects have priority
@@ -849,8 +849,12 @@ class NumpyLinspace(NumpyNewArray):
         else:
             args      = (start, stop)
             type_info = NumpyResultType(*args)
-            self._dtype = type_info.dtype
-            self._precision = type_info.precision
+            if type_info.dtype is NativeInteger():
+                self._dtype     = NativeFloat()
+                self._precision = default_precision['float']
+            else:
+                self._dtype = type_info.dtype
+                self._precision = type_info.precision
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
