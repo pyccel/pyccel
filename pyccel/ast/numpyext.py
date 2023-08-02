@@ -347,8 +347,8 @@ class NumpyResultType(PyccelInternalFunction):
     the datatype of an expression. This function can be used to access the `dtype`
     property of a NumPy array.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     *arrays_and_dtypes : PyccelAstNode
         Any arrays and dtypes passed to the function (currently only accepts one array
         and no dtypes).
@@ -440,6 +440,8 @@ class NumpyNewArray(PyccelInternalFunction):
 
     Parameters
     ----------
+    *args : tuple of PyccelAstNode
+        The arguments of the superclass PyccelInternalFunction.
     init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
     """
@@ -562,13 +564,13 @@ class NumpyArange(NumpyNewArray):
     Parameters
     ----------
     start : Numeric
-        Start of interval, default value 0
+        Start of interval, default value 0.
 
     stop : Numeric
-        End of interval
+        End of interval.
 
     step : Numeric
-        Spacing between values, default value 1
+        Spacing between values, default value 1.
 
     dtype : Datatype
         The type of the output array, if dtype is not given,
