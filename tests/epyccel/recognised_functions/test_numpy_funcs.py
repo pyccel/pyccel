@@ -3608,7 +3608,7 @@ def test_zeros_like_dtype_auto(language):
 
     f_complex_auto = epyccel(create_zeros_like_val_complex_auto, language = language)
     assert matching_types(f_complex_auto(), create_zeros_like_val_complex_auto())
-    
+
     f_int32_auto   = epyccel(create_zeros_like_val_int32_auto, language = language)
     assert matching_types(f_int32_auto(), create_zeros_like_val_int32_auto())
 
@@ -5752,7 +5752,7 @@ def test_numpy_linspace_array_like_1d(language):
     out = np.empty_like(arr)
     epyccel_func(integer32, 5, out, False)
     assert np.allclose(arr, out)
-    
+
     if sys.platform != 'win32':
         arr = linspace(integer64, 5, 7)
         out = np.empty_like(arr)
@@ -6379,3 +6379,39 @@ def test_dtype(language):
     assert matching_types(epyccel_func(fl), func(fl))
     assert matching_types(epyccel_func(fl32), func(fl32))
     assert matching_types(epyccel_func(fl64), func(fl64))
+
+def test_result_type(language):
+    def int_vs_int_array():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(3, np.arange(7, dtype=np.int32)))
+        return b[0]
+
+    def type_comparison():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.int32, np.int16))
+        return b[0]
+
+    def type_comparison2():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.int32, np.complex64))
+        return b[0]
+
+    def value_types():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(3.0, -2))
+        return b[0]
+
+    def pass_through_type():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.float64))
+        return b[0]
+
+    epyccel_int_vs_int_array = epyccel(int_vs_int_array, language=language)
+    epyccel_type_comparison = epyccel(type_comparison, language=language)
+    epyccel_type_comparison2 = epyccel(type_comparison2, language=language)
+    epyccel_value_types = epyccel(value_types, language=language)
+
+    assert matching_types(epyccel_int_vs_int_array(), int_vs_int_array())
+    assert matching_types(epyccel_type_comparison(), type_comparison())
+    assert matching_types(epyccel_type_comparison2(), type_comparison2())
+    assert matching_types(epyccel_value_types(), value_types())
