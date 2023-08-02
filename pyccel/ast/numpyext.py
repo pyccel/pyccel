@@ -707,8 +707,17 @@ class NumpyProduct(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyMatmul(PyccelInternalFunction):
-    """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , PythonTuple, PythonList, Variable
+    """
+    Represents a call to numpy.matmul for code generation.
+
+    Represents a call to NumPy's `matmul` function for code generation.
+
+    Parameters
+    ----------
+    a : PyccelAstNode
+        The first argument of the matrix multiplication.
+    b : PyccelAstNode
+        The second argument of the matrix multiplication.
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
     name = 'matmul'
@@ -929,7 +938,22 @@ class NumpyLinspace(NumpyNewArray):
 
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
-    """ Represents a call to  numpy.where """
+    """
+    Represents a call to `numpy.where`.
+
+    Represents a call to NumPy's `where` function.
+
+    Parameters
+    ----------
+    condition : PyccelAstNode
+        The condition which determines which value is returned.
+
+    x : PyccelAstNode, optional
+        The value if True. If `x` is provided, `y` should also be provided.
+
+    y : PyccelAstNode, optional
+        The value if False. If `y` is provided, `x` should also be provided.
+    """
 
     __slots__ = ('_condition', '_value_true', '_value_false', '_dtype',
                  '_rank', '_shape', '_order', '_precision')
@@ -939,10 +963,12 @@ class NumpyWhere(PyccelInternalFunction):
     def __new__(cls, condition, x = None, y = None):
         if x is None and y is None:
             return NumpyNonZero(condition)
+        elif x is None or y is None:
+            raise TypeError("Either both or neither of x and y should be given")
         else:
             return super().__new__(cls)
 
-    def __init__(self, condition, x = None, y = None):
+    def __init__(self, condition, x, y):
         self._condition = condition
         self._value_true = x
         self._value_false = y
@@ -1577,7 +1603,18 @@ class NumpyFloor(NumpyUfuncUnary):
         self._precision = default_precision[str_dtype(self._dtype)]
 
 class NumpyMod(NumpyUfuncBinary):
-    """Represent a call to the mod function in the Numpy library"""
+    """
+    Represent a call to the `numpy.mod` function.
+
+    Represent a call to the mod function in the Numpy library.
+
+    Parameters
+    ----------
+    x1 : PyccelAstNode
+        Dividend of the operator.
+    x2 : PyccelAstNode
+        Divisor of the operator.
+    """
     __slots__ = ()
     name = 'mod'
 
@@ -1608,6 +1645,12 @@ class NumpyMod(NumpyUfuncBinary):
             self._rank  = len(shape)
 
     def _set_dtype_precision(self, x1, x2):
+        """
+        Set the datatype of the object.
+
+        Set the datatype of the object by calculting how the types
+        may be promoted.
+        """
         args      = (x1, x2)
         type_info = NumpyResultType(*args)
         self._dtype = type_info.dtype
