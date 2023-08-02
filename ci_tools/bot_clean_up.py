@@ -4,8 +4,7 @@ import json
 import os
 from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys
 
-#pr_all_test_keys = pr_test_keys.copy() + ['Codacy']
-pr_all_test_keys = pr_test_keys.copy()
+pr_all_test_keys = pr_test_keys.copy() + ['Codacy']
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
