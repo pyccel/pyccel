@@ -403,15 +403,12 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
         results = []
         page = 1
-        exit_status = 200
         new_results = [None]
-        while exit_status == 200 and len(results)%100 == 0 and len(new_results) != 0:
+        while len(new_results) != 0:
             request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
             new_results = request.json()
             results.extend(new_results)
-            exit_status = request.status_code
             page += 1
-            print(exit_status, page, len(results), results[-1])
         return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
@@ -645,15 +642,12 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
         results = []
         page = 1
-        exit_status = 200
         new_results = [None]
-        while exit_status == 200 and len(results)%100 == 0 and len(new_results) != 0:
+        while len(new_results) != 0:
             request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
             new_results = request.json()
             results.extend(new_results)
-            exit_status = request.status_code
             page += 1
-            print(exit_status, page, len(results), results[-1])
         return results
 
     def get_events(self, pr_id, page = 1):
