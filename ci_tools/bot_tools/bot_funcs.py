@@ -718,6 +718,9 @@ class Bot:
             approved or requested changes.
         """
         all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        print("------------------- REVIEWS ---------------------------")
+        print(len(all_reviews))
+        print("-------------------------------------------------------")
         all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
         reviews = {r['user']['login'] : r for r in all_reviews}
         if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
