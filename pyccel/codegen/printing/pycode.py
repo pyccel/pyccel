@@ -354,6 +354,13 @@ class PythonCodePrinter(CodePrinter):
         self.exit_scope()
         return code
 
+    def _print_PyccelFunctionDef(self, expr):
+        cls = expr.cls_name
+        if cls.__name__.startswith('Numpy'):
+            return self._get_numpy_name(cls)
+        else:
+            return cls.name
+
     def _print_FunctionAddress(self, expr):
         return expr.name
 
