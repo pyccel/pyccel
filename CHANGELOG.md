@@ -28,6 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
