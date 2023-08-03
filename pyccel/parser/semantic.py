@@ -3356,7 +3356,8 @@ class SemanticParser(BasicParser):
 
             # get the imports
             imports   = self.scope.imports['imports'].values()
-            imports   = list(set(imports))
+            # Prefer dict to set to preserve order
+            imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
             # TODO improve func_ is None in the case of an interface
