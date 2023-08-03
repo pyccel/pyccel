@@ -16,6 +16,8 @@ from pyccel.ast.cwrapper import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper import PyArg_ParseTupleNode, PyccelPyObject, Py_None
 from pyccel.ast.cwrapper import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper import Python_to_C, PyErr_SetString, PyTypeError
+from pyccel.ast.cwrapper import C_to_Python
+from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.datatypes import NativeInteger, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import NativeBool
 from pyccel.ast.internals import get_final_precision
@@ -38,6 +40,7 @@ cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays'
 class CToPythonWrapper(Wrapper):
     def __init__(self):
         self._python_object_map = None
+        self._wrapping_arrays = False
         super().__init__()
 
     def get_new_PyObject(self, name):
@@ -102,11 +105,12 @@ class CToPythonWrapper(Wrapper):
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func) and not f.is_private]
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         self.exit_scope()
-        return PyModule(expr.name, (), funcs, func_names = (), imports = (cwrapper_ndarray_import,),
+        imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
+        return PyModule(expr.name, (), funcs, func_names = (), imports = imports,
                         scope = mod_scope, external_funcs = funcs_to_wrap)
 
     def _wrap_FunctionDef(self, expr):
-        func_name = self.scope.get_new_name(expr.original_function.name+'_wrapper')
+        func_name = self.scope.get_new_name(getattr(expr, 'original_function', expr).name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -117,7 +121,7 @@ class CToPythonWrapper(Wrapper):
         for a in getattr(expr, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
         for r in expr.results:
-            func_scope.insert_symbol(r.value.name)
+            func_scope.insert_symbol(r.var.name)
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
@@ -134,19 +138,22 @@ class CToPythonWrapper(Wrapper):
 
         body += [l for a in args for l in self._wrap(a)]
 
+        result_wrap = [self._wrap(r) for r in results]
+
         call_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
         call_res  = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for a in expr.results]
 
-        result_wrap = [self._wrap(r) for r in results]
-
-        func_results = [FunctionDefResult(r[-1].lhs) for r in result_wrap]
+        func_results = [r[-1].lhs for r in result_wrap]
 
         if call_res:
-            body.append(Assign(call_res, FunctionCall(expr, call_args)))
+            if len(call_res) == 1:
+                body.append(Assign(call_res[0], FunctionCall(expr, call_args)))
+            else:
+                body.append(Assign(call_res, FunctionCall(expr, call_args)))
         else:
             body.append(FunctionCall(expr, call_args))
 
-        body += [l for l in result_wrap]
+        body += [li for l in result_wrap for li in l]
 
         self.exit_scope()
 
@@ -167,6 +174,9 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
         arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+
+        if orig_var.rank != 0:
+            self._wrapping_arrays = True
 
         self.scope.insert_variable(arg_var)
 
@@ -239,13 +249,17 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDefResult(self, expr):
 
-        orig_var = expr.original_function_result_variable
+        orig_var = expr.var
+
+        if orig_var.rank != 0:
+            self._wrapping_arrays = True
 
         c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+        self.scope.insert_variable(c_res)
 
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
 
-        body = [Assign(python_res, FunctionCall(C_to_Python(variable), [ObjectAddress(variable)]))]
+        body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
@@ -261,6 +275,7 @@ class CToPythonWrapper(Wrapper):
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
 
         if orig_var.rank:
+            self._wrapping_arrays = True
             arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             self.scope.insert_variable(arg_var, expr.var.name)
@@ -271,7 +286,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
                 lhs=orig_var), nd_var))
 
-        body = [Assign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
+        body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
