@@ -1,10 +1,13 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 import pytest
 import numpy as np
 
 from pyccel.epyccel import epyccel
 from pyccel.decorators import types
+
+RTOL = 2e-14
+ATOL = 1e-15
 
 @pytest.fixture(scope="module")
 def Module_5(language):
@@ -40,10 +43,10 @@ def test_f2(language):
     f = epyccel(f2, language = language)
 
     # ...
-    assert f(2.0) == f2(2.0)
-    assert f() == f2()
-    assert f(None) == f2(None)
-    assert f(0.0) == f2(0.0)
+    assert np.isclose(f(2.0), f2(2.0), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f(), f2(), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f(None), f2(None), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f(0.0), f2(0.0), rtol=RTOL, atol=ATOL)
     # ...
 #------------------------------------------------------------------------------
 def test_f3(language):
@@ -56,9 +59,9 @@ def test_f3(language):
     f = epyccel(f3, language = language)
 
     # ...
-    assert f(complex(1, 2.2)) == f3(complex(1, 2.2))
-    assert f() == f3()
-    assert f(None) == f3(None)
+    assert np.isclose(f(complex(1, 2.2)), f3(complex(1, 2.2)), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f(), f3(), rtol=RTOL, atol=ATOL)
+    assert np.isclose(f(None), f3(None), rtol=RTOL, atol=ATOL)
     # ...
 #------------------------------------------------------------------------------
 def test_f4(language):

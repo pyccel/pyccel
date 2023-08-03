@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
 import pytest
@@ -16,7 +16,7 @@ def test_func_no_args_1(language):
         gift = 10
         return gift
 
-    c_gift = epyccel(free_gift, language=language)
+    c_gift = epyccel(free_gift, language=language, folder='__pyccel__test_folder__')
     assert c_gift() == free_gift()
     assert isinstance(c_gift(), type(free_gift()))
     unexpected_arg = 0
@@ -36,12 +36,6 @@ def test_func_no_args_2(language):
     with pytest.raises(TypeError):
         c_lose(unexpected_arg)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-)
 def test_func_no_return_1(language):
     '''Test function with args and no return '''
     @types(int)
@@ -68,14 +62,23 @@ def test_func_no_return_2(language):
     with pytest.raises(TypeError):
         c_func(unexpected_arg)
 
-def test_func_no_args_f1():
+def test_func_no_args_f1(language):
     def f1():
         from numpy import pi
         value = (2*pi)**(3/2)
         return value
 
-    f = epyccel(f1)
-    assert abs(f()-f1()) < 1e-13
+    f = epyccel(f1, language=language)
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
+
+def test_func_return_constant(language):
+    def f1():
+        from numpy import pi
+        return pi
+
+    f = epyccel(f1, language=language)
+    assert np.isclose(f(), f1(), rtol=RTOL, atol=ATOL)
+
 #------------------------------------------------------------------------------
 def test_decorator_f1(language):
     @types('int')
@@ -219,12 +222,6 @@ def test_decorator_f8(language):
     # ...
 
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-)
 def test_arguments_f9(language):
     @types('int64[:]')
     def f9(x):
@@ -239,12 +236,6 @@ def test_arguments_f9(language):
     f(x_expected)
     assert np.array_equal(x, x_expected)
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = pytest.mark.python),
-    ]
-)
 def test_arguments_f10(language):
     @types('int64[:]')
     def f10(x):

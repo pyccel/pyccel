@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 import pytest
 from numpy.random import randint
@@ -75,7 +75,7 @@ def test_complex_conjugate(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
-def test_complex_conjugate64(language):
+def test_complex64_conjugate(language):
     def f(a : 'complex64', b : 'complex64'):
         return (a+b).conj()
 
@@ -90,14 +90,81 @@ def test_complex_conjugate64(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.c,
-        pytest.mark.xfail(reason="sum not implemented in c")]
-    ),
-    pytest.param("python", marks = pytest.mark.python)
-))
+def test_float_conjugate(language):
+    def f(a : 'float', b : 'float'):
+        return (a+b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = float(randint(20))
+    b = float(randint(20))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_float64_conjugate(language):
+    def f(a : 'float64', b : 'float64'):
+        return (a+b).conj()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = np.float64(randint(20))
+    b = np.float64(randint(20))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_int_conjugate(language):
+    def f(a : 'int', b : 'int'):
+        return (a+b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = randint(20)
+    b = randint(20)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_int32_conjugate(language):
+    def f(a : 'int32', b : 'int32'):
+        return (a+b).conj()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = randint(20, dtype=np.int32)
+    b = randint(20, dtype=np.int32)
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
+def test_bool_conjugate(language):
+    def f(a : 'bool', b : 'bool'):
+        return (a or b).conjugate()
+
+    epyc_f = epyccel(f, language=language)
+
+    a = bool(randint(2))
+    b = bool(randint(2))
+
+    r = f(a,b)
+    epyc_r = epyc_f(a,b)
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
 def test_ndarray_var_from_expr(language):
     def f(x : 'int[:]', y : 'int[:]'):
         z = x + y
@@ -114,14 +181,6 @@ def test_ndarray_var_from_expr(language):
 
     assert r == epyc_r
 
-@pytest.mark.parametrize( 'language', (
-    pytest.param("fortran", marks = pytest.mark.fortran),
-    pytest.param("c", marks = [
-        pytest.mark.c,
-        pytest.mark.xfail(reason="sum not implemented in c")]
-    ),
-    pytest.param("python", marks = pytest.mark.python)
-))
 def test_ndarray_var_from_slice(language):
     def f(x : 'int[:]'):
         z = x[1:]

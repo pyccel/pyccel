@@ -8,6 +8,7 @@ File containing basic classes which are used throughout pyccel.
 To avoid circular imports this file should only import from basic, datatypes, and literals
 """
 
+from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import Basic, PyccelAstNode, Immutable
@@ -19,55 +20,118 @@ pyccel_stage = PyccelStage()
 __all__ = (
     'PrecomputedCode',
     'PyccelArraySize',
+    'PyccelArrayShapeElement',
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
+    'get_final_precision',
     'max_precision',
-    'get_final_precision'
 )
 
 
 class PyccelInternalFunction(PyccelAstNode):
-    """ Abstract class used by function calls
-    which are translated to Pyccel objects
+    """
+    Abstract class for function calls translated to Pyccel objects.
+
+    A subclass of this base class represents calls to a specific internal
+    function of Pyccel, which may be simplified at a later stage, or made
+    available in the target language when printing the generated code.
+
+    Parameters
+    ----------
+    *args : iterable
+        The arguments passed to the function call.
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
     name = None
+
     def __init__(self, *args):
-        self._args   = tuple(args)
+        self._args = tuple(args)
         super().__init__()
 
     @property
     def args(self):
-        """ The arguments passed to the function
+        """
+        The arguments passed to the function.
+
+        Tuple containing all the arguments passed to the function call.
         """
         return self._args
 
     @property
     def is_elemental(self):
-        """ Indicates whether the function should be
-        called elementwise for an array argument
+        """
+        Whether the function acts elementwise on an array argument.
+
+        Boolean indicating whether the (scalar) function should be called
+        elementwise on an array argument. Here we set the default to False.
         """
         return False
 
 
 class PyccelArraySize(PyccelInternalFunction):
     """
-    Class representing a call to a function which would
-    return the shape of an object in a given dimension
+    Gets the total number of elements in an array.
+
+    Class representing a call to a function which would return
+    the total number of elements in a multi-dimensional array.
 
     Parameters
-    ==========
-    arg   : PyccelAstNode
-            A PyccelAstNode of unknown shape
-    index : int
-            The dimension along which the shape is
-            provided
+    ----------
+    arg : PyccelAstNode
+        An array of unknown size.
     """
-    __slots__ = ('_arg','_index')
-    name   = 'shape'
-    _attribute_nodes = ('_arg', '_index')
+    __slots__ = ()
+    name = 'size'
+
+    _dtype = NativeInteger()
+    _precision = -1
+    _rank  = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, arg):
+        super().__init__(arg)
+
+    @property
+    def arg(self):
+        """
+        Object whose size is investigated.
+
+        The argument of the function call, i.e. the object whose size is
+        investigated.
+        """
+        return self._args[0]
+
+    def __str__(self):
+        return f'Size({self.arg})'
+
+    def __eq__(self, other):
+        if isinstance(other, PyccelArraySize):
+            return self.arg == other.arg
+        else:
+            return False
+
+
+class PyccelArrayShapeElement(PyccelInternalFunction):
+    """
+    Gets the number of elements in a given dimension of an array.
+
+    Class representing a call to a function which would return
+    the shape of a multi-dimensional array in a given dimension.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        An array of unknown shape.
+
+    index : int
+        The dimension along which the shape should be provided.
+    """
+    __slots__ = ()
+    name = 'shape'
+
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
@@ -75,53 +139,73 @@ class PyccelArraySize(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg, index):
-        if not isinstance(arg, (list,
-                                tuple,
-                                PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+        if not isinstance(arg, PyccelAstNode):
+            raise TypeError(f'Unknown type {type(arg)} of {arg}.')
+
         if isinstance(index, int):
             index = LiteralInteger(index)
         elif not isinstance(index, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(index))
+            raise TypeError(f'Unknown type {type(index)} of {index}.')
 
-        self._arg   = arg
-        self._index = index
-        super().__init__()
+        super().__init__(arg, index)
 
     @property
     def arg(self):
-        """ Object whose size is investigated
         """
-        return self._arg
+        Object whose size is investigated.
+
+        The first argument of the function call, i.e. the array whose size is
+        investigated.
+        """
+        return self._args[0]
 
     @property
     def index(self):
-        """ Dimension along which the size is calculated
         """
-        return self._index
+        Dimension along which the size is calculated.
+
+        The second argument of the function call, i.e. the dimension along
+        which the array size is calculated.
+        """
+        return self._args[1]
 
     def __str__(self):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+        return f'Shape({self.arg}, {self.index})'
 
     def __eq__(self, other):
-        if isinstance(other, PyccelArraySize):
+        if isinstance(other, PyccelArrayShapeElement):
             return self.arg == other.arg and self.index == other.index
         else:
             return False
 
-class Slice(Basic):
 
-    """Represents a slice in the code.
+class Slice(Basic):
+    """
+    Represents a slice in the code.
+
+    An object of this class represents the slicing of a Numpy array along one of
+    its dimensions. In most cases this corresponds to a Python slice in the user
+    code, where it is represented by a `python.ast.Slice` object.
+
+    In addition, at the wrapper and code generation stages, an integer index
+    `i` used to create a view of a Numpy array is converted to an object
+    `Slice(i, i+1, 1, slice_type = Slice.Element)`. This allows using C
+    variadic arguments in the function `array_slicing` (in file
+    pyccel/stdlib/ndarrays/ndarrays.c).
 
     Parameters
     ----------
     start : PyccelSymbol or int
-        starting index
+        Starting index.
 
     stop : PyccelSymbol or int
-        ending index
+        Ending index.
 
-    step : PyccelSymbol or int default None
+    step : PyccelSymbol or int, default=None
+        The step between indices.
+
+    slice_type : LiteralInteger
+        The type of the slice. Either Slice.Range or Slice.Element.
 
     Examples
     --------
@@ -136,13 +220,17 @@ class Slice(Basic):
     >>> Slice(start, stop, step)
     start : stop : step
     """
-    __slots__ = ('_start','_stop','_step')
-    _attribute_nodes = ('_start','_stop','_step')
+    __slots__ = ('_start','_stop','_step', '_slice_type')
+    _attribute_nodes = ('_start','_stop','_step', '_slice_type')
 
-    def __init__(self, start, stop, step = None):
+    Range = LiteralInteger(1)
+    Element = LiteralInteger(0)
+
+    def __init__(self, start, stop, step = None, slice_type = Range):
         self._start = start
         self._stop = stop
         self._step = step
+        self._slice_type = slice_type
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
@@ -152,6 +240,8 @@ class Slice(Basic):
             raise TypeError('Slice stop must be Integer or None')
         if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
             raise TypeError('Slice step must be Integer or None')
+        if slice_type not in (Slice.Range, Slice.Element):
+            raise TypeError('Slice type must be Range (1) or Element (0)')
 
     @property
     def start(self):
@@ -172,6 +262,14 @@ class Slice(Basic):
         """
         return self._step
 
+    @property
+    def slice_type(self):
+        """ The type of the slice (Range or Element)
+        Range <=> [..., :, ...]
+        Element <=> [..., 3, ...]
+        """
+        return self._slice_type
+
     def __str__(self):
         if self.start is None:
             start = ''
@@ -182,6 +280,7 @@ class Slice(Basic):
         else:
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
+
 
 class PyccelSymbol(str, Immutable):
     """Symbolic placeholder for a Python variable, which has a name but no type yet.
@@ -215,6 +314,7 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
+
 class PrecomputedCode(Basic):
     """
     Internal helper class for storing code which must be defined by the printer
@@ -245,6 +345,7 @@ class PrecomputedCode(Basic):
         """
         return self._code
 
+
 def symbols(names):
     """
     Transform strings into instances of PyccelSymbol class.
@@ -272,6 +373,7 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
+
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
     Returns the largest precision of an object in the list
@@ -292,8 +394,11 @@ def max_precision(objs : list, dtype = None, allow_native = True):
         return max(def_prec if o.precision == -1 \
                 else o.precision for o in objs if o.dtype is dtype)
     else:
-        return max(default_precision[str(o.dtype)] if o.precision == -1 \
-                else o.precision for o in objs)
+        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
+        if ndarray_list:
+            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
+        return max(get_final_precision(o) for o in objs)
+
 
 def get_final_precision(obj):
     """

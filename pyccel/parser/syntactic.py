@@ -4,8 +4,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-# pylint: disable=missing-function-docstring
-
 import os
 import re
 
@@ -36,6 +34,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.core import Comment, EmptyNode
 from pyccel.ast.core import Break, Continue
 from pyccel.ast.core import FunctionDefArgument
+from pyccel.ast.core import FunctionDefResult
 from pyccel.ast.core import Import
 from pyccel.ast.core import AsName
 from pyccel.ast.core import CommentBlock
@@ -104,11 +103,22 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 #==============================================================================
 
 class SyntaxParser(BasicParser):
+    """
+    Class which handles the syntactic stage as described in the developer docs.
 
-    """ Class for a Syntax Parser.
+    This class is described in detail in developer_docs/syntactic_stage.md.
+    It extracts all necessary information from the Python AST in order to create
+    a representation complete enough for the semantic stage to determine types, etc
+    as described in developer_docs/semantic_stage.md.
 
-        inputs: str
-            filename or code to parse as a string
+    Parameters
+    ----------
+    inputs : str
+        A string containing code or containing the name of a file whose code
+        should be read.
+
+    **kwargs : dict
+        Additional keyword arguments for BasicParser.
     """
 
     def __init__(self, inputs, **kwargs):
@@ -135,11 +145,21 @@ class SyntaxParser(BasicParser):
         self._fst           = tree
         self._in_lhs_assign = False
 
-        self.parse(verbose=True)
+        self.parse()
         self.dump()
 
-    def parse(self, verbose=False):
-        """converts python ast to sympy ast."""
+    def parse(self):
+        """
+        Convert Python's AST to Pyccel's AST object.
+
+        Convert Python's AST to Pyccel's AST object and raise errors
+        for any unsupported objects.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The Pyccel AST object.
+        """
 
         if self.syntax_done:
             return self.ast
@@ -176,10 +196,9 @@ class SyntaxParser(BasicParser):
                     self._metavars[str(expr.name)] = expr.value
                     expr = EmptyNode()
             else:
-
-                raise errors.report(PYCCEL_INVALID_HEADER,
+                errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
-                              severity='error')
+                              severity='fatal')
 
         else:
             txt = line[1:].lstrip()
@@ -210,8 +229,8 @@ class SyntaxParser(BasicParser):
             return result
 
         # Unknown object, we raise an error.
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
-                      severity='fatal')
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX, symbol=stmt,
+                      severity='error')
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
@@ -259,7 +278,7 @@ class SyntaxParser(BasicParser):
 
     def _visit_Dict(self, stmt):
         errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='fatal')
+                symbol=stmt, severity='error')
 
     def _visit_NoneType(self, stmt):
         return Nil()
@@ -309,28 +328,25 @@ class SyntaxParser(BasicParser):
         lhs = self._visit(stmt.target)
         rhs = self._visit(stmt.value)
         if isinstance(stmt.op, ast.Add):
-            expr = AugAssign(lhs, '+', rhs)
+            return AugAssign(lhs, '+', rhs)
         elif isinstance(stmt.op, ast.Sub):
-            expr = AugAssign(lhs, '-', rhs)
+            return AugAssign(lhs, '-', rhs)
         elif isinstance(stmt.op, ast.Mult):
-            expr = AugAssign(lhs, '*', rhs)
+            return AugAssign(lhs, '*', rhs)
         elif isinstance(stmt.op, ast.Div):
-            expr = AugAssign(lhs, '/', rhs)
+            return AugAssign(lhs, '/', rhs)
         elif isinstance(stmt.op, ast.Mod):
-            expr = AugAssign(lhs, '%', rhs)
+            return AugAssign(lhs, '%', rhs)
         else:
-            errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
-                      severity='fatal')
-
-        # we set the fst to keep track of needed information for errors
-
-        return expr
+            return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
+                    severity='error')
 
     def _visit_arguments(self, stmt):
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
-                    severity='fatal')
+                    severity='error')
+            return []
 
         arguments       = []
         if stmt.args:
@@ -473,7 +489,7 @@ class SyntaxParser(BasicParser):
         else:
             errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
 
         return Func(target)
 
@@ -522,9 +538,9 @@ class SyntaxParser(BasicParser):
             return NumpyMatmul(first, second)
 
         else:
-            errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+            return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                           symbol = stmt,
-                          severity='fatal')
+                          severity='error')
 
     def _visit_BoolOp(self, stmt):
 
@@ -536,15 +552,15 @@ class SyntaxParser(BasicParser):
         if isinstance(stmt.op, ast.Or):
             return PyccelOr(*args)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt.op,
-                      severity='fatal')
+                      severity='error')
 
     def _visit_Compare(self, stmt):
         if len(stmt.ops)>1:
-            errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
+            return errors.report(PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
 
         first = self._visit(stmt.left)
         second = self._visit(stmt.comparators[0])
@@ -567,9 +583,9 @@ class SyntaxParser(BasicParser):
         if isinstance(op, ast.IsNot):
             return PyccelIsNot(first, second)
 
-        errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
+        return errors.report(PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX,
                       symbol = stmt,
-                      severity='fatal')
+                      severity='error')
 
     def _visit_Return(self, stmt):
         results = self._visit(stmt.value)
@@ -741,11 +757,10 @@ class SyntaxParser(BasicParser):
 
         body = stmt.body
 
-        if 'sympy' in decorators.keys():
+        if 'sympy' in decorators:
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
-            func = SympyFunction(name, arguments, [],
-                    [stmt.__str__()])
+            func = SympyFunction(name, arguments, [], [str(stmt)])
             func.set_fst(stmt)
             self.insert_function(func)
             return EmptyNode()
@@ -757,10 +772,10 @@ class SyntaxParser(BasicParser):
             doc_string.header = ''
             body = body[1:]
 
-        if 'pure' in decorators.keys():
+        if 'pure' in decorators:
             is_pure = True
 
-        if 'elemental' in decorators.keys():
+        if 'elemental' in decorators:
             is_elemental = True
             if len(arguments) > 1:
                 errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
@@ -768,10 +783,10 @@ class SyntaxParser(BasicParser):
                               bounding_box=(stmt.lineno, stmt.col_offset),
                               severity='error')
 
-        if 'private' in decorators.keys():
+        if 'private' in decorators:
             is_private = True
 
-        if 'inline' in decorators.keys():
+        if 'inline' in decorators:
             is_inline = True
 
         body = CodeBlock(body)
@@ -786,19 +801,21 @@ class SyntaxParser(BasicParser):
         results = []
         result_counter = 1
 
+        local_symbols = self.scope.local_used_symbols
+
         for r in zip(*returns):
             r0 = r[0]
 
             pyccel_symbol  = isinstance(r0, PyccelSymbol)
             same_results   = all(r0 == ri for ri in r)
-            name_available = all(r0 != a.name for a in arguments)
+            name_available = all(r0 != a.name for a in arguments) and r0 in local_symbols
 
             if pyccel_symbol and same_results and name_available:
                 result_name = r0
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
-            results.append(result_name)
+            results.append(FunctionDefResult(result_name))
 
         self.exit_function_scope()
 
@@ -824,14 +841,19 @@ class SyntaxParser(BasicParser):
 
         name = stmt.name
         scope = self.create_new_class_scope(name)
-        methods = [self._visit(i) for i in stmt.body if isinstance(i, ast.FunctionDef)]
+        methods = []
+        for i in stmt.body:
+            if isinstance(i, ast.FunctionDef):
+                methods.append(self._visit(i))
+            elif isinstance(i, ast.Pass):
+                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
         for i in methods:
             i.cls_name = name
         attributes = [a.var for a in methods[0].arguments]
-        parent = [self._visit(i) for i in stmt.bases]
+        parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclass=parent, scope=scope)
+                        methods=methods, superclasses=parent, scope=scope)
 
         # we set the fst to keep track of needed information for errors
 
@@ -1022,10 +1044,11 @@ class SyntaxParser(BasicParser):
         elif name == 'max':
             expr = FunctionalMax(body, result, lhs, indices)
         else:
+            expr = EmptyNode()
             errors.report(PYCCEL_RESTRICTION_TODO,
                           symbol = name,
                           bounding_box=(stmt.lineno, stmt.col_offset),
-                          severity='fatal')
+                          severity='error')
 
         expr.set_fst(parent)
 

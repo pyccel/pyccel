@@ -1,5 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-import sys
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
 import modules.generic_functions as mod
@@ -246,6 +245,28 @@ def test_mix_types_3(language):
 # TEST ARRAYS
 #--------------------------------------------------------------------
 
+def test_mix_array_scalar(language):
+    f1 = epyccel(mod2.mix_array_scalar, language = language)
+    f2 = mod2.mix_array_scalar
+
+    x1 = np.array( [1,2,3], dtype=np.int64)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2 )
+
+    x1 = np.array( [1.0,2.0,3.0], dtype=np.float64)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2)
+
+    x1 = np.array( [1+ 2j,5 +2j,3.0 + 3j], dtype=np.complex128)
+    x2 = np.copy(x1)
+    f1(x1)
+    f2(x2)
+    assert np.array_equal( x1, x2)
+
 def test_mix_array_1(language):
     f1 = epyccel(mod2.mix_array_1, language = language)
     f2 = mod2.mix_array_1
@@ -317,7 +338,7 @@ def test_mix_int_array(language):
     f2(x2, a)
     assert np.array_equal( x1, x2 )
 
-    x1 = np.array([166,20,-5], dtype=np.int8)
+    x1 = np.array([126,20,-5], dtype=np.int8)
     x2 = np.copy(x1)
     f1(x1, a)
     f2(x2, a)
@@ -419,3 +440,69 @@ def test_zeros_types(language):
     assert fl_1 == fl_2
     assert isinstance(fl_1, type(fl_2))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Issue #1339"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_scalar_or_array(language):
+    f1 = epyccel(mod2.scalar_or_array, language = language)
+    f2 = mod2.scalar_or_array
+
+    i_1 = f1(0)
+    i_2 = f2(0)
+
+    assert i_1 == i_2
+    assert isinstance(i_1, type(i_2))
+
+    a = np.zeros(3, dtype=int)
+
+    a_1 = f1(a)
+    a_2 = f2(a)
+
+    assert isinstance(a_1, type(a_2))
+    assert isinstance(a_1[0], type(a_2[0]))
+    assert np.array_equal(a_1, a_2)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Issue #1339"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_add_scalars_or_arrays(language):
+    f1 = epyccel(mod2.add_scalars_or_arrays, language = language)
+    f2 = mod2.add_scalars_or_arrays
+
+    i_1 = f1(0,1)
+    i_2 = f2(0,1)
+
+    assert i_1 == i_2
+    assert isinstance(i_1, type(i_2))
+
+    a = np.zeros(3, dtype=float)
+    b = np.ones(3, dtype=float)
+
+    a_1 = f1(a,b)
+    a_2 = f2(a,b)
+
+    assert isinstance(a_1, type(a_2))
+    assert isinstance(a_1[0], type(a_2[0]))
+    assert np.array_equal(a_1, a_2)
+
+    c = np.zeros((3,4), dtype=complex)
+    d = np.ones((3,4), dtype=complex)
+
+    b_1 = f1(c,d)
+    b_2 = f2(c,d)
+
+    assert isinstance(b_1, type(b_2))
+    assert isinstance(b_1[0,0], type(b_2[0,0]))
+    assert np.array_equal(b_1, b_2)

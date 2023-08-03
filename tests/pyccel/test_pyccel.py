@@ -1,12 +1,15 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 import subprocess
 import json
 import os
 import shutil
 import sys
 import re
+import random
 import pytest
 import numpy as np
+from pyccel.codegen.pipeline import execute_pyccel
+from pyccel.ast.utilities import python_builtin_libs
 
 #==============================================================================
 # UTILITIES
@@ -43,7 +46,7 @@ def get_exe(filename, language=None):
 def insert_pyccel_folder(abs_path):
     base_dir = os.path.dirname(abs_path)
     base_name = os.path.basename(abs_path)
-    return os.path.join(base_dir, "__pyccel__", base_name)
+    return os.path.join(base_dir, "__pyccel__" + os.environ.get('PYTEST_XDIST_WORKER', ''), base_name)
 
 #------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
@@ -135,8 +138,12 @@ def get_value(string, regex, conversion):
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=None):
 
     if dtype is str:
-        p_list = [e.strip() for e in re.split('\n', p_output)]
-        f_list = [e.strip() for e in re.split('\n', f_output)]
+        p_output_split = re.split('\n', p_output)
+        f_output_split = re.split('\n', f_output)
+        p_list = p_output_split[0].strip()
+        f_list = f_output_split[0].strip()
+        p_output = '\n'.join(p_output_split[1:])
+        f_output = '\n'.join(f_output_split[1:])
         assert(p_list==f_list)
     elif dtype is complex:
         rx = re.compile('[-0-9.eEj]+')
@@ -659,7 +666,7 @@ def test_c_arrays(language):
 #------------------------------------------------------------------------------
 def test_arrays_view(language):
     types = [int] * 10 + [int] * 10 + [int] * 4 + [int] * 4 + [int] * 10 + \
-            [int] * 6 + [int] * 10
+            [int] * 6 + [int] * 10 + [int] * 10 + [int] * 25 + [int] * 60
     pyccel_test("scripts/arrays_view.py", language=language, output_dtype=types)
 
 #------------------------------------------------------------------------------
@@ -673,6 +680,19 @@ def test_return_numpy_arrays(language):
     types += [int]*5 # 5 ints for g
     types += [int]*4 # 4 ints for k
     pyccel_test("scripts/return_numpy_arrays.py", language=language, output_dtype=types)
+
+#------------------------------------------------------------------------------
+def test_array_binary_op(language):
+    types = [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 4
+    types += [int, float, int, int]
+    types += [int] * 8
+    pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( 'language', (
@@ -752,9 +772,19 @@ def test_basic_header():
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_5.py",
+                                        "scripts/classes/generic_methods.py",
                                         ] )
-def test_classes( test_file ):
-    pyccel_test(test_file, compile_with_pyccel = False)
+@pytest.mark.parametrize( 'language', (
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    )
+)
+
+def test_classes( test_file , language):
+    if language == "python":
+        pyccel_test(test_file, language=language)
+    else:
+        pyccel_test(test_file, compile_with_pyccel = False, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
@@ -789,46 +819,8 @@ def test_lapack( test_file ):
 
 #------------------------------------------------------------------------------
 def test_type_print( language ):
-    test_file = 'scripts/runtest_type_print.py'
-
-    test_file = os.path.normpath(test_file)
-
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-
-    test_file = get_abs_path(test_file)
-
-    pyccel_commands = "--language="+language
-
-    if language=="python":
-        output_dir = get_abs_path('__pyccel__')
-        pyccel_commands += " --output=" + output_dir
-        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
-    else:
-        output_test_file = test_file
-
-    compile_pyccel(cwd, test_file, pyccel_commands)
-
-    lang_out = get_lang_output(output_test_file, language)
-    lang_out = lang_out.split('\n')
-    assert len(lang_out)>=5
-
-    if language=="python":
-        assert 'int16' in lang_out[0]
-        if sys.platform == "win32":
-            assert 'int' in lang_out[1]
-            assert 'int64' in lang_out[2]
-        else:
-            assert 'int32' in lang_out[1]
-            assert 'int' in lang_out[2]
-        assert 'float32' in lang_out[3]
-        assert 'float' in lang_out[4]
-    else:
-        assert 'int16' in lang_out[0]
-        assert 'int32' in lang_out[1]
-        assert 'int64' in lang_out[2]
-        assert 'float32' in lang_out[3]
-        assert 'float64' in lang_out[4]
+    pyccel_test("scripts/runtest_type_print.py",
+                language = language, output_dtype=str)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -978,6 +970,12 @@ def test_function_aliasing():
             language = 'fortran')
 
 #------------------------------------------------------------------------------
+
+def test_function(language):
+    pyccel_test("scripts/functions.py",
+            language = language, output_dtype=[str]+[int]*7 )
+
+#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
@@ -1010,3 +1008,15 @@ def test_json():
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
+
+#------------------------------------------------------------------------------
+def test_reserved_file_name():
+    with pytest.raises(ValueError) as exc_info:
+        libname = str(random.choice(tuple(python_builtin_libs))) + ".py" # nosec B311
+        execute_pyccel(fname=libname)
+    assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
+
+def test_concatentation():
+    pyccel_test("scripts/concatenation.py",
+                language = 'fortran',
+                output_dtype=[int]*15+[str])

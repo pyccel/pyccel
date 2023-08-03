@@ -1,6 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
-# pylint: disable=unused-variable
-
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 #$ header function fib(int) results(int)
 def fib(n):
@@ -49,9 +47,11 @@ z2 = f2(1, m=0)
 
 helloworld()
 
+print(y)
+print(z)
+
 print(z1)
 print(z2)
 
 def pass_fun():
     pass
-

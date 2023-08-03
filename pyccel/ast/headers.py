@@ -10,7 +10,8 @@ from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import Basic, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .datatypes         import datatype, DataTypeFactory, UnionType
+from .core              import FunctionDefArgument, FunctionDefResult
+from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .variable          import DottedName, DottedVariable
@@ -25,6 +26,7 @@ __all__ = (
     'MacroVariable',
     'MetaVariable',
     'MethodHeader',
+    'Template',
     'VariableHeader',
 )
 
@@ -193,25 +195,30 @@ class Template(Header):
 
 #==============================================================================
 class FunctionHeader(Header):
-    """Represents function/subroutine header in the code.
+    """
+    Represents function/subroutine header in the code.
+
+    A node which represents the header for a function/subroutine.
+    It describes all the type information provided in the header
+    so that a typed function can be created.
 
     Parameters
     ----------
-    name: str
-        function/subroutine name
+    name : str
+        Function/subroutine name.
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    dtypes : tuple/list
+        A list of datatypes. An element of this list can be str/DataType of a
+        tuple (str/DataType, attr, allocatable).
 
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr, allocatable)
+    results : tuple/list
+        A list of datatypes. An element of this list can be str/DataType of a
+        tuple (str/DataType, attr, allocatable).
 
-    is_static: bool
-        True if we want to pass arrays in bind(c) mode. every argument of type
-        array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
+    is_static : bool, default: False
+        True if we want to pass arrays in bind(c) mode. Every argument of type
+        array will be preceeded by its shape, which will also appear in the
+        argument declaration.
 
     Examples
     --------
@@ -260,7 +267,28 @@ class FunctionHeader(Header):
         return self._is_static
 
     def create_definition(self, templates = (), is_external=False):
-        """Returns a FunctionDef with empy body."""
+        """
+        Create a FunctionDef with the described types.
+
+        Create a FunctionDef with arguments and results whose types
+        are indicated by the information stored in the header. The
+        body of the function is left empty.
+
+        Parameters
+        ----------
+        templates : list/tuple, default: ()
+            A list of all templates defined in the context which can be used
+            to define argument or result types.
+
+        is_external : bool, default: False
+            Indicates whether the function is an external function which
+            is defined elsewhere in the linked files.
+
+        Returns
+        -------
+        list of FunctionDef
+            A list of all functions described by the header.
+        """
         # TODO factorize what can be factorized
         from itertools import product
 
@@ -275,7 +303,29 @@ class FunctionHeader(Header):
         dtypes = []
 
         def build_argument(var_name, dc):
-            #Constructs an argument variable from a dictionary.
+            """
+            Construct an argument variable from a dictionary describing its properties.
+
+            Use a dictionary describing the properties of a variable which is either
+            an argument (in/inout) or a result (out) to create a variable and an
+            annotation string for the variable.
+
+            Parameters
+            ----------
+            var_name : srt
+                The name of the variable.
+
+            dc : dict
+                The properties of the variable.
+
+            Returns
+            -------
+            Variable
+                The newly created variable.
+
+            str
+                The annotation string.
+            """
             dtype    = dc['datatype']
             memory_handling = dc['memory_handling']
             precision = dc['precision']
@@ -284,10 +334,16 @@ class FunctionHeader(Header):
 
             order = None
             shape = None
+            annotation = None
+
+            if rank and precision == -1:
+                precision = default_precision[dtype]
+
             if rank >1:
                 order = dc['order']
 
             if isinstance(dtype, str):
+                annotation = dtype
                 try:
                     dtype = datatype(dtype)
                 except ValueError:
@@ -295,9 +351,9 @@ class FunctionHeader(Header):
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,
-                           is_argument=True, is_temp=True)
+                           is_temp=True)
 
-            return var
+            return var, annotation
 
         def process_template(signature, Tname, d_type):
             #Replaces templates named Tname inside signature, with the given type.
@@ -344,19 +400,20 @@ class FunctionHeader(Header):
                     _count = 0
                     for dc in d['decs']:
                         _name, _count = create_incremented_string(used_names, 'in', _count)
-                        var = build_argument(_name, dc)
-                        decs.append(var)
+                        var, annotation = build_argument(_name, dc)
+                        decs.append(FunctionDefArgument(var, annotation=annotation))
                     _count = 0
                     for dc in d['results']:
                         _name, _count = create_incremented_string(used_names, 'out', _count)
-                        var = build_argument(_name, dc)
-                        results.append(var)
+                        var, annotation = build_argument(_name, dc)
+                        results.append(FunctionDefResult(var, annotation=annotation))
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = FunctionAddress(arg_name, decs, results, [])
+                    arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
 
                 else:
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = build_argument(arg_name, d)
+                    var, annotation = build_argument(arg_name, d)
+                    arg = FunctionDefArgument(var, annotation=annotation)
                 args.append(arg)
 
             # ... factorize the following 2 blocks
@@ -365,7 +422,7 @@ class FunctionHeader(Header):
                 is_func = d_var.pop('is_func')
                 dtype = d_var.pop('datatype')
                 var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
-                results.append(var)
+                results.append(FunctionDefResult(var, annotation = str(dtype)))
                 # we put back dtype otherwise macro will crash when it tries to
                 # call create_definition
                 d_var['datatype'] = dtype

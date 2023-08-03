@@ -38,9 +38,10 @@ from .c_concepts import ObjectAddress
 errors = Errors()
 
 __all__ = (
+    'LoopCollection',
     'builtin_function',
     'builtin_import',
-    'builtin_import_registery',
+    'builtin_import_registry',
     'split_positional_keyword_arguments',
 )
 
@@ -80,32 +81,45 @@ pyccel_mod = Module('pyccel',(),(),
         imports = [Import('decorators', decorators_mod)])
 
 # TODO add documentation
-builtin_import_registery = Module('__main__',
+builtin_import_registry = Module('__main__',
         (),(),
         imports = [
-            Import('numpy', AsName(numpy_mod,'numpy')),
-            Import('scipy', AsName(scipy_mod,'scipy')),
-            Import('itertools', AsName(itertools_mod,'itertools')),
-            Import('math', AsName(math_mod,'math')),
-            Import('pyccel', AsName(pyccel_mod,'pyccel')),
-            Import('sys', AsName(sys_mod,'sys')),
+            Import('numpy', numpy_mod),
+            Import('scipy', scipy_mod),
+            Import('itertools', itertools_mod),
+            Import('math', math_mod),
+            Import('pyccel', pyccel_mod),
+            Import('sys', sys_mod),
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
 else:
     python_builtin_libs = set(sys.stdlib_module_names) # pylint: disable=no-member
 
-recognised_libs = python_builtin_libs | builtin_import_registery.keys()
+recognised_libs = python_builtin_libs | builtin_import_registry.keys()
 
 def recognised_source(source_name):
-    """ Determine whether the imported source is recognised by pyccel.
-    If it is not recognised then it should be imported and translated
+    """
+    Determine whether the imported source is recognised by pyccel.
+
+    Determine whether the imported source is recognised by pyccel.
+    If it is not recognised then it will need to be imported and translated.
+
+    Parameters
+    ----------
+    source_name : str
+        The name of the imported module.
+
+    Returns
+    -------
+    bool
+        True if the source is recognised, False otherwise.
     """
     source = str(source_name).split('.')
-    if source[0] in python_builtin_libs and source[0] not in builtin_import_registery.keys():
+    if source[0] in python_builtin_libs and source[0] not in builtin_import_registry.keys():
         return True
     else:
-        return source_name in builtin_import_registery
+        return source_name in builtin_import_registry
 
 #==============================================================================
 def collect_relevant_imports(module, targets):
@@ -139,7 +153,24 @@ def collect_relevant_imports(module, targets):
     return imports
 
 def builtin_import(expr):
-    """Returns a builtin pyccel-extension function/object from an import."""
+    """
+    Return a Pyccel-extension function/object from an import of a recognised module.
+
+    Examine an Import object which imports something which is recognised by
+    Pyccel internally. The object(s) imported are then returned for use in the
+    code.
+
+    Parameters
+    ----------
+    expr : Import
+        The expression which imports the module.
+
+    Returns
+    -------
+    list
+        A list of 2-tuples. The first element is the name of the imported object,
+        the second element is the object itself.
+    """
 
     if not isinstance(expr, Import):
         raise TypeError('Expecting an Import expression')
@@ -149,13 +180,13 @@ def builtin_import(expr):
     else:
         source = str(expr.source)
 
-    if source in builtin_import_registery:
+    if source in builtin_import_registry:
         if expr.target:
-            return collect_relevant_imports(builtin_import_registery[source], expr.target)
+            return collect_relevant_imports(builtin_import_registry[source], expr.target)
         elif isinstance(expr.source, AsName):
-            return [(expr.source.target, builtin_import_registery[source])]
+            return [(expr.source.target, builtin_import_registry[source])]
         else:
-            return [(expr.source, builtin_import_registery[source])]
+            return [(expr.source, builtin_import_registry[source])]
 
     return []
 
@@ -311,6 +342,9 @@ def insert_index(expr, pos, index_var):
         return type(expr)(insert_index(expr.args[0], pos, index_var),
                           insert_index(expr.args[1], pos, index_var))
 
+    elif hasattr(expr, '__getitem__'):
+        return expr[index_var]
+
     else:
         raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
 
@@ -321,13 +355,16 @@ LoopCollection = namedtuple('LoopCollection', ['body', 'length', 'modified_vars'
 #==============================================================================
 def collect_loops(block, indices, new_index, language_has_vectors = False, result = None):
     """
+    Collect blocks of code into loops.
+
     Run through a code block and split it into lists of tuples of lists where
     each inner list represents a code block and the tuples contain the lists
     and the size of the code block.
     So the following:
-    a = a+b
+    `a = a+b`
     for a: int[:,:] and b: int[:]
     Would be returned as:
+    ```
     [
       ([
         ([a[i,j]=a[i,j]+b[j]],a.shape[1])
@@ -335,31 +372,36 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
        , a.shape[0]
       )
     ]
+    ```
 
     Parameters
-    ==========
-    block                 : list of Ast Nodes
-                            The expressions to be modified
-    indices               : list
-                            An empty list to be filled with the temporary variables created
-    new_index             : function (class method of a Scope)
-                            A function which provides a new variable from a base name,
-                            avoiding name collisions.
-    language_has_vectors  : bool
-                            Indicates if the language has support for vector
-                            operations of the same shape
-    Results
-    =======
-    block : list of tuples of lists
-            The modified expression
+    ----------
+    block : list of Ast Nodes
+        The expressions to be modified.
+    indices : list
+        An empty list to be filled with the temporary variables created.
+    new_index : function (class method of a Scope)
+        A function which provides a new variable from a base name,
+        avoiding name collisions.
+    language_has_vectors : bool
+        Indicates if the language has support for vector
+        operations of the same shape.
+    result : list, default: None
+        The list which will be returned. If none is provided, a new list
+        is created.
+
+    Returns
+    -------
+    list of tuples of lists
+        The modified expression.
     """
     if result is None:
         result = []
     current_level = 0
     array_creator_types = (Allocate, PythonList, PythonTuple, Concatenate, Duplicate)
     is_function_call = lambda f: ((isinstance(f, FunctionCall) and not f.funcdef.is_elemental)
-                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental
-                                    and not isinstance(f, NumpyTranspose)))
+                                or (isinstance(f, PyccelInternalFunction) and not f.is_elemental and not hasattr(f, '__getitem__')
+                                    and not isinstance(f, (NumpyTranspose))))
     for line in block:
 
         if (isinstance(line, Assign) and
@@ -402,6 +444,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             transposed_vars = [v for v in notable_nodes if isinstance(v, NumpyTranspose)] \
                                 + [v for f in elemental_func_calls \
                                      for v in f.get_attribute_nodes(NumpyTranspose)]
+            indexed_funcs = [v for v in notable_nodes if isinstance(v, PyccelInternalFunction) and hasattr(v, '__getitem__')]
 
             is_checks = [n for n in notable_nodes if isinstance(n, PyccelIs)]
 
@@ -418,7 +461,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             funcs           = [f for f in notable_nodes+transposed_vars if (isinstance(f, FunctionCall) \
                                                             and not f.funcdef.is_elemental)]
             internal_funcs  = [f for f in notable_nodes+transposed_vars if (isinstance(f, PyccelInternalFunction) \
-                                                            and not f.is_elemental) \
+                                                            and not f.is_elemental and not hasattr(f, '__getitem__')) \
                                                             and not isinstance(f, NumpyTranspose)]
 
             # Collect all variables for which values other than the value indexed in the loop are important
@@ -440,8 +483,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                         "which return tuples or None",
                         symbol=line, severity='fatal')
 
-            func_results = [f.funcdef.results[0] for f in funcs]
-            func_vars2 = [new_index(r.dtype, r) for r in func_results]
+            func_results = [f.funcdef.results[0].var for f in funcs]
+            func_vars2 = [new_index(r.dtype, r.name) for r in func_results]
             assigns   += [Assign(v, f) for v,f in zip(func_vars2, funcs)]
 
             if assigns:
@@ -459,7 +502,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             rank = line.lhs.rank
             shape = line.lhs.shape
             new_vars = variables
-            new_vars_t = transposed_vars
+            handled_funcs = transposed_vars + indexed_funcs
             # Loop over indexes, inserting until the expression can be evaluated
             # in the desired language
             new_level = 0
@@ -470,8 +513,8 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                     indices.append(new_index('int','i'))
                 index_var = indices[rank+index]
                 new_vars = [insert_index(v, index, index_var) for v in new_vars]
-                new_vars_t = [insert_index(v, index, index_var) for v in new_vars_t]
-                if compatible_operation(*new_vars, *new_vars_t, language_has_vectors = language_has_vectors):
+                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
+                if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
             # TODO [NH]: get all indices when adding axis argument to linspace function
@@ -479,10 +522,12 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
                 line.rhs.ind = indices[0]
 
             # Replace variable expressions with Indexed versions
-            line.substitute(variables, new_vars, excluded_nodes = (FunctionCall, PyccelInternalFunction))
-            line.substitute(transposed_vars, new_vars_t, excluded_nodes = (FunctionCall))
+            line.substitute(variables, new_vars,
+                    excluded_nodes = (FunctionCall, PyccelInternalFunction))
+            line.substitute(transposed_vars + indexed_funcs, handled_funcs,
+                    excluded_nodes = (FunctionCall))
             _ = [f.substitute(variables, new_vars) for f in elemental_func_calls]
-            _ = [f.substitute(transposed_vars, new_vars_t) for f in elemental_func_calls]
+            _ = [f.substitute(transposed_vars + indexed_funcs, handled_funcs) for f in elemental_func_calls]
 
             # Recurse through result tree to save line with lines which need
             # the same set of for loops
