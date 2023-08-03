@@ -86,7 +86,7 @@ if __name__ == '__main__':
             for lang in languages:
                 failed_matches = pattern[lang].findall(outfile, re.MULTILINE)
                 failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
-                fails[lang] = [re.sub(r'\['+lang+r'\]', "`` :heavy_multiplication_x:", string) for string in c_failed]
+                fails[lang] = [re.sub(r'\['+lang+r'\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
 
         summary = summary + mini_md_summary(mini_title, outcome, fails)
 
