@@ -89,7 +89,7 @@ from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, Num
 from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
-from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero
+from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
@@ -2470,6 +2470,10 @@ class SemanticParser(BasicParser):
 
         else:
             rhs = self._visit(rhs)
+
+        if isinstance(rhs, NumpyResultType):
+            errors.report("Cannot assign a datatype to a variable.",
+                    symbol=expr, severity='error')
 
         if isinstance(rhs, FunctionDef):
 
