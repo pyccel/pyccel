@@ -18,7 +18,7 @@ import os
 import re
 import sys
 
-def     mini_md_summary(title, outcome, c, f, py):
+def     mini_md_summary(title, outcome, failed_tests):
     """
     Generate Markdown.
 
@@ -30,12 +30,8 @@ def     mini_md_summary(title, outcome, c, f, py):
         The title of the summary.
     outcome : str
         The result of a completed step, Possible values are success, failure, cancelled, or skipped.
-    c : list
-        A list of C test summaries, (Failed tests).
-    f : list
-        A list of Fortran test summaries, (Failed tests).
-    py : list
-        A list of Python test summaries, (Failed tests).
+    failed_tests : dict
+        A dictionary whose keys are languages and whose values are lists of failed test summaries.
 
     Returns
     -------
@@ -44,21 +40,12 @@ def     mini_md_summary(title, outcome, c, f, py):
     """
     md = f"## {title} - {outcome} "
     if outcome == "failure":
-        if len(c) != 0:
-            md = md + '\n' + "### C Test summary: "
-            md = md + '\n'
-            for i in c:
-                md = md + i + "\n"
-        if len(f) != 0:
-            md = md + '\n' + "### Fortran Test summary: "
-            md = md + '\n'
-            for i in f:
-                md = md + i + "\n"
-        if len(py) != 0:
-            md = md + '\n' + "### Python Test summary: "
-            md = md + '\n'
-            for i in py:
-                md = md + i + "\n"
+        for lang, errs in failed_tests.items():
+            if len(errs) != 0:
+                md = md + '\n' + f"### {lang.capitalize()} Test summary: "
+                md = md + '\n'
+                for i in errs:
+                    md = md + i + "\n"
     md = md + "\n"
     return(md)
 
@@ -73,6 +60,10 @@ if __name__ == '__main__':
     output_file = 'test_json_result.json'
     summary = ""
 
+    failed_pattern = re.compile(r".*FAILED.*")
+    languages = ('c', 'fortran', 'python')
+    pattern = {lang: re.compile(r".*\["+lang+r"\]\ \_.*") for lang in languages}
+
     for i in p_args.tests:
         values = i.split(':')
         mini_title = values[0] if len(values) >= 1 else None
@@ -86,28 +77,18 @@ if __name__ == '__main__':
             c_tests = []
             f_tests = []
             py_tests = []
-            failed_pattern = r".*FAILED.*"
-            c_pattern = r".*\[c\].*"
-            f_pattern = r".*\[fortran\]\ \_.*"
-            py_pattern = r".*\[python\]\ \_.*"
 
-            failed_matches = re.findall(failed_pattern, outfile, re.MULTILINE)
+            failed_matches = failed_pattern.findall(outfile, re.MULTILINE)
             failed_matches = [re.sub(r'.*FAILED ', "- ``", string) for string in failed_matches]
 
-            r = re.compile(c_pattern)
-            c_failed = list(filter(r.match, failed_matches))
-            c_failed = [re.sub(r'\[c\]', "`` :heavy_multiplication_x:", string) for string in c_failed]
+            fails = {}
 
-            failed_matches = re.findall(f_pattern, outfile, re.MULTILINE)
-            failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
-            f_failed = [re.sub(r'\[fortran\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
+            for lang in languages:
+                failed_matches = pattern[lang].findall(outfile, re.MULTILINE)
+                failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
+                fails[lang] = [re.sub(r'\['+lang+r'\]', "`` :heavy_multiplication_x:", string) for string in c_failed]
 
-            failed_matches = re.findall(py_pattern, outfile, re.MULTILINE)
-            failed_matches = ["- ``" + string.strip('_') for string in failed_matches]
-            py_failed = [re.sub(r'\[python\]', "`` :heavy_multiplication_x:", string) for string in failed_matches]
-
-
-        summary = summary + mini_md_summary(mini_title, outcome, c_failed, f_failed, py_failed)
+        summary = summary + mini_md_summary(mini_title, outcome, fails)
 
     print(summary)
     json_ouput = {
