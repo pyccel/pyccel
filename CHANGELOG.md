@@ -33,6 +33,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed `bugs` folder.
 -   \[INTERNALS\] Removed `inprogress` folder.
 -   \[INTERNALS\] Remove old Travis configuration file.
+-   \[INTERNALS\] Remove unused `Declare.dtype`.
 
 ## \[1.8.1\] - 2023-07-07
 

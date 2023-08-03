@@ -1079,7 +1079,7 @@ class Block(ScopedNode):
 
     @property
     def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
+        return [Declare(i) for i in self.variables]
 
 
 
@@ -1311,7 +1311,7 @@ class Module(ScopedNode):
     def declarations(self):
         """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v, module_variable=True) \
+        return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
 
     @property
@@ -3671,43 +3671,50 @@ class FuncAddressDeclare(Basic):
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(Basic):
+    """
+    Represents a variable declaration in the code.
 
-    """Represents a variable declaration in the code.
+    Represents a variable declaration in the code.
 
     Parameters
     ----------
-    dtype : DataType
-        The type for the declaration.
-    variable(s)
-        A single variable or an iterable of Variables. If iterable, all
-        Variables must be of the same type.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: PyccelAstNode
-        variable value
-    static: bool
+    variable : Variable
+        The variable to be declared.
+
+    intent : str, optional
+        Indicates how an argument is used in a function.
+        If providied, it should be one among {'in', 'out', 'inout'}.
+
+    value : PyccelAstNode, optional
+        The value to which the variable is initialised.
+
+    static : bool, default=False
         True for a static declaration of an array.
-    external: bool
-        True for a function declared through a header
-    module_variable : bool
-        True for a variable which belongs to a module
+
+    passed_from_dotted : bool, default=False
+        True if the argument is implicit in the call (i.e. `self` argument in a class).
+
+    external : bool, default=False
+        True for a function declared through a header.
+
+    module_variable : bool, default=False
+        True for a variable which belongs to a module.
 
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare('int', Variable('int', 'n'))
-    Declare(NativeInteger(), (n,), None)
-    >>> Declare('float', Variable('float', 'x'), intent='out')
-    Declare(NativeFloat(), (x,), out)
+    >>> Declare(Variable('int', 'n'))
+    Declare(n)
+    >>> Declare(Variable('float', 'x'), intent='out')
+    Declare(x)
     """
-    __slots__ = ('_dtype','_variable','_intent','_value',
+    __slots__ = ('_variable','_intent','_value',
                  '_static','_passed_from_dotted', '_external',
                  '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
         self,
-        dtype,
         variable,
         intent=None,
         value=None,
@@ -3716,15 +3723,8 @@ class Declare(Basic):
         external = False,
         module_variable = False
         ):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
         if not isinstance(variable, Variable):
             raise TypeError(f'var must be of type Variable, given {variable}')
-        if variable.dtype != dtype:
-            raise ValueError('All variables must have the same dtype')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3742,7 +3742,6 @@ class Declare(Basic):
         if not isinstance(module_variable, bool):
             raise TypeError('Expecting a boolean for module_variable attribute')
 
-        self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
@@ -3751,10 +3750,6 @@ class Declare(Basic):
         self._external = external
         self._module_variable = module_variable
         super().__init__()
-
-    @property
-    def dtype(self):
-        return self._dtype
 
     @property
     def variable(self):

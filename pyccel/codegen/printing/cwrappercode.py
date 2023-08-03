@@ -1541,14 +1541,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         funcs = []
         if self._target_language == 'fortran':
-            vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
+            vars_to_wrap_decs = [Declare(v.clone(v.name.lower()), module_variable=True) \
                                     for v in variables if not v.is_private and v.rank == 0]
 
             for f in expr.original_module.funcs:
                 if f.is_private:
                     funcs.append(f)
         else:
-            vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
+            vars_to_wrap_decs = [Declare(v, module_variable=True) \
                                     for v in expr.variables if not v.is_private]
 
         self._module_name  = self.get_python_name(scope, expr)
