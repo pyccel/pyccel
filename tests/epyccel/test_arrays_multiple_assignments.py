@@ -134,7 +134,10 @@ def test_creation_in_loop_stack(language):
 
     # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
-    assert errors.num_messages() == 2
+    if errors.mode == 'developer':
+        assert errors.num_messages() == 1
+    else:
+        assert errors.num_messages() == 2
 
     # Check that the errors are correct
     error_info_list = [*errors.error_info_map.values()][0]
@@ -310,7 +313,7 @@ def test_conda_flag_disable(language):
         return True
     with warnings.catch_warnings():
         warnings.simplefilter("error")
-        epyccel(one, language='c', conda_warnings = 'off')
+        epyccel(one, language=language, conda_warnings = 'off')
 
 @pytest.mark.skipif(sys.platform == 'win32', reason="NumPy compilation raises warnings on Windows. See issue #1405")
 def test_conda_flag_verbose(language):
@@ -319,7 +322,7 @@ def test_conda_flag_verbose(language):
     #with pytest.warns(Warning) as record1:
     with warnings.catch_warnings(record=True) as record1:
         warnings.simplefilter("always")
-        epyccel(one, language='c', conda_warnings = 'verbose')
+        epyccel(one, language=language, conda_warnings = 'verbose')
     if len(record1)>0:
         warn_message = record1[0].message
         p = str(warn_message).split(":")[2].strip()
