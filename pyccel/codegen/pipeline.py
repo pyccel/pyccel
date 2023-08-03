@@ -27,7 +27,7 @@ from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
 from .compiling.basic     import CompileObj
-from .compiling.compilers import Compiler
+from .compiling.compilers import Compiler, get_condaless_search_path
 
 pyccel_stage = PyccelStage()
 
@@ -57,7 +57,8 @@ def execute_pyccel(fname, *,
                    debug         = False,
                    accelerators  = (),
                    output_name   = None,
-                   compiler_export_file = None):
+                   compiler_export_file = None,
+                   conda_warnings = 'basic'):
     """
     Run Pyccel on the provided code.
 
@@ -106,6 +107,8 @@ def execute_pyccel(fname, *,
         Name of the generated module. Default is the same name as the translated file.
     compiler_export_file : str, optional
         Name of the JSON file to which compiler information is exported. Default is None.
+    conda_warnings : str, optional
+        Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
     if fname.endswith('.pyh'):
         syntax_only = True
@@ -156,7 +159,7 @@ def execute_pyccel(fname, *,
         folder = os.path.abspath(folder)
 
     # Define directory name and path for pyccel & cpython build
-    pyccel_dirname = '__pyccel__'
+    pyccel_dirname = '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', '')
     pyccel_dirpath = os.path.join(folder, pyccel_dirname)
 
     # Create new directories if not existing
@@ -166,6 +169,9 @@ def execute_pyccel(fname, *,
 
     # Change working directory to 'folder'
     os.chdir(folder)
+
+    if conda_warnings not in ('off', 'basic', 'verbose'):
+        raise ValueError("conda warnings accept {off, basic,verbose}")
 
     if language is None:
         language = 'fortran'
@@ -178,6 +184,7 @@ def execute_pyccel(fname, *,
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
 
     # Get compiler object
+    Compiler.acceptable_bin_paths = get_condaless_search_path(conda_warnings)
     src_compiler = Compiler(compiler, language, debug)
     wrapper_compiler = Compiler('GNU', 'c', debug)
 
@@ -196,7 +203,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('parsing (syntax)')
         raise
@@ -215,7 +223,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('annotation (semantic)')
         # Raise a new error to avoid a large traceback
@@ -240,7 +249,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
     except PyccelError:
         handle_error('code generation')
         # Raise a new error to avoid a large traceback
@@ -313,7 +323,7 @@ def execute_pyccel(fname, *,
     # ...
     # Determine all .o files and all folders needed by executable
     def get_module_dependencies(parser, deps):
-        mod_folder = os.path.join(os.path.dirname(parser.filename), "__pyccel__")
+        mod_folder = os.path.join(os.path.dirname(parser.filename), '__pyccel__' + os.environ.get('PYTEST_XDIST_WORKER', ''))
         mod_base = os.path.basename(parser.filename)
 
         # Stop conditions
@@ -371,7 +381,8 @@ def execute_pyccel(fname, *,
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
-            severity='error')
+            severity='error',
+            traceback=error.__traceback__)
         handle_error('code generation (wrapping)')
         raise PyccelCodegenError(msg) from None
     except PyccelError:

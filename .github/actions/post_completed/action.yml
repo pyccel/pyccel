@@ -1,0 +1,34 @@
+name: 'Posting in progress status'
+inputs:
+  installation_token:
+    description: "The GitHub API token of the bot"
+    required: true
+  run_id:
+    description: "The id of the check run"
+    required: true
+  status:
+    description: "The final status of the workflow"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Collecting status"
+      run: |
+        import os
+        import json
+        import requests
+        if os.path.exists('test_json_result.json'):
+            with open('test_json_result.json', 'r') as f:
+                result = json.load(f)
+        else:
+            result = {}
+        result["status"] = "completed"
+        result["conclusion"] = "${{ inputs.status }}"
+
+        headers = {"Accept": "application/vnd.github+json", "Authorization": "Bearer ${{ inputs.installation_token }}", "X-GitHub-Api-Version": "2022-11-28"}
+
+        reply = requests.patch("https://api.github.com/repos/${{ github.repository }}/check-runs/${{ inputs.run_id }}", headers=headers, json=result)
+
+        print(reply.text)
+      shell: python
