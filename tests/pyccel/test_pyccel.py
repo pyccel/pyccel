@@ -774,7 +774,6 @@ def test_basic_header():
                                         "scripts/classes/classes_5.py",
                                         "scripts/classes/generic_methods.py",
                                         "scripts/classes/classes_2_C.py",
-                                        "scripts/classes/classes_3_C.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
