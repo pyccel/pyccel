@@ -684,7 +684,7 @@ class CCodePrinter(CodePrinter):
         funcs = ""
         for classDef in expr.module.classes:
             classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print_Declare(Declare(var.dtype,var)) for var in classDef.attributes)
+            classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += f"{self.function_signature(method)};\n"
