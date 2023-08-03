@@ -684,12 +684,12 @@ class CCodePrinter(CodePrinter):
         classes = ""
         funcs = ""
         for classDef in expr.module.classes:
-            classes += "struct {} {{".format(classDef.name) + '\n'
+            classes += f"struct {classDef.name} {{\n"
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
-                funcs += "{};\n".format(self.function_signature(method))
+                funcs += f"{self.function_signature(method)};\n"
             classes += "};\n"
-        funcs += '\n'.join("{};".format(self.function_signature(f)) for f in expr.module.funcs)
+        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
