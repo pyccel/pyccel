@@ -1581,17 +1581,17 @@ class CWrapperCodePrinter(CCodePrinter):
         function_defs = '\n'.join(self._print(f) for f in funcs)
         #cast_functions = '\n'.join(CCodePrinter._print_FunctionDef(self, f)
         #                               for f in self._cast_functions_dict.values())
-        #method_def_func = ''.join(('{{\n'
-        #                             '"{name}",\n'
-        #                             '(PyCFunction){wrapper_name},\n'
-        #                             'METH_VARARGS | METH_KEYWORDS,\n'
-        #                             '{doc_string}\n'
-        #                             '}},\n').format(
-        #                                    name = self.get_python_name(expr.scope, f),
-        #                                    wrapper_name = self._function_wrapper_names[f.name],
-        #                                    doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-        #                                                if f.doc_string else '""')
-        #                             for f in funcs if f is not expr.init_func)
+        method_def_func = ''.join(('{{\n'
+                                     '"{name}",\n'
+                                     '(PyCFunction){wrapper_name},\n'
+                                     'METH_VARARGS | METH_KEYWORDS,\n'
+                                     '{doc_string}\n'
+                                     '}},\n').format(
+                                            name = self.get_python_name(expr.scope, f.original_function),
+                                            wrapper_name = f.name,
+                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                        if f.doc_string else '""')
+                                     for f in funcs if f is not expr.init_func)
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
         exec_func_name = self.scope.get_new_name('exec_func')
@@ -1603,10 +1603,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
         method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
-                        #'{method_def_func}'
+                        '{method_def_func}'
                         '{{ NULL, NULL, 0, NULL}}\n'
                         '}};\n'.format(method_def_name = method_def_name,
-                            #method_def_func = method_def_func
+                            method_def_func = method_def_func
                             ))
 
         module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))

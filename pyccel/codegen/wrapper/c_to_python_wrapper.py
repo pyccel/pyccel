@@ -16,7 +16,7 @@ from pyccel.ast.cwrapper import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper import PyArg_ParseTupleNode, PyccelPyObject, Py_None
 from pyccel.ast.cwrapper import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper import Python_to_C, PyErr_SetString, PyTypeError
-from pyccel.ast.cwrapper import C_to_Python
+from pyccel.ast.cwrapper import C_to_Python, PyFunctionDef
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.datatypes import NativeInteger, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import NativeBool
@@ -83,7 +83,7 @@ class CToPythonWrapper(Wrapper):
     def _get_check_function(self, py_obj, arg, raise_error):
         if arg.rank == 0:
             dtype = arg.dtype
-            prec  = get_final_precision(arg)
+            prec  = arg.precision
             try :
                 cast_function = check_type_registry[(dtype, prec)]
             except KeyError:
@@ -110,7 +110,8 @@ class CToPythonWrapper(Wrapper):
                         scope = mod_scope, external_funcs = funcs_to_wrap)
 
     def _wrap_FunctionDef(self, expr):
-        func_name = self.scope.get_new_name(getattr(expr, 'original_function', expr).name+'_wrapper')
+        original_func = getattr(expr, 'original_function', expr)
+        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -159,13 +160,13 @@ class CToPythonWrapper(Wrapper):
 
         if not in_interface:
             res = self.get_new_PyObject("result")
-            body.append(AliasAssign(res, PyBuildValueNode(func_results)))
+            body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in func_results])))
             body.append(Return([res]))
             func_results = [FunctionDefResult(res)]
         elif func_results:
             body.append(Return([func_results]))
 
-        return FunctionDef(func_name, func_args, func_results, body, scope=func_scope)
+        return PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope, original_function = original_func)
 
     def _wrap_FunctionDefArgument(self, expr):
 
