@@ -3,7 +3,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-Module handling all python builtin operators
+Module handling all Python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
@@ -29,7 +29,9 @@ __all__ = (
 
 class PyccelInvert(PyccelUnaryOperator):
     """
-    Class representing a call to the python bitwise not operator.
+    Class representing a call to the Python bitwise not operator.
+
+    Class representing a call to the Python bitwise not operator.
     I.e:
         ~a
     is equivalent to:
@@ -37,7 +39,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg : PyccelAstNode
         The argument passed to the operator
     """
     __slots__ = ()
@@ -58,16 +60,18 @@ class PyccelInvert(PyccelUnaryOperator):
 
 #==============================================================================
 
-class PyccelBitOperator(PyccelOperator):
-    """ Abstract superclass representing a python
-    bitwise operator with two arguments
+class PyccelBitOperator(PyccelBinaryOperator):
+    """
+    Abstract superclass representing a Python bitwise operator with two arguments.
+
+    Abstract superclass representing a Python bitwise operator with two arguments.
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     _shape = None
     _rank  = 0
@@ -78,12 +82,13 @@ class PyccelBitOperator(PyccelOperator):
         pass
 
     def _calculate_dtype(self, *args):
-        """ Sets the dtype and precision
+        """
+        Sets the dtype and precision.
 
-        If one argument is a string then all arguments must be strings
+        If one argument is a string then all arguments must be strings.
 
         If the arguments are numeric then the dtype and precision
-        match the broadest type and the largest precision
+        match the broadest type and the largest precision.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
@@ -118,7 +123,9 @@ class PyccelBitOperator(PyccelOperator):
 
 class PyccelRShift(PyccelBitOperator):
     """
-    Class representing a call to the python right shift operator.
+    Class representing a call to the Python right shift operator.
+
+    Class representing a call to the Python right shift operator.
     I.e:
         a >> b
     is equivalent to:
@@ -126,10 +133,10 @@ class PyccelRShift(PyccelBitOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 11
@@ -141,7 +148,9 @@ class PyccelRShift(PyccelBitOperator):
 
 class PyccelLShift(PyccelBitOperator):
     """
-    Class representing a call to the python right shift operator.
+    Class representing a call to the Python right shift operator.
+
+    Class representing a call to the Python right shift operator.
     I.e:
         a << b
     is equivalent to:
@@ -149,10 +158,10 @@ class PyccelLShift(PyccelBitOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 11
@@ -163,15 +172,18 @@ class PyccelLShift(PyccelBitOperator):
 #==============================================================================
 
 class PyccelBitComparisonOperator(PyccelBitOperator):
-    """ Abstract superclass representing a python
-    bitwise comparison operator with two arguments
+    """
+    Abstract superclass representing a bitwise comparison operator.
+
+    Abstract superclass representing a Python bitwise comparison
+    operator with two arguments
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     def _handle_integer_type(self, integers):
@@ -189,7 +201,9 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
 
 class PyccelBitXor(PyccelBitComparisonOperator):
     """
-    Class representing a call to the python bitwise XOR operator.
+    Class representing a call to the Python bitwise XOR operator.
+
+    Class representing a call to the Python bitwise XOR operator.
     I.e:
         a ^ b
     is equivalent to:
@@ -197,10 +211,10 @@ class PyccelBitXor(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 9
@@ -212,7 +226,9 @@ class PyccelBitXor(PyccelBitComparisonOperator):
 
 class PyccelBitOr(PyccelBitComparisonOperator):
     """
-    Class representing a call to the python bitwise OR operator.
+    Class representing a call to the Python bitwise OR operator.
+
+    Class representing a call to the Python bitwise OR operator.
     I.e:
         a | b
     is equivalent to:
@@ -220,10 +236,10 @@ class PyccelBitOr(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 8
@@ -235,7 +251,9 @@ class PyccelBitOr(PyccelBitComparisonOperator):
 
 class PyccelBitAnd(PyccelBitComparisonOperator):
     """
-    Class representing a call to the python bitwise AND operator.
+    Class representing a call to the Python bitwise AND operator.
+
+    Class representing a call to the Python bitwise AND operator.
     I.e:
         a & b
     is equivalent to:
@@ -243,10 +261,10 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 10

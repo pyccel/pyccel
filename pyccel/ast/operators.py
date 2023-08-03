@@ -159,7 +159,7 @@ class PyccelOperator(PyccelAstNode):
         """ The precedence of the operator as defined here:
             https://docs.python.org/3/reference/expressions.html#operator-precedence
         """
-        return self._precedence
+        return self._precedence #pylint: disable=no-member
 
     def _handle_precedence(self, args):
         """
@@ -185,12 +185,12 @@ class PyccelOperator(PyccelAstNode):
         """
         precedence = [getattr(a, 'precedence', 17) for a in args]
 
-        if min(precedence) <= self._precedence:
+        if min(precedence) <= self.precedence:
 
             new_args = []
 
             for i, (a,p) in enumerate(zip(args, precedence)):
-                if (p < self._precedence or (p == self._precedence and i != 0)):
+                if (p < self.precedence or (p == self.precedence and i != 0)):
                     new_args.append(PyccelAssociativeParenthesis(a))
                 else:
                     new_args.append(a)
@@ -206,7 +206,7 @@ class PyccelOperator(PyccelAstNode):
         This is chosen to match the arguments if they are in agreement.
         Otherwise it defaults to 'C'
         """
-        if self._rank is not None and self._rank > 1:
+        if self.rank is not None and self.rank > 1:
             orders = [a.order for a in self._args if a.order is not None]
             my_order = orders[0]
             if all(o == my_order for o in orders):
@@ -234,6 +234,9 @@ class PyccelUnaryOperator(PyccelOperator):
         The argument passed to the operator
     """
     __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
+
+    def __init__(self, arg):
+        super().__init__(arg)
 
     @staticmethod
     def _calculate_dtype(*args):
