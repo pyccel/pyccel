@@ -7,7 +7,7 @@
 Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
-from pyccel.ast.bind_c   import BindCFunctionDef
+from pyccel.ast.bind_c   import BindCFunctionDef, BindCPointer
 from pyccel.ast.core     import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core     import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core     import Assign, AliasAssign, Deallocate, Allocate
@@ -19,11 +19,11 @@ from pyccel.ast.cwrapper import Python_to_C, PyErr_SetString, PyTypeError
 from pyccel.ast.cwrapper import C_to_Python, PyFunctionDef
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.datatypes import NativeInteger, NativeFloat, NativeComplex
-from pyccel.ast.datatypes import NativeBool
+from pyccel.ast.datatypes import NativeBool, NativeVoid
 from pyccel.ast.internals import get_final_precision
 from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
 from pyccel.ast.operators import PyccelNot, PyccelIsNot
-from pyccel.ast.variable import Variable
+from pyccel.ast.variable import Variable, DottedVariable
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, array_type_check
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -106,7 +106,8 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         self.exit_scope()
         imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
-        return PyModule(expr.name, (), funcs, func_names = (), imports = imports,
+        original_mod = getattr(expr, 'original_module', expr)
+        return PyModule(original_mod.name, (), funcs, func_names = (), imports = imports,
                         scope = mod_scope, external_funcs = funcs_to_wrap)
 
     def _wrap_FunctionDef(self, expr):
@@ -142,9 +143,12 @@ class CToPythonWrapper(Wrapper):
         result_wrap = [self._wrap(r) for r in results]
 
         call_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
-        call_res  = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for a in expr.results]
+        call_res  = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in expr.results]
+        call_res  = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in call_res]
 
-        func_results = [r[-1].lhs for r in result_wrap]
+        c_compatible_result_names  = [getattr(r, 'original_function_result_variable', r.var).name for r in results]
+        c_compatible_results  = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in c_compatible_result_names]
+        func_results = [self._python_object_map[r] for r in c_compatible_results]
 
         if call_res:
             if len(call_res) == 1:
@@ -259,6 +263,7 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(c_res)
 
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
+        self._python_object_map[c_res] = python_res
 
         body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
 
@@ -270,24 +275,34 @@ class CToPythonWrapper(Wrapper):
     def _wrap_BindCFunctionDefResult(self, expr):
 
         orig_var = expr.original_function_result_variable
-
-        c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
-
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
 
+        body = []
+
         if orig_var.rank:
+            # C-compatible result variable
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False)
             self._wrapping_arrays = True
+            # Result of calling the bind-c function
             arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
+            # Save so we can find by iterating over func.results
             self.scope.insert_variable(arg_var, expr.var.name)
             [self.scope.insert_variable(v,s.name) for v,s in zip(shape_vars, expr.shape)]
+            # Save so we can find by iterating over func.bind_c_results
+            self.scope.insert_variable(c_res, orig_var.name)
 
             body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order,
                 status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=orig_var), nd_var))
+                lhs=c_res), arg_var))
+        else:
+            c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+            self.scope.insert_variable(c_res)
 
-        body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
+        self._python_object_map[c_res] = python_res
+
+        body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)])))
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
