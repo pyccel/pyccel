@@ -785,7 +785,7 @@ def test_basic_header():
 def test_classes( test_file , language):
     if language == "fortran":
         pyccel_test(test_file, compile_with_pyccel = False, language=language)
-    elif not (language == "c" and not test_file.endswith("_C.py")):
+    elif language != "c" or test_file.endswith("_C.py"):
         pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
