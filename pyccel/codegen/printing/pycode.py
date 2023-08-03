@@ -187,6 +187,24 @@ class PythonCodePrinter(CodePrinter):
     #----------------------------------------------------------------------
 
     def _print_dtype_argument(self, expr, init_dtype):
+        """
+        Print a dtype argument.
+
+        Print the argument `dtype=X` from the dtype initially provided.
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The expression whose datatype is being determined.
+
+        init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
+            The actual dtype passed to the NumPy function.
+
+        Returns
+        -------
+        str
+            The code for the dtype argument.
+        """
         if init_dtype is None:
             return ''
         elif isinstance(init_dtype, (PythonType, NumpyResultType)):
@@ -751,7 +769,7 @@ class PythonCodePrinter(CodePrinter):
             arg_code = self._print(arg)
             return f"{arg_code}.dtype"
         else:
-            name = self._aliases.get(type(expr),expr.name)
+            name = self._get_numpy_name(expr)
             args = ', '.join(self._print(a) for a in expr.args)
             return "{}({})".format(name, args)
 
