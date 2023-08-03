@@ -447,17 +447,6 @@ def get_int8_arr_1d(arr):
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
 @pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_1d, min_int64, max_int64), (get_int32_arr_1d, min_int32, max_int32),\
                                                  (get_int16_arr_1d, min_int16, max_int16), (get_int8_arr_1d, min_int8, max_int8)])
 def test_numpy_int_array_like_1d(language, function_boundaries):
@@ -557,18 +546,6 @@ def get_int8_arr_2d(arr):
     a = int8(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[1,0]
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
 
 @pytest.mark.parametrize( 'function_boundaries', [(get_int64_arr_2d, min_int64, max_int64), (get_int32_arr_2d, min_int32, max_int32),\
                                                  (get_int16_arr_2d, min_int16, max_int16), (get_int8_arr_2d, min_int8, max_int8)])
@@ -767,18 +744,6 @@ def get_float32_arr_1d(arr):
     s = shape(a)
     return len(s), s[0], a[0], a[1]
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
 @pytest.mark.parametrize( 'get_float', [get_float64_arr_1d, get_float32_arr_1d])
 def test_numpy_float_array_like_1d(language, get_float):
 
@@ -840,18 +805,6 @@ def get_float32_arr_2d(arr):
     a = float32(arr)
     s = shape(a)
     return len(s), s[0], s[1], a[0,0], a[0,1]
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
 
 @pytest.mark.parametrize( 'get_float', [get_float64_arr_2d, get_float32_arr_2d])
 def test_numpy_float_array_like_2d(language, get_float):
@@ -978,18 +931,6 @@ def test_numpy_double_scalar(language):
     assert matching_types(f_fl64_output, test_float64_output)
 
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
-
 def test_numpy_double_array_like_1d(language):
 
     @types('bool[:]')
@@ -1035,18 +976,6 @@ def test_numpy_double_array_like_1d(language):
         assert epyccel_func(fl) == get_double(fl)
         assert epyccel_func(fl64) == get_double(fl64)
     assert epyccel_func(fl32) == get_double(fl32)
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Arrays not handled yet."),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = [
-            pytest.mark.python]
-        )
-    )
-)
 
 def test_numpy_double_array_like_2d(language):
 
@@ -1277,10 +1206,7 @@ def get_complex64_arr_2d(arr):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not handled yet."),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = [pytest.mark.c]),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("complex handles types in __new__ so it "
                 "cannot be used in a translated interface in python. See #802")),
@@ -1322,10 +1248,7 @@ def test_numpy_complex_array_like_1d(language, get_complex):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Tuples not handled yet."),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks = [pytest.mark.c]),
         pytest.param("python", marks = [
             pytest.mark.skip(reason=("complex handles types in __new__ so it "
                 "cannot be used in a translated interface in python. See #802")),
