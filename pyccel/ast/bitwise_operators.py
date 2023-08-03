@@ -12,7 +12,7 @@ from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
 from .internals    import max_precision
-from .operators    import PyccelUnaryOperator, PyccelOperator
+from .operators    import PyccelUnaryOperator, PyccelOperator, PyccelBinaryOperator
 
 __all__ = (
     'PyccelBitComparisonOperator',
