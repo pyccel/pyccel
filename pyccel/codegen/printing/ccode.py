@@ -688,6 +688,10 @@ class CCodePrinter(CodePrinter):
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += f"{self.function_signature(method)};\n"
+            for interface in classDef.interfaces:
+                for func in interface.functions:
+                    func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
+                    funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
@@ -2170,7 +2174,8 @@ class CCodePrinter(CodePrinter):
 
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)
-        return methods
+        interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
+        return methods + interfaces
 
     #=================== MACROS ==================
 
