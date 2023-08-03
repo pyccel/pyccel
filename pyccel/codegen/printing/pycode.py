@@ -883,7 +883,7 @@ class PythonCodePrinter(CodePrinter):
             name = self._aliases.get(cast_func, cast_name)
             if is_numpy and name == cast_name:
                 self.insert_new_import(
-                        source = 'numpy', 
+                        source = 'numpy',
                         target = AsName(cast_func, cast_name))
             return '{}({})'.format(name, repr(expr.python_value))
 
@@ -1049,7 +1049,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonType(self, expr):
         return 'type({})'.format(self._print(expr.arg))
-    
+
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
