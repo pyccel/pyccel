@@ -699,19 +699,13 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
-        return ('#ifndef {name}_H\n'
-                '#define {name}_H\n\n'
-                '{imports}\n'
-                '{variables}\n'
-                '{classes}\n'
-                '{funcs}\n'
-                #'{interfaces}\n'
-                '#endif // {name}_H\n').format(
-                        name    = name.upper(),
-                        imports = imports,
-                        variables = global_variables,
-                        funcs   = funcs,
-                        classes = classes)
+        return (f"#ifndef {name.upper()}_H\n \
+                #define {name.upper()}_H\n\n \
+                {imports}\n \
+                {global_variables}\n \
+                {classes}\n \
+                {funcs}\n \
+                #endif // {name}_H\n")
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
