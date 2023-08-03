@@ -212,12 +212,12 @@ class PythonCodePrinter(CodePrinter):
             return "dtype = " + dtype
         elif isinstance(init_dtype, PyccelFunctionDef):
             dtype = self._get_numpy_name(init_dtype.cls_name)
-            return "dtype={}".format(dtype)
+            return f"dtype={dtype}"
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
                 dtype = self._get_numpy_name(DtypePrecisionToCastFunction[datatype(dtype).name][expr.precision])
-            return "dtype={}".format(dtype)
+            return f"dtype={dtype}"
 
     def _print_Header(self, expr):
         return ''
@@ -771,7 +771,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             name = self._get_numpy_name(expr)
             args = ', '.join(self._print(a) for a in expr.args)
-            return "{}({})".format(name, args)
+            return f"{name}({args})"
 
     def _print_NumpyRandint(self, expr):
         name = self._aliases.get(type(expr), expr.name)

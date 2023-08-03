@@ -367,7 +367,7 @@ class NumpyResultType(PyccelInternalFunction):
         precisions = [d[1] for d in dtype_and_precs]
 
         if any(d not in NativeNumeric for d in dtypes):
-            raise TypeError('cannot determine the type of {}'.format(self))
+            raise TypeError(f'cannot determine the type of {self}')
         elif any(d is NativeComplex() for d in dtypes):
             self._dtype     = NativeComplex()
         elif any(d is NativeFloat() for d in dtypes):
