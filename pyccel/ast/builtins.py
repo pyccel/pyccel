@@ -55,14 +55,21 @@ __all__ = (
 
 #==============================================================================
 class PythonComplexProperty(PyccelInternalFunction):
-    """Represents a call to the .real or .imag property
+    """
+    Represents a call to the .real or .imag property.
+
+    Represents a call to a property of a complex number. The relevant properties
+    are the `.real` and `.imag` properties.
 
     e.g:
-    > a = 1+2j
-    > a.real
+    >>> a = 1+2j
+    >>> a.real
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The object which the property is called from.
     """
     __slots__ = ()
     _dtype = NativeFloat()
@@ -81,14 +88,18 @@ class PythonComplexProperty(PyccelInternalFunction):
 
 #==============================================================================
 class PythonReal(PythonComplexProperty):
-    """Represents a call to the .real property
+    """
+    Represents a call to the .real property.
 
     e.g:
-    > a = 1+2j
-    > a.real
+    >>> a = 1+2j
+    >>> a.real
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The object which the property is called from.
     """
     __slots__ = ()
     name = 'real'
@@ -105,14 +116,18 @@ class PythonReal(PythonComplexProperty):
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
-    """Represents a call to the .imag property
+    """
+    Represents a call to the .imag property.
 
     e.g:
-    > a = 1+2j
-    > a.imag
+    >>> a = 1+2j
+    >>> a.imag
     1.0
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The object which the property is called from.
     """
     __slots__ = ()
     name = 'imag'
@@ -134,8 +149,8 @@ class PythonConjugate(PyccelInternalFunction):
     the builtin types int, float, complex. The conjugate function is
     called from Python as follows:
 
-    > a = 1+2j
-    > a.conjugate()
+    >>> a = 1+2j
+    >>> a.conjugate()
     1-2j
 
     Parameters
@@ -173,7 +188,16 @@ class PythonConjugate(PyccelInternalFunction):
 
 #==============================================================================
 class PythonBool(PyccelAstNode):
-    """ Represents a call to Python's native bool() function.
+    """
+    Represents a call to Python's native `bool()` function.
+
+    Represents a call to Python's native `bool()` function which casts an
+    argument to a boolean.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_arg',)
     name = 'bool'
@@ -205,7 +229,16 @@ class PythonBool(PyccelAstNode):
 
 #==============================================================================
 class PythonComplex(PyccelAstNode):
-    """ Represents a call to Python's native complex() function.
+    """
+    Represents a call to Python's native `complex()` function.
+
+    Represents a call to Python's native `complex()` function which casts an
+    argument to a complex number.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
@@ -307,10 +340,15 @@ class PythonComplex(PyccelAstNode):
 
 #==============================================================================
 class PythonEnumerate(Basic):
-
     """
-    Represents the enumerate stmt
+    Represents a call to Python's native `enumerate()` function.
 
+    Represents a call to Python's native `enumerate()` function.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_element','_start')
     _attribute_nodes = ('_element','_start')
@@ -346,7 +384,16 @@ class PythonEnumerate(Basic):
 
 #==============================================================================
 class PythonFloat(PyccelAstNode):
-    """ Represents a call to Python's native float() function.
+    """
+    Represents a call to Python's native `float()` function.
+
+    Represents a call to Python's native `float()` function which casts an
+    argument to a floating point number.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_arg')
     name = 'float'
@@ -377,7 +424,16 @@ class PythonFloat(PyccelAstNode):
 
 #==============================================================================
 class PythonInt(PyccelAstNode):
-    """ Represents a call to Python's native int() function.
+    """
+    Represents a call to Python's native `int()` function.
+
+    Represents a call to Python's native `int()` function which casts an
+    argument to an integer.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
 
     __slots__ = ('_arg')
