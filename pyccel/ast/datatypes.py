@@ -77,7 +77,7 @@ iso_c_binding = {
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
     "logical" : {
-        4  : "C_BOOL"}
+        -1 : "C_BOOL"}
 }
 iso_c_binding_shortcut_mapping = {
     'C_INT8_T'              : 'i8',
@@ -91,7 +91,7 @@ iso_c_binding_shortcut_mapping = {
     'C_FLOAT_COMPLEX'       : 'c32',
     'C_DOUBLE_COMPLEX'      : 'c64',
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
-    'C_BOOL'                : 'b4'
+    'C_BOOL'                : 'b1'
 }
 default_precision = {'float': 8,
                     'int': numpy.dtype(int).alignment,
