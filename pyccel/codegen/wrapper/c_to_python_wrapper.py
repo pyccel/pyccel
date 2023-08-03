@@ -71,7 +71,7 @@ class CToPythonWrapper(Wrapper):
         keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*func_args[1:], list(self._python_object_map.values()), keyword_list)
+        parse_node = PyArg_ParseTupleNode(*func_args[1:], args, list(self._python_object_map.values()), keyword_list)
 
         body = [keyword_list, If(IfSection(PyccelNot(parse_node), [Return([Nil()])]))]
 

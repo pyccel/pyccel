@@ -138,6 +138,7 @@ class PyArg_ParseTupleNode(Basic):
 
     def __init__(self, python_func_args,
                         python_func_kwargs,
+                        c_func_args,
                         parse_args,
                         arg_names):
         if not isinstance(python_func_args, Variable):
