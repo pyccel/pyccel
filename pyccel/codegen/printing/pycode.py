@@ -599,7 +599,11 @@ class PythonCodePrinter(CodePrinter):
         for_loops = ' '.join(['for {} in {}'.format(self._print(idx), self._print(iters))
                         for idx, iters in zip(expr.indices, iterators)])
 
-        name = self._get_numpy_name(expr)
+        name = self._aliases.get(type(expr),'array')
+        if name == 'array':
+            self.insert_new_import(
+                    source = 'numpy',
+                    target = AsName(NumpyArray, 'array'))
 
         return '{} = {}([{} {}])\n'.format(lhs, name, body, for_loops)
 
