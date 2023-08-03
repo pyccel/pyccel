@@ -746,13 +746,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyResultType(self, expr):
         args = expr.args
-        if len(args) == 1:
+        if len(args) == 1 and args[0].rank > 1:
             arg = args[0]
             arg_code = self._print(arg)
-            if isinstance(arg, Variable):
-                return f"{arg_code}.dtype"
-            else:
-                return f"({arg_code}).dtype"
+            return f"{arg_code}.dtype"
         else:
             name = self._aliases.get(type(expr),expr.name)
             args = ', '.join(self._print(a) for a in expr.args)
