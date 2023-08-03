@@ -104,18 +104,27 @@ dtype_and_precision_registry = { 'float':('float', -1),
                                  'pythonfloat':('float', -1), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
+                                 'f4':('float',4),
+                                 'f8':('float',8),
                                  'pythoncomplex':('complex', -1),
                                  'complex':('complex', -1),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
+                                 'c8':('complex',4),
+                                 'c16':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
+                                 'i1' :('int',1),
+                                 'i2':('int',2),
+                                 'i4':('int',4),
+                                 'i8':('int',8),
                                  'int'  :('int', -1),
                                  'pythonint'  :('int', -1),
                                  'integer':('int',-1),
                                  'bool' :('bool',-1),
+                                 'b1' :('bool',-1),
                                  'pythonbool' :('bool',-1)}
 
 
