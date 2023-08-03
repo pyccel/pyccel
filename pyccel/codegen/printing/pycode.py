@@ -10,7 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall, PyccelFunctionDef
-from pyccel.ast.datatypes  import default_precision
+from pyccel.ast.datatypes  import default_precision, datatype
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -178,7 +178,6 @@ class PythonCodePrinter(CodePrinter):
             cls = type(expr)
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
-        import traceback as tb
         if name == type_name:
             self.insert_new_import(
                     source = 'numpy',
@@ -199,8 +198,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
-                factor = 16 if dtype == 'complex' else 8
-                dtype += str(expr.precision*factor)
+                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[datatype(dtype).name][expr.precision])
             return "dtype={}".format(dtype)
 
     def _print_Header(self, expr):
