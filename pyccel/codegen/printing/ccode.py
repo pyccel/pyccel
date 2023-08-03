@@ -684,13 +684,13 @@ class CCodePrinter(CodePrinter):
         classes = ""
         funcs = ""
         for classDef in expr.module.classes:
-            classes += "struct {} {{".format(classDef.name) + '\n'
+            classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print_Declare(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
-                funcs += "{};\n".format(self.function_signature(method))
+                funcs += f"{self.function_signature(method)};\n"
             classes += "};\n"
-        funcs += '\n'.join("{};".format(self.function_signature(f)) for f in expr.module.funcs)
+        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
@@ -700,19 +700,13 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
-        return ('#ifndef {name}_H\n'
-                '#define {name}_H\n\n'
-                '{imports}\n'
-                '{variables}\n'
-                '{classes}\n'
-                '{funcs}\n'
-                #'{interfaces}\n'
-                '#endif // {name}_H\n').format(
-                        name    = name.upper(),
-                        imports = imports,
-                        variables = global_variables,
-                        funcs   = funcs,
-                        classes = classes)
+        return (f"#ifndef {name.upper()}_H\n \
+                #define {name.upper()}_H\n\n \
+                {imports}\n \
+                {global_variables}\n \
+                {classes}\n \
+                {funcs}\n \
+                #endif // {name}_H\n")
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)

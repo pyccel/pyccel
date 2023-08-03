@@ -29,3 +29,4 @@ if __name__ == '__main__':
     print(b)
     print(p.addition(10.0, 11.0))
     print(p.subtraction(x, y))
+    print(p.addition(10.0, 11.0) + 3.4)
