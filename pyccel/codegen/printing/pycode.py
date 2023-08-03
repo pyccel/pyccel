@@ -199,7 +199,8 @@ class PythonCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
-                name = self._get_numpy_name(expr)
+                factor = 16 if dtype == 'complex' else 8
+                dtype += str(expr.precision*factor)
             return "dtype={}".format(dtype)
 
     def _print_Header(self, expr):
