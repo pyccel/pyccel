@@ -29,6 +29,9 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'Lambda',
+    'PythonAbs',
+    'PythonComplexProperty',
     'PythonReal',
     'PythonImag',
     'PythonConjugate',
@@ -43,6 +46,7 @@ __all__ = (
     'PythonMap',
     'PythonPrint',
     'PythonRange',
+    'PythonSum',
     'PythonType',
     'PythonZip',
     'PythonMax',
@@ -61,6 +65,7 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     arg : Variable, Literal
     """
+    __slots__ = ()
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
@@ -123,21 +128,38 @@ class PythonImag(PythonComplexProperty):
 
 #==============================================================================
 class PythonConjugate(PyccelInternalFunction):
-    """Represents a call to the .conjugate() function
+    """
+    Represents a call to the .conjugate() function.
 
-    e.g:
+    Represents a call to the conjugate function which is a member of
+    the builtin types int, float, complex. The conjugate function is
+    called from Python as follows:
+
     > a = 1+2j
     > a.conjugate()
     1-2j
 
-    arg : Variable, Literal
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The variable/expression which was passed to the
+        conjugate function.
     """
+    __slots__ = ()
     _dtype = NativeComplex()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
     name = 'conjugate'
+
+    def __new__(cls, arg):
+        if arg.dtype is NativeBool():
+            return PythonInt(arg)
+        elif arg.dtype is not NativeComplex():
+            return arg
+        else:
+            return super().__new__(cls)
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -683,8 +705,7 @@ class PythonZip(PyccelInternalFunction):
     Represents a zip stmt.
 
     """
-    __slots__ = ('_length','_args')
-    _attribute_nodes = ('_args',)
+    __slots__ = ('_length',)
     name = 'zip'
 
     def __init__(self, *args):
@@ -856,7 +877,20 @@ class Lambda(Basic):
 
 #==============================================================================
 class PythonType(Basic):
-    """ Represents the python builtin type function
+    """
+    Represents a call to the Python builtin `type` function.
+
+    The use of `type` in code is usually for one of two purposes.
+    Firstly it is useful for debugging. In this case the `print_string`
+    property is useful to obtain the underlying type. It is
+    equally useful to provide datatypes to objects in templated
+    functions. This double usage should be considered when using
+    this class.
+
+    Parameters
+    ==========
+    obj : PyccelAstNode
+          The object whose type we wish to investigate.
     """
     __slots__ = ('_dtype','_precision','_obj')
     _attribute_nodes = ('_obj',)
@@ -868,8 +902,6 @@ class PythonType(Basic):
         self._precision = obj.precision
         self._obj = obj
 
-        if obj.rank > 0:
-            raise PyccelError("Python's type function doesn't return enough information about this object for pyccel to fully define a type")
         super().__init__()
 
     @property
@@ -892,13 +924,23 @@ class PythonType(Basic):
 
     @property
     def print_string(self):
-        """ Return a literal string representing the type that
-        can be used in a print  statement
+        """
+        Return a LiteralString describing the type.
+
+        Constructs a LiteralString containing the message usually
+        printed by Python to describe this type. This string can
+        then be easily printed in each language.
         """
         prec = self.precision
-        return LiteralString("<class '{dtype}{precision}'>".format(
-            dtype = str(self.dtype),
-            precision = '' if prec in (None, -1) else (prec * (16 if self.dtype is NativeComplex() else 8))))
+        dtype = str(self.dtype)
+        if prec in (None, -1):
+            return LiteralString(f"<class '{dtype}'>")
+
+        precision = prec * (16 if self.dtype is NativeComplex() else 8)
+        if self._obj.rank > 0:
+            return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
+        else:
+            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
 python_builtin_datatypes_dict = {

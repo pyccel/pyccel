@@ -116,34 +116,33 @@ def get_filename_from_import(module,input_folder=''):
 #==============================================================================
 
 class BasicParser(object):
+    """
+    Class for a basic parser.
 
-    """ Class for a base Parser.
-    This class contains functions and properties which are common to SyntacticParser and SemanticParser
+    This class contains functions and properties which are common to SyntacticParser and SemanticParser.
 
-    Parameters
-    ----------
+    See Also
+    --------
+    SyntacticParser : A parser for Pyccel based on a context-free grammar.
+    SemanticParser : A parser for Pyccel based on a context-sensitive grammar.
 
-        debug: bool
-            True if in debug mode.
-
-        headers: list, tuple
-            list of headers to append to the scope
-
+    Examples
+    --------
+    To use the BasicParser class, create an instance and call its parse() method:
+    >>> parser = BasicParser()
+    >>> result = parser.parse("1 + 2")
     """
 
-    def __init__(self,
-                 debug=False,
-                 headers=None):
-
+    def __init__(self):
         self._code = None
-        self._fst  = None
-        self._ast  = None
+        self._fst = None
+        self._ast = None
 
         self._filename = None
         self._metavars = {}
 
         # represent the scope of a function
-        self._scope    = Scope()
+        self._scope = Scope()
         self._current_class    = None
         self._current_function = None
 
@@ -160,13 +159,6 @@ class BasicParser(object):
         # TODO ERROR must be passed to the Parser __init__ as argument
 
         self._blocking = error_mode.value == 'developer'
-
-        if headers:
-            if not isinstance(headers, dict):
-                raise TypeError('Expecting a dict of headers')
-
-
-            self.scope.headers.update(headers)
 
         self._created_from_pickle = False
 

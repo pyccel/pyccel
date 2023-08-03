@@ -4,8 +4,8 @@
 #------------------------------------------------------------------------------------------#
 
 """
-Module containing functions which allow us to treat expressions expressed as pyccel nodes with sympy,
-by providing translations between the sympy representation and the pyccel nodes
+Module containing functions which allow us to treat expressions expressed as Pyccel nodes with SymPy,
+by providing translations between the SymPy representation and the Pyccel nodes
 """
 
 import sympy as sp
@@ -13,36 +13,39 @@ from sympy.core.numbers import One, NegativeOne, Zero, Half
 
 from pyccel.utilities.strings import create_incremented_string
 
+from .internals import PyccelArrayShapeElement
 from .operators import PyccelAdd, PyccelMul, PyccelPow, PyccelUnarySub
 from .operators import PyccelDiv, PyccelMinus, PyccelAssociativeParenthesis
 from .core      import Iterable
-
 from .builtins  import PythonRange, PythonTuple
-
 from .mathext   import MathCeil
-
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
-
 from .datatypes import NativeInteger
+from .variable  import Variable
 
-from .variable  import Variable, PyccelArraySize
+__all__ = ('sympy_to_pyccel',
+           'pyccel_to_sympy')
 
 #==============================================================================
 def sympy_to_pyccel(expr, symbol_map):
     """
-    Convert a sympy expression to a pyccel expression replacing sympy symbols with
-    pyccel expressions provided in a symbol_map
+    Convert a SymPy expression to a Pyccel expression.
 
-      Parameters
-      ----------
-      expr       : PyccelAstNode
-                   The pyccel node to be translated
-      symbol_map : dict
-                   Dictionary mapping sympy symbols to pyccel objects
+    Convert a SymPy expression to a Pyccel expression replacing SymPy symbols with
+    Pyccel expressions provided in a symbol_map
 
-      Returns
-      ----------
-      expr       : pyccel Object
+    Parameters
+    ----------
+    expr : SymPy object
+        The SymPy expression to be translated.
+
+    symbol_map : dict
+        Dictionary mapping SymPy symbols to Pyccel objects.
+
+    Returns
+    -------
+    PyccelAstNode
+        The Pyccel equivalent of the SymPy object `expr`.
     """
 
     #Constants
@@ -111,23 +114,28 @@ def sympy_to_pyccel(expr, symbol_map):
 #==============================================================================
 def pyccel_to_sympy(expr, symbol_map, used_names):
     """
-    Convert a pyccel expression to a sympy expression saving any pyccel objects
-    converted to sympy symbols in a dictionary to allow the reverse conversion
-    to be carried out later
+    Convert a Pyccel expression to a SymPy expression.
 
-      Parameters
-      ----------
-      expr       : PyccelAstNode
-                   The pyccel node to be translated
-      symbol_map : dict
-                   Dictionary containing any pyccel objects converted to sympy symbols
-      used_names : Set
-                   A set of all the names which already exist and therefore cannot
-                   be used to create new symbols
+    Convert a Pyccel expression to a SymPy expression saving any Pyccel objects
+    converted to SymPy symbols in a dictionary to allow the reverse conversion
+    to be carried out later.
 
-      Returns
-      ----------
-      expr       : sympy Object
+    Parameters
+    ----------
+    expr : PyccelAstNode
+        The Pyccel node to be translated.
+
+    symbol_map : dict
+        Dictionary containing any Pyccel objects converted to SymPy symbols.
+
+    used_names : Set
+        A set of all the names which already exist and therefore cannot
+        be used to create new symbols.
+
+    Returns
+    -------
+    SymPy Object
+        The SymPy equivalent of the `expr` argument.
     """
 
     #Constants
@@ -179,7 +187,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
         symbol_map[sym] = expr
         return sym
 
-    elif isinstance(expr, PyccelArraySize):
+    elif isinstance(expr, PyccelArrayShapeElement):
         sym_name,_ = create_incremented_string(used_names, prefix = 'tmp_size')
         used_names.add(sym_name)
         sym = sp.Symbol(sym_name)

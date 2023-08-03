@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-function-docstring, missing-module-docstring
 from module_init2 import x
 
 def f():

@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring,  disable=missing-function-docstring, missing-module-docstring/
+# pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 #$ header class A(public)
 #$ header method __init__(A, int)
 #$ header method __del__(A)
@@ -20,7 +20,7 @@ def get_A():
 
 if __name__ == '__main__':
     b = get_A().x
-    c = get_A().f()
+    c = get_A().f()+3
 
     print(b)
     print(c)
