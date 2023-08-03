@@ -6406,6 +6406,13 @@ def test_result_type(language):
         b = np.zeros(5, dtype=np.result_type(np.float64))
         return b[0]
 
+    def expression_type():
+        import numpy as np
+        a = np.array([6,1,8,2,3], dtype = np.int64)
+        b = np.array([6,22,1,8,2], dtype = np.float32)
+        c = np.zeros(5, dtype=np.result_type(a+b))
+        return c[0]
+
     epyccel_int_vs_int_array = epyccel(int_vs_int_array, language=language)
     epyccel_type_comparison = epyccel(type_comparison, language=language)
     epyccel_type_comparison2 = epyccel(type_comparison2, language=language)
