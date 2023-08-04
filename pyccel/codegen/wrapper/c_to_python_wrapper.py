@@ -281,6 +281,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = mod_scope
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func) and not f.is_private]
         funcs = [self._wrap(f) for f in funcs_to_wrap]
+        interfaces = [self._wrap(i) for i in expr.interfaces]
         self.exit_scope()
         imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
         original_mod = getattr(expr, 'original_module', expr)
