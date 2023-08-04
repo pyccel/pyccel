@@ -153,10 +153,14 @@ class CToPythonWrapper(Wrapper):
         arg_names = [a.var.name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
+        # Initialise optionals
+        body = [AliasAssign(py_arg, Py_None) for func_def_arg, py_arg in zip(args, arg_vars) if func_def_arg.has_default]
+
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*func_args[1:], args, arg_vars, keyword_list)
 
-        body = [keyword_list, If(IfSection(PyccelNot(parse_node), [Return([Nil()])]))]
+        body.append(keyword_list)
+        body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
         return func_args, body
 
@@ -379,7 +383,7 @@ class CToPythonWrapper(Wrapper):
         cast = Assign(arg_var, FunctionCall(cast_func, [collect_arg]))
 
         # Create any necessary type checks and errors
-        if arg_var.is_optional:
+        if expr.has_default:
             check_func, err = self._get_check_function(collect_arg, arg_var, False)
             body.append(If( IfSection(check_func, [cast]),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([Nil()])])

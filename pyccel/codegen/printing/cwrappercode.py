@@ -576,6 +576,15 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return [python_func_selfarg, python_func_args, python_func_kwargs]
 
+    def _handle_is_operator(self, Op, expr):
+        if expr.rhs is Py_None:
+            lhs = ObjectAddress(expr.lhs)
+            rhs = ObjectAddress(expr.rhs)
+            lhs = self._print(lhs)
+            rhs = self._print(rhs)
+            return '{} {} {}'.format(lhs, Op, rhs)
+        else:
+            return super()._handle_is_operator(Op, expr)
 
     # -------------------------------------------------------------------
     # Functions managing the creation of wrapper body
