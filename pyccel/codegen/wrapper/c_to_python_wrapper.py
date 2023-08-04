@@ -390,7 +390,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(result_wrap)
         # Deallocate the C equivalent of any array results
         for r in original_c_results:
-            orig_var = getattr(a, 'original_function_result_variable', a.var)
+            orig_var = getattr(r, 'original_function_result_variable', r.var)
             v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
             if v.is_ndarray:
                 if v.is_optional:
