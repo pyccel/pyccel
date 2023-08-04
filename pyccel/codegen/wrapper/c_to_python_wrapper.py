@@ -260,6 +260,21 @@ class CToPythonWrapper(Wrapper):
         return func_call, error_code
 
     def _wrap_Module(self, expr):
+        """
+        Build a `PyModule` from a `Module`.
+
+        Create a `PyModule` which wraps a C-compatible `Module`.
+
+        Parameters
+        ----------
+        expr : Module
+            The module which can be called from C.
+
+        Returns
+        -------
+        PyModule
+            The module which can be called from Python.
+        """
         # Define scope
         scope = expr.scope
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
@@ -273,6 +288,25 @@ class CToPythonWrapper(Wrapper):
                         scope = mod_scope, external_funcs = funcs_to_wrap)
 
     def _wrap_FunctionDef(self, expr):
+        """
+        Build a `PyFunctionDef` form a `FunctionDef`.
+
+        Create a `PyFunctionDef` which wraps a C-compatible `FunctionDef`.
+        The `PyFunctionDef` should take three arguments (`self`, `args`,
+        and `kwargs`) and return a `PyccelPyObject`. If the function is
+        called from an Interface then the arguments are `PyccelPyObject`s
+        describing each of the arguments of the C-compatible function.
+
+        Parameters
+        ----------
+        expr : FunctionDef
+            The function which can be called from C.
+
+        Returns
+        -------
+        PyFunctionDef
+            The function which can be called from Python.
+        """
         original_func = getattr(expr, 'original_function', expr)
         func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
@@ -281,6 +315,7 @@ class CToPythonWrapper(Wrapper):
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
+        # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
             func_scope.insert_symbol(a.var.name)
         for a in getattr(expr, 'bind_c_arguments', ()):
@@ -290,24 +325,33 @@ class CToPythonWrapper(Wrapper):
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
+        # Get variables describing the arguments and results that are seen from Python
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
         python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
 
+        # Get variables describing the arguments and results that must be passed to the function
         original_c_args = expr.arguments
         original_c_results = expr.results
 
+        # Get the arguments of the PyFunctionDef
         if in_interface:
             func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
             body = []
         else:
             func_args, body = self._unpack_python_args(python_args)
             func_args = [FunctionDefArgument(a) for a in func_args]
+
+        # Get the results of the PyFunctionDef
         python_result_variables = self._get_python_result_variables(python_results)
 
+        # Get the code required to extract the C-compatible arguments from the Python arguments
         body += [l for a in python_args for l in self._wrap(a)]
 
+        # Get the code required to wrap the C-compatible results into Python objects
+        # This function creates variables so it must be called before extracting them from the scope.
         result_wrap = [line for r in python_results for line in self._wrap(r)]
 
+        # Get the names of the arguments which should be used to call the C-compatible function
         func_call_arg_names = []
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
@@ -317,12 +361,13 @@ class CToPythonWrapper(Wrapper):
                     continue
             func_call_arg_names.append(a.var.name)
 
+        # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
         c_results = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in original_c_results]
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
 
+        # Call the C-compatible function
         n_c_results = len(c_results)
-
         if n_c_results == 0:
             body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
@@ -330,6 +375,10 @@ class CToPythonWrapper(Wrapper):
         else:
             body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
 
+        # Deallocate the C equivalent of any array arguments
+        # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
+        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
+        # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
             v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
@@ -339,7 +388,17 @@ class CToPythonWrapper(Wrapper):
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
+        # Deallocate the C equivalent of any array results
+        for r in original_c_results:
+            orig_var = getattr(a, 'original_function_result_variable', a.var)
+            v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            if v.is_ndarray:
+                if v.is_optional:
+                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
+                else:
+                    body.append(Deallocate(v))
 
+        # Pack the Python compatible results of the function into one argument.
         n_py_results = len(python_result_variables)
         if n_py_results == 0:
             res = Py_None
