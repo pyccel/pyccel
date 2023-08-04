@@ -349,7 +349,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get the code required to wrap the C-compatible results into Python objects
         # This function creates variables so it must be called before extracting them from the scope.
-        result_wrap = [line for r in python_results for line in self._wrap(r)]
+        result_wrap = [l for r in python_results for l in self._wrap(r)]
 
         # Get the names of the arguments which should be used to call the C-compatible function
         func_call_arg_names = []
