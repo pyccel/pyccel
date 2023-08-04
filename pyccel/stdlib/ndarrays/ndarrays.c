@@ -200,28 +200,28 @@ void   _array_fill_cdouble(double complex c, t_ndarray arr)
 ** deallocation
 */
 
-int32_t free_array(t_ndarray arr)
+int32_t free_array(t_ndarray* arr)
 {
-    if (arr.shape == NULL)
+    if (arr->shape == NULL)
         return (0);
-    free(arr.raw_data);
-    arr.raw_data = NULL;
-    free(arr.shape);
-    arr.shape = NULL;
-    free(arr.strides);
-    arr.strides = NULL;
+    free(arr->raw_data);
+    arr->raw_data = NULL;
+    free(arr->shape);
+    arr->shape = NULL;
+    free(arr->strides);
+    arr->strides = NULL;
     return (1);
 }
 
 
-int32_t free_pointer(t_ndarray arr)
+int32_t free_pointer(t_ndarray* arr)
 {
-    if (arr.is_view == false || arr.shape == NULL)
+    if (arr->is_view == false || arr->shape == NULL)
         return (0);
-    free(arr.shape);
-    arr.shape = NULL;
-    free(arr.strides);
-    arr.strides = NULL;
+    free(arr->shape);
+    arr->shape = NULL;
+    free(arr->strides);
+    arr->strides = NULL;
     return (1);
 }
 

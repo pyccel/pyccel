@@ -133,8 +133,8 @@ void        alias_assign(t_ndarray *dest, t_ndarray src);
 void        transpose_alias_assign(t_ndarray *dest, t_ndarray src);
 
 /* free */
-int32_t         free_array(t_ndarray dump);
-int32_t         free_pointer(t_ndarray dump);
+int32_t         free_array(t_ndarray* dump);
+int32_t         free_pointer(t_ndarray* dump);
 
 /* indexing */
 int64_t         get_index(t_ndarray arr, ...);

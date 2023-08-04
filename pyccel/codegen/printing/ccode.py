@@ -1361,8 +1361,8 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         if expr.variable.is_alias:
-            return 'free_pointer({});\n'.format(self._print(expr.variable))
-        return 'free_array({});\n'.format(self._print(expr.variable))
+            return 'free_pointer({});\n'.format(self._print(ObjectAddress(expr.variable)))
+        return 'free_array({});\n'.format(self._print(ObjectAddress(expr.variable)))
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
