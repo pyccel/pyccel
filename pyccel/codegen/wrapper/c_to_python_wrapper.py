@@ -388,15 +388,6 @@ class CToPythonWrapper(Wrapper):
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
-        # Deallocate the C equivalent of any array results
-        for r in original_c_results:
-            orig_var = getattr(r, 'original_function_result_variable', r.var)
-            v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
-            if v.is_ndarray:
-                if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
-                else:
-                    body.append(Deallocate(v))
 
         # Pack the Python compatible results of the function into one argument.
         n_py_results = len(python_result_variables)
