@@ -282,6 +282,7 @@ class CToPythonWrapper(Wrapper):
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func) and not f.is_private]
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         interfaces = [self._wrap(i) for i in expr.interfaces]
+        classes = [self._wrap(i) for i in expr.classes]
         variables = [self._wrap(v) for v in (expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables)]
         self.exit_scope()
         imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
