@@ -7,7 +7,7 @@
 Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
-from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
+from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
@@ -150,7 +150,7 @@ class CToPythonWrapper(Wrapper):
         keyword_list_name = self.scope.get_new_name('kwlist')
 
         # Create the list of argument names
-        arg_names = [a.var.name for a in args]
+        arg_names = [getattr(a, 'original_function_argument_variable', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Initialise optionals
@@ -293,8 +293,8 @@ class CToPythonWrapper(Wrapper):
         python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
         python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
 
-        c_args = expr.arguments
-        c_results = expr.results
+        original_c_args = expr.arguments
+        original_c_results = expr.results
 
         if in_interface:
             func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
@@ -308,20 +308,36 @@ class CToPythonWrapper(Wrapper):
 
         result_wrap = [line for r in python_results for line in self._wrap(r)]
 
-        c_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
-        c_results = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in expr.results]
+        func_call_arg_names = []
+        for a in original_c_args:
+            if isinstance(a, BindCFunctionDefArgument):
+                orig_var = a.original_function_argument_variable
+                if orig_var.is_optional and not orig_var.is_ndarray:
+                    func_call_arg_names.append(orig_var.name)
+                    continue
+            func_call_arg_names.append(a.var.name)
+
+        func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
+        c_results = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in original_c_results]
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
 
         n_c_results = len(c_results)
 
         if n_c_results == 0:
-            body.append(FunctionCall(expr, c_args))
+            body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
-            body.append(Assign(c_results[0], FunctionCall(expr, c_args)))
+            body.append(Assign(c_results[0], FunctionCall(expr, func_call_args)))
         else:
-            body.append(Assign(c_results, FunctionCall(expr, c_args)))
+            body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
 
-        body.extend(Deallocate(a) for a in c_args if a.is_ndarray)
+        for a in original_c_args:
+            orig_var = getattr(a, 'original_function_argument_variable', a.var)
+            v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            if v.is_ndarray:
+                if v.is_optional:
+                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
+                else:
+                    body.append(Deallocate(v))
         body.extend(result_wrap)
 
         n_py_results = len(python_result_variables)
