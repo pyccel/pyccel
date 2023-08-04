@@ -42,7 +42,7 @@ class CToPythonWrapper(Wrapper):
         self._wrapping_arrays = False
         super().__init__()
 
-    def get_new_PyObject(self, name):
+    def get_new_PyObject(self, name, is_temp = False):
         """
         Create new PyccelPyObject Variable with the desired name.
 
@@ -51,13 +51,17 @@ class CToPythonWrapper(Wrapper):
         name : String
             The desired name.
 
+        is_temp : bool
+            Indicates if the Variable is temporary.
+
         Returns
         -------
         Variable
         """
         var = Variable(dtype=PyccelPyObject(),
                         name=self.scope.get_new_name(name),
-                        memory_handling='alias')
+                        memory_handling='alias',
+                        is_temp=is_temp)
         self.scope.insert_variable(var)
         return var
 
@@ -126,48 +130,56 @@ class CToPythonWrapper(Wrapper):
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
-        args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
-        results = expr.bind_c_results if is_bind_c_function_def else expr.results
+        python_args = expr.bind_c_arguments if is_bind_c_function_def else expr.arguments
+        python_results = expr.bind_c_results if is_bind_c_function_def else expr.results
+
+        c_args = expr.arguments
+        c_results = expr.results
 
         if in_interface:
-            self._get_python_args(args)
+            self._get_python_args(python_args)
             func_args = [FunctionDefArgument(a) for a in self._python_object_map.values()]
             body = []
         else:
-            func_args, body = self._unpack_python_args(args)
+            func_args, body = self._unpack_python_args(python_args)
             func_args = [FunctionDefArgument(a) for a in func_args]
 
-        body += [l for a in args for l in self._wrap(a)]
+        body += [l for a in python_args for l in self._wrap(a)]
 
-        result_wrap = [self._wrap(r) for r in results]
+        result_wrap = [line for r in python_results for line in self._wrap(r)]
 
-        call_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
-        call_res  = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in expr.results]
-        call_res  = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in call_res]
+        c_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
+        c_results = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in expr.results]
+        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
 
-        c_compatible_result_names  = [getattr(r, 'original_function_result_variable', r.var).name for r in results]
-        c_compatible_results  = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in c_compatible_result_names]
-        func_results = [self._python_object_map[r] for r in c_compatible_results]
+        python_result_variables = [self._python_object_map[r] for r in python_results]
 
-        if call_res:
-            if len(call_res) == 1:
-                body.append(Assign(call_res[0], FunctionCall(expr, call_args)))
-            else:
-                body.append(Assign(call_res, FunctionCall(expr, call_args)))
+        n_c_results = len(c_results)
+
+        if n_c_results == 0:
+            body.append(FunctionCall(expr, c_args))
+        elif n_c_results == 1:
+            body.append(Assign(c_results[0], FunctionCall(expr, c_args)))
         else:
-            body.append(FunctionCall(expr, call_args))
+            body.append(Assign(c_results, FunctionCall(expr, c_args)))
 
-        body += [li for l in result_wrap for li in l]
+        body.extend(Deallocate(a) for a in c_args if a.is_ndarray)
+        body.extend(result_wrap)
+
+        n_py_results = len(python_result_variables)
+        if n_py_results == 0:
+            res = Py_None
+            func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        elif n_py_results == 1:
+            res = python_result_variables[0]
+            func_results = [FunctionDefResult(res)]
+        else:
+            res = self.get_new_PyObject("result")
+            body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
+            func_results = [FunctionDefResult(res)]
+        body.append(Return([res]))
 
         self.exit_scope()
-
-        if not in_interface:
-            res = self.get_new_PyObject("result")
-            body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in func_results])))
-            body.append(Return([res]))
-            func_results = [FunctionDefResult(res)]
-        elif func_results:
-            body.append(Return([func_results]))
 
         return PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope, original_function = original_func)
 
@@ -177,10 +189,11 @@ class CToPythonWrapper(Wrapper):
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
-        arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
-
-        if orig_var.rank != 0:
+        if orig_var.is_ndarray:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
+        else:
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
 
         self.scope.insert_variable(arg_var)
 
@@ -260,11 +273,15 @@ class CToPythonWrapper(Wrapper):
         if orig_var.rank != 0:
             self._wrapping_arrays = True
 
-        c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+        if orig_var.is_ndarray:
+            c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
+            self._wrapping_arrays = True
+        else:
+            c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
         self.scope.insert_variable(c_res)
 
         python_res = self.get_new_PyObject(orig_var.name+'_obj')
-        self._python_object_map[c_res] = python_res
+        self._python_object_map[expr] = python_res
 
         body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
 
@@ -301,7 +318,7 @@ class CToPythonWrapper(Wrapper):
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
             self.scope.insert_variable(c_res)
 
-        self._python_object_map[c_res] = python_res
+        self._python_object_map[expr] = python_res
 
         body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)])))
 
