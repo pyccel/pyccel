@@ -1027,207 +1027,207 @@ class CWrapperCodePrinter(CCodePrinter):
         names = expr.name
         return '.'.join(self._print(n) for n in names)
 
-    def _print_Interface(self, expr):
+    #def _print_Interface(self, expr):
 
-        # Find a name for the wrapper function
-        wrapper_name = self._get_wrapper_name(expr)
+    #    # Find a name for the wrapper function
+    #    wrapper_name = self._get_wrapper_name(expr)
 
-        mod_scope = self.scope
-        scope = self.scope.new_child_scope(wrapper_name)
-        self.set_scope(scope)
+    #    mod_scope = self.scope
+    #    scope = self.scope.new_child_scope(wrapper_name)
+    #    self.set_scope(scope)
 
-        # Collecting all functions
-        funcs = expr.functions
+    #    # Collecting all functions
+    #    funcs = expr.functions
 
-        # Save all used names
-        for n in funcs:
-            self.scope.insert_symbol(n.name)
+    #    # Save all used names
+    #    for n in funcs:
+    #        self.scope.insert_symbol(n.name)
 
-        # Collect arguments and results
-        wrapper_args    = self.get_wrapper_arguments()
-        wrapper_results = [self.get_new_PyObject("result")]
-        self.scope.insert_variable(wrapper_results[0])
+    #    # Collect arguments and results
+    #    wrapper_args    = self.get_wrapper_arguments()
+    #    wrapper_results = [self.get_new_PyObject("result")]
+    #    self.scope.insert_variable(wrapper_results[0])
 
-        if isinstance(funcs[0], BindCFunctionDef):
-            example_args = funcs[0].bind_c_arguments
-            example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
-                    for a in example_args}
-            arg_names = [a.var.name for a in funcs[0].original_function.arguments]
-        else:
-            example_args = funcs[0].arguments
-            example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
-                    for a in example_args}
-            arg_names = [a.name for a in example_args]
+    #    if isinstance(funcs[0], BindCFunctionDef):
+    #        example_args = funcs[0].bind_c_arguments
+    #        example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+    #                for a in example_args}
+    #        arg_names = [a.var.name for a in funcs[0].original_function.arguments]
+    #    else:
+    #        example_args = funcs[0].arguments
+    #        example_arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+    #                for a in example_args}
+    #        arg_names = [a.name for a in example_args]
 
-        # Collect argument names for PyArgParse
-        keyword_list_name = self.scope.get_new_name('kwlist')
-        keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
-        wrapper_body      = [keyword_list]
+    #    # Collect argument names for PyArgParse
+    #    keyword_list_name = self.scope.get_new_name('kwlist')
+    #    keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
+    #    wrapper_body      = [keyword_list]
 
-        wrapper_body_translations = []
-        body_tmp = []
+    #    wrapper_body_translations = []
+    #    body_tmp = []
 
-        # To store the mini function responsible for collecting value and calling interfaces functions and return the builded value
-        funcs_def = []
-        default_value = {} # dict to collect all initialisation needed in the wrapper
-        check_var = Variable(dtype = NativeInteger(), name = self.scope.get_new_name("check"))
-        scope.insert_variable(check_var, check_var.name)
-        types_dict = OrderedDict((a, set()) for a in example_arg_vars) #dict to collect each variable possible type and the corresponding flags
-        # collect parse arg
-        parse_args = [self.get_PyArgParseType(a) for a in example_arg_vars]
+    #    # To store the mini function responsible for collecting value and calling interfaces functions and return the builded value
+    #    funcs_def = []
+    #    default_value = {} # dict to collect all initialisation needed in the wrapper
+    #    check_var = Variable(dtype = NativeInteger(), name = self.scope.get_new_name("check"))
+    #    scope.insert_variable(check_var, check_var.name)
+    #    types_dict = OrderedDict((a, set()) for a in example_arg_vars) #dict to collect each variable possible type and the corresponding flags
+    #    # collect parse arg
+    #    parse_args = [self.get_PyArgParseType(a) for a in example_arg_vars]
 
-        # Determine flags which indicate argument type
-        argument_type_flags = self._determine_interface_flags(funcs)
+    #    # Determine flags which indicate argument type
+    #    argument_type_flags = self._determine_interface_flags(funcs)
 
-        # Managing the body of wrapper
-        for func in funcs :
-            mini_wrapper_func_body = []
-            res_args = []
-            static_func_args  = []
+    #    # Managing the body of wrapper
+    #    for func in funcs :
+    #        mini_wrapper_func_body = []
+    #        res_args = []
+    #        static_func_args  = []
 
-            mini_wrapper_func_name = self.scope.get_new_name(func.name + '_mini_wrapper')
-            mini_scope = mod_scope.new_child_scope(mini_wrapper_func_name)
-            self.set_scope(mini_scope)
+    #        mini_wrapper_func_name = self.scope.get_new_name(func.name + '_mini_wrapper')
+    #        mini_scope = mod_scope.new_child_scope(mini_wrapper_func_name)
+    #        self.set_scope(mini_scope)
 
-            # update ndarray local variables properties
-            if isinstance(func, BindCFunctionDef):
-                arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
-                        for a in func.bind_c_arguments}
-            else:
-                arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
-                        for a in func.arguments}
-            results = func.bind_c_results if isinstance(func, BindCFunctionDef) else func.results
-            result_vars = []
-            for r in results:
-                var = r.var
-                name = var.name
-                self.scope.insert_symbol(name)
-                if var.rank > 0:
-                    v = var.clone(self.scope.get_expected_name(name), memory_handling = 'alias')
-                else:
-                    v = var.clone(self.scope.get_expected_name(name))
-                result_vars.append(v)
-                self.scope.insert_variable(v)
-                if isinstance(r, BindCFunctionDefResult) and r.shape:
-                    original_var = r.original_function_result_variable
-                    original_name = original_var.name
-                    self.scope.insert_symbol(original_name)
-                    # Declare as pointer as the array should not free its data when it goes out of scope
-                    self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name), memory_handling = 'alias'))
+    #        # update ndarray local variables properties
+    #        if isinstance(func, BindCFunctionDef):
+    #            arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+    #                    for a in func.bind_c_arguments}
+    #        else:
+    #            arg_vars = {(a.original_function_argument_variable if isinstance(a, BindCFunctionDefArgument) else a.var): a \
+    #                    for a in func.arguments}
+    #        results = func.bind_c_results if isinstance(func, BindCFunctionDef) else func.results
+    #        result_vars = []
+    #        for r in results:
+    #            var = r.var
+    #            name = var.name
+    #            self.scope.insert_symbol(name)
+    #            if var.rank > 0:
+    #                v = var.clone(self.scope.get_expected_name(name), memory_handling = 'alias')
+    #            else:
+    #                v = var.clone(self.scope.get_expected_name(name))
+    #            result_vars.append(v)
+    #            self.scope.insert_variable(v)
+    #            if isinstance(r, BindCFunctionDefResult) and r.shape:
+    #                original_var = r.original_function_result_variable
+    #                original_name = original_var.name
+    #                self.scope.insert_symbol(original_name)
+    #                # Declare as pointer as the array should not free its data when it goes out of scope
+    #                self.scope.insert_variable(original_var.clone(self.scope.get_expected_name(original_name), memory_handling = 'alias'))
 
-            local_arg_vars = {(v.clone(v.name, memory_handling='alias')
-                              if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
-                              else v) : a for v,a in arg_vars.items()}
+    #        local_arg_vars = {(v.clone(v.name, memory_handling='alias')
+    #                          if isinstance(v, Variable) and v.rank > 0 or v.is_optional \
+    #                          else v) : a for v,a in arg_vars.items()}
 
-            for a in local_arg_vars:
-                mini_scope.insert_variable(a)
+    #        for a in local_arg_vars:
+    #            mini_scope.insert_variable(a)
 
-            # Loop for all args in every functions and create the corresponding condition and body
-            for idx, (p_arg, (f_var, f_arg)) in enumerate(zip(parse_args, local_arg_vars.items())):
-                collect_var  = self.get_PyArgParseType(f_var)
-                body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
+    #        # Loop for all args in every functions and create the corresponding condition and body
+    #        for idx, (p_arg, (f_var, f_arg)) in enumerate(zip(parse_args, local_arg_vars.items())):
+    #            collect_var  = self.get_PyArgParseType(f_var)
+    #            body, tmp_variable = self._body_management(f_var, p_arg, f_arg.value)
 
-                # get check type function
-                check = self._get_check_type_statement(f_var, p_arg, f_arg.value is None)
+    #            # get check type function
+    #            check = self._get_check_type_statement(f_var, p_arg, f_arg.value is None)
 
-                # Save the body
-                wrapper_body_translations.extend(body)
+    #            # Save the body
+    #            wrapper_body_translations.extend(body)
 
-                # Write default values
-                if f_arg.value is not None:
-                    wrapper_body.append(self.get_default_assign(parse_args[-1], f_var, f_arg.value))
+    #            # Write default values
+    #            if f_arg.value is not None:
+    #                wrapper_body.append(self.get_default_assign(parse_args[-1], f_var, f_arg.value))
 
-                # Get Bind/C arguments
-                static_func_args.extend(self.get_static_args(f_var))
+    #            # Get Bind/C arguments
+    #            static_func_args.extend(self.get_static_args(f_var))
 
-                # Save flag to types dict for interface recognition
-                flag_value = argument_type_flags[func][idx]
-                if flag_value >= len(types_dict[f_var]):
-                    types_dict[f_var].add((f_var, check, flag_value)) # collect variable type for each arguments
+    #            # Save flag to types dict for interface recognition
+    #            flag_value = argument_type_flags[func][idx]
+    #            if flag_value >= len(types_dict[f_var]):
+    #                types_dict[f_var].add((f_var, check, flag_value)) # collect variable type for each arguments
 
-                mini_wrapper_func_body += body
+    #            mini_wrapper_func_body += body
 
-            # create the corresponding function call
-            mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, results))
+    #        # create the corresponding function call
+    #        mini_wrapper_func_body.extend(self._get_static_func_call_code(func, static_func_args, results))
 
 
-            # Loop for all res in every functions and create the corresponding body and cast
-            for r in results :
-                collect_var, cast_func = self.get_PyBuildValue(r)
-                if cast_func is not None:
-                    mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
+    #        # Loop for all res in every functions and create the corresponding body and cast
+    #        for r in results :
+    #            collect_var, cast_func = self.get_PyBuildValue(r)
+    #            if cast_func is not None:
+    #                mini_wrapper_func_body.append(AliasAssign(collect_var, cast_func))
 
-                res_args.append(ObjectAddress(collect_var) if collect_var.is_alias else collect_var)
+    #            res_args.append(ObjectAddress(collect_var) if collect_var.is_alias else collect_var)
 
-            # Building PybuildValue and freeing the allocated variable after.
-            mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
-            mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
+    #        # Building PybuildValue and freeing the allocated variable after.
+    #        mini_wrapper_func_body.append(AliasAssign(wrapper_results[0],PyBuildValueNode(res_args)))
+    #        mini_wrapper_func_body += [FunctionCall(Py_DECREF, [i]) for i in self._to_free_PyObject_list]
 
-            # Call free function for C type
-            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
-                                        else Deallocate(i) for i in local_arg_vars if i.rank > 0]
-            if self._target_language == 'fortran':
-                dealloc_results = [self.scope.find(self.scope.get_expected_name(r.original_function_result_variable.name), category='variables')
-                                    for r in results]
-            else:
-                dealloc_results = result_vars
-            mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
-                                else Deallocate(i) for i in dealloc_results if i.rank > 0]
-            mini_wrapper_func_body.append(Return(wrapper_results))
-            self._to_free_PyObject_list.clear()
+    #        # Call free function for C type
+    #        mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
+    #                                    else Deallocate(i) for i in local_arg_vars if i.rank > 0]
+    #        if self._target_language == 'fortran':
+    #            dealloc_results = [self.scope.find(self.scope.get_expected_name(r.original_function_result_variable.name), category='variables')
+    #                                for r in results]
+    #        else:
+    #            dealloc_results = result_vars
+    #        mini_wrapper_func_body += [If(IfSection(PyccelIsNot(i, Nil()), [Deallocate(i)])) if self.is_c_pointer(i) \
+    #                            else Deallocate(i) for i in dealloc_results if i.rank > 0]
+    #        mini_wrapper_func_body.append(Return(wrapper_results))
+    #        self._to_free_PyObject_list.clear()
 
-            self.set_scope(scope)
+    #        self.set_scope(scope)
 
-            # Building Mini wrapper function
-            mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
-                arguments = [FunctionDefArgument(a) for a in parse_args],
-                results = [FunctionDefResult(r) for r in wrapper_results],
-                body = mini_wrapper_func_body,
-                scope = mini_scope)
-            funcs_def.append(mini_wrapper_func_def)
+    #        # Building Mini wrapper function
+    #        mini_wrapper_func_def = FunctionDef(name = mini_wrapper_func_name,
+    #            arguments = [FunctionDefArgument(a) for a in parse_args],
+    #            results = [FunctionDefResult(r) for r in wrapper_results],
+    #            body = mini_wrapper_func_body,
+    #            scope = mini_scope)
+    #        funcs_def.append(mini_wrapper_func_def)
 
-            # append check condition to the functioncall
-            body_tmp.append(IfSection(PyccelEq(check_var, LiteralInteger(sum(argument_type_flags[func]))), [AliasAssign(wrapper_results[0],
-                    FunctionCall(mini_wrapper_func_def, parse_args))]))
+    #        # append check condition to the functioncall
+    #        body_tmp.append(IfSection(PyccelEq(check_var, LiteralInteger(sum(argument_type_flags[func]))), [AliasAssign(wrapper_results[0],
+    #                FunctionCall(mini_wrapper_func_def, parse_args))]))
 
-        # Errors / Types management
-        # Creating check_type function
-        check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, funcs[0].name)
-        funcs_def.append(check_func_def)
+    #    # Errors / Types management
+    #    # Creating check_type function
+    #    check_func_def = self._create_wrapper_check(check_var, parse_args, types_dict, funcs[0].name)
+    #    funcs_def.append(check_func_def)
 
-        # Create the wrapper body with collected informations
-        body_tmp = [IfSection(PyccelEq(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
-        body_tmp.append(IfSection(LiteralTrue(),
-            [set_python_error_message('PyExc_TypeError', '"This combination of arguments is not valid"'),
-            Return([Nil()])]))
-        wrapper_body_translations = [If(*body_tmp)]
+    #    # Create the wrapper body with collected informations
+    #    body_tmp = [IfSection(PyccelEq(check_var, PyccelUnarySub(LiteralInteger(1))), [Return([Nil()])])] + body_tmp
+    #    body_tmp.append(IfSection(LiteralTrue(),
+    #        [set_python_error_message('PyExc_TypeError', '"This combination of arguments is not valid"'),
+    #        Return([Nil()])]))
+    #    wrapper_body_translations = [If(*body_tmp)]
 
-        # Parsing Arguments
-        parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
-                                          #example_args,
-                                          parse_args,
-                                          keyword_list)
+    #    # Parsing Arguments
+    #    parse_node = PyArg_ParseTupleNode(*wrapper_args[1:],
+    #                                      #example_args,
+    #                                      parse_args,
+    #                                      keyword_list)
 
-        wrapper_body += list(default_value.values())
-        wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
+    #    wrapper_body += list(default_value.values())
+    #    wrapper_body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
 
-        #finishing the wrapper body
-        wrapper_body.append(Assign(check_var, FunctionCall(check_func_def, parse_args)))
-        wrapper_body.extend(wrapper_body_translations)
-        wrapper_body.append(Return(wrapper_results)) # Return
+    #    #finishing the wrapper body
+    #    wrapper_body.append(Assign(check_var, FunctionCall(check_func_def, parse_args)))
+    #    wrapper_body.extend(wrapper_body_translations)
+    #    wrapper_body.append(Return(wrapper_results)) # Return
 
-        # Create FunctionDef
-        funcs_def.append(FunctionDef(name = wrapper_name,
-            arguments = [FunctionDefArgument(a) for a in wrapper_args],
-            results = [FunctionDefResult(r) for r in wrapper_results],
-            body = wrapper_body,
-            scope = scope))
+    #    # Create FunctionDef
+    #    funcs_def.append(FunctionDef(name = wrapper_name,
+    #        arguments = [FunctionDefArgument(a) for a in wrapper_args],
+    #        results = [FunctionDefResult(r) for r in wrapper_results],
+    #        body = wrapper_body,
+    #        scope = scope))
 
-        sep = self._print(SeparatorComment(40))
+    #    sep = self._print(SeparatorComment(40))
 
-        self.exit_scope()
+    #    self.exit_scope()
 
-        return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
+    #    return sep + '\n'.join(CCodePrinter._print_FunctionDef(self, f) for f in funcs_def)
 
     def _determine_interface_flags(self, funcs):
         """
