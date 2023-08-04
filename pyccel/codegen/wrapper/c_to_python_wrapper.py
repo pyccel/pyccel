@@ -7,31 +7,30 @@
 Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
-from pyccel.ast.bind_c   import BindCFunctionDef, BindCPointer
-from pyccel.ast.core     import Interface, If, IfSection, Return, FunctionCall
-from pyccel.ast.core     import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core     import Assign, AliasAssign, Deallocate, Allocate
-from pyccel.ast.core     import Import, Module
-from pyccel.ast.cwrapper import PyModule, PyccelPyObject, PyArgKeywords
-from pyccel.ast.cwrapper import PyArg_ParseTupleNode, PyccelPyObject, Py_None
-from pyccel.ast.cwrapper import py_to_c_registry, check_type_registry, PyBuildValueNode
-from pyccel.ast.cwrapper import Python_to_C, PyErr_SetString, PyTypeError
-from pyccel.ast.cwrapper import C_to_Python, PyFunctionDef
-from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.datatypes import NativeInteger, NativeFloat, NativeComplex
-from pyccel.ast.datatypes import NativeBool, NativeVoid
-from pyccel.ast.internals import get_final_precision
-from pyccel.ast.literals import Nil, LiteralTrue, LiteralString
-from pyccel.ast.operators import PyccelNot, PyccelIsNot
-from pyccel.ast.variable import Variable, DottedVariable
+from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer
+from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
+from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
+from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
+from pyccel.ast.core          import Import, Module
+from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
+from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
+from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
+from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError
+from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef
+from pyccel.ast.c_concepts    import ObjectAddress
+from pyccel.ast.datatypes     import NativeFloat, NativeComplex
+from pyccel.ast.datatypes     import NativeVoid
+from pyccel.ast.internals     import get_final_precision
+from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, array_type_check
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
-from pyccel.parser.scope import Scope
-from pyccel.ast.variable import Variable
-from pyccel.errors.errors   import Errors
+from pyccel.ast.operators     import PyccelNot, PyccelIsNot
+from pyccel.ast.variable      import Variable, DottedVariable
+from pyccel.parser.scope      import Scope
+from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
-from .wrapper import Wrapper
+from .wrapper                 import Wrapper
 
 errors = Errors()
 
@@ -64,7 +63,7 @@ class CToPythonWrapper(Wrapper):
 
     def _get_python_args(self, args):
         collect_args = [self.get_new_PyObject(a.var.name+'_obj') for a in args]
-        self._python_object_map = {a: c for a,c in zip(args, collect_args)}
+        self._python_object_map = dict(zip(args, collect_args))
 
     def _unpack_python_args(self, args):
         func_args = [self.get_new_PyObject(n) for n in ("self", "args", "kwargs")]
@@ -238,8 +237,10 @@ class CToPythonWrapper(Wrapper):
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
             self.scope.insert_variable(arg_var, expr.var.name)
-            [self.scope.insert_variable(v,s.name) for v,s in zip(shape_vars, expr.shape)]
-            [self.scope.insert_variable(v,s.name) for v,s in zip(stride_vars, expr.strides)]
+            for v,s in zip(shape_vars, expr.shape):
+                self.scope.insert_variable(v,s.name)
+            for v,s in zip(stride_vars, expr.strides):
+                self.scope.insert_variable(v,s.name)
 
             c_arg = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
 
