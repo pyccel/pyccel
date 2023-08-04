@@ -58,3 +58,9 @@ Array arguments and results are handled similarly to array module variables, by 
 Optional arguments are passed as C pointers. An if/else block then determines whether the pointer is assigned or not. This can be quite lengthy, however it is unavoidable for compilation with intel, or nvidia. It is also unavoidable for arrays as it is important not to index an array (to access the strides) which is not present.
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
+
+## C To Python
+
+The C to Python wrapper wraps C code to make it callable from Python. This module relies heavily on the [Python-C API](https://docs.python.org/3/c-api/index.html).
+
+### Functions

@@ -21,10 +21,12 @@ from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeFloat, NativeComplex
 from pyccel.ast.datatypes     import NativeVoid
 from pyccel.ast.internals     import get_final_precision
-from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString
+from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, array_type_check
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
+from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot
 from pyccel.ast.variable      import Variable, DottedVariable
 from pyccel.parser.scope      import Scope
@@ -37,26 +39,40 @@ errors = Errors()
 cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
 
 class CToPythonWrapper(Wrapper):
+    """
+    Class for creating a wrapper exposing C code to Python.
+
+    A class which provides all necessary functions for wrapping different AST
+    objects such that the resulting AST is Python-compatible.
+    """
     def __init__(self):
-        self._python_object_map = None
+        # A map used to find the Python-compatible Variable equivalent to an object in the AST
+        self._python_object_map = {}
+        # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
         super().__init__()
 
     def get_new_PyObject(self, name, is_temp = False):
         """
-        Create new PyccelPyObject Variable with the desired name.
+        Create new `PyccelPyObject` `Variable` with the desired name.
+
+        Create a new `Variable` with the datatype `PyccelPyObject` and the desired name.
+        A `PyccelPyObject` datatype means that this variable can be accessed and
+        manipulated from Python.
 
         Parameters
         ----------
-        name : String
+        name : str
             The desired name.
 
-        is_temp : bool
-            Indicates if the Variable is temporary.
+        is_temp : bool, default=False
+            Indicates if the Variable is temporary. A temporary variable may be ignored
+            by the printer.
 
         Returns
         -------
         Variable
+            The new variable.
         """
         var = Variable(dtype=PyccelPyObject(),
                         name=self.scope.get_new_name(name),
@@ -65,40 +81,179 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(var)
         return var
 
-    def _get_python_args(self, args):
+    def _get_python_argument_variables(self, args):
+        """
+        Get a new set of `PyccelPyObject` `Variable`s representing each of the arguments.
+
+        Create a new `PyccelPyObject` variable for each argument returned in Python.
+        The results are saved to the `self._python_object_map` dictionary so they can be
+        discovered later.
+
+        Parameters
+        ----------
+        args : iterable of FunctionDefArguments
+            The arguments of the function.
+
+        Returns
+        -------
+        list of Variable
+            Variables which will hold the arguments in Python.
+        """
         collect_args = [self.get_new_PyObject(a.var.name+'_obj') for a in args]
-        self._python_object_map = dict(zip(args, collect_args))
+        self._python_object_map.update(dict(zip(args, collect_args)))
+        return collect_args
 
     def _unpack_python_args(self, args):
+        """
+        Unpack the arguments received from Python into the expected Python variables.
+
+        Create the wrapper arguments of the current `FunctionDef` (`self`, `args`, `kwargs`).
+        Get a new set of `PyccelPyObject` `Variable`s representing each of the expected
+        arguments. Add the code which unpacks the `args` and `kwargs` into individual
+        `PyccelPyObject`s for each of the expected arguments.
+
+        Parameters
+        ----------
+        args : iterable of FunctionDefArguments
+            The expected arguments of the function.
+
+        Returns
+        -------
+        func_args : list of Variable
+            The arguments of the FunctionDef.
+
+        body : list of pyccel.ast.basic.Basic
+            The code which unpacks the arguments.
+
+        Examples
+        --------
+        >>> arg = Variable('int', 'x')
+        >>> func_args = (FunctionDefArgument(arg),)
+        >>> wrapper_args, body = self._unpack_python_args(func_args)
+        >>> wrapper_args
+        [Variable('self', dtype=PyccelPyObject()), Variable('args', dtype=PyccelPyObject()), Variable('kwargs', dtype=PyccelPyObject())]
+        >>> body
+        [<pyccel.ast.cwrapper.PyArgKeywords object at 0x7f99ec128cc0>, <pyccel.ast.core.If object at 0x7f99ed3a5b20>]
+        >>> CWrapperCodePrinter('wrapper_file.c').doprint(expr)
+        static char *kwlist[] = {
+            "x",
+            NULL
+        };
+        if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", kwlist, &x_obj))
+        {
+            return NULL;
+        }
+        """
+        # Create necessary variables
         func_args = [self.get_new_PyObject(n) for n in ("self", "args", "kwargs")]
-        arg_names = [a.var.name for a in args]
-        self._get_python_args(args)
+        arg_vars  = self._get_python_argument_variables(args)
         keyword_list_name = self.scope.get_new_name('kwlist')
-        keyword_list      = PyArgKeywords(keyword_list_name, arg_names)
+
+        # Create the list of argument names
+        arg_names = [a.var.name for a in args]
+        keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
         # Parse arguments
-        parse_node = PyArg_ParseTupleNode(*func_args[1:], args, list(self._python_object_map.values()), keyword_list)
+        parse_node = PyArg_ParseTupleNode(*func_args[1:], args, arg_vars, keyword_list)
 
         body = [keyword_list, If(IfSection(PyccelNot(parse_node), [Return([Nil()])]))]
 
         return func_args, body
 
+    def _get_python_result_variables(self, results):
+        """
+        Get a new set of `PyccelPyObject` `Variable`s representing each of the results.
+
+        Create a new `PyccelPyObject` variable for each result returned in Python.
+        The results are saved to the `self._python_object_map` dictionary so they can be
+        discovered later.
+
+        Parameters
+        ----------
+        results : iterable of FunctionDefResults
+            The results of the function.
+
+        Returns
+        -------
+        list of Variable
+            Variables which will hold the results in Python.
+        """
+        collect_results = [self.get_new_PyObject(r.var.name+'_obj') for r in results]
+        self._python_object_map.update(dict(zip(results, collect_results)))
+        return collect_results
+
     def _get_check_function(self, py_obj, arg, raise_error):
-        if arg.rank == 0:
+        """
+        Get the function which checks if an argument has the expected type.
+
+        Using the c-compatible description of a function argument, determine whether the Python
+        object (with datatype `PyccelPyObject`) holds data which is compatible with the expected
+        type. The check is returned along with any errors that may be raised depending upon the
+        result and the value of `raise_error`.
+
+        Parameters
+        ----------
+        py_obj : Variable
+            The variable with datatype `PyccelPyObject` where the arguments is stored in Python.
+
+        arg : Variable
+            The c-compatible variable which holds all the details about the expected type.
+
+        raise_error : bool
+            True if an error should be raised in case of an unexpected type, False otherwise.
+
+        Returns
+        -------
+        func_call : FunctionCall
+            The function call which checks if the argument has the expected type.
+
+        error_code : tuple of pyccel.ast.basic.Basic
+            The code which raises any necessary errors.
+        """
+        rank = arg.rank
+        error_code = ()
+        if rank == 0:
             dtype = arg.dtype
             prec  = arg.precision
             try :
                 cast_function = check_type_registry[(dtype, prec)]
             except KeyError:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype, severity='fatal')
+                errors.report(f"Can't check the type of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                        symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
                                results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
-            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
-            return FunctionCall(func, [py_obj]), (FunctionCall(PyErr_SetString, [PyTypeError, message]),)
+
+            if raise_error:
+                message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
+                python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
+                error_code = (python_error,)
+
+            func_call = FunctionCall(func, [py_obj])
         else:
-            return array_type_check(py_obj, arg, raise_error), ()
+            dtype = str(arg.dtype)
+            prec  = get_final_precision(arg)
+            try :
+                 type_ref = numpy_dtype_registry[(dtype, prec)]
+            except KeyError:
+                errors.report(f"Can't check the type of an array of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                        symbol=arg, severity='fatal')
+
+            # order flag
+            if rank == 1:
+                flag     = no_order_check
+            elif arg.order == 'F':
+                flag = numpy_flag_f_contig
+            else:
+                flag = numpy_flag_c_contig
+
+            check_func = pyarray_check if raise_error else is_numpy_array
+            # No error code required as the error is raised inside pyarray_check
+
+            func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+
+        return func_call, error_code
 
     def _wrap_Module(self, expr):
         # Define scope
@@ -118,6 +273,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        self._python_object_map = {}
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
@@ -137,12 +293,12 @@ class CToPythonWrapper(Wrapper):
         c_results = expr.results
 
         if in_interface:
-            self._get_python_args(python_args)
-            func_args = [FunctionDefArgument(a) for a in self._python_object_map.values()]
+            func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
             body = []
         else:
             func_args, body = self._unpack_python_args(python_args)
             func_args = [FunctionDefArgument(a) for a in func_args]
+        python_result_variables = self._get_python_result_variables(python_results)
 
         body += [l for a in python_args for l in self._wrap(a)]
 
@@ -151,8 +307,6 @@ class CToPythonWrapper(Wrapper):
         c_args = [self.scope.find(self.scope.get_expected_name(a.var.name), category='variables') for a in expr.arguments]
         c_results = [self.scope.find(self.scope.get_expected_name(r.var.name), category='variables') for r in expr.results]
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-
-        python_result_variables = [self._python_object_map[r] for r in python_results]
 
         n_c_results = len(c_results)
 
@@ -270,9 +424,6 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = expr.var
 
-        if orig_var.rank != 0:
-            self._wrapping_arrays = True
-
         if orig_var.is_ndarray:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
@@ -280,9 +431,7 @@ class CToPythonWrapper(Wrapper):
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
         self.scope.insert_variable(c_res)
 
-        python_res = self.get_new_PyObject(orig_var.name+'_obj')
-        self._python_object_map[expr] = python_res
-
+        python_res = self._python_object_map[expr]
         body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
 
         if orig_var.rank:
@@ -293,13 +442,12 @@ class CToPythonWrapper(Wrapper):
     def _wrap_BindCFunctionDefResult(self, expr):
 
         orig_var = expr.original_function_result_variable
-        python_res = self.get_new_PyObject(orig_var.name+'_obj')
 
         body = []
 
         if orig_var.rank:
             # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False)
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
             # Result of calling the bind-c function
             arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
@@ -310,16 +458,13 @@ class CToPythonWrapper(Wrapper):
             # Save so we can find by iterating over func.bind_c_results
             self.scope.insert_variable(c_res, orig_var.name)
 
-            body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order,
-                status='unallocated'))
-            body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=c_res), arg_var))
+            body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
+            body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         else:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
             self.scope.insert_variable(c_res)
 
-        self._python_object_map[expr] = python_res
-
+        python_res = self._python_object_map[expr]
         body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)])))
 
         if orig_var.rank:
