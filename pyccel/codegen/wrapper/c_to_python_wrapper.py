@@ -8,6 +8,7 @@ Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
+from pyccel.ast.bind_c        import BindCModule
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
