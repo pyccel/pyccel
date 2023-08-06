@@ -762,7 +762,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = f.name,
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
-                                     for f in funcs if f is not expr.init_func and not f.is_header)
+                                     for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
         exec_func_name = expr.exec_func.name
