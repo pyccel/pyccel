@@ -402,7 +402,7 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling='alias'))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func

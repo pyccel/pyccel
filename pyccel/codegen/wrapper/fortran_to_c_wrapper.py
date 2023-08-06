@@ -10,7 +10,7 @@ which creates an interface exposing Fortran code to C.
 import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
-from pyccel.ast.bind_c import CLocFunc, BindCModule
+from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
@@ -179,7 +179,7 @@ class FortranToCWrapper(Wrapper):
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variable_getters = [self._wrap(v) for v in expr.variables if not v.is_private]
-        trivial_variables = [v for v,g in zip(expr.variables, variable_getters) if isinstance(g, EmptyNode)]
+        trivial_variables = [v.clone(v.name, new_class = BindCVariable) for v,g in zip(expr.variables, variable_getters) if isinstance(g, EmptyNode)]
         variable_getters = [v for v in variable_getters if not isinstance(v, EmptyNode)]
         imports = [Import(expr.name, target = expr, mod=expr)]
 

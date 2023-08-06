@@ -420,7 +420,7 @@ class CToPythonWrapper(Wrapper):
         for v in expr.variables:
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
-            var_name = LiteralString(v.name)
+            var_name = LiteralString(getattr(v, 'python_name', v.name))
             add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
             if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                             [Return([PyccelUnarySub(LiteralInteger(1))])]))

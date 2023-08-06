@@ -13,6 +13,7 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
+from pyccel.ast.variable import Variable
 
 __all__ = (
     'BindCFunctionDef',
@@ -520,3 +521,15 @@ class C_F_Pointer(Basic):
         determine the size of the array in each dimension.
         """
         return self._shape
+
+class BindCVariable(Variable):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self):
+        return self._name.lower()
+
+    @property
+    def python_name(self):
+        return self._name
