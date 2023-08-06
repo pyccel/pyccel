@@ -747,10 +747,11 @@ class CWrapperCodePrinter(CCodePrinter):
         funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
 
         self._in_header = True
-        #decs = ''.join('extern '+self._print(d) for d in vars_to_wrap_decs)
+        decs = ''.join(self._print(d) for d in expr.declarations)
         self._in_header = False
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
+
         method_def_func = ''.join(('{{\n'
                                      '"{name}",\n'
                                      '(PyCFunction){wrapper_name},\n'
@@ -761,10 +762,10 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = f.name,
                                             doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""')
-                                     for f in funcs if f is not expr.init_func)
+                                     for f in funcs if f is not expr.init_func and not f.is_header)
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
-        exec_func_name = self.scope.get_new_name('exec_func')
+        exec_func_name = expr.exec_func.name
         slots_def = ('static PyModuleDef_Slot {name}[] = {{\n'
                      '{{Py_mod_exec, {exec_func}}},\n'
                      '{{0, NULL}},\n'
@@ -795,7 +796,7 @@ class CWrapperCodePrinter(CCodePrinter):
                     method_def_name = method_def_name,
                     slots_name = slots_name))
 
-        exec_func = self.get_module_exec_function(expr, exec_func_name)
+        exec_func = self._print(expr.exec_func)
 
         init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
                 'import_array();\n'
@@ -812,32 +813,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         self.exit_scope()
 
-        return ('#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API\n'
-                '{imports}\n'
-                #'{variable_declarations}\n'
-                '{function_signatures}\n'
-                '{sep}\n'
-                '{sep}\n'
-                '{function_defs}\n'
-                '{exec_func}\n'
-                '{sep}\n'
-                '{method_def}\n'
-                '{sep}\n'
-                '{slots_def}\n'
-                '{sep}\n'
-                '{module_def}\n'
-                '{sep}\n'
-                '{init_func}'.format(
-                    imports = imports,
-                    #variable_declarations = decs,
-                    function_signatures = function_signatures,
-                    sep = sep,
-                    function_defs = function_defs,
-                    exec_func = exec_func,
-                    method_def = method_def,
-                    slots_def  = slots_def,
-                    module_def = module_def,
-                    init_func = init_func))
+        return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
+                imports, decs, function_signatures, sep, sep, function_defs,
+                exec_func, sep, method_def, sep, slots_def, sep, module_def,
+                sep, init_func])
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code

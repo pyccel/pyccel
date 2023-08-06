@@ -1104,7 +1104,9 @@ class CCodePrinter(CodePrinter):
             preface = ''
             init    = ''
 
-        declaration = f'{declaration_type} {variable}{init};\n'
+        external = 'extern ' if expr.external else ''
+
+        declaration = f'{external}{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1620,7 +1622,7 @@ class CCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
 
-        if expr.is_external:
+        if expr.is_external or expr.is_header:
             return self.function_signature(expr)
 
         self.set_scope(expr.scope)

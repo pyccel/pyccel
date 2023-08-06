@@ -402,6 +402,10 @@ class BindCModule(Module):
         """
         return self._removed_functions
 
+    @property
+    def declarations(self):
+        return ()
+
 # =======================================================================================
 
 class BindCPointer(DataType):

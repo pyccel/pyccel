@@ -23,6 +23,8 @@ from .core      import Module, Interface
 
 from .internals import get_final_precision
 
+from .literals  import LiteralString
+
 from .variable  import Variable
 
 from .c_concepts import ObjectAddress
@@ -275,7 +277,7 @@ class PyModule_AddObject(PyccelAstNode):
     _shape = None
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, str):
+        if not isinstance(name, LiteralString):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
                 variable.dtype is not PyccelPyObject():
@@ -565,15 +567,48 @@ class PyModule(Module):
     """
     Class to hold a module which is accessible from Python
     """
-    __slots__ = ('_func_names', '_external_funcs')
-    def __init__(self, *args, func_names, external_funcs, **kwargs):
+    __slots__ = ('_func_names', '_external_funcs', '_exec_func', '_declarations')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_exec_func', '_declarations')
+    def __init__(self, *args, func_names, exec_func, external_funcs = (), declarations = (), **kwargs):
         self._func_names = func_names
         self._external_funcs = external_funcs
+        self._exec_func = exec_func
+        self._declarations = declarations
         super().__init__(*args, **kwargs)
 
     @property
     def external_funcs(self):
         return self._external_funcs
+
+    @external_funcs.setter
+    def external_funcs(self, funcs):
+        for f in self._external_funcs:
+            f.remove_user_node(self)
+        self._external_funcs = funcs
+        for f in funcs:
+            f.set_current_user_node(self)
+
+    @property
+    def exec_func(self):
+        """
+        The function which is executed when the module is loaded.
+        """
+        return self._exec_func
+
+    @property
+    def declarations(self):
+        """
+        All declarations that need printing in the module.
+        """
+        return self._declarations
+
+    @declarations.setter
+    def declarations(self, decs):
+        for d in self._declarations:
+            d.remove_user_node(self)
+        self._declarations = decs
+        for d in decs:
+            d.set_current_user_node(self)
 
 class PyFunctionDef(FunctionDef):
     """

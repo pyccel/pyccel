@@ -179,6 +179,7 @@ class FortranToCWrapper(Wrapper):
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
         variable_getters = [self._wrap(v) for v in expr.variables if not v.is_private]
+        trivial_variables = [v for v,g in zip(expr.variables, variable_getters) if isinstance(g, EmptyNode)]
         variable_getters = [v for v in variable_getters if not isinstance(v, EmptyNode)]
         imports = [Import(expr.name, target = expr, mod=expr)]
 
@@ -187,7 +188,7 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        return BindCModule(name, (), funcs, variable_wrappers = variable_getters,
+        return BindCModule(name, trivial_variables, funcs, variable_wrappers = variable_getters,
                 init_func = init_func, free_func = free_func,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,

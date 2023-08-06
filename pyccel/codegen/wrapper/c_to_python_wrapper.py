@@ -14,12 +14,13 @@ from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionC
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress
+from pyccel.ast.core          import FunctionAddress, AsName, Declare
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
+from pyccel.ast.cwrapper      import PyModule_AddObject
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeFloat, NativeComplex
 from pyccel.ast.datatypes     import NativeVoid
@@ -31,6 +32,7 @@ from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq
+from pyccel.ast.operators     import PyccelLt
 from pyccel.ast.variable      import Variable, DottedVariable
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -399,6 +401,37 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
+    def _build_module_exec_function(self, expr):
+        func_name = self.scope.get_new_name(expr.name+'_exec_func')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        for v in expr.variables:
+            func_scope.insert_symbol(v.name)
+
+        module_var = self.get_new_PyObject("mod")
+        result_var = self.scope.get_temporary_variable('int', precision=4)
+
+        if expr.init_func:
+            body = [FunctionCall(expr.init_func, [])]
+        else:
+            body = []
+
+        for v in expr.variables:
+            body.extend(self._wrap(v))
+            wrapped_var = self._python_object_map[v]
+            var_name = LiteralString(v.name)
+            add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
+            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+            body.append(if_expr)
+
+        body.append(Return([LiteralInteger(0)]))
+
+        self.exit_scope()
+
+        return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
+                scope = func_scope, is_static=True)
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
@@ -438,16 +471,32 @@ class CToPythonWrapper(Wrapper):
         # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces]
 
-        # Wrap module variables
-        variables = [self._wrap(v) for v in (expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables)]
+        exec_func = self._build_module_exec_function(expr)
 
         self.exit_scope()
 
-        imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
+        imports = [cwrapper_ndarray_import] if self._wrapping_arrays else []
+        if not isinstance(expr, BindCModule):
+            imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
         return PyModule(original_mod.name, (), funcs, func_names = (), imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        external_funcs = funcs_to_wrap)
+                        exec_func = exec_func)
+
+    def _wrap_BindCModule(self, expr):
+        pymod = self._wrap_Module(expr)
+        decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True, external = True) \
+                                    for v in expr.variables if not v.is_private and v.rank == 0]
+        pymod.declarations = decs
+
+        external_funcs = []
+        for v in expr.variable_wrappers:
+            external_funcs.append(FunctionDef(v.name, v.arguments, v.results, [], is_external = True, scope = Scope()))
+
+        for f in expr.funcs:
+            external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_external = True, scope = Scope()))
+        pymod.external_funcs = external_funcs
+        return pymod
 
     def _wrap_Interface(self, expr):
         """
@@ -777,3 +826,12 @@ class CToPythonWrapper(Wrapper):
             body.append(Deallocate(c_res))
 
         return body
+
+    def _wrap_Variable(self, expr):
+        wrapper_function = C_to_Python(expr)
+
+        py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
+
+        self._python_object_map[expr] = py_equiv
+
+        return [AliasAssign(py_equiv, FunctionCall(wrapper_function, [expr]))]
