@@ -352,6 +352,10 @@ class BindCModule(Module):
     variable_wrappers : list of BindCFunctionDef
         A list containing all the functions which expose module variables to C.
 
+    removed_functions : list of FunctionDef
+        A list of any functions which weren't translated to BindCFunctionDef
+        objects (e.g. private functions).
+
     **kwargs : dict
         See `pyccel.ast.core.Module`.
 
@@ -361,12 +365,13 @@ class BindCModule(Module):
         The class from which BindCModule inherits which contains all details
         about the args and kwargs.
     """
-    __slots__ = ('_orig_mod','_variable_wrappers')
-    _attribute_nodes = ('_orig_mod','_variable_wrappers')
+    __slots__ = ('_orig_mod','_variable_wrappers', '_removed_functions')
+    _attribute_nodes = Module._attribute_nodes + ('_orig_mod','_variable_wrappers', '_removed_functions')
 
-    def __init__(self, *args, original_module, variable_wrappers = (), **kwargs):
+    def __init__(self, *args, original_module, variable_wrappers = (), removed_functions = None, **kwargs):
         self._orig_mod = original_module
         self._variable_wrappers = variable_wrappers
+        self._removed_functions = removed_functions
         super().__init__(*args, **kwargs)
 
     @property
@@ -386,6 +391,16 @@ class BindCModule(Module):
         Get a list containing all the BindCFunctionDefs which expose module variables to C.
         """
         return self._variable_wrappers
+
+    @property
+    def removed_functions(self):
+        """
+        Get the functions which weren't translated to BindCFunctionDef objects.
+
+        Get a list of the functions which weren't translated to BindCFunctionDef objects.
+        This includes private functions and objects for which wrapper support is lacking.
+        """
+        return self._removed_functions
 
 # =======================================================================================
 

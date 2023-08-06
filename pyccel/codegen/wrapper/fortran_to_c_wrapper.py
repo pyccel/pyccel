@@ -164,7 +164,7 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = [f for f in expr.funcs if not f.is_private]
+        funcs_to_wrap = expr.funcs
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
             init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]
@@ -174,6 +174,7 @@ class FortranToCWrapper(Wrapper):
             free_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.free_func)]
         else:
             free_func = None
+        removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
@@ -190,7 +191,7 @@ class FortranToCWrapper(Wrapper):
                 init_func = init_func, free_func = free_func,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,
-                scope = mod_scope)
+                scope = mod_scope, removed_functions = removed_functions)
 
     def _wrap_FunctionDef(self, expr):
         """
@@ -215,6 +216,9 @@ class FortranToCWrapper(Wrapper):
         BindCFunctionDef
             The C-compatible function.
         """
+        if expr.is_private:
+            return EmptyNode()
+
         name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
         self._wrapper_names_dict[expr.name] = name
 

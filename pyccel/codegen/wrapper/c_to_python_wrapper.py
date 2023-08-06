@@ -421,16 +421,33 @@ class CToPythonWrapper(Wrapper):
         scope = expr.scope
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.scope = mod_scope
+
+        # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
-        funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func) and not f.is_private]
+
+        # Wrap functions
+        funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+
+        # Add any functions removed by the Fortran printer
+        removed_functions = getattr(expr, 'removed_functions', None)
+        if removed_functions:
+            funcs_to_wrap.extend(removed_functions)
+
         funcs = [self._wrap(f) for f in funcs_to_wrap]
+
+        # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces]
+
+        # Wrap module variables
         variables = [self._wrap(v) for v in (expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables)]
+
         self.exit_scope()
+
         imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
         original_mod = getattr(expr, 'original_module', expr)
         return PyModule(original_mod.name, (), funcs, func_names = (), imports = imports,
-                        interfaces = interfaces, scope = mod_scope, external_funcs = funcs_to_wrap)
+                        interfaces = interfaces, classes = classes, scope = mod_scope,
+                        external_funcs = funcs_to_wrap)
 
     def _wrap_Interface(self, expr):
         """
