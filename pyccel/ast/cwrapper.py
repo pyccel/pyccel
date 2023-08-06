@@ -19,7 +19,7 @@ from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionCall, FunctionDef, FunctionAddress
-from .core      import Module
+from .core      import Module, Interface
 
 from .internals import get_final_precision
 
@@ -577,7 +577,7 @@ class PyModule(Module):
 
 class PyFunctionDef(FunctionDef):
     """
-    Class to hold a FunctionDef which is accessible from Python
+    Class to hold a FunctionDef which is accessible from Python.
 
     Contains the Python-compatible version of the function which is
     used for the wrapper.
@@ -612,9 +612,59 @@ class PyFunctionDef(FunctionDef):
     @property
     def original_function(self):
         """
-        The function which is wrapped by this BindCFunctionDef.
+        The function which is wrapped by this PyFunctionDef.
 
-        The original function which would be printed in pure Fortran which is not
-        compatible with C.
+        The original function which would be printed in pure C which is not
+        compatible with Python.
         """
         return self._original_function
+
+class PyInterface(Interface):
+    """
+    Class to hold an Interface which is accessible from Python.
+
+    A class which holds the Python-compatible Interface. It contains functions for
+    determining the type of the arguments passed to the Interface and the functions
+    called through the interface.
+    """
+    __slots__ = ('_interface_func', '_type_check_func', '_original_interface')
+    _attribute_nodes = Interface._attribute_nodes + ('_interface_func', '_type_check_func',
+                        '_original_interface')
+
+    def __init__(self, name, interface_func, type_check_func, functions, original_interface):
+        self._interface_func = interface_func
+        self._type_check_func = type_check_func
+        self._original_interface = original_interface
+        for f in functions:
+            if not isinstance(f, PyFunctionDef):
+                raise TypeError("PyInterface functions should be instances of the class PyFunctionDef.")
+        super().__init__(name, functions, False)
+
+    @property
+    def interface_func(self):
+        """
+        The function which is exposed to Python.
+
+        The function which receives the Python arguments `self`, `args`, and `kwargs` and calls
+        the appropriate function.
+        """
+        return self._interface_func
+
+    @property
+    def type_check_func(self):
+        """
+        The function which determines the types which were passed to the Interface.
+
+        The function which takes the arguments passed to the function and returns an integer
+        indicating which function was called.
+        """
+        return self._type_check_func
+
+    @property
+    def original_function(self):
+        """
+        The Interface which is wrapped by this PyInterface.
+
+        The original interface which would be printed in C.
+        """
+        return self._original_interface

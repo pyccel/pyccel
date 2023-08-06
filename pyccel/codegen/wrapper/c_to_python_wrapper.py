@@ -12,12 +12,12 @@ from pyccel.ast.bind_c        import BindCModule
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
-from pyccel.ast.core          import Import, Module
+from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError
-from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef
+from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeFloat, NativeComplex
 from pyccel.ast.datatypes     import NativeVoid
@@ -28,7 +28,7 @@ from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
-from pyccel.ast.operators     import PyccelNot, PyccelIsNot
+from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq
 from pyccel.ast.variable      import Variable, DottedVariable
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
@@ -260,6 +260,106 @@ class CToPythonWrapper(Wrapper):
 
         return func_call, error_code
 
+    def _get_type_check_function(self, name, args, funcs):
+        """
+        Determine the flags which allow correct function to be identified from the interface.
+
+        Each function must be identifiable by a different integer value. This value is known
+        as a flag. Different parts of the flag to indicate the types of different arguments.
+        Take for example the following function:
+        ```python
+        @types('int', 'int')
+        @types('float', 'float')
+        def f(a, b):
+            pass
+        ```
+        The values 0 (int) and 1 (float) would indicate the type of the argument a. In order
+        to preserve this information the values which indicate the type of the argument b
+        must only change the part of the flag which does not contain this information. In other
+        words `flag % n_types_a = flag_a`. Therefore the values 0 (int) and 2(float) indicate
+        the type of the argument b.
+        We then finally have the following four options:
+          1. 0 = 0 + 0 => (int,int)
+          2. 1 = 1 + 0 => (float,int)
+          3. 2 = 0 + 2 => (int, float)
+          4. 3 = 1 + 2 => (float, float)
+
+        of which only the first and last flags indicate acceptable arguments.
+
+        The function returns a dictionary whose keys are the functions and whose values are
+        a list of the flags which would indicate the correct types.
+        In the above example we would return `{func_0 : [0,0], func_1 : [1,2]}`.
+        It also returns a FunctionDef which determines the index of the chosen function.
+
+        Parameters
+        ----------
+        funcs : list of FunctionDefs
+            The functions in the Interface.
+
+        Returns
+        -------
+        func : FunctionDef
+            The function which determines the key identifying the relevant function.
+        argument_type_flags : dict
+            A dictionary whose keys are the functions and whose values are the integer keys
+            which indicate that the function should be chosen.
+        """
+        func_scope = self.scope.new_child_scope(name)
+        self.scope = func_scope
+        orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
+        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+
+        # Initialise the argument_type_flags
+        argument_type_flags = {func : 0 for func in funcs}
+
+        # Initialise type_indicator
+        body = [Assign(type_indicator, LiteralInteger(0))]
+
+        step = 1
+        for i, py_arg in enumerate(args):
+            # Get the relevant typed arguments from the original functions
+            interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
+            # Get the type key
+            interface_types = [(a.dtype, a.precision, a.rank, a.order) for a in interface_args]
+            # Get a dictionary mapping each unique type key to an example argument
+            type_to_example_arg = dict(zip(interface_types, interface_args))
+            # Get a list of unique keys
+            possible_types = list(type_to_example_arg.keys())
+
+            n_possible_types = len(possible_types)
+            if n_possible_types != 1:
+                # Update argument_type_flags with the index of the type key
+                for func, t in zip(funcs, interface_types):
+                    index = possible_types.index(t)*step
+                    argument_type_flags[func] += index
+
+                # Create the type checks and incrementation of the type_indicator
+                if_blocks = []
+                for index, t in enumerate(possible_types):
+                    check_func_call, _ = self._get_check_function(py_arg, type_to_example_arg[t], False)
+                    if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
+                body.append(If(*if_blocks, IfSection(LiteralTrue(), 
+                            [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type for argument {interface_args[0].name}"]),
+                             Return([PyccelUnarySub(LiteralInteger(1))])])))
+
+            # Update the step to ensure unique indices for each argument
+            step *= n_possible_types
+
+        body.append(Return([type_indicator]))
+
+        self.exit_scope()
+
+        doc_string = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" + 
+                        "which indicates which function should be called.")
+
+        # Build the function
+        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
+                            body, doc_string=doc_string, scope=func_scope)
+
+        return func, argument_type_flags
+
+    #--------------------------------------------------------------------------------------------------------------------------------------------
+
     def _wrap_Module(self, expr):
         """
         Build a `PyModule` from a `Module`.
@@ -280,16 +380,64 @@ class CToPythonWrapper(Wrapper):
         scope = expr.scope
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.scope = mod_scope
+        classes = [self._wrap(i) for i in expr.classes]
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func) and not f.is_private]
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         interfaces = [self._wrap(i) for i in expr.interfaces]
-        classes = [self._wrap(i) for i in expr.classes]
         variables = [self._wrap(v) for v in (expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables)]
         self.exit_scope()
         imports = (cwrapper_ndarray_import,) if self._wrapping_arrays else ()
         original_mod = getattr(expr, 'original_module', expr)
         return PyModule(original_mod.name, (), funcs, func_names = (), imports = imports,
-                        scope = mod_scope, external_funcs = funcs_to_wrap)
+                        interfaces = interfaces, scope = mod_scope, external_funcs = funcs_to_wrap)
+
+    def _wrap_Interface(self, expr):
+        func_name = self.scope.get_new_name(expr.name+'_wrapper')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+        original_funcs = expr.functions
+        example_func = original_funcs[0]
+
+        # Add the variables to the expected symbols in the scope
+        for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
+            func_scope.insert_symbol(a.var.name)
+        python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
+        func_args, body = self._unpack_python_args(python_args)
+
+        python_arg_objs = [self._python_object_map[a] for a in python_args]
+
+        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+        self.scope.insert_variable(type_indicator)
+
+        self.exit_scope()
+
+        # Determine flags which indicate argument type
+        type_check_name = self.scope.get_new_name(expr.name+'_type_check')
+        type_check_func, argument_type_flags = self._get_type_check_function(type_check_name, python_arg_objs, original_funcs)
+
+        body.append(Assign(type_indicator, FunctionCall(type_check_func, python_arg_objs)))
+
+        functions = []
+        if_sections = []
+        for func, index in argument_type_flags.items():
+            wrapped_func = self._python_object_map[func]
+            if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
+                                [Return([FunctionCall(wrapped_func, python_arg_objs)])]))
+            functions.append(wrapped_func)
+        if_sections.append(IfSection(LiteralTrue(), 
+                    [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type combination"]),
+                     Return([Nil()])]))
+        body.append(If(*if_sections))
+
+        interface_func = FunctionDef(func_name,
+                                     [FunctionDefArgument(a) for a in func_args],
+                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
+                                     body,
+                                     scope=func_scope)
+        for a in python_args:
+            self._python_object_map.pop(a)
+
+        return PyInterface(func_name, interface_func, type_check_func, functions, expr)
 
     def _wrap_FunctionDef(self, expr):
         """
@@ -315,7 +463,6 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
-        self._python_object_map = {}
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
@@ -408,8 +555,17 @@ class CToPythonWrapper(Wrapper):
         body.append(Return([res]))
 
         self.exit_scope()
+        for a in python_args:
+            self._python_object_map.pop(a)
+        for r in python_results:
+            self._python_object_map.pop(r)
 
-        return PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope, original_function = original_func)
+        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope, original_function = original_func)
+
+        self.scope.functions[func_name] = function
+        self._python_object_map[expr] = function
+
+        return function
 
     def _wrap_FunctionDefArgument(self, expr):
 

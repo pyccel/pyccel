@@ -2120,6 +2120,8 @@ class FunctionCall(PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        for a in args:
+            assert not isinstance(a, FunctionDefArgument)
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 

@@ -1625,6 +1625,9 @@ class CCodePrinter(CodePrinter):
 
         self.set_scope(expr.scope)
 
+        # Reinitialise optional partners
+        self._optional_partners = {}
+
         arguments = [a.var for a in expr.arguments]
         results = [r.var for r in expr.results]
         if len(expr.results) > 1:
