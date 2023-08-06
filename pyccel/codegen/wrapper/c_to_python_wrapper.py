@@ -418,6 +418,8 @@ class CToPythonWrapper(Wrapper):
             body = []
 
         for v in expr.variables:
+            if v.is_private:
+                continue
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
             var_name = LiteralString(getattr(v, 'python_name', v.name))
