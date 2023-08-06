@@ -617,7 +617,8 @@ class CToPythonWrapper(Wrapper):
         for r in python_results:
             self._python_object_map.pop(r)
 
-        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope, original_function = original_func)
+        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+                doc_string = expr.doc_string, original_function = original_func)
 
         self.scope.functions[func_name] = function
         self._python_object_map[expr] = function
