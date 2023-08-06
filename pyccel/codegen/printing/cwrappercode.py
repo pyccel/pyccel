@@ -491,7 +491,7 @@ class CWrapperCodePrinter(CCodePrinter):
             rhs = ObjectAddress(expr.rhs)
             lhs = self._print(lhs)
             rhs = self._print(rhs)
-            return '{} {} {}'.format(lhs, Op, rhs)
+            return f'{lhs} {Op} {rhs}'
         else:
             return super()._handle_is_operator(Op, expr)
 

@@ -7,16 +7,18 @@
 Module describing the code-wrapping class : CToPythonWrapper
 which creates an interface exposing C code to Python.
 """
+import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
+from pyccel.ast.core          import FunctionAddress
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
-from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError
+from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeFloat, NativeComplex
@@ -338,7 +340,7 @@ class CToPythonWrapper(Wrapper):
                 for index, t in enumerate(possible_types):
                     check_func_call, _ = self._get_check_function(py_arg, type_to_example_arg[t], False)
                     if_blocks.append(IfSection(check_func_call, [AugAssign(type_indicator, '+', LiteralInteger(index*step))]))
-                body.append(If(*if_blocks, IfSection(LiteralTrue(), 
+                body.append(If(*if_blocks, IfSection(LiteralTrue(),
                             [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type for argument {interface_args[0].name}"]),
                              Return([PyccelUnarySub(LiteralInteger(1))])])))
 
@@ -349,7 +351,7 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        doc_string = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" + 
+        doc_string = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" +
                         "which indicates which function should be called.")
 
         # Build the function
@@ -357,6 +359,45 @@ class CToPythonWrapper(Wrapper):
                             body, doc_string=doc_string, scope=func_scope)
 
         return func, argument_type_flags
+
+    def _get_untranslatable_function(self, name, scope, original_function, error_msg):
+        """
+         Create code for a function complaining about an object which cannot be wrapped.
+
+         Certain functions are not handled in the wrapper (e.g. private),
+         This creates a wrapper function which raises NotImplementedError
+         exception and returns NULL.
+
+         Parameters
+         ----------
+         name : str
+             The name of the generated function.
+
+         scope : Scope
+             The scope of the generated function.
+
+        original_function : FunctionDef
+            The function we were trying to wrap.
+
+         error_msg : str
+             The message to be raised in the NotImplementedError.
+
+         Returns
+         -------
+         PyFunctionDef
+             The new function which raises the error.
+         """
+        func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
+        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
+                body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
+                                        LiteralString(error_msg)]),
+                        Return([Nil()])],
+                scope = scope, original_function = original_function)
+
+        self.scope.functions[name] = function
+
+        return function
 
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -392,6 +433,8 @@ class CToPythonWrapper(Wrapper):
                         interfaces = interfaces, scope = mod_scope, external_funcs = funcs_to_wrap)
 
     def _wrap_Interface(self, expr):
+        """
+        """
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
@@ -424,7 +467,7 @@ class CToPythonWrapper(Wrapper):
             if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
                                 [Return([FunctionCall(wrapped_func, python_arg_objs)])]))
             functions.append(wrapped_func)
-        if_sections.append(IfSection(LiteralTrue(), 
+        if_sections.append(IfSection(LiteralTrue(),
                     [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type combination"]),
                      Return([Nil()])]))
         body.append(If(*if_sections))
@@ -465,6 +508,20 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
+
+        if expr.is_private:
+            self.exit_scope()
+            return self._get_untranslatable_function(func_name,
+                         func_scope, expr,
+                         "Private functions are not accessible from python")
+
+        # Handle un-wrappable functions
+        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in expr.arguments):
+            self.exit_scope()
+            warnings.warn("Functions with functions as arguments will not be callable from Python")
+            return self._get_untranslatable_function(func_name,
+                         func_scope, expr,
+                         "Cannot pass a function as an argument")
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
@@ -573,6 +630,7 @@ class CToPythonWrapper(Wrapper):
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
+
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
