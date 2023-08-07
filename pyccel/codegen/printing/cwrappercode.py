@@ -4,50 +4,21 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from collections import OrderedDict
-
 from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c   import BindCPointer
-from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef, BindCFunctionDefArgument
-from pyccel.ast.bind_c   import BindCFunctionDefResult
+from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef
 
-from pyccel.ast.builtins import PythonTuple, PythonType
+from pyccel.ast.core import FunctionAddress, SeparatorComment
+from pyccel.ast.core import Import, Module
 
-from pyccel.ast.core import Assign, AliasAssign, FunctionDef, FunctionAddress
-from pyccel.ast.core import If, IfSection, Return, FunctionCall, Deallocate
-from pyccel.ast.core import SeparatorComment, Allocate
-from pyccel.ast.core import Import, Module, Declare
-from pyccel.ast.core import AugAssign, CodeBlock
-from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-
-from pyccel.ast.cwrapper    import PyArg_ParseTupleNode, PyBuildValueNode
-from pyccel.ast.cwrapper    import PyArgKeywords
-from pyccel.ast.cwrapper    import Py_None, Py_DECREF
-from pyccel.ast.cwrapper    import generate_datatype_error, set_python_error_message
-from pyccel.ast.cwrapper    import scalar_object_check
+from pyccel.ast.cwrapper    import PyBuildValueNode
+from pyccel.ast.cwrapper    import Py_None
 from pyccel.ast.cwrapper    import PyccelPyObject
-from pyccel.ast.cwrapper    import C_to_Python, Python_to_C
-from pyccel.ast.cwrapper    import PyModule_AddObject
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
-from pyccel.ast.datatypes import datatype, NativeVoid
-
-from pyccel.ast.literals  import LiteralTrue, LiteralInteger, LiteralString
-from pyccel.ast.literals  import Nil
-
-from pyccel.ast.numpy_wrapper   import array_type_check
-from pyccel.ast.numpy_wrapper   import pyarray_to_ndarray
-from pyccel.ast.numpy_wrapper   import array_get_data, array_get_dim, array_get_c_step, array_get_f_step
-
-from pyccel.ast.operators import PyccelEq, PyccelNot, PyccelOr, PyccelAssociativeParenthesis
-from pyccel.ast.operators import PyccelIsNot, PyccelLt, PyccelUnarySub
-
-from pyccel.ast.variable  import Variable, DottedVariable
+from pyccel.ast.literals  import LiteralString, Nil
 
 from pyccel.ast.c_concepts import ObjectAddress
-
-from pyccel.parser.scope  import Scope
 
 from pyccel.errors.errors   import Errors
 
@@ -224,267 +195,6 @@ class CWrapperCodePrinter(CCodePrinter):
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
-    def get_default_assign(self, arg, func_arg, value):
-        """
-        Provide the Assign which initialises an argument to its default value.
-
-        When a function def argument has a default value, this function
-        provides the code which initialises the argument. This value can
-        then either be used or overwritten with the provided argument.
-
-        Parameters
-        ----------
-        arg : Variable
-            The Variable where the default value should be saved.
-        func_arg : FunctionDefArgument
-            The argument object where the value may be provided.
-        value : PyccelAstNode
-            The default value which should be assigned.
-
-        Returns
-        -------
-        Assign
-            The code describing the assignement.
-
-        Raises
-        ------
-        NotImplementedError
-            If the type of the default value is not handled.
-        """
-        if func_arg.is_optional:
-            return AliasAssign(arg, Py_None)
-        elif isinstance(arg.dtype, (NativeFloat, NativeInteger, NativeBool)):
-            return Assign(arg, value)
-        elif isinstance(arg.dtype, PyccelPyObject):
-            return AliasAssign(arg, Py_None)
-        else:
-            raise NotImplementedError('Default values are not implemented for this datatype : {}'.format(func_arg.dtype))
-
-    def static_function_signature(self, expr):
-        """
-        Get the C representation of the function signature using only basic types.
-
-        Extract from the function definition `expr` all the
-        information (name, input, output) needed to create the
-        function signature used for C/Fortran binding and return
-        a string describing the function.
-
-        Parameters
-        ----------
-        expr : FunctionDef
-            The function definition for which a signature is needed.
-
-        Returns
-        -------
-        str
-            Signature of the function.
-        """
-        #if target_language is C no need for the binding
-        if self._target_language == 'c':
-            return self.function_signature(expr)
-
-        args = [a.var for a in expr.arguments]
-        results = [r.var for r in expr.results]
-        if len(results) == 1:
-            ret_type = self.get_declare_type(results[0])
-        elif len(results) > 1:
-            ret_type = self._print(datatype('int'))
-            args += [a.clone(name = a.name, memory_handling='alias') for a in results]
-        else:
-            ret_type = self._print(datatype('void'))
-        name = expr.name
-        if not args:
-            arg_code = 'void'
-        else:
-            arg_code = ', '.join(self.function_signature(i, False)
-                        if isinstance(i, FunctionAddress)
-                        else self.get_static_declare_type(i)
-                        for i in args)
-
-        return f'{ret_type} {name}({arg_code})'
-
-    def get_static_args(self, argument):
-        """
-        Get the value(s) which should be passed for the provided argument.
-
-        Get the value(s) which should be passed to the function for the
-        specified argument. In the case of a BindCFunctionDef (when the
-        target language is Fortran) and an argument with rank > 0,
-        multiple arguments are needed:
-        - buffer holding data.
-        - shape of array in each dimension.
-        - stride for the array in each dimension.
-
-        Parameters
-        ----------
-        argument : Variable
-            Variable holding information needed (rank).
-
-        Returns
-        -------
-        List of arguments
-            List that can contain Variables and FunctionCalls.
-
-        Examples
-        --------
-        If target language is Fortran:
-        >>> x = Variable('int', 'x', rank=2, order='c')
-        >>> self.get_static_args(x)
-        [&nd_data(x), nd_ndim(x, 0), nd_ndim(x, 1), nd_nstep_C(x, 0), nd_nstep_C(x, 1)]
-
-        If target language is C:
-        >>> x = Variable('int', 'x', rank=2, order='c')
-        >>> self.get_static_args(x)
-        [x]
-        """
-
-        if self._target_language == 'fortran' and argument.rank > 0:
-            arg_address = ObjectAddress(argument)
-            static_args = [ObjectAddress(FunctionCall(array_get_data, [arg_address]))]
-            static_args+= [
-                FunctionCall(array_get_dim, [arg_address, i]) for i in range(argument.rank)
-            ]
-            if argument.order == 'C':
-                static_args+= [
-                    FunctionCall(array_get_c_step, [arg_address, i]) for i in range(argument.rank)
-                ]
-            else:
-                static_args+= [
-                    FunctionCall(array_get_f_step, [arg_address, i]) for i in range(argument.rank)
-                ]
-        else:
-            static_args = [argument]
-
-        return static_args
-
-    def get_static_declare_type(self, variable):
-        """
-        Get the declaration type of a variable which may be passed to a Fortran binding function.
-
-        Get the declaration type of a variable, this function is used for
-        C/Fortran binding using native C datatypes.
-
-        Parameters
-        ----------
-        variable : Variable
-            Variable holding information needed to choose the declaration type.
-
-        Returns
-        -------
-        str
-            The code describing the type.
-        """
-        dtype = self._print(variable.dtype)
-        prec  = variable.precision
-
-        dtype = self.find_in_dtype_registry(dtype, prec)
-
-        if self.is_c_pointer(variable):
-            return f'{dtype}*'
-
-        else:
-            return dtype
-
-    def get_static_results(self, result):
-        """
-        Get the value(s) which should be used to collect the provided result.
-
-        Get the value(s) which should be collected from the function for the
-        specified argument. In the case of a BindCFunctionDefResult (when the
-        target language is Fortran) and an argument with rank > 0,
-        multiple outputs are needed:
-        - buffer holding data.
-        - shape of array in each dimension.
-        These must then be used to create the expected result variable.
-
-        Parameters
-        ----------
-        result : FunctionDefResult
-            The result of the function which we want to collect.
-
-        Returns
-        -------
-        body : list
-            Additional instructions (allocations and pointer assignments) for function body.
-
-        static_results : list
-            Expanded list of function arguments corresponding to the given result.
-
-        Examples
-        --------
-        If target language is Fortran:
-        >>> x_res = BindCFunctionDefResult(Variable(BindCPointer(), 'x_ptr', memory_handling='alias'), Variable('int', 'x', rank=2, order='c'), scope)
-        >>> self.get_static_results(x)
-        [allocate(x, [x_shape_0, x_shape_1]), x.raw_data=>x_ptr], [&nd_data(x_ptr), x_shape_0, x_shape_1]
-
-        If target language is C:
-        >>> x_res = FunctionDefResult(Variable('int', 'x', rank=2, order='c'))
-        >>> self.get_static_args(x)
-        [], [Variable(x)]
-        """
-
-        body = []
-        var_name = self.scope.get_expected_name(result.var.name)
-
-        if isinstance(result, BindCFunctionDefResult) and result.shape:
-            shape = [self.scope.get_temporary_variable(s) for s in result.shape]
-            orig_name = result.original_function_result_variable.name
-            orig_var = self.scope.find(self.scope.get_expected_name(orig_name), category='variables')
-            nd_var = self.scope.find(var_name, category='variables')
-            body.append(Allocate(orig_var, shape = shape, order = orig_var.order,
-                status='unallocated'))
-            body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias',
-                lhs=orig_var), nd_var))
-
-            static_results = [ObjectAddress(nd_var), *shape]
-
-        else:
-            var = self.scope.find(var_name, category='variables')
-            static_results = [var]
-
-        return body, static_results
-
-    def _get_static_func_call_code(self, expr, static_func_args, results):
-        """
-        Get all code necessary to call the wrapped function.
-
-        Get the function call which calls the underlying translated function
-        being wrapped. This may involve creating new variables in order to
-        call the function in a compatible way.
-
-        Parameters
-        ----------
-        expr : FunctionDef
-            The function being wrapped.
-
-        static_func_args : List of arguments
-            Arguments compatible with the static function.
-
-        results : List of results
-            Results of the wrapped function.
-
-        Returns
-        -------
-        list of pyccel.ast.basic.Basic
-            List of nodes describing the instructions which call the
-            wrapped function.
-        """
-        body = []
-        if len(results) == 0:
-            body.append(FunctionCall(expr, static_func_args))
-        else:
-            static_func_results = []
-            for r in results:
-                b, s = self.get_static_results(r)
-                body.extend(b)
-                static_func_results.extend(s)
-
-            results   = static_func_results if len(static_func_results)>1 else static_func_results[0]
-            func_call = Assign(results,FunctionCall(expr, static_func_args))
-            body.insert(0, func_call)
-
-        return body
-
     def _handle_is_operator(self, Op, expr):
         if expr.rhs is Py_None:
             lhs = ObjectAddress(expr.lhs)
@@ -498,151 +208,6 @@ class CWrapperCodePrinter(CCodePrinter):
     # -------------------------------------------------------------------
     # Functions managing the creation of wrapper body
     # -------------------------------------------------------------------
-
-    def insert_constant(self, mod_name, var_name, var, collect_var):
-        """
-        Insert a variable into the module
-
-        Parameters
-        ----------
-        mod_name    : str
-                      The name of the module variable
-        var_name    : str
-                      The name which will be used to identify the
-                      variable in python. (This is usually var.name,
-                      however it may differ due to the case-insensitivity
-                      of fortran)
-        var         : Variable
-                      The module variable
-        collect_var : Variable
-                      A PyObject* variable to store temporaries
-
-        Returns
-        -------
-        list : A list of PyccelAstNodes to be appended to the body of the
-                pymodule initialisation function
-        """
-        if var.rank != 0:
-            self.add_import(cwrapper_ndarray_import)
-
-        collect_value = AliasAssign(collect_var,
-                                FunctionCall(C_to_Python(var), [ObjectAddress(var)]))
-        add_expr = PyModule_AddObject(mod_name, var_name, collect_var)
-        if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                        [FunctionCall(Py_DECREF, [collect_var]),
-                         Return([PyccelUnarySub(LiteralInteger(1))])]))
-        return [collect_value, if_expr]
-
-    def get_module_exec_function(self, expr, exec_func_name):
-        """
-        Create code which initialises a module.
-
-        Create the function which executes any statements which happen
-        when the module is loaded.
-
-        Parameters
-        ----------
-        expr : Module
-            The module being wrapped.
-
-        exec_func_name : str
-            The name of the function.
-
-        Returns
-        -------
-        str
-            The code for a function which initialises a module.
-        """
-        # Create scope for the module initialisation function
-        scope = self.scope.new_child_scope(exec_func_name)
-        self.set_scope(scope)
-
-        #Create module variable
-        mod_var_name = self.scope.get_new_name('m')
-        mod_var = Variable(dtype = PyccelPyObject(),
-                      name       = mod_var_name,
-                      memory_handling = 'alias')
-        scope.insert_variable(mod_var)
-
-        # Collect module variables from translated code
-        body = []
-        if isinstance(expr, BindCModule):
-            orig_vars_to_wrap = [v for v in expr.original_module.variables if not v.is_private]
-            wrapper_funcs = {f.original_function: f for f in expr.variable_wrappers}
-            # Collect python compatible module variables
-            vars_to_wrap = []
-            for v in orig_vars_to_wrap:
-                if v in wrapper_funcs:
-                    # Get pointer to store array data
-                    var = scope.get_temporary_variable(dtype_or_var = v,
-                            name = v.name,
-                            memory_handling = 'alias',
-                            rank = 0, shape = None, order = None)
-                    # Create variables to store the shape of the array
-                    shape = [scope.get_temporary_variable(NativeInteger(),
-                            v.name+'_size') for _ in range(v.rank)]
-                    # Get the bind_c function which wraps a fortran array and returns c objects
-                    var_wrapper = wrapper_funcs[v]
-                    # Call bind_c function
-                    call = Assign(PythonTuple(ObjectAddress(var), *shape), FunctionCall(var_wrapper, ()))
-                    body.append(call)
-
-                    # Create ndarray to store array data
-                    nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
-                            name = v.name,
-                            memory_handling = 'alias'
-                            )
-                    alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
-                    body.append(alloc)
-                    # Save raw_data into ndarray to obtain useable pointer
-                    set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
-                            memory_handling = 'alias', lhs=nd_var), var)
-                    body.append(set_data)
-                    # Save the ndarray to vars_to_wrap to be handled as if it came from C
-                    vars_to_wrap.append(nd_var)
-                else:
-                    # Ensure correct name
-                    w = v.clone(scope.get_expected_name(v.name.lower()))
-                    assign = v.get_user_nodes(Assign)[0]
-                    # assign.fst should always exist, but is not always set when the
-                    # Assign is created in the codegen stage
-                    if assign.fst:
-                        w.set_fst(assign.fst)
-                    vars_to_wrap.append(w)
-        else:
-            orig_vars_to_wrap = [v for v in expr.variables if not v.is_private]
-            vars_to_wrap = orig_vars_to_wrap
-        var_names = [str(self.get_python_name(expr.scope, v)) for v in orig_vars_to_wrap]
-
-        # If there are any variables in the module then add them to the module object
-        if vars_to_wrap:
-            # Create variable for temporary python objects
-            tmp_var_name = self.scope.get_new_name('tmp')
-            tmp_var = Variable(dtype = PyccelPyObject(),
-                          name       = tmp_var_name,
-                          memory_handling = 'alias')
-            scope.insert_variable(tmp_var)
-            # Add code to add variable to module
-            body.extend(l for n,v in zip(var_names,vars_to_wrap) for l in self.insert_constant(mod_var_name, n, v, tmp_var))
-
-        if expr.init_func:
-            # Call init function code
-            body.insert(0,FunctionCall(expr.init_func,[],[]))
-
-        body.append(Return([LiteralInteger(0)]))
-        self.exit_scope()
-
-        func = FunctionDef(name = exec_func_name,
-            arguments = (FunctionDefArgument(mod_var),),
-            results = (FunctionDefResult(scope.get_temporary_variable(NativeInteger(),
-                precision = 4)),),
-            body = CodeBlock(body),
-            scope = scope)
-        func_code = super()._print_FunctionDef(func).split('\n')
-        func_code[1] = "static "+func_code[1]
-
-
-        return '\n'.join(func_code)
 
     def _print_BindCPointer(self, expr):
         return 'bind_c_ptr'
@@ -668,22 +233,12 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join(['&{}'.format(a.name) for a in expr.args])
+        args    = ', '.join('&{}'.format(a.name) for a in expr.args)
 
         if expr.args:
-            code = '{name}({pyarg}, {pykwarg}, "{flags}", {kwlist}, {args})'.format(
-                            name=name,
-                            pyarg=pyarg,
-                            pykwarg=pykwarg,
-                            flags = flags,
-                            kwlist = expr.arg_names.name,
-                            args = args)
+            code = f'{name}({pyarg}, {pykwarg}, "{flags}", {expr.arg_names.name}, {args})'
         else :
-            code ='{name}({pyarg}, {pykwarg}, "", {kwlist})'.format(
-                    name=name,
-                    pyarg=pyarg,
-                    pykwarg=pykwarg,
-                    kwlist = expr.arg_names.name)
+            code =f'{name}({pyarg}, {pykwarg}, "", {expr.arg_names.name})'
 
         return code
 
@@ -700,18 +255,17 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyArgKeywords(self, expr):
         arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
-        return ('static char *{name}[] = {{\n'
-                        '{arg_names}\n'
-                        '}};\n'.format(name=expr.name, arg_names = arg_names))
+        return (f'static char *{expr.name}[] = {{\n'
+                        f'{arg_names}\n'
+                        '}};\n')
 
     def _print_PyModule_AddObject(self, expr):
-        return 'PyModule_AddObject({}, {}, {})'.format(
-                expr.mod_name,
-                self._print(expr.name),
-                self._print(expr.variable))
+        name = self._print(expr.name)
+        var  = self._print(expr.variable)
+        return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
     def _print_PyModule(self, expr):
-        scope = Scope(original_symbols = expr.scope.python_names.copy())
+        scope = expr.scope
         self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
@@ -725,23 +279,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 scope.insert_symbol(v.name.lower())
 
         funcs = []
-        #if self._target_language == 'fortran':
-        #    vars_to_wrap_decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True) \
-        #                            for v in variables if not v.is_private and v.rank == 0]
-
-        #    for f in expr.original_module.funcs:
-        #        if f.is_private:
-        #            funcs.append(f)
-        #else:
-        #    vars_to_wrap_decs = [Declare(v.dtype, v, module_variable=True) \
-        #                            for v in expr.variables if not v.is_private]
 
         self._module_name  = self.get_python_name(scope, expr)
         sep = self._print(SeparatorComment(40))
 
-        function_signatures = ''.join(f'{self.static_function_signature(f)};\n' for f in expr.external_funcs)
-        #if self._target_language == 'fortran':
-        #    function_signatures += ''.join(f'{self.static_function_signature(f)};\n' for f in expr.variable_wrappers)
+        function_signatures = ''.join(f'{self.function_signature(f, print_arg_names = False)};\n' for f in expr.external_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
@@ -798,11 +340,10 @@ class CWrapperCodePrinter(CCodePrinter):
 
         exec_func = self._print(expr.exec_func)
 
-        init_func = ('PyMODINIT_FUNC PyInit_{mod_name}(void)\n{{\n'
+        init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
                 'import_array();\n'
-                'return PyModuleDef_Init(&{module_def_name});\n'
-                '}}\n'.format(mod_name=self._module_name,
-                    module_def_name = module_def_name))
+                f'return PyModuleDef_Init(&{module_def_name});\n'
+                '}}\n')
 
         # Print imports last to be sure that all additional_imports have been collected
         for i in expr.imports:
