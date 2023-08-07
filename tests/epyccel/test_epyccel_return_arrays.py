@@ -762,3 +762,98 @@ def test_return_arrays_in_expression2(language):
 
     assert np.array_equal(epyccel_function_output, return_arrays_in_expression2_output)
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
+
+def test_c_array_return(language):
+    @types('int')
+    @types('int8')
+    @types('int16')
+    @types('int32')
+    @types('int64')
+    @types('float')
+    @types('float32')
+    @types('float64')
+    @types('complex64')
+    @types('complex128')
+    def return_c_array(b):
+        from numpy import array
+        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b))
+        return a
+
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+
+    epyccel_func = epyccel(return_c_array, language=language)
+
+    for arg in (integer8, integer16, integer, integer32, integer64, fl, fl32, fl64, cmplx64, cmplx128):
+        f_output = epyccel_func(arg)
+        test_output = return_c_array(arg)
+
+        assert np.array_equal(f_output, test_output)
+        assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
+        assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
+def test_f_array_return(language):
+    @types('int')
+    @types('int8')
+    @types('int16')
+    @types('int32')
+    @types('int64')
+    @types('float')
+    @types('float32')
+    @types('float64')
+    @types('complex64')
+    @types('complex128')
+    def return_f_array(b):
+        from numpy import array
+        a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order='F')
+        return a
+
+    integer8 = randint(min_int8, max_int8, dtype=np.int8)
+    integer16 = randint(min_int16, max_int16, dtype=np.int16)
+    integer = randint(min_int, max_int, dtype=int)
+    integer32 = randint(min_int32, max_int32, dtype=np.int32)
+    integer64 = randint(min_int64, max_int64, dtype=np.int64)
+
+    fl = uniform(min_float / 2, max_float / 2)
+    fl32 = uniform(min_float32 / 2, max_float32 / 2)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(min_float64 / 2, max_float64 / 2)
+
+    cmplx128_from_float32 = uniform(low=min_float32 / 2, high=max_float32 / 2) + uniform(low=min_float32 / 2, high=max_float32 / 2) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = np.complex128(uniform(low=min_float64 / 2, high=max_float64 / 2) + uniform(low=min_float64 / 2, high=max_float64 / 2) * 1j)
+
+    epyccel_func = epyccel(return_f_array, language=language)
+
+    for arg in (integer8, integer16, integer, integer32, integer64, fl, fl32, fl64, cmplx64, cmplx128):
+        f_output = epyccel_func(arg)
+        test_output = return_f_array(arg)
+
+        assert np.array_equal(f_output, test_output)
+        assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
+        assert f_output.flags.f_contiguous == test_output.flags.f_contiguous

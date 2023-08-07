@@ -562,7 +562,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    -   `empty`, `full`, `ones`, `zeros`, `arange` (`like` parameter is not supported).
+    -   `empty`, `full`, `ones`, `zeros`, `array`, `arange` (`like` parameter is not supported).
     -   `empty_like`, `full_like`, `zeros_like`, and `ones_like` (`subok` parameter is not supported).
     -   `rand`, `randint`
     -   `where`, `count_nonzero` (Fortran only)
