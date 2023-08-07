@@ -309,34 +309,19 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
     if (o.nd == 1) {
         FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
+    else if (o->order == order_c) {
+        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
+    else if (o->order == order_f) {
+        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
     else {
-        FLAGS = 0;
+        FLAGS = NPY_ARRAY_WRITEABLE;
     }
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
 
     return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
-            o.nd, _ndarray_to_numpy_shape(o.shape, o.nd),
-            _ndarray_to_numpy_strides(o.strides, o.type_size, o.nd),
-            o.raw_data, FLAGS, NULL);
-}
-
-PyObject* c_ndarray_to_pyarray(t_ndarray o)
-{
-    int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-
-    enum NPY_TYPES npy_type = get_numpy_type(o);
-
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
-            o.nd, _ndarray_to_numpy_shape(o.shape, o.nd),
-            _ndarray_to_numpy_strides(o.strides, o.type_size, o.nd),
-            o.raw_data, FLAGS, NULL);
-}
-
-PyObject* fortran_ndarray_to_pyarray(t_ndarray o)
-{
-    int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o.type),
             o.nd, _ndarray_to_numpy_shape(o.shape, o.nd),
             _ndarray_to_numpy_strides(o.strides, o.type_size, o.nd),
             o.raw_data, FLAGS, NULL);
