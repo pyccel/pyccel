@@ -233,7 +233,7 @@ class CWrapperCodePrinter(CCodePrinter):
         pykwarg = expr.pykwarg
         flags   = expr.flags
         # All args are modified so even pointers are passed by address
-        args    = ', '.join('&{}'.format(a.name) for a in expr.args)
+        args    = ', '.join(f'&{a.name}' for a in expr.args)
 
         if expr.args:
             code = f'{name}({pyarg}, {pykwarg}, "{flags}", {expr.arg_names.name}, {args})'
@@ -245,7 +245,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyBuildValueNode(self, expr):
         name  = 'Py_BuildValue'
         flags = expr.flags
-        args  = ', '.join(['{}'.format(self._print(a)) for a in expr.args])
+        args  = ', '.join(self._print(a) for a in expr.args)
         #to change for args rank 1 +
         if expr.args:
             code = f'(*{name}("{flags}", {args}))'
@@ -254,10 +254,10 @@ class CWrapperCodePrinter(CCodePrinter):
         return code
 
     def _print_PyArgKeywords(self, expr):
-        arg_names = ',\n'.join(['"{}"'.format(a) for a in expr.arg_names] + [self._print(Nil())])
+        arg_names = ',\n'.join([f'"{a}"' for a in expr.arg_names] + [self._print(Nil())])
         return (f'static char *{expr.name}[] = {{\n'
                         f'{arg_names}\n'
-                        '}};\n')
+                        '};\n')
 
     def _print_PyModule_AddObject(self, expr):
         name = self._print(expr.name)
@@ -283,7 +283,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self._module_name  = self.get_python_name(scope, expr)
         sep = self._print(SeparatorComment(40))
 
-        function_signatures = ''.join(f'{self.function_signature(f, print_arg_names = False)};\n' for f in expr.external_funcs)
+        function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in expr.external_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
@@ -308,42 +308,36 @@ class CWrapperCodePrinter(CCodePrinter):
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
         exec_func_name = expr.exec_func.name
-        slots_def = ('static PyModuleDef_Slot {name}[] = {{\n'
-                     '{{Py_mod_exec, {exec_func}}},\n'
-                     '{{0, NULL}},\n'
-                     '}};\n').format(name = slots_name,
-                             exec_func = exec_func_name)
+        slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
+                     f'{{Py_mod_exec, {exec_func_name}}},\n'
+                     '{0, NULL},\n'
+                     '};\n')
 
         method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
-        method_def = ('static PyMethodDef {method_def_name}[] = {{\n'
-                        '{method_def_func}'
-                        '{{ NULL, NULL, 0, NULL}}\n'
-                        '}};\n'.format(method_def_name = method_def_name,
-                            method_def_func = method_def_func
-                            ))
+        method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
+                        f'{method_def_func}'
+                        '{ NULL, NULL, 0, NULL}\n'
+                        '};\n')
 
         module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
-        module_def = ('static struct PyModuleDef {module_def_name} = {{\n'
+        module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
                 'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'
-                '\"{mod_name}\",\n'
+                f'"{self._module_name}",\n'
                 '/* module documentation, may be NULL */\n'
                 'NULL,\n' #TODO: Add documentation
                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
                 '0,\n'
-                '{method_def_name},\n'
-                '{slots_name}\n'
-                '}};\n'.format(module_def_name = module_def_name,
-                    mod_name = self._module_name,
-                    method_def_name = method_def_name,
-                    slots_name = slots_name))
+                f'{method_def_name},\n'
+                f'{slots_name}\n'
+                '};\n')
 
         exec_func = self._print(expr.exec_func)
 
         init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
                 'import_array();\n'
                 f'return PyModuleDef_Init(&{module_def_name});\n'
-                '}}\n')
+                '}\n')
 
         # Print imports last to be sure that all additional_imports have been collected
         for i in expr.imports:
