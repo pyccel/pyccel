@@ -789,7 +789,7 @@ class CToPythonWrapper(Wrapper):
         self.scope.insert_variable(c_res)
 
         python_res = self._python_object_map[expr]
-        body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)]))]
+        body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
@@ -822,7 +822,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(c_res)
 
         python_res = self._python_object_map[expr]
-        body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [ObjectAddress(c_res)])))
+        body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
@@ -831,6 +831,9 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_Variable(self, expr):
         wrapper_function = C_to_Python(expr)
+
+        if expr.rank > 0:
+            self._wrapping_arrays = True
 
         py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
 
