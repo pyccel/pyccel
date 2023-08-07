@@ -36,6 +36,9 @@ __all__ = (
 #
 # --------- CLASSES -----------
 #
+    'PyFunctionDef',
+    'PyInterface',
+    'PyModule',
     'PyccelPyObject',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',

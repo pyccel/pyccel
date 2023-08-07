@@ -16,11 +16,13 @@ from pyccel.ast.datatypes import DataType, NativeInteger
 from pyccel.ast.variable import Variable
 
 __all__ = (
+    'BindCArrayVariable',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
     'BindCModule',
     'BindCPointer',
+    'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
 )
@@ -523,6 +525,7 @@ class C_F_Pointer(Basic):
         return self._shape
 
 class BindCVariable(Variable):
+    __slots__ = ()
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -535,17 +538,12 @@ class BindCVariable(Variable):
         return self._name
 
 class BindCArrayVariable(Variable):
-    __slots__ = ('_name', '_wrapper_function', '_original_variable')
+    __slots__ = ('_wrapper_function', '_original_variable')
     _attribute_nodes = ('_wrapper_function', '_original_variable')
     def __init__(self, *args, wrapper_function, original_variable, **kwargs):
-        self._name = original_variable.name
         self._original_variable = original_variable
         self._wrapper_function = wrapper_function
         super().__init__(*args, **kwargs)
-
-    @property
-    def name(self):
-        return self._name
 
     @property
     def original_variable(self):
