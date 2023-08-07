@@ -2227,7 +2227,9 @@ class ConstructorCall(DottedFunctionCall):
         A list of arguments.
 
     cls_variable : CustomDataType, optional
-        An instance of `CustomDataType` representing the class variable associated with the constructor.
+        The variable on the left-hand side of an assignment,
+        where the right-hand side is a constructor call.
+        Used to store data inside the class, set during object creation.
     """
     __slots__ = ('_cls_variable',)
     _attribute_nodes = ()
