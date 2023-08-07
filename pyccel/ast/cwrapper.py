@@ -397,15 +397,17 @@ def C_to_Python(c_object):
             cast_function = 'fortran_ndarray_to_pyarray'
         else:
             cast_function = 'ndarray_to_pyarray'
+        memory_handling = 'stack'
     else:
         try :
             cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+        memory_handling = 'alias'
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling='alias'))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
