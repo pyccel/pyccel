@@ -11,6 +11,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
+from pyccel.ast.bind_c import BindCArrayVariable
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
@@ -178,9 +179,8 @@ class FortranToCWrapper(Wrapper):
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
         interfaces = [self._wrap(f) for f in expr.interfaces]
         classes = [self._wrap(f) for f in expr.classes]
-        variable_getters = [self._wrap(v) for v in expr.variables if not v.is_private]
-        trivial_variables = [v.clone(v.name, new_class = BindCVariable) for v,g in zip(expr.variables, variable_getters) if isinstance(g, EmptyNode)]
-        variable_getters = [v for v in variable_getters if not isinstance(v, EmptyNode)]
+        variables = [self._wrap(v) for v in expr.variables if not v.is_private]
+        variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]
         imports = [Import(expr.name, target = expr, mod=expr)]
 
         name = mod_scope.get_new_name(f'bind_c_{expr.name.target}')
@@ -188,7 +188,7 @@ class FortranToCWrapper(Wrapper):
 
         self.exit_scope()
 
-        return BindCModule(name, trivial_variables, funcs, variable_wrappers = variable_getters,
+        return BindCModule(name, variables, funcs, variable_wrappers = variable_getters,
                 init_func = init_func, free_func = free_func,
                 interfaces = interfaces, classes = classes,
                 imports = imports, original_module = expr,
@@ -422,7 +422,7 @@ class FortranToCWrapper(Wrapper):
             the wrapping module to expose the variable.
         """
         if expr.rank == 0 and expr.dtype in NativeNumeric:
-            return EmptyNode()
+            return expr.clone(expr.name, new_class = BindCVariable)
         else:
             scope = self.scope
             func_name = scope.get_new_name('bind_c_'+expr.name.lower())
@@ -453,4 +453,5 @@ class FortranToCWrapper(Wrapper):
                           imports   = [import_mod],
                           scope = func_scope,
                           original_function = expr)
-            return func
+            return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
+                                original_variable = expr)

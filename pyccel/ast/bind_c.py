@@ -531,5 +531,26 @@ class BindCVariable(Variable):
         return self._name.lower()
 
     @property
-    def python_name(self):
+    def indexed_name(self):
         return self._name
+
+class BindCArrayVariable(Variable):
+    __slots__ = ('_name', '_wrapper_function', '_original_variable')
+    _attribute_nodes = ('_wrapper_function', '_original_variable')
+    def __init__(self, *args, wrapper_function, original_variable, **kwargs):
+        self._name = original_variable.name
+        self._original_variable = original_variable
+        self._wrapper_function = wrapper_function
+        super().__init__(*args, **kwargs)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def original_variable(self):
+        return self._original_variable
+
+    @property
+    def wrapper_function(self):
+        return self._wrapper_function
