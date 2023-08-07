@@ -774,6 +774,29 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_FunctionDefArgument(self, expr):
         """
+        Get the code which translates a Python `FunctionDefArgument` to a C-compatible `Variable`.
+
+        Get the code necessary to transform a Variable passed as an argument in Python, from an object with
+        datatype `PyccelPyObject` to a Variable that can be used in C code.
+
+        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
+
+        The necessary steps are:
+        - Create a variable to store the C-compatible result.
+        - Initialise the variable to any provided default value.
+        - Cast the Python object to the C object using utility functions.
+        - Raise any useful errors (this is not necessary if the FunctionDef is in an interface as errors are
+            raised while determining which function to call).
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the C function.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the `PyccelPyObject` to a C-compatible variable.
         """
 
         collect_arg = self._python_object_map[expr]
@@ -833,22 +856,48 @@ class CToPythonWrapper(Wrapper):
         return body
 
     def _wrap_BindCFunctionDefArgument(self, expr):
+        """
+        Get the code which translates a Python `FunctionDefArgument` to a C-compatible `Variable`.
+
+        Get the code necessary to transform a Variable passed as an argument in Python, from an object with
+        datatype `PyccelPyObject` to a Variable that can be used in C code to call code written in Fortran.
+
+        This function calls the more general self._wrap_FunctionDefArgument, however some additional
+        steps are necessary to handle arrays. In this case the arguments passed to the Fortran function are
+        not the same as the C-compatible arguments so they must also be created and initialised.
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the C function.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the `PyccelPyObject` to a C-compatible variable.
+        """
         body = self._wrap_FunctionDefArgument(expr)
 
         orig_var = expr.original_function_argument_variable
 
         if orig_var.rank:
+            # Create variable to hold raw data pointer
             arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
+            # Create variables for the shapes and strides
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
+
+            # Add variables to scope
             self.scope.insert_variable(arg_var, expr.var.name)
             for v,s in zip(shape_vars, expr.shape):
                 self.scope.insert_variable(v,s.name)
             for v,s in zip(stride_vars, expr.strides):
                 self.scope.insert_variable(v,s.name)
 
+            # Get the C-compatible variable created in self._wrap_FunctionDefArgument
             c_arg = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
 
+            # Unpack the C-compatible variable
             body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
             body.extend(Assign(s, FunctionCall(array_get_dim, [c_arg, i])) for i,s in enumerate(shape_vars))
             if orig_var.order == 'C':
@@ -859,25 +908,79 @@ class CToPythonWrapper(Wrapper):
         return body
 
     def _wrap_FunctionDefResult(self, expr):
+        """
+        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
+
+        Get the code necessary to transform a Variable returned from a C-compatible function to an object with
+        datatype `PyccelPyObject`.
+
+        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
+
+        The necessary steps are:
+        - Create a variable to store the C-compatible result.
+        - Cast the C object to the Python object using utility functions.
+        - Deallocate any unused memory (e.g. shapes of a C array).
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the C function.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the variable to a `PyccelPyObject`.
+        """
 
         orig_var = expr.var
 
+        # Create a variable to store the C-compatible result.
         if orig_var.is_ndarray:
+            # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
         else:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
         self.scope.insert_variable(c_res)
 
+        # Get the object with datatype PyccelPyObject
         python_res = self._python_object_map[expr]
+
+        # Cast from C to Python
         body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
 
+        # Deallocate any unused memory
         if orig_var.rank:
             body.append(Deallocate(c_res))
 
         return body
 
     def _wrap_BindCFunctionDefResult(self, expr):
+        """
+        Get the code which translates a C-compatible `Variable` to a Python `FunctionDefResult`.
+
+        Get the code necessary to transform a Variable returned from a C-compatible function written in
+        Fortran to an object with datatype `PyccelPyObject`.
+
+        The relevant `PyccelPyObject` is collected from `self._python_object_map`.
+
+        The necessary steps are:
+        - Create a variable to store the C-compatible result.
+        - For arrays also create variables for the Fortran-compatible results.
+        - If necessary, pack the Fortran-compatible results into a C-compatible array.
+        - Cast the Python object to the C object using utility functions.
+        - Deallocate any unused memory (e.g. shapes of a C array).
+
+        Parameters
+        ----------
+        expr : FunctionDefArgument
+            The argument of the C function.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the variable to a `PyccelPyObject`.
+        """
 
         orig_var = expr.original_function_result_variable
 
@@ -912,18 +1015,63 @@ class CToPythonWrapper(Wrapper):
         return body
 
     def _wrap_Variable(self, expr):
-        wrapper_function = C_to_Python(expr)
+        """
+        Get the code which translates a C-compatible module variable to an object with datatype `PyccelPyObject`.
 
+        Get the code which translates a C-compatible module variable to an object with datatype `PyccelPyObject`.
+        This new object is saved into self._python_object_map. The translation is achieved using utility
+        functions.
+
+        Parameters
+        ----------
+        expr : Variable
+            The module variable.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the Variable to a Python-compatible variable.
+        """
+
+        # Ensure that cwrapper_ndarrays is imported
         if expr.rank > 0:
             self._wrapping_arrays = True
 
+        # Create the resulting Variable with datatype `PyccelPyObject`
         py_equiv = self.scope.get_temporary_variable(PyccelPyObject(), memory_handling='alias')
-
+        # Save the Variable so it can be located later
         self._python_object_map[expr] = py_equiv
 
+        # Cast the C variable into a Python variable
+        wrapper_function = C_to_Python(expr)
         return [AliasAssign(py_equiv, FunctionCall(wrapper_function, [expr]))]
 
     def _wrap_BindCArrayVariable(self, expr):
+        """
+        Get the code which translates a Fortran array module variable to an object with datatype `PyccelPyObject`.
+
+        Get the code which translates a Fortran array module variable to an object with datatype `PyccelPyObject`
+        which can be used as a Python module variable. This new object is saved into self._python_object_map.
+        Fortran arrays are not compatible with C, but objects of type `BindCArrayVariable` contain wrapper
+        functions which can be used to retrieve C-compatible variables.
+
+        The necessary steps are:
+        - Create the variables necessary to retrieve array objects from Fortran.
+        - Call the bind c wrapper function to initialise these objects.
+        - Pack the results into a C-compatible `ndarray`.
+        - Use `self._wrap_Variable` to get the object with datatype `PyccelPyObject`.
+        - Correct the key in self._python_object_map initialised by `self._wrap_Variable`.
+
+        Parameters
+        ----------
+        expr : BindCArrayVariable
+            The array module variable.
+
+        Returns
+        -------
+        list of pyccel.ast.basic.Basic
+            The code which translates the Variable to a Python-compatible variable.
+        """
         v = expr.original_variable
 
         # Get pointer to store raw array data
