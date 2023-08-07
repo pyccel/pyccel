@@ -813,7 +813,8 @@ class CToPythonWrapper(Wrapper):
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             # Save so we can find by iterating over func.results
             self.scope.insert_variable(arg_var, expr.var.name)
-            [self.scope.insert_variable(v,s.name) for v,s in zip(shape_vars, expr.shape)]
+            for v,s in zip(shape_vars, expr.shape):
+                self.scope.insert_variable(v,s.name)
             # Save so we can find by iterating over func.bind_c_results
             self.scope.insert_variable(c_res, orig_var.name)
 
