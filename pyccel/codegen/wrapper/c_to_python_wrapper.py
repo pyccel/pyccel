@@ -244,7 +244,7 @@ class CToPythonWrapper(Wrapper):
             dtype = str(arg.dtype)
             prec  = get_final_precision(arg)
             try :
-                 type_ref = numpy_dtype_registry[(dtype, prec)]
+                type_ref = numpy_dtype_registry[(dtype, prec)]
             except KeyError:
                 errors.report(f"Can't check the type of an array of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
