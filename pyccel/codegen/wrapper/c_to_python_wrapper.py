@@ -10,6 +10,7 @@ which creates an interface exposing C code to Python.
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule
+from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
@@ -23,7 +24,7 @@ from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeFloat, NativeComplex
-from pyccel.ast.datatypes     import NativeVoid
+from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, array_type_check
@@ -422,7 +423,8 @@ class CToPythonWrapper(Wrapper):
                 continue
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
-            var_name = LiteralString(getattr(v, 'python_name', v.name))
+            name = getattr(v, 'indexed_name', v.name)
+            var_name = LiteralString(self.scope.get_python_name(name))
             add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
             if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                             [Return([PyccelUnarySub(LiteralInteger(1))])]))
@@ -493,10 +495,11 @@ class CToPythonWrapper(Wrapper):
 
         external_funcs = []
         for v in expr.variable_wrappers:
-            external_funcs.append(FunctionDef(v.name, v.arguments, v.results, [], is_external = True, scope = Scope()))
+            f = v.wrapper_function
+            external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
 
         for f in expr.funcs:
-            external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_external = True, scope = Scope()))
+            external_funcs.append(FunctionDef(f.name.lower(), f.arguments, f.results, [], is_header = True, scope = Scope()))
         pymod.external_funcs = external_funcs
         return pymod
 
@@ -840,3 +843,35 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[expr] = py_equiv
 
         return [AliasAssign(py_equiv, FunctionCall(wrapper_function, [expr]))]
+
+    def _wrap_BindCArrayVariable(self, expr):
+        v = expr.original_variable
+
+        # Get pointer to store raw array data
+        var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
+                name = v.name + '_data', memory_handling = 'alias')
+        # Create variables to store the shape of the array
+        shape = [self.scope.get_temporary_variable(NativeInteger(),
+                v.name+'_size') for _ in range(v.rank)]
+        # Get the bind_c function which wraps a fortran array and returns c objects
+        var_wrapper = expr.wrapper_function
+        # Call bind_c function
+        call = Assign(PythonTuple(ObjectAddress(var), *shape), FunctionCall(var_wrapper, ()))
+
+        # Create ndarray to store array data
+        nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
+                name = v.name, memory_handling = 'alias')
+        alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
+        # Save raw_data into ndarray to obtain useable pointer
+        set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
+                memory_handling = 'alias', lhs=nd_var), var)
+
+        # Save the ndarray to vars_to_wrap to be handled as if it came from C
+        body = [call, alloc, set_data] + self._wrap_Variable(nd_var)
+
+        # Correct self._python_object_map key
+        py_equiv = self._python_object_map.pop(nd_var)
+        self._python_object_map[expr] = py_equiv
+
+        return body
+
