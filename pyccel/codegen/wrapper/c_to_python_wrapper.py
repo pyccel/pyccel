@@ -15,7 +15,7 @@ from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionC
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, AsName, Declare
+from pyccel.ast.core          import FunctionAddress, Declare
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -23,11 +23,10 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject
 from pyccel.ast.c_concepts    import ObjectAddress
-from pyccel.ast.datatypes     import NativeFloat, NativeComplex
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, array_type_check
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
