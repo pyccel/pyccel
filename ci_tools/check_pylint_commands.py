@@ -19,7 +19,8 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('.*/syntax/.*'):['pointless-statement','undefined-variable'],
                             re.compile('tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
-                            re.compile('tests/semantic/scripts/calls.py'):['unused-variable']}
+                            re.compile('tests/semantic/scripts/calls.py'):['unused-variable'],
+                            re.compile('tests/pyccel/scripts/classes/classes_1.py'):['no-self-argument']}
 
 def run_pylint(file, flag, messages):
     """
