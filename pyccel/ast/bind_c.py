@@ -525,19 +525,57 @@ class C_F_Pointer(Basic):
         return self._shape
 
 class BindCVariable(Variable):
+    """
+    A class which wraps a compatible variable from Fortran to make it available in C.
+
+    A class which wraps a compatible variable from Fortran to make it available in C.
+    A compatible variable is a variable which can be exposed to C simply using
+    iso_c_binding (i.e. no wrapper function is required).
+    """
     __slots__ = ()
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
     @property
     def name(self):
+        """
+        The name of the external variable that should be printed in C.
+
+        The name of the external variable that should be printed in C.
+        In order to be compatible with Fortran the name must be printed
+        in lower case letters.
+        """
         return self._name.lower()
 
     @property
     def indexed_name(self):
+        """
+        The name under which the variable is indexed in the scope.
+
+        The name under which the variable is indexed in the scope. This is
+        important in order to be able to collect the original Python name
+        used by the user in case of collisions.
+        """
         return self._name
 
 class BindCArrayVariable(Variable):
+    """
+    A class which wraps an array from Fortran to make it available in C.
+
+    A class which wraps an array from Fortran to make it available in C.
+
+    Parameters
+    ----------
+    *args : tuple
+        See Variable.
+
+    wrapper_function : FunctionDef
+        The function which can be used to access the array.
+
+    original_variable : Variable
+        The original variable in the Fortran code.
+
+    **kwargs : dict
+        See Variable.
+    """
     __slots__ = ('_wrapper_function', '_original_variable')
     _attribute_nodes = ('_wrapper_function', '_original_variable')
     def __init__(self, *args, wrapper_function, original_variable, **kwargs):
@@ -547,8 +585,22 @@ class BindCArrayVariable(Variable):
 
     @property
     def original_variable(self):
+        """
+        The original variable in the Fortran code.
+
+        The original variable in the Fortran code. This is important in
+        order to access the correct type and other details about the
+        Variable.
+        """
         return self._original_variable
 
     @property
     def wrapper_function(self):
+        """
+        The function which can be used to access the array.
+
+        The function which can be used to access the array. The function
+        must return the pointer to the raw data and information about
+        the shape.
+        """
         return self._wrapper_function
