@@ -21,7 +21,7 @@ from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
-from pyccel.ast.cwrapper      import PyModule_AddObject
+from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
@@ -753,6 +753,8 @@ class CToPythonWrapper(Wrapper):
         else:
             res = self.get_new_PyObject("result")
             body.append(AliasAssign(res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
+            for r in python_result_variables:
+                body.append(FunctionCall(Py_DECREF, [r]))
             func_results = [FunctionDefResult(res)]
         body.append(Return([res]))
 
@@ -771,6 +773,8 @@ class CToPythonWrapper(Wrapper):
         return function
 
     def _wrap_FunctionDefArgument(self, expr):
+        """
+        """
 
         collect_arg = self._python_object_map[expr]
         in_interface = len(expr.get_user_nodes(Interface)) > 0
