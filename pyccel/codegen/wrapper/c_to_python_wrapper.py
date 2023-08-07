@@ -364,31 +364,31 @@ class CToPythonWrapper(Wrapper):
 
     def _get_untranslatable_function(self, name, scope, original_function, error_msg):
         """
-         Create code for a function complaining about an object which cannot be wrapped.
+        Create code for a function complaining about an object which cannot be wrapped.
 
-         Certain functions are not handled in the wrapper (e.g. private),
-         This creates a wrapper function which raises NotImplementedError
-         exception and returns NULL.
+        Certain functions are not handled in the wrapper (e.g. private),
+        This creates a wrapper function which raises NotImplementedError
+        exception and returns NULL.
 
-         Parameters
-         ----------
-         name : str
-             The name of the generated function.
+        Parameters
+        ----------
+        name : str
+            The name of the generated function.
 
-         scope : Scope
-             The scope of the generated function.
+        scope : Scope
+            The scope of the generated function.
 
         original_function : FunctionDef
-            The function we were trying to wrap.
+           The function we were trying to wrap.
 
-         error_msg : str
-             The message to be raised in the NotImplementedError.
+        error_msg : str
+            The message to be raised in the NotImplementedError.
 
-         Returns
-         -------
-         PyFunctionDef
-             The new function which raises the error.
-         """
+        Returns
+        -------
+        PyFunctionDef
+            The new function which raises the error.
+        """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
         func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,

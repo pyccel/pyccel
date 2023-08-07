@@ -58,7 +58,7 @@ __all__ = (
 #-------------------------------------------------------------------
 class PyccelPyObject(DataType):
     """ Datatype representing a PyObject which is the
-    class used to hold python objects"""
+    class used to hold Python objects"""
     __slots__ = ()
     _name = 'pyobject'
 
@@ -103,20 +103,24 @@ class PyArgKeywords(Basic):
 #-------------------------------------------------------------------
 class PyArg_ParseTupleNode(Basic):
     """
-    Represents a call to the function from Python.h which collects the expected arguments
+    Represents a call to the function `PyArg_ParseTupleNode`.
+
+    Represents a call to the function `PyArg_ParseTupleNode` from `Python.h`.
+    This function collects the expected arguments from `self`, `args`, `kwargs`
+    and packs them into variables with datatype `PyccelPyObject`.
 
     Parameters
     ----------
-    python_func_args: Variable
-        Args provided to the function in python
-    python_func_kwargs: Variable
-        Kwargs provided to the function in python
-    c_func_args: list of Variable
-        List of expected arguments. This helps determine the expected output types
-    parse_args: list of Variable
-        List of arguments into which the result will be collected
+    python_func_args : Variable
+        Args provided to the function in Python.
+    python_func_kwargs : Variable
+        Kwargs provided to the function in Python.
+    c_func_args : list of Variable
+        List of expected arguments. This helps determine the expected output types.
+    parse_args : list of Variable
+        List of arguments into which the result will be collected.
     arg_names : list of str
-        A list of the names of the function arguments
+        A list of the names of the function arguments.
     """
     __slots__ = ('_pyarg','_pykwarg','_parse_args','_arg_names','_flags')
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
@@ -178,7 +182,7 @@ class PyArg_ParseTupleNode(Basic):
     @property
     def flags(self):
         """ The flags indicating the types of the objects to
-        be collected from the python arguments passed to the
+        be collected from the Python arguments passed to the
         function
         """
         return self._flags
@@ -303,6 +307,7 @@ class PyModule(Module):
         A list of external functions.
 
     declarations : iterable
+        Any declarations of (external) variables which should be made in the module.
 
     **kwargs : dict
         See Module.
@@ -426,6 +431,13 @@ class PyInterface(Interface):
 
     original_interface : Interface
         The interface being wrapped.
+
+    **kwargs : dict
+        See Interface.
+
+    See Also
+    --------
+    Interface : The super class.
     """
     __slots__ = ('_interface_func', '_type_check_func', '_original_interface')
     _attribute_nodes = Interface._attribute_nodes + ('_interface_func', '_type_check_func',

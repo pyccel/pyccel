@@ -443,8 +443,24 @@ class BindCVariable(Variable):
     A class which wraps a compatible variable from Fortran to make it available in C.
     A compatible variable is a variable which can be exposed to C simply using
     iso_c_binding (i.e. no wrapper function is required).
+
+    Parameters
+    ----------
+    *args : tuple
+        See Variable.
+
+    **kwargs : dict
+        See Variable.
+
+    See Also
+    --------
+    Variable : The super class.
     """
-    __slots__ = ()
+    __slots__ = ('_f_name',)
+
+    def __init__(self, *args, **kwargs):
+        self._f_name = self._name.lower()
+        super().__init__(*args, **kwargs)
 
     @property
     def name(self):
@@ -455,7 +471,7 @@ class BindCVariable(Variable):
         In order to be compatible with Fortran the name must be printed
         in lower case letters.
         """
-        return self._name.lower()
+        return self._f_name
 
     @property
     def indexed_name(self):
@@ -489,6 +505,10 @@ class BindCArrayVariable(Variable):
 
     **kwargs : dict
         See Variable.
+
+    See Also
+    --------
+    Variable : The super class.
     """
     __slots__ = ('_wrapper_function', '_original_variable')
     _attribute_nodes = ('_wrapper_function', '_original_variable')

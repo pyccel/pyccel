@@ -2697,13 +2697,24 @@ class FunctionDef(ScopedNode):
 
     def clone(self, newname, **new_kwargs):
         """
-        Create an identical FunctionDef with name
-        newname.
+        Create an almost identical FunctionDef with name `newname`.
+
+        Create an almost identical FunctionDef with name `newname`.
+        Additional parameters can be passed to alter the resulting
+        FunctionDef.
 
         Parameters
         ----------
-        newname: str
-            new name for the FunctionDef
+        newname : str
+            New name for the FunctionDef.
+
+        **new_kwargs : dict
+            Any new keyword arguments to be passed to the new FunctionDef.
+
+        Returns
+        -------
+        FunctionDef
+            The clone of the function definition.
         """
         args, kwargs = self.__getnewargs__()
         kwargs.update(new_kwargs)
