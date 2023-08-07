@@ -311,8 +311,8 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_exec_func', '_declarations')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_exec_func', '_declarations')
+    __slots__ = ('_external_funcs', '_declarations')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
     def __init__(self, *args, external_funcs = (), declarations = (), **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations

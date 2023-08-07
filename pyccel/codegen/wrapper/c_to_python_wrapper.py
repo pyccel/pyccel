@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule
+from pyccel.ast.bind_c        import BindCModule, BindCVariable
 from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -402,6 +402,24 @@ class CToPythonWrapper(Wrapper):
         return function
 
     def _build_module_exec_function(self, expr):
+        """
+        Build the function that will be called when the module is first imported.
+
+        Build the function that will be called when the module is first imported.
+        This function must call any initialisation function of the underlying
+        module and must add any variables to the module variable.
+
+        Parameters
+        ----------
+        expr : Module
+            The module of interest.
+
+        Returns
+        -------
+        FunctionDef
+            The initialisation function.
+        """
+        # Initialise the scope
         func_name = self.scope.get_new_name(expr.name+'_exec_func')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
@@ -409,14 +427,17 @@ class CToPythonWrapper(Wrapper):
         for v in expr.variables:
             func_scope.insert_symbol(v.name)
 
+        # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         result_var = self.scope.get_temporary_variable('int', precision=4)
 
+        # Call the initialisation function
         if expr.init_func:
             body = [FunctionCall(expr.init_func, [])]
         else:
             body = []
 
+        # Save module variables to the module variable
         for v in expr.variables:
             if v.is_private:
                 continue
@@ -487,24 +508,71 @@ class CToPythonWrapper(Wrapper):
                         init_func = exec_func)
 
     def _wrap_BindCModule(self, expr):
+        """
+        Build a `PyModule` from a `BindCModule`.
+
+        Create a `PyModule` which wraps a C-compatible `BindCModule`. This function calls the
+        more general `_wrap_Module` however additional steps are required to ensure that the
+        Fortran functions and variables are declared in C.
+
+        Parameters
+        ----------
+        expr : Module
+            The module which can be called from C.
+
+        Returns
+        -------
+        PyModule
+            The module which can be called from Python.
+
+        """
         pymod = self._wrap_Module(expr)
+
+        # Add declarations for C-compatible variables
         decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True, external = True) \
-                                    for v in expr.variables if not v.is_private and v.rank == 0]
+                                    for v in expr.variables if not v.is_private and isinstance(v, BindCVariable)]
         pymod.declarations = decs
 
         external_funcs = []
+        # Add external functions for functions wrapping array variables
         for v in expr.variable_wrappers:
             f = v.wrapper_function
             external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
 
+        # Add external functions for normal functions
         for f in expr.funcs:
             external_funcs.append(FunctionDef(f.name.lower(), f.arguments, f.results, [], is_header = True, scope = Scope()))
         pymod.external_funcs = external_funcs
+
         return pymod
 
     def _wrap_Interface(self, expr):
         """
+        Build a `PyInterface` from an `Interface`.
+
+        Create a `PyInterface` which wraps a C-compatible `Interface`. The `PyInterface`
+        should take three arguments (`self`, `args`, and `kwargs`) and return a
+        `PyccelPyObject`. The arguments are unpacked into multiple `PyccelPyObject`s
+        which are passed to `PyFunctionDef`s describing each of the internal
+        `FunctionDef` objects. The appropriate `PyFunctionDef` is chosen using an
+        additional function which calculates an integer type_indicator.
+
+        Parameters
+        ----------
+        expr : Interface
+            The interface which can be called from C.
+
+        Returns
+        -------
+        PyInterface
+            The interface which can be called from Python.
+
+        See Also
+        --------
+        CToPythonWrapper._get_type_check_function : The function which defines the calculation
+            of the type_indicator.
         """
+        # Initialise the scope
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
@@ -514,9 +582,12 @@ class CToPythonWrapper(Wrapper):
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
             func_scope.insert_symbol(a.var.name)
+
+        # Create necessary arguments
         python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
         func_args, body = self._unpack_python_args(python_args)
 
+        # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
 
         type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
@@ -528,11 +599,14 @@ class CToPythonWrapper(Wrapper):
         type_check_name = self.scope.get_new_name(expr.name+'_type_check')
         type_check_func, argument_type_flags = self._get_type_check_function(type_check_name, python_arg_objs, original_funcs)
 
+        self.scope = func_scope
+        # Build the body of the function
         body.append(Assign(type_indicator, FunctionCall(type_check_func, python_arg_objs)))
 
         functions = []
         if_sections = []
         for func, index in argument_type_flags.items():
+            # Add an IfSection calling the appropriate function if the type_indicator matches the index
             wrapped_func = self._python_object_map[func]
             if_sections.append(IfSection(PyccelEq(type_indicator, LiteralInteger(index)),
                                 [Return([FunctionCall(wrapped_func, python_arg_objs)])]))
@@ -541,6 +615,7 @@ class CToPythonWrapper(Wrapper):
                     [FunctionCall(PyErr_SetString, [PyTypeError, "Unexpected type combination"]),
                      Return([Nil()])]))
         body.append(If(*if_sections))
+        self.exit_scope()
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
