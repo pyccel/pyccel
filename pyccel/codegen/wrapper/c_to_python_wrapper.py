@@ -538,7 +538,7 @@ class CToPythonWrapper(Wrapper):
                                 [Return([FunctionCall(wrapped_func, python_arg_objs)])]))
             functions.append(wrapped_func)
         if_sections.append(IfSection(LiteralTrue(),
-                    [FunctionCall(PyErr_SetString, [PyTypeError, f"Unexpected type combination"]),
+                    [FunctionCall(PyErr_SetString, [PyTypeError, "Unexpected type combination"]),
                      Return([Nil()])]))
         body.append(If(*if_sections))
 
