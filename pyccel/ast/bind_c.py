@@ -425,6 +425,13 @@ class BindCModule(Module):
 
     @property
     def declarations(self):
+        """
+        Get the declarations of all module variables.
+
+        In the case of a BindCModule no variables should be declared. Basic variables
+        are used directly from the original module and more complex variables require
+        wrapper functions.
+        """
         return ()
 
 # =======================================================================================
