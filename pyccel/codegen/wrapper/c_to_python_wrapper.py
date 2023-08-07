@@ -297,6 +297,13 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
+        name : str
+            The name of the function to be generated.
+
+        args : iterable of Variable
+            A list containing the variables of datatype `PyccelPyObject` describing the
+            arguments that were passed to the function from Python.
+
         funcs : list of FunctionDefs
             The functions in the Interface.
 
@@ -304,6 +311,7 @@ class CToPythonWrapper(Wrapper):
         -------
         func : FunctionDef
             The function which determines the key identifying the relevant function.
+
         argument_type_flags : dict
             A dictionary whose keys are the functions and whose values are the integer keys
             which indicate that the function should be chosen.
