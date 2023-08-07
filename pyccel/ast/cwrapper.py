@@ -57,8 +57,12 @@ __all__ = (
 #                        Python DataTypes
 #-------------------------------------------------------------------
 class PyccelPyObject(DataType):
-    """ Datatype representing a PyObject which is the
-    class used to hold Python objects"""
+    """
+    Datatype representing a `PyObject`.
+
+    Datatype representing a `PyObject` which is the
+    class used to hold Python objects in `Python.h`.
+    """
     __slots__ = ()
     _name = 'pyobject'
 
@@ -181,9 +185,11 @@ class PyArg_ParseTupleNode(Basic):
 
     @property
     def flags(self):
-        """ The flags indicating the types of the objects to
-        be collected from the Python arguments passed to the
-        function
+        """
+        The flags indicating the types of the objects.
+
+        The flags indicating the types of the objects to be collected from
+        the Python arguments passed to the function.
         """
         return self._flags
 
@@ -297,6 +303,12 @@ class PyModule_AddObject(PyccelAstNode):
 class PyModule(Module):
     """
     Class to hold a module which is accessible from Python.
+
+    Class to hold a module which is accessible from Python. This class
+    adds external functions and external declarations to the basic
+    Module. However it's main utility is in order to differentiate
+    itself such that a different `_print` function can be implemented
+    to handle it.
 
     Parameters
     ----------
