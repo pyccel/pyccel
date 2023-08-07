@@ -3246,7 +3246,7 @@ class SemanticParser(BasicParser):
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.scope.find(cls_name, 'classes')
-                var       = Variable(dt, str(arg), memory_handling='alias', cls_base=cls_base)
+                var       = Variable(dt, str(arg), cls_base=cls_base)
                 self.scope.insert_variable(var)
 
             if arguments:
