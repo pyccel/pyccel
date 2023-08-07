@@ -196,6 +196,31 @@ class CWrapperCodePrinter(CCodePrinter):
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+        This function overrides CCodePrinter._handle_is_operator to add the
+        handling of `Py_None`.
+
+        Parameters
+        ----------
+        Op : str
+            The C operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
         if expr.rhs is Py_None:
             lhs = ObjectAddress(expr.lhs)
             rhs = ObjectAddress(expr.rhs)

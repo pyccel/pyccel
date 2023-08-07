@@ -2046,6 +2046,29 @@ class CCodePrinter(CodePrinter):
         return 'conj({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+
+        Parameters
+        ----------
+        Op : str
+            The C operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
 
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
