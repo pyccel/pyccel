@@ -345,7 +345,7 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and (a.is_argument or a.get_user_nodes(FunctionDef)):
+        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
             return True
 
         if not isinstance(a, Variable):
