@@ -3241,7 +3241,7 @@ class SemanticParser(BasicParser):
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
 
-            if cls_name and str(arguments[0].name) is not None:
+            if cls_name:
                 arg       = arguments[0]
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
