@@ -27,12 +27,14 @@ def get_unique_test_list(keys):
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     tests.discard('pr_tests')
-    result = list(tests)
     if 'coverage' in tests:
-        result.append('linux')
+        tests.add('linux')
         # Ensure coverage is last in case dependencies are ready
-        result.remove('coverage')
+        tests.discard('coverage')
+        result = list(tests)
         result.append('coverage')
+    else:
+        result = list(tests)
     return result
 
 if __name__ == '__main__':
