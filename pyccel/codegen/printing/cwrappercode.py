@@ -307,7 +307,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
-        exec_func_name = expr.exec_func.name
+        exec_func_name = expr.init_func.name
         slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
                      f'{{Py_mod_exec, {exec_func_name}}},\n'
                      '{0, NULL},\n'
@@ -332,7 +332,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 f'{slots_name}\n'
                 '};\n')
 
-        exec_func = self._print(expr.exec_func)
+        exec_func = self._print(expr.init_func)
 
         init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
                 'import_array();\n'

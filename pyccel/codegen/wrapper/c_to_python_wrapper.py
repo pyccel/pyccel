@@ -482,9 +482,9 @@ class CToPythonWrapper(Wrapper):
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, (), funcs, func_names = (), imports = imports,
+        return PyModule(original_mod.name, (), funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        exec_func = exec_func)
+                        init_func = exec_func)
 
     def _wrap_BindCModule(self, expr):
         pymod = self._wrap_Module(expr)
@@ -550,7 +550,7 @@ class CToPythonWrapper(Wrapper):
         for a in python_args:
             self._python_object_map.pop(a)
 
-        return PyInterface(func_name, interface_func, type_check_func, functions, expr)
+        return PyInterface(func_name, functions, interface_func, type_check_func, expr)
 
     def _wrap_FunctionDef(self, expr):
         """
