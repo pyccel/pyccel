@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1479: Flexible `self` Instance naming in class methods.
 -   #1455 : Make `ConstructorCall` inherit from `FunctionCall`.
 -   Updating `stdlib` files if they are modified not just accessed.
 -   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
