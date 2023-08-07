@@ -43,6 +43,7 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
+        shell: 'bash -l -eo pipefail {0}'
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies
