@@ -374,7 +374,7 @@ class FortranToCWrapper(Wrapper):
             # Create the C-compatible data pointer
             bind_var = Variable(dtype=BindCPointer(),
                                 name=scope.get_new_name('bound_'+name),
-                                is_const=True, memory_handling='alias')
+                                is_const=False, memory_handling='alias')
             scope.insert_variable(bind_var)
 
             result = BindCFunctionDefResult(bind_var, var, scope)
