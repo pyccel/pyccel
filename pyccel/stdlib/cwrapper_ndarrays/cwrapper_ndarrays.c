@@ -309,10 +309,10 @@ PyObject* ndarray_to_pyarray(t_ndarray o)
     if (o.nd == 1) {
         FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
-    else if (o->order == order_c) {
+    else if (o.order == order_c) {
         FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
-    else if (o->order == order_f) {
+    else if (o.order == order_f) {
         FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
     else {
