@@ -2,10 +2,9 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, test_dependencies
+from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys
 
-pr_test_keys = ['linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'pyccel_lint', 'spelling', 'Codacy']
+pr_test_keys = bot_pr_test_keys.copy() + ['Codacy']
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -55,8 +54,6 @@ if __name__ == '__main__':
                 if q_name == 'coverage':
                     workflow_ids = [int(r['details_url'].split('/')[-1]) for r in runs if r['conclusion'] == "success" and '(' in r['name']]
                 bot.run_test(q_name, python_version, q["id"], workflow_ids)
-            elif all(d in completed_runs for d in deps):
-                bot.GAI.update_run(q["id"], {'conclusion':'cancelled', 'status':"completed"})
 
     if pr_id != 0:
         draft = bot.is_pr_draft()

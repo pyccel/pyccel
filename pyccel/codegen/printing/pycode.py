@@ -1028,9 +1028,10 @@ class PythonCodePrinter(CodePrinter):
         return classDef
 
     def _print_ConstructorCall(self, expr):
-        cls_name = expr.func.cls_name
-        args = ', '.join(self._print(arg) for arg in expr.arguments)
-        return f"{cls_name}({args})"
+        cls_name = expr.funcdef.cls_name
+        cls_variable = expr.cls_variable
+        args = ', '.join(self._print(arg) for arg in expr.args[1:])
+        return f"{cls_variable} = {cls_name}({args})\n"
 
     def _print_Del(self, expr):
         return ''.join(f'del {var}\n' for var in expr.variables)
