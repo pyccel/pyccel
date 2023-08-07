@@ -444,7 +444,7 @@ class CCodePrinter(CodePrinter):
                     operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
         if order == "F":
-            operations += f"array_copy_data({lhs_address}, {copy_to_address}, 0);\n" + self._print(Deallocate(copy_to))
+            operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
         return operations
 
     def arrayFill(self, expr):
