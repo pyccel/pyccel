@@ -1674,9 +1674,6 @@ class CCodePrinter(CodePrinter):
         if expr.is_inline:
             return ''
 
-        if expr.is_external or expr.is_header:
-            return self.function_signature(expr)
-
         self.set_scope(expr.scope)
 
         # Reinitialise optional partners
