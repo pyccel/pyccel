@@ -12,7 +12,7 @@ from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
                            NativeComplex, NativeString)
 from .internals    import max_precision
-from .operators    import PyccelUnaryOperator, PyccelBinaryOperator
+from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
     'PyccelBitComparisonOperator',
@@ -60,7 +60,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
 #==============================================================================
 
-class PyccelBitOperator(PyccelBinaryOperator):
+class PyccelBitOperator(PyccelOperator):
     """
     Abstract superclass representing a Python bitwise operator with two arguments.
 
@@ -77,6 +77,9 @@ class PyccelBitOperator(PyccelBinaryOperator):
     _rank  = 0
     _order = None
     __slots__ = ('_dtype','_precision')
+
+    def __init__(self, arg1, arg2):
+        super().__init__(arg1, arg2)
 
     def _set_order(self):
         pass
