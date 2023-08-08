@@ -67,4 +67,3 @@ jobs:
         if: always()
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
-        shell: 'bash -l -eo pipefail {0}'
