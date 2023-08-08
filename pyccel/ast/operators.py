@@ -130,8 +130,8 @@ class PyccelOperator(PyccelAstNode):
 
     Parameters
     ----------
-    args: tuple
-        The arguments passed to the operator
+    args : tuple
+        The arguments passed to the operator.
     """
     __slots__ = ('_args', )
     _attribute_nodes = ('_args',)
@@ -175,13 +175,13 @@ class PyccelOperator(PyccelAstNode):
 
         Parameters
         ----------
-        args: tuple
-            The arguments passed to the operator
+        args : tuple
+            The arguments passed to the operator.
 
         Results
         -------
-        args: tuple
-            The arguments with the parentheses inserted
+        args : tuple
+            The arguments with the parentheses inserted.
         """
         precedence = [getattr(a, 'precedence', 17) for a in args]
 
@@ -226,12 +226,12 @@ class PyccelOperator(PyccelAstNode):
 
 class PyccelUnaryOperator(PyccelOperator):
     """ Abstract superclass representing a python
-    operator with only one argument
+    operator with only one argument.
 
     Parameters
     ----------
-    arg: PyccelAstNode
-        The argument passed to the operator
+    arg : PyccelAstNode
+        The argument passed to the operator.
     """
     __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
 
@@ -270,8 +270,8 @@ class PyccelUnary(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
-        The argument passed to the operator
+    arg : PyccelAstNode
+        The argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 14
@@ -295,8 +295,8 @@ class PyccelUnarySub(PyccelUnary):
 
     Parameters
     ----------
-    arg: PyccelAstNode
-        The argument passed to the operator
+    arg : PyccelAstNode
+        The argument passed to the operator.
     """
     __slots__ = ()
 
@@ -315,8 +315,8 @@ class PyccelNot(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
-        The argument passed to the operator
+    arg : PyccelAstNode
+        The argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 6
@@ -352,8 +352,8 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
-        The argument in the PyccelAssociativeParenthesis
+    arg : PyccelAstNode
+        The argument in the PyccelAssociativeParenthesis.
     """
     __slots__ = () # ok
     _precedence = 18
@@ -371,14 +371,14 @@ class PyccelBinaryOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
 
-    def __init__(self, arg1, arg2, simplify = False):
+    def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
 
     @classmethod
@@ -468,20 +468,20 @@ class PyccelBinaryOperator(PyccelOperator):
 #==============================================================================
 
 class PyccelArithmeticOperator(PyccelBinaryOperator):
-    """ Abstract superclass representing a python
-    arithmetic operator
+    """
+    Abstract superclass representing a python arithmetic operator.
 
     This class is necessary to handle specific precedence
-    rules for arithmetic operators
+    rules for arithmetic operators.
     I.e. to handle the error:
     Extension: Unary operator following arithmetic operator (use parentheses)
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     def _handle_precedence(self, args):
@@ -494,6 +494,8 @@ class PyccelArithmeticOperator(PyccelBinaryOperator):
 class PyccelPow(PyccelArithmeticOperator):
     """
     Class representing a call to the python exponent operator.
+
+    Class representing a call to the python exponent operator.
     I.e:
         a ** b
     is equivalent to:
@@ -501,10 +503,10 @@ class PyccelPow(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence  = 15
@@ -533,6 +535,8 @@ class PyccelPow(PyccelArithmeticOperator):
 class PyccelAdd(PyccelArithmeticOperator):
     """
     Class representing a call to the python addition operator.
+
+    Class representing a call to the python addition operator.
     I.e:
         a + b
     is equivalent to:
@@ -540,10 +544,13 @@ class PyccelAdd(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 12
@@ -574,6 +581,9 @@ class PyccelAdd(PyccelArithmeticOperator):
         else:
             return super().__new__(cls)
 
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
+
     @staticmethod
     def _handle_str_type(strs):
         dtype = NativeString()
@@ -588,6 +598,8 @@ class PyccelAdd(PyccelArithmeticOperator):
 class PyccelMul(PyccelArithmeticOperator):
     """
     Class representing a call to the python multiplication operator.
+
+    Class representing a call to the python multiplication operator.
     I.e:
         a * b
     is equivalent to:
@@ -596,9 +608,12 @@ class PyccelMul(PyccelArithmeticOperator):
     Parameters
     ----------
     arg1 : PyccelAstNode
-        The first argument passed to the operator
+        The first argument passed to the operator.
     arg2 : PyccelAstNode
-        The second argument passed to the operator
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 13
@@ -630,6 +645,8 @@ class PyccelMul(PyccelArithmeticOperator):
 class PyccelMinus(PyccelArithmeticOperator):
     """
     Class representing a call to the python subtraction operator.
+
+    Class representing a call to the python subtraction operator.
     I.e:
         a - b
     is equivalent to:
@@ -637,10 +654,13 @@ class PyccelMinus(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 12
@@ -664,6 +684,9 @@ class PyccelMinus(PyccelArithmeticOperator):
         else:
             return super().__new__(cls)
 
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
+
     def __repr__(self):
         return f'{repr(self.args[0])} - {repr(self.args[1])}'
 
@@ -671,6 +694,8 @@ class PyccelMinus(PyccelArithmeticOperator):
 
 class PyccelDiv(PyccelArithmeticOperator):
     """
+    Class representing a call to the python division operator.
+
     Class representing a call to the python division operator.
     I.e:
         a / b
@@ -680,9 +705,12 @@ class PyccelDiv(PyccelArithmeticOperator):
     Parameters
     ----------
     arg1 : PyccelAstNode
-        The first argument passed to the operator
+        The first argument passed to the operator.
     arg2 : PyccelAstNode
-        The second argument passed to the operator
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
     _precedence = 13
@@ -692,6 +720,9 @@ class PyccelDiv(PyccelArithmeticOperator):
             if (arg2 == 1):
                 return arg1
         return super().__new__(cls)
+
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
 
     @staticmethod
     def _handle_integer_type(integers):
@@ -707,6 +738,8 @@ class PyccelDiv(PyccelArithmeticOperator):
 class PyccelMod(PyccelArithmeticOperator):
     """
     Class representing a call to the python modulo operator.
+
+    Class representing a call to the python modulo operator.
     I.e:
         a % b
     is equivalent to:
@@ -715,9 +748,9 @@ class PyccelMod(PyccelArithmeticOperator):
     Parameters
     ----------
     arg1 : PyccelAstNode
-        The first argument passed to the operator
+        The first argument passed to the operator.
     arg2 : PyccelAstNode
-        The second argument passed to the operator
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 13
@@ -730,6 +763,8 @@ class PyccelMod(PyccelArithmeticOperator):
 class PyccelFloorDiv(PyccelArithmeticOperator):
     """
     Class representing a call to the python integer division operator.
+
+    Class representing a call to the python integer division operator.
     I.e:
         a // b
     is equivalent to:
@@ -738,9 +773,9 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
     Parameters
     ----------
     arg1 : PyccelAstNode
-        The first argument passed to the operator
+        The first argument passed to the operator.
     arg2 : PyccelAstNode
-        The second argument passed to the operator
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 13
@@ -751,15 +786,15 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 #==============================================================================
 
 class PyccelComparisonOperator(PyccelBinaryOperator):
-    """ Abstract superclass representing a python
-    comparison operator with two arguments
+    """
+    Abstract superclass representing a python comparison operator with two arguments.
 
     Parameters
     ----------
     arg1 : PyccelAstNode
-        The first argument passed to the operator
+        The first argument passed to the operator.
     arg2 : PyccelAstNode
-        The second argument passed to the operator
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 7
@@ -774,6 +809,8 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
 class PyccelEq(PyccelComparisonOperator):
     """
     Class representing a call to the python equality operator.
+
+    Class representing a call to the python equality operator.
     I.e:
         a == b
     is equivalent to:
@@ -781,10 +818,13 @@ class PyccelEq(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
 
@@ -794,11 +834,16 @@ class PyccelEq(PyccelComparisonOperator):
         else:
             return super().__new__(cls)
 
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
+
     def __repr__(self):
         return f'{repr(self.args[0])} == {repr(self.args[1])}'
 
 class PyccelNe(PyccelComparisonOperator):
     """
+    Class representing a call to the python inequality operator.
+
     Class representing a call to the python inequality operator.
     I.e:
         a != b
@@ -807,10 +852,13 @@ class PyccelNe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
+    simplify : bool
+        True if the expression should be simplified to be as compact/readable as
+        possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
 
@@ -820,11 +868,16 @@ class PyccelNe(PyccelComparisonOperator):
         else:
             return super().__new__(cls)
 
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
+
     def __repr__(self):
         return f'{repr(self.args[0])} != {repr(self.args[1])}'
 
 class PyccelLt(PyccelComparisonOperator):
     """
+    Class representing a call to the python less than operator.
+
     Class representing a call to the python less than operator.
     I.e:
         a < b
@@ -833,10 +886,10 @@ class PyccelLt(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
 
@@ -846,6 +899,8 @@ class PyccelLt(PyccelComparisonOperator):
 class PyccelLe(PyccelComparisonOperator):
     """
     Class representing a call to the python less or equal operator.
+
+    Class representing a call to the python less or equal operator.
     I.e:
         a <= b
     is equivalent to:
@@ -853,10 +908,10 @@ class PyccelLe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
 
@@ -866,6 +921,8 @@ class PyccelLe(PyccelComparisonOperator):
 class PyccelGt(PyccelComparisonOperator):
     """
     Class representing a call to the python greater than operator.
+
+    Class representing a call to the python greater than operator.
     I.e:
         a > b
     is equivalent to:
@@ -873,10 +930,10 @@ class PyccelGt(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
 
@@ -886,6 +943,8 @@ class PyccelGt(PyccelComparisonOperator):
 class PyccelGe(PyccelComparisonOperator):
     """
     Class representing a call to the python greater or equal operator.
+
+    Class representing a call to the python greater or equal operator.
     I.e:
         a >= b
     is equivalent to:
@@ -893,10 +952,10 @@ class PyccelGe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
 
@@ -911,10 +970,10 @@ class PyccelBooleanOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     dtype = NativeBool()
     precision = -1
@@ -938,6 +997,8 @@ class PyccelBooleanOperator(PyccelOperator):
 class PyccelAnd(PyccelBooleanOperator):
     """
     Class representing a call to the python AND operator.
+
+    Class representing a call to the python AND operator.
     I.e:
         a and b
     is equivalent to:
@@ -945,10 +1006,10 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 5
@@ -965,6 +1026,8 @@ class PyccelAnd(PyccelBooleanOperator):
 class PyccelOr(PyccelBooleanOperator):
     """
     Class representing a call to the python OR operator.
+
+    Class representing a call to the python OR operator.
     I.e:
         a or b
     is equivalent to:
@@ -972,10 +1035,10 @@ class PyccelOr(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
-        The first argument passed to the operator
-    arg2: PyccelAstNode
-        The second argument passed to the operator
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 4
@@ -990,8 +1053,15 @@ class PyccelOr(PyccelBooleanOperator):
 #==============================================================================
 
 class PyccelIs(PyccelBooleanOperator):
+    """
+    Represents an `is` expression in the code.
 
-    """Represents a is expression in the code.
+    Parameters
+    ----------
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
 
     Examples
     --------
@@ -1037,8 +1107,15 @@ class PyccelIs(PyccelBooleanOperator):
 #==============================================================================
 
 class PyccelIsNot(PyccelIs):
+    """
+    Represents a `is not` expression in the code.
 
-    """Represents a is expression in the code.
+    Parameters
+    ----------
+    arg1 : PyccelAstNode
+        The first argument passed to the operator.
+    arg2 : PyccelAstNode
+        The second argument passed to the operator.
 
     Examples
     --------
@@ -1073,13 +1150,17 @@ class PyccelIsNot(PyccelIs):
 #==============================================================================
 
 class IfTernaryOperator(PyccelOperator):
-    """Represent a ternary conditional operator in the code, of the form (a if cond else b)
+    """
+    Represent a ternary conditional operator in the code, of the form (a if cond else b).
 
     Parameters
     ----------
-    args :
-        args : type list
-        format : condition , value_if_true, value_if_false
+    cond : PyccelAstNode
+        The condition which determines which result is returned.
+    value_if_true : PyccelAstNode
+        The value returned if the condition is true.
+    value_if_false
+        The value returned if the condition is false.
 
     Examples
     --------
