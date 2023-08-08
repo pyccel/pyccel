@@ -212,7 +212,25 @@ class SyntaxParser(BasicParser):
     #====================================================
 
     def _visit(self, stmt):
-        """Creates AST from FST."""
+        """
+        Build the AST from the AST parsed by Python.
+
+        The annotation is done by finding the appropriate function _visit_X
+        for the object expr. X is the type of the object expr. If this function
+        does not exist then the method resolution order is used to search for
+        other compatible _visit_X functions. If none are found then an error is
+        raised.
+
+        Parameters
+        ----------
+        stmt : ast.stmt
+            Object to visit of type X.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            AST object which is the syntactic equivalent of stmt.
+        """
 
         # TODO - add settings to Errors
         #      - line and column
