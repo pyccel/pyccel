@@ -237,8 +237,11 @@ class PythonComplex(PyccelAstNode):
 
     Parameters
     ----------
-    arg : PyccelAstNode
-        The argument passed to the function.
+    arg0 : PyccelAstNode
+        The first argument passed to the function (either a real or a complex).
+
+    arg1 : PyccelAstNode, default=0
+        The second argument passed to the function (the imaginary part).
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
@@ -349,6 +352,9 @@ class PythonEnumerate(Basic):
     ----------
     arg : PyccelAstNode
         The argument passed to the function.
+
+    start : PyccelAstNode
+        The start value of the enumeration index.
     """
     __slots__ = ('_element','_start')
     _attribute_nodes = ('_element','_start')
@@ -461,7 +467,15 @@ class PythonInt(PyccelAstNode):
 
 #==============================================================================
 class PythonTuple(PyccelAstNode):
-    """ Represents a call to Python's native tuple() function.
+    """
+    Represents a call to Python's native tuple() function.
+
+    Represents a call to Python's native tuple() function.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelAstNodes
+        The elements of the tuple.
     """
     __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
             '_dtype','_precision','_rank','_shape','_order')
@@ -597,11 +611,17 @@ class PythonTuple(PyccelAstNode):
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
-
     """
-    Represents a 'len' expression in the code.
-    """
+    Represents a `len` expression in the code.
 
+    Represents a call to the Python built-in function `len` which
+    determines the length of an object.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The object whose length should be deduced.
+    """
     __slots__ = ()
     name      = 'len'
     _dtype     = NativeInteger()
@@ -812,9 +832,15 @@ class PythonAbs(PyccelInternalFunction):
 
 #==============================================================================
 class PythonSum(PyccelInternalFunction):
-    """Represents a call to  python sum for code generation.
+    """
+    Represents a call to Python `sum` for code generation.
 
-    arg : list , tuple , PythonTuple, List, Variable
+    Represents a call to Python's built-in function `sum`.
+
+    Parameters
+    ----------
+    arg : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_dtype','_precision')
     name   = 'sum'
@@ -835,9 +861,15 @@ class PythonSum(PyccelInternalFunction):
 
 #==============================================================================
 class PythonMax(PyccelInternalFunction):
-    """Represents a call to  python max for code generation.
+    """
+    Represents a call to Python's built-in `max` function.
 
-    arg : list , tuple , PythonTuple, List
+    Represents a call to Python's built-in `max` function.
+
+    Parameters
+    ----------
+    *x : list, tuple, PythonTuple, PythonList
+        The arguments passed to the funciton.
     """
     __slots__ = ('_dtype','_precision')
     name   = 'max'
@@ -864,9 +896,15 @@ class PythonMax(PyccelInternalFunction):
 
 #==============================================================================
 class PythonMin(PyccelInternalFunction):
-    """Represents a call to  python min for code generation.
+    """
+    Represents a call to Python's built-in `max` function.
 
-    arg : list , tuple , PythonTuple, List, Variable
+    Represents a call to Python's built-in `max` function.
+
+    Parameters
+    ----------
+    *x : list, tuple, PythonTuple, PythonList
+        The arguments passed to the funciton.
     """
     __slots__ = ('_dtype','_precision')
     name   = 'min'
@@ -891,14 +929,17 @@ class PythonMin(PyccelInternalFunction):
 
 #==============================================================================
 class Lambda(Basic):
-    """Represents a call to python lambda for temporary functions
+    """
+    Represents a call to Python's lambda for temporary functions.
+
+    Represents a call to Python's built-in function `lambda` for temporary functions.
 
     Parameters
-    ==========
+    ----------
     variables : tuple of symbols
-                The arguments to the lambda expression
-    expr      : PyccelAstNode
-                The expression carried out when the lambda function is called
+        The arguments to the lambda expression.
+    expr : PyccelAstNode
+        The expression carried out when the lambda function is called.
     """
     __slots__ = ('_variables', '_expr')
     _attribute_nodes = ('_variables', '_expr')

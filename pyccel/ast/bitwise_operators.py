@@ -40,19 +40,36 @@ class PyccelInvert(PyccelUnaryOperator):
     Parameters
     ----------
     arg : PyccelAstNode
-        The argument passed to the operator
+        The argument passed to the operator.
     """
     __slots__ = ()
     _precedence = 14
 
-    def _calculate_dtype(self, *args):
+    def _calculate_dtype(self, arg):
+        """
+        Get the dtype and precision.
+
+        Arguments must be integers or booleans. Any booleans are cast
+        to integers.
+
+        Parameters
+        ----------
+        *args : tuple
+            The arguments passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The  datatype of the result of the operation.
+        precision : integer
+            The precision of the result of the operation.
+        """
         dtype = NativeInteger()
-        a = args[0]
-        if a.dtype not in (NativeInteger(), NativeBool()):
+        if arg.dtype not in (NativeInteger(), NativeBool()):
             raise TypeError(f'unsupported operand type(s): {args}')
 
-        self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
-        precision = a.precision
+        self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
+        precision = arg.precision
         return dtype, precision
 
     def __repr__(self):
@@ -86,7 +103,7 @@ class PyccelBitOperator(PyccelOperator):
 
     def _calculate_dtype(self, *args):
         """
-        Sets the dtype and precision.
+        Get the dtype and precision.
 
         If one argument is a string then all arguments must be strings.
 
@@ -94,6 +111,18 @@ class PyccelBitOperator(PyccelOperator):
         match the broadest type and the largest precision.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
+
+        Parameters
+        ----------
+        *args : tuple
+            The arguments passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The  datatype of the result of the operation.
+        precision : integer
+            The precision of the result of the operation.
         """
         integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
         floats    = [a for a in args if a.dtype is NativeFloat()]
