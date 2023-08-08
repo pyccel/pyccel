@@ -87,3 +87,4 @@ jobs:
         if: always()
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
+        shell: 'bash -l {0}'

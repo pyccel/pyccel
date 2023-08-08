@@ -41,7 +41,7 @@ jobs:
       - name: "Setup"
         id: token
         run: |
-          pip install jwt requests
+          python -m pip install jwt requests
           python ci_tools/setup_check_run.py
         shell: 'bash -l -eo pipefail {0}'
       - name: Install dependencies
@@ -67,3 +67,4 @@ jobs:
         if: always()
         run:
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
+        shell: 'bash -l -eo pipefail {0}'
