@@ -1097,7 +1097,6 @@ class SemanticParser(BasicParser):
         if isinstance(lhs, IndexedElement):
             lhs = self._visit(lhs)
         elif isinstance(lhs, PyccelSymbol):
-
             name = lhs
             if lhs == '_':
                 name = self.scope.get_new_name()
@@ -1112,7 +1111,6 @@ class SemanticParser(BasicParser):
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
-
                 # Update variable's dictionary with information from function decorators
                 decorators = self.scope.decorators
                 if decorators:
@@ -1208,7 +1206,6 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -1242,12 +1239,21 @@ class SemanticParser(BasicParser):
                 # ISSUES #177: lhs must be a pointer when rhs is heap array
                 if not arr_in_multirets:
                     self._ensure_target(rhs, d_lhs)
-
-                member = self._create_variable(n_name, dtype, rhs, d_lhs)
-                lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
+                is_duplicated = False
+                for key, attr in enumerate(attributes):
+                    if n_name == attr.name:
+                        is_duplicated = True
+                        member = self.check_for_variable(n_name)
+                        self._ensure_inferred_type_matches_existing(dtype, d_lhs, member, is_augassign, new_expressions, rhs)
+                        lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
+                        attributes[key] = member
+                        member = None
+                if not is_duplicated:
+                    member = self._create_variable(n_name, dtype, rhs, d_lhs)
+                    lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                 # update the attributes of the class and push it to the scope
-                attributes += [member]
+                attributes += [member] if member else ''
                 new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
                 self.scope.parent_scope.update_class(new_cls)
             else:
@@ -1255,7 +1261,6 @@ class SemanticParser(BasicParser):
         else:
             lhs_type = str(type(lhs))
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
-
         return lhs
 
     def _ensure_inferred_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
