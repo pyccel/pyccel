@@ -63,7 +63,7 @@ jobs:
           python -m pip install defusedxml requests jwt # All imported modules must be available for numpydoc
         shell: bash
       - name: Install dependencies
-        uses: ./.github/actions/linux_install
+        uses: ./compare/.github/actions/linux_install
       - name: Setup imports
         run: |
           echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
