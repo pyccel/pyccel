@@ -60,12 +60,13 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install docstr-coverage
           python -m pip install numpydoc
+          python -m pip install defusedxml requests jwt # All imported modules must be available for numpydoc
         shell: bash
       - name: Setup imports
         run: |
           echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
           cd compare
-          pip3 install .
+          pip3 install .[test]
           cd ..
         shell: bash
       - name: Check doc coverage
