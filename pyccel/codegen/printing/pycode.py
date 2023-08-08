@@ -251,8 +251,7 @@ class PythonCodePrinter(CodePrinter):
 
         body = ''.join([doc_string, functions, interfaces, imports, body])
 
-        code = (f'def {name}({args}):\n'
-                f'{body}\n')
+        code = f'def {name}({args}):\n{body}\n'
         decorators = expr.decorators
         if decorators:
             if decorators['template']:
@@ -322,8 +321,7 @@ class PythonCodePrinter(CodePrinter):
         self.exit_scope()
         if mod_scope:
             self.set_scope(mod_scope)
-        return ('if __name__ == "__main__":\n'
-                f'{body}\n')
+        return f'if __name__ == "__main__":\n{body}\n'
 
 
     def _print_AsName(self, expr):
@@ -1009,7 +1007,8 @@ class PythonCodePrinter(CodePrinter):
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
-        classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        inheritance = ', '.join(self._print(arg) for arg in expr.superclasses)
+        classDefName = f'class {expr.name}({inheritance}):'
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
         interfaces = ''.join(self._print(method) for method in expr.interfaces)
