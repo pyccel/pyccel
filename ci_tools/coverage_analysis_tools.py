@@ -104,7 +104,7 @@ def allow_untested_debug_code(untested):
     -------
     dict
             A dictionary which is a copy of the input dictionary
-            without the lines which express raise statements.
+            without the lines which describe string functions.
     """
     reduced_untested = {}
     for f,line_nums in untested.items():
@@ -156,7 +156,10 @@ def allow_untested_error_calls(untested):
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
-        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or l.startswith('errors.report(') or l.startswith('return errors.report('))]
+        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or 
+                                                     l.startswith('errors.report(') or 
+                                                     l.startswith('return errors.report(') or
+                                                     l.startswith('except '))]
         if len(lines):
             reduced_untested[f] = lines
 
