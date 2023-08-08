@@ -45,25 +45,25 @@ jobs:
           python ci_tools/setup_check_run.py
           which python
         shell: bash -l -eo pipefail {0}
-      #- name: Install dependencies
-      #  uses: ./.github/actions/windows_install
-      #- name: Install python dependencies
-      #  uses: ./.github/actions/conda_installation
-      #  with:
-      #    mpi_type: msmpi
-      #- name: Fortran/C tests with pytest
-      #  id: f_c_pytest
-      #  timeout-minutes: 60
-      #  uses: ./.github/actions/pytest_run
-      #  with:
-      #    shell_cmd: 'bash -l -eo pipefail {0}'
-      #    pytest_mark: 'and not external'
-      #- name: Python tests with pytest
-      #  id: python_pytest
-      #  timeout-minutes: 20
-      #  uses: ./.github/actions/pytest_run_python
-      #  with:
-      #    shell_cmd: 'bash -l -eo pipefail {0}'
+      - name: Install dependencies
+        uses: ./.github/actions/windows_install
+      - name: Install python dependencies
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: msmpi
+      - name: Fortran/C tests with pytest
+        id: f_c_pytest
+        timeout-minutes: 60
+        uses: ./.github/actions/pytest_run
+        with:
+          shell_cmd: 'bash -l -eo pipefail {0}'
+          pytest_mark: 'and not external'
+      - name: Python tests with pytest
+        id: python_pytest
+        timeout-minutes: 20
+        uses: ./.github/actions/pytest_run_python
+        with:
+          shell_cmd: 'bash -l -eo pipefail {0}'
       - name: "Post completed"
         if: always()
         run: |
