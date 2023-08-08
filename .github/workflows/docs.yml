@@ -85,19 +85,22 @@ jobs:
           git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
           git checkout ${{ env.COMMIT }}
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt ci_objects.txt
+          python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt ci_objects.txt
           touch report.txt
           while read line; do
-            python -m numpydoc --validate $line >> report.txt 2>&1 || true 
+            echo "python -m numpydoc --validate $line"
+            python -m numpydoc --validate $line 2>&1 | tee report.txt || true 
           done < objects.txt
+          echo "cd ci_tools"
           cd ci_tools
           while read line; do
-            python -m numpydoc --validate $line >> ../report.txt 2>&1 || true 
+            echo "python -m numpydoc --validate $line"
+            python -m numpydoc --validate $line 2>&1 | tee ../report.txt || true 
           done < ../ci_objects.txt
           cd ..
           cat report.txt
           cd ..
-          python base/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
+          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
