@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 else:
                     changes[file] = [int(line_no)]
 
-    for changes, output in zip([pkg_changes, ci_changes], [args.output, args.ci_output]):
+    for changes, output, rel_path in zip([pkg_changes, ci_changes], [args.output, args.ci_output], ['', 'ci_tools']):
         with open(output, 'w', encoding="utf-8") as f:
             for file, line_nos in changes.items():
                 with open(file, 'r', encoding="utf-8") as ast_file:
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                 # objects in the file.
                 # for example: the objects in the file pyccel/ast/core.py will
                 # have the prefix pyccel.ast.core
-                prefix = '.'.join(PurePath(file).with_suffix('').parts)
+                prefix = '.'.join(PurePath(file).relative_to(rel_path).with_suffix('').parts)
 
                 objects = []
                 to_visit = list(ast.iter_child_nodes(tree))
