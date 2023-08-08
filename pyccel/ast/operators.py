@@ -637,6 +637,9 @@ class PyccelMul(PyccelArithmeticOperator):
                                           dtype, precision)
         return super().__new__(cls)
 
+    def __init__(self, arg1, arg2, simplify = False):
+        super().__init__(arg1, arg2)
+
     def __repr__(self):
         return f'{repr(self.args[0])} * {repr(self.args[1])}'
 
