@@ -1003,7 +1003,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonType(self, expr):
         return f'type({self._print(expr.arg)})'
-    
+
     #-----------------Class Printer---------------------------------
 
     def _print_ClassDef(self, expr):
