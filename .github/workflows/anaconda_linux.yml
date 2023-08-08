@@ -40,16 +40,16 @@ jobs:
           auto-update-conda: true
           auto-activate-base: true
           python-version: ${{ inputs.python_version }}
+      - name: Install python dependencies
+        uses: ./.github/actions/conda_installation
+        with:
+          mpi_type: openmpi
       - name: "Setup"
         id: token
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
         shell: bash -l {0}
-      - name: Install python dependencies
-        uses: ./.github/actions/conda_installation
-        with:
-          mpi_type: openmpi
       - name: Coverage install
         uses: ./.github/actions/coverage_install
         with:
