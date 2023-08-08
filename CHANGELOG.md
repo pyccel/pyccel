@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
 -   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
+-   \[INTERNALS\] Re-write C-Python API wrapping stage (#1477)
 
 ### Deprecated
 
