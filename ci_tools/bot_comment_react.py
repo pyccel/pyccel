@@ -24,6 +24,7 @@ def get_unique_test_list(keys):
         A set of tests to run.
     """
     tests = set(keys)
+    print(tests)
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     tests.discard('pr_tests')
