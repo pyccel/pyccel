@@ -44,7 +44,7 @@ jobs:
           python -m pip install jwt requests
           python ci_tools/setup_check_run.py
           which python
-        shell: 'bash -l -eo pipefail {0}'
+        shell: bash -l -eo pipefail {0}
       #- name: Install dependencies
       #  uses: ./.github/actions/windows_install
       #- name: Install python dependencies
@@ -66,8 +66,8 @@ jobs:
       #    shell_cmd: 'bash -l -eo pipefail {0}'
       - name: "Post completed"
         if: always()
-        run:
+        run: |
           which python
           python --version
           python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }}
-        shell: 'bash -l -eo pipefail {0}'
+        shell: bash -l -eo pipefail {0}
