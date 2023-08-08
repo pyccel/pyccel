@@ -459,8 +459,8 @@ class BindCVariable(Variable):
     __slots__ = ('_f_name',)
 
     def __init__(self, *args, **kwargs):
-        self._f_name = self._name.lower()
         super().__init__(*args, **kwargs)
+        self._f_name = self._name.lower()
 
     @property
     def name(self):
