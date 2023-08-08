@@ -137,8 +137,8 @@ def allow_untested_error_calls(untested):
     Takes a dictionary describing untested lines and returns an
     equivalent dictionary without lines designed to raise errors.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     untested : dict
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
