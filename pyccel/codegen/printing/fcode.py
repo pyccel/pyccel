@@ -1322,11 +1322,12 @@ class FCodePrinter(CodePrinter):
                 lambda x,y: PyccelMul(x,y,simplify=True), var.shape))
 
     def _print_Declare(self, expr):
+        expr_dtype = expr.variable.dtype
         # ... ignored declarations
-        if isinstance(expr.dtype, NativeSymbol):
+        if isinstance(expr_dtype, NativeSymbol):
             return ''
 
-        if isinstance(expr.dtype, NativeRange):
+        if isinstance(expr_dtype, NativeRange):
             return ''
 
         # meta-variables
@@ -1341,7 +1342,6 @@ class FCodePrinter(CodePrinter):
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        expr_dtype = expr.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
@@ -1361,7 +1361,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... print datatype
-        if isinstance(expr.dtype, CustomDataType):
+        if isinstance(expr_dtype, CustomDataType):
             name   = expr_dtype.__class__.__name__
             prefix = expr_dtype.prefix
             alias  = expr_dtype.alias
