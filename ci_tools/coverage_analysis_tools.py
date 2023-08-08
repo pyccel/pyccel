@@ -156,8 +156,8 @@ def allow_untested_error_calls(untested):
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
-        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or 
-                                                     l.startswith('errors.report(') or 
+        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or
+                                                     l.startswith('errors.report(') or
                                                      l.startswith('return errors.report(') or
                                                      l.startswith('except '))]
         if len(lines):
