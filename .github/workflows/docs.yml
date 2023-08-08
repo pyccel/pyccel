@@ -55,13 +55,15 @@ jobs:
           cd compare
           python ../base/ci_tools/setup_check_run.py
           cd ..
-      - name: Install python dependencies
+      - name: Install python CI dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install docstr-coverage
           python -m pip install numpydoc
           python -m pip install defusedxml requests jwt # All imported modules must be available for numpydoc
         shell: bash
+      - name: Install dependencies
+        uses: ./.github/actions/linux_install
       - name: Setup imports
         run: |
           echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
