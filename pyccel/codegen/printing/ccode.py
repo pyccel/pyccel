@@ -15,7 +15,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -362,38 +362,90 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-            expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs.
+        expr : PyccelAstNode
+            The Assign Node used to get the lhs and rhs.
 
         Returns
         -------
-        string
-            A string containing the code which copies the data.
+        str
+            A string containing the code which allocates and copies the data.
         """
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
-        dummy_array_name = self.scope.get_new_name('array_dummy')
-        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        lhs_address = self._print(ObjectAddress(lhs))
 
-        buffer_size = self._print(DottedVariable(NativeVoid(), 'buffer_size', lhs=lhs))
-        lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
-
-        self.add_import(c_imports['string'])
+        # If the data is copied from a Variable rather than a list or tuple
+        # use the function array_copy_data directly
         if isinstance(arg, Variable):
-            arg_data    = self._print(DottedVariable(arg.dtype, dtype, lhs=arg))
-            return f"memcpy({lhs_data}, {arg_data}, {buffer_size});\n"
-        else :
-            if arg.rank > 1:
-                # flattening the args to use them in C initialization.
-                arg = self._flatten_list(arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
-            return  dummy_array + cpy_data
+            return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
+
+        order = lhs.order
+        rhs_dtype = self._print(rhs.dtype)
+        declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
+
+        flattened_list = self._flatten_list(arg)
+        operations = ""
+
+        # Get the variable where the data will be copied
+        if order == "F":
+            # If the order is F then the data should be copied non-contiguously so a temporary
+            # variable is required to pass to array_copy_data
+            temp_var = self.scope.get_temporary_variable(lhs, order='C')
+            operations += self._print(Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated"))
+            copy_to = temp_var
+        else:
+            copy_to = lhs
+        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
+
+        num_elements = len(flattened_list)
+        # Get the offset variable if it is needed
+        if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
+            offset_var = self.scope.get_temporary_variable(NativeInteger(), 'offset')
+            operations += self._print(Assign(offset_var, LiteralInteger(0)))
+        else:
+            offset_var = LiteralInteger(0)
+        offset_str = self._print(offset_var)
+
+        # Copy each of the elements
+        i = 0
+        while i < num_elements:
+            current_element = flattened_list[i]
+            # Copy an array element
+            if isinstance(current_element, Variable) and current_element.rank >= 1:
+                elem_name = self._print(current_element)
+                target = self._print(ObjectAddress(copy_to))
+                operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
+                i += 1
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', NumpySize(current_element)))
+
+            # Copy multiple scalar elements
+            else:
+                self.add_import(c_imports['string'])
+                remaining_elements = flattened_list[i:]
+                lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                subset = remaining_elements[:lenSubset]
+
+                # Declare list of consecutive elements
+                subset_str = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
+                dummy_array_name = self.scope.get_new_name()
+                operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
+
+                copy_to_data = self._print(copy_to_data_var)
+                type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
+                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+
+                i += lenSubset
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
+
+        if order == "F":
+            operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\nfree_array({copy_to});\n"
+        return operations
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -1338,23 +1390,23 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
+        variable = expr.variable
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            shape_var = DottedVariable(NativeVoid(), 'shape', lhs=expr.variable)
+            shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
             free_code = f'if ({self._print(shape_var)} != NULL)\n'
-            free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
-        elif  (expr.status == 'allocated'):
-            free_code += self._print(Deallocate(expr.variable))
+            free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+        elif (expr.status == 'allocated'):
+            free_code += self._print(Deallocate(variable))
         self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self._print(expr.variable.dtype)
-        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        dtype = self._print(variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.on_heap else 'true'
-        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
-                self._print(expr.variable), len(expr.shape), shape_Assign, dtype,
-                is_view)
+        is_view = 'false' if variable.on_heap else 'true'
+        order = "order_f" if expr.order == "F" else "order_c"
+        alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):

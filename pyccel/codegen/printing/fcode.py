@@ -2652,19 +2652,6 @@ class FCodePrinter(CodePrinter):
     def _print_Header(self, expr):
         return ''
 
-    def _print_ConstructorCall(self, expr):
-        func = expr.func
-        name = str(func.name)
-        if name == "__init__":
-            name = "create"
-        name = self._print(name)
-
-        code_args = ''
-        if expr.arguments is not None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
-        code = '{0}({1})'.format(name, code_args)
-        return self._get_statement(code)
-
     def _print_SysExit(self, expr):
         code = ""
         if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
@@ -2948,6 +2935,8 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
+        for k, m in _default_methods.items():
+            f_name = f_name.replace(k, m)
         args   = expr.args
         func_results  = [r.var for r in func.results]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))

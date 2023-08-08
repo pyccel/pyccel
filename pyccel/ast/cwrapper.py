@@ -395,12 +395,7 @@ def C_to_Python(c_object):
         The function which casts the C object to Python.
     """
     if c_object.rank != 0:
-        if c_object.order == 'C':
-            cast_function = 'c_ndarray_to_pyarray'
-        elif c_object.order == 'F':
-            cast_function = 'fortran_ndarray_to_pyarray'
-        else:
-            cast_function = 'ndarray_to_pyarray'
+        cast_function = 'ndarray_to_pyarray'
     else:
         try :
             cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]

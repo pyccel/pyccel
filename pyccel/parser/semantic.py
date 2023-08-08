@@ -622,23 +622,6 @@ class SemanticParser(BasicParser):
             d_var['rank'       ] = 0
             return d_var
 
-        elif isinstance(expr, ConstructorCall):
-            cls_name = expr.func.cls_name
-            cls = self.scope.find(cls_name, 'classes')
-
-            dtype = self.get_class_construct(cls_name)()
-
-            d_var['datatype'   ] = dtype
-            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = None
-            d_var['rank'       ] = 0
-            d_var['is_target'  ] = False
-
-            # set target  to True if we want the class objects to be pointers
-
-            d_var['cls_base'      ] = cls
-            return d_var
-
         else:
             type_name = type(expr).__name__
             msg = f'Type of Object : {type_name} cannot be infered'
@@ -1010,7 +993,7 @@ class SemanticParser(BasicParser):
             is_temp = False
 
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                (isinstance(rhs, FunctionCall) and len(rhs.funcdef.results)>1):
+                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
@@ -1168,7 +1151,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not rhs.funcdef.is_elemental and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -2348,12 +2331,18 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                 severity='error')
-            args = expr.args
-
+            d_var = {'datatype': self.get_class_construct(method.cls_name)(),
+                    'memory_handling':'stack',
+                    'shape' : None,
+                    'rank' : 0,
+                    'is_target' : False,
+                    'cls_base' : self.scope.find(method.cls_name, 'classes')}
+            cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
+            args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
 
-            expr = ConstructorCall(method, args, cls_variable=None)
+            expr = ConstructorCall(method, args, cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -2471,7 +2460,9 @@ class SemanticParser(BasicParser):
         else:
             rhs = self._visit(rhs)
 
-        if isinstance(rhs, FunctionDef):
+        if isinstance(rhs, ConstructorCall):
+            return rhs
+        elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
 
