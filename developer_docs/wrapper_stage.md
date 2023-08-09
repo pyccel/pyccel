@@ -371,3 +371,330 @@ Additionally the class method functions will be wrapped as described for functio
 The C to Python wrapper wraps C code to make it callable from Python. This module relies heavily on the [Python-C API](https://docs.python.org/3/c-api/index.html).
 
 ### Functions
+
+A function that can be called from Python must have the following prototype:
+```c
+PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
+```
+
+The arguments and keyword arguments are unpacked into individual `PyObject` pointers.
+Each of these objects is checked to verify the type. If the type does not match the expected type then an error is raised as described in the [C-API documentation](https://docs.python.org/3/c-api/intro.html#exceptions).
+If the type does match then the value is unpacked into a C object. This is done using custom functions defined in `pyccel/stdlib/cwrapper/` or `pyccel/stdlib/cwrapper_ndarrays/` (see these files for more details).
+
+Once C objects have been retrieved the function is called normally.
+
+Finally all the arguments are packed into a Python tuple stored in a `PyObject` and are returned.
+
+The wrapper is attached to the module via a `PyMethodDef` (see C-API [docs](https://docs.python.org/3/c-api/structures.html#c.PyMethodDef)).
+
+#### Example
+
+The following Python code:
+```python
+def f(x : 'float[:]', y : float = 3):
+    return x + y
+```
+
+leads to C code with the following prototype:
+```c
+t_ndarray f(t_ndarray x, double y);
+```
+
+which is then wrapped as follows:
+```c
+PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject* x_obj;
+    PyObject* y_obj;
+    t_ndarray x = {.shape = NULL};
+    double y;
+    t_ndarray Out_0001 = {.shape = NULL};
+    PyObject* Out_0001_obj;
+    // Initialise any optional arguments
+    y_obj = Py_None;
+    // Declare the names of the arguments so they can be found when the function is called
+    static char *kwlist[] = {
+        "x",
+        "y",
+        NULL
+    };
+    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
+    // The vertical line splits compulsory arguments from optional arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &x_obj, &y_obj))
+    {
+        return NULL;
+    }
+    // Unpack the PyObject (x_obj) into a C object (x)
+    if (pyarray_check(x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    {
+        x = pyarray_to_ndarray(x_obj);
+    }
+    else
+    {
+        // Return in case of an error (raised if the type doesn't match)
+        return NULL;
+    }
+    // Initialise default values
+    y = INT64_C(3);
+    // Unpack the PyObject (y_obj) into a C object (y)
+    if (PyIs_NativeFloat(y_obj))
+    {
+        y = PyDouble_to_Double(y_obj);
+    }
+    else if (y_obj != Py_None)
+    {
+        // Return in case of an error (raised if the type doesn't match)
+        return NULL;
+    }
+    // Call the function
+    Out_0001 = f(x, y);
+    // Free memory allocated for the arguments
+    free_pointer(&x);
+    // Pack the results into a PyObject
+    Out_0001_obj = ndarray_to_pyarray(Out_0001);
+    // Free memory allocated for the results
+    free_pointer(&Out_0001);
+    return Out_0001_obj;
+}
+```
+
+The function is linked to the module via a `PyMethodDef` as follows:
+```c
+static PyMethodDef tmp_methods[] = {
+    {
+        "f", // Function name
+        (PyCFunction)f_wrapper, // Function implementation
+        METH_VARARGS | METH_KEYWORDS, // Indicates that the function accepts args and kwargs
+        "" // function docstring
+    },
+    { NULL, NULL, 0, NULL}
+};
+```
+
+If the code was translated to Fortran the prototype is:
+```c
+int bind_c_f(void*, int64_t, int64_t, double, void*, int64_t*);
+```
+
+which is then wrapped as follows:
+```c
+PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject* bound_x_obj;
+    PyObject* y_obj;
+    t_ndarray x = {.shape = NULL};
+    void* bound_x;
+    int64_t bound_x_shape_1;
+    int64_t bound_x_stride_1;
+    double y;
+    void* bound_Out_0001;
+    int64_t Out_0001_shape_1;
+    t_ndarray Out_0001 = {.shape = NULL};
+    PyObject* bound_Out_0001_obj;
+    // Initialise any optional arguments
+    y_obj = Py_None;
+    // Declare the names of the arguments so they can be found when the function is called
+    static char *kwlist[] = {
+        "x",
+        "y",
+        NULL
+    };
+    // Unpack the Python arguments into individual PyObjects (e.g. x_obj, y_obj)
+    // The vertical line splits compulsory arguments from optional arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O", kwlist, &bound_x_obj, &y_obj))
+    {
+        return NULL;
+    }
+    // Unpack the PyObject (x_obj) into a C object (x)
+    if (pyarray_check(bound_x_obj, NPY_DOUBLE, INT64_C(1), NO_ORDER_CHECK))
+    {
+        x = pyarray_to_ndarray(bound_x_obj);
+    }
+    else
+    {
+        // Return in case of an error (raised if the type doesn't match)
+        return NULL;
+    }
+    // Unpack the C object into the individual arguments needed to call a Fortran function
+    bound_x = nd_data(&x);
+    bound_x_shape_1 = nd_ndim(&x, INT64_C(0));
+    bound_x_stride_1 = nd_nstep_F(&x, INT64_C(0));
+    // Initialise default values
+    y = INT64_C(3);
+    // Unpack the PyObject (y_obj) into a C object (y)
+    if (PyIs_NativeFloat(y_obj))
+    {
+        y = PyDouble_to_Double(y_obj);
+    }
+    else if (y_obj != Py_None)
+    {
+        // Return in case of an error (raised if the type doesn't match)
+        return NULL;
+    }
+    // Call the function
+    bind_c_f(bound_x, bound_x_shape_1, bound_x_stride_1, y, &bound_Out_0001, &Out_0001_shape_1);
+    // Free memory allocated for the arguments
+    free_pointer(&x);
+    // Pack the results into a `ndarray`
+    Out_0001 = array_create(1, (int64_t[]){Out_0001_shape_1}, nd_double, true, order_c);
+    Out_0001.raw_data = bound_Out_0001;
+    // Pack the results into a PyObject
+    bound_Out_0001_obj = ndarray_to_pyarray(Out_0001);
+    // Free memory allocated for the results
+    free_pointer(&Out_0001);
+    return bound_Out_0001_obj;
+}
+```
+
+### Interfaces
+
+Interfaces are functions which accept more than one type.
+These functions are handled via multiple functions in the wrapper:
+1. A function which can be called from Python with the prototype:
+    ```c
+    PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
+    ```
+2. A function which determines which combination of types were used in the call
+3. A function for each combination of types which calls the translated function
+
+#### Example
+
+The following Python code:
+```python
+@template('T', [int, float])
+def f(x : 'T'):
+    return x + 2
+```
+
+leads to C code with the following prototypes:
+```c
+double f_00(double x);
+int64_t f_01(int64_t x);
+```
+
+which is then wrapped as follows:
+```c
+/*........................................*/
+PyObject* f_00_wrapper(PyObject* x_obj)
+{
+    double x;
+    double Out_0001;
+    PyObject* Out_0001_obj;
+    x = PyDouble_to_Double(x_obj);
+    Out_0001 = f_00(x);
+    Out_0001_obj = Double_to_PyDouble(&Out_0001);
+    return Out_0001_obj;
+}
+/*........................................*/
+
+/*........................................*/
+PyObject* f_01_wrapper(PyObject* x_obj)
+{
+    int64_t x;
+    int64_t Out_0001;
+    PyObject* Out_0001_obj;
+    x = PyInt64_to_Int64(x_obj);
+    Out_0001 = f_01(x);
+    Out_0001_obj = Int64_to_PyLong(&Out_0001);
+    return Out_0001_obj;
+}
+/*........................................*/
+/*_________________________________CommentBlock_________________________________*/
+/*Assess the types. Raise an error for unexpected types and calculate an integer */
+/*which indicates which function should be called.                               */
+/*_______________________________________________________________________________*/
+int64_t f_type_check(PyObject* x_obj)
+{
+    int64_t type_indicator;
+    type_indicator = INT64_C(0);
+    if (PyIs_NativeFloat(x_obj))
+    {
+        type_indicator += INT64_C(0);
+    }
+    else if (PyIs_NativeInt(x_obj))
+    {
+        type_indicator += INT64_C(1);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError, "Unexpected type for argument x");
+        return -INT64_C(1);
+    }
+    return type_indicator;
+}
+/*........................................*/
+/*........................................*/
+PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject* x_obj;
+    int64_t type_indicator;
+    static char *kwlist[] = {
+        "x",
+        NULL
+    };
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O", kwlist, &x_obj))
+    {
+        return NULL;
+    }
+    type_indicator = f_type_check(x_obj);
+    if (type_indicator == INT64_C(0))
+    {
+        return f_00_wrapper(x_obj);
+    }
+    else if (type_indicator == INT64_C(1))
+    {
+        return f_01_wrapper(x_obj);
+    }
+    else
+    {
+        PyErr_SetString(PyExc_TypeError, "Unexpected type combination");
+        return NULL;
+    }
+}
+/*........................................*/
+```
+
+The function is linked to the module via a `PyMethodDef` as follows:
+```c
+static PyMethodDef tmp_methods[] = {
+    {
+        "f", // Function name
+        (PyCFunction)f_wrapper, // Function implementation
+        METH_VARARGS | METH_KEYWORDS, // Indicates that the function accepts args and kwargs
+        "" // function docstring
+    },
+    { NULL, NULL, 0, NULL}
+};
+```
+
+### Variables
+
+In order to import variables from a module, they must be attached to the module using the function [`PyModule_AddObject`](https://docs.python.org/3/c-api/module.html#c.PyModule_AddObject).
+In order to do this the value of the variable must be placed in a `PyObject`.
+This is done in a function which is executed when the module is imported for the first time.
+
+#### Example
+
+The following Python code:
+```python
+x = 3
+```
+
+leads to the following module initialisation function:
+```c
+int32_t tmp_exec_func(PyObject* mod)
+{
+    PyObject* Dummy_0001;
+    // Call the C function to initialise the module
+    tmp__init();
+    // Pack the module variable into a PyObject
+    Dummy_0001 = Int64_to_PyLong(&x);
+    // Add the PyObject to the Python module.
+    if (PyModule_AddObject(mod, "x", Dummy_0001) < INT64_C(0))
+    {
+        // Raise an error in case of problems
+        return -INT64_C(1);
+    }
+    return INT64_C(0);
+}
+```
