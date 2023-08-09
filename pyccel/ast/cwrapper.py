@@ -158,17 +158,6 @@ class PyArg_ParseTupleNode(Basic):
         self._arg_names  = arg_names
         super().__init__()
 
-    def get_pytype(self, c_arg, parse_arg):
-        """Return the needed flag to parse or build value
-        """
-        if isinstance(c_arg, FunctionAddress):
-            return 'O'
-        else:
-            try:
-                return pytype_parse_registry[(parse_arg.dtype, get_final_precision(parse_arg))]
-            except KeyError as e:
-                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
-
     @property
     def pyarg(self):
         """ The  variable containing all positional arguments
