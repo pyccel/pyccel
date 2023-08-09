@@ -39,6 +39,7 @@ if __name__ == '__main__':
     # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
+    print(f"mkaddani Debug: {os.environ["GITHUB_EVENT_PATH"]}")
 
     # If bot called explicitly (comment event)
 
