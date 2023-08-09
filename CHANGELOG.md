@@ -16,10 +16,10 @@ All notable changes to this project will be documented in this file.
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
 -   \[INTERNALS\] Fix string base class selection.
--   #1484 : Removing duplicated declaration of attributes in a `ClassDef`.
 
 ### Changed
 
+-   #1484 : Improving hundeling of `DottedName` in `_assign_lhs_variable`.
 -   #1455 : Make `ConstructorCall` inherit from `FunctionCall`.
 -   Updating `stdlib` files if they are modified not just accessed.
 -   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
