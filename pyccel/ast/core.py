@@ -3294,7 +3294,7 @@ class ClassDef(ScopedNode):
         """
         The attributes of a class.
 
-        A tuple of the attributes of a ClassDef
+        A tuple of the attributes of a ClassDef.
 
         Returns
         -------
