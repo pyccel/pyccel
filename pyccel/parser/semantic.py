@@ -391,7 +391,7 @@ class SemanticParser(BasicParser):
             for key, value in enumerate(attributes_list):
                 if value.name == name.name[-1]:
                     attributes_list[key] = value
-                    self._current_class._attributes = tuple(attributes_list)
+                    self._current_class.attributes = tuple(attributes_list)
                     return value
         return None
 
