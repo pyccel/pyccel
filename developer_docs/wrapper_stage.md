@@ -169,7 +169,7 @@ which is then wrapped as follows:
   end function bind_c_f
 ```
 
-This function has the following protoype in C:
+This function has the following prototype in C:
 ```c
 int64_t bind_c_f(int64_t);
 ```
@@ -224,7 +224,7 @@ which is then wrapped as follows:
   end subroutine bind_c_f
 ```
 
-This function has the following protoype in C:
+This function has the following prototype in C:
 ```c
 int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 ```
@@ -280,7 +280,7 @@ which is then wrapped as follows:
   end function bind_c_f
 ```
 
-This function has the following protoype in C:
+This function has the following prototype in C:
 ```c
 int64_t bind_c_f(void*);
 ```
@@ -352,7 +352,7 @@ which is then wrapped as follows:
   end subroutine bind_c_f
 ```
 
-This function has the following protoype in C:
+This function has the following prototype in C:
 ```c
 int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 ```
