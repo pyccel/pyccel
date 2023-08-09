@@ -343,8 +343,20 @@ class SemanticParser(BasicParser):
 
     def check_for_variable(self, name):
         """
+        Search for a Variable object with the given name in the current scope.
+
         Search for a Variable object with the given name in the current scope,
         defined by the local and global Python scopes. Return None if not found.
+
+        Parameters
+        ----------
+        name : str
+            The object describing the variable.
+
+        Returns
+        -------
+        Variable
+            Returns the varibale if found or None.
         """
 
         if self.current_class and not name == 'self':
@@ -356,16 +368,28 @@ class SemanticParser(BasicParser):
         else:
             return self.scope.find(name, 'variables')
 
-    def check_for_attribute(self, lhs):
+    def check_for_attribute(self, name):
         """
+        Search for an Attribute with the given name in the current scope.
+
         Search for an Attribute with the given name in the current scope,
         defined by the local and global Python scopes. Return None if not found.
+
+        Parameters
+        ----------
+        name : DottedName
+            The object describing the attribute.
+
+        Returns
+        -------
+        Variable
+            Returns the attribute if found or None.
         """
 
         if self.current_class:
             attributes_list = list(self._current_class.attributes)
             for key, value in enumerate(attributes_list):
-                if value.name == lhs.name[-1]:
+                if value.name == name.name[-1]:
                     attributes_list[key] = value
                     self._current_class._attributes = tuple(attributes_list)
                     return value
