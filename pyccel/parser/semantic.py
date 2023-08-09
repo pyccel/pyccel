@@ -347,7 +347,7 @@ class SemanticParser(BasicParser):
         defined by the local and global Python scopes. Return None if not found.
         """
 
-        if self.current_class:
+        if self.current_class and not name == 'self':
             for i in self._current_class.attributes:
                 if i.name == name:
                     var = i
@@ -355,6 +355,21 @@ class SemanticParser(BasicParser):
             return None
         else:
             return self.scope.find(name, 'variables')
+
+    def check_for_attribute(self, lhs):
+        """
+        Search for a Variable object with the given name in the current scope,
+        defined by the local and global Python scopes. Return None if not found.
+        """
+        if self.current_class:
+            attributes_list = list(self._current_class.attributes)
+            for key, value in enumerate(attributes_list):
+                if value.name == lhs.name[-1]:
+                    attributes_list[key] = value
+                    self._current_class._attributes = tuple(attributes_list)
+                    return value
+            return None
+
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -1096,11 +1111,9 @@ class SemanticParser(BasicParser):
 
         if isinstance(lhs, IndexedElement):
             lhs = self._visit(lhs)
-        elif isinstance(lhs, PyccelSymbol):
+        elif isinstance(lhs, (PyccelSymbol, DottedName)):
 
-            name = lhs
-            if lhs == '_':
-                name = self.scope.get_new_name()
+            name = str(lhs)
             dtype = d_var.pop('datatype')
 
             d_lhs = d_var.copy()
@@ -1108,11 +1121,36 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            var = self.check_for_variable(name)
-
+            if isinstance(lhs, DottedName):
+                var = self.check_for_attribute(lhs)
+            else:
+                var = self.check_for_variable(name)
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
+                if isinstance(lhs, DottedName):
+                    if (self._current_function == '__init__' or self.current_class) and lhs.name[0] == 'self':
+                        cls      = self.get_variable('self')
+                        cls_name = str(cls.cls_base.name)
+                        cls      = self.scope.find(cls_name, 'classes')
 
+                        attributes = cls.attributes
+                        parent     = cls.superclasses
+                        attributes = list(attributes)
+                        name     = str(lhs.name[-1])
+
+                        var      = self.get_variable('self')
+
+                        member = self._create_variable(name, dtype, rhs, d_lhs)
+                        lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
+
+                        # update the attributes of the class and push it to the scope
+                        attributes += [member]
+                        new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
+                        self._current_class = new_cls
+                        self.scope.parent_scope.update_class(new_cls)
+                    else:
+                        lhs = self._visit(lhs)
+                        name = str(lhs.name[0])
                 # Update variable's dictionary with information from function decorators
                 decorators = self.scope.decorators
                 if decorators:
@@ -1141,12 +1179,12 @@ class SemanticParser(BasicParser):
                                 self._current_fst_node.col_offset))
 
                 new_name = self.scope.get_expected_name(name)
+                if not (isinstance(lhs, DottedVariable)):
+                    # Create new variable
+                    lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
-                # Create new variable
-                lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
-
-                # Add variable to scope
-                self.scope.insert_variable(lhs, name)
+                    # Add variable to scope
+                    self.scope.insert_variable(lhs, name)
 
                 # ...
                 # Add memory allocation if needed
@@ -1216,52 +1254,10 @@ class SemanticParser(BasicParser):
                 # TODO d_lhs must be consistent with var!
                 # the following is a small fix, since lhs must be already
                 # declared
-                lhs = var
-
-        elif isinstance(lhs, DottedName):
-
-            dtype = d_var.pop('datatype')
-            name = self.scope.get_expected_name(lhs.name[-1])
-            if self._current_function == '__init__':
-
-                cls      = self.get_variable('self')
-                cls_name = str(cls.cls_base.name)
-                cls      = self.scope.find(cls_name, 'classes')
-
-                attributes = cls.attributes
-                parent     = cls.superclasses
-                attributes = list(attributes)
-                n_name     = str(lhs.name[-1])
-
-                # update the self variable with the new attributes
-
-                var      = self.get_variable('self')
-                d_lhs    = d_var.copy()
-
-
-                # ISSUES #177: lhs must be a pointer when rhs is heap array
-                if not arr_in_multirets:
-                    self._ensure_target(rhs, d_lhs)
-
-                is_duplicated = False
-                for key, attr in enumerate(attributes):
-                    if n_name == attr.name:
-                        is_duplicated = True
-                        member = self.check_for_variable(n_name)
-                        self._ensure_inferred_type_matches_existing(dtype, d_lhs, member, is_augassign, new_expressions, rhs)
-                        lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
-                        attributes[key] = member
-                        member = None
-                if not is_duplicated:
-                    member = self._create_variable(n_name, dtype, rhs, d_lhs)
-                    lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
-
-                # update the attributes of the class and push it to the scope
-                attributes += [member] if member else ''
-                new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
-                self.scope.parent_scope.update_class(new_cls)
-            else:
-                lhs = self._visit(lhs)
+                if isinstance(lhs, DottedName):
+                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = lhs.name[0])
+                else:
+                    lhs = var
         else:
             lhs_type = str(type(lhs))
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
