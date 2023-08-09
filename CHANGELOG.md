@@ -19,7 +19,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   #1484 : Improving hundeling of `DottedName` in `_assign_lhs_variable`.
+-   #1484 : Improving handling of `DottedName` in `_assign_lhs_variable`.
 -   #1455 : Make `ConstructorCall` inherit from `FunctionCall`.
 -   Updating `stdlib` files if they are modified not just accessed.
 -   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
