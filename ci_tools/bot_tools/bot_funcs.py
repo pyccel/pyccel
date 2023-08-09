@@ -289,7 +289,8 @@ class Bot:
             return []
         else:
             check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
+            #already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
+            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and c['conclusion'] != 'cancelled']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
