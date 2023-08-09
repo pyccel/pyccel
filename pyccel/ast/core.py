@@ -3291,25 +3291,20 @@ class ClassDef(ScopedNode):
 
     @property
     def attributes(self):
-        return self._attributes
-
-    @attributes.setter
-    def attributes(self, attr):
         """
-        Set updated attributes.
+        The attributes of a class.
 
-        Set updated attributes in the ClassDef
-
-        Parameters
-        ----------
-        attr : tuple
-            The tuple describing the attributes.
+        A tuple of the attributes of a ClassDef
 
         Returns
         -------
         None
         """
 
+        return self._attributes
+
+    @attributes.setter
+    def attributes(self, attr):
         if not isinstance(attr, tuple):
             raise TypeError('attributes must be a tuple.')
         self._attributes = attr
