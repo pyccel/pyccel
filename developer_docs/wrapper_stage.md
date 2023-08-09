@@ -59,6 +59,14 @@ Optional arguments are passed as C pointers. An if/else block then determines wh
 
 Finally the most complex cases such as functions as arguments are simply not printed. Instead these cases raise warnings or errors to alert the user that support is missing.
 
+### Class module variables
+
+**Class module variables are not yet wrapped. This describes the future implementation**
+
+Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper should print a function which returns a pointer to the module variable.
+
+Additionally the class method functions will be wrapped as described for functions. The attributes of the class will be exposed via wrapper functions.
+
 ## C To Python
 
 The C to Python wrapper wraps C code to make it callable from Python. This module relies heavily on the [Python-C API](https://docs.python.org/3/c-api/index.html).
