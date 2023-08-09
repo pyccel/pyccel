@@ -18,7 +18,7 @@ from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionDef, FunctionAddress
+from .core      import FunctionDef
 from .core      import Module, Interface
 
 from .internals import get_final_precision
