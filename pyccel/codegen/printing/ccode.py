@@ -1228,8 +1228,9 @@ class CCodePrinter(CodePrinter):
                 """ Get the code which declares the argument variable.
                 """
                 code = "const " * var.is_const
-                code += self.get_declare_type(var) + ' '
-                code += var.name * print_arg_names
+                code += self.get_declare_type(var)
+                if print_arg_names:
+                    code += ' ' + var.name
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
