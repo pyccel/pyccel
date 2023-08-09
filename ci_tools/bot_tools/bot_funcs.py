@@ -293,7 +293,7 @@ class Bot:
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             print(already_triggered)
-            print(f'mkaddani Debug  check runs:{check_runs} \n already triggered {already_triggered}")    
+            print(f'mkaddani Debug  check runs:{check_runs} \n already triggered {already_triggered}')    
 
             states = []
 
