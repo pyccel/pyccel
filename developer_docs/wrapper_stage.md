@@ -357,7 +357,6 @@ This function has the following protoype in C:
 int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 ```
 
-
 ### Class module variables
 
 **Class module variables are not yet wrapped. This describes the future implementation**
@@ -550,12 +549,14 @@ PyObject* f_wrapper(PyObject* self, PyObject* args, PyObject* kwargs)
 
 Interfaces are functions which accept more than one type.
 These functions are handled via multiple functions in the wrapper:
-1. A function which can be called from Python with the prototype:
+1.  A function which can be called from Python with the prototype:
     ```c
     PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
     ```
-2. A function which determines which combination of types were used in the call
-3. A function for each combination of types which calls the translated function
+
+2.  A function which determines which combination of types were used in the call
+
+3.  A function for each combination of types which calls the translated function
 
 #### Example
 
