@@ -8,6 +8,7 @@ See the developer docs for more details
 """
 
 from itertools import chain
+import warnings
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -3072,6 +3073,10 @@ class SemanticParser(BasicParser):
             return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in " +
+                      "a future version of Pyccel. This annotation may be unnecessary " +
+                      "in your code. If you find it is necessary please open an issue " +
+                      "so we do not remove support until an alternative is in place.", FutureWarning)
 
         # TODO improve
         #      move it to the ast like create_definition for FunctionHeader?
@@ -3086,6 +3091,9 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in a " +
+                      "future version of Pyccel. Please use type hints. The @template " +
+                      "decorator can be used to specify multiple types", FutureWarning)
         # TODO should we return it and keep it in the AST?
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
@@ -3093,6 +3101,8 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Template(self, expr):
+        warnings.warn("Support for specifying templates via headers will be removed in " +
+                      "a future version of Pyccel. Please use the @template decorator", FutureWarning)
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         self.scope.insert_template(expr)
