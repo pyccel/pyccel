@@ -602,9 +602,7 @@ def array_float_3d_F_array_initialization_2(a):
 def array_float_4d_F_array_initialization(x, y, a):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
-    print(tmp)
     a[:,:,:,:] = tmp[:,:,:,:]
-    print(a)
 
 @types('float[:,:](order=F)', 'float[:,:,:,:](order=F)')
 def array_float_4d_F_array_initialization_mixed_ordering(x, a):
