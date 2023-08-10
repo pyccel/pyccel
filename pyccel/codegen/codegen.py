@@ -205,7 +205,6 @@ class Codegen(object):
         code = self._printer.doprint(self.ast)
         with open(filename, 'w') as f:
             f.write(code)
-            print(code)
 
         # print program
         prog_filename = None
