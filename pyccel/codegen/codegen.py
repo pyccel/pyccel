@@ -206,6 +206,7 @@ class Codegen(object):
         with open(filename, 'w') as f:
             for line in code:
                 f.write(line)
+                print(line)
 
         # print program
         prog_filename = None

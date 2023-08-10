@@ -165,6 +165,8 @@ def create_shared_library(codegen,
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
 
+    print(wrapper_code)
+
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
