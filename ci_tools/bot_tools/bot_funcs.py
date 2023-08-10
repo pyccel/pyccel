@@ -417,17 +417,21 @@ class Bot:
         print("Checking : ", name)
         if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
-                                                    and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+                                                    and f.endswith('.py') and f != 'pyccel/version.py' \
+                                                    for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') \
+                                                    and f != 'pyccel/version.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pylint'):
-            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f == 'pyccel/parser/semantic.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('docs'):
-            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' \
+                                                    for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('spelling'):
             has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') \
+                                                    and f != 'pyccel/version.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
