@@ -30,6 +30,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Using a type sepcification header will raise a `FutureWarning` as this will be deprecated in a future version.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
