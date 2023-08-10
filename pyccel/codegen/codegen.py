@@ -204,9 +204,8 @@ class Codegen(object):
         # print module
         code = self._printer.doprint(self.ast)
         with open(filename, 'w') as f:
-            for line in code:
-                f.write(line)
-                print(line)
+            f.write(code)
+            print(code)
 
         # print program
         prog_filename = None
