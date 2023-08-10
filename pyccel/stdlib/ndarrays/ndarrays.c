@@ -464,7 +464,7 @@ int64_t get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
 */
 int64_t element_index(t_ndarray arr, int64_t flat_c_idx, int32_t nd)
 {
-    if (arr.order == order_c)
+    if (arr.order == order_c && !arr.is_view)
         return flat_c_idx;
     if (nd == 0)
         return (0);
