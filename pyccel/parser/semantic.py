@@ -3075,8 +3075,9 @@ class SemanticParser(BasicParser):
     def _visit_VariableHeader(self, expr):
         warnings.warn("Support for specifying types via headers will be removed in " +
                       "a future version of Pyccel. This annotation may be unnecessary " +
-                      "in your code. If you find it is necessary please open an issue " +
-                      "so we do not remove support until an alternative is in place.", FutureWarning)
+                      "in your code. If you find it is necessary please open a discussion " +
+                      "at https://github.com/pyccel/pyccel/discussions so we do not " +
+                      "remove support until an alternative is in place.", FutureWarning)
 
         # TODO improve
         #      move it to the ast like create_definition for FunctionHeader?
