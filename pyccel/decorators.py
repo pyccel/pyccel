@@ -52,6 +52,11 @@ def types(*args, results = None):
 
     results : str or type, optional
         The return type of the function.
+
+    Returns
+    -------
+    decorator
+        The identity decorator which will not modify the function.
     """
     warnings.warn("The @types decorator will be removed in a future version of " +
                   "Pyccel. Please use type hints. The @template decorator can be " +
