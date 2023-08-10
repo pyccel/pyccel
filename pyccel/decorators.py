@@ -53,7 +53,11 @@ def types(*args, results = None):
     results : str or type, optional
         The return type of the function.
     """
-    warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
+    warnings.warn("The @types decorator will be removed in a future version of " +
+                  "Pyccel. Please use type hints. The @template decorator can be " +
+                  "used to specify multiple types. See the documentation at " +
+                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations"
+                  "for examples.", FutureWarning)
     def identity(f):
         return f
     return identity
