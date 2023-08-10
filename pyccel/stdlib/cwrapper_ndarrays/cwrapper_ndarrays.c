@@ -297,7 +297,7 @@ t_ndarray	pyarray_to_ndarray(PyObject *o)
 	array.buffer_size = PyArray_NBYTES(a);
 	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(a), array.nd);
 	array.strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(a), array.type_size, array.nd);
-	array.order = PyArray_CHKFLAGS(a, NPY_ARRAY_F_CONTIGUOUS) ? order_f : order_c;
+	array.order = PyArray_CHKFLAGS(a, NPY_ARRAY_C_CONTIGUOUS) ? order_c : order_f;
 
 	array.is_view     = 1;
 
