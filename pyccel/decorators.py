@@ -6,8 +6,7 @@
 """
 This module contains all the provided decorator methods.
 """
-
-#TODO use pycode and call exec after that in lambdify
+import warnings
 
 __all__ = (
     'allow_negative_index',
@@ -40,7 +39,21 @@ def sympy(f):
 def bypass(f):
     return f
 
-def types(*args,**kw):
+def types(*args, results = None):
+    """
+    Specify the types passed to the function.
+
+    Specify the types passed to the function.
+
+    Parameters
+    ----------
+    *args : tuple of str or types
+        The types of the arguments of the function.
+
+    results : str or type, optional
+        The return type of the function.
+    """
+    warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
     def identity(f):
         return f
     return identity
