@@ -72,7 +72,6 @@ if __name__ == '__main__':
             objects = []
             to_visit = list(ast.iter_child_nodes(tree))
             for node in to_visit:
-                print(node)
                 # This loop walks the ast and explores all objects
                 # present in the file.
                 # If the object is an instance of a FunctionDef or
