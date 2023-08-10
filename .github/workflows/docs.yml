@@ -94,7 +94,7 @@ jobs:
             python -m numpydoc --validate $line 2>&1 | tee report.txt || true 
           done < objects.txt
           cd ..
-          python coverage/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
+          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
