@@ -1569,20 +1569,15 @@ def test_array_float_3d_F_array_initialization_1(language):
     f1 = arrays.array_float_3d_F_array_initialization_1
     f2 = epyccel(f1, language = language)
 
-    x  = np.reshape(np.arange(6, dtype=float), (3,2), order='F')
-    y  = np.reshape(np.arange(6,12, dtype=float), (3,2), order='F')
+    x  = np.random.random((3,2)).copy(order='F')
+    y  = np.random.random((3,2)).copy(order='F')
     a  = np.array([x,y], order='F')
-
-    print(a)
 
     x1 = np.zeros_like(a)
     x2 = np.zeros_like(a)
 
     f1(x, y, x1)
     f2(x, y, x2)
-
-    print(x1)
-    print(x2)
 
     assert np.array_equal(x1, x2)
 

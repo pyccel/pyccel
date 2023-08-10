@@ -584,12 +584,8 @@ def array_float_2d_F_array_initialization(a):
 @types('float[:,:](order=F)','float[:,:](order=F)', 'float[:,:,:](order=F)')
 def array_float_3d_F_array_initialization_1(x, y, a):
     from numpy import array
-    print(x)
-    print(y)
     tmp      = array([x, y], dtype='float', order='F')
-    print(tmp)
     a[:,:,:] = tmp[:,:,:]
-    print(a)
 
 @types('float[:,:,:](order=F)')
 def array_float_3d_F_array_initialization_2(a):
