@@ -290,6 +290,7 @@ class Bot:
             already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
+            success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
             states = []
 
@@ -322,7 +323,7 @@ class Bot:
 
                 deps = test_dependencies.get(t, ())
                 print(already_triggered_names, deps)
-                if all(d in already_triggered_names for d in deps):
+                if all(d in success_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
                         print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
@@ -369,12 +370,14 @@ class Bot:
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
             print("possible_artifacts : ", possible_artifacts)
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
-            while len(acceptable_urls) == 0:
+            ntests = 0
+            while len(acceptable_urls) == 0 and ntests < 10:
                 # Occasionally artifacts are not available immediately after linux concludes
                 time.sleep(10)
                 possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
                 print("possible_artifacts : ", possible_artifacts)
                 acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+                ntests += 1
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
