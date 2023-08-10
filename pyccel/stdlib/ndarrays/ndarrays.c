@@ -317,13 +317,16 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     t_slice slice;
     int32_t start = 0;
     int32_t j = 0;
+    t_order order = arr.order;
 
     view.nd = n;
     view.type = arr.type;
     view.type_size = arr.type_size;
     view.shape = malloc(sizeof(int64_t) * view.nd);
     view.strides = malloc(sizeof(int64_t) * view.nd);
+    view.order = order;
     view.is_view = true;
+
     va_start(va, n);
     for (int32_t i = 0; i < arr.nd; i++)
     {
@@ -343,6 +346,7 @@ t_ndarray array_slicing(t_ndarray arr, int n, ...)
     for (int32_t i = 0; i < view.nd; i++)
             view.length *= view.shape[i];
     view.buffer_size =  view.length * view.type_size;
+
     return (view);
 }
 
@@ -408,7 +412,7 @@ int64_t     get_index(t_ndarray arr, ...)
 ** convert numpy strides to nd_array strides, and return it in a new array, to
 ** avoid the problem of different implementations of strides in numpy and ndarray.
 */
-int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd)
+int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int32_t nd)
 {
     int64_t *ndarray_strides;
 
@@ -424,7 +428,7 @@ int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd
 ** avoid the problem of variation of system architecture because numpy shape
 ** is not saved in fixed length type.
 */
-int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
+int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int32_t nd)
 {
     int64_t *nd_shape;
 
@@ -440,9 +444,9 @@ int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd)
 ** returns the stride (number of single elements to jump in a dimension
 ** to get to this dimension's next element) of the 'nd`th dimension
 */
-int get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
+int64_t get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
 {
-    int product = 1;
+    int64_t product = 1;
 
     for (int i = nd; i < max_nd; ++i)
         product *= shape[i];
@@ -458,7 +462,7 @@ int get_dimension_stride(int64_t *shape, int32_t nd, int32_t max_nd)
 **  Returns the element's index depending on its required memory layout
 **          (order_f/column major or order_c/row major)
 */
-int element_index(t_ndarray arr, uint32_t flat_c_idx, int32_t nd)
+int64_t element_index(t_ndarray arr, int64_t flat_c_idx, int32_t nd)
 {
     if (arr.order == order_c)
         return flat_c_idx;
@@ -466,7 +470,7 @@ int element_index(t_ndarray arr, uint32_t flat_c_idx, int32_t nd)
         return (0);
     if (nd == arr.nd)
         return (flat_c_idx % arr.shape[nd - 1]) * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1);
-    int true_index = (flat_c_idx / (get_dimension_stride(arr.shape, nd, arr.nd)));
+    int64_t true_index = (flat_c_idx / get_dimension_stride(arr.shape, nd, arr.nd));
     if (true_index >= arr.shape[nd - 1])
         true_index = true_index % arr.shape[nd - 1];
     return (true_index * arr.strides[nd - 1] + element_index(arr, flat_c_idx, nd - 1));
@@ -497,7 +501,7 @@ void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
     }
     else
     {
-        for (int32_t element_num = 0; element_num < src.length; ++element_num)
+        for (int64_t element_num = 0; element_num < src.length; ++element_num)
         {
             memcpy(d + ((element_index(*dest, element_num, dest->nd) + offset) * dest->type_size),
                 s + (element_index(src, element_num, src.nd) * src.type_size), src.type_size);
