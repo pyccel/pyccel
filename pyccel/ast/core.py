@@ -1766,67 +1766,6 @@ class ForIterator(For):
     def ranges(self):
         return get_iterable_ranges(self.iterable)
 
-class ConstructorCall(Basic):
-
-    """
-    It  serves as a constructor for undefined function classes.
-
-    Parameters
-    ----------
-    func: FunctionDef, str
-        an instance of FunctionDef or function name
-
-    arguments: list, tuple, None
-        a list of arguments.
-
-    """
-    __slots__ = ('_cls_variable', '_func', '_arguments')
-    _attribute_nodes = ('_func', '_arguments')
-
-    is_commutative = True
-
-    # TODO improve
-
-    def __init__(
-        self,
-        func,
-        arguments,
-        cls_variable=None,
-        ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
-
-        self._cls_variable = cls_variable
-        self._func = func
-        self._arguments = arguments
-        super().__init__()
-
-    def __str__(self):
-        name = str(self.name)
-        args = ''
-        if not self.arguments is None:
-            args = ', '.join(str(i) for i in self.arguments)
-        return '{0}({1})'.format(name, args)
-
-    @property
-    def func(self):
-        return self._func
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    @property
-    def cls_variable(self):
-        return self._cls_variable
-
-    @property
-    def name(self):
-        if isinstance(self.func, FunctionDef):
-            return self.func.name
-        else:
-            return self.func
-
 class FunctionCallArgument(Basic):
     """
     An argument passed in a function call
@@ -2270,6 +2209,60 @@ class DottedFunctionCall(FunctionCall):
         """ The object in which the function is defined
         """
         return self._prefix
+
+class ConstructorCall(DottedFunctionCall):
+
+    """
+    Represents a Constructor call in the code.
+
+    A node which holds all information necessary to represent a Constructor
+    call in the code.
+
+    Parameters
+    ----------
+    func : FunctionDef, str
+        An instance of FunctionDef or function name.
+
+    arguments : list, tuple, None
+        A list of arguments.
+
+    cls_variable : CustomDataType, optional
+        The variable on the left-hand side of an assignment,
+        where the right-hand side is a constructor call.
+        Used to store data inside the class, set during object creation.
+    """
+    __slots__ = ('_cls_variable',)
+    _attribute_nodes = ()
+
+    # TODO improve
+
+    def __init__(
+        self,
+        func,
+        arguments,
+        cls_variable=None,
+        ):
+        if not isinstance(func, (FunctionDef, Interface, str)):
+            raise TypeError('Expecting func to be a FunctionDef or str')
+
+        self._cls_variable = cls_variable
+        super().__init__(func, arguments, self._cls_variable)
+
+    @property
+    def cls_variable(self):
+        """
+        Get the class variable associated with the constructor.
+
+        The `cls_variable` property allows accessing the class
+        variable associated with the constructor.
+
+        Returns
+        -------
+        CustomDataType or None
+            The class variable associated with the constructor, or None if not provided.
+        """
+        return self._cls_variable
+
 
 class Return(Basic):
 
