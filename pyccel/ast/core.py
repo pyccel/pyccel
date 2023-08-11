@@ -482,6 +482,8 @@ class Assign(Basic):
 #------------------------------------------------------------------------------
 class Allocate(Basic):
     """
+    Represents memory allocation for code generation.
+
     Represents memory allocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory allocation.
@@ -505,7 +507,6 @@ class Allocate(Basic):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable', '_shape', '_order', '_status')
     _attribute_nodes = ('_variable',)

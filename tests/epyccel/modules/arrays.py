@@ -4,7 +4,7 @@ import numpy as np
 from pyccel.decorators import template, stack_array, allow_negative_index
 
 a_1d   = np.array([1 << i for i in range(21)], dtype=int)
-a_1d_overflow = np.array([(1 << i) - 1 for i in range(32)], dtype=int)
+a_1d_f = np.array([1 << i for i in range(21)], dtype=int, order="F")
 a_2d_f = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int, order='F')
 a_2d_c = np.array([[1 << j for j in range(21)] for i in range(21)], dtype=int)
 
@@ -227,154 +227,273 @@ def array_int_2d_F_initialization(a : 'int[:,:](order=F)'):
 # 1D ARRAYS OF REAL
 #==============================================================================
 
-def array_real_1d_scalar_add(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_add(x : 'float[:]', a : 'float'):
     x[:] += a
 
-def array_real_1d_scalar_sub(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_sub(x : 'float[:]', a : 'float'):
     x[:] -= a
 
-def array_real_1d_scalar_mul(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_mul(x : 'float[:]', a : 'float'):
     x[:] *= a
 
-def array_real_1d_scalar_div(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_div(x : 'float[:]', a : 'float'):
     x[:] /= a
 
-def array_real_1d_scalar_mod(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_mod(x : 'float[:]', a : 'float'):
     x[:] %= a
 
-def array_real_1d_scalar_idiv(x : 'float[:]', a : 'float'):
+def array_float_1d_scalar_idiv(x : 'float[:]', a : 'float'):
     x[:] = x // a
 
-def array_real_1d_add(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_add(x : 'float[:]', y : 'float[:]'):
     x[:] += y
 
-def array_real_1d_sub(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_sub(x : 'float[:]', y : 'float[:]'):
     x[:] -= y
 
-def array_real_1d_mul(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_mul(x : 'float[:]', y : 'float[:]'):
     x[:] *= y
 
-def array_real_1d_div(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_div(x : 'float[:]', y : 'float[:]'):
     x[:] /= y
 
-def array_real_1d_mod(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_mod(x : 'float[:]', y : 'float[:]'):
     x[:] %= y
 
-def array_real_1d_idiv(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_idiv(x : 'float[:]', y : 'float[:]'):
     x[:] = x // y
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH C ORDERING
 #==============================================================================
 
-def array_real_2d_C_scalar_add(x : 'float[:,:]', a : 'float'):
+def array_float_2d_C_scalar_add(x : 'float[:,:]', a : 'float'):
     x[:,:] += a
 
-def array_real_2d_C_scalar_sub(x : 'float[:,:]', a : 'float'):
+def array_float_2d_C_scalar_sub(x : 'float[:,:]', a : 'float'):
     x[:,:] -= a
 
-def array_real_2d_C_scalar_mul(x : 'float[:,:]', a : 'float'):
+def array_float_2d_C_scalar_mul(x : 'float[:,:]', a : 'float'):
     x[:,:] *= a
 
-def array_real_2d_C_scalar_div(x : 'float[:,:]', a : 'float'):
+def array_float_2d_C_scalar_div(x : 'float[:,:]', a : 'float'):
     x[:,:] /= a
 
-def array_real_2d_C_scalar_mod(x : 'float[:,:]', a : 'float'):
+def array_float_2d_C_scalar_mod(x : 'float[:,:]', a : 'float'):
     x[:,:] %= a
 
-def array_real_2d_C_add(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_add(x : 'float[:,:]', y : 'float[:,:]'):
     x[:,:] += y
 
-def array_real_2d_C_sub(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_sub(x : 'float[:,:]', y : 'float[:,:]'):
     x[:,:] -= y
 
-def array_real_2d_C_mul(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_mul(x : 'float[:,:]', y : 'float[:,:]'):
     x[:,:] *= y
 
-def array_real_2d_C_div(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_div(x : 'float[:,:]', y : 'float[:,:]'):
     x[:,:] /= y
 
-def array_real_2d_C_mod(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_mod(x : 'float[:,:]', y : 'float[:,:]'):
     x[:,:] %= y
 
-def array_real_2d_C_array_initialization(a : 'float[:,:]'):
+def array_float_2d_C_array_initialization(a : 'float[:,:]'):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float')
     a[:,:] = tmp[:,:]
 
-def array_real_3d_C_array_initialization_1(x : 'float[:,:]', y : 'float[:,:]', a : 'float[:,:,:]'):
+def array_float_3d_C_array_initialization_1(x : 'float[:,:]', y : 'float[:,:]', a : 'float[:,:,:]'):
     from numpy import array
     tmp      = array([x, y], dtype='float')
     a[:,:,:] = tmp[:,:,:]
 
-def array_real_3d_C_array_initialization_2(a : 'float[:,:,:]'):
+def array_float_3d_C_array_initialization_2(a : 'float[:,:,:]'):
     from numpy import array
     x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
               [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='C')
     a[:,:,:] = x[:,:,:]
 
-def array_real_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]', a : 'float[:,:,:,:]'):
+def array_float_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]', a : 'float[:,:,:,:]'):
     from numpy import array
     tmp      = array([x, y], dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
 
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
+##==============================================================================
+
+def array_float_nested_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:]'):
+    from numpy import array
+    tmp      = array([x, [y, z, z], x], dtype='float')
+    a[:,:,:,:] = tmp[:,:,:,:]
+
+def array_float_nested_C_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:]'):
+    from numpy import array
+    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float')
+    x[:,:,:,:] = tmp[:,:,:,:]
+
+def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:]'):
+    from numpy import array
+    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+                       a,
+                       [[[1., 2., 3.], [1., 2., 3.]],
+                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float')
+    x[:,:,:,:] = tmp[:,:,:,:]
+
+##==============================================================================
+## TEST NESTED ARRAYS INITIALIZATION WITH ORDER F
+##==============================================================================
+
+def array_float_nested_F_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:](order=F)'):
+    from numpy import array
+    tmp      = array([x, [y, z, z], x], dtype='float', order="F")
+    a[:,:,:,:] = tmp[:,:,:,:]
+
+def array_float_nested_F_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:](order=F)'):
+    from numpy import array
+    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
+    x[:,:,:,:] = tmp[:,:,:,:]
+
+def array_float_nested_F_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:](order=F)'):
+    from numpy import array
+    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+                       a,
+                       [[[1., 2., 3.], [1., 2., 3.]],
+                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float', order="F")
+    x[:,:,:,:] = tmp[:,:,:,:]
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 1D
+##==============================================================================
+
+def array_view_steps_C_1D_1(a : 'int[:]'):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp)
+    return b
+
+def array_view_steps_C_1D_2(a : 'int[:]'):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp)
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER C 2D
+##==============================================================================
+
+def array_view_steps_C_2D_1(a : 'int[:,:]'):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp)
+    return b
+
+def array_view_steps_C_2D_2(a : 'int[:,:]'):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp)
+    return b
+
+def array_view_steps_C_2D_3(a : 'int[:,:]'):
+    from numpy import array
+    tmp = a[1:10:2, 1::2]
+    b = array(tmp)
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 1D
+##==============================================================================
+
+def array_view_steps_F_1D_1(a : 'int[:](order=F)'):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp, order="F")
+    return b
+
+def array_view_steps_F_1D_2(a : 'int[:](order=F)'):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp, order="F")
+    return b
+
+##==============================================================================
+## TEST ARRAY VIEW STEPS ARRAY INITIALIZATION ORDER F 2D
+##==============================================================================
+
+def array_view_steps_F_2D_1(a : 'int[:,:](order=F)'):
+    from numpy import array
+    tmp = a[::2]
+    b = array(tmp, order="F")
+    return b
+
+def array_view_steps_F_2D_2(a : 'int[:,:](order=F)'):
+    from numpy import array
+    tmp = a[1:10:2]
+    b = array(tmp, order="F")
+    return b
+
+def array_view_steps_F_2D_3(a : 'int[:,:](order=F)'):
+    from numpy import array
+    tmp = a[1:10:2, 1::2]
+    b = array(tmp, order="F")
+    return b
 
 #==============================================================================
 # 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
 
-def array_real_2d_F_scalar_add(x : 'float[:,:](order=F)', a : 'float'):
+def array_float_2d_F_scalar_add(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] += a
 
-def array_real_2d_F_scalar_sub(x : 'float[:,:](order=F)', a : 'float'):
+def array_float_2d_F_scalar_sub(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] -= a
 
-def array_real_2d_F_scalar_mul(x : 'float[:,:](order=F)', a : 'float'):
+def array_float_2d_F_scalar_mul(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] *= a
 
-def array_real_2d_F_scalar_div(x : 'float[:,:](order=F)', a : 'float'):
+def array_float_2d_F_scalar_div(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] /= a
 
-def array_real_2d_F_scalar_mod(x : 'float[:,:](order=F)', a : 'float'):
+def array_float_2d_F_scalar_mod(x : 'float[:,:](order=F)', a : 'float'):
     x[:,:] %= a
 
-def array_real_2d_F_add(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_add(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] += y
 
-def array_real_2d_F_sub(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_sub(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] -= y
 
-def array_real_2d_F_mul(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_mul(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] *= y
 
-def array_real_2d_F_div(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_div(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] /= y
 
-def array_real_2d_F_mod(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_mod(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     x[:,:] %= y
 
-def array_real_2d_F_array_initialization(a : 'float[:,:](order=F)'):
+def array_float_2d_F_array_initialization(a : 'float[:,:](order=F)'):
     from numpy import array
     tmp = array([[1, 2, 3], [4, 5, 6]], dtype='float', order='F')
     a[:,:] = tmp[:,:]
 
-def array_real_3d_F_array_initialization_1(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)', a : 'float[:,:,:](order=F)'):
+def array_float_3d_F_array_initialization_1(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)', a : 'float[:,:,:](order=F)'):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:] = tmp[:,:,:]
 
-def array_real_3d_F_array_initialization_2(a : 'float[:,:,:](order=F)'):
+def array_float_3d_F_array_initialization_2(a : 'float[:,:,:](order=F)'):
     from numpy import array
     x = array([[[0., 1., 2., 3.], [4., 5., 6., 7.], [8., 9., 10., 11.]],
                  [[12., 13., 14., 15.], [16., 17., 18., 19.], [20., 21., 22., 23.]]], order='F')
     a[:,:,:] = x[:,:,:]
 
-def array_real_4d_F_array_initialization(x : 'float[:,:,:](order=F)', y : 'float[:,:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
+def array_float_4d_F_array_initialization(x : 'float[:,:,:](order=F)', y : 'float[:,:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
     from numpy import array
     tmp      = array([x, y], dtype='float', order='F')
     a[:,:,:,:] = tmp[:,:,:,:]
 
-def array_real_4d_F_array_initialization_mixed_ordering(x : 'float[:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
+def array_float_4d_F_array_initialization_mixed_ordering(x : 'float[:,:](order=F)', a : 'float[:,:,:,:](order=F)'):
     import numpy as np
     tmp      = np.array(((((0., 1.), (2., 3.)),
                           ((4., 5.), (6., 7.)),
@@ -406,17 +525,17 @@ def array_int32_2d_F_complex_3d_expr(x : 'int32[:,:](order=F)', y : 'int32[:,:](
     z = full((2,3),5,order='F', dtype=int32)
     x[:] = (x // y) * x + z
 
-def array_real_1d_complex_3d_expr(x : 'float[:]', y : 'float[:]'):
+def array_float_1d_complex_3d_expr(x : 'float[:]', y : 'float[:]'):
     from numpy import full
     z = full(3,5)
     x[:] = (x // y) * x + z
 
-def array_real_2d_C_complex_3d_expr(x : 'float[:,:]', y : 'float[:,:]'):
+def array_float_2d_C_complex_3d_expr(x : 'float[:,:]', y : 'float[:,:]'):
     from numpy import full
     z = full((2,3),5)
     x[:] = (x // y) * x + z
 
-def array_real_2d_F_complex_3d_expr(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
+def array_float_2d_F_complex_3d_expr(x : 'float[:,:](order=F)', y : 'float[:,:](order=F)'):
     from numpy import full
     z = full((2,3),5,order='F')
     x[:] = (x // y) * x + z
@@ -441,7 +560,7 @@ def array_int32_in_bool_out_2d_F_complex_3d_expr(x : 'int32[:,:](order=F)', y : 
 #==============================================================================
 
 @stack_array('a')
-def array_real_1d_sum_stack_array():
+def array_float_1d_sum_stack_array():
     from numpy import zeros
     a = zeros(10)
     s = 0.
@@ -450,7 +569,7 @@ def array_real_1d_sum_stack_array():
     return s
 
 @stack_array('a')
-def array_real_1d_div_stack_array():
+def array_float_1d_div_stack_array():
     from numpy import ones
     a = ones(10)
     s = 0.
@@ -486,7 +605,7 @@ def multiple_stack_array_2():
 #==============================================================================
 
 @stack_array('a')
-def array_real_2d_sum_stack_array():
+def array_float_2d_sum_stack_array():
     from numpy import zeros
     a = zeros((10, 10))
     s = 0.
@@ -496,7 +615,7 @@ def array_real_2d_sum_stack_array():
     return s
 
 @stack_array('a')
-def array_real_2d_div_stack_array():
+def array_float_2d_div_stack_array():
     from numpy import full
     a = full((10, 10), 2)
     s = 1.
@@ -535,44 +654,44 @@ def multiple_2d_stack_array_2():
 # TEST: Product and matrix multiplication
 #==============================================================================
 
-def array_real_1d_1d_prod(x : 'float[:]', out : 'float[:]'):
+def array_float_1d_1d_prod(x : 'float[:]', out : 'float[:]'):
     from numpy import prod
     out[:] = prod(x)
 
-def array_real_2d_1d_matmul(A : 'float[:,:]', x : 'float[:]', out : 'float[:]'):
+def array_float_2d_1d_matmul(A : 'float[:,:]', x : 'float[:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_2d_1d_matmul_creation(A : 'float[:,:]', x : 'float[:]'):
+def array_float_2d_1d_matmul_creation(A : 'float[:,:]', x : 'float[:]'):
     from numpy import matmul
     out = matmul(A, x)
     return out.sum()
 
-def array_real_2d_1d_matmul_order_F(A : 'float[:,:](order=F)', x : 'float[:]', out : 'float[:]'):
+def array_float_2d_1d_matmul_order_F(A : 'float[:,:](order=F)', x : 'float[:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(A, x)
 
-def array_real_1d_2d_matmul(x : 'float[:]', A : 'float[:,:]', out : 'float[:]'):
+def array_float_1d_2d_matmul(x : 'float[:]', A : 'float[:,:]', out : 'float[:]'):
     from numpy import matmul
     out[:] = matmul(x, A)
 
-def array_real_2d_2d_matmul(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
+def array_float_2d_2d_matmul(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_F_F(A : 'float[:,:](order=F)', B : 'float[:,:](order=F)', out : 'float[:,:](order=F)'):
+def array_float_2d_2d_matmul_F_F(A : 'float[:,:](order=F)', B : 'float[:,:](order=F)', out : 'float[:,:](order=F)'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
 # Mixed order, not supported currently, see #244
-def array_real_2d_2d_matmul_mixorder(A : 'float[:,:]', B : 'float[:,:](order=F)', out : 'float[:,:]'):
+def array_float_2d_2d_matmul_mixorder(A : 'float[:,:]', B : 'float[:,:](order=F)', out : 'float[:,:]'):
     from numpy import matmul
     out[:,:] = matmul(A, B)
 
-def array_real_2d_2d_matmul_operator(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
+def array_float_2d_2d_matmul_operator(A : 'float[:,:]', B : 'float[:,:]', out : 'float[:,:]'):
     out[:,:] = A @ B
 
-def array_real_loopdiff(x : 'float[:]', y : 'float[:]', out : 'float[:]'):
+def array_float_loopdiff(x : 'float[:]', y : 'float[:]', out : 'float[:]'):
     dxy = x - y
     for k in range(len(x)):
         out[k] = dxy[k]
