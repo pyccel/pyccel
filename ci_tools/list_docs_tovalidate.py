@@ -72,14 +72,14 @@ if __name__ == '__main__':
             objects = []
             to_visit = list(ast.iter_child_nodes(tree))
             for node in to_visit:
-                # This loop walks the ast and explores all objects
+                # This loop walks the AST and explores all objects
                 # present in the file.
                 # If the object is an instance of a FunctionDef or
                 # a ClassDef, a check is performed to see if any of
                 # the updated lines are present within the object.
-                # Additionally, The name of all objects present
+                # Additionally, the name of all objects present
                 # inside a function or a class is updated to include
-                # the name of the parent object
+                # the name of the parent object.
                 if isinstance(node, (FunctionDef, ClassDef)):
                     if should_ignore('.'.join([prefix, node.name])):
                         continue
