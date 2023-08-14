@@ -778,3 +778,119 @@ def test_f_array_return(language):
         assert np.array_equal(f_output, test_output)
         assert f_output.flags.c_contiguous == test_output.flags.c_contiguous
         assert f_output.flags.f_contiguous == test_output.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
+def test_copy_f_to_f(language):
+    @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
+    def copy_f_to_f(b : 'T'):
+        from numpy import array
+        a = array(b, order='F')
+        return a
+
+    epyccel_func = epyccel(copy_f_to_f, language=language)
+    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2,3,4)), order='F')
+    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3,4)), order='F')
+
+    for fl in (fl_2d, fl_3d):
+        pyth_out = copy_f_to_f(fl)
+        pycc_out = epyccel_func(fl)
+
+        assert np.array_equal(pyth_out, pycc_out)
+        assert pyth_out.dtype is pycc_out.dtype
+        assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+        assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
+def test_copy_f_to_c(language):
+    @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
+    def copy_f_to_c(b : 'T'):
+        from numpy import array
+        a = array(b, order='C')
+        return a
+
+    epyccel_func = epyccel(copy_f_to_c, language=language)
+    fl_3d = np.array(uniform(min_float / 2, max_float / 2, (2,3,4)), order='F')
+    fl_2d = np.array(uniform(min_float / 2, max_float / 2, (3,4)), order='F')
+
+    for fl in (fl_2d, fl_3d):
+        pyth_out = copy_f_to_c(fl)
+        pycc_out = epyccel_func(fl)
+
+        assert np.array_equal(pyth_out, pycc_out)
+        assert pyth_out.dtype is pycc_out.dtype
+        assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+        assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
+def test_copy_c_to_c(language):
+    @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
+    def copy_c_to_c(b : 'T'):
+        from numpy import array
+        a = array(b, order='C')
+        return a
+
+    epyccel_func = epyccel(copy_c_to_c, language=language)
+    fl_3d = uniform(min_float / 2, max_float / 2, (2,3,4))
+    fl_2d = uniform(min_float / 2, max_float / 2, (3,4))
+
+    for fl in (fl_2d, fl_3d):
+        pyth_out = copy_c_to_c(fl)
+        pycc_out = epyccel_func(fl)
+
+        assert np.array_equal(pyth_out, pycc_out)
+        assert pyth_out.dtype is pycc_out.dtype
+        assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+        assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
+            pytest.mark.python
+        ])
+    )
+)
+def test_copy_c_to_f(language):
+    @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
+    def copy_c_to_f(b : 'T'):
+        from numpy import array
+        a = array(b, order='F')
+        return a
+
+    epyccel_func = epyccel(copy_c_to_f, language=language)
+    fl_3d = uniform(min_float / 2, max_float / 2, (2,3,4))
+    fl_2d = uniform(min_float / 2, max_float / 2, (3,4))
+
+    for fl in (fl_2d, fl_3d):
+        pyth_out = copy_c_to_f(fl)
+        pycc_out = epyccel_func(fl)
+
+        assert np.array_equal(pyth_out, pycc_out)
+        assert pyth_out.dtype is pycc_out.dtype
+        assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
+        assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
