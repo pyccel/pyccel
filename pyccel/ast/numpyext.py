@@ -463,7 +463,7 @@ class NumpyNewArray(PyccelInternalFunction):
     Superclass for nodes representing NumPy array allocation functions.
 
     Class from which all nodes representing a NumPy function which implies a call
-    to `Allocate` shoul inherit.
+    to `Allocate` should inherit.
 
     Parameters
     ----------
