@@ -27,6 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
+from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -344,6 +345,8 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
+        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
+            return True
 
         if not isinstance(a, Variable):
             return False
@@ -728,8 +731,16 @@ class CCodePrinter(CodePrinter):
         name = expr.module.name
         if isinstance(name, AsName):
             name = name.name
-        # TODO: Add classes and interfaces
-        funcs = '\n'.join('{};'.format(self.function_signature(f)) for f in expr.module.funcs)
+        # TODO: Add interfaces
+        classes = ""
+        funcs = ""
+        for classDef in expr.module.classes:
+            classes += f"struct {classDef.name} {{\n"
+            for method in classDef.methods:
+                method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
+                funcs += f"{self.function_signature(method)};\n"
+            classes += "};\n"
+        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 
@@ -739,18 +750,13 @@ class CCodePrinter(CodePrinter):
 
         self._in_header = False
         self.exit_scope()
-        return ('#ifndef {name}_H\n'
-                '#define {name}_H\n\n'
-                '{imports}\n'
-                '{variables}\n'
-                #'{classes}\n'
-                '{funcs}\n'
-                #'{interfaces}\n'
-                '#endif // {name}_H\n').format(
-                        name    = name.upper(),
-                        imports = imports,
-                        variables = global_variables,
-                        funcs   = funcs)
+        return (f"#ifndef {name.upper()}_H\n \
+                #define {name.upper()}_H\n\n \
+                {imports}\n \
+                {global_variables}\n \
+                {classes}\n \
+                {funcs}\n \
+                #endif // {name}_H\n")
 
     def _print_Module(self, expr):
         self.set_scope(expr.scope)
@@ -1106,7 +1112,8 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
         if isinstance(expr.dtype, NativeInteger):
             self.add_import(c_imports['stdint'])
-        dtype = self.find_in_dtype_registry(dtype, prec)
+        if not dtype.startswith("struct"):
+            dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
@@ -2237,6 +2244,15 @@ class CCodePrinter(CodePrinter):
                 '}}').format(imports=imports,
                                     decs=decs,
                                     body=body)
+
+    #================== CLASSES ==================
+
+    def _print_CustomDataType(self, expr):
+        return "struct " + expr.name
+
+    def _print_ClassDef(self, expr):
+        methods = ''.join(self._print(method) for method in expr.methods)
+        return methods
 
     #=================== MACROS ==================
 
