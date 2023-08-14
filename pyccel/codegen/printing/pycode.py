@@ -207,17 +207,16 @@ class PythonCodePrinter(CodePrinter):
         """
         if init_dtype is None:
             return ''
-        elif isinstance(init_dtype, (PythonType, NumpyResultType)):
+
+        if isinstance(init_dtype, (PythonType, NumpyResultType)):
             dtype = self._print(init_dtype)
-            return "dtype = " + dtype
         elif isinstance(init_dtype, PyccelFunctionDef):
             dtype = self._get_numpy_name(init_dtype.cls_name)
-            return f"dtype={dtype}"
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
                 dtype = self._get_numpy_name(DtypePrecisionToCastFunction[datatype(dtype).name][expr.precision])
-            return f"dtype={dtype}"
+        return f"dtype = {dtype}"
 
     def _print_Header(self, expr):
         return ''
