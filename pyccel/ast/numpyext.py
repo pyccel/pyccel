@@ -1652,7 +1652,7 @@ class NumpyMod(NumpyUfuncBinary):
         """
         Set the datatype of the object.
 
-        Set the datatype of the object by calculting how the types
+        Set the datatype of the object by calculating how the types
         may be promoted.
 
         Parameters
