@@ -1078,47 +1078,38 @@ class FCodePrinter(CodePrinter):
         expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
-        if expr.order == 'F':
-            if expr.rank == 2:
-                rhs_code = self._print(expr.arg)
-                if expr.arg.order != expr.order:
-                    rhs_code = 'transpose({})'.format(rhs_code)
-            elif expr.rank > 2:
-                args     = [self._print(a) for a in expr_args]
-                new_args = []
-                for ac, a in zip(args, expr_args):
-                    if a.order == 'C':
-                        shape    = ', '.join(self._print(i) for i in a.shape)
-                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
-                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
-                    new_args.append(ac)
-
-                args     = new_args
-                rhs_code = '[' + ' ,'.join(args) + ']'
-                shape    = ', '.join(self._print(i) for i in expr.shape)
-                order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
-                order    = order[1:]+ order[:1]
-                order    = ', '.join(self._print(i) for i in order)
-                rhs_code = 'reshape({}, [{}], order=[{}])'.format(rhs_code, shape, order)
-        elif expr.order == 'C':
-            if expr.rank > 2:
-                args     = [self._print(a) for a in expr_args]
-                new_args = []
-                for ac, a in zip(args, expr_args):
-                    if a.order == 'F':
-                        shape    = ', '.join(self._print(i) for i in a.shape[::-1])
-                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
-                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
-                    new_args.append(ac)
-
-                args     = new_args
-                rhs_code = '[' + ' ,'.join(args) + ']'
-                shape    = ', '.join(self._print(i) for i in expr.shape[::-1])
-                rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
-            else:
-                rhs_code = self._print(expr.arg)
+        if expr.rank == 2:
+            rhs_code = self._print(expr.arg)
+            if expr.arg.order != expr.order:
+                rhs_code = f'transpose({rhs_code})'
         elif expr.order is None:
             rhs_code = self._print(expr.arg)
+        else:
+            new_args = []
+            order = expr.order
+            inv_order = 'C' if order == 'F' else 'F'
+            for a in expr_args:
+                ac = self._print(a)
+                if a.order == inv_order:
+                    shape = a.shape if a.order == 'C' else a.shape[::-1]
+                    shape_code = ', '.join(self._print(i) for i in shape)
+                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                    ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
+                new_args.append(ac)
+
+            if len(new_args) == 1:
+                rhs_code = new_args[0]
+            else:
+                rhs_code = '[' + ' ,'.join(new_args) + ']'
+                if order == 'C':
+                    shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
+                    rhs_code = f'reshape({rhs_code}, [{shape_code}])'
+                else:
+                    shape_code = ', '.join(self._print(i) for i in expr.shape)
+                    order_index = [LiteralInteger(i) for i in range(1, expr.rank+1)]
+                    order_index = order_index[1:]+ order_index[:1]
+                    order_code = ', '.join(self._print(i) for i in order_index)
+                    rhs_code = f'reshape({rhs_code}, [{shape_code}], order=[{order_code}])'
         return rhs_code
 
     def _print_NumpyFloor(self, expr):
