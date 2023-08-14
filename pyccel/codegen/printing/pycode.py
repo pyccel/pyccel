@@ -165,7 +165,7 @@ class PythonCodePrinter(CodePrinter):
         Parameters
         ----------
         expr : PyccelInternalFunction
-            A pyccel node describing a NumPy function.
+            A Pyccel node describing a NumPy function.
 
         Returns
         -------
