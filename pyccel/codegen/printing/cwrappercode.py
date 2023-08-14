@@ -1276,7 +1276,7 @@ class CWrapperCodePrinter(CCodePrinter):
         step = 1
         for i in range(nargs):
             interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
-            interface_types = [(a.dtype, a.precision) for a in interface_args]
+            interface_types = [(a.dtype, a.precision, a.rank, a.order) for a in interface_args]
             possible_types = list(dict.fromkeys(interface_types)) # Remove duplicates but preserve order
             for func, t in zip(funcs, interface_types):
                 argument_type_flags[func].append(possible_types.index(t)*step)
