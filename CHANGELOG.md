@@ -8,8 +8,9 @@ All notable changes to this project will be documented in this file.
 -   #752 : Allow passing array variables to `numpy.array`.
 -   #1280 : Allow copying arrays using `numpy.array`.
 -   Allow interfaces in classes.
--   Python support for a simple class.
--   #1430 : Added conjugate support to booleans.
+-   Add Python support for a simple class.
+-   #1430 : Add conjugate support to booleans.
+-   #1452 : Add C printing support for a class containing only functions.
 
 ### Fixed
 
