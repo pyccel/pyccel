@@ -1075,8 +1075,7 @@ class FCodePrinter(CodePrinter):
         return stmt
 
     def _print_NumpyArray(self, expr):
-        """Fortran print."""
-
+        expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.order == 'F':
@@ -1085,9 +1084,9 @@ class FCodePrinter(CodePrinter):
                 if expr.arg.order != expr.order:
                     rhs_code = 'transpose({})'.format(rhs_code)
             elif expr.rank > 2:
-                args     = [self._print(a) for a in expr.arg]
+                args     = [self._print(a) for a in expr_args]
                 new_args = []
-                for ac, a in zip(args, expr.arg):
+                for ac, a in zip(args, expr_args):
                     if a.order == 'C':
                         shape    = ', '.join(self._print(i) for i in a.shape)
                         order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
@@ -1103,9 +1102,9 @@ class FCodePrinter(CodePrinter):
                 rhs_code = 'reshape({}, [{}], order=[{}])'.format(rhs_code, shape, order)
         elif expr.order == 'C':
             if expr.rank > 2:
-                args     = [self._print(a) for a in expr.arg]
+                args     = [self._print(a) for a in expr_args]
                 new_args = []
-                for ac, a in zip(args, expr.arg):
+                for ac, a in zip(args, expr_args):
                     if a.order == 'F':
                         shape    = ', '.join(self._print(i) for i in a.shape[::-1])
                         order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
