@@ -291,20 +291,21 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
-        func = expr.functions[0]
-        if not isinstance(func, FunctionAddress):
-            func.rename(expr.name)
-        func_code = self._print(func)
-        _, body = func_code.split(':\n',1)
-        for func in expr.functions[1:]:
+
+        # Print each function in the interface
+        func_def_code = []
+        for func in expr.functions:
             if not isinstance(func, FunctionAddress):
                 func.rename(expr.name)
-            i_func_code = self._print(func)
-            _, i_body = i_func_code.split(':\n',1)
-            if i_body != body:
-                warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
-                return func_code
-        return func_code
+            func_def_code.append(self._print(func))
+
+        # Split functions after declaration to ignore type declaration differences
+        bodies = [c.split(':\n',1)[1] for c in func_def_code]
+        # Verify that generated function bodies are identical
+        if len(set(bodies)) > 1:
+            warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
+
+        return func_def_code[0]
 
     def _print_FunctionDef(self, expr):
         self.set_scope(expr.scope)
