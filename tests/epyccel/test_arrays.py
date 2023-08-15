@@ -2660,7 +2660,7 @@ def test_array_1d_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2699,7 +2699,7 @@ def test_array_1d_slice_stride_5(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2722,7 +2722,7 @@ def test_array_1d_slice_stride_7(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2744,7 +2744,7 @@ def test_array_1d_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2766,7 +2766,7 @@ def test_array_1d_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2787,7 +2787,7 @@ def test_array_1d_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2802,7 +2802,7 @@ def test_array_1d_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2823,7 +2823,7 @@ def test_array_1d_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2837,7 +2837,7 @@ def test_array_1d_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2858,7 +2858,7 @@ def test_array_1d_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2872,7 +2872,7 @@ def test_array_1d_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2911,7 +2911,7 @@ def test_array_2d_F_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2925,7 +2925,7 @@ def test_array_2d_F_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2982,7 +2982,7 @@ def test_array_2d_F_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2996,7 +2996,7 @@ def test_array_2d_F_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3010,7 +3010,7 @@ def test_array_2d_F_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3024,7 +3024,7 @@ def test_array_2d_F_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3038,7 +3038,7 @@ def test_array_2d_F_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3052,7 +3052,7 @@ def test_array_2d_F_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3066,7 +3066,7 @@ def test_array_2d_F_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3080,7 +3080,7 @@ def test_array_2d_F_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3094,7 +3094,7 @@ def test_array_2d_F_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3108,7 +3108,7 @@ def test_array_2d_F_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3122,7 +3122,7 @@ def test_array_2d_F_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3137,7 +3137,7 @@ def test_array_2d_F_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3151,7 +3151,7 @@ def test_array_2d_F_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3165,7 +3165,7 @@ def test_array_2d_F_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3190,7 +3190,7 @@ def test_array_2d_C_slice_stride_1(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3204,7 +3204,7 @@ def test_array_2d_C_slice_stride_2(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3225,7 +3225,7 @@ def test_array_2d_C_slice_stride_4(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3246,7 +3246,7 @@ def test_array_2d_C_slice_stride_6(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3268,7 +3268,7 @@ def test_array_2d_C_slice_stride_8(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3282,7 +3282,7 @@ def test_array_2d_C_slice_stride_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3296,7 +3296,7 @@ def test_array_2d_C_slice_stride_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3310,7 +3310,7 @@ def test_array_2d_C_slice_stride_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3324,7 +3324,7 @@ def test_array_2d_C_slice_stride_12(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3338,7 +3338,7 @@ def test_array_2d_C_slice_stride_13(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3352,7 +3352,7 @@ def test_array_2d_C_slice_stride_14(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3366,7 +3366,7 @@ def test_array_2d_C_slice_stride_15(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3380,7 +3380,7 @@ def test_array_2d_C_slice_stride_16(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3394,7 +3394,7 @@ def test_array_2d_C_slice_stride_17(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3408,7 +3408,7 @@ def test_array_2d_C_slice_stride_18(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3422,7 +3422,7 @@ def test_array_2d_C_slice_stride_19(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3436,7 +3436,7 @@ def test_array_2d_C_slice_stride_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3450,7 +3450,7 @@ def test_array_2d_C_slice_stride_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3464,7 +3464,7 @@ def test_array_2d_C_slice_stride_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3510,13 +3510,6 @@ def test_arrs_2d_different_shapes_0(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="eppycel zero gives 0 or +inf randomly"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    ]
-)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
@@ -3539,7 +3532,7 @@ def test_arrs_1d_int64_index(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3556,7 +3549,7 @@ def test_arrs_1d_negative_step_positive_step(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="negative step does not work in c"),
+            pytest.mark.skip(reason="negative step does not work in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -3589,7 +3582,7 @@ def test_numpy_arange_full_arg(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    assert r_f1.dtype is r_f2.dtype
+    assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_with_dtype(language):
@@ -3604,7 +3597,7 @@ def test_numpy_arange_negative_step(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    assert r_f1.dtype is r_f2.dtype
+    assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_negative_step_2(language):
@@ -3614,7 +3607,7 @@ def test_numpy_arange_negative_step_2(language):
     r_f1 = f1()
     r_f2 = f2()
 
-    assert r_f1.dtype is r_f2.dtype
+    assert (type(r_f1[1]) is type(r_f2[1]))
     np.testing.assert_allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_numpy_arange_into_slice(language):
