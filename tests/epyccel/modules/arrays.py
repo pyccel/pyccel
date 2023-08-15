@@ -671,6 +671,12 @@ def array_ndmin_4(x : 'T'):
     y = array(x, ndmin=4)
     return y
 
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def array_ndmin_2_order(x : 'T'):
+    from numpy import array
+    y = array(x, ndmin=2, order='F')
+    return y
+
 #==============================================================================
 # TEST: Product and matrix multiplication
 #==============================================================================

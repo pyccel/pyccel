@@ -3924,6 +3924,31 @@ def test_array_ndmin_4(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_array_ndmin_2_order(language):
+    f1 = arrays.array_ndmin_2_order
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    b = arrays.a_2d_c
+    c = arrays.a_2d_c
+    d = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64, size=(2,3,4))
+    e = d.copy(order='F')
+
+    check_array_equal(f1(a), f2(a))
+    check_array_equal(f1(b), f2(b))
+    check_array_equal(f1(c), f2(c))
+    check_array_equal(f1(d), f2(d))
+    check_array_equal(f1(e), f2(e))
+
 
 #def teardown_module():
 #    import os, glob
