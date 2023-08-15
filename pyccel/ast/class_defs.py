@@ -11,7 +11,7 @@ from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize)
+                        NumpyConjugate, NumpySize, NumpyResultType)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -158,7 +158,9 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             PyccelFunctionDef('conj', func_class = NumpyConjugate,
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
             PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'})
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('dtype', func_class = NumpyResultType,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )
 

@@ -74,10 +74,7 @@ In order to use this library the user needs to create a header file, we call it 
 After that we can create a Python file `test_funcs.py`,where we can import the Fortran functions and use them
 
 ```python
-from pyccel.decorators import types
-
-@types('int')
-def print_fib(x):
+def print_fib(x : int):
     from  funcs_headers import fib
     print(fib(x))
 ```

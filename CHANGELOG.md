@@ -8,8 +8,11 @@ All notable changes to this project will be documented in this file.
 -   #752 : Allow passing array variables to `numpy.array`.
 -   #1280 : Allow copying arrays using `numpy.array`.
 -   Allow interfaces in classes.
--   Python support for a simple class.
--   #1430 : Added conjugate support to booleans.
+-   Add Python support for a simple class.
+-   #1430 : Add conjugate support to booleans.
+-   #1452 : Add C printing support for a class containing only functions.
+-   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
+-   #1260 : Add support for NumPy `result_type` function.
 
 ### Fixed
 
@@ -32,6 +35,7 @@ All notable changes to this project will be documented in this file.
 
 -   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
