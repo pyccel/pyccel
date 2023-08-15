@@ -891,8 +891,16 @@ class SemanticParser(BasicParser):
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
+            argument_description = func.argument_description
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
+
+            if argument_description:
+                # Ignore values passed by position but add any unspecified keywords
+                # with the correct default value
+                for kw, val in list(argument_description.items())[len(args):]:
+                    if kw not in kwargs:
+                        kwargs[kw] = val
 
             try:
                 new_expr = func(*args, **kwargs)

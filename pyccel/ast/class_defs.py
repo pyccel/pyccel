@@ -162,7 +162,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
             PyccelFunctionDef('dtype', func_class = NumpyResultType,
                 decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('copy', func_class = NumpyArray,
+            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )

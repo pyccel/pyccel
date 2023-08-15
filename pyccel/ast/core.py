@@ -2910,25 +2910,42 @@ class PyccelFunctionDef(FunctionDef):
     Parameters
     ----------
     name : str
-           The name of the function.
+        The name of the function.
 
     func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
-         The class which should be instantiated upon a FunctionCall
-         to this FunctionDef object.
+        The class which should be instantiated upon a FunctionCall
+        to this FunctionDef object.
 
     decorators : dictionary
         A dictionary whose keys are the names of decorators and whose values
         contain their implementation.
+
+    argument_description : dict, optional
+        A dictionary containing all arguments and their default values. This
+        is useful in order to reuse types with similar functionalities but
+        different default values.
     """
-    __slots__ = ()
-    def __init__(self, name, func_class, *, decorators = {}):
+    __slots__ = ('_argument_description',)
+    def __init__(self, name, func_class, *, decorators = {}, argument_description = None):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
+        assert argument_description is None or isinstance(argument_description, dict)
         arguments = ()
         results = ()
         body = ()
         super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
+        self._argument_description = argument_description or {}
+
+    @property
+    def argument_description(self):
+        """
+        Get a description of the arguments.
+
+        If the underlying class has different default values, return a dictionary
+        containing all arguments and their default values. Otherwise return `None`.
+        """
+        return self._argument_description
 
 class Interface(Basic):
 
