@@ -3872,7 +3872,7 @@ def test_array_ndmin_1(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -3897,7 +3897,7 @@ def test_array_ndmin_2(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -3922,7 +3922,7 @@ def test_array_ndmin_4(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -3947,7 +3947,7 @@ def test_array_ndmin_2_order(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
