@@ -15,12 +15,12 @@ Arguments:
 ---
 *Note:*
 The arguments **name** and **types** could also be passed of the form
-`@template(T, types=['int', 'real'])` without specifying the keywords.and the order in which the decorators are called is not important.
+`@template('T', types=['int', 'real'])` without specifying the keywords.
 
 ---
 When  a function is decorated with the template decorator:
 -   The templates are only available to the decorated function.
--   The templates overrides any existing templates with the same name (declared as header comment).
+-   A template overrides any existing template with the same name (declared as header comment).
 -   If the function is decorated with two templates with the same name, the first one gets overridden.
 ##### Examples
 In this example the arguments of **f** can either be boolean or complex, they can not be integer or float.
@@ -54,7 +54,7 @@ When a function is declared using a header comment as above:
 -   A template declared in the same scope as the function overrides any template with the same name in the parent's scopes.
 
 *Note:*
-When both a decorator and a header comment are used, the decorator takes precedent.
+When both a decorator and a header comment are used, the decorator takes precedence.
 
 #### Examples
 In this example the template **T** can be used to define the arguments types of the nested function **f2**:
