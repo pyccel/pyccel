@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
 -   #1241 : Incorrect transpose when copying an F-ordered array.
 -   #1241 : Fix infinite loop when passing an array as the only argument to `np.array`.
+-   #1496 : Fix interfaces which differ only by order or rank.
 
 ### Changed
 
