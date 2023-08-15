@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
+-   #1499 : Fix passing temporary arrays to functions.
 -   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
