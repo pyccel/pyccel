@@ -4,7 +4,7 @@
 
 OpenMP Runtime Library Routines for Pyccel work by importing the OpenMP routine needed from the `pyccel.stdlib`:
 
-Please note that files using the OpenMP Runtime library routines will only work when compiled with Pyccel (i.e. they won't work in pure python mode).
+Please note that files using the OpenMP Runtime library routines will only work when compiled with Pyccel (i.e. they won't work in pure Python mode).
 
 ```python
 from pyccel.stdlib.internal.openmp import omp_set_num_threads
@@ -15,10 +15,7 @@ from pyccel.stdlib.internal.openmp import omp_set_num_threads
 The following example shows how ``` omp_set_num_threads ``` is used to set the number of threads to ``` 4 threads ``` and how ``` omp_get_num_threads ``` is used to get the number of threads in the current team within a parallel region; ``` omp_get_num_threads ``` will return ``` 4 threads ```.
 
 ```python
-from pyccel.decorators import types
-
-@types('int')
-def get_num_threads(n):
+def get_num_threads(n : int):
     from pyccel.stdlib.internal.openmp import omp_set_num_threads, omp_get_num_threads, omp_get_thread_num
     omp_set_num_threads(n)
     #$ omp parallel
@@ -370,8 +367,7 @@ structured-block
 The ``` #$ omp task ``` pragma is used here to define an explicit task.\
 The ``` #$ omp taskwait ``` pragma is used here to specify that the current task region remains suspended until all child tasks that it generated before the `taskwait` construct complete execution.
 ```python
-@types('int', results='int')
-def fib(n):
+def fib(n : int) -> int:
   if n < 2:
     return n
   #$ omp task shared(i) firstprivate(n)

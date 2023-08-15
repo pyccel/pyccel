@@ -77,7 +77,7 @@ iso_c_binding = {
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
     "logical" : {
-        4  : "C_BOOL"}
+        -1 : "C_BOOL"}
 }
 iso_c_binding_shortcut_mapping = {
     'C_INT8_T'              : 'i8',
@@ -91,31 +91,40 @@ iso_c_binding_shortcut_mapping = {
     'C_FLOAT_COMPLEX'       : 'c32',
     'C_DOUBLE_COMPLEX'      : 'c64',
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
-    'C_BOOL'                : 'b4'
+    'C_BOOL'                : 'b1'
 }
 default_precision = {'float': 8,
                     'int': numpy.dtype(int).alignment,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
-                    'bool':4}
+                    'bool':-1}
 dtype_and_precision_registry = { 'float':('float', -1),
                                  'double':('float', -1),
                                  'real':('float', -1),
                                  'pythonfloat':('float', -1), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
+                                 'f4':('float',4),
+                                 'f8':('float',8),
                                  'pythoncomplex':('complex', -1),
                                  'complex':('complex', -1),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
+                                 'c8':('complex',4),
+                                 'c16':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
+                                 'i1' :('int',1),
+                                 'i2':('int',2),
+                                 'i4':('int',4),
+                                 'i8':('int',8),
                                  'int'  :('int', -1),
                                  'pythonint'  :('int', -1),
                                  'integer':('int',-1),
                                  'bool' :('bool',-1),
+                                 'b1' :('bool',-1),
                                  'pythonbool' :('bool',-1)}
 
 
@@ -182,13 +191,14 @@ class NativeSymbol(DataType):
     __slots__ = ()
     _name = 'Symbol'
 
-
-# TODO to be removed
 class CustomDataType(DataType):
-    __slots__ = ('_name',)
+    """
+    Class from which user-defined types inherit.
 
-    def __init__(self, name='__UNDEFINED__'):
-        self._name = name
+    A general class for custom data types which is used as a
+    base class when a user defines their own type using classes.
+    """
+    __slots__ = ()
 
 class NativeGeneric(DataType):
     __slots__ = ()
@@ -239,11 +249,32 @@ class UnionType:
 
 def DataTypeFactory(name, argnames=["_name"],
                     BaseClass=CustomDataType,
-                    prefix=None,
-                    alias=None,
-                    is_iterable=False,
-                    is_with_construct=False,
-                    is_polymorphic=False):
+                    prefix=None):
+    """
+    Create a new data class.
+
+    Create a new data class which sub-classes a DataType. This provides
+    a new data type which can be used, for example, for class types.
+
+    Parameters
+    ----------
+    name : str
+        The name of the new class.
+
+    argnames : list of str
+        A list of all the arguments for the new class.
+
+    BaseClass : type inheriting from DataType
+        The class from which the new type will be sub-classed.
+
+    prefix : str
+        A prefix which will be added to the class name.
+
+    Returns
+    -------
+    type
+        A new DataType class.
+    """
     def __init__(self, **kwargs):
         for key, value in list(kwargs.items()):
             # here, the argnames variable is the one passed to the
@@ -252,7 +283,7 @@ def DataTypeFactory(name, argnames=["_name"],
                 raise TypeError("Argument %s not valid for %s"
                     % (key, self.__class__.__name__))
             setattr(self, key, value)
-        BaseClass.__init__(self, name=name[:-len("Class")])
+        BaseClass.__init__(self)
 
     if prefix is None:
         prefix = 'Pyccel'
@@ -260,13 +291,10 @@ def DataTypeFactory(name, argnames=["_name"],
         prefix = 'Pyccel{0}'.format(prefix)
 
     newclass = type(prefix + name, (BaseClass,),
-                    {"__init__":          __init__,
-                     "_name":             name,
-                     "prefix":            prefix,
-                     "alias":             alias,
-                     "is_iterable":       is_iterable,
-                     "is_with_construct": is_with_construct,
-                     "is_polymorphic":    is_polymorphic})
+                    {"__init__": __init__,
+                     "_name": name,
+                     "prefix": prefix,
+                     "alias": name})
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -318,15 +346,26 @@ def datatype(arg):
 def str_dtype(dtype):
 
     """
-    This function takes a datatype and returns a pyccel datatype as a string
+    Get a string describing a datatype.
 
-    Example
+    This function takes a pyccel datatype and returns a string which describes it.
+
+    Parameters
+    ----------
+    dtype : DataType
+        The datatype.
+
+    Returns
     -------
+    str
+        A description of the data type.
+
+    Examples
+    --------
     >>> str_dtype('int')
     'integer'
     >>> str_dtype(NativeInteger())
     'integer'
-
     """
     if isinstance(dtype, str):
         if dtype == 'int':
@@ -343,5 +382,7 @@ def str_dtype(dtype):
         return 'complex'
     elif isinstance(dtype, NativeBool):
         return 'bool'
+    elif isinstance(dtype, CustomDataType):
+        return dtype.name
     else:
         raise TypeError('Unknown datatype {0}'.format(str(dtype)))

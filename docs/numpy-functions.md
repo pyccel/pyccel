@@ -562,7 +562,7 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   Supported [array creation routines](https://numpy.org/doc/stable/reference/routines.array-creation.html) (fully supported):
 
-    -   `empty`, `full`, `ones`, `zeros`, `arange` (`like` parameter is not supported).
+    -   `empty`, `full`, `ones`, `zeros`, `array`, `arange` (`like` parameter is not supported).
     -   `empty_like`, `full_like`, `zeros_like`, and `ones_like` (`subok` parameter is not supported).
     -   `rand`, `randint`
     -   `where`, `count_nonzero` (Fortran only)
@@ -570,6 +570,6 @@ In Pyccel we try to support the NumPy functions which developers use the most.. 
 
 -   others:
 
-    -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`
+    -   `amax`, `amin`, `sum`, `shape`, `size`, `floor`, `sign`, `result_type`
 
 If discrepancies beyond round-off error are found between [NumPy](https://numpy.org/doc/stable/reference/)'s and [Pyccel](https://github.com/pyccel/pyccel)'s results, please create an issue at <https://github.com/pyccel/pyccel/issues> and provide a small example of your problem. Do not forget to specify your target language.

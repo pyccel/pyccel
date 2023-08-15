@@ -110,7 +110,7 @@ end module boo
 
 ## Allow negative index
 
-In python negative indexes allow a user to index an array starting from the back (e.g. the index -1 is the
+In Python negative indexes allow a user to index an array starting from the back (e.g. the index -1 is the
 last element of the array). Pyccel recreates this behaviour for literal indexes. However when an array is
 indexed with a variable or an expression, it is impractical (and often impossible) to know at compile time whether the index is
 positive or negative. As a result an if block must be added. This implies a (potentially large) performance
@@ -213,15 +213,14 @@ In Python it is often the case that a function with scalar arguments and a singl
 
 Important note: applying the `elemental` decorator to a function will not make a difference to the C translation of the function definition itself since C doesn't have the elementwise feature. However, Pyccel implements that functionality by calling the function in a `for` loop when an array argument is passed. In the following example, we will use the function `square` where `@elemental` will be useful:
 
-Here is the python code:
+Here is the Python code:
 
 ```python
 from pyccel.decorators import elemental
 import numpy as np
 
 @elemental
-@types(float)
-def square(x):
+def square(x : float):
     s = x*x
     return s
 
@@ -328,8 +327,7 @@ Here is a simple usage example:
 from pyccel.decorators import pure
 
 @pure
-@types(float)
-def square(x):
+def square(x : float):
     s = x*x
     return s
 ```

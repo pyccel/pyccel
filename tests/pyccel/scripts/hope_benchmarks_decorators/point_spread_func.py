@@ -1,8 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
-@types('double[:,:]','int','int','double','double','double[:,:]','double','double','double')
-def pdf ( density , x_range , y_range , x_center , y_center , w2D, r50 , b , a) :
+def pdf (density : 'double[:,:]', x_range : 'int', y_range : 'int', x_center : 'double', y_center : 'double', w2D : 'double[:,:]', r50 : 'double', b : 'double', a : 'double') :
     from numpy import sqrt, pi, sum as np_sum
     for x in range ( x_range ) :
         for y in range ( y_range ) :

@@ -1,4 +1,1 @@
 Unfortunately your PR is not passing the tests so it is not quite ready for review yet. Let me know when it is fixed with `/bot mark as ready`.
-
-The failing tests are:
-

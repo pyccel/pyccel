@@ -5,14 +5,35 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #752 : Allow passing array variables to `numpy.array`.
+-   #1280 : Allow copying arrays using `numpy.array`.
+-   Allow interfaces in classes.
+-   Add Python support for a simple class.
+-   #1430 : Add conjugate support to booleans.
+-   #1452 : Add C printing support for a class containing only functions.
+-   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
+-   #1260 : Add support for NumPy `result_type` function.
+
 ### Fixed
+
+-   #682 : Wrong data layout when copying a slice of an array.
+-   #1453 : Fix error-level developer mode output.
+-   \[INTERNALS\] Fix string base class selection.
 
 ### Changed
 
+-   #1455 : Make `ConstructorCall` inherit from `FunctionCall`.
 -   Updating `stdlib` files if they are modified not just accessed.
+-   `pyccel_clean` tool now deletes folders **starting with** `__pyccel__` and `__epyccel__`.
+-   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
+-   \[INTERNALS\] Add class object to class function call arguments.
+-   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
+-   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
+-   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
 
 ### Deprecated
 
+-   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
