@@ -1076,17 +1076,21 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyArray(self, expr):
         expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
+        order = expr.order
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
-        if expr.rank == 2:
+        if expr.rank <= 2:
             rhs_code = self._print(expr.arg)
-            if expr.arg.order != expr.order:
+            if expr.arg.order and expr.arg.order != expr.order:
                 rhs_code = f'transpose({rhs_code})'
-        elif expr.order is None:
-            rhs_code = self._print(expr.arg)
+            if expr.arg.rank < expr.rank:
+                if order == 'F':
+                    shape_code = ', '.join(self._print(i) for i in expr.shape)
+                else:
+                    shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
+                rhs_code = f"reshape({rhs_code}, [{shape_code}])"
         else:
             new_args = []
-            order = expr.order
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
                 ac = self._print(a)
@@ -1101,6 +1105,8 @@ class FCodePrinter(CodePrinter):
                 rhs_code = new_args[0]
             else:
                 rhs_code = '[' + ' ,'.join(new_args) + ']'
+
+            if len(new_args) != 1 or expr.arg.rank < expr.rank:
                 if order == 'C':
                     shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
                     rhs_code = f'reshape({rhs_code}, [{shape_code}])'
@@ -1110,6 +1116,8 @@ class FCodePrinter(CodePrinter):
                     order_index = order_index[1:]+ order_index[:1]
                     order_code = ', '.join(self._print(i) for i in order_index)
                     rhs_code = f'reshape({rhs_code}, [{shape_code}], order=[{order_code}])'
+
+
         return rhs_code
 
     def _print_NumpyFloor(self, expr):
