@@ -9,7 +9,7 @@ In this example the argument **a**, could either be an integer or float, and the
 from pyccel.decorators import template
 @template(name='T', types=['int','float'])
 @template(name='Z', types=['int','float'])
-def f(a : 'T', b : 'T'):
+def f(a : 'T', b : 'Z'):
 	pass
 ```
 In this example the arguments **a** and **b**, should both be integers or floats at the same time:
