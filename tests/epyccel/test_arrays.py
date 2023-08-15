@@ -2230,7 +2230,7 @@ def test_array_1d_slice_9(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2245,7 +2245,7 @@ def test_array_1d_slice_10(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2260,7 +2260,7 @@ def test_array_1d_slice_11(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2419,7 +2419,7 @@ def test_array_2d_F_slice_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2433,7 +2433,7 @@ def test_array_2d_F_slice_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2447,7 +2447,7 @@ def test_array_2d_F_slice_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2606,7 +2606,7 @@ def test_array_2d_C_slice_20(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2620,7 +2620,7 @@ def test_array_2d_C_slice_21(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
@@ -2634,7 +2634,7 @@ def test_array_2d_C_slice_22(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="array slice does not work with variable in c"),
+            pytest.mark.skip(reason="Array slicing does not work with negative variables in c. See #1311"),
             pytest.mark.c]),
         pytest.param("fortran", marks = pytest.mark.fortran)
     ]
