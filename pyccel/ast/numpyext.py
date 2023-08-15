@@ -502,12 +502,9 @@ class NumpyNewArray(PyccelInternalFunction):
         return order
 
 #==============================================================================
-# TODO [YG, 18.02.2020]: accept Numpy array argument
-# TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-# TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 class NumpyArray(NumpyNewArray):
     """
-    Represents a call to  numpy.array for code generation.
+    Represents a call to `numpy.array` for code generation.
 
     A class representing a call to the NumPy `array` function.
 
@@ -521,12 +518,16 @@ class NumpyArray(NumpyNewArray):
 
     order : str
         The ordering of the array (C/Fortran).
+
+    ndmin : LiteralInteger, int, optional
+        The minimum number of dimensions that the resulting array should
+        have.
     """
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -538,6 +539,17 @@ class NumpyArray(NumpyNewArray):
         if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
 
+        if not isinstance(order, (LiteralString, str)):
+            raise TypeError("The order must be specified explicitly with a string.")
+        elif isinstance(order, LiteralString):
+            order = order.python_value
+
+        if ndmin is not None:
+            if not isinstance(ndmin, (LiteralInteger, int)):
+                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
+            elif isinstance(ndmin, LiteralInteger):
+                ndmin = ndmin.python_value
+
         init_dtype = dtype
 
         # Verify dtype and get precision
@@ -546,11 +558,13 @@ class NumpyArray(NumpyNewArray):
             prec = get_final_precision(arg)
         else:
             dtype, prec = process_dtype(dtype)
-        # ... Determine ordering
-        order = str(order).strip("\'")
 
         shape = process_shape(False, arg.shape)
         rank  = len(shape)
+
+        if ndmin and ndmin>rank:
+            shape += (LiteralInteger(1),)*(ndmin-rank)
+            rank = ndmin
 
         if rank < 2:
             order = None
@@ -561,9 +575,8 @@ class NumpyArray(NumpyNewArray):
             if order not in ('K', 'A', 'C', 'F'):
                 raise ValueError(f"Cannot recognize '{order}' order")
 
-            # TODO [YG, 18.02.2020]: set correct order based on input array
             if order in ('K', 'A'):
-                order = 'C'
+                order = arg.order
             # ...
 
         self._arg   = arg
