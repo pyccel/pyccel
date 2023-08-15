@@ -699,17 +699,10 @@ def test_return_arrays_in_expression2(language):
     assert epyccel_function_output.dtype == return_arrays_in_expression2_output.dtype
 
 def test_c_array_return(language):
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    @types('complex64')
-    @types('complex128')
-    def return_c_array(b):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64',
+                    'float', 'float32', 'float64',
+                    'complex64', 'complex128'])
+    def return_c_array(b : 'T'):
         from numpy import array
         a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b))
         return a
@@ -751,17 +744,10 @@ def test_c_array_return(language):
     )
 )
 def test_f_array_return(language):
-    @types('int')
-    @types('int8')
-    @types('int16')
-    @types('int32')
-    @types('int64')
-    @types('float')
-    @types('float32')
-    @types('float64')
-    @types('complex64')
-    @types('complex128')
-    def return_f_array(b):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64',
+                    'float', 'float32', 'float64',
+                    'complex64', 'complex128'])
+    def return_f_array(b : 'T'):
         from numpy import array
         a = array([[1, 2, 3], [4, 5, 6]], dtype=type(b), order='F')
         return a
