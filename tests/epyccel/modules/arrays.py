@@ -651,6 +651,27 @@ def multiple_2d_stack_array_2():
     return s
 
 #==============================================================================
+# TEST: Array with ndmin argument
+#==============================================================================
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def array_ndmin_1(x : 'T'):
+    from numpy import array
+    y = array(x, ndmin=1)
+    return y
+
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def array_ndmin_2(x : 'T'):
+    from numpy import array
+    y = array(x, ndmin=2)
+    return y
+
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def array_ndmin_4(x : 'T'):
+    from numpy import array
+    y = array(x, ndmin=4)
+    return y
+
+#==============================================================================
 # TEST: Product and matrix multiplication
 #==============================================================================
 
@@ -1602,6 +1623,7 @@ def arrs_2d_different_shapes_0():
     pm = np.array([[1, 1, 1]])
     x = pn + pm
     return np.shape(x)[0], np.shape(x)[1]
+
 def arrs_1d_negative_index_1():
     import numpy as np
     a = np.zeros(10)
