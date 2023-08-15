@@ -1,84 +1,74 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
-from pyccel.decorators import template
+from pyccel.decorators import template, types
 
 
-@template('Z', types=['int', 'real'])
-@types('Z', 'Z')
-def tmplt_1(x, y):
+@template('Z', types=['int', 'float'])
+def tmplt_1(x : 'Z', y : 'Z'):
     return x + y
 
-@template('Z', types=['int', 'real'])
-@template('Y', types=['int', 'real'])
-@types('Z', 'Z', 'Y')
-def multi_tmplt_1(x, y, z):
+@template('Z', types=['int', 'float'])
+@template('Y', types=['int', 'float'])
+def multi_tmplt_1(x : 'Z', y : 'Z', z : 'Y'):
     return x + y + z
 
 @types('int', 'int')
-@types('int', 'real')
+@types('int', 'float')
 def multi_heads_1(x, y):
     return x + y
 
-@template(types=['int', 'real'], name = 'Z')
-@types('Z', 'Z')
-def tmplt_2(x, y):
+@template(types=['int', 'float'], name = 'Z')
+def tmplt_2(x : 'Z', y : 'Z'):
     return x + y
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
-@types('K', 'G')
-def multi_tmplt_2(y, z):
+@template('G', types=['int', 'float'])
+def multi_tmplt_2(y : 'K', z : 'G'):
     return y + z
 
 
 #------------------------------------------------------
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
-@types('G', 'K')
-def default_var_1(x , y = 5):
+@template('G', types=['int', 'float'])
+def default_var_1(x : 'G', y  : 'K' =  5):
     return x + y
 
 
 @template('K', types=['complex'])
-@template('G', types=['int', 'real'])
-@types('G', 'K')
-def default_var_2(x , y = 5j):
+@template('G', types=['int', 'float'])
+def default_var_2(x : 'G', y  : 'K' =  5j):
     return x + y
 
 @template('K', types=['bool'])
-@template('G', types=['int', 'real'])
-@types('G', 'K')
-def default_var_3(x , y = False):
+@template('G', types=['int', 'float'])
+def default_var_3(x : 'G', y  : 'K' =  False):
     if y is True:
         return x
     return x - 1
 
 @types('int', 'int')
-@types('real', 'int')
+@types('float', 'int')
 def default_var_4(x, y = 5):
     return x + y
 
 
 @template('K', types=['int'])
-@template('G', types=['int', 'real'])
-@types('G', 'K')
-def optional_var_1(x , y = None):
+@template('G', types=['int', 'float'])
+def optional_var_1(x : 'G', y  : 'K' =  None):
     if y is None :
         return x
     return x + y
 
 
 @template('K', types=['complex'])
-@template('G', types=['int', 'real'])
-@types('G', 'K')
-def optional_var_2(x , y = None):
+@template('G', types=['int', 'float'])
+def optional_var_2(x : 'G', y  : 'K' =  None):
     if y is None :
         return x + 1j
     return x + y
 
-@types('int', 'real')
-@types('real', 'real')
+@types('int', 'float')
+@types('float', 'float')
 def optional_var_3(x, y = None):
     if y is None:
         return x / 2.0
@@ -86,7 +76,7 @@ def optional_var_3(x, y = None):
 
 
 @types('complex', 'int')
-@types('real', 'int')
+@types('float', 'int')
 def optional_var_4(x, y = None):
     if y is None:
         return x
@@ -95,85 +85,77 @@ def optional_var_4(x, y = None):
 #-------------------------------------------------
 
 @template('T', types=['int', 'int32', 'int8', 'int16', 'int64'])
-@types('T', 'T')
-def int_types(x, y):
+def int_types(x : 'T', y : 'T'):
     return x + y
 
 
-@template('T', types=['real', 'float32', 'float64'])
-@types('T', 'T')
-def float_types(x, y):
+@template('T', types=['float', 'float32', 'float64'])
+def float_types(x : 'T', y : 'T'):
     return x + y
 
 @template('T', types=['complex', 'complex64', 'complex128'])
-@types('T', 'T')
-def complex_types(x, y):
+def complex_types(x : 'T', y : 'T'):
     return x + y
 
 
 @template('G', types=['complex', 'int'])
 @template('H', types=['int', 'float64'])
 @template('K', types=['int16', 'bool'])
-@types('G', 'H', 'K')
-def mix_types_1(x, y, z):
+def mix_types_1(x : 'G', y : 'H', z : 'K'):
     if z :
         return x + y
     return x - y
 
 
-@template('T', types=['int64', 'int32', 'int16', 'real', 'complex', 'float32'])
-@types('T', 'T')
-def mix_types_2(x, y):
+@template('T', types=['int64', 'int32', 'int16', 'float', 'complex', 'float32'])
+def mix_types_2(x : 'T', y : 'T'):
     if y != x:
         return y - x
     return -x
 
 
 @template('T', types=['int', 'int32'])
-@types('T', 'T')
-def mix_types_3(x, y):
+def mix_types_3(x : 'T', y : 'T'):
     if y != x:
         return y - x
     return -x
 
 
-@template('T', types=['int64[:]', 'real[:]', 'complex[:]'])
-@types('T', 'int')
-def mix_array_1(x, a):
+@template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
+def mix_array_scalar(x : 'T'):
+    x[:] += 1
+
+@template('T', types=['int64[:]', 'float[:]', 'complex[:]'])
+def mix_array_1(x : 'T', a : 'int'):
     x[:] += a
 
 
 @types('complex[:]', 'complex[:]', 'int')
-@types('real[:]', 'int64[:]', 'int')
+@types('float[:]', 'int64[:]', 'int')
 def mix_array_2(x, y, a):
     x[:] += a
     y[:] -= a
 
 @template('T', types=['int32[:]', 'int8[:]', 'int16[:]', 'int64[:]'])
-@types('T', 'int')
-def mix_int_array_1(x, a):
+def mix_int_array_1(x : 'T', a : 'int'):
     x[:] += a
 
 @template('T', types=['int[:]', 'int32[:]', 'int64[:]'])
-@types('T', 'int')
-def mix_int_array_2(x, a):
+def mix_int_array_2(x : 'T', a : 'int'):
     x[:] += a
 
-@template('T', types=['real[:]', 'float32[:]'])
-@types('T', 'real')
-def mix_float_array_1(x, a):
+@template('T', types=['float[:]', 'float32[:]'])
+def mix_float_array_1(x : 'T', a : 'float'):
     x[:] *= a
 
 @template('T', types=['complex[:]', 'complex64[:]'])
-@types('T', 'real')
-def mix_complex_array_1(x, a):
+def mix_complex_array_1(x : 'T', a : 'float'):
     x[:] *= a
 
-#$ header function dup_header(real)
+#$ header function dup_header(float)
 #$ header function dup_header(float64)
-@types('float')
-@types('float64')
-def dup_header(a):
+@template('T', ['float', 'float64'])
+def dup_header(a : 'T'):
     return a
 
 @template('T', types=[float,int])
@@ -182,9 +164,8 @@ def zeros_type(a : 'T'):
     x = zeros(10,dtype= type(a))
     return x[0]
 
-@types('int')
-@types('int[:]')
-def scalar_or_array(a):
+@template('T', ['int', 'int[:]'])
+def scalar_or_array(a : 'T'):
     return a+2
 
 @template('T', types=['int', 'float[:]', 'complex[:, :]'])

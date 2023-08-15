@@ -297,6 +297,7 @@ t_ndarray	pyarray_to_ndarray(PyObject *o)
 	array.buffer_size = PyArray_NBYTES(a);
 	array.shape       = _numpy_to_ndarray_shape(PyArray_SHAPE(a), array.nd);
 	array.strides     = _numpy_to_ndarray_strides(PyArray_STRIDES(a), array.type_size, array.nd);
+	array.order       = PyArray_CHKFLAGS(a, NPY_ARRAY_C_CONTIGUOUS) ? order_c : order_f;
 
 	array.is_view     = 1;
 
@@ -309,34 +310,19 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
     if (o->nd == 1) {
         FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
+    else if (o->order == order_c) {
+        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
+    else if (o->order == order_f) {
+        FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
+    }
     else {
-        FLAGS = 0;
+        FLAGS = NPY_ARRAY_WRITEABLE;
     }
 
     enum NPY_TYPES npy_type = get_numpy_type(o);
 
     return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, FLAGS, NULL);
-}
-
-PyObject* c_ndarray_to_pyarray(t_ndarray *o)
-{
-    int FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-
-    enum NPY_TYPES npy_type = get_numpy_type(o);
-
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, FLAGS, NULL);
-}
-
-PyObject* fortran_ndarray_to_pyarray(t_ndarray *o)
-{
-    int FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
-    return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(o->type),
             o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
             _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
             o->raw_data, FLAGS, NULL);
@@ -463,7 +449,6 @@ int     nd_ndim(t_ndarray *a, int n)
  *
  * 	Parameters	:
  *		a 	  : python array object
- *      index : dimension index
  * 	Returns		:
  *		return NULL if object is NULL or the data of the array
  * reference of the used c/numpy api function
@@ -476,4 +461,49 @@ void    *nd_data(t_ndarray *a)
 		return NULL;
 
 	return a->raw_data;
+}
+
+/*
+ * Function: nd_step_C
+ * --------------------
+ * Return the step in the nth dimension for a C-ordered array (decreasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_C(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = n+1; i<a->nd; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
+}
+/*
+ * Function: nd_step_F
+ * --------------------
+ * Return the step in the nth dimension for a F-ordered array (increasing strides)
+ *
+ * 	Parameters	:
+ *		a 	  : python array object
+ * 		index	  : dimension index
+ * 	Returns		:
+ *		return 1 if object is NULL or the step along the indexed dimension
+ */
+int     nd_nstep_F(t_ndarray *a, int n)
+{
+	if (a == NULL || a->length == 0)
+		return 1;
+
+	int step = a->strides[n];
+	for (int i = 0; i<n; ++i) {
+		step /= a->shape[i];
+	}
+	return step > 0 ? step : 1;
 }

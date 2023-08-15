@@ -1,26 +1,22 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
 #==============================================================================
 
-@types( int )
-def sum_natural_numbers( n ):
+def sum_natural_numbers(n : int):
     x = 0
     for i in range( 1, n+1 ):
         x += i
     return x
 
 # ...
-@types( int )
-def factorial( n ):
+def factorial(n : int):
     x = 1
     for i in range( 2, n+1 ):
         x *= i
     return x
 
 # ...
-@types( int )
-def fibonacci( n ):
+def fibonacci(n : int):
     x = 0
     y = 1
     for i in range( n ): # pylint: disable=unused-variable
@@ -30,8 +26,7 @@ def fibonacci( n ):
     return x
 
 # ...
-@types( int )
-def double_loop( n ):
+def double_loop(n : int):
     x = 0
     for i in range( 3, 10 ): # pylint: disable=unused-variable
         x += 1
@@ -41,8 +36,7 @@ def double_loop( n ):
     return z
 
 # ...
-@types( 'int[:,:](order=C)' )
-def double_loop_on_2d_array_C( z ):
+def double_loop_on_2d_array_C(z : 'int[:,:](order=C)'):
 
     from numpy import shape
 
@@ -54,8 +48,7 @@ def double_loop_on_2d_array_C( z ):
 
 
 # ...
-@types( 'int[:,:](order=F)' )
-def double_loop_on_2d_array_F( z ):
+def double_loop_on_2d_array_F(z : 'int[:,:](order=F)'):
 
     from numpy import shape
 
@@ -66,8 +59,7 @@ def double_loop_on_2d_array_F( z ):
             z[i,j] = i-j
 
 # ...
-@types( 'int[:,:](order=C)' )
-def product_loop_on_2d_array_C( z ):
+def product_loop_on_2d_array_C(z : 'int[:,:](order=C)'):
 
     from numpy     import shape
     from itertools import product
@@ -81,8 +73,7 @@ def product_loop_on_2d_array_C( z ):
         z[i,j] = i-j
 
 # ...
-@types( 'int[:,:](order=F)' )
-def product_loop_on_2d_array_F( z ):
+def product_loop_on_2d_array_F(z : 'int[:,:](order=F)'):
 
     from numpy     import shape
     from itertools import product
@@ -96,11 +87,22 @@ def product_loop_on_2d_array_F( z ):
         z[i,j] = i-j
 
 # ...
-@types( 'int[:]' )
-def map_on_1d_array( z ):
+def product_loop( z : 'float[:]', m : int, n : int ):
 
-    @types( int )
-    def f( x ):
+    from itertools import product
+
+    x = [i*3+2 for i in range(m)]
+    y = [j*7+6 for j in range(n)]
+
+    k = 0
+    for i,j in product( x, y ):
+        z[k] = i-j
+        k += 1
+
+# ...
+def map_on_1d_array(z : 'int[:]'):
+
+    def f(x : int):
         return x+5
 
     res = 0
@@ -110,8 +112,7 @@ def map_on_1d_array( z ):
     return res
 
 # ...
-@types( 'int[:]' )
-def enumerate_on_1d_array( z ):
+def enumerate_on_1d_array(z : 'int[:]'):
 
     res = 0
     for i,v in enumerate( z ):
@@ -120,8 +121,7 @@ def enumerate_on_1d_array( z ):
     return res
 
 # ...
-@types( 'int[:]', 'int' )
-def enumerate_on_1d_array_with_start( z, k ):
+def enumerate_on_1d_array_with_start(z : 'int[:]', k : 'int'):
 
     res = 0
     for i,v in enumerate( z, k ):
@@ -130,8 +130,7 @@ def enumerate_on_1d_array_with_start( z, k ):
     return res
 
 # ...
-@types( int )
-def zip_prod( m ):
+def zip_prod(m : int):
 
     x = [  i for i in range(m)]
     y = [2*j for j in range(m)]
@@ -143,8 +142,7 @@ def zip_prod( m ):
     return res
 
 # ...
-@types( 'real[:], real[:]' )
-def product_loop_on_real_array( z, out ):
+def product_loop_on_real_array(z : 'float[:]', out : 'float[:]'):
 
     from numpy     import shape
 
@@ -154,16 +152,14 @@ def product_loop_on_real_array( z, out ):
         out[i] = z[i]**2
 
 # ...
-@types('int,int,int')
-def fizzbuzz_search_with_breaks( fizz, buzz, max_val ):
+def fizzbuzz_search_with_breaks(fizz : 'int', buzz : 'int', max_val : 'int'):
     for i in range(1,max_val+1):
         if i%fizz == 0 and i%buzz == 0:
             break
     return i
 
 # ...
-@types('int,int,int')
-def fizzbuzz_sum_with_continue( fizz, buzz, max_val ):
+def fizzbuzz_sum_with_continue(fizz : int, buzz : int, max_val : int):
     fizzbuzz_sum = 0
     for i in range(1,max_val+1):
         if i%fizz != 0:
@@ -174,8 +170,7 @@ def fizzbuzz_sum_with_continue( fizz, buzz, max_val ):
     return fizzbuzz_sum
 
 # ...
-@types(int)
-def fibonacci_while(n):
+def fibonacci_while(n : int):
     x = 0
     y = 1
     i = 1
@@ -187,8 +182,7 @@ def fibonacci_while(n):
     return x
 
 # ...
-@types(int)
-def sum_nat_numbers_while(n):
+def sum_nat_numbers_while(n : int):
     x = 0
     i = 0
     while i <= n:
@@ -197,8 +191,7 @@ def sum_nat_numbers_while(n):
     return x
 
 # ...
-@types(int,int)
-def double_while_sum(n, m):
+def double_while_sum(n : int, m : int):
     x = 0
     y = 0
     i = 0
@@ -211,8 +204,7 @@ def double_while_sum(n, m):
     return i
 
 # ...
-@types( int )
-def factorial_while( n ):
+def factorial_while(n : int):
     x = 1
     i = 1
     while i <= n:
@@ -220,14 +212,12 @@ def factorial_while( n ):
         i = i + 1
     return x
 
-@types( int )
-def while_not_0( n ):
+def while_not_0(n : int):
     while n:
         n -= 1
     return n
 
-@types( int, int, int )
-def for_loop1(start, stop, step):
+def for_loop1(start : int, stop : int, step : int):
     x = 0
     for i in range(start, stop, step):
         x += i
@@ -244,3 +234,17 @@ def for_loop3():
     for i in range(10, 1, -2):
         x += i
     return x
+
+def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
+    import numpy as np
+    c = np.zeros_like(a)
+    d1 = np.zeros_like(a)
+    d2 = np.zeros_like(a)
+    for _ in range(1):
+        for d in range(2):
+            b[d] += d
+        c[:] = b - a
+        d1[:] = np.abs(c)
+        d2[:] = np.abs(b - a)
+    return d1, d2
+

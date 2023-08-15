@@ -6,11 +6,15 @@
 """
 Handles name clash problems in C
 """
-from pyccel.utilities.metaclasses import Singleton
-from pyccel.utilities.strings import create_incremented_string
+from .languagenameclashchecker import LanguageNameClashChecker
 
-class CNameClashChecker(metaclass = Singleton):
-    """ Class containing functions to help avoid problematic names in C
+class CNameClashChecker(LanguageNameClashChecker):
+    """
+    Class containing functions to help avoid problematic names in C.
+
+    A class which provides functionalities to check or propose variable names and
+    verify that they do not cause name clashes. Name clashes may be due to
+    new variables, or due to the use of reserved keywords.
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
@@ -33,7 +37,7 @@ class CNameClashChecker(metaclass = Singleton):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size'])
+        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
 
     def has_clash(self, name, symbols):
         """ Indicate whether the proposed name causes any clashes
@@ -42,20 +46,29 @@ class CNameClashChecker(metaclass = Singleton):
                any(name == s for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
-        """ Get the name that will be used in the fortran code
+        """
+        Get a valid name which doesn't collision with symbols or C keywords.
+
+        Find a new name based on the suggested name which will not cause
+        conflicts with C keywords, does not appear in the provided symbols,
+        and is a valid name in C code.
+
+        Parameters
+        ----------
+        name : str
+            The suggested name.
+        symbols : set
+            Symbols which should be considered as collisions.
+
+        Returns
+        -------
+        str
+            A new name which is collision free.
         """
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             # Ignore magic methods
             return name
         if name[0] == '_':
             name = 'private'+name
-        prefix = name
-        coll_symbols = self.keywords.copy()
-        coll_symbols.update(s.lower() for s in symbols)
-        if prefix in coll_symbols:
-            counter = 1
-            new_name, counter = create_incremented_string(coll_symbols,
-                    prefix = prefix, counter = counter)
-            name = name+new_name[-5:]
-        return name
+        return self._get_collisionless_name(name, symbols)
 

@@ -16,7 +16,7 @@ from .basic     import Basic, PyccelAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
-from .internals import PyccelArraySize, Slice, get_final_precision
+from .internals import PyccelArrayShapeElement, Slice, get_final_precision
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -36,8 +36,11 @@ __all__ = (
 )
 
 class Variable(PyccelAstNode):
+    """
+    Represents a typed variable.
 
-    """Represents a typed variable.
+    Represents a variable in the code and stores all useful properties which allow
+    for easy usage of this variable.
 
     Parameters
     ----------
@@ -49,48 +52,50 @@ class Variable(PyccelAstNode):
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
-    rank : int
-        used for arrays. [Default value: 0]
+    rank : int, default: 0
+        The number of dimensions for an array.
 
-    memory_handling: str
-        'heap' is used for arrays, if we need to allocate memory on the heap
-        'stack' if memory should be allocated on the stack, represents stack arrays and scalars
-        'alias' if object allows access to memory stored in another variable
-        [Default value: 'stack']
+    memory_handling : str, default: 'stack'
+        'heap' is used for arrays, if we need to allocate memory on the heap.
+        'stack' if memory should be allocated on the stack, represents stack arrays and scalars.
+        'alias' if object allows access to memory stored in another variable.
 
-    is_target: bool
-        if object is pointed to by another variable [Default value: False]
+    is_const : bool, default: False
+        Indicates if object is a const argument of a function.
 
-    is_optional: bool
-        if object is an optional argument of a function [Default value: False]
+    is_target : bool, default: False
+        Indicates if object is pointed to by another variable.
 
-    shape: int or list
-        shape of the array. [Default value: None]
+    is_optional : bool, default: False
+        Indicates if object is an optional argument of a function.
 
-    cls_base: class
-        class base if variable is an object or an object member [Default value: None]
+    is_private : bool, default: False
+        Indicates if object is private within a Module.
 
-    order : str
-        used for arrays. Indicates whether the data is stored in C or Fortran format in memory [Default value: 'C']
+    shape : tuple, default: None
+        The shape of the array. A tuple whose elements indicate the number of elements along
+        each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
 
-    precision : str
-        Precision of the data type [Default value: depends on the datatype]
+    cls_base : class, default: None
+        Class base if variable is an object or an object member.
 
-    is_argument: bool
-        if object is the argument of a function [Default value: False]
+    order : str, default: 'C'
+        Used for arrays. Indicates whether the data is stored in C or Fortran format in memory.
+        See order_docs.md in the developer docs for more details.
 
-    is_kwonly: bool
-        if object is an argument which can only be specified using its keyword
+    precision : str, default: 0
+        Precision of the data type.
 
-    is_const: bool
-        if object is a const argument of a function [Default value: False]
+    is_argument : bool, default: False
+        Indicates if object is the argument of a function.
 
-    is_private: bool
-        if object is private within a Module [Default value: False]
-
-    is_temp: bool
+    is_temp : bool, default: False
         Indicates if this symbol represents a temporary variable created by Pyccel,
-        and was not present in the original Python code [default value : False].
+        and was not present in the original Python code.
+
+    allows_negative_indexes : bool, default: False
+        Indicates if non-literal negative indexes should be correctly handled when indexing this
+        variable. The default is False for performance reasons.
 
     Examples
     --------
@@ -105,7 +110,7 @@ class Variable(PyccelAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_kwonly', '_is_temp','_dtype','_precision',
+            '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
             '_rank','_shape','_order','_is_private')
     _attribute_nodes = ()
 
@@ -125,7 +130,6 @@ class Variable(PyccelAstNode):
         order=None,
         precision=0,
         is_argument=False,
-        is_kwonly=False,
         is_temp =False,
         allows_negative_indexes=False
         ):
@@ -174,7 +178,6 @@ class Variable(PyccelAstNode):
         self._cls_base       = cls_base
         self._order          = order
         self._is_argument    = is_argument
-        self._is_kwonly      = is_kwonly
         self._is_temp        = is_temp
 
         # ------------ PyccelAstNode Properties ---------------
@@ -216,15 +219,24 @@ class Variable(PyccelAstNode):
             self._order = None
 
     def process_shape(self, shape):
-        """ Simplify the provided shape and ensure it
-        has the expected format
+        """
+        Simplify the provided shape and ensure it has the expected format.
 
-        The provided shape is the shape used to create
-        the object. In most cases where the shape is
-        required we do not require this expression
-        (which can be quite long). This function therefore
-        replaces those expressions with calls to
-        PyccelArraySize
+        The provided shape is the shape used to create the object, and it can
+        be a long expression. In most cases where the shape is required the
+        provided shape is inconvenient, or it might have become invalid. This
+        function therefore replaces those expressions with calls to the function
+        `PyccelArrayShapeElement`.
+
+        Parameters
+        ----------
+        shape : iterable of int
+            The array shape to be simplified.
+
+        Returns
+        -------
+        tuple
+            The simplified array shape.
         """
         if self.rank == 0:
             return None
@@ -232,16 +244,16 @@ class Variable(PyccelAstNode):
             shape = [shape]
 
         new_shape = []
-        for i,s in enumerate(shape):
+        for i, s in enumerate(shape):
             if self.shape_can_change(i):
                 # Shape of a pointer can change
-                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+                new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
             elif isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
             elif s is None or isinstance(s, PyccelAstNode):
-                new_shape.append(PyccelArraySize(self, LiteralInteger(i)))
+                new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
                                 'Variable, Slice, PyccelAstNode, int, Function')
@@ -249,16 +261,31 @@ class Variable(PyccelAstNode):
 
     def shape_can_change(self, i):
         """
-        Indicates if the shape can change in the i-th dimension
+        Indicate if the shape can change in the i-th dimension.
+
+        Indicate whether the Variable's shape can change in the i-th dimension
+        at run time.
+
+        Parameters
+        ----------
+        i : int
+            The dimension over which the shape can change at runtime.
+
+        Returns
+        -------
+        bool
+            Whether or not the variable shape can change in the i-th dimension.
         """
         return self.is_alias
 
     def set_changeable_shape(self):
         """
+        Indicate that the Variable's shape is unknown at compilation time.
+
         Indicate that the exact shape is unknown, e.g. if the allocate is done in
         an If block.
         """
-        self._shape = [PyccelArraySize(self, LiteralInteger(i)) for i in range(self.rank)]
+        self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
 
     @property
     def name(self):
@@ -384,13 +411,14 @@ class Variable(PyccelAstNode):
         """
         return self._is_argument
 
-    @property
-    def is_kwonly(self):
-        """ If the Variable is an argument then this
-        indicates whether the argument is a keyword
-        only argument
+    def declare_as_argument(self):
         """
-        return self._is_kwonly
+        Indicate that the variable is used as an argument.
+
+        This function is called by FunctionDefArgument to ensure that
+        arguments are correctly flagged as such.
+        """
+        self._is_argument = True
 
     @property
     def is_ndarray(self):
@@ -539,6 +567,14 @@ class DottedName(Basic):
     """
     Represents a dotted object.
 
+    Represents an object accessed via a dot. This usually means that
+    the object belongs to a class or module.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelSymbol
+        The different symbols making up the dotted name.
+
     Examples
     --------
     >>> from pyccel.ast.core import DottedName
@@ -564,6 +600,9 @@ class DottedName(Basic):
 
     def __str__(self):
         return """.""".join(str(n) for n in self.name)
+
+    def __repr__(self):
+        return """.""".join(repr(n) for n in self.name)
 
     def __eq__(self, other):
         return str(self) == str(other)
