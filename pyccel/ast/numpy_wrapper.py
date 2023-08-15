@@ -181,7 +181,7 @@ numpy_int_type_precision_map = {
         4 : np.dtype(np.int32).num,
         8 : np.dtype(np.int64).num}
 
-numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
+numpy_dtype_registry = {('bool',-1)    : numpy_bool_type,
                         ('int',1)      : numpy_num_to_type[numpy_int_type_precision_map[1]],
                         ('int',2)      : numpy_num_to_type[numpy_int_type_precision_map[2]],
                         ('int',4)      : numpy_num_to_type[numpy_int_type_precision_map[4]],
