@@ -94,7 +94,7 @@ def test_array_int32_1d_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_add_stride(language):
 
@@ -108,7 +108,7 @@ def test_array_int32_1d_scalar_add_stride(language):
     f1(x1[::3], a)
     f2(x2[::3], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_sub(language):
 
@@ -122,7 +122,7 @@ def test_array_int32_1d_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_sub_stride(language):
 
@@ -136,7 +136,7 @@ def test_array_int32_1d_scalar_sub_stride(language):
     f1(x1[::2], a)
     f2(x2[::2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_mul(language):
 
@@ -150,7 +150,7 @@ def test_array_int32_1d_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_mul_stride(language):
 
@@ -164,7 +164,7 @@ def test_array_int32_1d_scalar_mul_stride(language):
     f1(x1[3:7:2], a)
     f2(x2[3:7:2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_div(language):
 
@@ -178,7 +178,7 @@ def test_array_int32_1d_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_idiv(language):
 
@@ -192,7 +192,7 @@ def test_array_int32_1d_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_scalar_idiv_stride(language):
 
@@ -206,7 +206,7 @@ def test_array_int32_1d_scalar_idiv_stride(language):
     f1(x1[:3:2], a)
     f2(x2[:3:2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_add(language):
 
@@ -220,7 +220,7 @@ def test_array_int32_1d_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_sub(language):
 
@@ -234,7 +234,7 @@ def test_array_int32_1d_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_mul(language):
 
@@ -248,7 +248,7 @@ def test_array_int32_1d_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_idiv(language):
 
@@ -262,7 +262,7 @@ def test_array_int32_1d_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_add_augassign(language):
 
@@ -276,7 +276,7 @@ def test_array_int32_1d_add_augassign(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_1d_sub_augassign(language):
 
@@ -290,7 +290,7 @@ def test_array_int32_1d_sub_augassign(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_initialization_1(language):
 
@@ -329,7 +329,7 @@ def test_array_int32_2d_C_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_scalar_add_stride(language):
 
@@ -343,7 +343,7 @@ def test_array_int32_2d_C_scalar_add_stride(language):
     f1(x1[::2,:], a)
     f2(x2[::2,:], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_scalar_sub(language):
 
@@ -357,7 +357,7 @@ def test_array_int32_2d_C_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -381,7 +381,7 @@ def test_array_int32_2d_C_scalar_sub_stride(language):
     f1(x1[:,::2], a)
     f2(x2[:,::2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_scalar_mul(language):
 
@@ -395,7 +395,7 @@ def test_array_int32_2d_C_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_scalar_mul_stride(language):
 
@@ -409,7 +409,7 @@ def test_array_int32_2d_C_scalar_mul_stride(language):
     f1(x1[1:,:], a)
     f2(x2[1:,:], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_scalar_idiv(language):
 
@@ -423,7 +423,7 @@ def test_array_int32_2d_C_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -447,7 +447,7 @@ def test_array_int32_2d_C_scalar_idiv_stride(language):
     f1(x1[:,1:], a)
     f2(x2[:,1:], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_add(language):
 
@@ -461,7 +461,7 @@ def test_array_int32_2d_C_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_sub(language):
 
@@ -475,7 +475,7 @@ def test_array_int32_2d_C_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_mul(language):
 
@@ -489,7 +489,7 @@ def test_array_int32_2d_C_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_idiv(language):
 
@@ -503,7 +503,7 @@ def test_array_int32_2d_C_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-32 WITH F ORDERING
@@ -521,7 +521,7 @@ def test_array_int32_2d_F_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -545,7 +545,7 @@ def test_array_int32_2d_F_scalar_add_stride(language):
     f1(x1[1::2,::2], a)
     f2(x2[1::2,::2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_scalar_sub(language):
 
@@ -559,7 +559,7 @@ def test_array_int32_2d_F_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -583,7 +583,7 @@ def test_array_int32_2d_F_scalar_sub_stride(language):
     f1(x1[::2,1::2], a)
     f2(x2[::2,1::2], a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_scalar_mul(language):
 
@@ -597,7 +597,7 @@ def test_array_int32_2d_F_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_scalar_idiv(language):
 
@@ -611,7 +611,7 @@ def test_array_int32_2d_F_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_add(language):
 
@@ -625,7 +625,7 @@ def test_array_int32_2d_F_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_sub(language):
 
@@ -639,7 +639,7 @@ def test_array_int32_2d_F_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_mul(language):
 
@@ -653,7 +653,7 @@ def test_array_int32_2d_F_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_idiv(language):
 
@@ -667,7 +667,7 @@ def test_array_int32_2d_F_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 
 #==============================================================================
@@ -686,7 +686,7 @@ def test_array_int_1d_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_scalar_sub(language):
 
@@ -700,7 +700,7 @@ def test_array_int_1d_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_scalar_mul(language):
 
@@ -714,7 +714,7 @@ def test_array_int_1d_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_scalar_idiv(language):
 
@@ -728,7 +728,7 @@ def test_array_int_1d_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_add(language):
 
@@ -742,7 +742,7 @@ def test_array_int_1d_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_sub(language):
 
@@ -756,7 +756,7 @@ def test_array_int_1d_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_mul(language):
 
@@ -770,7 +770,7 @@ def test_array_int_1d_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_1d_idiv(language):
 
@@ -784,7 +784,7 @@ def test_array_int_1d_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-64 WITH C ORDERING
@@ -802,7 +802,7 @@ def test_array_int_2d_C_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_scalar_sub(language):
 
@@ -816,7 +816,7 @@ def test_array_int_2d_C_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_scalar_mul(language):
 
@@ -830,7 +830,7 @@ def test_array_int_2d_C_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_scalar_idiv(language):
 
@@ -844,7 +844,7 @@ def test_array_int_2d_C_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_add(language):
 
@@ -858,7 +858,7 @@ def test_array_int_2d_C_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_sub(language):
 
@@ -872,7 +872,7 @@ def test_array_int_2d_C_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_mul(language):
 
@@ -886,7 +886,7 @@ def test_array_int_2d_C_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_idiv(language):
 
@@ -900,7 +900,7 @@ def test_array_int_2d_C_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_C_initialization(language):
 
@@ -913,7 +913,7 @@ def test_array_int_2d_C_initialization(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 #==============================================================================
 # TEST: 2D ARRAYS OF INT-64 WITH F ORDERING
@@ -931,7 +931,7 @@ def test_array_int_2d_F_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_scalar_sub(language):
 
@@ -945,7 +945,7 @@ def test_array_int_2d_F_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_scalar_mul(language):
 
@@ -959,7 +959,7 @@ def test_array_int_2d_F_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_scalar_idiv(language):
 
@@ -973,7 +973,7 @@ def test_array_int_2d_F_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_add(language):
 
@@ -987,7 +987,7 @@ def test_array_int_2d_F_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_sub(language):
 
@@ -1001,7 +1001,7 @@ def test_array_int_2d_F_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_mul(language):
 
@@ -1015,7 +1015,7 @@ def test_array_int_2d_F_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_idiv(language):
 
@@ -1029,7 +1029,7 @@ def test_array_int_2d_F_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int_2d_F_initialization(language):
 
@@ -1042,7 +1042,7 @@ def test_array_int_2d_F_initialization(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 #==============================================================================
 # TEST: 1D ARRAYS OF REAL
@@ -1060,7 +1060,7 @@ def test_array_float_1d_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_sub(language):
 
@@ -1074,7 +1074,7 @@ def test_array_float_1d_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_mul(language):
 
@@ -1088,7 +1088,7 @@ def test_array_float_1d_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_div(language):
 
@@ -1102,7 +1102,7 @@ def test_array_float_1d_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_mod(language):
     f1 = arrays.array_float_1d_scalar_mod
@@ -1115,7 +1115,7 @@ def test_array_float_1d_scalar_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_scalar_idiv(language):
 
@@ -1129,7 +1129,7 @@ def test_array_float_1d_scalar_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_add(language):
 
@@ -1143,7 +1143,7 @@ def test_array_float_1d_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_sub(language):
 
@@ -1157,7 +1157,7 @@ def test_array_float_1d_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_mul(language):
 
@@ -1171,7 +1171,7 @@ def test_array_float_1d_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_div(language):
 
@@ -1185,7 +1185,7 @@ def test_array_float_1d_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_1d_mod(language):
 
@@ -1199,7 +1199,7 @@ def test_array_float_1d_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2)
+    np.array_equal( x1, x2)
 
 def test_array_float_1d_idiv(language):
 
@@ -1213,7 +1213,7 @@ def test_array_float_1d_idiv(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH C ORDERING
@@ -1231,7 +1231,7 @@ def test_array_float_2d_C_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_scalar_sub(language):
 
@@ -1245,7 +1245,7 @@ def test_array_float_2d_C_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_scalar_mul(language):
 
@@ -1259,7 +1259,7 @@ def test_array_float_2d_C_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_scalar_div(language):
 
@@ -1273,7 +1273,7 @@ def test_array_float_2d_C_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_scalar_mod(language):
 
@@ -1287,7 +1287,7 @@ def test_array_float_2d_C_scalar_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_add(language):
 
@@ -1301,7 +1301,7 @@ def test_array_float_2d_C_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_sub(language):
 
@@ -1315,7 +1315,7 @@ def test_array_float_2d_C_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_mul(language):
 
@@ -1329,7 +1329,7 @@ def test_array_float_2d_C_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_div(language):
 
@@ -1343,7 +1343,7 @@ def test_array_float_2d_C_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_mod(language):
 
@@ -1357,7 +1357,7 @@ def test_array_float_2d_C_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_array_initialization(language):
 
@@ -1370,7 +1370,7 @@ def test_array_float_2d_C_array_initialization(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_3d_C_array_initialization_1(language):
 
@@ -1387,7 +1387,7 @@ def test_array_float_3d_C_array_initialization_1(language):
     f1(x, y, x1)
     f2(x, y, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_3d_C_array_initialization_2(language):
 
@@ -1400,7 +1400,7 @@ def test_array_float_3d_C_array_initialization_2(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_4d_C_array_initialization(language):
 
@@ -1417,7 +1417,7 @@ def test_array_float_4d_C_array_initialization(language):
     f1(x, y, x1)
     f2(x, y, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 #==============================================================================
 # TEST: 2D ARRAYS OF REAL WITH F ORDERING
 #==============================================================================
@@ -1434,7 +1434,7 @@ def test_array_float_2d_F_scalar_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_scalar_sub(language):
 
@@ -1448,7 +1448,7 @@ def test_array_float_2d_F_scalar_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_scalar_mul(language):
 
@@ -1462,7 +1462,7 @@ def test_array_float_2d_F_scalar_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_scalar_div(language):
 
@@ -1476,7 +1476,7 @@ def test_array_float_2d_F_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_scalar_mod(language):
 
@@ -1490,7 +1490,7 @@ def test_array_float_2d_F_scalar_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_add(language):
 
@@ -1504,7 +1504,7 @@ def test_array_float_2d_F_add(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_sub(language):
 
@@ -1518,7 +1518,7 @@ def test_array_float_2d_F_sub(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_mul(language):
 
@@ -1532,7 +1532,7 @@ def test_array_float_2d_F_mul(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_div(language):
 
@@ -1546,7 +1546,7 @@ def test_array_float_2d_F_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_mod(language):
 
@@ -1560,7 +1560,7 @@ def test_array_float_2d_F_mod(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_array_initialization(language):
 
@@ -1573,7 +1573,7 @@ def test_array_float_2d_F_array_initialization(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_3d_F_array_initialization_1(language):
 
@@ -1590,7 +1590,7 @@ def test_array_float_3d_F_array_initialization_1(language):
     f1(x, y, x1)
     f2(x, y, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_3d_F_array_initialization_2(language):
 
@@ -1603,7 +1603,7 @@ def test_array_float_3d_F_array_initialization_2(language):
     f1(x1)
     f2(x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_4d_F_array_initialization(language):
 
@@ -1620,7 +1620,7 @@ def test_array_float_4d_F_array_initialization(language):
     f1(x, y, x1)
     f2(x, y, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 @pytest.mark.xfail(reason='Inhomogeneous arguments due to unknown shape')
 def test_array_float_4d_F_array_initialization_mixed_ordering(language):
@@ -1643,7 +1643,7 @@ def test_array_float_4d_F_array_initialization_mixed_ordering(language):
     f1(x, x1)
     f2(x, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 #==============================================================================
 # TEST: COMPLEX EXPRESSIONS IN 3D : TEST CONSTANT AND UNKNOWN SHAPES
 #==============================================================================
@@ -1661,7 +1661,7 @@ def test_array_int32_1d_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_C_complex_3d_expr(language):
 
@@ -1675,7 +1675,7 @@ def test_array_int32_2d_C_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_2d_F_complex_3d_expr(language):
 
@@ -1689,7 +1689,7 @@ def test_array_int32_2d_F_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
 
@@ -1704,7 +1704,7 @@ def test_array_int32_in_bool_out_1d_complex_3d_expr(language):
     f1(x, a, r1)
     f2(x, a, r2)
 
-    check_array_equal( r1, r2 )
+    np.array_equal( r1, r2 )
 
 def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
 
@@ -1719,7 +1719,7 @@ def test_array_int32_in_bool_out_2d_C_complex_3d_expr(language):
     f1(x, a, r1)
     f2(x, a, r2)
 
-    check_array_equal( r1, r2 )
+    np.array_equal( r1, r2 )
 
 def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
 
@@ -1734,7 +1734,7 @@ def test_array_int32_in_bool_out_2d_F_complex_3d_expr(language):
     f1(x, a, r1)
     f2(x, a, r2)
 
-    check_array_equal( r1, r2 )
+    np.array_equal( r1, r2 )
 
 def test_array_float_1d_complex_3d_expr(language):
 
@@ -1748,7 +1748,7 @@ def test_array_float_1d_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_C_complex_3d_expr(language):
 
@@ -1762,7 +1762,7 @@ def test_array_float_2d_C_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 def test_array_float_2d_F_complex_3d_expr(language):
 
@@ -1776,7 +1776,7 @@ def test_array_float_2d_F_complex_3d_expr(language):
     f1(x1, a)
     f2(x2, a)
 
-    check_array_equal( x1, x2 )
+    np.array_equal( x1, x2 )
 
 #==============================================================================
 # TEST: 1D Stack ARRAYS OF REAL
@@ -1862,7 +1862,7 @@ def test_array_float_1d_1d_prod(language):
     y2 = np.empty(3)
     f1(x1, y1)
     f2(x2, y2)
-    check_array_equal(y1, y2)
+    np.array_equal(y1, y2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1884,7 +1884,7 @@ def test_array_float_2d_1d_matmul(language):
     y2 = np.empty([3])
     f1(A1, x1, y1)
     f2(A2, x2, y2)
-    check_array_equal(y1, y2)
+    np.array_equal(y1, y2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1926,7 +1926,7 @@ def test_array_float_2d_1d_matmul_order_F_F(language):
     y2 = np.empty([3])
     f1(A1, x1, y1)
     f2(A2, x2, y2)
-    check_array_equal(y1, y2)
+    np.array_equal(y1, y2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1948,7 +1948,7 @@ def test_array_float_2d_2d_matmul(language):
     C2 = np.empty([3,3])
     f1(A1, B1, C1)
     f2(A2, B2, C2)
-    check_array_equal(C1, C2)
+    np.array_equal(C1, C2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1970,7 +1970,7 @@ def test_array_float_2d_2d_matmul_F_F_F_F(language):
     C2 = np.empty([3,3], order='F')
     f1(A1, B1, C1)
     f2(A2, B2, C2)
-    check_array_equal(C1, C2)
+    np.array_equal(C1, C2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -1995,7 +1995,7 @@ def test_array_float_2d_2d_matmul_mixorder(language):
     C2 = np.empty([3,3])
     f1(A1, B1, C1)
     f2(A2, B2, C2)
-    check_array_equal(C1, C2)
+    np.array_equal(C1, C2)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
@@ -2017,7 +2017,7 @@ def test_array_float_2d_2d_matmul_operator(language):
     C2 = np.empty([3,3])
     f1(A1, B1, C1)
     f2(A2, B2, C2)
-    check_array_equal(C1, C2)
+    np.array_equal(C1, C2)
 
 def test_array_float_loopdiff(language):
     f1 = arrays.array_float_loopdiff
@@ -2030,7 +2030,7 @@ def test_array_float_loopdiff(language):
     z2 = np.empty(5)
     f1(x1, y1, z1)
     f2(x2, y2, z2)
-    check_array_equal(z1, z2)
+    np.array_equal(z1, z2)
 
 #==============================================================================
 # TEST: keyword arguments
@@ -3646,7 +3646,7 @@ def test_array_float_nested_C_array_initialization(language):
     f1(x, y, z, x1)
     f2(x, y, z, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_nested_C_array_initialization_2(language):
     f1 = arrays.array_float_nested_C_array_initialization_2
@@ -3663,7 +3663,7 @@ def test_array_float_nested_C_array_initialization_2(language):
     f1(a, e, f, x1)
     f2(a, e, f, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_nested_C_array_initialization_3(language):
     f1 = arrays.array_float_nested_C_array_initialization_3
@@ -3679,7 +3679,7 @@ def test_array_float_nested_C_array_initialization_3(language):
     f1(a, e, x1)
     f2(a, e, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 #==============================================================================
 # NUMPY SUM
@@ -3724,7 +3724,7 @@ def test_array_float_nested_F_array_initialization(language):
     f1(x, y, z, x1)
     f2(x, y, z, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_nested_F_array_initialization_2(language):
     f1 = arrays.array_float_nested_F_array_initialization_2
@@ -3741,7 +3741,7 @@ def test_array_float_nested_F_array_initialization_2(language):
     f1(a, e, f, x1)
     f2(a, e, f, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 def test_array_float_nested_F_array_initialization_3(language):
     f1 = arrays.array_float_nested_F_array_initialization_3
@@ -3757,7 +3757,7 @@ def test_array_float_nested_F_array_initialization_3(language):
     f1(a, e, x1)
     f2(a, e, x2)
 
-    check_array_equal(x1, x2)
+    np.array_equal(x1, x2)
 
 ##==============================================================================
 ## TEST SIMPLE ARRAY SLICING WITH ORDER C 1D
