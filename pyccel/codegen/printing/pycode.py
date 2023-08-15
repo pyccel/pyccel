@@ -165,7 +165,7 @@ class PythonCodePrinter(CodePrinter):
         Parameters
         ----------
         expr : PyccelInternalFunction
-            A pyccel node describing a NumPy function.
+            A Pyccel node describing a NumPy function.
 
         Returns
         -------
@@ -207,17 +207,16 @@ class PythonCodePrinter(CodePrinter):
         """
         if init_dtype is None:
             return ''
-        elif isinstance(init_dtype, (PythonType, NumpyResultType)):
+
+        if isinstance(init_dtype, (PythonType, NumpyResultType)):
             dtype = self._print(init_dtype)
-            return "dtype = " + dtype
         elif isinstance(init_dtype, PyccelFunctionDef):
             dtype = self._get_numpy_name(init_dtype.cls_name)
-            return f"dtype={dtype}"
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
                 dtype = self._get_numpy_name(DtypePrecisionToCastFunction[datatype(dtype).name][expr.precision])
-            return f"dtype={dtype}"
+        return f"dtype = {dtype}"
 
     def _print_Header(self, expr):
         return ''
@@ -292,20 +291,21 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
-        func = expr.functions[0]
-        if not isinstance(func, FunctionAddress):
-            func.rename(expr.name)
-        func_code = self._print(func)
-        _, body = func_code.split(':\n',1)
-        for func in expr.functions[1:]:
+
+        # Print each function in the interface
+        func_def_code = []
+        for func in expr.functions:
             if not isinstance(func, FunctionAddress):
                 func.rename(expr.name)
-            i_func_code = self._print(func)
-            _, i_body = i_func_code.split(':\n',1)
-            if i_body != body:
-                warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
-                return func_code
-        return func_code
+            func_def_code.append(self._print(func))
+
+        # Split functions after declaration to ignore type declaration differences
+        bodies = [c.split(':\n',1)[1] for c in func_def_code]
+        # Verify that generated function bodies are identical
+        if len(set(bodies)) > 1:
+            warnings.warn(UserWarning("Generated code varies between interfaces but has not been printed. This Python code may produce unexpected results."))
+
+        return func_def_code[0]
 
     def _print_FunctionDef(self, expr):
         self.set_scope(expr.scope)

@@ -463,7 +463,7 @@ class NumpyNewArray(PyccelInternalFunction):
     Superclass for nodes representing NumPy array allocation functions.
 
     Class from which all nodes representing a NumPy function which implies a call
-    to `Allocate` shoul inherit.
+    to `Allocate` should inherit.
 
     Parameters
     ----------
@@ -1652,7 +1652,7 @@ class NumpyMod(NumpyUfuncBinary):
         """
         Set the datatype of the object.
 
-        Set the datatype of the object by calculting how the types
+        Set the datatype of the object by calculating how the types
         may be promoted.
 
         Parameters
