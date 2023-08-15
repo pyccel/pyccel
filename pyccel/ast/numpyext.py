@@ -563,7 +563,7 @@ class NumpyArray(NumpyNewArray):
         rank  = len(shape)
 
         if ndmin and ndmin>rank:
-            shape += (LiteralInteger(1),)*(ndmin-rank)
+            shape = (LiteralInteger(1),)*(ndmin-rank) + shape
             rank = ndmin
 
         if rank < 2:
@@ -577,6 +577,8 @@ class NumpyArray(NumpyNewArray):
 
             if order in ('K', 'A'):
                 order = arg.order
+                if order is None:
+                    order = 'C'
             # ...
 
         self._arg   = arg
