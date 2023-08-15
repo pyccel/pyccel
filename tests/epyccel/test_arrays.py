@@ -3510,6 +3510,13 @@ def test_arrs_2d_different_shapes_0(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Negative start of range does not work in c. See #1311"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
