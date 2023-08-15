@@ -211,7 +211,7 @@ dtype_registry = {('float',8)   : 'double',
                   ('int',8)     : 'int64_t',
                   ('int',2)     : 'int16_t',
                   ('int',1)     : 'int8_t',
-                  ('bool',4)    : 'bool'}
+                  ('bool',-1)   : 'bool'}
 
 ndarray_type_registry = {
                   ('float',8)   : 'nd_double',
@@ -222,7 +222,7 @@ ndarray_type_registry = {
                   ('int',4)     : 'nd_int32',
                   ('int',2)     : 'nd_int16',
                   ('int',1)     : 'nd_int8',
-                  ('bool',4)    : 'nd_bool'}
+                  ('bool',-1)   : 'nd_bool'}
 
 type_to_format = {('float',8)   : '%.12lf',
                   ('float',4)   : '%.12f',
@@ -232,7 +232,7 @@ type_to_format = {('float',8)   : '%.12lf',
                   ('int',8)     : LiteralString("%") + CMacro('PRId64'),
                   ('int',2)     : LiteralString("%") + CMacro('PRId16'),
                   ('int',1)     : LiteralString("%") + CMacro('PRId8'),
-                  ('bool',4)    : '%s',
+                  ('bool',-1)   : '%s',
                   ('string', 0) : '%s'}
 
 import_dict = {'omp_lib' : 'omp' }

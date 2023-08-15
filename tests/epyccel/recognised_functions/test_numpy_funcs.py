@@ -3608,7 +3608,7 @@ def test_zeros_like_dtype_auto(language):
 
     f_complex_auto = epyccel(create_zeros_like_val_complex_auto, language = language)
     assert matching_types(f_complex_auto(), create_zeros_like_val_complex_auto())
-    
+
     f_int32_auto   = epyccel(create_zeros_like_val_int32_auto, language = language)
     assert matching_types(f_int32_auto(), create_zeros_like_val_int32_auto())
 
@@ -5752,7 +5752,7 @@ def test_numpy_linspace_array_like_1d(language):
     out = np.empty_like(arr)
     epyccel_func(integer32, 5, out, False)
     assert np.allclose(arr, out)
-    
+
     if sys.platform != 'win32':
         arr = linspace(integer64, 5, 7)
         out = np.empty_like(arr)
@@ -6348,3 +6348,77 @@ def test_nonzero(language):
     assert epyccel_func(fl32) == nonzero_func(fl32)
     assert epyccel_func(fl64) == nonzero_func(fl64)
 
+def test_dtype(language):
+
+    @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]',
+                    'float[:]', 'float32[:]', 'float64[:]'])
+    def func(a : 'T'):
+        from numpy import zeros
+        b = zeros(5, dtype=a.dtype)
+        return b[0]
+
+    bl = np.array([True, False, True, False, True])
+    integer8  = np.array([6,1,8,2,3], dtype = np.int8)
+    integer16 = np.array([6,1,8,2,3], dtype = np.int16)
+    integer   = np.array([6,1,8,2,3], dtype = int)
+    integer32 = np.array([6,1,8,2,3], dtype = np.int32)
+    integer64 = np.array([6,1,8,2,3], dtype = np.int64)
+
+    fl   = np.array([6,22,1,8,2,3], dtype = float)
+    fl32 = np.array([6,22,1,8,2,3], dtype = np.float32)
+    fl64 = np.array([6,22,1,8,2,3], dtype = np.float64)
+
+    epyccel_func = epyccel(func, language=language)
+
+    assert matching_types(epyccel_func(bl), func(bl))
+    assert matching_types(epyccel_func(integer8), func(integer8))
+    assert matching_types(epyccel_func(integer16), func(integer16))
+    assert matching_types(epyccel_func(integer), func(integer))
+    assert matching_types(epyccel_func(integer32), func(integer32))
+    assert matching_types(epyccel_func(integer64), func(integer64))
+    assert matching_types(epyccel_func(fl), func(fl))
+    assert matching_types(epyccel_func(fl32), func(fl32))
+    assert matching_types(epyccel_func(fl64), func(fl64))
+
+def test_result_type(language):
+    def int_vs_int_array():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(3, np.arange(7, dtype=np.int32)))
+        return b[0]
+
+    def type_comparison():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.int32, np.int16))
+        return b[0]
+
+    def type_comparison2():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.int32, np.complex64))
+        return b[0]
+
+    def value_types():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(3.0, -2))
+        return b[0]
+
+    def pass_through_type():
+        import numpy as np
+        b = np.zeros(5, dtype=np.result_type(np.float64))
+        return b[0]
+
+    def expression_type():
+        import numpy as np
+        a = np.array([6,1,8,2,3], dtype = np.int64)
+        b = np.array([6,22,1,8,2], dtype = np.float32)
+        c = np.zeros(5, dtype=np.result_type(a+b))
+        return c[0]
+
+    epyccel_int_vs_int_array = epyccel(int_vs_int_array, language=language)
+    epyccel_type_comparison = epyccel(type_comparison, language=language)
+    epyccel_type_comparison2 = epyccel(type_comparison2, language=language)
+    epyccel_value_types = epyccel(value_types, language=language)
+
+    assert matching_types(epyccel_int_vs_int_array(), int_vs_int_array())
+    assert matching_types(epyccel_type_comparison(), type_comparison())
+    assert matching_types(epyccel_type_comparison2(), type_comparison2())
+    assert matching_types(epyccel_value_types(), value_types())

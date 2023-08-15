@@ -108,7 +108,7 @@ pytype_parse_registry = {
     (NativeFloat(), 4)         : 'f',
     (NativeComplex(), 4)       : 'O',
     (NativeComplex(), 8)       : 'O',
-    (NativeBool(), 4)          : 'p',
+    (NativeBool(), -1)         : 'p',
     (NativeString(), 0)        : 's',
     (PyccelPyObject(), 0)      : 'O',
     }
@@ -366,7 +366,7 @@ def Python_to_C(c_object):
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
-    (NativeBool(), 4)      : 'PyBool_to_Bool',
+    (NativeBool(), -1)     : 'PyBool_to_Bool',
     (NativeInteger(), 1)   : 'PyInt8_to_Int8',
     (NativeInteger(), 2)   : 'PyInt16_to_Int16',
     (NativeInteger(), 4)   : 'PyInt32_to_Int32',
@@ -412,7 +412,6 @@ def C_to_Python(c_object):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 c_to_py_registry = {
     (NativeBool(), -1)     : 'Bool_to_PyBool',
-    (NativeBool(), 4)      : 'Bool_to_PyBool',
     (NativeInteger(), -1)  : 'Int'+str(default_precision['int']*8)+'_to_PyLong',
     (NativeInteger(), 1)   : 'Int8_to_NumpyLong',
     (NativeInteger(), 2)   : 'Int16_to_NumpyLong',
@@ -510,7 +509,6 @@ def generate_datatype_error(variable):
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
     (NativeBool(), -1)     : 'PyIs_Bool',
-    (NativeBool(), 4)      : 'PyIs_Bool',
     (NativeInteger(), -1)  : 'PyIs_NativeInt',
     (NativeInteger(), 1)   : 'PyIs_Int8',
     (NativeInteger(), 2)   : 'PyIs_Int16',
