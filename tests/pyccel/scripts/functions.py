@@ -4,7 +4,8 @@ def incr_(x : int):
     def decr_(y : int):
         y = y-1
         return y
-    x = x + 1
+    x = x + 2
+    x = decr_(x)
     return x
 
 def helloworld():
