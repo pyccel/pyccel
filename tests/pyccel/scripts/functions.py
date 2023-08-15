@@ -1,11 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import numpy as np
 
 def incr_(x : int):
-    def decr_(y : int):
-        y = y-1
-        return y
     x = x + 2
-    x = decr_(x)
     return x
 
 def helloworld():
@@ -22,7 +19,7 @@ def decr(x : int) -> int:
 def incr_array(x : 'int[:]'):
     x[:] = x + 1
 
-y_=[1,2,3]
+y_ = np.array([1,2,3])
 
 # def decr_array(x : int) -> int:
 #     y_[1] = 6
@@ -65,4 +62,4 @@ if __name__ == '__main__':
     print(z)
     print(z1)
     print(z2)
-    my_print([1,2,3])
+    my_print(np.array([1,2,3]))
