@@ -80,8 +80,8 @@ def compile_c(path_dir,test_file,dependencies,is_mod=False):
             root, ext = os.path.splitext(fi)
             if ext == '.c':
                 deps.append(os.path.join(f, root) +'.py')
-                p = subprocess.Popen([gcc, '-c', fi, '-o', root+'.o'], text=True, cwd=f)
-                p.wait()
+                with subprocess.Popen([gcc, '-c', fi, '-o', root+'.o'], text=True, cwd=f) as p:
+                    p.wait()
     compile_fortran_or_c(gcc, '.c', path_dir,test_file,dependencies,deps,is_mod)
 
 #------------------------------------------------------------------------------
@@ -159,8 +159,9 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,std_
         command.append("%s.o" % root)
     else:
         command.append("%s" % test_file[:-3])
-    p = subprocess.Popen(command, universal_newlines=True, cwd=path_dir)
-    p.wait()
+
+    with subprocess.Popen(command, universal_newlines=True, cwd=path_dir) as p:
+        p.wait()
 
 #------------------------------------------------------------------------------
 def get_lang_output(abs_path, language):
