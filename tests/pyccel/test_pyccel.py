@@ -71,6 +71,7 @@ def compile_pyccel(path_dir,test_file, options = ""):
 
 #------------------------------------------------------------------------------
 def compile_c(path_dir,test_file,dependencies,is_mod=False):
+    gcc = shutil.which('gcc')
     folder = os.path.join(path_dir, '__pyccel__')
     deps = []
     subfolders = [ f.path for f in os.scandir(folder) if f.is_dir() ]
@@ -79,13 +80,13 @@ def compile_c(path_dir,test_file,dependencies,is_mod=False):
             root, ext = os.path.splitext(fi)
             if ext == '.c':
                 deps.append(os.path.join(f, root) +'.py')
-                p = subprocess.Popen(['gcc', '-c', fi, '-o', root+'.o'], text=True, cwd=f)
+                p = subprocess.Popen([gcc, '-c', fi, '-o', root+'.o'], text=True, cwd=f)
                 p.wait()
-    compile_fortran_or_c('gcc', '.c', path_dir,test_file,dependencies,deps,is_mod)
+    compile_fortran_or_c(gcc, '.c', path_dir,test_file,dependencies,deps,is_mod)
 
 #------------------------------------------------------------------------------
 def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
-    compile_fortran_or_c('gfortran', '.f90', path_dir,test_file,dependencies,(),is_mod)
+    compile_fortran_or_c(shutil.which('gfortran'), '.f90', path_dir,test_file,dependencies,(),is_mod)
 
 #------------------------------------------------------------------------------
 def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,std_deps,is_mod=False):
@@ -143,7 +144,7 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,std_
         for d in std_deps:
             command.append("-I"+os.path.dirname(d))
     else:
-        command = [shutil.which(compiler), "-O3", root+extension]
+        command = [compiler, "-O3", root+extension]
         for d in deps:
             d = insert_pyccel_folder(d)
             command.append(d[:-3]+".o")
