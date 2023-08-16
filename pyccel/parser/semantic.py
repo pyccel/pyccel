@@ -1160,8 +1160,10 @@ class SemanticParser(BasicParser):
                         parent     = cls.superclasses
                         attributes = list(attributes)
                         name     = str(lhs.name[-1])
-
+                        name = self.scope.get_expected_name(name)
                         member = self._create_variable(name, dtype, rhs, d_lhs)
+                        self.scope.insert_variable(member, name)
+
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                         # update the attributes of the class and push it to the scope
@@ -1202,8 +1204,8 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
 
-                new_name = self.scope.get_expected_name(name)
                 if not (isinstance(lhs, DottedVariable)):
+                    new_name = self.scope.get_expected_name(name)
                     # Create new variable
                     lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
