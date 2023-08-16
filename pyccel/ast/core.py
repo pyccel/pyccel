@@ -3360,8 +3360,11 @@ class ClassDef(ScopedNode):
             d_attributes[i.name] = i
         return d_attributes
 
-    # TODO add other attributes?
-
+    def add_new_attribute(self, attr):
+        if not isinstance(attr, Variable):
+            raise TypeError("Attributes must be Variables")
+        attr.set_current_user_node(self)
+        self._attributes += (attr,)
 
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""
