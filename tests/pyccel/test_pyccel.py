@@ -89,6 +89,35 @@ def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
 
 #------------------------------------------------------------------------------
 def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,std_deps,is_mod=False):
+    """
+    Compile Fortran or C code manually.
+
+    Compile Fortran or C code manually. This is necessary when support is missing for the
+    wrapper or when dependencies also need to be translated and compiled.
+
+    Parameters
+    ----------
+    compiler : str
+        The compiler (gfortran/gcc).
+
+    extension : str
+        The extension of the generated file (.c/.f90).
+
+    path_dir : str
+        The path to the directory where the compilation command should be run from.
+
+    test_file : str
+        The python file which was translated.
+
+    dependencies : list of str
+        A list of any python dependencies of the file.
+
+    std_deps : list of str
+        A list of any language-specific dependencies of the file (e.g. ndarrays).
+
+    is_mod : bool, default=False
+        True if translating a module, false if translating a program
+    """
     root = insert_pyccel_folder(test_file)[:-3]
 
     assert(os.path.isfile(root+extension))
@@ -803,6 +832,7 @@ def test_classes_f_only( test_file , language):
         pyccel_test(test_file, compile_with_pyccel = False, language=language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
