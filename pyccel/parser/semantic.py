@@ -1160,8 +1160,6 @@ class SemanticParser(BasicParser):
                         attributes = list(attributes)
                         name     = str(lhs.name[-1])
 
-                        var      = self.get_variable('self')
-
                         member = self._create_variable(name, dtype, rhs, d_lhs)
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
