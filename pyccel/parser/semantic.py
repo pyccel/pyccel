@@ -358,7 +358,6 @@ class SemanticParser(BasicParser):
         Variable
             Returns the varibale if found or None.
         """
-
         if self.current_class and not name == 'self':
             for i in self._current_class.attributes:
                 if i.name == name:
@@ -387,14 +386,10 @@ class SemanticParser(BasicParser):
         """
 
         if self.current_class:
-            attributes_list = list(self._current_class.attributes)
-            for key, value in enumerate(attributes_list):
+            for value in self._current_class.attributes:
                 if value.name == name.name[-1]:
-                    attributes_list[key] = value
-                    self._current_class.attributes = tuple(attributes_list)
                     return value
         return None
-
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -1156,8 +1151,8 @@ class SemanticParser(BasicParser):
             if var is None:
                 if isinstance(lhs, DottedName):
                     if (self._current_function == '__init__' or self.current_class) and lhs.name[0] == 'self':
-                        cls      = self.get_variable('self')
-                        cls_name = str(cls.cls_base.name)
+                        var      = self.get_variable('self')
+                        cls_name = str(var.cls_base.name)
                         cls      = self.scope.find(cls_name, 'classes')
 
                         attributes = cls.attributes
@@ -1172,9 +1167,12 @@ class SemanticParser(BasicParser):
 
                         # update the attributes of the class and push it to the scope
                         attributes += [member]
-                        new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
-                        self._current_class = new_cls
-                        self.scope.parent_scope.update_class(new_cls)
+                        if not self._current_class:
+                            new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
+                            self._current_class = new_cls
+                        else:
+                            self._current_class.attributes = tuple(attributes)
+                        self.scope.parent_scope.update_class(self._current_class)
                     else:
                         lhs = self._visit(lhs)
                         name = str(lhs.name[0])
@@ -1273,7 +1271,6 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -3594,7 +3591,7 @@ class SemanticParser(BasicParser):
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
-
+        self._current_class = None
         self.exit_class_scope()
 
         cls = ClassDef(name, attributes, methods,
