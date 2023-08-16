@@ -1162,9 +1162,10 @@ class SemanticParser(BasicParser):
                         name     = str(lhs.name[-1])
                         name = self.scope.get_expected_name(name)
                         member = self._create_variable(name, dtype, rhs, d_lhs)
-                        self.scope.insert_variable(member, name)
 
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
+                        if not str(lhs.name[-1]) == name:
+                            self.scope.insert_variable(lhs, name)
 
                         # update the attributes of the class and push it to the scope
                         attributes += [member]
