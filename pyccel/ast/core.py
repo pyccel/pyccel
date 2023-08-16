@@ -3303,17 +3303,6 @@ class ClassDef(ScopedNode):
 
         return self._attributes
 
-    @attributes.setter
-    def attributes(self, attr):
-        if not isinstance(attr, tuple):
-            raise TypeError('attributes must be a tuple.')
-        if self._user_nodes:
-            for a in self._attributes:
-                self.remove_user_node(a)
-        self._attributes = attr
-        for a in attr:
-            a.set_current_user_node(self)
-
     @property
     def methods(self):
         return self._methods

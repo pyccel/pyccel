@@ -1168,12 +1168,12 @@ class SemanticParser(BasicParser):
                             self.scope.insert_variable(lhs, name)
 
                         # update the attributes of the class and push it to the scope
-                        attributes += [member]
                         if not self._current_class:
+                            attributes += [member]
                             new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
                             self._current_class = new_cls
                         else:
-                            self._current_class.attributes = tuple(attributes)
+                            self.current_class.add_new_attribute(member)
                         self.scope.parent_scope.update_class(self._current_class)
                     else:
                         lhs = self._visit(lhs)
