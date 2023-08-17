@@ -360,7 +360,7 @@ class SemanticParser(BasicParser):
             Returns the varibale if found or None.
         """
         if isinstance(name, DottedName):
-            prefix = self._visit(DottedName(*name.name[:-1]))
+            prefix = self._visit(name)
             class_def = prefix.cls_base
             attr_name = name.name[-1]
             for attr in class_def.attributes:
@@ -1146,6 +1146,7 @@ class SemanticParser(BasicParser):
 
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
                         if not str(lhs.name[-1]) == name:
+                            self.scope.remove_variable(lhs, lhs.name[-1])
                             self.scope.insert_variable(lhs, name)
 
                         # update the attributes of the class and push it to the scope
