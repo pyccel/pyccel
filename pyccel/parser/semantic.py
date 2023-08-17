@@ -386,10 +386,12 @@ class SemanticParser(BasicParser):
             Returns the attribute if found or None.
         """
 
-        if self.current_class:
-            for value in self._current_class.attributes:
-                if value.name == name.name[-1]:
-                    return value
+        prefix = self._visit(DottedName(*name.name[:-1]))
+        class_def = prefix.cls_base
+        attr_name = name.name[-1]
+        for attr in class_def.attributes:
+            if attr_name == attr.name:
+                return attr
         return None
 
     def get_variable(self, name):
@@ -1151,14 +1153,13 @@ class SemanticParser(BasicParser):
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
                 if isinstance(lhs, DottedName):
-                    if (self._current_function == '__init__' or self.current_class) and lhs.name[0] == 'self':
+                    prefix = self._visit(DottedName(*lhs.name[:-1]))
+                    class_def = prefix.cls_base
+                    if isinstance(class_def, ClassDef) and lhs.name[0] == 'self':
                         var      = self.get_variable('self')
                         cls_name = str(var.cls_base.name)
                         cls      = self.scope.find(cls_name, 'classes')
 
-                        attributes = cls.attributes
-                        parent     = cls.superclasses
-                        attributes = list(attributes)
                         name     = str(lhs.name[-1])
                         name = self.scope.get_expected_name(name)
                         member = self._create_variable(name, dtype, rhs, d_lhs)
@@ -1168,13 +1169,8 @@ class SemanticParser(BasicParser):
                             self.scope.insert_variable(lhs, name)
 
                         # update the attributes of the class and push it to the scope
-                        if not self._current_class:
-                            attributes += [member]
-                            new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
-                            self._current_class = new_cls
-                        else:
-                            self.current_class.add_new_attribute(member)
-                        self.scope.parent_scope.update_class(self._current_class)
+                        class_def.add_new_attribute(member)
+                        self.scope.parent_scope.update_class(class_def)
                     else:
                         lhs = self._visit(lhs)
                         name = str(lhs.name[0])
@@ -3614,7 +3610,6 @@ class SemanticParser(BasicParser):
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
-        self._current_class = None
         self.exit_class_scope()
 
         cls = ClassDef(name, attributes, methods,
