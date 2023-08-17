@@ -359,40 +359,23 @@ class SemanticParser(BasicParser):
         Variable
             Returns the varibale if found or None.
         """
-        if self.current_class and not name == 'self':
-            for i in self._current_class.attributes:
-                if i.name == name:
-                    var = i
-                    return var
+        if isinstance(name, DottedName):
+            prefix = self._visit(DottedName(*name.name[:-1]))
+            class_def = prefix.cls_base
+            attr_name = name.name[-1]
+            for attr in class_def.attributes:
+                if attr_name == attr.name:
+                    return attr
             return None
         else:
-            return self.scope.find(name, 'variables')
-
-    def check_for_attribute(self, name):
-        """
-        Search for an Attribute with the given name in the current scope.
-
-        Search for an Attribute with the given name in the current scope,
-        defined by the local and global Python scopes. Return None if not found.
-
-        Parameters
-        ----------
-        name : DottedName
-            The object describing the attribute.
-
-        Returns
-        -------
-        Variable
-            Returns the attribute if found or None.
-        """
-
-        prefix = self._visit(DottedName(*name.name[:-1]))
-        class_def = prefix.cls_base
-        attr_name = name.name[-1]
-        for attr in class_def.attributes:
-            if attr_name == attr.name:
-                return attr
-        return None
+            if self.current_class:
+                for i in self._current_class.attributes:
+                    if i.name == name:
+                        var = i
+                        return var
+                return None
+            else:
+                return self.scope.find(name, 'variables')
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -1146,10 +1129,7 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            if isinstance(lhs, DottedName):
-                var = self.check_for_attribute(lhs)
-            else:
-                var = self.check_for_variable(name)
+            var = self.check_for_variable(name)
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
                 if isinstance(lhs, DottedName):
