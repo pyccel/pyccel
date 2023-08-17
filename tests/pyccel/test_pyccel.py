@@ -71,8 +71,31 @@ def compile_pyccel(path_dir,test_file, options = ""):
 
 #------------------------------------------------------------------------------
 def compile_c(path_dir,test_file,dependencies,is_mod=False):
+    """
+    Compile C code manually.
+
+    Compile C code manually. This is a wrapper around compile_fortran_or_c.
+
+    Parameters
+    ----------
+    path_dir : str
+        The path to the directory where the compilation command should be run from.
+
+    test_file : str
+        The python file which was translated.
+
+    dependencies : list of str
+        A list of any python dependencies of the file.
+
+    is_mod : bool, default=False
+        True if translating a module, false if translating a program
+
+    See also
+    --------
+    compile_fortran_or_c : The function that is called.
+    """
     gcc = shutil.which('gcc')
-    folder = os.path.join(path_dir, '__pyccel__')
+    folder = os.path.join(os.path.dirname(test_file), '__pyccel__')
     deps = []
     subfolders = [ f.path for f in os.scandir(folder) if f.is_dir() ]
     for f in subfolders:
@@ -86,6 +109,29 @@ def compile_c(path_dir,test_file,dependencies,is_mod=False):
 
 #------------------------------------------------------------------------------
 def compile_fortran(path_dir,test_file,dependencies,is_mod=False):
+    """
+    Compile Fortran code manually.
+
+    Compile Fortran code manually. This is a wrapper around compile_fortran_or_c.
+
+    Parameters
+    ----------
+    path_dir : str
+        The path to the directory where the compilation command should be run from.
+
+    test_file : str
+        The python file which was translated.
+
+    dependencies : list of str
+        A list of any python dependencies of the file.
+
+    is_mod : bool, default=False
+        True if translating a module, false if translating a program
+
+    See also
+    --------
+    compile_fortran_or_c : The function that is called.
+    """
     compile_fortran_or_c(shutil.which('gfortran'), '.f90', path_dir,test_file,dependencies,(),is_mod)
 
 #------------------------------------------------------------------------------
