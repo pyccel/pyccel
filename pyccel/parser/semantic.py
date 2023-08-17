@@ -1130,18 +1130,17 @@ class SemanticParser(BasicParser):
                 self._ensure_target(rhs, d_lhs)
 
             var = self.check_for_variable(name)
+
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
+
                 if isinstance(lhs, DottedName):
                     prefix = self._visit(DottedName(*lhs.name[:-1]))
                     class_def = prefix.cls_base
                     if isinstance(class_def, ClassDef) and lhs.name[0] == 'self':
                         var      = self.get_variable('self')
-                        cls_name = str(var.cls_base.name)
-                        cls      = self.scope.find(cls_name, 'classes')
 
-                        name     = str(lhs.name[-1])
-                        name = self.scope.get_expected_name(name)
+                        name = self.scope.get_expected_name(str(lhs.name[-1]))
                         member = self._create_variable(name, dtype, rhs, d_lhs)
 
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
@@ -1250,6 +1249,7 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -3591,6 +3591,7 @@ class SemanticParser(BasicParser):
             if isinstance(i, Interface):
                 methods.remove(i)
                 interfaces += [i]
+
         self.exit_class_scope()
 
         cls = ClassDef(name, attributes, methods,

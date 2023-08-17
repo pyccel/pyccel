@@ -3350,6 +3350,21 @@ class ClassDef(ScopedNode):
         return d_attributes
 
     def add_new_attribute(self, attr):
+        """
+        Adding a new attributes to the current class.
+
+        A new attributes of the current ClassDef.
+
+        Parameters
+        ----------
+        attr : Varibale
+            The Variable that will be added.
+
+        Returns
+        -------
+        None
+        """
+
         if not isinstance(attr, Variable):
             raise TypeError("Attributes must be Variables")
         attr.set_current_user_node(self)
