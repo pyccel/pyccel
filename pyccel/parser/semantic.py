@@ -363,10 +363,11 @@ class SemanticParser(BasicParser):
             prefix = self._visit(name)
             class_def = prefix.cls_base
             attr_name = name.name[-1]
-            for attr in class_def.attributes:
-                if attr_name == attr.name:
-                    return attr
-            return None
+            try:
+                value = next(a for a in class_def.attributes if a.name == attr_name)
+            except StopIteration:
+                value = None
+            return value
         else:
             if self.current_class:
                 for i in self._current_class.attributes:
