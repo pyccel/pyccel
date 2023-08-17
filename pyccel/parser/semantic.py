@@ -360,7 +360,7 @@ class SemanticParser(BasicParser):
             Returns the varibale if found or None.
         """
         if isinstance(name, DottedName):
-            prefix = self._visit(name)
+            prefix = self._visit(name.name[:-1])
             class_def = prefix.cls_base
             attr_name = name.name[-1]
             try:
