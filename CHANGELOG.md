@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
 -   \[INTERNALS\] Fix string base class selection.
+-   #1502 : Allowing the bot to re-run cancelled tests 
 
 ### Changed
 
