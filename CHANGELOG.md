@@ -34,6 +34,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
