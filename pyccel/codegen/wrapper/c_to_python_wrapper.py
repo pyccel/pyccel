@@ -206,7 +206,7 @@ class CToPythonWrapper(Wrapper):
             The variable with datatype `PyccelPyObject` where the arguments is stored in Python.
 
         arg : Variable
-            The c-compatible variable which holds all the details about the expected type.
+            The C-compatible variable which holds all the details about the expected type.
 
         raise_error : bool
             True if an error should be raised in case of an unexpected type, False otherwise.
