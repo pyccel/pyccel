@@ -295,7 +295,7 @@ class PyModule(Module):
 
     Class to hold a module which is accessible from Python. This class
     adds external functions and external declarations to the basic
-    Module. However it's main utility is in order to differentiate
+    Module. However its main utility is in order to differentiate
     itself such that a different `_print` function can be implemented
     to handle it.
 
