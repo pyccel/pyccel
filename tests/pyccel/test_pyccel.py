@@ -154,16 +154,16 @@ def compile_fortran_or_c(compiler,extension,path_dir,test_file,dependencies,std_
         The path to the directory where the compilation command should be run from.
 
     test_file : str
-        The python file which was translated.
+        The Python file which was translated.
 
     dependencies : list of str
-        A list of any python dependencies of the file.
+        A list of any Python dependencies of the file.
 
     std_deps : list of str
         A list of any language-specific dependencies of the file (e.g. ndarrays).
 
     is_mod : bool, default=False
-        True if translating a module, false if translating a program
+        True if translating a module, False if translating a program
     """
     root = insert_pyccel_folder(test_file)[:-3]
 
