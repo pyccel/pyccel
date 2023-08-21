@@ -269,7 +269,7 @@ class CToPythonWrapper(Wrapper):
         Determine the flags which allow correct function to be identified from the interface.
 
         Each function must be identifiable by a different integer value. This value is known
-        as a flag. Different parts of the flag to indicate the types of different arguments.
+        as a flag. Different parts of the flag indicate the types of different arguments.
         Take for example the following function:
         ```python
         @types('int', 'int')
