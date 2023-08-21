@@ -373,7 +373,7 @@ The C to Python wrapper wraps C code to make it callable from Python. This modul
 
 A function that can be called from Python must have the following prototype:
 ```c
-PyObject* func_name(PyObject* self, PyOject* args, PyObject* kwargs);
+PyObject* func_name(PyObject* self, PyObject* args, PyObject* kwargs);
 ```
 
 The arguments and keyword arguments are unpacked into individual `PyObject` pointers.
