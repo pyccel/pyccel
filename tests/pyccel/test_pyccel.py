@@ -88,7 +88,7 @@ def compile_c(path_dir,test_file,dependencies,is_mod=False):
         A list of any Python dependencies of the file.
 
     is_mod : bool, default=False
-        True if translating a module, false if translating a program
+        True if translating a module, False if translating a program
 
     See also
     --------
