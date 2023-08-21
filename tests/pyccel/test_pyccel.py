@@ -82,10 +82,10 @@ def compile_c(path_dir,test_file,dependencies,is_mod=False):
         The path to the directory where the compilation command should be run from.
 
     test_file : str
-        The python file which was translated.
+        The Python file which was translated.
 
     dependencies : list of str
-        A list of any python dependencies of the file.
+        A list of any Python dependencies of the file.
 
     is_mod : bool, default=False
         True if translating a module, false if translating a program
