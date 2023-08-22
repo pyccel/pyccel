@@ -203,9 +203,9 @@ static char* _check_pyarray_type(PyObject *a)
 	return NULL;
 }
 
-enum NPY_TYPES get_numpy_type(t_ndarray *o)
+enum NPY_TYPES get_numpy_type(t_ndarray o)
 {
-    enum e_types nd_type = o->type;
+    enum e_types nd_type = o.type;
     enum NPY_TYPES npy_type;
     switch (nd_type)
     {
@@ -304,16 +304,16 @@ t_ndarray	pyarray_to_ndarray(PyObject *o)
 	return array;
 }
 
-PyObject* ndarray_to_pyarray(t_ndarray *o)
+PyObject* ndarray_to_pyarray(t_ndarray o)
 {
     int FLAGS;
-    if (o->nd == 1) {
+    if (o.nd == 1) {
         FLAGS = NPY_ARRAY_F_CONTIGUOUS | NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
-    else if (o->order == order_c) {
+    else if (o.order == order_c) {
         FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
-    else if (o->order == order_f) {
+    else if (o.order == order_f) {
         FLAGS = NPY_ARRAY_C_CONTIGUOUS | NPY_ARRAY_WRITEABLE;
     }
     else {
@@ -323,9 +323,9 @@ PyObject* ndarray_to_pyarray(t_ndarray *o)
     enum NPY_TYPES npy_type = get_numpy_type(o);
 
     return PyArray_NewFromDescr(&PyArray_Type, PyArray_DescrFromType(npy_type),
-            o->nd, _ndarray_to_numpy_shape(o->shape, o->nd),
-            _ndarray_to_numpy_strides(o->strides, o->type_size, o->nd),
-            o->raw_data, FLAGS, NULL);
+            o.nd, _ndarray_to_numpy_shape(o.shape, o.nd),
+            _ndarray_to_numpy_strides(o.strides, o.type_size, o.nd),
+            o.raw_data, FLAGS, NULL);
 }
 
 /*
