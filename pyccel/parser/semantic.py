@@ -3595,7 +3595,6 @@ class SemanticParser(BasicParser):
 
         self.exit_class_scope()
         self.scope.update_class(cls)
-        print(cls.attributes)
 
         return EmptyNode()
 
