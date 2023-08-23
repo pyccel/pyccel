@@ -16,7 +16,7 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
-##  \[1.9.0\] - 2023-08-22
+## \[1.9.0\] - 2023-08-22
 
 ### Added
 
