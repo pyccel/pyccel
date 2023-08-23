@@ -576,9 +576,7 @@ class NumpyArray(NumpyNewArray):
                 raise ValueError(f"Cannot recognize '{order}' order")
 
             if order in ('K', 'A'):
-                order = arg.order
-                if order is None:
-                    order = 'C'
+                order = arg.order or 'C'
             # ...
 
         self._arg   = arg
