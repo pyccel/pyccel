@@ -18,6 +18,7 @@ All notable changes to this project will be documented in this file.
 
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
+-   #1499 : Fix passing temporary arrays to functions.
 -   \[INTERNALS\] Fix string base class selection.
 -   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
 -   #1241 : Incorrect transpose when copying an F-ordered array.
@@ -34,9 +35,12 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
 -   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
+-   \[INTERNALS\] Re-write C-Python API wrapping stage (#1477)
 
 ### Deprecated
 
+-   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.

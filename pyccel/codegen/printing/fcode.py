@@ -3204,6 +3204,9 @@ class FCodePrinter(CodePrinter):
 
         return new_code
 
+    def _print_BindCArrayVariable(self, expr):
+        return self._print(expr.wrapper_function)
+
 
 def fcode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of Fortran code
