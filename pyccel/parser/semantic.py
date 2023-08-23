@@ -361,7 +361,9 @@ class SemanticParser(BasicParser):
         """
 
         if isinstance(name, DottedName):
-            prefix = self._visit(DottedName(*name.name[:-1])) # See above about this line
+            prefix_parts = name.name[:-1]
+            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+            prefix = self._visit(syntactic_prefix)
             class_def = prefix.cls_base
             attr_name = name.name[-1]
             attribute = class_def.scope.find(attr_name, 'variables')
