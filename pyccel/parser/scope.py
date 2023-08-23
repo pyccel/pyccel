@@ -292,7 +292,8 @@ class Scope(object):
             self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals['variables']:
-                raise RuntimeError('New variable {} already exists in scope'.format(name))
+                if self._locals['variables'][name] == var:
+                    raise RuntimeError('New variable {} already exists in scope'.format(name))
             if name == '_':
                 self._temporary_variables.append(var)
             else:

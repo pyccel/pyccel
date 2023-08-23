@@ -1157,8 +1157,7 @@ class SemanticParser(BasicParser):
                         # Create the local DottedVariable
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
                         # Insert the DottedVariable to the local scope so it can be easily found in `_check_for_variable`
-                        if not self.scope.find(new_name, 'variables'):
-                            self.scope.insert_variable(lhs, new_name)
+                        self.scope.insert_variable(lhs, new_name)
 
                         # update the attributes of the class and push it to the scope
                         class_def.add_new_attribute(member)
