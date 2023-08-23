@@ -3370,6 +3370,48 @@ class ClassDef(ScopedNode):
         attr.set_current_user_node(self)
         self._attributes += (attr,)
 
+    def add_new_method(self, method):
+        """
+        Adding a new method to the current class.
+
+        A new method of the current ClassDef.
+
+        Parameters
+        ----------
+        attr : FunctionDef
+            The Method that will be added.
+
+        Returns
+        -------
+        None
+        """
+
+        if not isinstance(method, FunctionDef):
+            raise TypeError("Method must be FunctionDef")
+        method.set_current_user_node(self)
+        self._methods += (method,)
+
+    def add_new_interface(self, interface):
+        """
+        Adding a new interface to the current class.
+
+        A new interface of the current ClassDef.
+
+        Parameters
+        ----------
+        attr : FunctionDef
+            The interface that will be added.
+
+        Returns
+        -------
+        None
+        """
+
+        if not isinstance(interface, Interface):
+            raise TypeError("Interface must be Interface")
+        interface.set_current_user_node(self)
+        self._interfaces += (interface,)
+
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""
 

@@ -359,15 +359,16 @@ class SemanticParser(BasicParser):
         Variable
             Returns the varibale if found or None.
         """
+
         if isinstance(name, DottedName):
-            prefix = self._visit(name.name[:-1])
+            prefix = self._visit(DottedName(*name.name[:-1])) # See above about this line
             class_def = prefix.cls_base
             attr_name = name.name[-1]
-            try:
-                value = next(a for a in class_def.attributes if a.name == attr_name)
-            except StopIteration:
-                value = None
-            return value
+            attribute = class_def.scope.find(attr_name, 'variables')
+            if attribute:
+                return attribute
+            else:
+                return None
         else:
             if self.current_class:
                 for i in self._current_class.attributes:
@@ -1141,17 +1142,27 @@ class SemanticParser(BasicParser):
                     if isinstance(class_def, ClassDef) and lhs.name[0] == 'self':
                         var      = self.get_variable('self')
 
-                        name = self.scope.get_expected_name(str(lhs.name[-1]))
-                        member = self._create_variable(name, dtype, rhs, d_lhs)
+                        # Collect the name that should be used in the generated code
+                        attribute_name = lhs.name[-1]
+                        new_name = self.scope.get_expected_name(attribute_name)
+                        # Create the attribute
+                        member = self._create_variable(new_name, dtype, rhs, d_lhs)
 
+                        # Insert the attribute to the class scope
+                        # Passing the original name ensures that the attribute can be found under this name
+                        if not str(lhs.name[-1]) == new_name:
+                            class_def.scope.remove_variable(member, lhs.name[-1])
+                            class_def.scope.insert_variable(member, attribute_name)
+
+                        # Create the local DottedVariable
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
-                        if not str(lhs.name[-1]) == name:
+                        # Insert the DottedVariable to the local scope so it can be easily found in `_check_for_variable`
+                        if not str(lhs.name[-1]) == new_name:
                             self.scope.remove_variable(lhs, lhs.name[-1])
-                            self.scope.insert_variable(lhs, name)
+                            self.scope.insert_variable(lhs, new_name)
 
                         # update the attributes of the class and push it to the scope
                         class_def.add_new_attribute(member)
-                        self.scope.parent_scope.update_class(class_def)
                     else:
                         lhs = self._visit(lhs)
                         name = str(lhs.name[0])
@@ -3460,16 +3471,14 @@ class SemanticParser(BasicParser):
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
 
+            funcs += [func]
             if cls_name:
                 cls = self.scope.find(cls_name, 'classes')
-                methods = list(cls.methods) + [func]
 
                 # update the class methods
-                superclasses = self._find_superclasses(cls)
-                self.scope.update_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclasses=superclasses))
+                if len(funcs) == 1:
+                    cls.add_new_method(func)
 
-            funcs += [func]
 
             #clear the sympy cache
             #TODO clear all variable except the global ones
@@ -3483,6 +3492,9 @@ class SemanticParser(BasicParser):
                 self.insert_function(f)
 
             funcs = Interface(interface_name, funcs)
+            if cls_name:
+                cls = self.scope.find(cls_name, 'classes')
+                cls.add_new_interface(funcs)
             self.insert_function(funcs)
 #        TODO move this to codegen
 #        if vec_func:
@@ -3548,16 +3560,17 @@ class SemanticParser(BasicParser):
 
         cls = ClassDef(name, [], [], superclasses=parent)
         self.scope.insert_class(cls)
-
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
+
+        cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
+        self.scope.update_class(cls)
+
         methods = list(expr.methods)
-        interfaces = []
         const = None
 
         for (i, method) in enumerate(methods):
             m_name = method.name.replace("'", '')
-
             if m_name == '__init__':
                 self._visit_FunctionDef(method)
                 methods.pop(i)
@@ -3571,14 +3584,11 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error')
 
-        ms = []
         for i in methods:
             self._visit_FunctionDef(i)
             m_name = i.name.replace("'", '')
-            m = self.scope.functions.pop(m_name)
-            ms.append(m)
+            self.scope.functions.pop(m_name)
 
-        methods = [const] + ms
         header = self.get_headers(name)
 
         if not header:
@@ -3586,17 +3596,7 @@ class SemanticParser(BasicParser):
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='fatal')
 
-        attributes = self.scope.find(name, 'classes').attributes
-
-        for i in methods.copy():
-            if isinstance(i, Interface):
-                methods.remove(i)
-                interfaces += [i]
-
         self.exit_class_scope()
-
-        cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, superclasses=parent, scope=scope)
         self.scope.update_class(cls)
 
         return EmptyNode()
