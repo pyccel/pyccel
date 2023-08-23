@@ -297,7 +297,7 @@ class Scope(object):
                         if var.lhs.cls_base.name == self._locals['variables'][name].lhs.cls_base.name:
                             raise RuntimeError(f'New variable {name} already exists in scope')
                 else:
-                    raise RuntimeError('New variable {} already exists in scope'.format(name))
+                    raise RuntimeError(f'New variable {name} already exists in scope')
             if name == '_':
                 self._temporary_variables.append(var)
             else:
