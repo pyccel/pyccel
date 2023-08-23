@@ -2060,6 +2060,8 @@ class FunctionCall(PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        for a in args:
+            assert not isinstance(a, FunctionDefArgument)
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
@@ -2693,17 +2695,29 @@ class FunctionDef(ScopedNode):
         """ Mark the function as a recursive function """
         self._is_recursive = True
 
-    def clone(self, newname):
+    def clone(self, newname, **new_kwargs):
         """
-        Create an identical FunctionDef with name
-        newname.
+        Create an almost identical FunctionDef with name `newname`.
+
+        Create an almost identical FunctionDef with name `newname`.
+        Additional parameters can be passed to alter the resulting
+        FunctionDef.
 
         Parameters
         ----------
-        newname: str
-            new name for the FunctionDef
+        newname : str
+            New name for the FunctionDef.
+
+        **new_kwargs : dict
+            Any new keyword arguments to be passed to the new FunctionDef.
+
+        Returns
+        -------
+        FunctionDef
+            The clone of the function definition.
         """
         args, kwargs = self.__getnewargs__()
+        kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)

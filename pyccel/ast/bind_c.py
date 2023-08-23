@@ -13,16 +13,37 @@ from pyccel.ast.core import Module
 from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
+from pyccel.ast.variable import Variable
 
 __all__ = (
+    'BindCArrayVariable',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
     'BindCModule',
     'BindCPointer',
+    'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
 )
+
+# =======================================================================================
+#                                    Datatypes
+# =======================================================================================
+
+class BindCPointer(DataType):
+    """
+    Datatype representing a C pointer in Fortran.
+
+    Datatype representing a C pointer in Fortran. This data type is defined
+    in the iso_c_binding module.
+    """
+    __slots__ = ()
+    _name = 'bindcpointer'
+
+# =======================================================================================
+#                                   Wrapper classes
+# =======================================================================================
 
 
 class BindCFunctionDef(FunctionDef):
@@ -352,6 +373,10 @@ class BindCModule(Module):
     variable_wrappers : list of BindCFunctionDef
         A list containing all the functions which expose module variables to C.
 
+    removed_functions : list of FunctionDef
+        A list of any functions which weren't translated to BindCFunctionDef
+        objects (e.g. private functions).
+
     **kwargs : dict
         See `pyccel.ast.core.Module`.
 
@@ -361,12 +386,13 @@ class BindCModule(Module):
         The class from which BindCModule inherits which contains all details
         about the args and kwargs.
     """
-    __slots__ = ('_orig_mod','_variable_wrappers')
-    _attribute_nodes = ('_orig_mod','_variable_wrappers')
+    __slots__ = ('_orig_mod','_variable_wrappers', '_removed_functions')
+    _attribute_nodes = Module._attribute_nodes + ('_orig_mod','_variable_wrappers', '_removed_functions')
 
-    def __init__(self, *args, original_module, variable_wrappers = (), **kwargs):
+    def __init__(self, *args, original_module, variable_wrappers = (), removed_functions = None, **kwargs):
         self._orig_mod = original_module
         self._variable_wrappers = variable_wrappers
+        self._removed_functions = removed_functions
         super().__init__(*args, **kwargs)
 
     @property
@@ -387,18 +413,134 @@ class BindCModule(Module):
         """
         return self._variable_wrappers
 
+    @property
+    def removed_functions(self):
+        """
+        Get the functions which weren't translated to BindCFunctionDef objects.
+
+        Get a list of the functions which weren't translated to BindCFunctionDef objects.
+        This includes private functions and objects for which wrapper support is lacking.
+        """
+        return self._removed_functions
+
+    @property
+    def declarations(self):
+        """
+        Get the declarations of all module variables.
+
+        In the case of a BindCModule no variables should be declared. Basic variables
+        are used directly from the original module and more complex variables require
+        wrapper functions.
+        """
+        return ()
+
 # =======================================================================================
 
-class BindCPointer(DataType):
+class BindCVariable(Variable):
     """
-    Datatype representing a C pointer in Fortran.
+    A class which wraps a compatible variable from Fortran to make it available in C.
 
-    Datatype representing a C pointer in Fortran. This data type is defined
-    in the iso_c_binding module.
+    A class which wraps a compatible variable from Fortran to make it available in C.
+    A compatible variable is a variable which can be exposed to C simply using
+    iso_c_binding (i.e. no wrapper function is required).
+
+    Parameters
+    ----------
+    *args : tuple
+        See Variable.
+
+    **kwargs : dict
+        See Variable.
+
+    See Also
+    --------
+    Variable : The super class.
     """
-    __slots__ = ()
-    _name = 'bindcpointer'
+    __slots__ = ('_f_name',)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._f_name = self._name.lower()
+
+    @property
+    def name(self):
+        """
+        The name of the external variable that should be printed in C.
+
+        The name of the external variable that should be printed in C.
+        In order to be compatible with Fortran the name must be printed
+        in lower case letters.
+        """
+        return self._f_name
+
+    @property
+    def indexed_name(self):
+        """
+        The name under which the variable is indexed in the scope.
+
+        The name under which the variable is indexed in the scope. This is
+        important in order to be able to collect the original Python name
+        used by the user in case of collisions.
+        """
+        return self._name
+
+# =======================================================================================
+
+class BindCArrayVariable(Variable):
+    """
+    A class which wraps an array from Fortran to make it available in C.
+
+    A class which wraps an array from Fortran to make it available in C.
+
+    Parameters
+    ----------
+    *args : tuple
+        See Variable.
+
+    wrapper_function : FunctionDef
+        The function which can be used to access the array.
+
+    original_variable : Variable
+        The original variable in the Fortran code.
+
+    **kwargs : dict
+        See Variable.
+
+    See Also
+    --------
+    Variable : The super class.
+    """
+    __slots__ = ('_wrapper_function', '_original_variable')
+    _attribute_nodes = ('_wrapper_function', '_original_variable')
+    def __init__(self, *args, wrapper_function, original_variable, **kwargs):
+        self._original_variable = original_variable
+        self._wrapper_function = wrapper_function
+        super().__init__(*args, **kwargs)
+
+    @property
+    def original_variable(self):
+        """
+        The original variable in the Fortran code.
+
+        The original variable in the Fortran code. This is important in
+        order to access the correct type and other details about the
+        Variable.
+        """
+        return self._original_variable
+
+    @property
+    def wrapper_function(self):
+        """
+        The function which can be used to access the array.
+
+        The function which can be used to access the array. The function
+        must return the pointer to the raw data and information about
+        the shape.
+        """
+        return self._wrapper_function
+
+# =======================================================================================
+#                                   Utility functions
 # =======================================================================================
 
 class CLocFunc(Basic):
