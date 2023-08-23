@@ -1131,7 +1131,7 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            var = self.check_for_variable(name)
+            var = self.check_for_variable(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
@@ -1150,15 +1150,12 @@ class SemanticParser(BasicParser):
 
                         # Insert the attribute to the class scope
                         # Passing the original name ensures that the attribute can be found under this name
-                        if not str(lhs.name[-1]) == new_name:
-                            class_def.scope.remove_variable(member, lhs.name[-1])
-                            class_def.scope.insert_variable(member, attribute_name)
+                        class_def.scope.insert_variable(member, attribute_name)
 
                         # Create the local DottedVariable
                         lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
                         # Insert the DottedVariable to the local scope so it can be easily found in `_check_for_variable`
-                        if not str(lhs.name[-1]) == new_name:
-                            self.scope.remove_variable(lhs, lhs.name[-1])
+                        if not self.scope.find(new_name, 'variables'):
                             self.scope.insert_variable(lhs, new_name)
 
                         # update the attributes of the class and push it to the scope
@@ -3598,6 +3595,7 @@ class SemanticParser(BasicParser):
 
         self.exit_class_scope()
         self.scope.update_class(cls)
+        print(cls.attributes)
 
         return EmptyNode()
 
