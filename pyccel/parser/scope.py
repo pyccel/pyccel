@@ -11,7 +11,7 @@ from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol
-from pyccel.ast.variable  import Variable, DottedName, DottedVariable
+from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.errors.errors import Errors
 
@@ -292,12 +292,7 @@ class Scope(object):
             self.parent_scope.insert_variable(var, name)
         else:
             if name in self._locals['variables']:
-                if isinstance(var, DottedVariable):
-                    if isinstance(self._locals['variables'][name], DottedVariable):
-                        if var.lhs.cls_base.name == self._locals['variables'][name].lhs.cls_base.name:
-                            raise RuntimeError(f'New variable {name} already exists in scope')
-                else:
-                    raise RuntimeError(f'New variable {name} already exists in scope')
+                raise RuntimeError('New variable {} already exists in scope'.format(name))
             if name == '_':
                 self._temporary_variables.append(var)
             else:
