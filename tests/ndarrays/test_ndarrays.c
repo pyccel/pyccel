@@ -174,7 +174,7 @@ int32_t test_indexing_int64(void)
     value = x.nd_int64[index];
     c_value = 103;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -203,7 +203,7 @@ int32_t test_indexing_int64_order_f(void)
     value = x.nd_int64[index];
     c_value = 9;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -232,7 +232,7 @@ int32_t test_indexing_int32(void)
     value = x.nd_int32[index];
     c_value = 103;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -261,7 +261,7 @@ int32_t test_indexing_int32_order_f(void)
     value = x.nd_int32[index];
     c_value = 6;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -291,7 +291,7 @@ int32_t test_indexing_int16(void)
     value = x.nd_int16[index];
     c_value = 103;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -320,7 +320,7 @@ int32_t test_indexing_int16_order_f(void)
     value = x.nd_int16[index];
     c_value = 6;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -349,7 +349,7 @@ int32_t test_indexing_int8(void)
     value = x.nd_int8[index];
     c_value = 103;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -378,7 +378,7 @@ int32_t test_indexing_int8_order_f(void)
     value = x.nd_int8[index];
     c_value = 6;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -407,7 +407,7 @@ int32_t test_indexing_double(void)
     value = x.nd_double[index];
     c_value = 103.009;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -441,7 +441,7 @@ int32_t test_indexing_double_order_f(void)
     value = x.nd_double[index];
     c_value = 0.39310326602036905;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -470,7 +470,7 @@ int32_t test_indexing_cdouble(void)
     value = x.nd_cdouble[index];
     c_value = 0.58532094+0.67890618*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -499,7 +499,7 @@ int32_t test_indexing_cdouble_order_f(void)
     value = x.nd_cdouble[index];
     c_value = 0.02005023+0.59950758*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -528,7 +528,7 @@ int32_t test_indexing_cfloat(void)
     value = x.nd_cfloat[index];
     c_value = 0.58532094+0.67890618*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -557,7 +557,7 @@ int32_t test_indexing_cfloat_order_f(void)
     value = x.nd_cfloat[index];
     c_value = 0.8023905547293535+0.17882460280193202*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -601,8 +601,8 @@ int32_t test_slicing_int64(void)
     xview.nd_int64[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int64[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -639,8 +639,8 @@ int32_t test_slicing_int64_order_f(void)
     xview.nd_int64[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int64[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -680,8 +680,8 @@ int32_t test_slicing_int32(void)
     xview.nd_int32[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int32[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -715,8 +715,8 @@ int32_t test_slicing_int32_order_f(void)
     xview.nd_int32[get_index(xview, 1)] = c_value;
     value = x.nd_int32[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -756,8 +756,8 @@ int32_t test_slicing_int16(void)
     xview.nd_int16[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int16[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -794,8 +794,8 @@ int32_t test_slicing_int16_order_f(void)
     xview.nd_int16[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int16[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -835,8 +835,8 @@ int32_t test_slicing_int8(void)
     xview.nd_int8[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int8[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -873,8 +873,8 @@ int32_t test_slicing_int8_order_f(void)
     xview.nd_int8[get_index(xview, 0, 1)] = c_value;
     value = x.nd_int8[get_index(x, 1, 2)];
     my_assert(value , c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -914,8 +914,8 @@ int32_t test_slicing_double(void)
     xview.nd_double[get_index(xview, 0, 1)] = c_value;
     value = x.nd_double[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -952,8 +952,8 @@ int32_t test_slicing_double_order_f(void)
     xview.nd_double[get_index(xview, 0, 1)] = c_value;
     value = x.nd_double[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -989,8 +989,8 @@ int32_t test_slicing_cdouble(void)
     xview.nd_cdouble[get_index(xview, 0, 1)] = c_value;
     value = x.nd_cdouble[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -1028,8 +1028,8 @@ int32_t test_slicing_cdouble_order_f(void)
     xview.nd_cdouble[get_index(xview, 0, 1)] = c_value;
     value = x.nd_cdouble[get_index(x, 1, 2)];
     my_assert(value, c_value, "testing xview assignment");
-    free_array(x);
-    free_pointer(xview);
+    free_array(&x);
+    free_pointer(&xview);
     return (0);
 }
 
@@ -1055,7 +1055,7 @@ int32_t test_array_fill_int64(void)
     value = x.nd_int64[index];
     c_value = 32;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1079,7 +1079,7 @@ int32_t test_array_fill_int64_order_f(void)
     value = x.nd_int64[index];
     c_value = 64;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1104,7 +1104,7 @@ int32_t test_array_fill_int32(void)
     value = x.nd_int32[index];
     c_value = 32;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1128,7 +1128,7 @@ int32_t test_array_fill_int32_order_f(void)
     value = x.nd_int32[index];
     c_value = 32;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1153,7 +1153,7 @@ int32_t test_array_fill_int16(void)
     value = x.nd_int16[index];
     c_value = 32;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1177,7 +1177,7 @@ int32_t test_array_fill_int16_order_f(void)
     value = x.nd_int16[index];
     c_value = 16;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1201,7 +1201,7 @@ int32_t test_array_fill_int8(void)
     value = x.nd_int8[index];
     c_value = 32;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1225,7 +1225,7 @@ int32_t test_array_fill_int8_order_f(void)
     value = x.nd_int8[index];
     c_value = 8;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1249,7 +1249,7 @@ int32_t test_array_fill_double(void)
     value = x.nd_double[index];
     c_value = 2.;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1273,7 +1273,7 @@ int32_t test_array_fill_double_order_f(void)
     value = x.nd_double[index];
     c_value = 2.;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1297,7 +1297,7 @@ int32_t test_array_fill_cdouble(void)
     value = x.nd_cdouble[index];
     c_value = 0.3+0.54*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1321,7 +1321,7 @@ int32_t test_array_fill_cdouble_order_f(void)
     value = x.nd_cdouble[index];
     c_value = 0.3+0.54*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1347,7 +1347,7 @@ int32_t test_array_zeros_double(void)
     value = x.nd_double[index];
     c_value = 0.;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1371,7 +1371,7 @@ int32_t test_array_zeros_int32(void)
     value = x.nd_int32[index];
     c_value = 0;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
@@ -1395,7 +1395,7 @@ int32_t test_array_zeros_cdouble(void)
     value = x.nd_cdouble[index];
     c_value = 0+0*I;
     my_assert(value , c_value, "testing the value");
-    free_array(x);
+    free_array(&x);
     return (0);
 }
 
