@@ -20,7 +20,7 @@ class Point(object):
 
     def print_x(self):
         print(self._x)
-    
+
 
 if __name__ == '__main__':
     x = np.array([0.,0.,0.])
