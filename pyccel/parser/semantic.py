@@ -2117,7 +2117,7 @@ class SemanticParser(BasicParser):
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
             # standard class attribute
-            rhs_new_name = cls_base.scope.get_expected_name(rhs)
+            rhs_new_name = cls_base.scope.get_expected_name(rhs) if cls_base.scope else rhs
             if rhs_new_name in attr_name:
                 self._current_class = cls_base
                 second = self._visit(rhs_new_name)
@@ -3570,7 +3570,7 @@ class SemanticParser(BasicParser):
         const = None
 
         for (i, method) in enumerate(methods):
-            m_name = method.name.replace("'", '')
+            m_name = method.name
             if m_name == '__init__':
                 self._visit_FunctionDef(method)
                 methods.pop(i)
@@ -3586,8 +3586,7 @@ class SemanticParser(BasicParser):
 
         for i in methods:
             self._visit_FunctionDef(i)
-            m_name = i.name.replace("'", '')
-            self.scope.functions.pop(m_name)
+            self.scope.functions.pop(i.name)
 
         header = self.get_headers(name)
 
