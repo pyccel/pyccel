@@ -2115,9 +2115,10 @@ class SemanticParser(BasicParser):
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
             # standard class attribute
-            if rhs in attr_name:
+            rhs_new_name = cls_base.scope.get_expected_name(rhs)
+            if rhs_new_name in attr_name:
                 self._current_class = cls_base
-                second = self._visit(rhs)
+                second = self._visit(rhs_new_name)
                 self._current_class = None
                 return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
 
