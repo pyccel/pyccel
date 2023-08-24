@@ -1139,7 +1139,9 @@ class SemanticParser(BasicParser):
             if var is None:
 
                 if isinstance(lhs, DottedName):
-                    prefix = self._visit(DottedName(*lhs.name[:-1]))
+                    prefix_parts = lhs.name[:-1]
+                    syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+                    prefix = self._visit(syntactic_prefix)
                     class_def = prefix.cls_base
                     if isinstance(class_def, ClassDef) and lhs.name[0] == 'self':
                         var      = self.get_variable('self')
