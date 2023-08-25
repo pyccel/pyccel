@@ -6010,7 +6010,7 @@ def test_copy(language):
         b = a.copy(order='C')
         return b
 
-    arr_1d = randint(min_int64, max_int64, size=5)
+    arr_1d = randint(min_int, max_int, size=5)
     arr_2d = uniform(min_float64 / 2, max_float64 / 2, size=(3,4))
     arr_3d = (uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5)) \
             + uniform(min_float64 / 2, max_float64 / 2, size=(3,4,5))*1j).T
