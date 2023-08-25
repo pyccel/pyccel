@@ -2956,8 +2956,9 @@ class PyccelFunctionDef(FunctionDef):
         """
         Get a description of the arguments.
 
-        If the underlying class has different default values, return a dictionary
-        containing all arguments and their default values. Otherwise return `None`.
+        Return a dictionary whose keys are the arguments with default values
+        and whose values are the default values for the function described by
+        the `PyccelFunctionDef`
         """
         return self._argument_description
 
