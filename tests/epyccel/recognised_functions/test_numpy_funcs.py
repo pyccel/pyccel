@@ -6007,7 +6007,7 @@ def test_copy(language):
 
     @template('T', ['float[:,:]', 'complex[:,:,:](order=F)'])
     def copy_array_to_C(a : 'T'):
-        b = a.copy(order='F')
+        b = a.copy(order='C')
         return b
 
     arr_1d = randint(min_int64, max_int64, size=5)
