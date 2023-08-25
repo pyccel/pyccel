@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+-   #1499 : Fix passing temporary arrays to functions.
+-   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
+-   #1241 : Incorrect transpose when copying an F-ordered array.
+-   #1241 : Fix infinite loop when passing an array as the only argument to `np.array`.
+
+### Changed
+
+### Deprecated
+
+## \[1.9.0\] - 2023-08-22
+
+### Added
+
 -   #752 : Allow passing array variables to `numpy.array`.
 -   #1280 : Allow copying arrays using `numpy.array`.
 -   Allow interfaces in classes.
@@ -18,8 +33,8 @@ All notable changes to this project will be documented in this file.
 
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
--   #1499 : Fix passing temporary arrays to functions.
 -   \[INTERNALS\] Fix string base class selection.
+-   #1496 : Fix interfaces which differ only by order or rank.
 
 ### Changed
 
