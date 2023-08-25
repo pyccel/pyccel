@@ -2940,7 +2940,7 @@ class PyccelFunctionDef(FunctionDef):
         different default values.
     """
     __slots__ = ('_argument_description',)
-    def __init__(self, name, func_class, *, decorators = {}, argument_description = None):
+    def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
         assert argument_description is None or isinstance(argument_description, dict)
