@@ -447,7 +447,7 @@ class CCodePrinter(CodePrinter):
                     operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
 
         if order == "F":
-            operations += f"array_copy_data({lhs_address}, {copy_to}, 0);\nfree_array({copy_to});\n"
+            operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
         return operations
 
     def arrayFill(self, expr):
@@ -1163,7 +1163,9 @@ class CCodePrinter(CodePrinter):
             preface = ''
             init    = ''
 
-        declaration = f'{declaration_type} {variable}{init};\n'
+        external = 'extern ' if expr.external else ''
+
+        declaration = f'{external}{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1233,8 +1235,9 @@ class CCodePrinter(CodePrinter):
                 """ Get the code which declares the argument variable.
                 """
                 code = "const " * var.is_const
-                code += self.get_declare_type(var) + ' '
-                code += var.name * print_arg_names
+                code += self.get_declare_type(var)
+                if print_arg_names:
+                    code += ' ' + var.name
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
@@ -1419,9 +1422,10 @@ class CCodePrinter(CodePrinter):
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        variable_address = self._print(ObjectAddress(expr.variable))
         if expr.variable.is_alias:
-            return 'free_pointer({});\n'.format(self._print(expr.variable))
-        return 'free_array({});\n'.format(self._print(expr.variable))
+            return f'free_pointer({variable_address});\n'
+        return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -1678,7 +1682,11 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+
         self.set_scope(expr.scope)
+
+        # Reinitialise optional partners
+        self._optional_partners = {}
 
         arguments = [a.var for a in expr.arguments]
         results = [r.var for r in expr.results]
@@ -2044,6 +2052,29 @@ class CCodePrinter(CodePrinter):
         return 'conj({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+
+        Parameters
+        ----------
+        Op : str
+            The C operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
 
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)

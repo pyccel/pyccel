@@ -3510,6 +3510,13 @@ def test_arrs_2d_different_shapes_0(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Negative start of range does not work in c. See #1311"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = pytest.mark.fortran)
+    ]
+)
 def test_arrs_1d_negative_index_1(language):
     f1 = arrays.arrs_1d_negative_index_1
     f2 = epyccel(f1, language = language)
@@ -3865,7 +3872,7 @@ def test_array_ndmin_1(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -3890,7 +3897,7 @@ def test_array_ndmin_2(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))
@@ -3915,7 +3922,32 @@ def test_array_ndmin_4(language):
     a = arrays.a_1d
     b = arrays.a_2d_c
     c = arrays.a_2d_c
-    d = randint(low = iinfo('int64').min, high = iinfo('int64').max, dtype=np.int64, size=(2,3,4))
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
+    e = d.copy(order='F')
+
+    check_array_equal(f1(a), f2(a))
+    check_array_equal(f1(b), f2(b))
+    check_array_equal(f1(c), f2(c))
+    check_array_equal(f1(d), f2(d))
+    check_array_equal(f1(e), f2(e))
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason=("Template results in wrong ordered arrays")),
+            pytest.mark.python]
+        )
+    )
+)
+def test_array_ndmin_2_order(language):
+    f1 = arrays.array_ndmin_2_order
+    f2 = epyccel(f1, language = language)
+
+    a = arrays.a_1d
+    b = arrays.a_2d_c
+    c = arrays.a_2d_c
+    d = randint(low = iinfo(int).min, high = iinfo(int).max, dtype=int, size=(2,3,4))
     e = d.copy(order='F')
 
     check_array_equal(f1(a), f2(a))

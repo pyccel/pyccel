@@ -799,15 +799,6 @@ def test_copy_f_to_f(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
-            pytest.mark.python
-        ])
-    )
-)
 def test_copy_f_to_c(language):
     @template('T', ['float[:,:,:](order=F)', 'float[:,:](order=F)'])
     def copy_f_to_c(b : 'T'):
@@ -848,15 +839,6 @@ def test_copy_c_to_c(language):
         assert pyth_out.flags.c_contiguous == pycc_out.flags.c_contiguous
         assert pyth_out.flags.f_contiguous == pycc_out.flags.f_contiguous
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("python", marks = [
-            pytest.mark.xfail(reason="Order not printed in Python. See #1260"),
-            pytest.mark.python
-        ])
-    )
-)
 def test_copy_c_to_f(language):
     @template('T', ['float[:,:,:](order=C)', 'float[:,:](order=C)'])
     def copy_c_to_f(b : 'T'):

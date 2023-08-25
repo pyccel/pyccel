@@ -8,6 +8,7 @@ See the developer docs for more details
 """
 
 from itertools import chain
+import warnings
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -1834,7 +1835,7 @@ class SemanticParser(BasicParser):
     def _visit_FunctionCallArgument(self, expr):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
-        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
             tmp_var = self.scope.get_new_name()
             assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
             self._additional_exprs[-1].append(assign)
@@ -3084,6 +3085,11 @@ class SemanticParser(BasicParser):
             return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in " +
+                      "a future version of Pyccel. This annotation may be unnecessary " +
+                      "in your code. If you find it is necessary please open a discussion " +
+                      "at https://github.com/pyccel/pyccel/discussions so we do not " +
+                      "remove support until an alternative is in place.", FutureWarning)
 
         # TODO improve
         #      move it to the ast like create_definition for FunctionHeader?
@@ -3098,6 +3104,12 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in a " +
+                      "future version of Pyccel. Please use type hints. The @template " +
+                      "decorator can be used to specify multiple types. See the " +
+                      "documentation at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                      "for examples.", FutureWarning)
         # TODO should we return it and keep it in the AST?
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
@@ -3105,6 +3117,11 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Template(self, expr):
+        warnings.warn("Support for specifying templates via headers will be removed in " +
+                      "a future version of Pyccel. Please use the @template decorator. " +
+                      "See the documentatiosn at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/templates.md " +
+                      "for examples.", FutureWarning)
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         self.scope.insert_template(expr)
