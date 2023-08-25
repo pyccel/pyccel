@@ -2943,7 +2943,7 @@ class PyccelFunctionDef(FunctionDef):
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
-        assert argument_description is None or isinstance(argument_description, dict)
+        assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
         body = ()
