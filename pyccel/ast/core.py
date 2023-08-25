@@ -2949,7 +2949,7 @@ class PyccelFunctionDef(FunctionDef):
         body = ()
         super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
-        self._argument_description = argument_description or {}
+        self._argument_description = argument_description
 
     @property
     def argument_description(self):
