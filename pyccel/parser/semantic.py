@@ -1155,7 +1155,7 @@ class SemanticParser(BasicParser):
 
                         # Collect the name that should be used in the generated code
                         attribute_name = lhs.name[-1]
-                        new_name = self.scope.get_expected_name(attribute_name)
+                        new_name = class_def.scope.get_expected_name(attribute_name)
                         # Create the attribute
                         member = self._create_variable(new_name, dtype, rhs, d_lhs)
 
@@ -3294,6 +3294,7 @@ class SemanticParser(BasicParser):
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.scope.find(cls_name, 'classes')
+                cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
                 var       = Variable(dt, 'self', cls_base=cls_base)
                 self.scope.insert_variable(var)
 
