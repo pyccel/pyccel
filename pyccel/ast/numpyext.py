@@ -2014,6 +2014,7 @@ numpy_funcs = {
     'ones_like' : PyccelFunctionDef('ones_like' , NumpyOnesLike),
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
+    'copy'      : PyccelFunctionDef('copy'      , NumpyArray),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
     'size'      : PyccelFunctionDef('size'      , NumpySize),
