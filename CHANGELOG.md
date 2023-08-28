@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1497 : Add support for NumPy `copy` method: `a.copy`.
+-   #1497 : Add support for NumPy function `copy`.
+
 ### Fixed
 
 -   #1499 : Fix passing temporary arrays to functions.
