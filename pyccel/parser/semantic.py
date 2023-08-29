@@ -3479,14 +3479,14 @@ class SemanticParser(BasicParser):
             if not is_recursive:
                 recursive_func_obj.invalidate_node()
 
-            funcs += [func]
             if cls_name:
                 cls = self.scope.find(cls_name, 'classes')
 
                 # update the class methods
-                if len(funcs) == 1:
+                if expr.name == func.name:
                     cls.add_new_method(func)
 
+            funcs += [func]
 
             #clear the sympy cache
             #TODO clear all variable except the global ones
