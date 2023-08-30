@@ -377,9 +377,7 @@ class SemanticParser(BasicParser):
                     if i.name == name:
                         var = i
                         return var
-                return None
-            else:
-                return self.scope.find(name, 'variables')
+            return self.scope.find(name, 'variables')
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
