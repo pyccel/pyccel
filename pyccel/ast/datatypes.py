@@ -295,6 +295,8 @@ def DataTypeFactory(name, argnames=["_name"],
                      "_name": name,
                      "prefix": prefix,
                      "alias": name})
+
+    dtype_registry[name] = newclass()
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -335,7 +337,7 @@ def datatype(arg):
 
 
     if isinstance(arg, str):
-        if arg.lower() not in dtype_registry:
+        if arg not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
     if isinstance(arg, DataType):

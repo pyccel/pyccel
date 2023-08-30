@@ -27,6 +27,7 @@ class Point(object):
 class Line(object):
     def __init__(self, l):
         print(l._X)
+        l.print_x()
 
 if __name__ == '__main__':
     x = np.array([0.,0.,0.])
