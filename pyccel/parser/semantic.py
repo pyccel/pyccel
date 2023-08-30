@@ -27,7 +27,7 @@ from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComple
 from pyccel.ast.builtins import python_builtin_datatype
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda)
+                                 PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -2439,6 +2439,8 @@ class SemanticParser(BasicParser):
             macro = self.scope.find(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs)
+                if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
+                    errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
             else:
 
                 # TODO check types from FunctionDef
