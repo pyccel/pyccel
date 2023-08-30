@@ -3424,7 +3424,7 @@ class ClassDef(ScopedNode):
 
     def add_new_interface(self, interface):
         """
-        Adding a new interface to the current class.
+        Add a new interface to the current class.
 
         A new interface of the current ClassDef.
 
