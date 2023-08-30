@@ -3326,13 +3326,12 @@ class ClassDef(ScopedNode):
         """
         The attributes of a class.
 
-        A tuple of the attributes of a ClassDef.
+        Returns a tuple of the attributes of a ClassDef.
 
         Returns
         -------
-        None
+        tuple: A tuple of the attributes of the class.
         """
-
         return self._attributes
 
     @property
