@@ -1168,8 +1168,7 @@ class SemanticParser(BasicParser):
                         class_def.add_new_attribute(member)
 
                     else:
-                        lhs = self._visit(lhs)
-                        name = str(lhs.name[0])
+                        errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
                 # Update variable's dictionary with information from function decorators
                 decorators = self.scope.decorators
                 if decorators:
