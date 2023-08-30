@@ -10,6 +10,7 @@
 import numpy as np
 class Point(object):
     def __init__(self, x):
+        self._X = 10
         self._x = x
 
     def __del__(self):
