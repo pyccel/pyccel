@@ -52,6 +52,108 @@ def test_syntax_errors(f):
 
     assert(errors.has_errors())
 
+@pytest.mark.parametrize("f", get_files_from_folder("semantic/blocking"))
+def test_semantic_blocking_errors(f):
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    with pytest.raises(PyccelSemanticError):
+        ast = pyccel.annotate(**settings)
+
+    assert(errors.has_blockers())
+
+@pytest.mark.xdist_incompatible
+def test_traceback():
+    base_dir = os.path.dirname(os.path.realpath(__file__))
+    f = os.path.join(base_dir, 'semantic/blocking/INHOMOG_LIST.py')
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+    error_mode.set_mode('developer')
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    try:
+        ast = pyccel.annotate(**settings)
+    except PyccelSemanticError as e:
+        msg = str(e)
+        errors.report(msg,
+            severity='error',
+            traceback=e.__traceback__)
+
+    assert(errors.has_blockers())
+    assert errors.num_messages() == 2
+    error_mode.set_mode('user')
+
+semantic_non_blocking_errors_args = [f for f in get_files_from_folder("semantic/non_blocking")]
+@pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
+def test_semantic_non_blocking_errors(f):
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    assert(errors.has_errors())
+
+@pytest.mark.xdist_incompatible
+@pytest.mark.parametrize("f", semantic_non_blocking_errors_args)
+def test_semantic_non_blocking_developer_errors(f):
+    print('> testing {0}'.format(str(f)))
+
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+    error_mode.set_mode('developer')
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    with pytest.raises(PyccelSemanticError):
+        ast = pyccel.annotate(**settings)
+
+    error_mode.set_mode('user')
+    assert(errors.has_errors())
+
+@pytest.mark.parametrize("f",get_files_from_folder("codegen/fortran"))
+def test_codegen_errors(f):
+    # reset Errors singleton
+    errors = Errors()
+    errors.reset()
+
+    pyccel = Parser(f)
+    ast = pyccel.parse()
+
+    settings = {}
+    ast = pyccel.annotate(**settings)
+
+    name = os.path.basename(f)
+    name = os.path.splitext(name)[0]
+
+    codegen = Codegen(ast, name)
+    with pytest.raises(PyccelCodegenError):
+        codegen.doprint()
+
+    assert(errors.has_errors())
+
 @pytest.mark.parametrize("f",get_files_from_folder("known_bugs"))
 def test_neat_errors_for_known_bugs(f):
     # reset Errors singleton
