@@ -3403,7 +3403,7 @@ class ClassDef(ScopedNode):
 
     def add_new_method(self, method):
         """
-        Adding a new method to the current class.
+        Add a new method to the current class.
 
         A new method of the current ClassDef.
 
