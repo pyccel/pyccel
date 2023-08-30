@@ -51,7 +51,6 @@ __all__ = (
     'Py_ReturnNone',
     'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
-    'Py_INCREF',
     'Py_DECREF',
 )
 
