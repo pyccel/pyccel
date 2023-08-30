@@ -22,6 +22,7 @@ from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBu
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
+from pyccel.ast.cwrapper      import Py_ReturnNone
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
@@ -753,7 +754,7 @@ class CToPythonWrapper(Wrapper):
         # Pack the Python compatible results of the function into one argument.
         n_py_results = len(python_result_variables)
         if n_py_results == 0:
-            res = Py_None
+            res = Py_ReturnNone
             func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
         elif n_py_results == 1:
             res = python_result_variables[0]
