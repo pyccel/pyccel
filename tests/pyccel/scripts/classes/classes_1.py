@@ -6,6 +6,8 @@
 #$ header method __del__(Point)
 #$ header method translate(Point, double[:])
 #$ header method print_x(Point)
+#$ header class Line(public)
+#$ header method __init__(Line, Point)
 
 import numpy as np
 class Point(object):
@@ -22,6 +24,9 @@ class Point(object):
     def print_x(self):
         print(self._x)
 
+class Line(object):
+    def __init__(self, l):
+        print(l._X)
 
 if __name__ == '__main__':
     x = np.array([0.,0.,0.])

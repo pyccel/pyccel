@@ -551,7 +551,7 @@ class SemanticParser(BasicParser):
             d_var['memory_handling'] = expr.memory_handling
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
-            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype, 'classes')
+            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype.name, 'classes')
             d_var['is_target'      ] = expr.is_target
             d_var['order'          ] = expr.order
             d_var['precision'      ] = expr.precision
