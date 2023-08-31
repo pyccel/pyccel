@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+-   #1484 : Using scope for classes to avoid name clashes.
+
+### Changed
+
+-   #1484 : Improving handling of `DottedName` in `_assign_lhs_variable`.
+
+### Deprecated
+
+## \[1.9.1\] - 2023-08-31
+
+### Added
+
 -   #1497 : Add support for NumPy `copy` method: `a.copy`.
 -   #1497 : Add support for NumPy function `copy`.
 
@@ -14,13 +28,7 @@ All notable changes to this project will be documented in this file.
 -   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
 -   #1241 : Incorrect transpose when copying an F-ordered array.
 -   #1241 : Fix infinite loop when passing an array as the only argument to `np.array`.
--   #1484 : Using scope for classes to avoid name clashes .
-
-### Changed
-
--   #1484 : Improving handling of `DottedName` in `_assign_lhs_variable`.
-
-### Deprecated
+-   #1506 : Increment `Py_None` reference count to avoid unexpected deallocation.
 
 ## \[1.9.0\] - 2023-08-22
 
