@@ -2034,7 +2034,6 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             first = results[0].var
         rhs_name = _get_name(rhs)
-        attr_name = []
 
         # Handle case of imported module
         if isinstance(first, Module):
@@ -2090,9 +2089,6 @@ class SemanticParser(BasicParser):
                 severity='fatal')
 
         cls_base = d_var['cls_base']
-
-        if cls_base:
-            attr_name = [i.name for i in cls_base.attributes]
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
