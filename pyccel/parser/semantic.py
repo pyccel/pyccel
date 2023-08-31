@@ -366,9 +366,9 @@ class SemanticParser(BasicParser):
             prefix = self._visit(syntactic_prefix)
             class_def = self.scope.find(prefix.dtype.name, 'classes')
             attr_name = name.name[-1]
-            attribute = class_def.scope.find(attr_name, 'variables')
+            attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
             if attribute:
-                return attribute
+                return attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
             else:
                 return None
         return self.scope.find(name, 'variables')
@@ -2115,10 +2115,9 @@ class SemanticParser(BasicParser):
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
             # standard class attribute
-            rhs_new_name = cls_base.scope.get_expected_name(rhs) if cls_base.scope else rhs
-            if rhs_new_name in attr_name:
-                second = self.get_variable(expr)
-                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
+            second = self.check_for_variable(expr)
+            if second:
+                return second
 
             # class property?
             else:
