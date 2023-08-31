@@ -1148,7 +1148,7 @@ class SemanticParser(BasicParser):
                     syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
                     prefix = self._visit(syntactic_prefix)
                     class_def = prefix.cls_base
-                    if isinstance(class_def, ClassDef) and lhs.name[0] == 'self':
+                    if prefix.name == 'self':
                         var      = self.get_variable('self')
 
                         # Collect the name that should be used in the generated code
@@ -1196,7 +1196,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
 
-                if not (isinstance(lhs, DottedVariable)):
+                if not isinstance(lhs, DottedVariable):
                     new_name = self.scope.get_expected_name(name)
                     # Create new variable
                     lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)

@@ -26,7 +26,10 @@ class Point(object):
 
 class Line(object):
     def __init__(self, l):
-        print(l._X)
+        self.l = l
+        self.l._X = 11
+        print(self.l._X)
+
         l.print_x()
 
 if __name__ == '__main__':
@@ -37,3 +40,4 @@ if __name__ == '__main__':
 
     p.translate(a)
     p.print_x()
+    k = Line(p)
