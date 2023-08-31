@@ -2117,7 +2117,7 @@ class SemanticParser(BasicParser):
             # standard class attribute
             rhs_new_name = cls_base.scope.get_expected_name(rhs) if cls_base.scope else rhs
             if rhs_new_name in attr_name:
-                second = self.check_for_variable(expr)
+                second = self.get_variable(expr)
                 return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
 
             # class property?
