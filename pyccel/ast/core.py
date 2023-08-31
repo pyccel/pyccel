@@ -3327,10 +3327,6 @@ class ClassDef(ScopedNode):
         The attributes of a class.
 
         Returns a tuple of the attributes of a ClassDef.
-
-        Returns
-        -------
-        tuple: A tuple of the attributes of the class.
         """
         return self._attributes
 
@@ -3390,10 +3386,6 @@ class ClassDef(ScopedNode):
         ----------
         attr : Varibale
             The Variable that will be added.
-
-        Returns
-        -------
-        None
         """
 
         if not isinstance(attr, Variable):
@@ -3409,12 +3401,8 @@ class ClassDef(ScopedNode):
 
         Parameters
         ----------
-        attr : FunctionDef
+        method : FunctionDef
             The Method that will be added.
-
-        Returns
-        -------
-        None
         """
 
         if not isinstance(method, FunctionDef):
@@ -3430,12 +3418,8 @@ class ClassDef(ScopedNode):
 
         Parameters
         ----------
-        attr : FunctionDef
+        interface : FunctionDef
             The interface that will be added.
-
-        Returns
-        -------
-        None
         """
 
         if not isinstance(interface, Interface):

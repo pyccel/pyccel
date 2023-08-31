@@ -357,7 +357,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         Variable
-            Returns the varibale if found or None.
+            Returns the variable if found or None.
         """
 
         if isinstance(name, DottedName):
