@@ -364,20 +364,14 @@ class SemanticParser(BasicParser):
             prefix_parts = name.name[:-1]
             syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
             prefix = self._visit(syntactic_prefix)
-            class_def = prefix.cls_base
+            class_def = self.scope.find(prefix.dtype.name, 'classes')
             attr_name = name.name[-1]
             attribute = class_def.scope.find(attr_name, 'variables')
             if attribute:
                 return attribute
             else:
                 return None
-        else:
-            if self.current_class:
-                for i in self._current_class.attributes:
-                    if i.name == name:
-                        var = i
-                        return var
-            return self.scope.find(name, 'variables')
+        return self.scope.find(name, 'variables')
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -2123,9 +2117,7 @@ class SemanticParser(BasicParser):
             # standard class attribute
             rhs_new_name = cls_base.scope.get_expected_name(rhs) if cls_base.scope else rhs
             if rhs_new_name in attr_name:
-                self._current_class = cls_base
-                second = self._visit(rhs_new_name)
-                self._current_class = None
+                second = self.check_for_variable(expr)
                 return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
 
             # class property?

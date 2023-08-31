@@ -40,4 +40,3 @@ if __name__ == '__main__':
 
     p.translate(a)
     p.print_x()
-    k = Line(p)
