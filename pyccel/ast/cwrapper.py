@@ -50,6 +50,7 @@ __all__ = (
     'Py_None',
     'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
+    'Py_INCREF',
     'Py_DECREF',
 )
 
@@ -492,6 +493,12 @@ Py_False = Variable(PyccelPyObject(), 'Py_False', memory_handling='alias')
 
 # Python.h object representing None
 Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
+
+# https://docs.python.org/3/c-api/refcounting.html#c.Py_INCREF
+Py_INCREF = FunctionDef(name = 'Py_INCREF',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
+                        results = [])
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
