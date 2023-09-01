@@ -40,11 +40,6 @@ All notable changes to this project will be documented in this file.
 -   #1452 : Add C printing support for a class containing only functions.
 -   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
 -   #1260 : Add support for NumPy `result_type` function.
--   Add Python support for a simple class.
--   #1430 : Add conjugate support to booleans.
--   #1452 : Add C printing support for a class containing only functions.
--   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
--   #1260 : Add support for NumPy `result_type` function.
 
 ### Fixed
 
