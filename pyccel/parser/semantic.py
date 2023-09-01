@@ -1143,7 +1143,7 @@ class SemanticParser(BasicParser):
                     prefix = self._visit(syntactic_prefix)
                     class_def = prefix.cls_base
                     if prefix.name == 'self':
-                        var      = self.get_variable('self')
+                        var = self.get_variable('self')
 
                         # Collect the name that should be used in the generated code
                         attribute_name = lhs.name[-1]
