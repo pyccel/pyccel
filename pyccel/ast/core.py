@@ -3397,7 +3397,7 @@ class ClassDef(ScopedNode):
         """
         Add a new method to the current class.
 
-        A new method of the current ClassDef.
+        Add a new method to the current ClassDef.
 
         Parameters
         ----------
