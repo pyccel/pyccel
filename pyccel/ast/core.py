@@ -3414,7 +3414,7 @@ class ClassDef(ScopedNode):
         """
         Add a new interface to the current class.
 
-        A new interface of the current ClassDef.
+        Add a new interface to the current ClassDef.
 
         Parameters
         ----------
