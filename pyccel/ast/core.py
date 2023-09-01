@@ -3424,7 +3424,7 @@ class ClassDef(ScopedNode):
         """
 
         if not isinstance(interface, Interface):
-            raise TypeError("Argument 'interface' must be of type Interface")
+            raise TypeError("Argument interface must be of type Interface")
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
