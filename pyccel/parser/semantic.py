@@ -346,7 +346,7 @@ class SemanticParser(BasicParser):
         """
         Search for a Variable object with the given name in the current scope.
 
-        Search for a Variable object with the given name in the current scope,
+        Search for a Variable object with the given name in the current scope
         defined by the local and global Python scopes. Return None if not found.
 
         Parameters
