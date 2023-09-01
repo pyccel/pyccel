@@ -1,10 +1,12 @@
 """ File containing the class Bot and all functions useful for bot reactions.
 """
+from datetime import datetime
 import json
 import os
 import platform
 import shutil
 import subprocess
+import time
 from .github_api_interactions import GitHubAPIInteractions
 
 default_python_versions = {
@@ -270,6 +272,11 @@ class Bot:
         force_run : bool, default=False
             Force the tests to run even if they are not necessary.
 
+        Returns
+        -------
+        list of str
+            A list containing the state of each test.
+
         See Also
         --------
         Bot.run_test
@@ -277,12 +284,15 @@ class Bot:
         """
         if any(t not in default_python_versions for t in tests):
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
+            return []
         else:
             check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress')]
+            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and c['conclusion'] != 'cancelled']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
+            success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
+            states = []
 
             if not force_run:
                 # Get a list of all commits on this branch
@@ -303,8 +313,9 @@ class Bot:
                 if any(key in a for a in already_triggered):
                     continue
                 name = f"{test_names[t]} {key}"
-                if not force_run and not self.is_test_required(commit_log, name, t):
+                if not force_run and not self.is_test_required(commit_log, name, t, states):
                     continue
+                states.append('queued')
                 if key not in already_programmed:
                     posted = self._GAI.prepare_run(self._ref, name)
                 else:
@@ -312,13 +323,14 @@ class Bot:
 
                 deps = test_dependencies.get(t, ())
                 print(already_triggered_names, deps)
-                if all(d in already_triggered_names for d in deps):
+                if all(d in success_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
                         print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
                         workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
                     print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
+            return states
 
     def run_test(self, test, python_version, check_run_id, workflow_ids = None):
         """
@@ -358,6 +370,14 @@ class Bot:
             possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
             print("possible_artifacts : ", possible_artifacts)
             acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+            ntests = 0
+            while len(acceptable_urls) == 0 and ntests < 10:
+                # Occasionally artifacts are not available immediately after linux concludes
+                time.sleep(10)
+                possible_artifacts = self._GAI.get_artifacts('coverage-artifact')['artifacts']
+                print("possible_artifacts : ", possible_artifacts)
+                acceptable_urls = [a['archive_download_url'] for a in possible_artifacts if a['workflow_run']['id'] in workflow_ids]
+                ntests += 1
             print("acceptable_urls: ", acceptable_urls)
             inputs['artifact_urls'] = ' '.join(acceptable_urls)
             inputs['pr_id'] = str(self._pr_id)
@@ -367,7 +387,7 @@ class Bot:
         print("Post workflow")
         self._GAI.run_workflow(f'{test}.yml', inputs)
 
-    def is_test_required(self, commit_log, name, key):
+    def is_test_required(self, commit_log, name, key, state):
         """
         Check if a costly test is required.
 
@@ -386,6 +406,9 @@ class Bot:
         key : str
             The key which identifies the test.
 
+        state : list of str
+            A list to which the state should be appended if found.
+
         Returns
         -------
         bool
@@ -394,17 +417,21 @@ class Bot:
         print("Checking : ", name)
         if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
-                                                    and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+                                                    and f.endswith('.py') and f != 'pyccel/version.py' \
+                                                    for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') \
+                                                    and f != 'pyccel/version.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pylint'):
-            has_relevant_change = lambda diff: any(f.endswith('parser/semantic.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f == 'pyccel/parser/semantic.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('docs'):
-            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' \
+                                                    for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('spelling'):
             has_relevant_change = lambda diff: any(f.endswith('.md') for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') \
+                                                    and f != 'pyccel/version.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
@@ -425,6 +452,7 @@ class Bot:
                     if key == 'coverage' and conclusion == 'failure':
                         return True
                     self._GAI.create_run_from_old(self._ref, name, previous_state)
+                    state.append(conclusion)
                     return False
         return True
 
@@ -501,14 +529,22 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        self.run_tests(pr_test_keys)
+        states = self.run_tests(pr_test_keys)
 
-        cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
+        if 'failure' in states:
+            self.draft_due_to_failure()
+            return False
+        else:
+            cmds = [github_cli, 'pr', 'ready', str(self._pr_id)]
 
-        with subprocess.Popen(cmds) as p:
-            _, err = p.communicate()
-        print(err)
-        return True
+            with subprocess.Popen(cmds) as p:
+                _, err = p.communicate()
+            print(err)
+
+            if all(s == 'success' for s in states):
+                self.mark_as_ready(False)
+
+            return True
 
     def mark_as_ready(self, following_review):
         """
@@ -686,7 +722,9 @@ class Bot:
             whose values are dictionaries describing the reviews which either
             approved or requested changes.
         """
-        reviews = {r['user']['login'] : r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')}
+        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
+        reviews = {r['user']['login'] : r for r in all_reviews}
         if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):
             return "Ready_to_merge", reviews
 

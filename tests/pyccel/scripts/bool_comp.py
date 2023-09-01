@@ -1,64 +1,54 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
-@types('bool')
-def is_false(a):
+def is_false(a : 'bool'):
     c = False
     if a is False:
         c = True
     return c
 
-@types('bool', 'bool')
-def compare_is(a, b):
+def compare_is(a : 'bool', b : 'bool'):
     c = False
     if a is b:
         c = True
     return c
 
-@types('bool')
-def not_true(a):
+def not_true(a : 'bool'):
     c = False
     if a is not True:
         c = True
     return c
 
-@types('bool')
-def eq_false(a):
+def eq_false(a : 'bool'):
     c = False
     if a == False:
         c = True
     return c
 
-@types('bool')
-def neq_true(a):
+def neq_true(a : 'bool'):
     c = False
     if a != True:
         c = True
     return c
 
-@types('bool')
-def not_val(a):
+def not_val(a : 'bool'):
     c = False
     if not a:
         c = True
     return c
 
-@types('bool')
-def is_nil(a = None):
+def is_nil(a  : 'bool' =  None):
     c = False
     if a is None:
         c = True
     return c
 
-@types('bool')
-def is_not_nil(a = None):
+def is_not_nil(a  : 'bool' =  None):
     c = False
     if a is not None:
         c = True
     return c
 
-@types('bool')
-def is_nil_default_arg(a = None):
+def is_nil_default_arg(a  : 'bool' =  None):
     c = False
     if a is None:
         c = True

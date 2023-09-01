@@ -1,72 +1,62 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.decorators import types
 from pyccel.decorators import template
+from pyccel.decorators import types
 
-#$ header function gen_2(real, int)
-#$ header function gen_2(int, real)
+#$ header function gen_2(float, int)
+#$ header function gen_2(int, float)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, real)
-#$ header template T(int|real)
-#$ header template R(int|real)
+#$ header function tmplt_head_1(int, float)
+#$ header template T(int|float)
+#$ header template R(int|float)
 #$ header template O(bool|complex)
-#$ header template S(int|real)
+#$ header template S(int|float)
 
-@types('real')
-def gen_1(a):
+def gen_1(a : 'float'):
     return a * 10
 
 def gen_2(y, x):
     return y * x
 
-@types('T', 'T')
-def gen_3(x, y):
+def gen_3(x : 'T', y : 'T'):
     return x - y
 
 def gen_4(x, y):
     return x + y
 
-@types('T', 'R')
-def gen_5(x, y):
+def gen_5(x : 'T', y : 'R'):
     return x + y
 
-@types('S', 'S')
-def gen_6(x, y):
+def gen_6(x : 'S', y : 'S'):
     return x + y
 
-@types('T', 'T', 'R')
-def gen_7(x, y, z):
+def gen_7(x : 'T', y : 'T', z : 'R'):
     return x + y + z
 
 @types('int', 'int')
-@types('int', 'real')
+@types('int', 'float')
 def multi_heads_1(x, y):
     return x + y
 
-@template('z', types=['int', 'real'])
-@types('z', 'z')
-def tmplt_1(x, y):
+@template('z', types=['int', 'float'])
+def tmplt_1(x : 'z', y : 'z'):
     return x + y
 
-@template('z', types=['int', 'real'])
-@template('y', types=['int', 'real'])
-@types('z', 'z', 'y')
-def multi_tmplt_1(x, y, z):
+@template('z', types=['int', 'float'])
+@template('y', types=['int', 'float'])
+def multi_tmplt_1(x : 'z', y : 'z', z : 'y'):
     return x + y + z
 
-@template('z', types=['int', 'real'])
-@types('z', 'z')
-def tmplt_head_1(x, y):
+@template('z', types=['int', 'float'])
+def tmplt_head_1(x : 'z', y : 'z'):
     return x + y
 
-@template('O', types=['int', 'real'])
-@types('O', 'O')
-def local_overide_1(x, y):
+@template('O', types=['int', 'float'])
+def local_overide_1(x : 'O', y : 'O'):
     return x + y
 
-@template('z', types=['int', 'real'])
-@types('z', 'z', 'R')
-def tmplt_tmplt_1(x, y, z):
+@template('z', types=['int', 'float'])
+def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
     return x + y + z
 
 #$ header function array_elem1(int64 [:]|float64[:])
@@ -74,18 +64,15 @@ def array_elem1(x):
     return x[0]
 
 @template('k', types=['int'])
-@template('g', types=['int', 'real'])
-@types('k', 'g')
-def multi_tmplt_2(y, z):
+@template('g', types=['int', 'float'])
+def multi_tmplt_2(y : 'k', z : 'g'):
     return y + z
 
 @template('g', types=['int', 'int'])
-@types('g')
-def dup_types_1(a):
+def dup_types_1(a : 'g'):
     return a
 
-@types('int|int')
-def dup_types_2(a):
+def dup_types_2(a : 'int|int'):
     return a
 
 def tst_gen_1():
