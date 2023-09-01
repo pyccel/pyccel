@@ -3378,9 +3378,9 @@ class ClassDef(ScopedNode):
 
     def add_new_attribute(self, attr):
         """
-        Add new attributes to the current class.
+        Add a new attribute to the current class.
 
-        A new attributes of the current ClassDef.
+        Add a new attribute to the current ClassDef.
 
         Parameters
         ----------
