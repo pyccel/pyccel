@@ -3326,7 +3326,8 @@ class ClassDef(ScopedNode):
         """
         The attributes of a class.
 
-        Returns a tuple of the attributes of a ClassDef.
+        Returns a tuple containing the attributes of a ClassDef.
+        Each element within the tuple is of the data type Variable.
         """
         return self._attributes
 
