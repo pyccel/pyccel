@@ -3384,7 +3384,7 @@ class ClassDef(ScopedNode):
 
         Parameters
         ----------
-        attr : Varibale
+        attr : Variable
             The Variable that will be added.
         """
 
