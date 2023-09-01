@@ -14,7 +14,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, ClassDef
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
@@ -345,8 +345,9 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
-            return True
+        if a.get_user_nodes(ClassDef):
+            if a.cls_base is a.get_user_nodes(ClassDef)[0]:
+                return True
 
         if not isinstance(a, Variable):
             return False
