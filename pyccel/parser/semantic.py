@@ -1232,7 +1232,7 @@ class SemanticParser(BasicParser):
             name = self.scope.get_expected_name(lhs.name[-1])
             if self._current_function == '__init__':
 
-                cls      = self.get_variable('self')
+                cls      = self.get_variable(lhs.name[0])
                 cls_name = str(cls.cls_base.name)
                 cls      = self.scope.find(cls_name, 'classes')
 
@@ -1243,7 +1243,7 @@ class SemanticParser(BasicParser):
 
                 # update the self variable with the new attributes
 
-                var      = self.get_variable('self')
+                var      = self.get_variable(lhs.name[0])
                 d_lhs    = d_var.copy()
 
 
@@ -3269,12 +3269,12 @@ class SemanticParser(BasicParser):
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
 
-            if cls_name and str(arguments[0].name) == 'self':
+            if cls_name:
                 arg       = arguments[0]
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.scope.find(cls_name, 'classes')
-                var       = Variable(dt, 'self', cls_base=cls_base)
+                var       = Variable(dt, str(arg), cls_base=cls_base)
                 self.scope.insert_variable(var)
 
             if arguments:
@@ -3366,7 +3366,7 @@ class SemanticParser(BasicParser):
             if arg and cls_name:
                 dt       = self.get_class_construct(cls_name)()
                 cls_base = self.scope.find(cls_name, 'classes')
-                var      = Variable(dt, 'self', cls_base=cls_base)
+                var      = Variable(dt, str(arg), cls_base=cls_base)
                 args     = [FunctionDefArgument(var)] + args
 
             # Determine local and global variables
@@ -3411,7 +3411,7 @@ class SemanticParser(BasicParser):
 
             # ... computing inout arguments
             for a in args:
-                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
+                if a.name in chain(results_names, str(args[0])) or a.var in all_assigned:
                     v = a.var
                     if isinstance(v, Variable) and v.is_const:
                         msg = f"Cannot modify 'const' argument ({v})"

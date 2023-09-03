@@ -1,4 +1,4 @@
-# pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring, no-self-argument
 # coding: utf-8
 
 #$ header class Point(public)
@@ -7,14 +7,14 @@
 #$ header method translate(Point, double[:])
 import numpy as np
 class Point(object):
-    def __init__(self, x):
-        self.x = x
+    def __init__(this, x):
+        this.x = x
 
     def __del__(self):
         pass
 
-    def translate(self, a):
-        self.x[:]   =  self.x + a
+    def translate(this, a):
+        this.x[:]   =  this.x + a
 
 if __name__ == '__main__':
     x = np.array([0.,0.,0.])
