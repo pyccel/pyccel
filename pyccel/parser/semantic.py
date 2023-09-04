@@ -1258,7 +1258,6 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -1267,7 +1266,7 @@ class SemanticParser(BasicParser):
                 # the following is a small fix, since lhs must be already
                 # declared
                 if isinstance(lhs, DottedName):
-                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = lhs.name[0])
+                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = self._visit(lhs.name[0]))
                 else:
                     lhs = var
         else:
