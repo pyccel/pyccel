@@ -5,16 +5,52 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   Allow interfaces in classes.
--   Python support for a simple class.
--   #1430 : Added conjugate support to booleans.
--   #1452 : Added C printing support for a class containing only functions.
--   #1472 : Added C printing support for a class containing only scalar data.
+-   #1472 : Added C printing support for a class containing scalar data.
 
 ### Fixed
 
+-   #1484 : Use scope for classes to avoid name clashes.
+
+### Changed
+
+-   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
+
+### Deprecated
+
+## \[1.9.1\] - 2023-08-31
+
+### Added
+
+-   #1497 : Add support for NumPy `copy` method: `a.copy`.
+-   #1497 : Add support for NumPy function `copy`.
+
+### Fixed
+
+-   #1499 : Fix passing temporary arrays to functions.
+-   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
+-   #1241 : Incorrect transpose when copying an F-ordered array.
+-   #1241 : Fix infinite loop when passing an array as the only argument to `np.array`.
+-   #1506 : Increment `Py_None` reference count to avoid unexpected deallocation.
+
+## \[1.9.0\] - 2023-08-22
+
+### Added
+
+-   #752 : Allow passing array variables to `numpy.array`.
+-   #1280 : Allow copying arrays using `numpy.array`.
+-   Allow interfaces in classes.
+-   Add Python support for a simple class.
+-   #1430 : Add conjugate support to booleans.
+-   #1452 : Add C printing support for a class containing only functions.
+-   #1260 : Add support for NumPy `dtype` property: `a.dtype`.
+-   #1260 : Add support for NumPy `result_type` function.
+
+### Fixed
+
+-   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
 -   \[INTERNALS\] Fix string base class selection.
+-   #1496 : Fix interfaces which differ only by order or rank.
 
 ### Changed
 
@@ -24,11 +60,15 @@ All notable changes to this project will be documented in this file.
 -   Pyccel-generated folder names are dependent on `PYTEST_XDIST_WORKER` when running with `pytest-xdist`.
 -   \[INTERNALS\] Add class object to class function call arguments.
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
--   \[INTERNALS\] In `ast.internals` rename `NumpyArraySize` as `NumpySize`, create new `NumpyArraySize` w/out `index` argument
+-   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
+-   \[INTERNALS\] Re-write C-Python API wrapping stage (#1477)
 
 ### Deprecated
 
+-   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.

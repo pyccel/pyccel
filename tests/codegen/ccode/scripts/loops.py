@@ -1,26 +1,22 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-from pyccel.decorators import types
 
 #==============================================================================
 
-@types( int )
-def sum_natural_numbers( n ):
+def sum_natural_numbers(n : int):
     x = 0
     for i in range( 1, n+1 ):
         x += i
     return x
 
 # ...
-@types( int )
-def factorial( n ):
+def factorial(n : int):
     x = 1
     for i in range( 2, n+1 ):
         x *= i
     return x
 
 # ...
-@types( int )
-def fibonacci( n ):
+def fibonacci(n : int):
     x = 0
     y = 1
     for i in range( n ):
@@ -30,8 +26,7 @@ def fibonacci( n ):
     return x
 
 # ...
-@types( int )
-def double_loop( n ):
+def double_loop(n : int):
     x = 0
     for i in range( 3, 10 ):
         x += 1
@@ -41,24 +36,21 @@ def double_loop( n ):
     return z
 
 # ...
-@types( int )
-def sum_natural_numbers_2( n ):
+def sum_natural_numbers_2(n : int):
     x = 0.
     for i in range( 1, n+1 ):
         x= x+i
     return x
 
 # ...
-@types( int )
-def factorial_2( n ):
+def factorial_2(n : int):
     x = 1.
     for i in range( 2, n+1 ):
         x = x*i
     return x
 
 # ...
-@types( int )
-def fibonacci_2( n ):
+def fibonacci_2(n : int):
     x = 0.
     y = 1.
     for i in range( n ):
@@ -68,8 +60,7 @@ def fibonacci_2( n ):
     return x
 
 # ...
-@types( int )
-def double_loop_2( n ):
+def double_loop_2(n : int):
     x = 0.
     for i in range( 3, 10 ):
         x = x+1

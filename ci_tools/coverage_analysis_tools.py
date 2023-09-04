@@ -137,8 +137,8 @@ def allow_untested_error_calls(untested):
     Takes a dictionary describing untested lines and returns an
     equivalent dictionary without lines designed to raise errors.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     untested : dict
             A dictionary whose keys are the files in pyccel with
             untested lines which have been added in this branch
@@ -156,7 +156,10 @@ def allow_untested_error_calls(untested):
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
         untested_lines = [(i, f_lines[i-1].strip()) for i in line_nums]
-        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or l.startswith('errors.report(') or l.startswith('return errors.report('))]
+        lines = [i for i,l in untested_lines if not (l.startswith('raise ') or \
+                                                     l.startswith('errors.report(') or \
+                                                     l.startswith('return errors.report(') or \
+                                                     l.startswith('except'))]
         if len(lines):
             reduced_untested[f] = lines
 

@@ -21,7 +21,6 @@ def get_authorization():
     str
         A string describing the expiration of the JWT.
     """
-    print(len(os.environ["PEM"]))
     signing_key = jwt.jwk_from_pem(bytes(os.environ["PEM"], "utf-8"))
     # Issued at time
     # JWT expiration time (10 minutes maximum)
@@ -402,7 +401,15 @@ class GitHubAPIInteractions:
             A dictionary containing the comments.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
         """
@@ -633,7 +640,15 @@ class GitHubAPIInteractions:
             A dictionary describing the reviews.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def get_events(self, pr_id, page = 1):
         """
@@ -752,7 +767,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
         review_requests = {}
         if request_team:
-            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+            review_requests['team_reviewers'] = ['pyccel-dev']
         if reviewers:
             review_requests['reviewers'] = list(reviewers)
 

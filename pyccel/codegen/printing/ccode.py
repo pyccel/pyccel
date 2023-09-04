@@ -14,8 +14,8 @@ from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
-from pyccel.ast.core      import Deallocate
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, ClassDef
+from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
@@ -38,7 +38,7 @@ from pyccel.ast.literals  import Nil
 from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat
+from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -211,7 +211,7 @@ dtype_registry = {('float',8)   : 'double',
                   ('int',8)     : 'int64_t',
                   ('int',2)     : 'int16_t',
                   ('int',1)     : 'int8_t',
-                  ('bool',4)    : 'bool'}
+                  ('bool',-1)   : 'bool'}
 
 ndarray_type_registry = {
                   ('float',8)   : 'nd_double',
@@ -222,7 +222,7 @@ ndarray_type_registry = {
                   ('int',4)     : 'nd_int32',
                   ('int',2)     : 'nd_int16',
                   ('int',1)     : 'nd_int8',
-                  ('bool',4)    : 'nd_bool'}
+                  ('bool',-1)   : 'nd_bool'}
 
 type_to_format = {('float',8)   : '%.12lf',
                   ('float',4)   : '%.12f',
@@ -232,7 +232,7 @@ type_to_format = {('float',8)   : '%.12lf',
                   ('int',8)     : LiteralString("%") + CMacro('PRId64'),
                   ('int',2)     : LiteralString("%") + CMacro('PRId16'),
                   ('int',1)     : LiteralString("%") + CMacro('PRId8'),
-                  ('bool',4)    : '%s',
+                  ('bool',-1)   : '%s',
                   ('string', 0) : '%s'}
 
 import_dict = {'omp_lib' : 'omp' }
@@ -285,6 +285,7 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
         self._current_module = None
+        self._current_class = None
         self._in_header = False
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
@@ -345,7 +346,9 @@ class CCodePrinter(CodePrinter):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
-        if isinstance(getattr(a, 'dtype', None), CustomDataType) and (a.is_argument or a.get_user_nodes(FunctionDef)):
+        if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
+            return True
+        if a.get_user_nodes(DottedVariable) and a.cls_base is self._current_class:
             return True
 
         if not isinstance(a, Variable):
@@ -365,38 +368,90 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-            expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs.
+        expr : PyccelAstNode
+            The Assign Node used to get the lhs and rhs.
 
         Returns
         -------
-        string
-            A string containing the code which copies the data.
+        str
+            A string containing the code which allocates and copies the data.
         """
         rhs = expr.rhs
         lhs = expr.lhs
         if rhs.rank == 0:
             raise NotImplementedError(str(expr))
-        dummy_array_name = self.scope.get_new_name('array_dummy')
-        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
-        dtype = self.find_in_ndarray_type_registry(self._print(rhs.dtype), rhs.precision)
         arg = rhs.arg if isinstance(rhs, NumpyArray) else rhs
+        lhs_address = self._print(ObjectAddress(lhs))
 
-        buffer_size = self._print(DottedVariable(NativeVoid(), 'buffer_size', lhs=lhs))
-        lhs_data    = self._print(DottedVariable(lhs.dtype, dtype, lhs=lhs))
-
-        self.add_import(c_imports['string'])
+        # If the data is copied from a Variable rather than a list or tuple
+        # use the function array_copy_data directly
         if isinstance(arg, Variable):
-            arg_data    = self._print(DottedVariable(arg.dtype, dtype, lhs=arg))
-            return f"memcpy({lhs_data}, {arg_data}, {buffer_size});\n"
-        else :
-            if arg.rank > 1:
-                # flattening the args to use them in C initialization.
-                arg = self._flatten_list(arg)
-            arg = ', '.join(self._print(i) for i in arg)
-            dummy_array = "%s %s[] = {%s};\n" % (declare_dtype, dummy_array_name, arg)
-            cpy_data = f"memcpy({lhs_data}, {dummy_array_name}, {buffer_size});\n"
-            return  dummy_array + cpy_data
+            return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
+
+        order = lhs.order
+        rhs_dtype = self._print(rhs.dtype)
+        declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
+        dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
+
+        flattened_list = self._flatten_list(arg)
+        operations = ""
+
+        # Get the variable where the data will be copied
+        if order == "F":
+            # If the order is F then the data should be copied non-contiguously so a temporary
+            # variable is required to pass to array_copy_data
+            temp_var = self.scope.get_temporary_variable(lhs, order='C')
+            operations += self._print(Allocate(temp_var, shape=lhs.shape, order="C", status="unallocated"))
+            copy_to = temp_var
+        else:
+            copy_to = lhs
+        copy_to_data_var = DottedVariable(lhs.dtype, dtype, lhs=copy_to)
+
+        num_elements = len(flattened_list)
+        # Get the offset variable if it is needed
+        if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
+            offset_var = self.scope.get_temporary_variable(NativeInteger(), 'offset')
+            operations += self._print(Assign(offset_var, LiteralInteger(0)))
+        else:
+            offset_var = LiteralInteger(0)
+        offset_str = self._print(offset_var)
+
+        # Copy each of the elements
+        i = 0
+        while i < num_elements:
+            current_element = flattened_list[i]
+            # Copy an array element
+            if isinstance(current_element, Variable) and current_element.rank >= 1:
+                elem_name = self._print(current_element)
+                target = self._print(ObjectAddress(copy_to))
+                operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
+                i += 1
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', NumpySize(current_element)))
+
+            # Copy multiple scalar elements
+            else:
+                self.add_import(c_imports['string'])
+                remaining_elements = flattened_list[i:]
+                lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                subset = remaining_elements[:lenSubset]
+
+                # Declare list of consecutive elements
+                subset_str = "{" + ', '.join(self._print(elem) for elem in subset) + "}"
+                dummy_array_name = self.scope.get_new_name()
+                operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
+
+                copy_to_data = self._print(copy_to_data_var)
+                type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
+                operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
+
+                i += lenSubset
+                if i < num_elements:
+                    operations += self._print(AugAssign(offset_var, '+', LiteralInteger(lenSubset)))
+
+        if order == "F":
+            operations += f"array_copy_data({lhs_address}, {self._print(copy_to)}, 0);\n" + self._print(Deallocate(copy_to))
+        return operations
 
     def arrayFill(self, expr):
         """ print the assignment of a NdArray
@@ -684,7 +739,7 @@ class CCodePrinter(CodePrinter):
         funcs = ""
         for classDef in expr.module.classes:
             classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print_Declare(Declare(var.dtype,var)) for var in classDef.attributes)
+            classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += f"{self.function_signature(method)};\n"
@@ -1116,7 +1171,9 @@ class CCodePrinter(CodePrinter):
             preface = ''
             init    = ''
 
-        declaration = f'{declaration_type} {variable}{init};\n'
+        external = 'extern ' if expr.external else ''
+
+        declaration = f'{external}{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1186,8 +1243,9 @@ class CCodePrinter(CodePrinter):
                 """ Get the code which declares the argument variable.
                 """
                 code = "const " * var.is_const
-                code += self.get_declare_type(var) + ' '
-                code += var.name * print_arg_names
+                code += self.get_declare_type(var)
+                if print_arg_names:
+                    code += ' ' + var.name
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
@@ -1350,31 +1408,32 @@ class CCodePrinter(CodePrinter):
 
     def _print_Allocate(self, expr):
         free_code = ''
+        variable = expr.variable
         #free the array if its already allocated and checking if its not null if the status is unknown
         if  (expr.status == 'unknown'):
-            shape_var = DottedVariable(NativeVoid(), 'shape', lhs=expr.variable)
+            shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
             free_code = f'if ({self._print(shape_var)} != NULL)\n'
-            free_code += "{{\n{}}}\n".format(self._print(Deallocate(expr.variable)))
-        elif  (expr.status == 'allocated'):
-            free_code += self._print(Deallocate(expr.variable))
+            free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+        elif (expr.status == 'allocated'):
+            free_code += self._print(Deallocate(variable))
         self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self._print(expr.variable.dtype)
-        dtype = self.find_in_ndarray_type_registry(dtype, expr.variable.precision)
+        dtype = self._print(variable.dtype)
+        dtype = self.find_in_ndarray_type_registry(dtype, variable.precision)
         shape_dtype = self.find_in_dtype_registry('int', 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if expr.variable.on_heap else 'true'
-        alloc_code = "{} = array_create({}, {}, {}, {});\n".format(
-                self._print(expr.variable), len(expr.shape), shape_Assign, dtype,
-                is_view)
+        is_view = 'false' if variable.on_heap else 'true'
+        order = "order_f" if expr.order == "F" else "order_c"
+        alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
         return '{}{}'.format(free_code, alloc_code)
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
+        variable_address = self._print(ObjectAddress(expr.variable))
         if expr.variable.is_alias:
-            return 'free_pointer({});\n'.format(self._print(expr.variable))
-        return 'free_array({});\n'.format(self._print(expr.variable))
+            return f'free_pointer({variable_address});\n'
+        return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -1631,7 +1690,11 @@ class CCodePrinter(CodePrinter):
     def _print_FunctionDef(self, expr):
         if expr.is_inline:
             return ''
+
         self.set_scope(expr.scope)
+
+        # Reinitialise optional partners
+        self._optional_partners = {}
 
         arguments = [a.var for a in expr.arguments]
         results = [r.var for r in expr.results]
@@ -1997,6 +2060,29 @@ class CCodePrinter(CodePrinter):
         return 'conj({})'.format(self._print(expr.internal_var))
 
     def _handle_is_operator(self, Op, expr):
+        """
+        Get the code to print an `is` or `is not` expression.
+
+        Get the code to print an `is` or `is not` expression. These two operators
+        function similarly so this helper function reduces code duplication.
+
+        Parameters
+        ----------
+        Op : str
+            The C operator representing "is" or "is not".
+
+        expr : PyccelIs/PyccelIsNot
+            The expression being printed.
+
+        Returns
+        -------
+        str
+            The code describing the expression.
+
+        Raises
+        ------
+        PyccelError : Raised if the comparison is poorly defined.
+        """
 
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
@@ -2173,8 +2259,10 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_ClassDef(self, expr):
+        self._current_class = expr
         methods = ''.join(self._print(method) for method in expr.methods)
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
+        self._current_class = None
         return methods + interfaces
 
     #=================== MACROS ==================

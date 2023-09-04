@@ -77,7 +77,7 @@ iso_c_binding = {
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
     "logical" : {
-        4  : "C_BOOL"}
+        -1 : "C_BOOL"}
 }
 iso_c_binding_shortcut_mapping = {
     'C_INT8_T'              : 'i8',
@@ -91,31 +91,40 @@ iso_c_binding_shortcut_mapping = {
     'C_FLOAT_COMPLEX'       : 'c32',
     'C_DOUBLE_COMPLEX'      : 'c64',
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
-    'C_BOOL'                : 'b4'
+    'C_BOOL'                : 'b1'
 }
 default_precision = {'float': 8,
                     'int': numpy.dtype(int).alignment,
                     'integer': numpy.dtype(int).alignment,
                     'complex': 8,
-                    'bool':4}
+                    'bool':-1}
 dtype_and_precision_registry = { 'float':('float', -1),
                                  'double':('float', -1),
                                  'real':('float', -1),
                                  'pythonfloat':('float', -1), # built-in float
                                  'float32':('float',4),
                                  'float64':('float',8),
+                                 'f4':('float',4),
+                                 'f8':('float',8),
                                  'pythoncomplex':('complex', -1),
                                  'complex':('complex', -1),  # to create numpy array with dtype='complex'
                                  'complex64':('complex',4),
                                  'complex128':('complex',8),
+                                 'c8':('complex',4),
+                                 'c16':('complex',8),
                                  'int8' :('int',1),
                                  'int16':('int',2),
                                  'int32':('int',4),
                                  'int64':('int',8),
+                                 'i1' :('int',1),
+                                 'i2':('int',2),
+                                 'i4':('int',4),
+                                 'i8':('int',8),
                                  'int'  :('int', -1),
                                  'pythonint'  :('int', -1),
                                  'integer':('int',-1),
                                  'bool' :('bool',-1),
+                                 'b1' :('bool',-1),
                                  'pythonbool' :('bool',-1)}
 
 
@@ -286,6 +295,8 @@ def DataTypeFactory(name, argnames=["_name"],
                      "_name": name,
                      "prefix": prefix,
                      "alias": name})
+
+    dtype_registry[name] = newclass()
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -326,7 +337,7 @@ def datatype(arg):
 
 
     if isinstance(arg, str):
-        if arg.lower() not in dtype_registry:
+        if arg not in dtype_registry:
             raise ValueError("Unrecognized datatype " + arg)
         return dtype_registry[arg]
     if isinstance(arg, DataType):
