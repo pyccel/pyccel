@@ -1258,6 +1258,7 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
+
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
