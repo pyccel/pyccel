@@ -2258,6 +2258,7 @@ class CCodePrinter(CodePrinter):
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
+
         return methods + interfaces
     #=================== MACROS ==================
 
