@@ -863,14 +863,11 @@ def test_basic_header():
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
-                                        "scripts/classes/classes_1.py",
-                                        "scripts/classes/classes_5.py",
                                         "scripts/classes/generic_methods.py",
-                                        "scripts/classes/classes_2_C.py",
+                                        "scripts/classes/classes_1.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = pytest.mark.fortran)
     )
 )
@@ -884,6 +881,8 @@ def test_classes_f_only( test_file , language):
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
+                                        "scripts/classes/classes_5.py",
+                                        "scripts/classes/classes_3.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
@@ -893,10 +892,10 @@ def test_classes_f_only( test_file , language):
 )
 
 def test_classes( test_file , language):
-    if language == "fortran":
-        pyccel_test(test_file, compile_with_pyccel = False, language=language)
-    elif language != "c" or test_file.endswith("_C.py"):
+    if language == "python":
         pyccel_test(test_file, language=language)
+    else:
+        pyccel_test(test_file, compile_with_pyccel = False, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",

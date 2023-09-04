@@ -285,7 +285,6 @@ class CCodePrinter(CodePrinter):
         self._additional_args = []
         self._temporary_args = []
         self._current_module = None
-        self._current_class = None
         self._in_header = False
         # Dictionary linking optional variables to their
         # temporary counterparts which provide allocated
@@ -347,8 +346,6 @@ class CCodePrinter(CodePrinter):
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
         if isinstance(getattr(a, 'dtype', None), CustomDataType) and a.is_argument:
-            return True
-        if a.get_user_nodes(DottedVariable) and a.cls_base is self._current_class:
             return True
 
         if not isinstance(a, Variable):
@@ -2259,12 +2256,9 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_ClassDef(self, expr):
-        self._current_class = expr
         methods = ''.join(self._print(method) for method in expr.methods)
         interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
-        self._current_class = None
         return methods + interfaces
-
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):

@@ -2,14 +2,13 @@
 import numpy as np
 
 #$ header class Point(public)
-#$ header method __init__(Point, float, float)
+#$ header method __init__(Point)
 #$ header method addition(Point, float, float)
 #$ header method subtraction(Point, float[:], float[:])
 
 class Point:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    def __init__(self):
+        pass
 
     def addition(self, a, b):
         return a + b
@@ -18,7 +17,7 @@ class Point:
         return a - b
 
 if __name__ == '__main__':
-    p = Point(10.0, 11.0)
+    p = Point()
 
     x = np.ones(4)
     y = np.full(4, 3.0)
@@ -28,6 +27,6 @@ if __name__ == '__main__':
 
     print(a)
     print(b)
-    print(p.addition(p.x, p.y))
+    print(p.addition(10.0, 11.0))
     print(p.subtraction(x, y))
-    print(p.addition(p.x, p.y) + 3.4)
+    print(p.addition(10.0, 11.0) + 3.4)

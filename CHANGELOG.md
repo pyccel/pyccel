@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #1472 : Added C printing support for a class containing scalar data.
+-   #1472 : Add C printing support for a class contains `scalar data`.
 
 ### Fixed
 

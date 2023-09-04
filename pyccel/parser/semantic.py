@@ -3281,7 +3281,7 @@ class SemanticParser(BasicParser):
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.scope.find(cls_name, 'classes')
                 cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
-                var       = Variable(dt, 'self', cls_base=cls_base)
+                var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
                 self.scope.insert_variable(var)
 
             if arguments:
