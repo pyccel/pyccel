@@ -3323,6 +3323,12 @@ class ClassDef(ScopedNode):
 
     @property
     def attributes(self):
+        """
+        The attributes of a class.
+
+        Returns a tuple containing the attributes of a ClassDef.
+        Each element within the tuple is of type Variable.
+        """
         return self._attributes
 
     @property
@@ -3371,8 +3377,56 @@ class ClassDef(ScopedNode):
             d_attributes[i.name] = i
         return d_attributes
 
-    # TODO add other attributes?
+    def add_new_attribute(self, attr):
+        """
+        Add a new attribute to the current class.
 
+        Add a new attribute to the current ClassDef.
+
+        Parameters
+        ----------
+        attr : Variable
+            The Variable that will be added.
+        """
+
+        if not isinstance(attr, Variable):
+            raise TypeError("Attributes must be Variables")
+        attr.set_current_user_node(self)
+        self._attributes += (attr,)
+
+    def add_new_method(self, method):
+        """
+        Add a new method to the current class.
+
+        Add a new method to the current ClassDef.
+
+        Parameters
+        ----------
+        method : FunctionDef
+            The Method that will be added.
+        """
+
+        if not isinstance(method, FunctionDef):
+            raise TypeError("Method must be FunctionDef")
+        method.set_current_user_node(self)
+        self._methods += (method,)
+
+    def add_new_interface(self, interface):
+        """
+        Add a new interface to the current class.
+
+        Add a new interface to the current ClassDef.
+
+        Parameters
+        ----------
+        interface : FunctionDef
+            The interface that will be added.
+        """
+
+        if not isinstance(interface, Interface):
+            raise TypeError("Argument 'interface' must be of type Interface")
+        interface.set_current_user_node(self)
+        self._interfaces += (interface,)
 
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""

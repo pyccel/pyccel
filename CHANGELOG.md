@@ -9,7 +9,11 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1484 : Use scope for classes to avoid name clashes.
+
 ### Changed
+
+-   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
 
 ### Deprecated
 
