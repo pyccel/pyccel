@@ -32,5 +32,3 @@ if __name__ == '__main__':
 
     print(p.x, p.y)
     print(a)
-
-    del p

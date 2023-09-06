@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1476 : Add C support for a class containing `Interfaces`.
 -   #1472 : Add C printing support for a class containing scalar data.
 
 ### Fixed
