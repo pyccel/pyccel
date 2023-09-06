@@ -14,7 +14,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, FunctionDef
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, ClassDef
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
@@ -736,6 +736,7 @@ class CCodePrinter(CodePrinter):
         funcs = ""
         for classDef in expr.module.classes:
             classes += f"struct {classDef.name} {{\n"
+            classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += f"{self.function_signature(method)};\n"
