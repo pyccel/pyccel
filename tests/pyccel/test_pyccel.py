@@ -883,6 +883,8 @@ def test_classes_f_only( test_file , language):
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
                                         "scripts/classes/classes_5.py",
                                         "scripts/classes/classes_3.py",
+                                        "scripts/classes/classes_1.py",
+                                        "scripts/classes/classes.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),

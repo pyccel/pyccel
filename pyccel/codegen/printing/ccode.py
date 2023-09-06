@@ -2251,6 +2251,9 @@ class CCodePrinter(CodePrinter):
     def _print_CustomDataType(self, expr):
         return "struct " + expr.name
 
+    def _print_Del(self, expr):
+        return ""
+
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)
         return methods

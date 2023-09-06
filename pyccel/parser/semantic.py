@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import NativeSymbol, CustomDataType
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
@@ -487,10 +487,14 @@ class SemanticParser(BasicParser):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
         """
+
+        deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            deallocs = [Deallocate(i) for i in self._allocs[-1]]
-        else:
-            deallocs = []
+            for i in self._allocs[-1]:
+                if isinstance(i, DottedVariable):
+                    if isinstance(i.lhs.dtype, CustomDataType) and not self._current_function == '__Pyccel__del__':
+                        continue
+                deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
 
@@ -1159,7 +1163,7 @@ class SemanticParser(BasicParser):
                         lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                         # update the attributes of the class and push it to the scope
-                        class_def.add_new_attribute(member)
+                        class_def.add_new_attribute(lhs)
 
                     else:
                         errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
@@ -3361,6 +3365,11 @@ class SemanticParser(BasicParser):
             self._allocs.append([])
 
             # we annotate the body
+            if cls_name and expr.name == '__Pyccel__del__':
+                attributes = self.scope.find(cls_name, 'classes').attributes
+                attribute = []
+                attribute.extend(attr for attr in attributes if not attr.on_stack)
+                self._allocs.append(attribute) if len(attribute) > 0 else None
             body = self._visit(expr.body)
 
             # Calling the Garbage collecting,

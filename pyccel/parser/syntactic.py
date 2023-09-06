@@ -851,6 +851,13 @@ class SyntaxParser(BasicParser):
                 methods.append(self._visit(i))
             elif isinstance(i, ast.Pass):
                 return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+        if not any(method.name == '__Pyccel__del__' for method in methods):
+            header = hdr_parse(stmts=f"#$ header method __Pyccel__del__({name})")
+            self.scope.parent_scope.insert_header(header)
+            arguments = ast.arguments(args=[ast.arg(arg='self')], kwonlyargs=[], defaults=[])
+            body = [Pass()]
+            del_functiondef = ast.FunctionDef(name="__Pyccel__del__", args=arguments, body=body, decorator_list=[])
+            methods.append(self._visit(del_functiondef))
         for i in methods:
             i.cls_name = name
         attributes = [a.var for a in methods[0].arguments]
