@@ -3,23 +3,23 @@ Omp:
 ;
 
 OmpStatement:
-  '#$' 'omp' statement=OmpConstructOrDirective
+  '#$' 'omp' statement=OmpDirective
 ;
 
 ////////////////////////////////////////////////////
 //         Constructs and Directives
 ////////////////////////////////////////////////////
-OmpConstructOrDirective:
-      OmpParallelConstruct
-    | OmpEndConstruct
+OmpDirective:
+      OmpParallelDirective
+    | OmpEndDirective
 ;
 ////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////
 //     Constructs and Directives definitions
 ////////////////////////////////////////////////////
-OmpParallelConstruct:   name='parallel'  clauses*=AllOmpClauses;
-OmpEndConstruct: 'end' name=OmpEndedConstruct;
+OmpParallelDirective:   name='parallel'  clauses*=AllOmpClauses;
+OmpEndDirective: 'end' name=EndDirectiveNames;
 
 ////////////////////////////////////////////////////
 //      Clauses for Constructs and Directives
@@ -85,7 +85,7 @@ OmpProcBindClause: name='proc_bind' '('(
 ////////////////////////////////////////////////////
 //              Clauses values
 ////////////////////////////////////////////////////
-OmpEndedConstruct: 'parallel';
+EndDirectiveNames: 'parallel';
 ParenthesizedExpression: (('(' ParenthesizedExpression ')') | /[^()]*/)*; // TODO: find a better way to do this as this will not escape the parenthesis inside of a string
 DataSharingAttribute: ('shared' | 'none' | 'private' | 'firstprivate');
 ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'max'); // TODO: those are only the implicitly declared ones for C and C++. Add the others for Fortran and support user-defined ones (see specs https://www.openmp.org/spec-html/5.0/openmpsu107.html#x140-581002)

@@ -76,6 +76,8 @@ from pyccel.utilities.stage import PyccelStage
 
 from pyccel.errors.errors import Errors
 
+from pyccel.parser.syntax.openmp import omp_syntax_parser
+
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
 
@@ -102,7 +104,7 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 #==============================================================================
 
-class SyntaxParser(BasicParser):
+class SyntaxParser(BasicParser, omp_syntax_parser):
     """
     Class which handles the syntactic stage as described in the developer docs.
 
@@ -123,6 +125,7 @@ class SyntaxParser(BasicParser):
 
     def __init__(self, inputs, **kwargs):
         BasicParser.__init__(self, **kwargs)
+        omp_syntax_parser.__init__(self)
 
         # check if inputs is a file
         code = inputs
@@ -170,6 +173,15 @@ class SyntaxParser(BasicParser):
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
+
+        if any(pd.require_end_directive for pd in self.pending_directives):
+            errors.report(
+                "directives need closing",
+                symbol=self._pending_directives,
+                severity="fatal",
+            )
+
+
         self._ast = ast
 
         self._syntax_done = True
@@ -217,7 +229,6 @@ class SyntaxParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
-
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
@@ -1098,6 +1109,7 @@ class SyntaxParser(BasicParser):
         if len(exprs) == 1:
             return exprs[0]
         else:
+            #causes errors in omp
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):

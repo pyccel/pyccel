@@ -136,6 +136,8 @@ from pyccel.parser.syntactic import SyntaxParser
 
 from pyccel.utilities.stage import PyccelStage
 
+from pyccel.parser.syntax.openmp import omp_semantic_parser
+
 import pyccel.decorators as def_decorators
 #==============================================================================
 
@@ -164,7 +166,7 @@ def _get_name(var):
 
 #==============================================================================
 
-class SemanticParser(BasicParser):
+class SemanticParser(BasicParser, omp_semantic_parser):
     """
     Class which handles the semantic stage as described in the developer docs.
 
@@ -205,6 +207,7 @@ class SemanticParser(BasicParser):
 
         # ...
         BasicParser.__init__(self, **kwargs)
+        omp_semantic_parser.__init__(self)
         # ...
 
         # ...
@@ -1851,7 +1854,8 @@ class SemanticParser(BasicParser):
         ls = []
         self._additional_exprs.append([])
         for b in expr.body:
-
+            if b in self.omp_reserved_nodes:
+                continue
             # Save parsed code
             line = self._visit(b)
             ls.extend(self._additional_exprs[-1])
@@ -1900,7 +1904,7 @@ class SemanticParser(BasicParser):
 
     def _visit_OmpAnnotatedComment(self, expr, **settings):
         expr = expr.visit_semantic(self, errors)
-        expr.clear_user_nodes()
+        expr.clear_syntactic_user_nodes()
         return expr
 
     def _visit_Omp_End_Clause(self, expr):

@@ -19,9 +19,12 @@ this_folder = dirname(__file__)
 grammar = join(this_folder, "../grammar/openmp.tx")
 
 # TODO: get the version from the compiler
-used_version = openmp_versions["5.0"]
-OmpAnnotatedComment.set_current_version(5.0)
-omp_classes = used_version.inner_classes_list()
+omp = openmp_versions["4.5"]
+omp_syntax_parser = omp.SyntaxParser
+omp_semantic_parser = omp.SemanticParser
+omp_ccodeprinter = omp.CCodePrinter
+omp.OmpAnnotatedComment.set_current_version(4.5)
+omp_classes = omp.inner_classes_list()
 
 meta = metamodel_from_file(grammar, classes=omp_classes)
 
@@ -54,7 +57,7 @@ def parse(stmt, parser, errors):
     try:
         meta_model = meta.model_from_str(stmt)
         assert len(meta_model.statements) == 1
-        return meta_model.statements[0].statement.visit_syntatic(parser, errors)
+        return parser._visit(meta_model.statements[0].statement)
     except TextXError as e:
         errors.report(e.message, severity="fatal", symbol=stmt)
         return None

@@ -55,6 +55,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+from pyccel.parser.syntax.openmp import omp_ccodeprinter
 
 errors = Errors()
 
@@ -251,7 +252,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'numpy_c']}
 
-class CCodePrinter(CodePrinter):
+class CCodePrinter(CodePrinter, omp_ccodeprinter):
     """
     A printer for printing code in C.
 
@@ -2114,8 +2115,8 @@ class CCodePrinter(CodePrinter):
 
     #=================== OMP ==================
 
-    def _print_OmpAnnotatedComment(self, expr):
-        return expr.cprint(printer=self, errors=errors)
+    #def _print_OmpAnnotatedComment(self, expr):
+    #    return expr.cprint(printer=self, errors=errors)
 
     #=====================================
 

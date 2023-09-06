@@ -3,19 +3,21 @@
 Module containing the grammar rules for the OpenMP 4.5 specification,
 """
 from inspect import isclass
+from abc import ABC, abstractmethod
 import ast as Ast
-import pyccel.ast.omp as PreviousVersion
 from pyccel.ast.core import FunctionCall, Return
-from pyccel.ast.omp import (
-    OmpConstruct,
-    OmpEndConstruct,
-)
 from pyccel.ast.variable import Variable
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.ast.datatypes import NativeInteger, NativeVoid
+from pyccel.ast.core import CodeBlock
+from pyccel.ast.basic  import Basic
+from pyccel.ast.core import EmptyNode
+from pyccel.errors.errors import Errors
 
 __all__ = ("Openmp",)
 
+
+errors = Errors()
 
 class Openmp:
     """Class that groups all the OpenMP classes for constructs and clauses."""
@@ -28,103 +30,138 @@ class Openmp:
         results = []
         for attrname in dir(cls):
             obj = getattr(cls, attrname)
-            if isclass(obj) and obj.__name__.startswith("Omp"):
+            if isclass(obj) and hasattr(obj, '_used_in_grammar'):
                 results.append(obj)
         return results
 
-    @classmethod
-    def _visit_syntacic_variables(cls, expr, parser, errors, variables):
-        """
-        Helper function to visit the syntactic of a variables list of the OpenMP clauses.
-        """
-        variables_ast = []
-        for var in variables:
-            fst = extend_tree(var)
-            if (
-                not isinstance(fst, Ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
-                or not isinstance(fst.body[0].value, Ast.Name)
-            ):
-                errors.report(
-                    "OMP PRIVATE clause must be a list of variables",
-                    symbol=expr,
-                    severity="fatal",
+
+    class OmpAnnotatedComment(Basic):
+
+        """Represents an OpenMP Annotated Comment in the code."""
+
+        __slots__ = ("VERSION", "DEPRECATED")
+        _attribute_nodes = ()
+        _current_omp_version = None
+
+        def __init__(self, **kwargs):
+            if self._current_omp_version is None:
+                raise NotImplementedError(
+                    "OpenMP version not set (use OmpAnnotatedComment.set_current_version)"
                 )
-            fst = fst.body[0].value
-            variables_ast.append(parser._visit(fst))
-        return variables_ast
-
-    @classmethod
-    def _visit_semantic_variables(cls, expr, parser, errors, variables):
-        """
-        Helper function to visit the semantic of a variables list of the OpenMP clauses.
-        """
-        tmp_vars = []
-        for var in variables:
-            ret = parser._visit(var)
-            if not isinstance(ret, Variable):
-                errors.report(
-                    "OMP PRIVATE clause must be a list of variables",
-                    symbol=expr,
-                    severity="fatal",
+            self.VERSION = float(kwargs.pop("VERSION", "0") or "0")
+            self.DEPRECATED = float(kwargs.pop("DEPRECATED", "inf") or "inf")
+            if self.version > self._current_omp_version:
+                raise NotImplementedError(
+                    f"Syntax not supported in OpenMP version {self._current_omp_version}"
                 )
-            tmp_vars.append(ret)
-        return tmp_vars
+            if self.deprecated <= self._current_omp_version:
+                raise NotImplementedError(
+                    f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
+                )
+            super().__init__()
 
-    class Omp(PreviousVersion.Omp):
-        """Represents an OpenMP Construct for both Pyccel AST
-        and textx grammer rule
-        """
+        @property
+        def version(self):
+            """Returns the version of OpenMP syntax used."""
+            return self.VERSION
 
-        __slots__ = ()
+        @property
+        def deprecated(self):
+            """Returns the deprecated version of OpenMP syntax used."""
+            return self.DEPRECATED
 
-        def visit_syntatic(self, parser, errors):
-            self._statements = [
-                stmt.visit_syntatic(parser, errors) for stmt in self._statements
-            ]
-            return self
+        @classmethod
+        def set_current_version(cls, version):
+            """Sets the version of OpenMP syntax to support."""
+            cls._current_omp_version = version
 
-        def visit_semantic(self, parser, errors):
-            self._statements = tuple(
-                stmt.visit_semantic(parser, errors) for stmt in self._statements
-            )
-            return self
+    class Omp(OmpAnnotatedComment):
+        """Represents a holder for all OpenMP statements."""
 
-        def cprint(self, printer, errors):
-            return "\n".join(stmt.cprint(printer, errors) for stmt in self._statements)
+        __slots__ = ("_statements",)
+        _used_in_grammar = True
+        def __init__(self, **kwargs):
+            self._statements = kwargs.pop("statements", [])
+            super().__init__(**kwargs)
 
-        def fprint(self, printer, errors):
-            return "\n".join(stmt.fprint(printer, errors) for stmt in self._statements)
+        @property
+        def statements(self):
+            """Returns the statements of the OpenMP holder."""
+            return self._statements
 
-        def pyprint(self, printer, errors):
-            return "\n".join(stmt.pyprint(printer, errors) for stmt in self._statements)
+        def __str__(self):
+            return "\n".join(str(stmt) for stmt in self.statements)
 
-    class OmpStatement(PreviousVersion.OmpStatement):
-        """Represents an OpenMP Statement for both Pyccel AST
-        and textx grammer rule
-        """
+        def __repr__(self):
+            return "\n".join(repr(stmt) for stmt in self.statements)
 
-        __slots__ = ()
+    class OmpConstruct(Basic):
 
-        def visit_syntatic(self, parser, errors):
-            self._statement = self._statement.visit_syntatic(parser, errors)
-            return self
+        __slots__ = ("_start", "_end", "_body")
+        _attribute_nodes = ("_start", "_end", "_body")
 
-        def visit_semantic(self, parser, errors):
-            self._statement = self._statement.visit_semantic(parser, errors)
-            return self
+        def __init__(self, start, body, end=None):
+            self._start = start
+            self._end = end
+            self._body = body
+            super().__init__()
 
-        def cprint(self, printer, errors):
-            return self._statement.cprint(printer, errors)
+        @property
+        def start(self):
+            return self._start
 
-        def fprint(self, printer, errors):
-            return self._statement.fprint(printer, errors)
+        @property
+        def body(self):
+            return self._body
 
-        def pyprint(self, printer, errors):
-            return self._statement.pyprint(printer, errors)
+        @property
+        def end(self):
+            return self._end
 
-    class OmpParallelConstruct(PreviousVersion.OmpParallelConstruct):
+    class OmpDirective(OmpAnnotatedComment):
+
+        """Represents an OpenMP Construct in the code."""
+
+        __slots__ = ("_name", "_clauses", "_require_end_directive")
+
+        _attribute_nodes = ("_clauses",)
+        _allowed_clauses = ()
+        _deprecated_clauses = ()
+        _used_in_grammar = True
+
+        def __init__(self, **kwargs):
+            self._name = kwargs.pop("name")
+            self._clauses = kwargs.pop("clauses", [])
+            self._require_end_directive = kwargs.pop("require_end_directive", False)
+            super().__init__(**kwargs)
+
+        @property
+        def name(self):
+            return self._name
+
+        @property
+        def clauses(self):
+            return self._clauses
+
+        @property
+        def require_end_directive(self):
+            return self._require_end_directive
+
+    class OmpEndDirective(OmpDirective):
+        """Represents an OpenMP End Construct."""
+
+        __slots__ = ("_coresponding_directive",)
+        _attribute_nodes = ("_coresponding_directive",)
+
+        def __init__(self, **kwargs):
+            self._coresponding_directive = kwargs.pop("coresponding_directive", None)
+            super().__init__(**kwargs)
+
+        @property
+        def coresponding_directive(self):
+            return self._coresponding_directive
+
+    class OmpParallelDirective(OmpDirective):
         """Represents an OpenMP Parallel Construct for both Pyccel AST
         and textx grammer rule
         """
@@ -145,115 +182,54 @@ class Openmp:
         _deprecated_clauses = ()
 
         def __init__(self, **kwargs):
-            super().__init__(**kwargs, has_closing=True)
+            super().__init__(**kwargs, require_end_directive=True)
 
-        def visit_syntatic(self, parser, errors):
-            """Check the validity of the clauses and the construct."""
-            # visit the clauses
-            visited_clauses = super().visit_syntatic_clauses(parser, errors)
-            for clause in ("if", "proc_bind", "num_threads"):
-                if self.clauses_count.get(clause, 0) > 1:
-                    errors.report(
-                        f"OMP PARALLEL `{clause}` clause must appear only once",
-                        symbol=self,
-                        severity="fatal",
-                    )
-            self._clauses = visited_clauses
-            return self
 
-        def visit_semantic(self, parser, errors):
-            """Check the validity of the clauses and the construct."""
-            # check if the construct has an end parallel or a return before end parallel
-            code_block = self.current_user_node
-            body = code_block.body
-            index = body.index(self) + 1
-            need_closing = [self._name]
-            while index < len(body) and len(need_closing) > 0:
-                if isinstance(body[index], OmpEndConstruct):
-                    if body[index].name == need_closing[-1]:
-                        need_closing.pop()
-                    else:
-                        errors.report(
-                            f"OMP END {need_closing[-1]} does not match OMP {body[index].name}",
-                            symbol=self,
-                            severity="fatal",
-                        )
-                elif isinstance(body[index], OmpConstruct) and body[index].has_closing:
-                    need_closing.append(body[index].name)
-                elif isinstance(body[index], Return):
-                    errors.report(
-                        "OMP PARALLEL invalid branch to/from OpenMP structured block",
-                        symbol=self,
-                        severity="fatal",
-                    )
-                index += 1
-            if len(need_closing) != 0:
-                errors.report(
-                    "OMP PARALLEL construct must be closed with OMP END PARALLEL",
-                    symbol=self,
-                    severity="fatal",
-                )
-            body[index - 1].found_opening = True
+    class OmpStatement(OmpAnnotatedComment):
+        """Represents an OpenMP statement."""
 
-            # check the validity clauses
-            self._clauses = super().visit_semantic_clauses(parser, errors)
-            return self
-
-        def cprint(self, printer, errors):
-            return f"{super().cprint(printer, errors)}\n{{"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpEndConstruct(PreviousVersion.OmpEndConstruct):
-        """Represents an OpenMP End Construct for both Pyccel AST
-        and textx grammer rule
-        """
-
-        __slots__ = ("found_opening",)
+        __slots__ = ("_statement",)
+        _used_in_grammar = True
 
         def __init__(self, **kwargs):
-            super().__init__(**kwargs)
-            self.found_opening = False
+            self._statement = kwargs.pop("statement")
+            super().__init__()
 
-        def visit_syntatic(self, parser, errors):
-            self._clauses = super().visit_syntatic_clauses(parser, errors)
-            return self
-
-        def visit_semantic(self, parser, errors):
-            if not self.found_opening:
-                errors.report(
-                    f"OMP END does not match any OMP {self.name}",
-                    symbol=self,
-                    severity="fatal",
-                )
-            self._clauses = super().visit_semantic_clauses(parser, errors)
-            return self
-
-        def cprint(self, printer, errors):
-            return "}\n"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
+        @property
+        def statement(self):
+            """Returns the statement of the OpenMP statement."""
+            return self._statement
 
         def __str__(self):
-            return f"$# omp end {self.name}"
+            return f"#$ omp {str(self.statement)}"
 
         def __repr__(self):
-            return f"$# omp end {self.name}"
+            return f"#$ omp {repr(self.statement)}"
 
-    class OmpIfClause(PreviousVersion.OmpIfClause):
+    class OmpClause(OmpAnnotatedComment):
+        """Represents an OpenMP Clause in the code."""
+
+        __slots__ = ("_name", "_parent")
+
+        def __init__(self, **kwargs):
+            self._name = kwargs.pop("name")
+            self._parent = kwargs.pop("parent")
+            super().__init__(**kwargs)
+
+        @property
+        def name(self):
+            """Returns the name of the clause."""
+            return self._name
+
+        def __repr__(self):
+            return f"{self.name}"
+
+    class OmpIfClause(OmpClause):
         """Represents an OpenMP If Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("expr_ast",)
+        __slots__ = ('expr_ast', 'directive_name_modifier', 'expr')
 
         def __init__(self, **kwargs):
             self.directive_name_modifier = kwargs.pop("directive_name_modifier", None)
@@ -261,274 +237,86 @@ class Openmp:
             self.expr_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            # TODO: check if directive_name_modifier matches the name if the parent construct
-            fst = extend_tree(self.expr)
-            if (
-                not isinstance(fst, Ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
-            ):
-                errors.report(
-                    "OMP IF clause must be a valid expression",
-                    symbol=self,
-                    severity="fatal",
-                )
-            self.expr_ast = parser._visit(fst.body[0].value)
-            return self
-
-        def visit_semantic(self, parser, errors):
-            ret = parser._visit(self.expr_ast)
-            if (
-                not hasattr(ret, "dtype")
-                or isinstance(ret.dtype, NativeVoid)
-                or (isinstance(ret, FunctionCall) and not ret.funcdef.results)
-            ):
-                errors.report(
-                    "OMP IF clause must be a valid expression",
-                    symbol=self,
-                    severity="fatal",
-                )
-            self.expr_ast = ret
-            return self
-
-        def cprint(self, printer, errors):
-            modifier = (
-                f"{self.directive_name_modifier}:"
-                if self.directive_name_modifier
-                else ""
-            )
-            return f"if({modifier} {printer._print(self.expr_ast)})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpNumThreadsClause(PreviousVersion.OmpNumThreadsClause):
+    class OmpNumThreadsClause(OmpClause):
         """Represents an OpenMP NumThreads Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("num_threads_ast",)
+        __slots__ = ('num_threads', "num_threads_ast")
 
         def __init__(self, **kwargs):
             self.num_threads = kwargs.pop("num_threads")
             self.num_threads_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            fst = extend_tree(self.num_threads)
-            if (
-                not isinstance(fst, Ast.Module)
-                or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
-            ):
-                errors.report(
-                    "OMP NUM_THREADS clause must be an integer expression",
-                    symbol=self,
-                    severity="fatal",
-                )
-            self.num_threads_ast = parser._visit(fst.body[0].value)
-            return self
-
-        def visit_semantic(self, parser, errors):
-            ret = parser._visit(self.num_threads_ast)
-            if not hasattr(ret, "dtype") or not isinstance(ret.dtype, NativeInteger):
-                errors.report(
-                    "OMP NUM_THREADS clause must be an integer expression",
-                    symbol=self,
-                    severity="fatal",
-                )
-            self.num_threads_ast = ret
-            return self
-
-        def cprint(self, printer, errors):
-            return f"num_threads({printer._print(self.num_threads_ast)})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpDefaultClause(PreviousVersion.OmpDefaultClause):
+    class OmpDefaultClause(OmpClause):
         """Represents an OpenMP Default Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ()
+        __slots__ = ('attribute',)
 
         def __init__(self, **kwargs):
             self.attribute = kwargs.pop("attribute")
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            if self._parent.clauses_count.get("default", 0) > 1:
-                errors.report(
-                    "OMP DEFAULT clause must be specified only once",
-                    symbol=self,
-                    severity="fatal",
-                )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            return self
-
-        def cprint(self, printer, errors):
-            return f"default({self.attribute})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpPrivateClause(PreviousVersion.OmpPrivateClause):
+    class OmpPrivateClause(OmpClause):
         """Represents an OpenMP Private Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("variables_ast",)
+        __slots__ = ('variables', 'variables_ast')
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
             self.variables_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            self.variables_ast = Openmp._visit_syntacic_variables(
-                self, parser, errors, self.variables
-            )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            self.variables_ast = Openmp._visit_semantic_variables(
-                self, parser, errors, self.variables_ast
-            )
-            return self
-
-        def cprint(self, printer, errors):
-            return (
-                f"private({', '.join(printer._print(i) for i in self.variables_ast)})"
-            )
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpFirstPrivateClause(PreviousVersion.OmpFirstPrivateClause):
+    class OmpFirstPrivateClause(OmpClause):
         """Represents an OpenMP FirstPrivate Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("variables_ast",)
+        __slots__ = ('variables', 'variables_ast')
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
             self.variables_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            self.variables_ast = Openmp._visit_syntacic_variables(
-                self, parser, errors, self.variables
-            )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            self.variables_ast = Openmp._visit_semantic_variables(
-                self, parser, errors, self.variables_ast
-            )
-            return self
-
-        def cprint(self, printer, errors):
-            return f"firstprivate({', '.join(printer._print(i) for i in self.variables_ast)})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpSharedClause(PreviousVersion.OmpSharedClause):
+    class OmpSharedClause(OmpClause):
         """Represents an OpenMP Shared Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("variables_ast",)
+        __slots__ = ('variables', 'variables_ast')
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
             self.variables_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            self.variables_ast = Openmp._visit_syntacic_variables(
-                self, parser, errors, self.variables
-            )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            self.variables_ast = Openmp._visit_semantic_variables(
-                self, parser, errors, self.variables_ast
-            )
-            return self
-
-        def cprint(self, printer, errors):
-            return f"shared({', '.join(printer._print(i) for i in self.variables_ast)})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpCopyinClause(PreviousVersion.OmpCopyinClause):
+    class OmpCopyinClause(OmpClause):
         """Represents an OpenMP Copyin Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ("variables_ast")
+        __slots__ = ('variables', 'variables_ast')
 
         def __init__(self, **kwargs):
             self.variables = kwargs.pop("variables")
             self.variables_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            self.variables_ast = Openmp._visit_syntacic_variables(
-                self, parser, errors, self.variables
-            )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            self.variables_ast = Openmp._visit_semantic_variables(
-                self, parser, errors, self.variables_ast
-            )
-            return self
-
-        def cprint(self, printer, errors):
-            return (
-                f"private({', '.join(printer._print(i) for i in self.variables_ast)})"
-            )
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpReductionClause(PreviousVersion.OmpReductionClause):
+    class OmpReductionClause(OmpClause):
         """Represents an OpenMP Reduction Clause for both Pyccel AST
         and textx grammer rule
         """
         #TODO: this clause still needs more work to support 
         # both C and Fortran and also to support user defined
         # reduction operations
-        __slots__ = ('variables_ast',)
+
+        __slots__ = ('modifier', 'operator', 'variables', 'variables_ast')
 
         def __init__(self, **kwargs):
             self.operator = kwargs.pop("operator")
@@ -536,50 +324,146 @@ class Openmp:
             self.variables_ast = None
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            # TODO: check if a variable occured in other reduction clause
-            self.variables_ast = Openmp._visit_syntacic_variables(
-                self, parser, errors, self.variables
-            )
-            return self
-
-        def visit_semantic(self, parser, errors):
-            self.variables_ast = Openmp._visit_semantic_variables(
-                self, parser, errors, self.variables_ast
-            )
-            return self
-
-        def cprint(self, printer, errors):
-            return f"reduction({self.operator}: {', '.join(printer._print(i) for i in self.variables_ast)})"
-
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
-
-    class OmpProcBindClause(PreviousVersion.OmpProcBindClause):
+    class OmpProcBindClause(OmpClause):
         """Represents an OpenMP ProcBind Clause for both Pyccel AST
         and textx grammer rule
         """
 
-        __slots__ = ()
+        __slots__ = ('affinity_policy',)
 
         def __init__(self, **kwargs):
             self.affinity_policy = kwargs.pop("affinity_policy")
             super().__init__(**kwargs)
 
-        def visit_syntatic(self, parser, errors):
-            return self
+    class SemanticParser(ABC):
 
-        def visit_semantic(self, parser, errors):
-            return self
+        def __init__(self):
+            self._omp_reserved_nodes = []
 
-        def cprint(self, printer, errors):
-            return f"proc_bind({self.affinity_policy})"
+        @property
+        def omp_reserved_nodes(self):
+            return self._omp_reserved_nodes
 
-        def fprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
+        @abstractmethod
+        def _visit(self, stmt):
+            pass
 
-        def pyprint(self, printer, errors):
-            raise NotImplementedError("TODO: implement me please!")
+        def _visit_Omp(self, expr):
+            statements = tuple(
+                self._visit(stmt) for stmt in expr.statements
+            )
+            return statements
+
+        def _visit_OmpDirective(self, expr):
+            clauses = [self._visit(clause) for clause in expr._clauses]
+            directive = Openmp.OmpDirective(name=expr.name, clauses=clauses)
+            end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, Openmp.OmpEndDirective)]
+            if len(end_directives) == 0:
+               return directive
+            assert len(end_directives) == 1
+            end_dir = end_directives[0]
+            end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
+            if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
+                errors.report(
+                    f"{expr} and {end_dir}, should be contained in the same block",
+                    symbol=expr,
+                    severity="fatal",
+                )
+            container = expr.get_all_user_nodes()[-1]
+            reserved_nodes = container.body[container.body.index(expr) + 1:container.body.index(end_dir) + 1]
+            end_dir = self._visit(reserved_nodes[-1])
+            body = self._visit(CodeBlock(reserved_nodes[:-1]))
+            self._omp_reserved_nodes = reserved_nodes
+            return Openmp.OmpConstruct(start=directive, end=end_dir, body=body)
+
+        #def _visit_OmpParallelConstruct(self, expr):
+        #    """Check the validity of the clauses and the construct."""
+        #    # check if the construct has an end parallel or a return before end parallel
+
+        #    #body = self.get_body(expr)
+        #    #clauses = [self._visit(clause) for clause in expr._clauses]
+        #    #return  Openmp.OmpParallelConstruct(name=expr.name, clauses=clauses, body=body)
+        def _visit_OmpEndDirective(self, expr):
+            if expr.coresponding_directive is None:
+                errors.report(
+                    f"OMP END does not match any OMP {expr.name}",
+                    symbol=expr,
+                    severity="fatal",
+                )
+            clauses = [self._visit(clause) for clause in expr.clauses]
+            return Openmp.OmpEndDirective(name=expr.name, clauses=clauses)
+
+    class SyntaxParser(ABC):
+
+        def __init__(self):
+            self._pending_directives = []
+
+        @property
+        def pending_directives(self):
+            return self._pending_directives
+
+        @abstractmethod
+        def _visit(self, stmt):
+            pass
+
+        def _visit_Omp(self, expr):
+            statements = tuple(
+                self._visit(stmt) for stmt in expr.statements
+            )
+            return statements
+
+        def _find_coresponding_directive(self, end_directive):
+            cor_directive = None
+            if len(self._pending_directives) == 0:
+                errors.report(
+                   f"`{end_directive}` misplaced",
+                   symbol=end_directive,
+                   severity="fatal",
+                   )
+            if end_directive.name != self._pending_directives[-1].name:
+                if not self._pending_directives[-1].require_end_directive:
+                    self._pending_directives.pop()
+                    cor_directive = self._find_coresponding_directive(end_directive)
+                else:
+                    errors.report(
+                        f"`{end_directive}` misplaced",
+                        symbol=end_directive,
+                        severity="fatal",
+                    )
+            else:
+                cor_directive = self._pending_directives.pop()
+
+            return cor_directive
+
+        def _visit_OmpDirective(self, expr):
+            clauses = [self._visit(clause) for clause in expr._clauses]
+            ret = Openmp.OmpDirective(name=expr.name, clauses=clauses)
+            self._pending_directives.append(ret)
+            return ret
+
+        def _visit_OmpParallelDirective(self, expr):
+            clauses = [self._visit(clause) for clause in expr._clauses]
+            #for clause in ("if", "proc_bind", "num_threads"):
+            #    if expr.clauses_count.get(clause, 0) > 1:
+            #        errors.report(
+            #            f"OMP PARALLEL `{clause}` clause must appear only once",
+            #            symbol=expr,
+            #            severity="fatal",
+            #        )
+            ret = Openmp.OmpParallelDirective(name=expr.name, clauses=clauses)
+            self._pending_directives.append(ret)
+            return ret
+        def _visit_OmpEndDirective(self, expr):
+            cor_directive = self._find_coresponding_directive(expr)
+            clauses = [self._visit(clause) for clause in expr._clauses]
+            return Openmp.OmpEndDirective(name=expr.name, clauses=clauses, coresponding_directive=cor_directive)
+
+    class CCodePrinter:
+
+        def _print_OmpConstruct(self, expr):
+            clauses = " ".join(self._print(clause) for clause in expr.start.clauses)
+            body = self._print(expr.body)
+            return f"#pragma omp {expr.start.name} {clauses}\n{{\n{body}\n}}\n"
+
+        def _print_OmpEndDirective(self, expr):
+            return ""
