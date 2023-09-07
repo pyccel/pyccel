@@ -413,13 +413,6 @@ class Scope(object):
                 self.headers[expr.name].append(expr)
             else:
                 self.headers[expr.name] = [expr]
-        elif isinstance(expr, ClassHeader):
-            self.headers[expr.name] = expr
-
-            #  create a new Datatype for the current class
-
-            dtype = DataTypeFactory(expr.name, '_name')
-            self.cls_constructs[expr.name] = dtype
         else:
             msg = 'header of type{0} is not supported'
             msg = msg.format(str(type(expr)))
