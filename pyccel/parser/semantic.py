@@ -3540,8 +3540,10 @@ class SemanticParser(BasicParser):
         #      - wouldn't be better if it is done inside ClassDef?
 
         name = expr.name
-        # remove quotes for str representation
-        name = name.replace("'", '')
+
+        #  create a new Datatype for the current class
+        dtype = DataTypeFactory(name, '_name')
+        self.scope.cls_constructs[name] = dtype
 
         parent = self._find_superclasses(expr)
 
