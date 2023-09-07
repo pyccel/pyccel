@@ -7,9 +7,8 @@
 """
 
 from pyccel.ast.core      import ClassDef
-from pyccel.ast.datatypes import DataTypeFactory
 from pyccel.ast.headers   import MacroFunction, MacroVariable
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader
+from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.ast.variable  import Variable, DottedName
 
