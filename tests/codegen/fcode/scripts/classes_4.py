@@ -1,36 +1,29 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 #An example of a class
-#$ header class Shape(public)
-#$ header method __init__(Shape, double, double)
-#$ header method area(Shape) results(double)
-#$ header method perimeter(Shape) results(double)
-#$ header method describe(Shape,str)
-#$ header method authorName(Shape,str)
-#$ header method scaleSize(Shape, double)
 
 class Shape:
 
-    def __init__(self, x, y):
+    def __init__(self : Shape, x : float, y : float):
         self.x = x
         self.y = y
         self.description = "This shape has not been described yet"
         self.author = "Nobody has claimed to make this shape yet"
 
-    def area(self):
+    def area(self : Shape) -> float:
         y = self.x * self.y
         return y
 
-    def perimeter(self):
+    def perimeter(self : Shape) -> float:
         x = 2 * self.x + 2 * self.y
         return x
 
-    def describe(self, text):
+    def describe(self : Shape, text : str):
         self.description = text
 
-    def authorName(self, text):
+    def authorName(self : Shape, text : str):
         self.author = text
 
-    def scaleSize(self, scale):
+    def scaleSize(self : Shape, scale : float):
         self.x = self.x * scale
         self.y = self.y * scale
 
