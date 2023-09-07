@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
