@@ -1,31 +1,23 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
-
-#$ header class Point(public)
-#$ header method __init__(Point, double[:])
-#$ header method __del__(Point)
-#$ header method translate(Point, double[:])
-#$ header method print_x(Point)
-#$ header class Line(public)
-#$ header method __init__(Line, Point)
-
 import numpy as np
+
 class Point(object):
-    def __init__(self, x):
+    def __init__(self : Point, x : 'float[:]'):
         self._X = 10
         self._x = x
 
-    def __del__(self):
+    def __del__(self : Point):
         pass
 
-    def translate(self, a):
+    def translate(self : Point, a : 'float[:]'):
         self._x[:]   =  self._x + a
 
-    def print_x(self):
+    def print_x(self : Point):
         print(self._x)
 
 class Line(object):
-    def __init__(self, l):
+    def __init__(self : Line, l : Point):
         self.l = l
         self.l._X = 11
         print(self.l._X)
