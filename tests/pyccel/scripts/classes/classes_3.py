@@ -1,21 +1,15 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
 
-#$ header class Point1(public)
-#$ header method __init__(Point1, double)
-#$ header class Point2(public)
-#$ header method __init__(Point2, double)
-#$ header method test_func(Point2)
-
 class Point1:
-    def __init__(self, x):
+    def __init__(self : Point1, x : float):
         self.x = x
 
 class Point2:
-    def __init__(self, y):
+    def __init__(self : Point2, y : float):
         self.y = y
 
-    def test_func(self):
+    def test_func(self : Point2):
         p = Point1(self.y)
         print(p.x)
 
