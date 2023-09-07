@@ -3549,7 +3549,7 @@ class SemanticParser(BasicParser):
                     original_symbols = expr.scope.python_names.copy())
 
         cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
-        self.scope.insert_class(cls)
+        self.scope.parent.insert_class(cls)
 
         methods = list(expr.methods)
         const = None
