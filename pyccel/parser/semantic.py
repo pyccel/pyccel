@@ -3132,13 +3132,6 @@ class SemanticParser(BasicParser):
         self.scope.insert_template(expr)
         return expr
 
-    def _visit_ClassHeader(self, expr):
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
-        return expr
-
     def _visit_Return(self, expr):
 
         results     = expr.expr
@@ -3552,13 +3545,11 @@ class SemanticParser(BasicParser):
 
         parent = self._find_superclasses(expr)
 
-        cls = ClassDef(name, [], [], superclasses=parent)
-        self.scope.insert_class(cls)
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
-        self.scope.update_class(cls)
+        self.scope.insert_class(cls)
 
         methods = list(expr.methods)
         const = None
@@ -3568,29 +3559,18 @@ class SemanticParser(BasicParser):
             if m_name == '__init__':
                 self._visit_FunctionDef(method)
                 methods.pop(i)
-                const = self.scope.functions.pop(m_name)
+                init_func = self.scope.functions.pop(m_name)
                 break
 
-
-
-        if not const:
+        if not init_func:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error')
 
         for i in methods:
             self._visit_FunctionDef(i)
-            self.scope.functions.pop(i.name)
-
-        header = self.get_headers(name)
-
-        if not header:
-            errors.report(PYCCEL_MISSING_HEADER, symbol=name,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal')
 
         self.exit_class_scope()
-        self.scope.update_class(cls)
 
         return EmptyNode()
 
