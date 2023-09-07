@@ -10,7 +10,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
+from pyccel.ast.headers   import FunctionHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
@@ -327,28 +327,6 @@ class FunctionHeaderStmt(BasicStmt):
                                   results=results,
                                   is_static=is_static)
 
-class ClassHeaderStmt(BasicStmt):
-    """Base class representing a class header statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Header statement
-
-        name: str
-            class name
-        options: list, tuple
-            list of class options
-        """
-        self.name    = kwargs.pop('name')
-        self.options = kwargs.pop('options')
-
-        super(ClassHeaderStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        options = [str(i) for i in self.options]
-        return ClassHeader(self.name, options)
-
 
 class MetavarHeaderStmt(BasicStmt):
     """Base class representing a metavar header statement in the grammar."""
@@ -547,7 +525,6 @@ hdr_classes = [Header, TypeHeader,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,
-               ClassHeaderStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
@@ -607,7 +584,6 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
     print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))
