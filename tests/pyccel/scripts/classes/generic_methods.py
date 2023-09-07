@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
+from pyccel.decorators import template
 
 class Point(object):
     def __init__(self : Point, x : float, y : float):
