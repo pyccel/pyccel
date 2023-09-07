@@ -1,13 +1,13 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 
 class A(object):
-    def __init__(self : A, x : int):
+    def __init__(self : 'A', x : int):
         self.x = x
 
-    def __del__(self : A):
+    def __del__(self : 'A'):
         pass
 
-    def f(self : A):
+    def f(self : 'A'):
         return self.x+2
 
 def get_A():
