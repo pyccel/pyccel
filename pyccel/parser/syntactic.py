@@ -750,8 +750,10 @@ class SyntaxParser(BasicParser):
                 else:
                     types = fill_types(ls)
 
-                txt  = '#$ header ' + name
-                txt += '(' + ','.join(types) + ')'
+                txt  = '#$ header '
+                if isinstance(self.context[-2], ClassDef):
+                    txt += 'method '
+                txt += name + '(' + ','.join(types) + ')'
 
                 if results:
                     txt += ' results(' + ','.join(results) + ')'
