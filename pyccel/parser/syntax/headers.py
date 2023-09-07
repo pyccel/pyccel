@@ -319,6 +319,7 @@ class FunctionHeaderStmt(BasicStmt):
                 cls_instance = dtype.args[0]['datatype']
             else:
                 cls_instance = dtype['datatype']
+            dtypes = dtypes[1:] # remove the attribut
             return MethodHeader((cls_instance, self.name), dtypes, [] )
         else:
             return FunctionHeader(self.name,
