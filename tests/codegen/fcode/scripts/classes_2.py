@@ -2,21 +2,21 @@
 from numpy import ones
 
 class Point(object):
-    def __init__(self : Point, x : 'float[:]'):
+    def __init__(self : 'Point', x : 'float[:]'):
         self.x = x
 
-    def __del__(self : Point):
+    def __del__(self : 'Point'):
         pass
 
-    def translate(self : Point, a : 'float[:]'):
+    def translate(self : 'Point', a : 'float[:]'):
         self.x = self.x + a
 
 
 class Points(object):
-    def __init__(self : Points, x : Point):
+    def __init__(self : 'Points', x : Point):
         self.x = x
 
-    def __del__(self : Points):
+    def __del__(self : 'Points'):
         pass
 
 x = ones(4)
