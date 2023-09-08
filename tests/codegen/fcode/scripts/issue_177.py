@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 # coding: utf-8
-# pylint: disable=unused-variable
 
 from numpy import zeros
 from numpy import ones
@@ -11,6 +10,7 @@ def test_1():
 
     y = zeros((5,7))
     yp = y
+    return xp[0], yp[0,0]
 
 
 class Coords:
@@ -21,4 +21,4 @@ m = ones(5)
 coor = Coords(m)
 print(coor.major_radius)
 
-test_1()
+print(test_1())
