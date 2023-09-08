@@ -1,10 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 # coding: utf-8
 
-#$ header class Line(public)
-#$ header method __init__(Line, int, int, int)
-#$ header method __del__(Line)
-
 class Line(object):
     def __init__(self : 'Line', a : int, b : int, step : int):
         self.a = a
