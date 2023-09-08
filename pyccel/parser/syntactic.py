@@ -757,7 +757,6 @@ class SyntaxParser(BasicParser):
 
                 if results:
                     txt += ' results(' + ','.join(results) + ')'
-                print(txt)
 
                 header = hdr_parse(stmts=txt)
                 headers += [header]
