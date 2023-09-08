@@ -6,7 +6,7 @@
 #$ header method __del__(Square)
 
 class Square(object):
-    def __init__(self, starts, stops, steps):
+    def __init__(self : 'Square', starts : 'int[:]', stops : 'int[:]', steps : 'int[:]'):
         self.starts = starts
         self.stops  = stops
         self.steps  = steps
@@ -16,7 +16,7 @@ class Square(object):
 
         self.indices = tensor (self.rx, self.ry)
 
-    def __del__(self):
+    def __del__(self : 'Square'):
         pass
 
 starts = zeros(2, int)
