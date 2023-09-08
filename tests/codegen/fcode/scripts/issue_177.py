@@ -14,7 +14,7 @@ def test_1():
 
 
 class Coords:
-    def __init__(self 'Coords', m : 'float[:]'):
+    def __init__(self : 'Coords', m : 'float[:]'):
         self.major_radius = m
 
 m = ones(5)
