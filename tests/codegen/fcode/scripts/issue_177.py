@@ -13,10 +13,8 @@ def test_1():
     yp = y
 
 
-#$ header class Coords(public)
-#$ header method __init__(Coords, double [:])
 class Coords:
-    def __init__(self, m):
+    def __init__(self 'Coords', m : 'float[:]'):
         self.major_radius = m
 
 m = ones(5)
