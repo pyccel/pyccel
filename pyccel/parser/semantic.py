@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
@@ -131,7 +131,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
-        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_MISSING_HEADER, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
@@ -3132,13 +3132,6 @@ class SemanticParser(BasicParser):
         self.scope.insert_template(expr)
         return expr
 
-    def _visit_ClassHeader(self, expr):
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
-        return expr
-
     def _visit_Return(self, expr):
 
         results     = expr.expr
@@ -3547,50 +3540,39 @@ class SemanticParser(BasicParser):
         #      - wouldn't be better if it is done inside ClassDef?
 
         name = expr.name
-        # remove quotes for str representation
-        name = name.replace("'", '')
+
+        #  create a new Datatype for the current class
+        dtype = DataTypeFactory(name, '_name')
+        self.scope.cls_constructs[name] = dtype
 
         parent = self._find_superclasses(expr)
 
-        cls = ClassDef(name, [], [], superclasses=parent)
-        self.scope.insert_class(cls)
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
         cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
-        self.scope.update_class(cls)
+        self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
-        const = None
+        init_func = None
 
         for (i, method) in enumerate(methods):
             m_name = method.name
             if m_name == '__init__':
                 self._visit_FunctionDef(method)
                 methods.pop(i)
-                const = self.scope.functions.pop(m_name)
+                init_func = self.scope.functions.pop(m_name)
                 break
 
-
-
-        if not const:
+        if not init_func:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error')
 
         for i in methods:
             self._visit_FunctionDef(i)
-            self.scope.functions.pop(i.name)
-
-        header = self.get_headers(name)
-
-        if not header:
-            errors.report(PYCCEL_MISSING_HEADER, symbol=name,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal')
 
         self.exit_class_scope()
-        self.scope.update_class(cls)
 
         return EmptyNode()
 
