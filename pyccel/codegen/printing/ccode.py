@@ -1563,14 +1563,17 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['complex'])
             else:
                 self.add_import(c_imports['math'])
-        args = []
-        for arg in expr.args:
-            if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
-                args.append(self._print(NumpyFloat(arg)))
-            else:
-                args.append(self._print(arg))
+        if expr.dtype is NativeComplex():
+            args = [self._print(a) for a in expr.args]
+        else:
+            args = []
+            for arg in expr.args:
+                if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
+                    args.append(self._print(NumpyFloat(arg)))
+                else:
+                    args.append(self._print(arg))
         code_args = ', '.join(args)
-        if expr.dtype == NativeInteger():
+        if expr.dtype is NativeInteger():
             cast_type = self.find_in_dtype_registry('int', expr.precision)
             return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
