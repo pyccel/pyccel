@@ -19,8 +19,7 @@ from .mathext import math_constants, MathAtan2, MathFunctionBase
 from .mathext import MathIsfinite, MathIsinf, MathIsnan
 
 __all__ = (
-        'CmathFunctionBool',
-        'CmathFunctionComplex',
+        'cmath_mod',
         'CmathAcos',
         'CmathAcosh',
         'CmathAsin',
@@ -30,19 +29,20 @@ __all__ = (
         'CmathCos',
         'CmathCosh',
         'CmathExp',
-        'CmathSin',
-        'CmathSinh',
-        'CmathSqrt',
-        'CmathTan',
-        'CmathTanh',
+        'CmathFunctionBool',
+        'CmathFunctionComplex',
         'CmathIsclose',
         'CmathIsfinite',
         'CmathIsinf',
         'CmathIsnan',
+        'CmathSin',
+        'CmathSinh',
+        'CmathSqrt',
         'CmathPhase',
         'CmathPolar',
         'CmathRect',
-        'cmath_mod'
+        'CmathTan',
+        'CmathTanh',
     )
 
 class CmathFunctionBool(MathFunctionBase):
