@@ -398,13 +398,23 @@ class CmathPhase(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'phase'
-    def __new__(self, z):
+    def __new__(cls, z):
         if z.dtype is not NativeComplex():
             return LiteralFloat(0.0)
         else:
             return MathAtan2(PythonImag(z), PythonReal(z))
 
 class CmathPolar(PyccelInternalFunction):
+    """
+    Class representing a call to the `cmath.polar` function.
+
+    A class which represents a call to the `polar` function from the `cmath` library.
+
+    Parameters
+    ----------
+    z : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'polar'
     _dtype = NativeFloat()
@@ -412,14 +422,23 @@ class CmathPolar(PyccelInternalFunction):
     _shape = (LiteralInteger(2),)
     _rank  = 1
     _order = None
-    #def __new__(self, z):
-    #    x = PythonReal(z)
-    #    y = PythonReal(z)
-    #    r = MathSqrt(PyccelMul(x,x), 
-    #    return PythonTuple(
-    pass
+
+    def __init__(self, z):
+        super().__init__(z)
 
 class CmathRect(PyccelInternalFunction):
+    """
+    Class representing a call to the `cmath.rect` function.
+
+    A class which represents a call to the `rect` function from the `cmath` library.
+
+    Parameters
+    ----------
+    r : PyccelAstNode
+        The first argument to the function, representing the radius.
+    phi : PyccelAstNode
+        The second argument to the function, representing the polar angle.
+    """
     __slots__ = ()
     name = 'rect'
     _dtype = NativeComplex()
@@ -427,6 +446,8 @@ class CmathRect(PyccelInternalFunction):
     _shape = None
     _rank  = 0
     _order = None
+    def __new__(cls, r, phi):
+        return PyccelAdd(PyccelMul(r, MathCos(phi)), PyccelMul(r, MathSin(phi)))
 
 #==============================================================================
 # Dictionary to map cmath functions to classes above
