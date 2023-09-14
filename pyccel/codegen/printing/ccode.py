@@ -185,6 +185,21 @@ math_function_to_c = {
     'MathDegrees'   : 'pyc_degrees',
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
+    # --------------------------- cmath functions --------------------------
+    'CmathAcos'  : 'cacos',
+    'CmathAcosh' : 'cacosh',
+    'CmathAsin'  : 'casin',
+    'CmathAsinh' : 'casinh',
+    'CmathAtan'  : 'catan',
+    'CmathAtanh' : 'catanh',
+    'CmathCos'   : 'ccos',
+    'CmathCosh'  : 'ccosh',
+    'CmathExp'   : 'cexp',
+    'CmathSin'   : 'csin',
+    'CmathSinh'  : 'csinh',
+    'CmathSqrt'  : 'csqrt',
+    'CmathTan'   : 'ctan',
+    'CmathTanh'  : 'ctanh',
 }
 
 c_library_headers = (
@@ -242,7 +257,6 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'math',
                  'string',
                  'ndarrays',
-                 'math',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -1546,7 +1560,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['pyc_math_c'])
         else:
             if expr.dtype is NativeComplex():
-                self.add_import(c_imports['cmath'])
+                self.add_import(c_imports['complex'])
             else:
                 self.add_import(c_imports['math'])
         args = []
