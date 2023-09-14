@@ -416,6 +416,18 @@ def test_atanh_phrase(language):
 
 #------------------------------- Polar functions ------------------------------#
 
+def test_phase_call(language):
+    def phase_call(x : complex):
+        from cmath import phase
+        return phase(x)
+
+    f1 = epyccel(phase_call, language = language)
+    low = -1 + min_float
+    high = 1 - min_float
+    x = uniform(low=low, high=high) + uniform(low=low, high=high)*1j
+    assert isclose(f1(x) , phase_call(x), rtol=RTOL, atol=ATOL).all()
+    assert isinstance(f1(x), type(phase_call(x)))
+
 def test_polar_call(language):
     def polar_call(x : complex):
         from cmath import polar
