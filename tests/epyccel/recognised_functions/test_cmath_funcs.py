@@ -1,13 +1,12 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-import pytest
 from cmath import nanj, infj, pi
-from numpy.random import rand, randint, uniform
+import sys
+
+import pytest
+from numpy.random import rand, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
-
-import sys
 
 RTOL = 1e-13
 ATOL = 1e-14
