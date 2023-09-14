@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   Drop official support for Python 3.7 due to End of Life.
+
 ## \[1.9.1\] - 2023-08-31
 
 ### Added
