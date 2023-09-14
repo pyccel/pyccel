@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-from cmath import nanj, infj
+from cmath import nanj, infj, pi
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
@@ -272,7 +272,7 @@ def test_isfinite_call(language): # isfinite
     # Test infinite number
     assert isfinite_call(infj) == f1(infj)
     # Test negative infinite number
-    assert(isfinite_call(-infj) == f1(-infj))
+    assert isfinite_call(-infj) == f1(-infj)
 
 #------------------------------- isinf function ------------------------------#
 @pytest.mark.parametrize( 'language', (
@@ -298,7 +298,7 @@ def test_isinf_call(language): # isinf
     # Test infinite number
     assert isinf_call(infj) == f1(infj)
     # Test negative infinite number
-    assert(isinf_call(-infj) == f1(-infj))
+    assert isinf_call(-infj) == f1(-infj)
 
 #------------------------------- isnan function ------------------------------#
 
@@ -329,7 +329,7 @@ def test_isnan_call(language): # isnan
     # Test infinite number
     assert isnan_call(infj) == f1(infj)
     # Test negative infinite number
-    assert(isnan_call(-infj) == f1(-infj))
+    assert isnan_call(-infj) == f1(-infj)
 
 #------------------------------- Acosh function ------------------------------#
 
@@ -371,7 +371,7 @@ def test_asinh_call(language):
     assert isinstance(f1(x), type(asinh_call(x)))
 
     # Negative value
-    assert(isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL))
+    assert isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL)
 
 def test_asinh_phrase(language):
     def asinh_phrase(x : complex, y : complex):
@@ -384,7 +384,7 @@ def test_asinh_phrase(language):
     y = uniform(high=max_float) + uniform(high=max_float)*1j
     assert isclose(f2(x,y), asinh_phrase(x,y), rtol=RTOL, atol=ATOL)
     # Negative value
-    assert(isclose(f2(-x,-y), asinh_phrase(-x,-y), rtol=RTOL, atol=ATOL))
+    assert isclose(f2(-x,-y), asinh_phrase(-x,-y), rtol=RTOL, atol=ATOL)
 
 #------------------------------- Atanh function ------------------------------#
 
@@ -415,7 +415,7 @@ def test_atanh_phrase(language):
     y = uniform(low=low, high=high) + uniform(low=low, high=high)*1j
     assert isclose(f2(x, y), atanh_phrase(x, y), rtol=RTOL, atol=ATOL)
 
-#------------------------------- Polar function ------------------------------#
+#------------------------------- Polar functions ------------------------------#
 
 def test_polar_call(language):
     def polar_call(x : complex):
@@ -427,5 +427,16 @@ def test_polar_call(language):
     low = -1 + min_float
     high = 1 - min_float
     x = uniform(low=low, high=high) + uniform(low=low, high=high)*1j
-    assert(isclose(f1(x) , polar_call(x), rtol=RTOL, atol=ATOL).all())
+    assert isclose(f1(x) , polar_call(x), rtol=RTOL, atol=ATOL).all()
     assert isinstance(f1(x), type(polar_call(x)))
+
+def test_rect_call(language):
+    def rect_call(r : float, phi : float):
+        from cmath import rect
+        return rect(r, phi)
+
+    f1 = epyccel(rect_call, language = language)
+    r = uniform(low=0, high=max_float)
+    phi = uniform(low=-2*pi, high=2*pi)
+    assert isclose(f1(r, phi) , rect_call(r, phi), rtol=RTOL, atol=ATOL)
+    assert isinstance(f1(r, phi), type(rect_call(r, phi)))
