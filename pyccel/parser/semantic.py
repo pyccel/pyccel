@@ -2297,6 +2297,15 @@ class SemanticParser(BasicParser):
         self.insert_import('math', AsName(MathSin, 'sin'))
         return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
 
+    def _visit_CmathPhase(self, expr):
+        arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
+        var = arg.value
+        if var.dtype is not NativeComplex():
+            return LiteralFloat(0.0)
+        else:
+            self.insert_import('math', AsName(MathAtan2, 'atan2'))
+            return MathAtan2(PythonImag(var), PythonReal(var))
+
     def _visit_Lambda(self, expr):
         expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
         var_names = map(str, expr.variables)

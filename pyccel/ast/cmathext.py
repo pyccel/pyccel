@@ -412,11 +412,8 @@ class CmathPhase(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'phase'
-    def __new__(cls, z):
-        if z.dtype is not NativeComplex():
-            return LiteralFloat(0.0)
-        else:
-            return MathAtan2(PythonImag(z), PythonReal(z))
+    def __init__(self, z):
+        super().__init__(z)
 
 class CmathPolar(PyccelInternalFunction):
     """
