@@ -247,11 +247,15 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
-        type_annotation = ''
         default = ''
 
         if expr.annotation:
-            type_annotation = f' : {expr.annotation}'
+            type_annotation = self._print(expr.annotation)
+        else:
+            type_annotation = str(expr.dtype)
+            if expr.rank:
+                type_annotation += '[' + ','.join(':' for _ in range(expr.rank)) + ']'
+            type_annotation = f"'{type_annotation}'"
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -259,7 +263,7 @@ class PythonCodePrinter(CodePrinter):
             else:
                 default = f' = {self._print(expr.value)}'
 
-        return f'{name}{type_annotation}{default}'
+        return f'{name} : {type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -353,7 +357,7 @@ class PythonCodePrinter(CodePrinter):
                         args = []
                     else:
                         args = [LiteralString(a) for a in func]
-                    if n == 'types' and len(args)==0:
+                    if n == 'types':
                         continue
                     if args:
                         args = ', '.join(self._print(i) for i in args)
