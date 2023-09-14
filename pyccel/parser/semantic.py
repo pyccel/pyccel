@@ -2284,6 +2284,8 @@ class SemanticParser(BasicParser):
         self._additional_exprs[-1].append(Assign(y_var, y))
         r = MathSqrt(PyccelAdd(PyccelMul(x_var,x_var), PyccelMul(y_var,y_var)))
         t = MathAtan2(y_var, x_var)
+        self.insert_import('math', AsName(MathSqrt, 'sqrt'))
+        self.insert_import('math', AsName(MathAtan2, 'atan2'))
         return PythonTuple(r,t)
 
     def _visit_Lambda(self, expr):
