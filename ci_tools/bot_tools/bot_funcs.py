@@ -15,7 +15,7 @@ default_python_versions = {
         'coverage': '3.8',
         'docs': '3.8',
         'linux': '3.8',
-        'macosx': '3.10',
+        'macosx': '3.11',
         'pickle_wheel': '3.8',
         'pickle': '3.8',
         'editable_pickle': '3.8',
