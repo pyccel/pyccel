@@ -46,6 +46,17 @@ __all__ = (
     )
 
 class CmathFunctionBool(MathFunctionBase):
+    """
+    Super-class from which functions returning a boolean inherit.
+
+    A super-class from which functions in the `cmath` library which
+    return a boolean should inherit.
+
+    Paramters
+    ---------
+    z : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     _dtype = NativeBool()
     _precision = -1
@@ -53,6 +64,9 @@ class CmathFunctionBool(MathFunctionBase):
 class CmathFunctionComplex(MathFunctionBase):
     """
     Super-class from which functions returning a complex number inherit.
+
+    A super-class from which functions in the `cmath` library which
+    return a complex number should inherit.
 
     Paramters
     ---------
