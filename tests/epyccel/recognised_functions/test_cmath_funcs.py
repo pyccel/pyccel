@@ -368,6 +368,7 @@ def test_acosh_phrase(language):
 
 #------------------------------- Asinh function ------------------------------#
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Windows asinh gives different results to Python")
 def test_asinh_call(language):
     def asinh_call(x : complex):
         from cmath import asinh
@@ -382,6 +383,7 @@ def test_asinh_call(language):
     # Negative value
     assert isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL)
 
+@pytest.mark.skipif(sys.platform == 'win32', reason="Windows asinh gives different results to Python")
 def test_asinh_phrase(language):
     def asinh_phrase(x : complex, y : complex):
         from cmath import asinh
