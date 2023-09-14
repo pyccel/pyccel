@@ -252,10 +252,19 @@ class PythonCodePrinter(CodePrinter):
         if expr.annotation:
             type_annotation = self._print(expr.annotation)
         else:
-            type_annotation = str(expr.dtype)
-            if expr.rank:
-                type_annotation += '[' + ','.join(':' for _ in range(expr.rank)) + ']'
-            type_annotation = f"'{type_annotation}'"
+            var = expr.var
+            def get_type_annotation(var):
+                if isinstance(var, Variable):
+                    type_annotation = str(var.dtype)
+                    if var.rank:
+                        type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
+                    return f"'{type_annotation}'"
+                elif isinstance(var, FunctionAddress):
+                    results = ', '.join(get_type_annotation(r.var) for r in var.results)
+                    arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
+                    return f'"({results})({arguments})"'
+
+            type_annotation = get_type_annotation(var)
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
