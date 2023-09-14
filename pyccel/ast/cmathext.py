@@ -446,8 +446,8 @@ class CmathRect(PyccelInternalFunction):
     _shape = None
     _rank  = 0
     _order = None
-    def __new__(cls, r, phi):
-        return PyccelAdd(PyccelMul(r, MathCos(phi)), PyccelMul(r, MathSin(phi)))
+    def __init__(self, r, phi):
+        super().__init__(r, phi)
 
 #==============================================================================
 # Dictionary to map cmath functions to classes above
