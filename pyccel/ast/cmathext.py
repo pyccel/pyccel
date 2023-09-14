@@ -7,14 +7,43 @@
 
 import cmath
 
+from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import NativeBool, NativeComplex
+from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat
 from pyccel.ast.operators import PyccelOr
 from pyccel.ast.variable  import Constant
 
 from .mathext import math_constants, MathAtan2, MathFunctionBase
 from .mathext import MathIsfinite, MathIsinf, MathIsnan
+
+__all__ = (
+        'CmathFunctionBool',
+        'CmathFunctionComplex',
+        'CmathAcos',
+        'CmathAcosh',
+        'CmathAsin',
+        'CmathAsinh',
+        'CmathAtan',
+        'CmathAtanh',
+        'CmathCos',
+        'CmathCosh',
+        'CmathExp',
+        'CmathSin',
+        'CmathSinh',
+        'CmathSqrt',
+        'CmathTan',
+        'CmathTanh',
+        'CmathIsclose',
+        'CmathIsfinite',
+        'CmathIsinf',
+        'CmathIsnan',
+        'CmathPhase',
+        'CmathPolar',
+        'CmathRect',
+        'cmath_mod'
+    )
 
 class CmathFunctionBool(MathFunctionBase):
     __slots__ = ()
@@ -378,6 +407,11 @@ class CmathPhase(PyccelInternalFunction):
 class CmathPolar(PyccelInternalFunction):
     __slots__ = ()
     name = 'polar'
+    _dtype = NativeFloat()
+    _precision = -1
+    _shape = (LiteralInteger(2),)
+    _rank  = 1
+    _order = None
     #def __new__(self, z):
     #    x = PythonReal(z)
     #    y = PythonReal(z)
@@ -388,7 +422,11 @@ class CmathPolar(PyccelInternalFunction):
 class CmathRect(PyccelInternalFunction):
     __slots__ = ()
     name = 'rect'
-    pass
+    _dtype = NativeComplex()
+    _precision = -1
+    _shape = None
+    _rank  = 0
+    _order = None
 
 #==============================================================================
 # Dictionary to map cmath functions to classes above
