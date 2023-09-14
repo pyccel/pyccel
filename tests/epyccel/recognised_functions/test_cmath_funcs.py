@@ -257,14 +257,17 @@ def test_tanh_phrase(language):
     )
 )
 def test_isfinite_call(language): # isfinite
-    def isfinite_call(x : complex):
+    @template('T', [float, complex])
+    def isfinite_call(x : 'T'):
         from cmath import isfinite
         return isfinite(x)
 
     f1 = epyccel(isfinite_call, language = language)
-    x = rand() + rand()*1j
+    x = rand()
+    y = rand() + rand()*1j
 
     assert isfinite_call(x) == f1(x)
+    assert isfinite_call(y) == f1(y)
 
     # Test not a number
     assert isfinite_call(nanj) == f1(nanj)
@@ -283,14 +286,17 @@ def test_isfinite_call(language): # isfinite
     )
 )
 def test_isinf_call(language): # isinf
-    def isinf_call(x : complex):
+    @template('T', [float, complex])
+    def isinf_call(x : 'T'):
         from cmath import isinf
         return isinf(x)
 
     f1 = epyccel(isinf_call, language = language)
-    x = rand() + rand()*1j
+    x = rand()
+    y = rand() + rand()*1j
 
     assert isinf_call(x) == f1(x)
+    assert isinf_call(y) == f1(y)
 
     # Test not a number
     assert isinf_call(nanj) == f1(nanj)
@@ -314,14 +320,17 @@ def test_isinf_call(language): # isinf
     )
 )
 def test_isnan_call(language): # isnan
-    def isnan_call(x : complex):
+    @template('T', [float, complex])
+    def isnan_call(x : 'T'):
         from cmath import isnan
         return isnan(x)
 
     f1 = epyccel(isnan_call, language = language)
-    x = rand() + rand()*1j
+    x = rand()
+    y = rand() + rand()*1j
 
     assert isnan_call(x) == f1(x)
+    assert isnan_call(y) == f1(y)
 
     # Test not a number
     assert isnan_call(nanj) == f1(nanj)
@@ -417,7 +426,8 @@ def test_atanh_phrase(language):
 #------------------------------- Polar functions ------------------------------#
 
 def test_phase_call(language):
-    def phase_call(x : complex):
+    @template('T', [float, complex])
+    def phase_call(x : 'T'):
         from cmath import phase
         return phase(x)
 
@@ -427,6 +437,10 @@ def test_phase_call(language):
     x = uniform(low=low, high=high) + uniform(low=low, high=high)*1j
     assert isclose(f1(x) , phase_call(x), rtol=RTOL, atol=ATOL).all()
     assert isinstance(f1(x), type(phase_call(x)))
+
+    y = uniform(low=low, high=high)
+    assert isclose(f1(y) , phase_call(y), rtol=RTOL, atol=ATOL).all()
+    assert isinstance(f1(y), type(phase_call(y)))
 
 def test_polar_call(language):
     def polar_call(x : complex):
