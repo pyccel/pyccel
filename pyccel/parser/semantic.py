@@ -2273,7 +2273,6 @@ class SemanticParser(BasicParser):
         return self._handle_function(expr, func, (arg,))
 
     def _visit_CmathPolar(self, expr):
-        func = self.scope.find(expr.funcdef, 'functions')
         arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
         z = arg.value
         x = PythonReal(z)
@@ -2289,7 +2288,6 @@ class SemanticParser(BasicParser):
         return PythonTuple(r,t)
 
     def _visit_CmathRect(self, expr):
-        func = self.scope.find(expr.funcdef, 'functions')
         arg_r, arg_phi = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
         r = arg_r.value
         phi = arg_phi.value
