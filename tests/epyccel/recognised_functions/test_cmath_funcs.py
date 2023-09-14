@@ -302,6 +302,18 @@ def test_isinf_call(language): # isinf
 
 #------------------------------- isnan function ------------------------------#
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="infj not properly passed through"),
+            pytest.mark.c]
+        ),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="infj not properly passed through"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_isnan_call(language): # isnan
     def isnan_call(x : complex):
         from cmath import isnan
