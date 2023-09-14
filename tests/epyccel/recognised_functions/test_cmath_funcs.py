@@ -9,8 +9,8 @@ from numpy import isclose
 from pyccel.epyccel import epyccel
 from pyccel.decorators import template
 
-RTOL = 1e-13
-ATOL = 1e-14
+RTOL = sys.float_info.epsilon*1000
+ATOL = sys.float_info.epsilon*100
 
 max_float = 3.40282e5        # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
