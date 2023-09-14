@@ -11,11 +11,11 @@ from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.internals import PyccelInternalFunction
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat
+from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelOr
 from pyccel.ast.variable  import Constant
 
-from .mathext import math_constants, MathAtan2, MathFunctionBase
+from .mathext import math_constants, MathFunctionBase
 from .mathext import MathIsfinite, MathIsinf, MathIsnan
 
 __all__ = (
