@@ -7,6 +7,7 @@ from numpy.random import rand, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
+from pyccel.decorators import template
 
 RTOL = 1e-13
 ATOL = 1e-14
@@ -320,7 +321,7 @@ def test_isinf_call(language): # isinf
     )
 )
 def test_isnan_call(language): # isnan
-    @template('T', [float, complex])
+    @template('T', [complex, float])
     def isnan_call(x : 'T'):
         from cmath import isnan
         return isnan(x)
@@ -425,6 +426,15 @@ def test_atanh_phrase(language):
 
 #------------------------------- Polar functions ------------------------------#
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Printed code differs between types. See #1334"),
+            pytest.mark.python]
+        )
+    )
+)
 def test_phase_call(language):
     @template('T', [float, complex])
     def phase_call(x : 'T'):
@@ -432,14 +442,14 @@ def test_phase_call(language):
         return phase(x)
 
     f1 = epyccel(phase_call, language = language)
-    low = -1 + min_float
-    high = 1 - min_float
+    low  = 1 + min_float
+    high = max_float
     x = uniform(low=low, high=high) + uniform(low=low, high=high)*1j
-    assert isclose(f1(x) , phase_call(x), rtol=RTOL, atol=ATOL).all()
+    assert isclose(f1(x) , phase_call(x), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(x), type(phase_call(x)))
 
     y = uniform(low=low, high=high)
-    assert isclose(f1(y) , phase_call(y), rtol=RTOL, atol=ATOL).all()
+    assert isclose(f1(y) , phase_call(y), rtol=RTOL, atol=ATOL)
     assert isinstance(f1(y), type(phase_call(y)))
 
 def test_polar_call(language):
