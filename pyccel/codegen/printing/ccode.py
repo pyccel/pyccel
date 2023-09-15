@@ -1568,7 +1568,7 @@ class CCodePrinter(CodePrinter):
         else:
             args = []
             for arg in expr.args:
-                if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
+                if arg.dtype is not NativeFloat() and not func_name.startswith("pyc"):
                     args.append(self._print(NumpyFloat(arg)))
                 else:
                     args.append(self._print(arg))
