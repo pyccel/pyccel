@@ -82,17 +82,20 @@ class MathFunctionBase(PyccelInternalFunction):
     _rank  = 0
     _order = None
 
+
 class MathFunctionFloat(MathFunctionBase):
     __slots__ = ()
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
 
+
 class MathFunctionInt(MathFunctionBase):
     __slots__ = ()
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
+
 
 class MathFunctionBool(MathFunctionBase):
     __slots__ = ()
@@ -118,6 +121,8 @@ class MathAcos    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'acos'
+
+
 class MathAcosh   (MathFunctionFloat):
     """
     Class representing a call to the `math.acosh` function.
@@ -131,6 +136,8 @@ class MathAcosh   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'acosh'
+
+
 class MathAsin    (MathFunctionFloat):
     """
     Class representing a call to the `math.asin` function.
@@ -144,6 +151,8 @@ class MathAsin    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'asin'
+
+
 class MathAsinh   (MathFunctionFloat):
     """
     Class representing a call to the `math.asinh` function.
@@ -157,6 +166,8 @@ class MathAsinh   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'asinh'
+
+
 class MathAtan    (MathFunctionFloat):
     """
     Class representing a call to the `math.atan` function.
@@ -170,10 +181,25 @@ class MathAtan    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atan'
+
+
 class MathAtan2   (MathFunctionFloat):
-    """Represent a call to the atan2 function in the Math library"""
+    """
+    Class representing a call to the `math.atan2` function.
+
+    A class which represents a call to the `atan2` function from the `math` library.
+
+    Parameters
+    ----------
+    y : PyccelAstNode
+        The first expression passed as argument to the function.
+    x : PyccelAstNode
+        The second expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'atan2'
+
+
 class MathAtanh   (MathFunctionFloat):
     """
     Class representing a call to the `math.atanh` function.
@@ -187,6 +213,8 @@ class MathAtanh   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atanh'
+
+
 class MathCopysign(MathFunctionFloat):
     """
     Class representing a call to the `math.copysign` function.
@@ -200,6 +228,8 @@ class MathCopysign(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'copysign'
+
+
 class MathCos     (MathFunctionFloat):
     """
     Class representing a call to the `math.cos` function.
@@ -213,6 +243,8 @@ class MathCos     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'cos'
+
+
 class MathCosh    (MathFunctionFloat):
     """
     Class representing a call to the `math.cosh` function.
@@ -226,6 +258,8 @@ class MathCosh    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'cosh'
+
+
 class MathErf     (MathFunctionFloat):
     """
     Class representing a call to the `math.erf` function.
@@ -239,6 +273,8 @@ class MathErf     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'erf'
+
+
 class MathErfc    (MathFunctionFloat):
     """
     Class representing a call to the `math.erfc` function.
@@ -252,6 +288,8 @@ class MathErfc    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'erfc'
+
+
 class MathExp     (MathFunctionFloat):
     """
     Class representing a call to the `math.exp` function.
@@ -265,10 +303,14 @@ class MathExp     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'exp'
+
+
 class MathExpm1   (MathFunctionFloat):
     """Represent a call to the expm1 function in the Math library"""
     __slots__ = ()
     name = 'expm1'
+
+
 class MathFabs    (MathFunctionFloat):
     """
     Class representing a call to the `math.fabs` function.
@@ -282,6 +324,8 @@ class MathFabs    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fabs'
+
+
 class MathFmod    (MathFunctionFloat):
     """
     Class representing a call to the `math.fmod` function.
@@ -295,6 +339,8 @@ class MathFmod    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fmod'
+
+
 class MathFsum    (MathFunctionFloat):
     """
     Class representing a call to the `math.fsum` function.
@@ -308,6 +354,8 @@ class MathFsum    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fsum'
+
+
 class MathGamma   (MathFunctionFloat):
     """
     Class representing a call to the `math.gamma` function.
@@ -321,6 +369,8 @@ class MathGamma   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'gamma'
+
+
 class MathHypot   (MathFunctionFloat):
     """
     Class representing a call to the `math.hypot` function.
@@ -334,6 +384,8 @@ class MathHypot   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'hypot'
+
+
 class MathLdexp   (MathFunctionFloat):
     """
     Class representing a call to the `math.ldexp` function.
@@ -347,6 +399,8 @@ class MathLdexp   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'ldexp'
+
+
 class MathLgamma  (MathFunctionFloat):
     """
     Class representing a call to the `math.lgamma` function.
@@ -360,6 +414,8 @@ class MathLgamma  (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'lgamma'
+
+
 class MathLog     (MathFunctionFloat):
     """
     Class representing a call to the `math.log` function.
@@ -373,18 +429,53 @@ class MathLog     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'log'
+
+
 class MathLog10   (MathFunctionFloat):
-    """Represent a call to the log10 function in the Math library"""
+    """
+    Class representing a call to the `math.log10` function.
+
+    A class which represents a call to the `log10` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log10'
+
+
 class MathLog1p   (MathFunctionFloat):
-    """Represent a call to the log1p function in the Math library"""
+    """
+    Class representing a call to the `math.log1p` function.
+
+    A class which represents a call to the `log1p` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log1p'
+
+
 class MathLog2    (MathFunctionFloat):
-    """Represent a call to the log2 function in the Math library"""
+    """
+    Class representing a call to the `math.log2` function.
+
+    A class which represents a call to the `log2` function from the `math` library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'log2'
+
+
 class MathPow     (MathFunctionFloat):
     """
     Class representing a call to the `math.pow` function.
@@ -398,6 +489,8 @@ class MathPow     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'pow'
+
+
 class MathSin     (MathFunctionFloat):
     """
     Class representing a call to the `math.sin` function.
@@ -411,6 +504,8 @@ class MathSin     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sin'
+
+
 class MathSinh    (MathFunctionFloat):
     """
     Class representing a call to the `math.sinh` function.
@@ -424,6 +519,8 @@ class MathSinh    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sinh'
+
+
 class MathSqrt    (MathFunctionFloat):
     """
     Class representing a call to the `math.sqrt` function.
@@ -437,6 +534,8 @@ class MathSqrt    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sqrt'
+
+
 class MathTan     (MathFunctionFloat):
     """
     Class representing a call to the `math.tan` function.
@@ -450,6 +549,8 @@ class MathTan     (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'tan'
+
+
 class MathTanh    (MathFunctionFloat):
     """
     Class representing a call to the `math.tanh` function.
@@ -463,6 +564,8 @@ class MathTanh    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'tanh'
+
+
 class MathRemainder (MathFunctionFloat):
     """
     Class representing a call to the `math.remainder` function.
@@ -490,6 +593,8 @@ class MathRadians (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'radians'
+
+
 class MathDegrees (MathFunctionFloat):
     """
     Class representing a call to the `math.degrees` function.
@@ -518,6 +623,8 @@ class MathFactorial(MathFunctionInt):
     """
     __slots__ = ()
     name = 'factorial'
+
+
 class MathGcd      (MathFunctionInt):
     """
     Class representing a call to the `math.gcd` function.
@@ -531,6 +638,8 @@ class MathGcd      (MathFunctionInt):
     """
     __slots__ = ()
     name = 'gcd'
+
+
 class MathLcm      (MathFunctionInt):
     """
     Class representing a call to the `math.lcm` function.
@@ -558,6 +667,8 @@ class MathCeil     (MathFunctionInt):
     """
     __slots__ = ()
     name = 'ceil'
+
+
 class MathFloor    (MathFunctionInt):
     """
     Class representing a call to the `math.floor` function.
@@ -571,6 +682,8 @@ class MathFloor    (MathFunctionInt):
     """
     __slots__ = ()
     name = 'floor'
+
+
 class MathTrunc    (MathFunctionInt):
     """
     Class representing a call to the `math.trunc` function.
@@ -599,6 +712,8 @@ class MathIsclose (MathFunctionBool):
     """
     __slots__ = ()
     name = 'isclose'
+
+
 class MathIsfinite(MathFunctionBool):
     """
     Class representing a call to the `math.isfinite` function.
@@ -612,6 +727,8 @@ class MathIsfinite(MathFunctionBool):
     """
     __slots__ = ()
     name = 'isfinite'
+
+
 class MathIsinf   (MathFunctionBool):
     """
     Class representing a call to the `math.isinf` function.
@@ -625,6 +742,8 @@ class MathIsinf   (MathFunctionBool):
     """
     __slots__ = ()
     name = 'isinf'
+
+
 class MathIsnan   (MathFunctionBool):
     """
     Class representing a call to the `math.isnan` function.
