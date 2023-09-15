@@ -108,7 +108,7 @@ class MathFunctionBool(MathFunctionBase):
 #==============================================================================
 
 # Floating-point result
-class MathAcos    (MathFunctionFloat):
+class MathAcos(MathFunctionFloat):
     """
     Class representing a call to the `math.acos` function.
 
@@ -123,7 +123,7 @@ class MathAcos    (MathFunctionFloat):
     name = 'acos'
 
 
-class MathAcosh   (MathFunctionFloat):
+class MathAcosh(MathFunctionFloat):
     """
     Class representing a call to the `math.acosh` function.
 
@@ -138,7 +138,7 @@ class MathAcosh   (MathFunctionFloat):
     name = 'acosh'
 
 
-class MathAsin    (MathFunctionFloat):
+class MathAsin(MathFunctionFloat):
     """
     Class representing a call to the `math.asin` function.
 
@@ -153,7 +153,7 @@ class MathAsin    (MathFunctionFloat):
     name = 'asin'
 
 
-class MathAsinh   (MathFunctionFloat):
+class MathAsinh(MathFunctionFloat):
     """
     Class representing a call to the `math.asinh` function.
 
@@ -168,7 +168,7 @@ class MathAsinh   (MathFunctionFloat):
     name = 'asinh'
 
 
-class MathAtan    (MathFunctionFloat):
+class MathAtan(MathFunctionFloat):
     """
     Class representing a call to the `math.atan` function.
 
@@ -200,7 +200,7 @@ class MathAtan2   (MathFunctionFloat):
     name = 'atan2'
 
 
-class MathAtanh   (MathFunctionFloat):
+class MathAtanh(MathFunctionFloat):
     """
     Class representing a call to the `math.atanh` function.
 
@@ -230,7 +230,7 @@ class MathCopysign(MathFunctionFloat):
     name = 'copysign'
 
 
-class MathCos     (MathFunctionFloat):
+class MathCos(MathFunctionFloat):
     """
     Class representing a call to the `math.cos` function.
 
@@ -245,7 +245,7 @@ class MathCos     (MathFunctionFloat):
     name = 'cos'
 
 
-class MathCosh    (MathFunctionFloat):
+class MathCosh(MathFunctionFloat):
     """
     Class representing a call to the `math.cosh` function.
 
@@ -260,7 +260,7 @@ class MathCosh    (MathFunctionFloat):
     name = 'cosh'
 
 
-class MathErf     (MathFunctionFloat):
+class MathErf(MathFunctionFloat):
     """
     Class representing a call to the `math.erf` function.
 
@@ -275,7 +275,7 @@ class MathErf     (MathFunctionFloat):
     name = 'erf'
 
 
-class MathErfc    (MathFunctionFloat):
+class MathErfc(MathFunctionFloat):
     """
     Class representing a call to the `math.erfc` function.
 
@@ -290,7 +290,7 @@ class MathErfc    (MathFunctionFloat):
     name = 'erfc'
 
 
-class MathExp     (MathFunctionFloat):
+class MathExp(MathFunctionFloat):
     """
     Class representing a call to the `math.exp` function.
 
@@ -311,7 +311,7 @@ class MathExpm1   (MathFunctionFloat):
     name = 'expm1'
 
 
-class MathFabs    (MathFunctionFloat):
+class MathFabs(MathFunctionFloat):
     """
     Class representing a call to the `math.fabs` function.
 
@@ -326,7 +326,7 @@ class MathFabs    (MathFunctionFloat):
     name = 'fabs'
 
 
-class MathFmod    (MathFunctionFloat):
+class MathFmod(MathFunctionFloat):
     """
     Class representing a call to the `math.fmod` function.
 
@@ -341,7 +341,7 @@ class MathFmod    (MathFunctionFloat):
     name = 'fmod'
 
 
-class MathFsum    (MathFunctionFloat):
+class MathFsum(MathFunctionFloat):
     """
     Class representing a call to the `math.fsum` function.
 
@@ -356,7 +356,7 @@ class MathFsum    (MathFunctionFloat):
     name = 'fsum'
 
 
-class MathGamma   (MathFunctionFloat):
+class MathGamma(MathFunctionFloat):
     """
     Class representing a call to the `math.gamma` function.
 
@@ -371,7 +371,7 @@ class MathGamma   (MathFunctionFloat):
     name = 'gamma'
 
 
-class MathHypot   (MathFunctionFloat):
+class MathHypot(MathFunctionFloat):
     """
     Class representing a call to the `math.hypot` function.
 
@@ -386,7 +386,7 @@ class MathHypot   (MathFunctionFloat):
     name = 'hypot'
 
 
-class MathLdexp   (MathFunctionFloat):
+class MathLdexp(MathFunctionFloat):
     """
     Class representing a call to the `math.ldexp` function.
 
@@ -401,7 +401,7 @@ class MathLdexp   (MathFunctionFloat):
     name = 'ldexp'
 
 
-class MathLgamma  (MathFunctionFloat):
+class MathLgamma(MathFunctionFloat):
     """
     Class representing a call to the `math.lgamma` function.
 
@@ -416,7 +416,7 @@ class MathLgamma  (MathFunctionFloat):
     name = 'lgamma'
 
 
-class MathLog     (MathFunctionFloat):
+class MathLog(MathFunctionFloat):
     """
     Class representing a call to the `math.log` function.
 
@@ -476,7 +476,7 @@ class MathLog2    (MathFunctionFloat):
     name = 'log2'
 
 
-class MathPow     (MathFunctionFloat):
+class MathPow(MathFunctionFloat):
     """
     Class representing a call to the `math.pow` function.
 
@@ -491,7 +491,7 @@ class MathPow     (MathFunctionFloat):
     name = 'pow'
 
 
-class MathSin     (MathFunctionFloat):
+class MathSin(MathFunctionFloat):
     """
     Class representing a call to the `math.sin` function.
 
@@ -506,7 +506,7 @@ class MathSin     (MathFunctionFloat):
     name = 'sin'
 
 
-class MathSinh    (MathFunctionFloat):
+class MathSinh(MathFunctionFloat):
     """
     Class representing a call to the `math.sinh` function.
 
@@ -521,7 +521,7 @@ class MathSinh    (MathFunctionFloat):
     name = 'sinh'
 
 
-class MathSqrt    (MathFunctionFloat):
+class MathSqrt(MathFunctionFloat):
     """
     Class representing a call to the `math.sqrt` function.
 
@@ -536,7 +536,7 @@ class MathSqrt    (MathFunctionFloat):
     name = 'sqrt'
 
 
-class MathTan     (MathFunctionFloat):
+class MathTan(MathFunctionFloat):
     """
     Class representing a call to the `math.tan` function.
 
@@ -551,7 +551,7 @@ class MathTan     (MathFunctionFloat):
     name = 'tan'
 
 
-class MathTanh    (MathFunctionFloat):
+class MathTanh(MathFunctionFloat):
     """
     Class representing a call to the `math.tanh` function.
 
@@ -566,7 +566,7 @@ class MathTanh    (MathFunctionFloat):
     name = 'tanh'
 
 
-class MathRemainder (MathFunctionFloat):
+class MathRemainder(MathFunctionFloat):
     """
     Class representing a call to the `math.remainder` function.
 
@@ -580,7 +580,7 @@ class MathRemainder (MathFunctionFloat):
     __slots__ = ()
     name = 'remainder'
 
-class MathRadians (MathFunctionFloat):
+class MathRadians(MathFunctionFloat):
     """
     Class representing a call to the `math.radians` function.
 
@@ -595,7 +595,7 @@ class MathRadians (MathFunctionFloat):
     name = 'radians'
 
 
-class MathDegrees (MathFunctionFloat):
+class MathDegrees(MathFunctionFloat):
     """
     Class representing a call to the `math.degrees` function.
 
@@ -625,7 +625,7 @@ class MathFactorial(MathFunctionInt):
     name = 'factorial'
 
 
-class MathGcd      (MathFunctionInt):
+class MathGcd(MathFunctionInt):
     """
     Class representing a call to the `math.gcd` function.
 
@@ -640,7 +640,7 @@ class MathGcd      (MathFunctionInt):
     name = 'gcd'
 
 
-class MathLcm      (MathFunctionInt):
+class MathLcm(MathFunctionInt):
     """
     Class representing a call to the `math.lcm` function.
 
@@ -654,7 +654,7 @@ class MathLcm      (MathFunctionInt):
     __slots__ = ()
     name = 'lcm'
 
-class MathCeil     (MathFunctionInt):
+class MathCeil(MathFunctionInt):
     """
     Class representing a call to the `math.ceil` function.
 
@@ -669,7 +669,7 @@ class MathCeil     (MathFunctionInt):
     name = 'ceil'
 
 
-class MathFloor    (MathFunctionInt):
+class MathFloor(MathFunctionInt):
     """
     Class representing a call to the `math.floor` function.
 
@@ -684,7 +684,7 @@ class MathFloor    (MathFunctionInt):
     name = 'floor'
 
 
-class MathTrunc    (MathFunctionInt):
+class MathTrunc(MathFunctionInt):
     """
     Class representing a call to the `math.trunc` function.
 
@@ -699,7 +699,7 @@ class MathTrunc    (MathFunctionInt):
     name = 'trunc'
 
 # Boolean result
-class MathIsclose (MathFunctionBool):
+class MathIsclose(MathFunctionBool):
     """
     Class representing a call to the `math.isclose` function.
 
@@ -729,7 +729,7 @@ class MathIsfinite(MathFunctionBool):
     name = 'isfinite'
 
 
-class MathIsinf   (MathFunctionBool):
+class MathIsinf(MathFunctionBool):
     """
     Class representing a call to the `math.isinf` function.
 
@@ -744,7 +744,7 @@ class MathIsinf   (MathFunctionBool):
     name = 'isinf'
 
 
-class MathIsnan   (MathFunctionBool):
+class MathIsnan(MathFunctionBool):
     """
     Class representing a call to the `math.isnan` function.
 
