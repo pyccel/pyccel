@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   #1513 : Stop printing `@types` decorators in generated Python code.
+
 ## \[1.9.1\] - 2023-08-31
 
 ### Added
