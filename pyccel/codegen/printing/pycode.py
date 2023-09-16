@@ -497,13 +497,22 @@ class PythonCodePrinter(CodePrinter):
                 args = self._print(expr.func_args))
 
     def _print_PythonReal(self, expr):
-        return '({}).real'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.real'.format(self._print(expr.internal_var))
+        else:
+            return '({}).real'.format(self._print(expr.internal_var))
 
     def _print_PythonImag(self, expr):
-        return '({}).imag'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.imag'.format(self._print(expr.internal_var))
+        else:
+            return '({}).imag'.format(self._print(expr.internal_var))
 
     def _print_PythonConjugate(self, expr):
-        return '({}).conjugate()'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.conjugate()'.format(self._print(expr.internal_var))
+        else:
+            return '({}).conjugate()'.format(self._print(expr.internal_var))
 
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))

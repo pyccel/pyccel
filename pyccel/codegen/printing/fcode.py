@@ -155,6 +155,21 @@ math_function_to_fortran = {
     'MathDegrees'   : 'pyc_degrees',
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
+    # --------------------------- cmath functions --------------------------
+    'CmathAcos'  : 'acos',
+    'CmathAcosh' : 'acosh',
+    'CmathAsin'  : 'asin',
+    'CmathAsinh' : 'asinh',
+    'CmathAtan'  : 'atan',
+    'CmathAtanh' : 'atanh',
+    'CmathCos'   : 'cos',
+    'CmathCosh'  : 'cosh',
+    'CmathExp'   : 'exp',
+    'CmathSin'   : 'sin',
+    'CmathSinh'  : 'sinh',
+    'CmathSqrt'  : 'sqrt',
+    'CmathTan'   : 'tan',
+    'CmathTanh'  : 'tanh',
 }
 
 INF = math_constants['inf']
