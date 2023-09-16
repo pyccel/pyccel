@@ -1,12 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from math import nan, inf, modf
+import sys
 import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
+from pyccel.decorators import template
 
-import sys
 
 RTOL = 1e-13
 ATOL = 1e-14
@@ -548,7 +549,6 @@ def test_isfinite_call(language): # isfinite
 
     assert(isfinite_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isfinite_call(nan) == f1(nan))
     # Test infinite number
@@ -575,7 +575,6 @@ def test_isinf_call(language): # isinf
 
     assert(isinf_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isinf_call(nan) == f1(nan))
     # Test infinite number
@@ -595,7 +594,6 @@ def test_isnan_call(language): # isnan
 
     assert(isnan_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isnan_call(nan) == f1(nan))
     # Test infinite number
@@ -933,9 +931,8 @@ def test_log10_phrase(language):
 #--------------------------------- Pow function ------------------------------#
 
 def test_pow_call(language):
-    @types('real', 'real')
-    @types('real', 'int')
-    def pow_call(x, y):
+    @template('T', [int, float])
+    def pow_call(x : float, y : 'T'):
         from math import pow as my_pow
         return my_pow(x, y)
 
@@ -1125,7 +1122,6 @@ def test_gamma_call(language):
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
     assert(isclose(f1(x) , gamma_call(x), rtol=RTOL, atol=ATOL))
-    from math import modf
     # make fractional part different from zero to test negative case
     if modf(x)[0] == 0:
         x += - 0.1
@@ -1158,7 +1154,6 @@ def test_lgamma_call(language):
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
     assert(isclose(f1(x) , lgamma_call(x), rtol=RTOL, atol=ATOL))
-    from math import modf
     _, f = modf(x)
     # make fractional part different from zero to test negative case
     if f == 0:
