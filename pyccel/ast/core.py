@@ -18,7 +18,7 @@ from pyccel.utilities.strings import create_incremented_string
 from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
-from .datatypes import (datatype, DataType, NativeSymbol,
+from .datatypes import (datatype, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
