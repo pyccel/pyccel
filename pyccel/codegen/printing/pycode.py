@@ -511,7 +511,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_PythonConjugate(self, expr):
         internal_var = self._print(expr.internal_var)
         if isinstance(expr.internal_var, Variable):
-            return '{internal_var}.conjugate()'
+            return f'{internal_var}.conjugate()'
         else:
             return f'({internal_var}).conjugate()'
 
