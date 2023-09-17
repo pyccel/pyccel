@@ -314,9 +314,6 @@ class CCodePrinter(CodePrinter):
         if import_obj.source not in self._additional_imports:
             self._additional_imports[import_obj.source] = import_obj
 
-    def _get_comment(self, text):
-        return f"// {text}\n"
-
     def _format_code(self, lines):
         return self.indent_code(lines)
 

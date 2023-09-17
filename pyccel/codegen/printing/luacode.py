@@ -228,9 +228,6 @@ class LuaCodePrinter(CodePrinter):
     def _rate_index_position(self, p):
         return p*5
 
-    def _get_comment(self, text):
-        return "-- %s" % text
-
     def _declare_number_const(self, name, value):
         return "const %s: f64 = %s" % (name, value)
 
