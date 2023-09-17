@@ -319,32 +319,28 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
 
-        method_def_func = ''.join(('{{\n'
-                                     '"{name}",\n'
-                                     '(PyCFunction){wrapper_name},\n'
-                                     'METH_VARARGS | METH_KEYWORDS,\n'
-                                     '{doc_string}\n'
-                                     '}},\n').format(
-                                            name = self.get_python_name(expr.scope, f.original_function),
-                                            wrapper_name = f.name,
-                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                        if f.doc_string else '""')
-                                     for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
+        method_def_func = ''.join(('\n'.join('{',
+                                             '"'+self.get_python_name(expr.scope, f.original_function)+'"',
+                                             f'(PyCFunction){f.name},'
+                                             'METH_VARARGS | METH_KEYWORDS,'
+                                             self._print(LiteralString('\n'.join(f.doc_string.comments))) \
+                                                        if f.doc_string else '""'
+                                             '},') for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
 
-        slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
+        slots_name = self.scope.get_new_name(f'{expr.name}_slots')
         exec_func_name = expr.init_func.name
         slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
                      f'{{Py_mod_exec, {exec_func_name}}},\n'
                      '{0, NULL},\n'
                      '};\n')
 
-        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_func}'
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        module_def_name = self.scope.get_new_name('{}_module'.format(expr.name))
+        module_def_name = self.scope.get_new_name(f'{expr.name}_module')
         module_def = (f'static struct PyModuleDef {module_def_name} = {{\n'
                 'PyModuleDef_HEAD_INIT,\n'
                 '/* name of module */\n'
