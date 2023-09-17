@@ -258,10 +258,10 @@ class LiteralImaginaryUnit(LiteralComplex):
         The precision of the complex. The default is Python built-in precision.
     """
     __slots__ = ()
-    def __new__(cls):
-        return super().__new__(cls, 0, 1)
+    def __new__(cls, precision = -1):
+        return super().__new__(cls, 0, 1, precision=precision)
 
-    def __init__(self, real=0, imag=1, precision = -1):
+    def __init__(self, precision = -1):
         super().__init__(0, 1, precision=precision)
 
     @property
@@ -383,19 +383,19 @@ def convert_to_literal(value, dtype = None, precision = None):
     Parameters
     ----------
     value : int/float/complex/bool/str
-                The Python value.
+        The Python value.
     dtype : DataType
-                The datatype of the Python value.
-                Default : Matches type of 'value'.
+        The datatype of the Python value.
+        Default : Matches type of 'value'.
     precision : int
-                The precision of the value in the generated code.
-                Default : Python precision (see default_precision).
+        The precision of the value in the generated code.
+        Default : Python precision (see default_precision).
 
     Returns
     -------
-    literal_val : Literal
-                  The Python value 'value' expressed as a literal
-                  with the specified dtype and precision.
+    Literal
+        The Python value 'value' expressed as a literal
+        with the specified dtype and precision.
     """
     from .operators import PyccelUnarySub # Imported here to avoid circular import
 

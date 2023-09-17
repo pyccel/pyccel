@@ -147,6 +147,13 @@ class AsName(Basic):
     A class representing how a variable or class is renamed. This
     occurs during an import.
 
+    Parameters
+    ----------
+    obj : Basic or BasicType
+         The variable, function, or module being renamed.
+    target : str
+         The name of the variable or function in this context.
+
     Examples
     --------
     >>> from pyccel.ast.core import AsName, FunctionDef
@@ -156,13 +163,6 @@ class AsName(Basic):
     old as new
     >>> AsName(NumpyFull, 'fill_func')
     full as fill_func
-
-    Parameters
-    ----------
-    obj : Basic or BasicType
-         The variable, function, or module being renamed.
-    target : str
-         The name of the variable or function in this context.
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -292,6 +292,8 @@ class Concatenate(PyccelAstNode):
 
 class Assign(Basic):
     """
+    Represents variable assignment for code generation.
+
     Represents variable assignment for code generation.
 
     Parameters
@@ -552,6 +554,11 @@ class CodeBlock(Basic):
     ----------
     body : iterable
         The lines of code to be grouped together.
+
+    unravelled : bool, default=False
+        Indicates whether the loops in the code have already been unravelled.
+        This is useful for printing in languages which don't support vector
+        expressions.
     """
     __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
@@ -650,7 +657,6 @@ class AliasAssign(Basic):
     >>> x = Variable('int', 'x', rank=1, shape=[n])
     >>> y = Variable('int', 'y', rank=1, shape=[n])
     >>> AliasAssign(y, x)
-
     """
     __slots__ = ('_lhs','_rhs')
     _attribute_nodes = ('_lhs','_rhs')
@@ -690,7 +696,7 @@ class SymbolicAssign(Basic):
     Parameters
     ----------
     lhs : PyccelSymbol
-        Why not a Variable?
+        Why not a Variable? To be investigated.
 
     rhs : Range
         Apparently a range.
@@ -745,7 +751,10 @@ class AugAssign(Assign):
         Operator (+, -, /, \*, %).
 
     rhs : PyccelAstNode
-        Object representing the rhs of the expression
+        Object representing the rhs of the expression.
+
+    ast : ast.AST
+        The AST node where the object appeared in the original code.
 
     Examples
     --------
@@ -939,13 +948,13 @@ class Block(ScopedNode):
 
     Parameters
     ----------
-    variables: list
+    variables : list
         List of the variables that appear in the block.
 
-    declarations: list
+    declarations : list
         List of declarations of the variables that appear in the block.
 
-    body: list
+    body : list
         A list of statements.
 
     scope : Scope
@@ -1650,7 +1659,7 @@ class FunctionCallArgument(Basic):
     is called.
 
     Parameters
-    ---------
+    ----------
     value : PyccelAstNode
         The expression passed as an argument.
     keyword : str
@@ -2153,7 +2162,7 @@ class Return(Basic):
     expr : PyccelAstNode
         The expression to return.
 
-    stmts : CodeBlock, optional
+    stmt : CodeBlock, optional
         Any statements which must be executed in order to be able to return the
         necessary expression.
     """
@@ -2904,7 +2913,7 @@ class Interface(Basic):
 
     def point(self, args, use_final_precision = False):
         """
-        Returns the actual function that will be called, depending on the passed arguments.
+        Get the actual function that will be called, depending on the passed arguments.
 
         From the arguments passed, determine and return the relevant function which should
         be called.
@@ -3332,7 +3341,7 @@ class ClassDef(ScopedNode):
 
     def get_attribute(self, O, attr):
         """
-        Returns the attribute `attr` of the instance `O` of class `self`.
+        Get the attribute `attr` of the instance `O` of class `self`.
 
         Get the attribute `attr` from this class definition (stored in `self`)
         and use it to return the attribute of the instance `O`.
@@ -4168,7 +4177,7 @@ class If(Basic):
 
     Parameters
     ----------
-    args : IfSection
+    *args : IfSections
            All arguments are sections of the complete If block.
 
     Examples
