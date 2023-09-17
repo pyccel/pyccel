@@ -476,9 +476,9 @@ class CCodePrinter(CodePrinter):
         declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
 
         lhs_code = self._print(lhs)
-        fill_val = self._print(rhs.fill_value)
 
         if rhs.fill_value is not None:
+            fill_val = self._print(rhs.fill_value)
             if isinstance(rhs.fill_value, Literal):
                 code_init += f'array_fill(({declare_dtype}){fill_val}, {lhs_code});\n'
             else:
@@ -511,15 +511,15 @@ class CCodePrinter(CodePrinter):
         dummy_array_name = self.scope.get_new_name('array_dummy')
         buffer_array = f"{dtype} {dummy_array_name}[{tot_shape}];\n"
         shape_init = f"({declare_dtype}[]){{{shape}}}"
-        strides_init = f"({declare_dtype}[{var.shape}]){{0}}"
-        array_init = '\n'.join(' = (t_ndarray){',
-                               f'.{np_dtype}={dummy_array_name},',
-                               f'.shape={shape_init},',
-                               f'.strides={strides_init},',
-                               f'.nd={len(var.shape)},',
-                               f'.type={np_dtype},',
-                               ".is_view='false'",
-                               '};\n')
+        strides_init = f"({declare_dtype}[{len(var.shape)}]){{0}}"
+        array_init = '\n'.join((' = (t_ndarray){',
+                                f'.{np_dtype}={dummy_array_name},',
+                                f'.shape={shape_init},',
+                                f'.strides={strides_init},',
+                                f'.nd={len(var.shape)},',
+                                f'.type={np_dtype},',
+                                ".is_view=false",
+                                '};\n'))
         array_init += f'stack_array_init(&{self._print(var)})\n'
         self.add_import(c_imports['ndarrays'])
         return buffer_array, array_init
@@ -651,7 +651,7 @@ class CCodePrinter(CodePrinter):
         arg = expr.args[0]
         if arg.dtype is NativeFloat() and len(arg) == 2:
             self.add_import(c_imports['math'])
-            return "fmax({self._print(arg[0])}, {self._print(arg[1])})"
+            return f"fmax({self._print(arg[0])}, {self._print(arg[1])})"
         elif arg.dtype is NativeInteger() and len(arg) == 2:
             arg1 = self.scope.get_temporary_variable(NativeInteger())
             arg2 = self.scope.get_temporary_variable(NativeInteger())
