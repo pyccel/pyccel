@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unused `Declare.dtype`.
 -   \[INTERNALS\] Remove unused functions `subs`, `inline`, `get_iterable_ranges` from `pyccel.ast.core`.
 -   \[INTERNALS\] Remove unused class `pyccel.ast.core.ForIterator`.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 
 ## \[1.9.1\] - 2023-08-31
 

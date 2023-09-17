@@ -364,12 +364,6 @@ class Assign(Basic):
     def rhs(self):
         return self._rhs
 
-    # TODO : remove
-
-    @property
-    def expr(self):
-        return self.rhs
-
     @property
     def is_alias(self):
         """Returns True if the assignment is an alias."""
