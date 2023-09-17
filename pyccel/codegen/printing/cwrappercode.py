@@ -320,7 +320,7 @@ class CWrapperCodePrinter(CCodePrinter):
         function_defs = '\n'.join(self._print(f) for f in funcs)
 
         method_def_func = ''.join('\n'.join(('{',
-                                            '"'+self.get_python_name(expr.scope, f.original_function)+'"',
+                                            '"'+self.get_python_name(expr.scope, f.original_function)+'",',
                                             f'(PyCFunction){f.name},',
                                             'METH_VARARGS | METH_KEYWORDS,',
                                             self._print(LiteralString('\n'.join(f.doc_string.comments))) \
