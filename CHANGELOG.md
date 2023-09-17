@@ -21,6 +21,8 @@ All notable changes to this project will be documented in this file.
 ### Deprecated
 
 -   #1513 : Stop printing `@types` decorators in generated Python code.
+-   Removed support for untested, undocumented `lambidify` function.
+-   \[INTERNALS\] Remove unused `Declare.dtype`.
 
 ## \[1.9.1\] - 2023-08-31
 
@@ -74,7 +76,6 @@ All notable changes to this project will be documented in this file.
 -   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Stop generating `numpy.bool` (deprecated from NumPy) in code.
--   Removed support for untested, undocumented `lambidify` function.
 -   \[INTERNALS\] Removed `obsolete` folder.
 -   \[INTERNALS\] Removed out of date `samples` folder.
 -   \[INTERNALS\] Removed out of date `doc` folder.
@@ -82,7 +83,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed `bugs` folder.
 -   \[INTERNALS\] Removed `inprogress` folder.
 -   \[INTERNALS\] Remove old Travis configuration file.
--   \[INTERNALS\] Remove unused `Declare.dtype`.
 
 ## \[1.8.1\] - 2023-07-07
 
