@@ -429,18 +429,20 @@ class SemanticParser(BasicParser):
 
     def insert_import(self, name, target, storage_name = None):
         """
+        Insert a new import into the scope.
+
         Create and insert a new import in scope if it's not defined
         otherwise append target to existing import.
 
         Parameters
         ----------
         name : str-like
-               The source from which the object is imported
+               The source from which the object is imported.
         target : AsName
-               The imported object
+               The imported object.
         storage_name : str-like
                 The name which will be used to identify the Import in the
-                container
+                container.
         """
         source = _get_name(name)
         if storage_name is None:
@@ -1287,18 +1289,18 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         dtype : DataType
-                The inferred DataType
+            The inferred DataType.
         d_var : dict
-                The inferred information about the variable. Usually created by the _infer_type function
-        var   : Variable
-                The existing variable
+            The inferred information about the variable. Usually created by the _infer_type function.
+        var : Variable
+            The existing variable.
         is_augassign : bool
-                A boolean indicating if the assign statement is an augassign (tests are less strict)
+            A boolean indicating if the assign statement is an augassign (tests are less strict).
         new_expressions : list
-                A list to which any new expressions created are appended
-        rhs   : PyccelAstNode
-                The right hand side of the expression : lhs=rhs
-                If is_augassign is False, this value is not used
+            A list to which any new expressions created are appended.
+        rhs : PyccelAstNode
+            The right hand side of the expression : lhs=rhs.
+            If is_augassign is False, this value is not used.
         """
         precision = d_var.get('precision',None)
         internal_precision = default_precision[str(dtype)] if precision == -1 else precision

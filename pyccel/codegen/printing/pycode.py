@@ -111,19 +111,22 @@ class PythonCodePrinter(CodePrinter):
 
     def _find_functional_expr_and_iterables(self, expr):
         """
+        Find the expression and any iterables in a FunctionalFor.
+
         Traverse through the loop representing a FunctionalFor or GeneratorComprehension
-        to extract the central expression and the different iterable objects
+        to extract the central expression and the different iterable objects.
 
         Parameters
         ----------
         expr : FunctionalFor
+            The expression describing the FunctionalFor.
 
         Returns
         -------
-        body      : PyccelAstNode
-                    The expression inside the for loops
+        body : PyccelAstNode
+            The expression inside the for loops.
         iterables : list of Iterables
-                    The iterables over which the for loops iterate
+            The iterables over which the for loops iterate.
         """
         dummy_var = expr.index
         iterables = []

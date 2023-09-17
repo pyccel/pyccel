@@ -357,6 +357,8 @@ class BasicParser(object):
 
     def create_new_class_scope(self, name, **kwargs):
         """
+        Create a new scope for a Python class.
+
         Create a new Scope object for a Python class with the given name,
         and attach any decorators' information to the scope. The new scope is
         a child of the current one, and can be accessed from the dictionary of
@@ -371,6 +373,8 @@ class BasicParser(object):
         name : str
             Function's name, used as a key to retrieve the new scope.
 
+        **kwargs : dict
+            A dictionary containing any additional arguments of the new scope.
         """
         child = self.scope.new_child_scope(name, **kwargs)
         self._scope = child
@@ -386,11 +390,13 @@ class BasicParser(object):
         """
         Dump the current ast using Pickle.
 
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
+        Dump the current ast using Pickle.
+
+        Parameters
+        ----------
+        filename : str
+            Output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel).
         """
         if self._created_from_pickle:
             return
@@ -433,13 +439,16 @@ class BasicParser(object):
             warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
 
     def load(self, filename=None):
-        """ Load the current ast using Pickle.
+        """
+        Load the current ast using Pickle.
 
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
+        Load the current ast using Pickle.
+
+        Parameters
+        ----------
+        filename : str
+            Output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel).
         """
 
         # ...

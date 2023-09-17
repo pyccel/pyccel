@@ -459,16 +459,20 @@ class CCodePrinter(CodePrinter):
         return operations
 
     def arrayFill(self, expr):
-        """ print the assignment of a NdArray
+        """
+        Print the assignment of a NdArray.
 
-        parameters
+        Print the assignment of a NdArray that is filled with a default value.
+
+        Parameters
         ----------
-            expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs
-        Return
-        ------
-            String
-                Return a str that contains a call to the C function array_fill,
+        expr : PyccelAstNode
+            The Assign Node used to get the lhs and rhs.
+
+        Returns
+        -------
+        str
+            Return a string that contains a call to the C function array_fill.
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -1301,21 +1305,25 @@ class CCodePrinter(CodePrinter):
 
 
     def _cast_to(self, expr, dtype, precision):
-        """ add cast to an expression when needed
-        parameters
-        ----------
-            expr      : PyccelAstNode
-                the expression to be cast
-            dtype     : Datatype
-                base type of the cast
-            precision : integer
-                precision of the base type of the cast
+        """
+        Add a cast to an expression if needed.
 
-        Return
-        ------
-            String
-                Return format string that contains the desired cast type
-                NB: You should insert the expression to be cast in the string after using this function.
+        Get a format string which will cast an expression to a specified dtype and precision.
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The expression to be cast.
+        dtype : Datatype
+            The type to cast to.
+        precision : integer
+            The precision to cast to.
+
+        Returns
+        -------
+        str
+            Return format string that contains the desired cast type.
+            NB: You should insert the expression to be cast in the string after using this function.
         """
         if (expr.dtype != dtype or expr.precision != precision):
             cast=self.find_in_dtype_registry(self._print(dtype), precision)

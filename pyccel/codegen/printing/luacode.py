@@ -198,7 +198,20 @@ reserved_words = ['local',
 errors = Errors()
 
 class LuaCodePrinter(CodePrinter):
-    """A printer to convert python expressions to strings of Lua code"""
+    """
+    A printer for printing code in Lua.
+
+    A printer to convert Pyccel's AST to strings of Python code.
+    As for all printers the navigation of this file is done via _print_X
+    functions.
+
+    This file is entirely untested and should probably be removed.
+
+    Parameters
+    ----------
+    settings : dict
+        The settings.
+    """
     printmethod = "_lua_code"
     language = "Lua"
 

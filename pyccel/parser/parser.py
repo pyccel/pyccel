@@ -181,24 +181,26 @@ class Parser(object):
         self._sons.append(son)
 
     def parse_sons(self, d_parsers_by_filename, verbose=False):
-        """Recursive algorithm for syntax analysis on a given file and its
+        """
+        Parse the files on which this file is dependent.
+
+        Recursive algorithm for syntax analysis on a given file and its
         dependencies.
         This function always terminates with an dict that contains parsers
         for all involved files.
 
-         Parameters
-         ----------
-         d_parsers_by_filename : dict
-          A dictionary of parsed sons.
+        Parameters
+        ----------
+        d_parsers_by_filename : dict
+            A dictionary of parsed sons.
 
-        verbose: bool
-          Determine the verbosity.
+        verbose : bool, default=False
+            Set the verbosity.
 
-         Results
-         -------
-         d_parsers: dict
-          The updated dictionary of parsed sons.
-
+        Results
+        -------
+        d_parsers : dict
+            The updated dictionary of parsed sons.
         """
 
         imports     = self.imports
