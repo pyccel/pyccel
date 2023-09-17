@@ -66,7 +66,7 @@ class PyccelInvert(PyccelUnaryOperator):
         """
         dtype = NativeInteger()
         if arg.dtype not in (NativeInteger(), NativeBool()):
-            raise TypeError(f'unsupported operand type(s): {args}')
+            raise TypeError(f'unsupported operand type(s): {arg}')
 
         self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
         precision = arg.precision
