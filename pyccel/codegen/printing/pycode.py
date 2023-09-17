@@ -263,6 +263,8 @@ class PythonCodePrinter(CodePrinter):
                     results = ', '.join(get_type_annotation(r.var) for r in var.results)
                     arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
                     return f'"({results})({arguments})"'
+                else:
+                    return ''
 
             type_annotation = get_type_annotation(var)
 

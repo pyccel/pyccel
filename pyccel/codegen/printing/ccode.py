@@ -628,7 +628,7 @@ class CCodePrinter(CodePrinter):
             func = "cabs"
         else:
             func = "labs"
-        return "{func}({self._print(expr.arg)})"
+        return f"{func}({self._print(expr.arg)})"
 
     def _print_PythonMin(self, expr):
         arg = expr.args[0]
@@ -1664,6 +1664,7 @@ class CCodePrinter(CodePrinter):
         start = self._print(expr.start)
         step  = self._print(expr.step)
         index = self._print(expr.ind)
+        dtype = self._print(expr.dtype)
         stop = self._cast_to(expr.stop, dtype, expr.precision).format(self._print(expr.stop))
 
         init_value = f'({start} + {index}*{step})'
@@ -1677,8 +1678,6 @@ class CCodePrinter(CodePrinter):
                 condition = lhs + f' = {stop}'
             else:
                 condition = lhs + f' = {self._print(expr.endpoint)} ? {stop} : ' + lhs
-
-        dtype = self._print(expr.dtype)
 
         if isinstance(expr.endpoint, LiteralFalse):
             code = init_value
