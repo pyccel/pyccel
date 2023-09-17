@@ -141,9 +141,11 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
 
 
 class AsName(Basic):
-
     """
-    Represents a renaming of a variable, used with Import.
+    Represents a renaming of a variable or function.
+
+    A class representing how a variable or class is renamed. This
+    occurs during an import.
 
     Examples
     --------
@@ -156,11 +158,11 @@ class AsName(Basic):
     full as fill_func
 
     Parameters
-    ==========
-    obj    : Basic or BasicType
-             The variable, function, or module being renamed
+    ----------
+    obj : Basic or BasicType
+         The variable, function, or module being renamed.
     target : str
-             name of variable or function in this context
+         The name of the variable or function in this context.
     """
     __slots__ = ('_obj', '_target')
     _attribute_nodes = ()
@@ -218,15 +220,19 @@ class AsName(Basic):
 
 
 class Duplicate(PyccelAstNode):
+    """
+    Class representing the duplication of a Python tuple.
 
-    """ this is equivalent to the * operator for python tuples.
+    A class representing the duplication of an object. This is equivalent
+    to the `*` operator for Python tuples.
 
     Parameters
     ----------
-    value : PyccelAstNode
-           an expression which represents the initilized value of the list
+    val : PyccelAstNode
+        The expression being duplicated.
 
-    shape : the shape of the array
+    length : PyccelAstNode
+        The number of times the expression should be duplicated.
     """
     __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order')
     _attribute_nodes = ('_val', '_length')
@@ -285,8 +291,8 @@ class Concatenate(PyccelAstNode):
 
 
 class Assign(Basic):
-
-    """Represents variable assignment for code generation.
+    """
+    Represents variable assignment for code generation.
 
     Parameters
     ----------
@@ -297,20 +303,13 @@ class Assign(Basic):
            include PyccelSymbol, and IndexedElement. Types that
            subclass these types are also supported.
         In the semantic stage:
-           Variable or IndexedElement
+           Variable or IndexedElement.
 
     rhs : PyccelAstNode
         In the syntactic stage:
-          Object representing the rhs of the expression
+          Object representing the rhs of the expression.
         In the semantic stage :
-          PyccelAstNode with the same shape as the lhs
-
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
-
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+          PyccelAstNode with the same shape as the lhs.
 
     ast : ast.AST
         The AST node where the object appeared in the original code.
@@ -331,15 +330,13 @@ class Assign(Basic):
     >>> Assign(A[0,1], x)
     IndexedElement(A, 0, 1) := x
     """
-    __slots__ = ('_lhs', '_rhs', '_status', '_like')
+    __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
 
     def __init__(
         self,
         lhs,
         rhs,
-        status=None,
-        like=None,
         *,
         ast = None
         ):
@@ -349,8 +346,6 @@ class Assign(Basic):
             rhs = PythonTuple(*rhs)
         self._lhs = lhs
         self._rhs = rhs
-        self._status = status
-        self._like = like
         super().__init__()
         if ast is not None:
             self.ast = ast
@@ -374,14 +369,6 @@ class Assign(Basic):
     @property
     def expr(self):
         return self.rhs
-
-    @property
-    def status(self):
-        return self._status
-
-    @property
-    def like(self):
-        return self._like
 
     @property
     def is_alias(self):
@@ -790,8 +777,6 @@ class AugAssign(Assign):
         lhs,
         op,
         rhs,
-        status=None,
-        like=None,
         *,
         ast = None
         ):
@@ -801,7 +786,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, ast=ast)
+        super().__init__(lhs, rhs, ast=ast)
 
     def __repr__(self):
         return f'{self.lhs} {self.op}= {self.rhs}'
