@@ -1688,7 +1688,7 @@ class FCodePrinter(CodePrinter):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = []
-        for c in expr.arg:
+        for c in expr.python_value:
             if c in sp_chars:
                 if sub_str != '':
                     formatted_str.append("'{sub_str}'")
