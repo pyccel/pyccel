@@ -497,6 +497,8 @@ class Allocate(Basic):
 #------------------------------------------------------------------------------
 class Deallocate(Basic):
     """
+    Represent the deallocation of memory.
+
     Represents memory deallocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory deallocation.
@@ -510,7 +512,6 @@ class Deallocate(Basic):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable',)
     _attribute_nodes = ('_variable',)
@@ -541,18 +542,19 @@ class Deallocate(Basic):
 
 #------------------------------------------------------------------------------
 class CodeBlock(Basic):
+    """
+    Represents a block of statements.
 
-    """Represents a list of stmt for code generation.
-       we use it when a single statement in python
-       produce multiple statement in the targeted language
+    Represents a list of statements for code generation. Each statement
+    represents a line of code.
 
-       Parameters
-       ==========
-       body : iterable
+    Parameters
+    ----------
+    body : iterable
+        The lines of code to be grouped together.
     """
     __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
-
 
     def __init__(self, body, unravelled = False):
         ls = []
@@ -625,19 +627,19 @@ class CodeBlock(Basic):
                 l.ast = ast_node
 
 class AliasAssign(Basic):
+    """
+    Represent the assignment of a pointer to an address.
 
-    """Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
+    Represents aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where `lhs` and `rhs` share memory after this statement.
 
     Parameters
     ----------
-    lhs : PyccelSymbol
-        at this point we don't know yet all information about lhs, this is why a
-        PyccelSymbol is the appropriate type.
+    lhs : Variable
+        The pointer variable being assigned to.
 
     rhs : Variable, IndexedElement
-        an assignable variable can be of any rank and any datatype, however its
-        shape must be known (not None)
+        The object whose memory will be shared with the `lhs` pointer.
 
     Examples
     --------
@@ -646,7 +648,7 @@ class AliasAssign(Basic):
     >>> from pyccel.ast.core import Variable
     >>> n = Variable('int', 'n')
     >>> x = Variable('int', 'x', rank=1, shape=[n])
-    >>> y = PyccelSymbol('y')
+    >>> y = Variable('int', 'y', rank=1, shape=[n])
     >>> AliasAssign(y, x)
 
     """
@@ -654,12 +656,11 @@ class AliasAssign(Basic):
     _attribute_nodes = ('_lhs','_rhs')
 
     def __init__(self, lhs, rhs):
-        if pyccel_stage == 'semantic':
-            if not lhs.is_alias:
-                raise TypeError('lhs must be a pointer')
+        if not lhs.is_alias:
+            raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
-                raise TypeError("A pointer cannot point to the address of a temporary variable")
+        if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
+            raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
         self._rhs = rhs
@@ -678,15 +679,21 @@ class AliasAssign(Basic):
 
 
 class SymbolicAssign(Basic):
+    """
+    Represents symbolic aliasing for code generation.
 
-    """Represents symbolic aliasing for code generation. An alias is any statement of the
+    Represents symbolic aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
+
+    This code needs investigating to find out if it is still useful.
 
     Parameters
     ----------
     lhs : PyccelSymbol
+        Why not a Variable?
 
     rhs : Range
+        Apparently a range.
 
     Examples
     --------
@@ -696,7 +703,6 @@ class SymbolicAssign(Basic):
     >>> r = Range(0, 3)
     >>> y = PyccelSymbol('y')
     >>> SymbolicAssign(y, r)
-
     """
     __slots__ = ('_lhs', '_rhs')
     _attribute_nodes = ('_lhs', '_rhs')
@@ -722,32 +728,24 @@ class AugAssign(Assign):
     r"""
     Represents augmented variable assignment for code generation.
 
+    Represents augmented variable assignment for code generation.
+    Augmented variable assignment is an assignment which modifies the
+    variable using its initial value rather than simply replacing the
+    value; for example via an addition (`+=`).
+
     Parameters
     ----------
-    lhs : PyccelAstNode
-        In the syntactic stage:
-           Object representing the lhs of the expression. These should be
-           singular objects, such as one would use in writing code. Notable types
-           include PyccelSymbol, and IndexedElement. Types that
-           subclass these types are also supported.
-        In the semantic stage:
-           Variable or IndexedElement
+    lhs : PyccelSymbol | PyccelAstNode
+        Object representing the lhs of the expression.
+        In the syntactic stage this may be a PyccelSymbol, or an IndexedElement.
+        In later stages the object should inherit from PyccelAstNode and be fully
+        typed.
 
     op : str
         Operator (+, -, /, \*, %).
 
     rhs : PyccelAstNode
-        In the syntactic stage:
-          Object representing the rhs of the expression
-        In the semantic stage :
-          PyccelAstNode with the same shape as the lhs
-
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
-
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+        Object representing the rhs of the expression
 
     Examples
     --------
@@ -933,19 +931,25 @@ class With(ScopedNode):
 # TODO add a name to a block?
 
 class Block(ScopedNode):
+    """
+    Represents a block in the code.
 
-    """Represents a block in the code. A block consists of the following inputs
+    Represents a block in the code. A block consists of the inputs described
+    in the parameters.
 
     Parameters
     ----------
     variables: list
-        list of the variables that appear in the block.
+        List of the variables that appear in the block.
 
     declarations: list
-        list of declarations of the variables that appear in the block.
+        List of declarations of the variables that appear in the block.
 
     body: list
-        a list of statements
+        A list of statements.
+
+    scope : Scope
+        The scope of the block.
 
     Examples
     --------
@@ -994,6 +998,11 @@ class Block(ScopedNode):
 
     @property
     def declarations(self):
+        """
+        The declarations of the variables in the block.
+
+        The declarations of the variables in the block.
+        """
         return [Declare(i) for i in self.variables]
 
 
@@ -1224,7 +1233,10 @@ class Module(ScopedNode):
 
     @property
     def declarations(self):
-        """ Returns the declarations of the variables
+        """
+        Returns the declarations of the variables.
+
+        Returns the declarations of the module variables.
         """
         return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
@@ -1413,10 +1425,12 @@ class Program(ScopedNode):
 #==============================================================================
 class Iterable(Basic):
     """
-    Wrapper around iterable types helping to convert between those
-    types and a range (necessary in low level languages, e.g. C and Fortran)
+    A wrapper around iterable types.
 
-    Paramaters
+    Wrapper around iterable types helping to convert between those
+    types and a range (necessary in low level languages, e.g. C and Fortran).
+
+    Parameters
     ----------
     iterable : acceptable_iterator_type
                The iterator being wrapped
@@ -1630,15 +1644,18 @@ class DoConcurrent(For):
 
 class FunctionCallArgument(Basic):
     """
-    An argument passed in a function call
+    An argument passed in a function call.
+
+    A class representing an argument passed when a function
+    is called.
 
     Parameters
     ---------
-    value   : PyccelAstNode
-              The expression passed as an argument
+    value : PyccelAstNode
+        The expression passed as an argument.
     keyword : str
-              If the argument is passed by keyword then this
-              is that keyword
+        If the argument is passed by keyword then this
+        is that keyword.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
@@ -2126,15 +2143,19 @@ class ConstructorCall(DottedFunctionCall):
 
 
 class Return(Basic):
+    """
+    Represents a function return in the code.
 
-    """Represents a function return in the code.
+    Represents a return from a function in the code.
 
     Parameters
     ----------
     expr : PyccelAstNode
         The expression to return.
 
-    stmts :represent assign stmts in the case of expression return
+    stmts : CodeBlock, optional
+        Any statements which must be executed in order to be able to return the
+        necessary expression.
     """
     __slots__ = ('_expr', '_stmt')
     _attribute_nodes = ('_expr', '_stmt')
@@ -2819,8 +2840,12 @@ class PyccelFunctionDef(FunctionDef):
         return self._argument_description
 
 class Interface(Basic):
+    """
+    Represents an Interface.
 
-    """Represents an Interface.
+    Represents a function which can take multiple different types. Following
+    the Fortran nomenclature this is called an interface. It contains multiple
+    functions handling each of the acceptable argument types.
 
     Parameters
     ----------
@@ -2830,7 +2855,7 @@ class Interface(Basic):
     functions : iterable
         The functions of the interface.
 
-    is_argument: bool
+    is_argument : bool
         True if the interface is used for a function argument.
 
     Examples
@@ -2878,7 +2903,28 @@ class Interface(Basic):
         return self._functions[0].doc_string
 
     def point(self, args, use_final_precision = False):
-        """Returns the actual function that will be called, depending on the passed arguments."""
+        """
+        Returns the actual function that will be called, depending on the passed arguments.
+
+        From the arguments passed, determine and return the relevant function which should
+        be called.
+
+        Parameters
+        ----------
+        args : iterable of FunctionCallArguments
+            The arguments passed to the function.
+
+        use_final_precision : bool, default=False
+            Indicates if functions should be considered matching if they have identical
+            precision. This is useful in the printing stage to avoid printing multiple
+            functions with the same prototype (e.g. when handling `float64` and the
+            default `float`).
+
+        Returns
+        -------
+        FunctionDef
+            The function which should be called by these arguments.
+        """
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
@@ -2911,7 +2957,7 @@ class Interface(Basic):
         if found:
             return  self._functions[j]
         else:
-            errors.report(f'Arguments types provided to {self.name} are incompatible',
+            raise errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
 
 class FunctionAddress(FunctionDef):
@@ -3285,7 +3331,20 @@ class ClassDef(ScopedNode):
         self._interfaces += (interface,)
 
     def get_attribute(self, O, attr):
-        """Returns the attribute attr of the class O of instance self."""
+        """
+        Returns the attribute `attr` of the instance `O` of class `self`.
+
+        Get the attribute `attr` from this class definition (stored in `self`)
+        and use it to return the attribute of the instance `O`.
+
+        Parameters
+        ----------
+        O : Variable
+            The instance of this class whose attribute we are interested in.
+
+        attr : str
+            The name of the attribute we are looking for.
+        """
 
         if not isinstance(attr, str):
             raise TypeError('Expecting attribute to be a string')
@@ -3396,19 +3455,23 @@ class ClassDef(ScopedNode):
 
 
 class Import(Basic):
+    """
+    Represents inclusion of dependencies in the code.
 
-    """Represents inclusion of dependencies in the code.
+    Represents the import of dependencies from other modules or
+    librareis.
 
     Parameters
     ----------
     source : str, DottedName, AsName
-        the module from which we import
+        The name of the module from which we import.
     target : str, AsName, list, tuple
-        targets to import
+        The objects imported from the source.
     ignore_at_print : bool
-        indicates whether the import should be printed
-    mod : Module
-        The module describing the source
+        Indicates whether the import should be printed.
+    mod : Module, optional
+        The module describing the source. This should be provided
+        where possible.
 
     Examples
     --------
@@ -3434,7 +3497,7 @@ class Import(Basic):
 
         self._source = source
         self._target = set()
-        self._source_mod      = mod
+        self._source_mod = mod
         self._ignore_at_print = ignore_at_print
         if target is None:
             if pyccel_stage == "syntactic":
@@ -3531,18 +3594,20 @@ class Import(Basic):
 # TODO: Should Declare have an optional init value for each var?
 
 class FuncAddressDeclare(Basic):
+    """
+    Represents a FunctionAddress declaration in the code.
 
-    """Represents a FunctionAddress declaration in the code.
+    Represents a FunctionAddress declaration in the code.
 
     Parameters
     ----------
-    variable:
+    variable : Variable
         An instance of FunctionAddress.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: PyccelAstNode
-        variable value
-    static: bool
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : PyccelAstNode
+        Variable value.
+    static : bool
         True for a static declaration of an array.
 
     Examples
@@ -3748,13 +3813,15 @@ class Raise(Basic):
 
 
 class SymbolicPrint(Basic):
+    """
+    Represents a print function of symbolic expressions in the code.
 
-    """Represents a print function of symbolic expressions in the code.
+    Represents a print function of symbolic expressions in the code.
 
     Parameters
     ----------
     expr : PyccelAstNode
-        The expression to print
+        The expression to print.
 
     Examples
     --------
@@ -3846,13 +3913,15 @@ class EmptyNode(Basic):
 
 
 class Comment(Basic):
+    """
+    Represents a Comment in the code.
 
-    """Represents a Comment in the code.
+    Represents a Comment in the code.
 
     Parameters
     ----------
     text : str
-       the comment line
+       The comment line.
 
     Examples
     --------
@@ -4036,16 +4105,19 @@ class ErrorExit(Exit):
     __slots__ = ()
 
 class IfSection(Basic):
-    """Represents a condition and associated code block
-    in an if statement in the code.
+    """
+    Represents a section of an if/elif/else block.
+
+    Represents a condition and associated code block in an if statement
+    in the code.
 
     Parameters
     ----------
     cond : PyccelAstNode
            A boolean expression indicating whether or not the block
-           should be executed
+           should be executed.
     body : CodeBlock
-           The code to be executed in the condition is satisfied
+           The code to be executed in the condition is satisfied.
 
     Examples
     --------
@@ -4089,13 +4161,15 @@ class IfSection(Basic):
         return f"IfSec({self.condition},{self.body})"
 
 class If(Basic):
+    """
+    Represents an `if` block in the code.
 
-    """Represents a if statement in the code.
+    Represents a block of `if`/`elif`/`else` statements in the code.
 
     Parameters
     ----------
     args : IfSection
-           All arguments are sections of the complete If block
+           All arguments are sections of the complete If block.
 
     Examples
     --------

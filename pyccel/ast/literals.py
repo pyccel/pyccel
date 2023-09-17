@@ -383,19 +383,19 @@ def convert_to_literal(value, dtype = None, precision = None):
     Parameters
     ----------
     value : int/float/complex/bool/str
-                The Python value
+                The Python value.
     dtype : DataType
-                The datatype of the Python value
-                Default : Matches type of 'value'
+                The datatype of the Python value.
+                Default : Matches type of 'value'.
     precision : int
-                The precision of the value in the generated code
-                Default : Python precision (see default_precision)
+                The precision of the value in the generated code.
+                Default : Python precision (see default_precision).
 
     Returns
     -------
     literal_val : Literal
                   The Python value 'value' expressed as a literal
-                  with the specified dtype and precision
+                  with the specified dtype and precision.
     """
     from .operators import PyccelUnarySub # Imported here to avoid circular import
 
