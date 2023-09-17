@@ -2213,12 +2213,12 @@ class CCodePrinter(CodePrinter):
         imports = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
-        return ''.join(imports,
+        return ''.join((imports,
                        'int main()\n{\n',
                        decs,
                        body,
                        'return 0;\n',
-                       '}')
+                       '}'))
 
     #================== CLASSES ==================
 
