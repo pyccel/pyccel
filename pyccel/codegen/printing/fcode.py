@@ -45,7 +45,7 @@ from pyccel.ast.builtins  import (PythonInt, PythonType,
                                   PythonFloat, PythonTuple)
 from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
-from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
+from pyccel.ast.datatypes import is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
@@ -1812,7 +1812,6 @@ class FCodePrinter(CodePrinter):
         out_args = [r.var for r in expr.results if not r.is_argument]
         args_decs = OrderedDict()
         arguments = expr.arguments
-        argument_vars = [a.var for a in arguments]
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -2021,7 +2020,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.clone(j.name) for j in i.functions]
 
-        methods = '\n{sep}\n'.join(self._print(f) for f in cls_methods)
+        methods = f'\n{sep}\n'.join(self._print(f) for f in cls_methods)
 
         self.set_current_class(None)
 
@@ -2154,7 +2153,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ...
-        return ''.join((prolog, body, epilog))
+        return ''.join((prolog, loop, epilog))
 
     def _print_ACC_Async(self, expr):
         args = ', '.join(self._print(i) for i in expr.variables)
