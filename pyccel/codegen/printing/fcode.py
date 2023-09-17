@@ -80,7 +80,6 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 
 # TODO: add examples
-# TODO: use _get_statement when returning a string
 
 __all__ = ["FCodePrinter", "fcode"]
 
@@ -295,9 +294,6 @@ class FCodePrinter(CodePrinter):
             return self.get_function(name.name[-1])
         errors.report(UNDEFINED_FUNCTION, symbol=name,
             severity='fatal')
-
-    def _get_statement(self, codestring):
-        return codestring
 
     def _format_code(self, lines):
         return self._wrap_fortran(self.indent_code(lines))
@@ -608,7 +604,7 @@ class FCodePrinter(CodePrinter):
 
         # in some cases, the source is given as a string (when using metavar)
         code = code.replace("'", '')
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
     def _print_PythonPrint(self, expr):
         end = LiteralString('\n')
@@ -774,7 +770,7 @@ class FCodePrinter(CodePrinter):
     def _print_SymbolicPrint(self, expr):
         # for every expression we will generate a print
         code = '\n'.join("print *, 'sympy> {}'".format(a) for a in expr.expr)
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
@@ -1267,7 +1263,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'min('+code+')'
-        return self._get_statement(code)
+        return code
 
     def _print_PythonMax(self, expr):
         args = expr.args
@@ -1277,7 +1273,7 @@ class FCodePrinter(CodePrinter):
         else:
             code = ','.join(self._print(arg) for arg in args)
             code = 'max('+code+')'
-        return self._get_statement(code)
+        return code
 
     # ... MACROS
     def _print_MacroShape(self, expr):
@@ -1512,7 +1508,7 @@ class FCodePrinter(CodePrinter):
                                           op=op,
                                           rhs=self._print(expr.rhs))
 
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
     def _print_CodeBlock(self, expr):
         if not expr.unravelled:
@@ -1641,7 +1637,7 @@ class FCodePrinter(CodePrinter):
 #                else:
 #            print('code_args > {0}'.format(code_args))
 #            code = 'call {0}({1})'.format(rhs_code, code_args)
-        return self._get_statement(code) + '\n'
+        return code + '\n'
 
 #------------------------------------------------------------------------------
     def _print_Allocate(self, expr):
@@ -2178,7 +2174,7 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
         # ...
 
-        return self._get_statement(code)
+        return code
 
     def _print_ACC_For(self, expr):
         # ...
@@ -2197,7 +2193,7 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, loop=loop, epilog=epilog)
         # ...
 
-        return self._get_statement(code)
+        return code
 
     def _print_ACC_Async(self, expr):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
@@ -2689,7 +2685,7 @@ class FCodePrinter(CodePrinter):
 				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
-        return self._get_statement(code)
+        return code
 
     def _print_NumpySign(self, expr):
         """ Print the corresponding Fortran function for a call to Numpy.sign
@@ -2814,7 +2810,7 @@ class FCodePrinter(CodePrinter):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
-        return self._get_statement(code)
+        return code
 
     def _print_LiteralImaginaryUnit(self, expr):
         """ purpose: print complex numbers nicely in Fortran."""
