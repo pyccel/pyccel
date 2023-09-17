@@ -251,13 +251,18 @@ class LiteralImaginaryUnit(LiteralComplex):
     Represents the Python value j.
 
     Represents the imaginary unit.
+
+    Parameters
+    ----------
+    precision : int, optional
+        The precision of the complex. The default is Python built-in precision.
     """
     __slots__ = ()
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self):
-        super().__init__(0, 1)
+    def __init__(self, real=0, imag=1, precision = -1):
+        super().__init__(0, 1, precision=precision)
 
     @property
     def python_value(self):
@@ -299,7 +304,7 @@ class LiteralString(Literal):
 
     @property
     def python_value(self):
-        return self.arg
+        return self._string
 
 #------------------------------------------------------------------------------
 
