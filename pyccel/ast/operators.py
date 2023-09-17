@@ -3,7 +3,7 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-Module handling all python builtin operators
+Module handling all Python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, precision, rank, shape
@@ -225,7 +225,7 @@ class PyccelOperator(PyccelAstNode):
 #==============================================================================
 
 class PyccelUnaryOperator(PyccelOperator):
-    """ Abstract superclass representing a python
+    """ Abstract superclass representing a Python
     operator with only one argument.
 
     Parameters
@@ -262,7 +262,7 @@ class PyccelUnaryOperator(PyccelOperator):
 
 class PyccelUnary(PyccelUnaryOperator):
     """
-    Class representing a call to the python positive operator.
+    Class representing a call to the Python positive operator.
     I.e:
         +a
     is equivalent to:
@@ -287,7 +287,7 @@ class PyccelUnary(PyccelUnaryOperator):
 
 class PyccelUnarySub(PyccelUnary):
     """
-    Class representing a call to the python negative operator.
+    Class representing a call to the Python negative operator.
     I.e:
         -a
     is equivalent to:
@@ -307,7 +307,7 @@ class PyccelUnarySub(PyccelUnary):
 
 class PyccelNot(PyccelUnaryOperator):
     """
-    Class representing a call to the python not operator.
+    Class representing a call to the Python not operator.
     I.e:
         not a
     is equivalent to:
@@ -366,7 +366,7 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
 #==============================================================================
 
 class PyccelBinaryOperator(PyccelOperator):
-    """ Abstract superclass representing a python
+    """ Abstract superclass representing a Python
     operator with two arguments
 
     Parameters
@@ -469,7 +469,7 @@ class PyccelBinaryOperator(PyccelOperator):
 
 class PyccelArithmeticOperator(PyccelBinaryOperator):
     """
-    Abstract superclass representing a python arithmetic operator.
+    Abstract superclass representing a Python arithmetic operator.
 
     This class is necessary to handle specific precedence
     rules for arithmetic operators.
@@ -493,9 +493,9 @@ class PyccelArithmeticOperator(PyccelBinaryOperator):
 
 class PyccelPow(PyccelArithmeticOperator):
     """
-    Class representing a call to the python exponent operator.
+    Class representing a call to the Python exponent operator.
 
-    Class representing a call to the python exponent operator.
+    Class representing a call to the Python exponent operator.
     I.e:
         a ** b
     is equivalent to:
@@ -534,9 +534,9 @@ class PyccelPow(PyccelArithmeticOperator):
 
 class PyccelAdd(PyccelArithmeticOperator):
     """
-    Class representing a call to the python addition operator.
+    Class representing a call to the Python addition operator.
 
-    Class representing a call to the python addition operator.
+    Class representing a call to the Python addition operator.
     I.e:
         a + b
     is equivalent to:
@@ -597,9 +597,9 @@ class PyccelAdd(PyccelArithmeticOperator):
 
 class PyccelMul(PyccelArithmeticOperator):
     """
-    Class representing a call to the python multiplication operator.
+    Class representing a call to the Python multiplication operator.
 
-    Class representing a call to the python multiplication operator.
+    Class representing a call to the Python multiplication operator.
     I.e:
         a * b
     is equivalent to:
@@ -647,9 +647,9 @@ class PyccelMul(PyccelArithmeticOperator):
 
 class PyccelMinus(PyccelArithmeticOperator):
     """
-    Class representing a call to the python subtraction operator.
+    Class representing a call to the Python subtraction operator.
 
-    Class representing a call to the python subtraction operator.
+    Class representing a call to the Python subtraction operator.
     I.e:
         a - b
     is equivalent to:
@@ -697,9 +697,9 @@ class PyccelMinus(PyccelArithmeticOperator):
 
 class PyccelDiv(PyccelArithmeticOperator):
     """
-    Class representing a call to the python division operator.
+    Class representing a call to the Python division operator.
 
-    Class representing a call to the python division operator.
+    Class representing a call to the Python division operator.
     I.e:
         a / b
     is equivalent to:
@@ -740,9 +740,9 @@ class PyccelDiv(PyccelArithmeticOperator):
 
 class PyccelMod(PyccelArithmeticOperator):
     """
-    Class representing a call to the python modulo operator.
+    Class representing a call to the Python modulo operator.
 
-    Class representing a call to the python modulo operator.
+    Class representing a call to the Python modulo operator.
     I.e:
         a % b
     is equivalent to:
@@ -765,9 +765,9 @@ class PyccelMod(PyccelArithmeticOperator):
 
 class PyccelFloorDiv(PyccelArithmeticOperator):
     """
-    Class representing a call to the python integer division operator.
+    Class representing a call to the Python integer division operator.
 
-    Class representing a call to the python integer division operator.
+    Class representing a call to the Python integer division operator.
     I.e:
         a // b
     is equivalent to:
@@ -790,7 +790,7 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
 class PyccelComparisonOperator(PyccelBinaryOperator):
     """
-    Abstract superclass representing a python comparison operator with two arguments.
+    Abstract superclass representing a Python comparison operator with two arguments.
 
     Parameters
     ----------
@@ -811,9 +811,9 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
 
 class PyccelEq(PyccelComparisonOperator):
     """
-    Class representing a call to the python equality operator.
+    Class representing a call to the Python equality operator.
 
-    Class representing a call to the python equality operator.
+    Class representing a call to the Python equality operator.
     I.e:
         a == b
     is equivalent to:
@@ -845,9 +845,9 @@ class PyccelEq(PyccelComparisonOperator):
 
 class PyccelNe(PyccelComparisonOperator):
     """
-    Class representing a call to the python inequality operator.
+    Class representing a call to the Python inequality operator.
 
-    Class representing a call to the python inequality operator.
+    Class representing a call to the Python inequality operator.
     I.e:
         a != b
     is equivalent to:
@@ -879,9 +879,9 @@ class PyccelNe(PyccelComparisonOperator):
 
 class PyccelLt(PyccelComparisonOperator):
     """
-    Class representing a call to the python less than operator.
+    Class representing a call to the Python less than operator.
 
-    Class representing a call to the python less than operator.
+    Class representing a call to the Python less than operator.
     I.e:
         a < b
     is equivalent to:
@@ -901,9 +901,9 @@ class PyccelLt(PyccelComparisonOperator):
 
 class PyccelLe(PyccelComparisonOperator):
     """
-    Class representing a call to the python less or equal operator.
+    Class representing a call to the Python less or equal operator.
 
-    Class representing a call to the python less or equal operator.
+    Class representing a call to the Python less or equal operator.
     I.e:
         a <= b
     is equivalent to:
@@ -923,9 +923,9 @@ class PyccelLe(PyccelComparisonOperator):
 
 class PyccelGt(PyccelComparisonOperator):
     """
-    Class representing a call to the python greater than operator.
+    Class representing a call to the Python greater than operator.
 
-    Class representing a call to the python greater than operator.
+    Class representing a call to the Python greater than operator.
     I.e:
         a > b
     is equivalent to:
@@ -945,9 +945,9 @@ class PyccelGt(PyccelComparisonOperator):
 
 class PyccelGe(PyccelComparisonOperator):
     """
-    Class representing a call to the python greater or equal operator.
+    Class representing a call to the Python greater or equal operator.
 
-    Class representing a call to the python greater or equal operator.
+    Class representing a call to the Python greater or equal operator.
     I.e:
         a >= b
     is equivalent to:
@@ -968,7 +968,7 @@ class PyccelGe(PyccelComparisonOperator):
 #==============================================================================
 
 class PyccelBooleanOperator(PyccelOperator):
-    """ Abstract superclass representing a python
+    """ Abstract superclass representing a Python
     boolean operator with two arguments
 
     Parameters
@@ -999,9 +999,9 @@ class PyccelBooleanOperator(PyccelOperator):
 
 class PyccelAnd(PyccelBooleanOperator):
     """
-    Class representing a call to the python AND operator.
+    Class representing a call to the Python AND operator.
 
-    Class representing a call to the python AND operator.
+    Class representing a call to the Python AND operator.
     I.e:
         a and b
     is equivalent to:
@@ -1028,9 +1028,9 @@ class PyccelAnd(PyccelBooleanOperator):
 
 class PyccelOr(PyccelBooleanOperator):
     """
-    Class representing a call to the python OR operator.
+    Class representing a call to the Python OR operator.
 
-    Class representing a call to the python OR operator.
+    Class representing a call to the Python OR operator.
     I.e:
         a or b
     is equivalent to:
