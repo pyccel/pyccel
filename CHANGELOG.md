@@ -23,6 +23,8 @@ All notable changes to this project will be documented in this file.
 -   #1513 : Stop printing `@types` decorators in generated Python code.
 -   Removed support for untested, undocumented `lambidify` function.
 -   \[INTERNALS\] Remove unused `Declare.dtype`.
+-   \[INTERNALS\] Remove unused functions `subs`, `inline`, `get_iterable_ranges` from `pyccel.ast.core`.
+-   \[INTERNALS\] Remove unused class `pyccel.ast.core.ForIterator`.
 
 ## \[1.9.1\] - 2023-08-31
 

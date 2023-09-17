@@ -16,7 +16,6 @@ import functools
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
-from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
@@ -2291,52 +2290,6 @@ class FCodePrinter(CodePrinter):
         args = ', '.join(self._print(i) for i in expr.variables)
         return f'worker({args})'
     # .....................................................
-
-    def _print_ForIterator(self, expr):
-        return self._print_For(expr)
-
-        prolog = ''
-        epilog = ''
-
-        # ...
-        def _do_range(target, iterable, prolog, epilog):
-            tar        = self._print(target)
-            range_code = self._print(iterable)
-
-            prolog += f'do {tar} = {range_code}\n'
-            epilog = 'end do\n' + epilog
-
-            return prolog, epilog
-        # ...
-
-        # ...
-        if not isinstance(expr.iterable, (Variable, ConstructorCall)):
-            raise TypeError('iterable must be Variable or ConstructorCall.')
-        # ...
-
-        # ...
-        targets = expr.target
-        if isinstance(expr.iterable, Variable):
-            iters = expr.ranges
-        elif isinstance(expr.iterable, ConstructorCall):
-            iters = get_iterable_ranges(expr.iterable)
-        # ...
-
-        # ...
-        for i,a in zip(targets, iters):
-            prolog, epilog = _do_range(i, a, \
-                                       prolog, epilog)
-
-        body = ''.join(self._print(i) for i in expr.body)
-        # ...
-
-        return ''.join((prolog, body, epilog))
-
-
-    #def _print_Block(self, expr):
-    #    body    = '\n'.join(self._print(i) for i in expr.body)
-    #    prelude = '\n'.join(self._print(i) for i in expr.declarations)
-    #    return prelude, body
 
     def _print_While(self,expr):
         self.set_scope(expr.scope)
