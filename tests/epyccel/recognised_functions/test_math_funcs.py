@@ -1,12 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from math import nan, inf, modf
+import sys
 import pytest
 from numpy.random import rand, randint, uniform
 from numpy import isclose
 
-from pyccel.decorators import types
 from pyccel.epyccel import epyccel
+from pyccel.decorators import template
 
-import sys
 
 RTOL = 1e-13
 ATOL = 1e-14
@@ -15,8 +16,7 @@ max_float = 3.40282e5        # maximum positive float
 min_float = sys.float_info.min  # Minimum positive float
 
 def test_fabs_call(language):
-    @types('real')
-    def fabs_call(x):
+    def fabs_call(x : 'float'):
         from math import fabs
         return fabs(x)
 
@@ -25,8 +25,7 @@ def test_fabs_call(language):
     assert(isclose(f1(x) ,  fabs_call(x), rtol=RTOL, atol=ATOL))
 
 def test_fabs_phrase(language):
-    @types('real','real')
-    def fabs_phrase(x,y):
+    def fabs_phrase(x : 'float', y : 'float'):
         from math import fabs
         a = fabs(x)*fabs(y)
         return a
@@ -37,8 +36,7 @@ def test_fabs_phrase(language):
     assert(isclose(f2(x,y) ,  fabs_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_fabs_return_type(language):
-    @types('int')
-    def fabs_return_type(x):
+    def fabs_return_type(x : 'int'):
         from math import fabs
         a = fabs(x)
         return a
@@ -49,8 +47,7 @@ def test_fabs_return_type(language):
     assert(type(f1(x))  == type(fabs_return_type(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sqrt_call(language):
-    @types('real')
-    def sqrt_call(x):
+    def sqrt_call(x : 'float'):
         from math import sqrt
         return sqrt(x)
 
@@ -59,8 +56,7 @@ def test_sqrt_call(language):
     assert(isclose(f1(x) ,  sqrt_call(x), rtol=RTOL, atol=ATOL))
 
 def test_sqrt_phrase(language):
-    @types('real','real')
-    def sqrt_phrase(x,y):
+    def sqrt_phrase(x : 'float', y : 'float'):
         from math import sqrt
         a = sqrt(x)*sqrt(y)
         return a
@@ -71,8 +67,7 @@ def test_sqrt_phrase(language):
     assert(isclose(f2(x,y) ,  sqrt_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_sqrt_return_type(language):
-    @types('real')
-    def sqrt_return_type_real(x):
+    def sqrt_return_type_real(x : 'float'):
         from math import sqrt
         a = sqrt(x)
         return a
@@ -83,8 +78,7 @@ def test_sqrt_return_type(language):
     assert(type(f1(x))  == type(sqrt_return_type_real(x))) # pylint: disable=unidiomatic-typecheck
 
 def test_sin_call(language):
-    @types('real')
-    def sin_call(x):
+    def sin_call(x : 'float'):
         from math import sin
         return sin(x)
 
@@ -93,8 +87,7 @@ def test_sin_call(language):
     assert(isclose(f1(x) ,  sin_call(x), rtol=RTOL, atol=ATOL))
 
 def test_sin_phrase(language):
-    @types('real','real')
-    def sin_phrase(x,y):
+    def sin_phrase(x : 'float', y : 'float'):
         from math import sin
         a = sin(x)+sin(y)
         return a
@@ -105,8 +98,7 @@ def test_sin_phrase(language):
     assert(isclose(f2(x,y) ,  sin_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_cos_call(language):
-    @types('real')
-    def cos_call(x):
+    def cos_call(x : 'float'):
         from math import cos
         return cos(x)
 
@@ -115,8 +107,7 @@ def test_cos_call(language):
     assert(isclose(f1(x) ,  cos_call(x), rtol=RTOL, atol=ATOL))
 
 def test_cos_phrase(language):
-    @types('real','real')
-    def cos_phrase(x,y):
+    def cos_phrase(x : 'float', y : 'float'):
         from math import cos
         a = cos(x)+cos(y)
         return a
@@ -128,8 +119,7 @@ def test_cos_phrase(language):
 
 
 def test_tan_call(language):
-    @types('real')
-    def tan_call(x):
+    def tan_call(x : 'float'):
         from math import tan
         return tan(x)
 
@@ -139,8 +129,7 @@ def test_tan_call(language):
 
 
 def test_tan_phrase(language):
-    @types('real','real')
-    def tan_phrase(x,y):
+    def tan_phrase(x : 'float', y : 'float'):
         from math import tan
         a = tan(x)+tan(y)
         return a
@@ -151,8 +140,7 @@ def test_tan_phrase(language):
     assert(isclose(f2(x,y) ,  tan_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_exp_call(language):
-    @types('real')
-    def exp_call(x):
+    def exp_call(x : 'float'):
         from math import exp
         return exp(x)
 
@@ -161,8 +149,7 @@ def test_exp_call(language):
     assert(isclose(f1(x) ,  exp_call(x), rtol=RTOL, atol=ATOL))
 
 def test_exp_phrase(language):
-    @types('real','real')
-    def exp_phrase(x,y):
+    def exp_phrase(x : 'float', y : 'float'):
         from math import exp
         a = exp(x)+exp(y)
         return a
@@ -173,8 +160,7 @@ def test_exp_phrase(language):
     assert(isclose(f2(x,y) ,  exp_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_log_call(language):
-    @types('real')
-    def log_call(x):
+    def log_call(x : 'float'):
         from math import log
         return log(x)
 
@@ -183,8 +169,7 @@ def test_log_call(language):
     assert(isclose(f1(x) ,  log_call(x), rtol=RTOL, atol=ATOL))
 
 def test_log_phrase(language):
-    @types('real','real')
-    def log_phrase(x,y):
+    def log_phrase(x : 'float', y : 'float'):
         from math import log
         a = log(x)+log(y)
         return a
@@ -195,8 +180,7 @@ def test_log_phrase(language):
     assert(isclose(f2(x,y) ,  log_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_asin_call(language):
-    @types('real')
-    def asin_call(x):
+    def asin_call(x : 'float'):
         from math import asin
         return asin(x)
 
@@ -205,8 +189,7 @@ def test_asin_call(language):
     assert(isclose(f1(x) ,  asin_call(x), rtol=RTOL, atol=ATOL))
 
 def test_asin_phrase(language):
-    @types('real','real')
-    def asin_phrase(x,y):
+    def asin_phrase(x : 'float', y : 'float'):
         from math import asin
         a = asin(x)+asin(y)
         return a
@@ -217,8 +200,7 @@ def test_asin_phrase(language):
     assert(isclose(f2(x,y) ,  asin_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_acos_call(language):
-    @types('real')
-    def acos_call(x):
+    def acos_call(x : 'float'):
         from math import acos
         return acos(x)
 
@@ -227,8 +209,7 @@ def test_acos_call(language):
     assert(isclose(f1(x) ,  acos_call(x), rtol=RTOL, atol=ATOL))
 
 def test_acos_phrase(language):
-    @types('real','real')
-    def acos_phrase(x,y):
+    def acos_phrase(x : 'float', y : 'float'):
         from math import acos
         a = acos(x)+acos(y)
         return a
@@ -239,8 +220,7 @@ def test_acos_phrase(language):
     assert(isclose(f2(x,y) ,  acos_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_atan_call(language):
-    @types('real')
-    def atan_call(x):
+    def atan_call(x : 'float'):
         from math import atan
         return atan(x)
 
@@ -249,8 +229,7 @@ def test_atan_call(language):
     assert(isclose(f1(x) ,  atan_call(x), rtol=RTOL, atol=ATOL))
 
 def test_atan_phrase(language):
-    @types('real','real')
-    def atan_phrase(x,y):
+    def atan_phrase(x : 'float', y : 'float'):
         from math import atan
         a = atan(x)+atan(y)
         return a
@@ -261,8 +240,7 @@ def test_atan_phrase(language):
     assert(isclose(f2(x,y) ,  atan_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_sinh_call(language):
-    @types('real')
-    def sinh_call(x):
+    def sinh_call(x : 'float'):
         from math import sinh
         return sinh(x)
 
@@ -271,8 +249,7 @@ def test_sinh_call(language):
     assert(isclose(f1(x) ,  sinh_call(x), rtol=RTOL, atol=ATOL))
 
 def test_sinh_phrase(language):
-    @types('real','real')
-    def sinh_phrase(x,y):
+    def sinh_phrase(x : 'float', y : 'float'):
         from math import sinh
         a = sinh(x)+sinh(y)
         return a
@@ -283,8 +260,7 @@ def test_sinh_phrase(language):
     assert(isclose(f2(x,y) ,  sinh_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_cosh_call(language):
-    @types('real')
-    def cosh_call(x):
+    def cosh_call(x : 'float'):
         from math import cosh
         return cosh(x)
 
@@ -293,8 +269,7 @@ def test_cosh_call(language):
     assert(isclose(f1(x) ,  cosh_call(x), rtol=RTOL, atol=ATOL))
 
 def test_cosh_phrase(language):
-    @types('real','real')
-    def cosh_phrase(x,y):
+    def cosh_phrase(x : 'float', y : 'float'):
         from math import cosh
         a = cosh(x)+cosh(y)
         return a
@@ -305,8 +280,7 @@ def test_cosh_phrase(language):
     assert(isclose(f2(x,y) ,  cosh_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_tanh_call(language):
-    @types('real')
-    def tanh_call(x):
+    def tanh_call(x : 'float'):
         from math import tanh
         return tanh(x)
 
@@ -315,8 +289,7 @@ def test_tanh_call(language):
     assert(isclose(f1(x) ,  tanh_call(x), rtol=RTOL, atol=ATOL))
 
 def test_tanh_phrase(language):
-    @types('real','real')
-    def tanh_phrase(x,y):
+    def tanh_phrase(x : 'float', y : 'float'):
         from math import tanh
         a = tanh(x)+tanh(y)
         return a
@@ -327,8 +300,7 @@ def test_tanh_phrase(language):
     assert(isclose(f2(x,y) ,  tanh_phrase(x,y), rtol=RTOL, atol=ATOL))
 
 def test_atan2_call(language):
-    @types('real', 'real')
-    def atan2_call(x, y):
+    def atan2_call(x : 'float', y : 'float'):
         from math import atan2
         return atan2(x, y)
 
@@ -338,8 +310,7 @@ def test_atan2_call(language):
     assert(isclose(f1(x, y), atan2_call(x, y), rtol=RTOL, atol=ATOL))
 
 def test_atan2_phrase(language):
-    @types('real', 'real', 'real')
-    def atan2_phrase(x, y, z):
+    def atan2_phrase(x : 'float', y : 'float', z : 'float'):
         from math import atan2
         a = atan2(x, y)+atan2(y, z)
         return a
@@ -352,8 +323,7 @@ def test_atan2_phrase(language):
 
 #------------------------------- Floor function ------------------------------#
 def test_floor_call(language):
-    @types('real')
-    def floor_call(x):
+    def floor_call(x : 'float'):
         from math import floor
         return floor(x)
 
@@ -364,8 +334,7 @@ def test_floor_call(language):
     assert(isclose(f1(-x) ,  floor_call(-x), rtol=RTOL, atol=ATOL))
 
 def test_floor_phrase(language):
-    @types('real','real')
-    def floor_phrase(x,y):
+    def floor_phrase(x : 'float', y : 'float'):
         from math import floor
         a = floor(x)*floor(y)
         return a
@@ -380,14 +349,12 @@ def test_floor_phrase(language):
     assert(isclose(f2(-x,-y) ,  floor_phrase(-x,-y), rtol=RTOL, atol=ATOL))
 
 def test_floor_return_type(language):
-    @types('int')
-    def floor_return_type_int(x):
+    def floor_return_type_int(x : 'int'):
         from math import floor
         a = floor(x)
         return a
 
-    @types('real')
-    def floor_return_type_real(x):
+    def floor_return_type_real(x : 'float'):
         from math import floor
         a = floor(x)
         return a
@@ -410,8 +377,7 @@ def test_floor_return_type(language):
 
 #------------------------------- Ceil function -------------------------------#
 def test_ceil_call_r(language):
-    @types('real')
-    def ceil_call(x):
+    def ceil_call(x : 'float'):
         from math import ceil
         return ceil(x)
 
@@ -425,8 +391,7 @@ def test_ceil_call_r(language):
     assert isinstance(ceil_call(x), type(f1(x)))
 
 def test_ceil_call_i(language):
-    @types('int')
-    def ceil_call(x):
+    def ceil_call(x : 'int'):
         from math import ceil
         return ceil(x)
 
@@ -440,8 +405,7 @@ def test_ceil_call_i(language):
     assert isinstance(ceil_call(x), type(f1(x)))
 
 def test_ceil_phrase(language):
-    @types('real','real')
-    def ceil_phrase(x,y):
+    def ceil_phrase(x : 'float', y : 'float'):
         from math import ceil
         a = ceil(x)*ceil(y)
         return a
@@ -458,8 +422,7 @@ def test_ceil_phrase(language):
 #------------------------------- copysign function -------------------------------#
 
 def test_copysign_call(language):
-    @types('real', 'real')
-    def copysign_call(x, y):
+    def copysign_call(x : 'float', y : 'float'):
         from math import copysign
         return copysign(x, y)
 
@@ -477,8 +440,7 @@ def test_copysign_call(language):
     assert(isclose(copysign_call(0.0, y), f1(0.0, y), rtol=RTOL, atol=ATOL))
 
 def test_copysign_call_zero_case(language):
-    @types('int', 'int')
-    def copysign_zero_case(x, y):
+    def copysign_zero_case(x : 'int', y : 'int'):
         from math import copysign
         return copysign(x, y)
 
@@ -494,8 +456,7 @@ def test_copysign_call_zero_case(language):
 
 def test_copysign_return_type_1(language): # copysign
     '''test type copysign(real, real) => should return real number'''
-    @types('real', 'real')
-    def copysign_return_type(x, y):
+    def copysign_return_type(x : 'float', y : 'float'):
         from math import copysign
         a = copysign(x, y)
         return a
@@ -513,8 +474,7 @@ def test_copysign_return_type_1(language): # copysign
 
 def test_copysign_return_type_2(language): # copysign
     '''test type copysign(int, int) => should return real type'''
-    @types('int', 'int')
-    def copysign_return_type(x, y):
+    def copysign_return_type(x : 'int', y : 'int'):
         from math import copysign
         a = copysign(x, y)
         return a
@@ -533,8 +493,7 @@ def test_copysign_return_type_2(language): # copysign
 
 def test_copysign_return_type_3(language): # copysign
     '''test type copysign(int, real) => should return real type'''
-    @types('int', 'real')
-    def copysign_return_type(x, y):
+    def copysign_return_type(x : 'int', y : 'float'):
         from math import copysign
         a = copysign(x, y)
         return a
@@ -553,8 +512,7 @@ def test_copysign_return_type_3(language): # copysign
 
 def test_copysign_return_type_4(language): # copysign
     '''test type copysign(real, int) => should return real type'''
-    @types('real', 'int')
-    def copysign_return_type(x, y):
+    def copysign_return_type(x : 'float', y : 'int'):
         from math import copysign
         a = copysign(x, y)
         return a
@@ -582,8 +540,7 @@ def test_copysign_return_type_4(language): # copysign
     )
 )
 def test_isfinite_call(language): # isfinite
-    @types('real')
-    def isfinite_call(x):
+    def isfinite_call(x : 'float'):
         from math import isfinite
         return isfinite(x)
 
@@ -592,7 +549,6 @@ def test_isfinite_call(language): # isfinite
 
     assert(isfinite_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isfinite_call(nan) == f1(nan))
     # Test infinite number
@@ -610,8 +566,7 @@ def test_isfinite_call(language): # isfinite
     )
 )
 def test_isinf_call(language): # isinf
-    @types('real')
-    def isinf_call(x):
+    def isinf_call(x : 'float'):
         from math import isinf
         return isinf(x)
 
@@ -620,7 +575,6 @@ def test_isinf_call(language): # isinf
 
     assert(isinf_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isinf_call(nan) == f1(nan))
     # Test infinite number
@@ -631,8 +585,7 @@ def test_isinf_call(language): # isinf
 #------------------------------- isnan function ------------------------------#
 
 def test_isnan_call(language): # isnan
-    @types('real')
-    def isnan_call(x):
+    def isnan_call(x : 'float'):
         from math import isnan
         return isnan(x)
 
@@ -641,7 +594,6 @@ def test_isnan_call(language): # isnan
 
     assert(isnan_call(x) == f1(x))
 
-    from math import nan, inf
     # Test not a number
     assert(isnan_call(nan) == f1(nan))
     # Test infinite number
@@ -659,8 +611,7 @@ def test_isnan_call(language): # isnan
     )
 )
 def test_ldexp_call(language): # ldexp
-    @types('real', 'int')
-    def ldexp_call(x, exp):
+    def ldexp_call(x : 'float', exp : 'int'):
         from math import ldexp
         return ldexp(x, exp)
 
@@ -686,8 +637,7 @@ def test_ldexp_call(language): # ldexp
     )
 )
 def test_ldexp_return_type(language): # ldexp
-    @types('real', 'int')
-    def ldexp_type(x, exp):
+    def ldexp_type(x : 'float', exp : 'int'):
         from math import ldexp
         return ldexp(x, exp)
 
@@ -716,8 +666,7 @@ def test_ldexp_return_type(language): # ldexp
     )
 )
 def test_remainder_call(language): # remainder
-    @types('real', 'real')
-    def remainder_call(x, y):
+    def remainder_call(x : 'float', y : 'float'):
         from math import remainder
         return remainder(x, y)
 
@@ -742,8 +691,7 @@ def test_remainder_call(language): # remainder
     )
 )
 def test_remainder_return_type(language): # remainder
-    @types('real', 'real')
-    def remainder_type(x, y):
+    def remainder_type(x : 'float', y : 'float'):
         from math import remainder
         return remainder(x, y)
 
@@ -762,8 +710,7 @@ def test_remainder_return_type(language): # remainder
 #----------------------------- trunc function --------------------------------#
 
 def test_trunc_call(language): # trunc
-    @types('real')
-    def trunc_call(x):
+    def trunc_call(x : 'float'):
         from math import trunc
         return trunc(x)
 
@@ -776,8 +723,7 @@ def test_trunc_call(language): # trunc
     assert(trunc_call(-x) == f1(-x))
 
 def test_trunc_call_int(language): # trunc
-    @types('int')
-    def trunc_call(x):
+    def trunc_call(x : 'int'):
         from math import trunc
         return trunc((x))
 
@@ -791,8 +737,7 @@ def test_trunc_call_int(language): # trunc
     assert(trunc_call(-x) == f1(-x))
 
 def test_trunc_return_type(language): # trunc
-    @types('real')
-    def trunc_type(x):
+    def trunc_type(x : 'float'):
         from math import trunc
         return trunc(x)
 
@@ -812,8 +757,7 @@ def test_trunc_return_type(language): # trunc
     )
 )
 def test_expm1_call(language): # expm1
-    @types('real')
-    def expm1_call(x):
+    def expm1_call(x : 'float'):
         from math import expm1
         return expm1(x)
 
@@ -830,8 +774,7 @@ def test_expm1_call(language): # expm1
     )
 )
 def test_expm1_call_special_case(language): # expm1
-    @types('real')
-    def expm1_call(x):
+    def expm1_call(x : 'float'):
         from math import expm1
         return expm1(x)
     # should give result accurate to full precision better than exp()
@@ -848,8 +791,7 @@ def test_expm1_call_special_case(language): # expm1
     )
 )
 def test_expm1_phrase(language): # expm1
-    @types('real','real')
-    def expm1_phrase(x,y):
+    def expm1_phrase(x : 'float', y : 'float'):
         from math import expm1
         a = expm1(x)+expm1(y)
         return a
@@ -868,8 +810,7 @@ def test_expm1_phrase(language): # expm1
     )
 )
 def test_expm1_return_type(language): # expm1 # expm1
-    @types('real')
-    def expm1_type(x):
+    def expm1_type(x : 'float'):
         from math import expm1
         return expm1(x)
 
@@ -890,8 +831,7 @@ def test_expm1_return_type(language): # expm1 # expm1
     )
 )
 def test_log1p_call(language):
-    @types('real')
-    def log1p_call(x):
+    def log1p_call(x : 'float'):
         from math import log1p
         return log1p(x)
 
@@ -909,8 +849,7 @@ def test_log1p_call(language):
     )
 )
 def test_log1p_phrase(language):
-    @types('real','real')
-    def log1p_phrase(x,y):
+    def log1p_phrase(x : 'float', y : 'float'):
         from math import log1p
         a = log1p(x)+log1p(y)
         return a
@@ -930,8 +869,7 @@ def test_log1p_phrase(language):
     )
 )
 def test_log2_call(language):
-    @types('real')
-    def log2_call(x):
+    def log2_call(x : 'float'):
         from math import log2
         return log2(x)
 
@@ -951,8 +889,7 @@ def test_log2_call(language):
     )
 )
 def test_log2_phrase(language):
-    @types('real','real')
-    def log2_phrase(x,y):
+    def log2_phrase(x : 'float', y : 'float'):
         from math import log2
         a = log2(x)+log2(y)
         return a
@@ -967,8 +904,7 @@ def test_log2_phrase(language):
 #--------------------------- log10 function ------------------------------#
 
 def test_log10_call(language):
-    @types('real')
-    def log10_call(x):
+    def log10_call(x : 'float'):
         from math import log10
         return log10(x)
 
@@ -980,8 +916,7 @@ def test_log10_call(language):
     assert isinstance(f1(x), type(log10_call(x)))
 
 def test_log10_phrase(language):
-    @types('real','real')
-    def log10_phrase(x,y):
+    def log10_phrase(x : 'float', y : 'float'):
         from math import log10
         a = log10(x)+log10(y)
         return a
@@ -996,9 +931,8 @@ def test_log10_phrase(language):
 #--------------------------------- Pow function ------------------------------#
 
 def test_pow_call(language):
-    @types('real', 'real')
-    @types('real', 'int')
-    def pow_call(x, y):
+    @template('T', [int, float])
+    def pow_call(x : float, y : 'T'):
         from math import pow as my_pow
         return my_pow(x, y)
 
@@ -1023,8 +957,7 @@ def test_pow_call(language):
 #------------------------------- Hypot function ------------------------------#
 
 def test_hypot_call(language):
-    @types('real', 'real')
-    def hypot_call(x, y):
+    def hypot_call(x : 'float', y : 'float'):
         from math import hypot
         return hypot(x, y)
 
@@ -1038,8 +971,7 @@ def test_hypot_call(language):
 #------------------------------- Acosh function ------------------------------#
 
 def test_acosh_call(language):
-    @types('real')
-    def acosh_call(x):
+    def acosh_call(x : 'float'):
         from math import acosh
         return acosh(x)
 
@@ -1050,8 +982,7 @@ def test_acosh_call(language):
     assert isinstance(f1(x), type(acosh_call(x)))
 
 def test_acosh_phrase(language):
-    @types('real','real')
-    def acosh_phrase(x,y):
+    def acosh_phrase(x : 'float', y : 'float'):
         from math import acosh
         a = acosh(x) + acosh(y)
         return a
@@ -1066,8 +997,7 @@ def test_acosh_phrase(language):
 #------------------------------- Asinh function ------------------------------#
 
 def test_asinh_call(language):
-    @types('real')
-    def asinh_call(x):
+    def asinh_call(x : 'float'):
         from math import asinh
         return asinh(x)
 
@@ -1081,8 +1011,7 @@ def test_asinh_call(language):
     assert(isclose(f1(-x) , asinh_call(-x), rtol=RTOL, atol=ATOL))
 
 def test_asinh_phrase(language):
-    @types('real','real')
-    def asinh_phrase(x,y):
+    def asinh_phrase(x : 'float', y : 'float'):
         from math import asinh
         a = asinh(x)+ asinh(y)
         return a
@@ -1097,8 +1026,7 @@ def test_asinh_phrase(language):
 #------------------------------- Atanh function ------------------------------#
 
 def test_atanh_call(language):
-    @types('real')
-    def atanh_call(x):
+    def atanh_call(x : 'float'):
         from math import atanh
         return atanh(x)
 
@@ -1110,8 +1038,7 @@ def test_atanh_call(language):
     assert isinstance(f1(x), type(atanh_call(x)))
 
 def test_atanh_phrase(language):
-    @types('real','real')
-    def atanh_phrase(x, y):
+    def atanh_phrase(x : 'float', y : 'float'):
         from math import atanh
         a = atanh(x)+ atanh(y)
         return a
@@ -1128,8 +1055,7 @@ def test_atanh_phrase(language):
 #--------------------------------- Erf function ------------------------------#
 
 def test_erf_call(language):
-    @types('real')
-    def erf_call(x):
+    def erf_call(x : 'float'):
         from math import erf
         return erf(x)
 
@@ -1142,8 +1068,7 @@ def test_erf_call(language):
     assert isinstance(f1(x), type(erf_call(x)))
 
 def test_erf_phrase(language):
-    @types('real','real')
-    def erf_phrase(x, y):
+    def erf_phrase(x : 'float', y : 'float'):
         from math import erf
         a = erf(x)+ erf(y)
         return a
@@ -1159,8 +1084,7 @@ def test_erf_phrase(language):
 #-------------------------------- Erfc function ------------------------------#
 
 def test_erfc_call(language):
-    @types('real')
-    def erfc_call(x):
+    def erfc_call(x : 'float'):
         from math import erfc
         return erfc(x)
 
@@ -1173,8 +1097,7 @@ def test_erfc_call(language):
     assert isinstance(f1(x), type(erfc_call(x)))
 
 def test_erfc_phrase(language):
-    @types('real','real')
-    def erfc_phrase(x, y):
+    def erfc_phrase(x : 'float', y : 'float'):
         from math import erfc
         a = erfc(x)+ erfc(y)
         return a
@@ -1190,8 +1113,7 @@ def test_erfc_phrase(language):
 #-------------------------------- gamma function -----------------------------#
 
 def test_gamma_call(language):
-    @types('real')
-    def gamma_call(x):
+    def gamma_call(x : 'float'):
         from math import gamma
         return gamma(x)
 
@@ -1200,7 +1122,6 @@ def test_gamma_call(language):
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
     assert(isclose(f1(x) , gamma_call(x), rtol=RTOL, atol=ATOL))
-    from math import modf
     # make fractional part different from zero to test negative case
     if modf(x)[0] == 0:
         x += - 0.1
@@ -1209,8 +1130,7 @@ def test_gamma_call(language):
     assert isinstance(f1(x), type(gamma_call(x)))
 
 def test_gamma_phrase(language):
-    @types('real','real')
-    def gamma_phrase(x, y):
+    def gamma_phrase(x : 'float', y : 'float'):
         from math import gamma
         a = gamma(x)+ gamma(y)
         return a
@@ -1225,8 +1145,7 @@ def test_gamma_phrase(language):
 #------------------------------- lgamma function -----------------------------#
 
 def test_lgamma_call(language):
-    @types('real')
-    def lgamma_call(x):
+    def lgamma_call(x : 'float'):
         from math import lgamma
         return lgamma(x)
 
@@ -1235,7 +1154,6 @@ def test_lgamma_call(language):
     # Domain ]0, +inf[ || (x < 0 and x.fraction not null)
     x = uniform(low=min_float)
     assert(isclose(f1(x) , lgamma_call(x), rtol=RTOL, atol=ATOL))
-    from math import modf
     _, f = modf(x)
     # make fractional part different from zero to test negative case
     if f == 0:
@@ -1244,8 +1162,7 @@ def test_lgamma_call(language):
     assert isinstance(f1(x), type(lgamma_call(x)))
 
 def test_lgamma_phrase(language):
-    @types('real','real')
-    def lgamma_phrase(x, y):
+    def lgamma_phrase(x : 'float', y : 'float'):
         from math import lgamma
         a = lgamma(x)+ lgamma(y)
         return a

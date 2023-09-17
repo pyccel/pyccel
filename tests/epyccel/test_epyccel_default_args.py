@@ -3,12 +3,10 @@
 import numpy as np
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
 
 #------------------------------------------------------------------------------
 def test_f1(language):
-    @types('int')
-    def f1(x = 1):
+    def f1(x  : 'int' =  1):
         y = x - 1
         return y
 
@@ -20,8 +18,7 @@ def test_f1(language):
     # ...
 #------------------------------------------------------------------------------
 def test_f2(language):
-    @types('real [:]', 'int')
-    def f5(x, m1 = 2):
+    def f5(x : 'float [:]', m1  : 'int' =  2):
         x[:] = 0.
         for i in range(0, m1):
             x[i] = i * 1.
@@ -49,8 +46,7 @@ def test_f2(language):
 
 #------------------------------------------------------------------------------
 def test_f3(language):
-    @types('real','real')
-    def f3(x = 1.5, y = 2.5):
+    def f3(x  : 'float' =  1.5, y  : 'float' =  2.5):
         return x+y
 
     f = epyccel(f3, language=language)
@@ -64,8 +60,7 @@ def test_f3(language):
 
 #------------------------------------------------------------------------------
 def test_f4(language):
-    @types('bool')
-    def f4(x = True):
+    def f4(x  : 'bool' =  True):
         if x:
             return 1
         else:
@@ -81,8 +76,7 @@ def test_f4(language):
 
 #------------------------------------------------------------------------------
 def test_f5(language):
-    @types('complex')
-    def f5(x = 1j):
+    def f5(x  : 'complex' =  1j):
         y = x - 1
         return y
 

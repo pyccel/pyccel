@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1476 : Add C support for a class containing `Interfaces`.
+-   #1472 : Add C printing support for a class containing scalar data.
+-   #1492 : Types of arguments for class methods can be declared like function arguments.
+-   #1511 : Add support for the `cmath` library.
+
+### Fixed
+
+-   #1484 : Use scope for classes to avoid name clashes.
+
+### Changed
+
+-   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
+
+### Deprecated
+
+-   #1513 : Stop printing `@types` decorators in generated Python code.
+
+## \[1.9.1\] - 2023-08-31
+
+### Added
+
+-   #1497 : Add support for NumPy `copy` method: `a.copy`.
+-   #1497 : Add support for NumPy function `copy`.
+
+### Fixed
+
+-   #1499 : Fix passing temporary arrays to functions.
+-   #1241 : Missing transpose when converting from a C-ordered array to F-ordered array.
+-   #1241 : Incorrect transpose when copying an F-ordered array.
+-   #1241 : Fix infinite loop when passing an array as the only argument to `np.array`.
+-   #1506 : Increment `Py_None` reference count to avoid unexpected deallocation.
+
+## \[1.9.0\] - 2023-08-22
+
+### Added
+
 -   #752 : Allow passing array variables to `numpy.array`.
 -   #1280 : Allow copying arrays using `numpy.array`.
 -   Allow interfaces in classes.
@@ -19,6 +55,7 @@ All notable changes to this project will be documented in this file.
 -   #682 : Wrong data layout when copying a slice of an array.
 -   #1453 : Fix error-level developer mode output.
 -   \[INTERNALS\] Fix string base class selection.
+-   #1496 : Fix interfaces which differ only by order or rank.
 
 ### Changed
 
@@ -30,9 +67,12 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] In `ast.numpyext` rename `Shape` as `NumpyShape`, `NumpyArraySize` as `NumpySize`
 -   \[INTERNALS\] In `ast.internals` rename `PyccelArraySize` as `PyccelArraySizeElement`, create new `PyccelArraySize` w/out `index` argument
 -   \[INTERNALS\] Make `NumpySize` a factory class (which cannot be instantiated)
+-   \[INTERNALS\] Re-write C-Python API wrapping stage (#1477)
 
 ### Deprecated
 
+-   Using a `@types` decorator will raise a `FutureWarning` as this will be deprecated in a future version.
+-   Using a type specification header will raise a `FutureWarning` as this will be deprecated in a future version.
 -   Stop generating `numpy.bool` (deprecated from NumPy) in code.
 -   Removed support for untested, undocumented `lambidify` function.
 -   \[INTERNALS\] Removed `obsolete` folder.

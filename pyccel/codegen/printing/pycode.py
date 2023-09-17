@@ -247,11 +247,24 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
-        type_annotation = ''
         default = ''
 
         if expr.annotation:
-            type_annotation = f' : {expr.annotation}'
+            type_annotation = self._print(expr.annotation)
+        else:
+            var = expr.var
+            def get_type_annotation(var):
+                if isinstance(var, Variable):
+                    type_annotation = str(var.dtype)
+                    if var.rank:
+                        type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
+                    return f"'{type_annotation}'"
+                elif isinstance(var, FunctionAddress):
+                    results = ', '.join(get_type_annotation(r.var) for r in var.results)
+                    arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
+                    return f'"({results})({arguments})"'
+
+            type_annotation = get_type_annotation(var)
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -259,7 +272,7 @@ class PythonCodePrinter(CodePrinter):
             else:
                 default = f' = {self._print(expr.value)}'
 
-        return f'{name}{type_annotation}{default}'
+        return f'{name} : {type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -349,7 +362,7 @@ class PythonCodePrinter(CodePrinter):
                         args = []
                     else:
                         args = [LiteralString(a) for a in func]
-                    if n == 'types' and len(args)==0:
+                    if n == 'types':
                         continue
                     if args:
                         args = ', '.join(self._print(i) for i in args)
@@ -480,13 +493,25 @@ class PythonCodePrinter(CodePrinter):
         return f'map({func}, {args})'
 
     def _print_PythonReal(self, expr):
-        return f'({self._print(expr.internal_var)}).real'
+        internal_var = self._print(expr.internal_var)
+        if isinstance(expr.internal_var, Variable):
+            return f'{internal_var}.real'
+        else:
+            return f'({internal_var}).real'
 
     def _print_PythonImag(self, expr):
-        return f'({self._print(expr.internal_var)}).imag'
+        internal_var = self._print(expr.internal_var)
+        if isinstance(expr.internal_var, Variable):
+            return f'{internal_var}.imag'
+        else:
+            return f'({internal_var}).imag'
 
     def _print_PythonConjugate(self, expr):
-        return f'({self._print(expr.internal_var)}).conjugate()'
+        internal_var = self._print(expr.internal_var)
+        if isinstance(expr.internal_var, Variable):
+            return '{internal_var}.conjugate()'
+        else:
+            return f'({internal_var}).conjugate()'
 
     def _print_PythonPrint(self, expr):
         args = ', '.join(self._print(a) for a in expr.expr)
@@ -699,11 +724,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_NumpyArray(self, expr):
         name = self._get_numpy_name(expr)
+        arg_var = expr.arg
 
-        arg   = self._print(expr.arg)
+        arg   = self._print(arg_var)
         dtype = self._print_dtype_argument(expr, expr.init_dtype)
         order = f"order='{expr.order}'" if expr.order else ''
-        args  = ', '.join(a for a in [arg, dtype, order] if a!= '')
+        ndmin = f"ndmin={expr.rank}" if expr.rank > arg_var.rank else ''
+        args  = ', '.join(a for a in [arg, dtype, order, ndmin] if a!= '')
         return f"{name}({args})"
 
     def _print_NumpyAutoFill(self, expr):

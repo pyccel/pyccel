@@ -18,9 +18,12 @@ from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionCall, FunctionDef, FunctionAddress
+from .core      import FunctionDef
+from .core      import Module, Interface
 
 from .internals import get_final_precision
+
+from .literals  import LiteralString
 
 from .variable  import Variable
 
@@ -33,6 +36,9 @@ __all__ = (
 #
 # --------- CLASSES -----------
 #
+    'PyFunctionDef',
+    'PyInterface',
+    'PyModule',
     'PyccelPyObject',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
@@ -44,19 +50,20 @@ __all__ = (
     'Py_None',
     'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
+    'Py_INCREF',
     'Py_DECREF',
-    'set_python_error_message',
-#----- CHECK FUNCTIONS ---
-    'generate_datatype_error',
-    'scalar_object_check',
 )
 
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
 class PyccelPyObject(DataType):
-    """ Datatype representing a PyObject which is the
-    class used to hold python objects"""
+    """
+    Datatype representing a `PyObject`.
+
+    Datatype representing a `PyObject` which is the
+    class used to hold Python objects in `Python.h`.
+    """
     __slots__ = ()
     _name = 'pyobject'
 
@@ -98,92 +105,59 @@ class PyArgKeywords(Basic):
         """
         return self._arg_names
 
-#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
-pytype_parse_registry = {
-    (NativeInteger(), 4)       : 'i',
-    (NativeInteger(), 8)       : 'l',
-    (NativeInteger(), 2)       : 'h',
-    (NativeInteger(), 1)       : 'b',
-    (NativeFloat(), 8)         : 'd',
-    (NativeFloat(), 4)         : 'f',
-    (NativeComplex(), 4)       : 'O',
-    (NativeComplex(), 8)       : 'O',
-    (NativeBool(), -1)         : 'p',
-    (NativeString(), 0)        : 's',
-    (PyccelPyObject(), 0)      : 'O',
-    }
-
+#-------------------------------------------------------------------
 class PyArg_ParseTupleNode(Basic):
     """
-    Represents a call to the function from Python.h which collects the expected arguments
+    Represents a call to the function `PyArg_ParseTupleNode`.
+
+    Represents a call to the function `PyArg_ParseTupleNode` from `Python.h`.
+    This function collects the expected arguments from `self`, `args`, `kwargs`
+    and packs them into variables with datatype `PyccelPyObject`.
 
     Parameters
     ----------
-    python_func_args: Variable
-        Args provided to the function in python
-    python_func_kwargs: Variable
-        Kwargs provided to the function in python
-    c_func_args: list of Variable
-        List of expected arguments. This helps determine the expected output types
-    parse_args: list of Variable
-        List of arguments into which the result will be collected
+    python_func_args : Variable
+        Args provided to the function in Python.
+    python_func_kwargs : Variable
+        Kwargs provided to the function in Python.
+    c_func_args : list of Variable
+        List of expected arguments. This helps determine the expected output types.
+    parse_args : list of Variable
+        List of arguments into which the result will be collected.
     arg_names : list of str
-        A list of the names of the function arguments
-    is_interface : boolean
-        Default value False and True when working with interface functions
+        A list of the names of the function arguments.
     """
     __slots__ = ('_pyarg','_pykwarg','_parse_args','_arg_names','_flags')
     _attribute_nodes = ('_pyarg','_pykwarg','_parse_args','_arg_names')
 
     def __init__(self, python_func_args,
                         python_func_kwargs,
-                        c_func_args, parse_args,
+                        c_func_args,
+                        parse_args,
                         arg_names):
         if not isinstance(python_func_args, Variable):
             raise TypeError('Python func args should be a Variable')
         if not isinstance(python_func_kwargs, Variable):
             raise TypeError('Python func kwargs should be a Variable')
-        if not all(isinstance(c, FunctionDefArgument) for c in c_func_args):
-            raise TypeError('C func args should be a list of Arguments')
         if not isinstance(parse_args, list) and any(not isinstance(c, Variable) for c in parse_args):
             raise TypeError('Parse args should be a list of Variables')
         if not isinstance(arg_names, PyArgKeywords):
             raise TypeError('Parse args should be a list of Variables')
-        if len(parse_args) != len(c_func_args):
-            raise TypeError('There should be the same number of c_func_args and parse_args')
 
-        self._flags      = ''
         i = 0
-
         while i < len(c_func_args) and not c_func_args[i].has_default:
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
             i+=1
+        self._flags = 'O'*i
+
         if i < len(c_func_args):
             self._flags += '|'
-        while i < len(c_func_args):
-            self._flags += self.get_pytype(c_func_args[i], parse_args[i])
-            i+=1
-        # Restriction as of python 3.8
-        if any([isinstance(a, (Variable, FunctionAddress)) and a.is_kwonly for a in c_func_args]):
-            errors.report('Kwarg only arguments without default values will not raise an error if they are not passed',
-                          symbol=c_func_args, severity='warning')
+            self._flags += 'O'*(len(c_func_args)-i)
 
         self._pyarg      = python_func_args
         self._pykwarg    = python_func_kwargs
         self._parse_args = parse_args
         self._arg_names  = arg_names
         super().__init__()
-
-    def get_pytype(self, c_arg, parse_arg):
-        """Return the needed flag to parse or build value
-        """
-        if isinstance(c_arg, FunctionAddress):
-            return 'O'
-        else:
-            try:
-                return pytype_parse_registry[(parse_arg.dtype, get_final_precision(parse_arg))]
-            except KeyError as e:
-                raise NotImplementedError("Type not implemented for argument collection : "+str(type(parse_arg))) from e
 
     @property
     def pyarg(self):
@@ -201,9 +175,11 @@ class PyArg_ParseTupleNode(Basic):
 
     @property
     def flags(self):
-        """ The flags indicating the types of the objects to
-        be collected from the python arguments passed to the
-        function
+        """
+        The flags indicating the types of the objects.
+
+        The flags indicating the types of the objects to be collected from
+        the Python arguments passed to the function.
         """
         return self._flags
 
@@ -221,6 +197,7 @@ class PyArg_ParseTupleNode(Basic):
         """
         return self._arg_names
 
+#-------------------------------------------------------------------
 class PyBuildValueNode(PyccelAstNode):
     """
     Represents a call to the function PyBuildValueNode.
@@ -284,7 +261,7 @@ class PyModule_AddObject(PyccelAstNode):
     _shape = None
 
     def __init__(self, mod_name, name, variable):
-        if not isinstance(name, str):
+        if not isinstance(name, LiteralString):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
                 variable.dtype is not PyccelPyObject():
@@ -313,6 +290,200 @@ class PyModule_AddObject(PyccelAstNode):
         return self._var
 
 #-------------------------------------------------------------------
+class PyModule(Module):
+    """
+    Class to hold a module which is accessible from Python.
+
+    Class to hold a module which is accessible from Python. This class
+    adds external functions and external declarations to the basic
+    Module. However its main utility is in order to differentiate
+    itself such that a different `_print` function can be implemented
+    to handle it.
+
+    Parameters
+    ----------
+    *args : tuple
+        See Module.
+
+    external_funcs : iterable of FunctionDef
+        A list of external functions.
+
+    declarations : iterable
+        Any declarations of (external) variables which should be made in the module.
+
+    **kwargs : dict
+        See Module.
+
+    See Also
+    --------
+    Module : The super class from which the class inherits.
+    """
+    __slots__ = ('_external_funcs', '_declarations')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
+    def __init__(self, *args, external_funcs = (), declarations = (), **kwargs):
+        self._external_funcs = external_funcs
+        self._declarations = declarations
+        super().__init__(*args, **kwargs)
+
+    @property
+    def external_funcs(self):
+        """
+        A list of external functions.
+
+        The external functions which should be declared at the start of the module.
+        This is useful for declaring the existence of Fortran functions whose
+        definition and declaration is inaccessible from C.
+        """
+        return self._external_funcs
+
+    @external_funcs.setter
+    def external_funcs(self, funcs):
+        for f in self._external_funcs:
+            f.remove_user_node(self)
+        self._external_funcs = funcs
+        for f in funcs:
+            f.set_current_user_node(self)
+
+    @property
+    def declarations(self):
+        """
+        All declarations that need printing in the module.
+
+        All declarations that need printing in the module. This usually includes
+        any variables coming from a non-C language for which compatibility with C
+        exists.
+        """
+        return self._declarations
+
+    @declarations.setter
+    def declarations(self, decs):
+        for d in self._declarations:
+            d.remove_user_node(self)
+        self._declarations = decs
+        for d in decs:
+            d.set_current_user_node(self)
+
+#-------------------------------------------------------------------
+class PyFunctionDef(FunctionDef):
+    """
+    Class to hold a FunctionDef which is accessible from Python.
+
+    Contains the Python-compatible version of the function which is
+    used for the wrapper.
+    As compared to a normal FunctionDef, this version contains
+    arguments for the shape of arrays. It should be generated by
+    calling `codegen.wrapper.CToPythonWrapper.wrap`.
+
+    Parameters
+    ----------
+    *args : list
+        See FunctionDef.
+
+    original_function : FunctionDef
+        The function from which the Python-compatible version was created.
+
+    **kwargs : dict
+        See FunctionDef.
+
+    See Also
+    --------
+    pyccel.ast.core.FunctionDef
+        The class from which BindCFunctionDef inherits which contains all
+        details about the args and kwargs.
+    """
+    __slots__ = ('_original_function',)
+    _attribute_nodes = (*FunctionDef._attribute_nodes, '_original_function')
+
+    def __init__(self, *args, original_function, **kwargs):
+        self._original_function = original_function
+        super().__init__(*args, **kwargs)
+
+    @property
+    def original_function(self):
+        """
+        The function which is wrapped by this PyFunctionDef.
+
+        The original function which would be printed in pure C which is not
+        compatible with Python.
+        """
+        return self._original_function
+
+#-------------------------------------------------------------------
+class PyInterface(Interface):
+    """
+    Class to hold an Interface which is accessible from Python.
+
+    A class which holds the Python-compatible Interface. It contains functions for
+    determining the type of the arguments passed to the Interface and the functions
+    called through the interface.
+
+    Parameters
+    ----------
+    name : str
+        The name of the interface. See Interface.
+
+    functions : iterable of FunctionDef
+        The functions of the interface. See Interface.
+
+    interface_func : FunctionDef
+        The function which Python will call to access the interface.
+
+    type_check_func : FunctionDef
+        The helper function which will determine the types of the arguments passed.
+
+    original_interface : Interface
+        The interface being wrapped.
+
+    **kwargs : dict
+        See Interface.
+
+    See Also
+    --------
+    Interface : The super class.
+    """
+    __slots__ = ('_interface_func', '_type_check_func', '_original_interface')
+    _attribute_nodes = Interface._attribute_nodes + ('_interface_func', '_type_check_func',
+                        '_original_interface')
+
+    def __init__(self, name, functions, interface_func, type_check_func, original_interface, **kwargs):
+        self._interface_func = interface_func
+        self._type_check_func = type_check_func
+        self._original_interface = original_interface
+        for f in functions:
+            if not isinstance(f, PyFunctionDef):
+                raise TypeError("PyInterface functions should be instances of the class PyFunctionDef.")
+        super().__init__(name, functions, False, **kwargs)
+
+    @property
+    def interface_func(self):
+        """
+        The function which is exposed to Python.
+
+        The function which receives the Python arguments `self`, `args`, and `kwargs` and calls
+        the appropriate function.
+        """
+        return self._interface_func
+
+    @property
+    def type_check_func(self):
+        """
+        The function which determines the types which were passed to the Interface.
+
+        The function which takes the arguments passed to the function and returns an integer
+        indicating which function was called.
+        """
+        return self._type_check_func
+
+    @property
+    def original_function(self):
+        """
+        The Interface which is wrapped by this PyInterface.
+
+        The original interface which would be printed in C.
+        """
+        return self._original_interface
+
+#-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
 
@@ -323,46 +494,36 @@ Py_False = Variable(PyccelPyObject(), 'Py_False', memory_handling='alias')
 # Python.h object representing None
 Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 
+# https://docs.python.org/3/c-api/refcounting.html#c.Py_INCREF
+Py_INCREF = FunctionDef(name = 'Py_INCREF',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
+                        results = [])
+
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
 
+#using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
+pytype_parse_registry = {
+    (NativeInteger(), 4)       : 'i',
+    (NativeInteger(), 8)       : 'l',
+    (NativeInteger(), 2)       : 'h',
+    (NativeInteger(), 1)       : 'b',
+    (NativeFloat(), 8)         : 'd',
+    (NativeFloat(), 4)         : 'f',
+    (NativeComplex(), 4)       : 'O',
+    (NativeComplex(), 8)       : 'O',
+    (NativeBool(), -1)         : 'p',
+    (NativeString(), 0)        : 's',
+    (PyccelPyObject(), 0)      : 'O',
+    }
+
 #-------------------------------------------------------------------
 #                      cwrapper.h functions
 #-------------------------------------------------------------------
-
-def Python_to_C(c_object):
-    """
-    Create a FunctionDef responsible for casting scalar Python argument to C.
-
-    Creates a FunctionDef node which contains all the code necessary
-    for casting a PythonObject to a C object whose characteristics
-    match that of the object passed as an argument.
-
-    Parameters
-    ----------
-    c_object : Variable
-        The variable needed for the generation of the cast_function.
-
-    Returns
-    -------
-    FunctionDef
-        The function which casts the Python object to C.
-    """
-    dtype = c_object.dtype
-    prec  = get_final_precision(c_object)
-    try :
-        cast_function = py_to_c_registry[(dtype, prec)]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
-    cast_func = FunctionDef(name = cast_function,
-                       body      = [],
-                       arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                       results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
-
-    return cast_func
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
@@ -396,15 +557,17 @@ def C_to_Python(c_object):
     """
     if c_object.rank != 0:
         cast_function = 'ndarray_to_pyarray'
+        memory_handling = 'stack'
     else:
         try :
             cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
+        memory_handling = 'alias'
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(Variable(dtype=c_object.dtype, name = 'v', precision = c_object.precision))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
@@ -441,69 +604,8 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
                            FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
               results   = [])
 
-def set_python_error_message(exception, message):
-    """
-    Generate a function call which sets the Python error.
-
-    Generate a function call of C/Python API PyErr_SetString
-    https://docs.python.org/3/c-api/exceptions.html#c.PyErr_SetString
-    with a defined error message used to set the error indicator.
-
-    Parameters
-    ----------
-    exception : str
-        The error exception type.
-    message : str
-        The message which will be shown.
-
-    Returns
-    -------
-    FunctionCall
-        The FunctionCall which raises the error.
-    """
-    func = FunctionDef(name = 'PyErr_SetString',
-                  body      = [],
-                  arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
-                               FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
-                  results   = [])
-
-    exception = Variable(PyccelPyObject(), name = exception)
-
-    return FunctionCall(func, [exception, message])
-
-
-def generate_datatype_error(variable):
-    """
-    Generate TypeError exception from the variable information.
-
-    Generate a TypeError exception indicated that the variable passed
-    as an argument does not have the right datatype/precision.
-
-    Parameters
-    ----------
-    variable : Variable
-        The variable which indicates the correct datatype/precision.
-
-    Returns
-    -------
-    FunctionCall
-        Call to PyErr_SetString with TypeError as exception and custom message.
-    """
-    dtype     = variable.dtype
-
-    if variable.precision == -1:
-        precision = 'native '
-    elif isinstance(dtype, NativeBool):
-        precision = ''
-    elif isinstance(dtype, NativeComplex):
-        nbit = variable.precision * 2 * 8
-        precision = f'{nbit} bit '
-    else:
-        nbit = variable.precision * 8
-        precision = f'{nbit} bit '
-
-    message = f'"Argument must be {precision}{variable.dtype}"'
-    return set_python_error_message('PyExc_TypeError', message)
+PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
+PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
@@ -520,36 +622,3 @@ check_type_registry = {
     (NativeComplex(), -1)  : 'PyIs_NativeComplex',
     (NativeComplex(), 4)   : 'PyIs_Complex64',
     (NativeComplex(), 8)   : 'PyIs_Complex128'}
-
-def scalar_object_check(py_object, c_object):
-    """
-    Create FunctionCall responsible for checking Python argument data type.
-
-    Create a FunctionCall which checks whether the Python argument
-    passed as an argument is a scalar with a type which matches the
-    type of the C object.
-
-    Parameters
-    ----------
-    py_object : Variable
-        The Python argument of the check function.
-    c_object : Variable
-        The variable needed for the generation of the type check.
-
-    Returns
-    -------
-    FunctionCall
-        Check type FunctionCall.
-    """
-
-    try :
-        check_type = check_type_registry[c_object.dtype, c_object.precision]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
-
-    check_func = FunctionDef(name = check_type,
-                    body      = [],
-                    arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling = 'alias'))],
-                    results   = [FunctionDefResult(Variable(dtype=NativeBool(), name = 'r'))])
-
-    return FunctionCall(check_func, [py_object])

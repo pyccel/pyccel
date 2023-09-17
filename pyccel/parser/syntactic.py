@@ -8,6 +8,7 @@ import os
 import re
 
 import ast
+import warnings
 
 #==============================================================================
 
@@ -662,18 +663,21 @@ class SyntaxParser(BasicParser):
         for a in arguments:
             annotated_args.append(a.annotation)
 
-        if all(not isinstance(a, Nil) for a in annotated_args):
-            if stmt.returns:
-                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
-                annotated_args.append(returns)
-            decorators['types'] = [FunctionCall('types', annotated_args)]
-
         for d in self._visit(stmt.decorator_list):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
             if tmp_var in decorators:
                 decorators[tmp_var] += [d]
             else:
                 decorators[tmp_var] = [d]
+
+        if 'types' in decorators:
+            warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
+
+        if all(not isinstance(a, Nil) for a in annotated_args):
+            if stmt.returns:
+                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
+                annotated_args.append(returns)
+            decorators.setdefault('types', []).append(FunctionCall('types', annotated_args))
 
         if 'bypass' in decorators:
             return EmptyNode()
@@ -762,8 +766,10 @@ class SyntaxParser(BasicParser):
                 else:
                     types = fill_types(ls)
 
-                txt  = '#$ header ' + name
-                txt += '(' + ','.join(types) + ')'
+                txt  = '#$ header '
+                if len(self._context) > 1 and isinstance(self._context[-2], ast.ClassDef):
+                    txt += 'method '
+                txt += name + '(' + ','.join(types) + ')'
 
                 if results:
                     txt += ' results(' + ','.join(results) + ')'

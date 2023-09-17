@@ -7,8 +7,7 @@ HeaderStmt: '#$' 'header' stmt=Statement;
 Statement:
     FunctionMacroStmt 
   | VariableHeaderStmt
-  | FunctionHeaderStmt 
-  | ClassHeaderStmt
+  | FunctionHeaderStmt
   | MetavarHeaderStmt
   | TemplateStmt
   | InterfaceStmt
@@ -38,19 +37,6 @@ TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 FunctionKind: 'function' | 'method';
 Static: 'static';
 HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
-
-ClassHeaderStmt: 'class'  name=ID '(' options+=ClassOptions[','] ')';
-
-ClassOptions: 
-    'abstract' 
-  | 'private' 
-  | 'public' 
-  | 'iterable' 
-  | 'with' 
-  | 'hide' 
-  | 'openmp'
-  | 'openacc'
-;
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
