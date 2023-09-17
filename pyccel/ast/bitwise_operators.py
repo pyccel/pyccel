@@ -54,8 +54,8 @@ class PyccelInvert(PyccelUnaryOperator):
 
         Parameters
         ----------
-        *args : tuple
-            The arguments passed to the operator.
+        arg : tuple
+            The argument passed to the operator.
 
         Returns
         -------
