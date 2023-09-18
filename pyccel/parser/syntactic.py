@@ -366,7 +366,7 @@ class SyntaxParser(BasicParser):
                 if isinstance(annotation, LiteralString):
                     annotation = types_meta.model_from_str(annotation.python_value)
                 elif annotation is Nil():
-                    annotation = UnionTypeStmt(const = None)
+                    annotation = UnionTypeStmt([], const = None)
                 new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=annotation)
                 new_arg.set_fst(a)
@@ -377,7 +377,7 @@ class SyntaxParser(BasicParser):
                 if isinstance(annotation, LiteralString):
                     annotation = types_meta.model_from_str(annotation.python_value)
                 elif annotation is Nil():
-                    annotation = UnionTypeStmt(const = None)
+                    annotation = UnionTypeStmt([], const = None)
                 new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=annotation,
                                             value = self._visit(d))
@@ -757,7 +757,7 @@ class SyntaxParser(BasicParser):
         if isinstance(result_annotation, LiteralString):
             result_annotation = types_meta.model_from_str(annotation.python_value)
         elif result_annotation is Nil():
-            result_annotation = UnionTypeStmt(const = None)
+            result_annotation = UnionTypeStmt([], const = None)
 
         if headers:
             for head in headers:
@@ -804,6 +804,9 @@ class SyntaxParser(BasicParser):
                                     symbol=expr, severity='error')
                     elif annotation is not Nil():
                         argument_annotations[i].dtypes += annotation
+
+        for a, annot in zip(arguments, argument_annotations):
+            a.annotation = annot
 
         body = stmt.body
 

@@ -1899,6 +1899,12 @@ class FunctionDefArgument(PyccelAstNode):
         """
         return self._annotation
 
+    @annotation.setter
+    def annotation(self, annotation):
+        """ The argument annotation providing dtype information
+        """
+        self._annotation = annotation
+
     @property
     def value(self):
         """ The default value of the argument

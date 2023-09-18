@@ -82,7 +82,7 @@ class TemplateStmt(BasicStmt):
 class Type(BasicStmt):
     """Base class representing a header type in the grammar."""
 
-    def __init__(self, dtype, trailer = (), **kwargs):
+    def __init__(self, dtype, trailer = None, **kwargs):
         """
         Constructor for a Type.
 
@@ -90,7 +90,10 @@ class Type(BasicStmt):
             variable type
         """
         self.dtype   = dtype
-        self.trailer = list(trailer)
+        if trailer:
+            self.trailer = trailer
+        else:
+            self.trailer = []
 
         super().__init__(**kwargs)
 
@@ -133,7 +136,7 @@ class StringStmt(BasicStmt):
         return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
-    def __init__(self, *dtypes, const = None, **kwargs):
+    def __init__(self, dtypes, const = None, **kwargs):
         """
         Constructor for a TypeHeader.
 
