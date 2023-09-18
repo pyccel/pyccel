@@ -82,48 +82,17 @@ class TemplateStmt(BasicStmt):
 class Type(BasicStmt):
     """Base class representing a header type in the grammar."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, dtype, trailer = (), **kwargs):
         """
         Constructor for a Type.
 
         dtype: str
             variable type
         """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
+        self.dtype   = dtype
+        self.trailer = list(trailer)
 
-        super(Type, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        dtype = self.dtype
-        precision = self.prec
-        if dtype in dtype_registry.keys():
-            dtype,precision = dtype_registry[dtype]
-        trailer = self.trailer
-        order = 'C'
-
-        if trailer:
-            if trailer.order:
-                order = str(trailer.order)
-            trailer = [str(i) for i in trailer.args]
-        else:
-            trailer = []
-        d_var={}
-        d_var['datatype']=dtype
-        d_var['rank'] = len(trailer)
-        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
-        d_var['precision']  = precision
-        d_var['is_func'] = False
-        d_var['is_const'] = False
-        if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
-                d_var['precision'] = default_precision[dtype]
-
-        if d_var['rank']>1:
-            d_var['order'] = order
-        return d_var
+        super().__init__(**kwargs)
 
 class ShapedID(BasicStmt):
     """class representing a ShapedID in the grammar.
@@ -156,23 +125,24 @@ class TypeHeader(BasicStmt):
     pass
 
 class StringStmt(BasicStmt):
-    def __init__(self, **kwargs):
-        self.arg = kwargs.pop('arg')
+    def __init__(self, arg, **kwargs):
+        self.arg = arg
+        super().__init__(**kwargs)
     @property
     def expr(self):
         return LiteralString(str(self.arg))
 
 class UnionTypeStmt(BasicStmt):
-    def __init__(self, **kwargs):
+    def __init__(self, *dtypes, const = None, **kwargs):
         """
         Constructor for a TypeHeader.
 
         dtype: list fo str
         """
-        self.dtypes = kwargs.pop('dtypes')
-        self.const = kwargs.pop('const')
+        self.dtypes = list(dtypes)
+        self.const = const
 
-        super(UnionTypeStmt, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @property
     def expr(self):
@@ -504,8 +474,10 @@ this_folder = dirname(__file__)
 
 # Get meta-model from language description
 grammar = join(this_folder, '../grammar/headers.tx')
+types_grammar = join(this_folder, '../grammar/types.tx')
 
 meta = metamodel_from_file(grammar, classes=hdr_classes)
+types_meta = metamodel_from_file(types_grammar)
 
 def parse(filename=None, stmts=None):
     """ Parse header pragmas

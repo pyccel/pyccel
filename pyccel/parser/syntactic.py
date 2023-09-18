@@ -44,6 +44,8 @@ from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
 
+from pyccel.ast.datatypes import UnionType
+
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
 from pyccel.ast.operators import PyccelEq,  PyccelNe,  PyccelLt,  PyccelLe,  PyccelGt,  PyccelGe
@@ -69,7 +71,7 @@ from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
-from pyccel.parser.syntax.headers import parse as hdr_parse
+from pyccel.parser.syntax.headers import parse as hdr_parse, meta as hdr_meta, FunctionHeaderStmt, types_meta, UnionTypeStmt
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
@@ -188,14 +190,19 @@ class SyntaxParser(BasicParser):
             elif env.startswith('acc'):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):
-                expr = hdr_parse(stmts=line)
-                if isinstance(expr, MetaVariable):
-
-                    # a metavar will not appear in the semantic stage.
-                    # but can be used to modify the ast
-
-                    self._metavars[str(expr.name)] = expr.value
+                header_stmt = hdr_meta.model_from_str(line).statements[0].stmt
+                if isinstance(header_stmt, FunctionHeaderStmt):
+                    self.scope.insert_header(header_stmt)
                     expr = EmptyNode()
+                else:
+                    expr = header_stmt.stmt
+                    if isinstance(expr, MetaVariable):
+
+                        # a metavar will not appear in the semantic stage.
+                        # but can be used to modify the ast
+
+                        self._metavars[str(expr.name)] = expr.value
+                        expr = EmptyNode()
             else:
                 errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
@@ -352,14 +359,27 @@ class SyntaxParser(BasicParser):
         arguments       = []
         if stmt.args:
             n_expl = len(stmt.args)-len(stmt.defaults)
-            positional_args        = [FunctionDefArgument(PyccelSymbol(a.arg),
-                                            annotation=self._visit(a.annotation))
-                                        for a in stmt.args[:n_expl]]
-            valued_arguments       = [FunctionDefArgument(PyccelSymbol(a.arg),
-                                            annotation=self._visit(a.annotation),
-                                            value = self._visit(d))
-                                        for a,d in zip(stmt.args[n_expl:],stmt.defaults)]
-            arguments              = positional_args + valued_arguments
+
+            arguments = []
+            for a in stmt.args[:n_expl]:
+                annotation=self._visit(a.annotation)
+                if isinstance(annotation, LiteralString):
+                    annotation = types_meta.model_from_str(annotation.python_value)
+                elif annotation is Nil():
+                    annotation = UnionTypeStmt(const = None)
+                arguments.append(FunctionDefArgument(PyccelSymbol(a.arg),
+                                            annotation=annotation))
+
+            for a,d in zip(stmt.args[n_expl:], stmt.defaults):
+                annotation=self._visit(a.annotation)
+                if isinstance(annotation, LiteralString):
+                    annotation = types_meta.model_from_str(annotation.python_value)
+                elif annotation is Nil():
+                    annotation = UnionTypeStmt(const = None)
+                arguments.append(FunctionDefArgument(PyccelSymbol(a.arg),
+                                            annotation=annotation,
+                                            value = self._visit(d)))
+
             self.scope.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
 
         if stmt.kwonlyargs:
@@ -605,14 +625,13 @@ class SyntaxParser(BasicParser):
 
         name = PyccelSymbol(self._visit(stmt.name))
         self.scope.insert_symbol(name)
-        name = name.replace("'", '')
+
+        headers = self.scope.headers.get(name, None)
 
         scope = self.create_new_function_scope(name)
 
         arguments    = self._visit(stmt.args)
 
-        global_vars  = []
-        headers      = []
         template    = {}
         is_pure      = False
         is_elemental = False
@@ -630,9 +649,7 @@ class SyntaxParser(BasicParser):
                 if isinstance(arg, PyccelSymbol):
                     container.append(arg)
                 elif isinstance(arg, LiteralString):
-                    arg = str(arg)
-                    arg = arg.strip("'").strip('"')
-                    container.append(arg)
+                    container.append(types_meta.model_from_str(arg.python_value))
                 else:
                     msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
                     errors.report(msg,
@@ -641,11 +658,6 @@ class SyntaxParser(BasicParser):
             return container
 
         decorators = {}
-
-        # add the decorator @types if the arguments are annotated
-        annotated_args = []
-        for a in arguments:
-            annotated_args.append(a.annotation)
 
         for d in self._visit(stmt.decorator_list):
             tmp_var = d if isinstance(d, PyccelSymbol) else d.funcdef
@@ -657,21 +669,30 @@ class SyntaxParser(BasicParser):
         if 'types' in decorators:
             warnings.warn("The @types decorator will be removed in a future version of Pyccel. Please use type hints. The @template decorator can be used to specify multiple types", FutureWarning)
 
-        if all(not isinstance(a, Nil) for a in annotated_args):
-            if stmt.returns:
-                returns = FunctionCallArgument(self._visit(stmt.returns), keyword='results')
-                annotated_args.append(returns)
-            decorators.setdefault('types', []).append(FunctionCall('types', annotated_args))
-
-        if 'bypass' in decorators:
-            return EmptyNode()
-
         if 'stack_array' in decorators:
             decorators['stack_array'] = tuple(str(b.value) for a in decorators['stack_array']
                 for b in a.args)
 
         if 'allow_negative_index' in decorators:
             decorators['allow_negative_index'] = tuple(str(b.value) for a in decorators['allow_negative_index'] for b in a.args)
+
+        if 'pure' in decorators:
+            is_pure = True
+
+        if 'elemental' in decorators:
+            is_elemental = True
+            if len(arguments) > 1:
+                errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
+                              symbol=decorators['elemental'],
+                              bounding_box=(stmt.lineno, stmt.col_offset),
+                              severity='error')
+
+        if 'private' in decorators:
+            is_private = True
+
+        if 'inline' in decorators:
+            is_inline = True
+
         template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
@@ -726,40 +747,59 @@ class SyntaxParser(BasicParser):
 
         if not template['template_dict']:
             decorators['template'] = None
+
+        argument_annotations = [a.annotation for a in arguments]
+        result_annotation = self._visit(stmt.returns)
+        if isinstance(result_annotation, LiteralString):
+            result_annotation = types_meta.model_from_str(annotation.python_value)
+        elif result_annotation is Nil():
+            result_annotation = UnionTypeStmt(const = None)
+
+        if headers:
+            for head in headers:
+                for i,arg in enumerate(head.decs):
+                    if argument_annotations[i].const is None:
+                        argument_annotations[i].const = arg.const
+                    elif isinstance(arg.const, bool) and arg.const != argument_annotations[i].const:
+                        errors.report('Headers have conflicting constness',
+                                symbol=expr, severity='error')
+                    argument_annotations[i].dtypes += arg.dtypes
+                if head.results:
+                    result_annotation.dtypes += (head.results,)
+
         # extract the types to construct a header
         if 'types' in decorators:
-            for comb_types in decorators['types']:
+            for types_decorator in decorators['types']:
+                type_args = types_decorator.args
 
-                cache.clear_cache()
-                results = []
-                ls = comb_types.args
+                args = [a for a in type_args if not a.has_keyword]
+                kwargs = [a for a in type_args if a.has_keyword]
 
-                if len(ls) > 0 and ls[-1].has_keyword:
-                    arg_name = ls[-1].keyword
-                    if not arg_name == 'results':
-                        msg = 'Argument "{}" provided to the types decorator is not valid'.format(arg_name)
-                        errors.report(msg,
-                                    symbol = comb_types,
+                if len(kwargs) > 1:
+                    errors.report('Too many keyword arguments passed to @types decorator',
+                                symbol = types_decorator,
+                                bounding_box = (stmt.lineno, stmt.col_offset),
+                                severity='error')
+                elif kwargs:
+                    if kwargs[0].keyword != 'results':
+                        errors.report('Wrong keyword argument passed to @types decorator',
+                                    symbol = types_decorator,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
-                    else:
-                        container = ls[-1].value
-                        container = container if isinstance(container, PythonTuple) else [container]
-                        results = fill_types(container)
-                    types = fill_types(ls[:-1])
-                else:
-                    types = fill_types(ls)
+                    result_annotation.dtypes += (kwargs[0].value,)
 
-                txt  = '#$ header '
-                if len(self._context) > 1 and isinstance(self._context[-2], ast.ClassDef):
-                    txt += 'method '
-                txt += name + '(' + ','.join(types) + ')'
-
-                if results:
-                    txt += ' results(' + ','.join(results) + ')'
-
-                header = hdr_parse(stmts=txt)
-                headers += [header]
+                for i,arg in enumerate(args):
+                    annotation = arg.value
+                    if isinstance(annotation, LiteralString):
+                        annotation = types_meta.model_from_str(annotation.python_value)
+                        argument_annotations[i].dtypes += annotation.dtypes
+                        if argument_annotations[i].const is None:
+                            argument_annotations[i].const = annotation.const
+                        elif isinstance(annotation.const, bool) and annotation.const != argument_annotations[i].const:
+                            errors.report('Headers have conflicting constness',
+                                    symbol=expr, severity='error')
+                    elif annotation is not Nil():
+                        argument_annotations[i].dtypes += annotation
 
         body = stmt.body
 
@@ -773,27 +813,12 @@ class SyntaxParser(BasicParser):
 
         else:
             body = self._visit(body)
+
+        # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
             doc_string = body[0]
             doc_string.header = ''
             body = body[1:]
-
-        if 'pure' in decorators:
-            is_pure = True
-
-        if 'elemental' in decorators:
-            is_elemental = True
-            if len(arguments) > 1:
-                errors.report(FORTRAN_ELEMENTAL_SINGLE_ARGUMENT,
-                              symbol=decorators['elemental'],
-                              bounding_box=(stmt.lineno, stmt.col_offset),
-                              severity='error')
-
-        if 'private' in decorators:
-            is_private = True
-
-        if 'inline' in decorators:
-            is_inline = True
 
         body = CodeBlock(body)
 
@@ -831,13 +856,11 @@ class SyntaxParser(BasicParser):
                arguments,
                results,
                body,
-               global_vars=global_vars,
                is_pure=is_pure,
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               headers=headers,
                doc_string=doc_string,
                scope=scope)
 
