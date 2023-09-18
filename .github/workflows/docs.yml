@@ -91,7 +91,7 @@ jobs:
           touch report.txt
           while read line; do
             echo "python -m numpydoc --validate $line"
-            python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true
+            python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
           done < objects.txt
           cd ..
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
