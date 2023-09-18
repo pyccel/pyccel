@@ -3395,7 +3395,7 @@ class SemanticParser(BasicParser):
             if cls_name and expr.name == '__Pyccel__del__':
                 attributes = self.scope.find(cls_name, 'classes').attributes
                 attribute = [attr for attr in attributes if not attr.on_stack]
-                self._allocs.append(attribute) if len(attribute) > 0 else None
+                self._allocs[-1].extend(attribute) 
             body = self._visit(expr.body)
 
             # Calling the Garbage collecting,
