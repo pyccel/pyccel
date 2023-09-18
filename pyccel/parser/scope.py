@@ -12,6 +12,8 @@ from pyccel.ast.headers   import FunctionHeader, MethodHeader
 from pyccel.ast.internals import PyccelSymbol
 from pyccel.ast.variable  import Variable, DottedName
 
+from pyccel.parser.syntax.headers import FunctionHeaderStmt
+
 from pyccel.errors.errors import Errors
 
 from pyccel.naming.pythonnameclashchecker import PythonNameClashChecker
@@ -407,7 +409,7 @@ class Scope(object):
         TypeError
             Raised if the header type is unknown.
         """
-        if isinstance(expr, (FunctionHeader, MethodHeader)):
+        if isinstance(expr, (FunctionHeader, MethodHeader, FunctionHeaderStmt)):
             if expr.name in self.headers:
                 self.headers[expr.name].append(expr)
             else:
