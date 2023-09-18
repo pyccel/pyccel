@@ -1445,7 +1445,7 @@ class CCodePrinter(CodePrinter):
         if expr.variable.is_alias:
             return f'free_pointer({variable_address});\n'
         if isinstance(expr.variable.dtype, CustomDataType):
-            Pyccel__del = next((method.name for method in expr.variable.cls_base.methods if method.name.endswith('__Pyccel__del__')), None)
+            Pyccel__del = next(method.name for method in expr.variable.cls_base.methods if method.name.endswith('__Pyccel__del__'))
             return(f"{Pyccel__del}({variable_address});\n")
         return f'free_array({variable_address});\n'
 
