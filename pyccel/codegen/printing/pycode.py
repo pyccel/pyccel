@@ -247,11 +247,24 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
-        type_annotation = ''
         default = ''
 
         if expr.annotation:
-            type_annotation = f' : {expr.annotation}'
+            type_annotation = self._print(expr.annotation)
+        else:
+            var = expr.var
+            def get_type_annotation(var):
+                if isinstance(var, Variable):
+                    type_annotation = str(var.dtype)
+                    if var.rank:
+                        type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
+                    return f"'{type_annotation}'"
+                elif isinstance(var, FunctionAddress):
+                    results = ', '.join(get_type_annotation(r.var) for r in var.results)
+                    arguments = ', '.join(get_type_annotation(a.var) for a in var.arguments)
+                    return f'"({results})({arguments})"'
+
+            type_annotation = get_type_annotation(var)
 
         if expr.has_default:
             if isinstance(expr.value, FunctionDef):
@@ -259,7 +272,7 @@ class PythonCodePrinter(CodePrinter):
             else:
                 default = f' = {self._print(expr.value)}'
 
-        return f'{name}{type_annotation}{default}'
+        return f'{name} : {type_annotation}{default}'
 
     def _print_FunctionCallArgument(self, expr):
         if expr.keyword:
@@ -353,7 +366,7 @@ class PythonCodePrinter(CodePrinter):
                         args = []
                     else:
                         args = [LiteralString(a) for a in func]
-                    if n == 'types' and len(args)==0:
+                    if n == 'types':
                         continue
                     if args:
                         args = ', '.join(self._print(i) for i in args)
@@ -484,13 +497,22 @@ class PythonCodePrinter(CodePrinter):
                 args = self._print(expr.func_args))
 
     def _print_PythonReal(self, expr):
-        return '({}).real'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.real'.format(self._print(expr.internal_var))
+        else:
+            return '({}).real'.format(self._print(expr.internal_var))
 
     def _print_PythonImag(self, expr):
-        return '({}).imag'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.imag'.format(self._print(expr.internal_var))
+        else:
+            return '({}).imag'.format(self._print(expr.internal_var))
 
     def _print_PythonConjugate(self, expr):
-        return '({}).conjugate()'.format(self._print(expr.internal_var))
+        if isinstance(expr.internal_var, Variable):
+            return '{}.conjugate()'.format(self._print(expr.internal_var))
+        else:
+            return '({}).conjugate()'.format(self._print(expr.internal_var))
 
     def _print_PythonPrint(self, expr):
         return 'print({})\n'.format(', '.join(self._print(a) for a in expr.expr))

@@ -1,28 +1,21 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
-#$ header class Point2d(public)
-#$ header method __init__(Point2d, double, double)
-#$ header method translate(Point2d, double, double)
 
 class Point2d:
-    def __init__(self, x, y):
+    def __init__(self : 'Point2d', x : float, y : float):
         self.x = x
         self.y = y
 
-    def translate(self, a, b):
+    def translate(self : 'Point2d', a : float, b : float):
         self.x = self.x + a
         self.y = self.y + b
 
-#$ header class Point3d(public)
-#$ header method __init__(Point3d, double, double, double)
-#$ header method translate(Point3d, double, double, double)
-
 class Point3d(Point2d):
-    def __init__(self, x, y, z):
+    def __init__(self : 'Point3d', x : float, y : float, z : float):
         self.z = z
         Point2d.__init__(self,x, y)
         #super().__init__(x, y)
 
-    def translate(self, a, b, c):
+    def translate(self : 'Point3d', a : float, b : float, c : float):
         self.z = self.z + c
         Point2d.translate(self,a,b)
         #super().translate(a,b)

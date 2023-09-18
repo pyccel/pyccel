@@ -14,7 +14,7 @@ from pyccel.ast.builtins  import PythonPrint, PythonType
 from pyccel.ast.builtins  import PythonList, PythonTuple
 
 from pyccel.ast.core      import Declare, For, CodeBlock
-from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument, ClassDef
+from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
@@ -185,6 +185,21 @@ math_function_to_c = {
     'MathDegrees'   : 'pyc_degrees',
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
+    # --------------------------- cmath functions --------------------------
+    'CmathAcos'  : 'cacos',
+    'CmathAcosh' : 'cacosh',
+    'CmathAsin'  : 'casin',
+    'CmathAsinh' : 'casinh',
+    'CmathAtan'  : 'catan',
+    'CmathAtanh' : 'catanh',
+    'CmathCos'   : 'ccos',
+    'CmathCosh'  : 'ccosh',
+    'CmathExp'   : 'cexp',
+    'CmathSin'   : 'csin',
+    'CmathSinh'  : 'csinh',
+    'CmathSqrt'  : 'csqrt',
+    'CmathTan'   : 'ctan',
+    'CmathTanh'  : 'ctanh',
 }
 
 c_library_headers = (
@@ -242,7 +257,6 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'math',
                  'string',
                  'ndarrays',
-                 'math',
                  'complex',
                  'stdint',
                  'pyc_math_c',
@@ -740,6 +754,10 @@ class CCodePrinter(CodePrinter):
             for method in classDef.methods:
                 method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
                 funcs += f"{self.function_signature(method)};\n"
+            for interface in classDef.interfaces:
+                for func in interface.functions:
+                    func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
+                    funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
@@ -1542,17 +1560,20 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['pyc_math_c'])
         else:
             if expr.dtype is NativeComplex():
-                self.add_import(c_imports['cmath'])
+                self.add_import(c_imports['complex'])
             else:
                 self.add_import(c_imports['math'])
-        args = []
-        for arg in expr.args:
-            if arg.dtype != NativeFloat() and not func_name.startswith("pyc"):
-                args.append(self._print(NumpyFloat(arg)))
-            else:
-                args.append(self._print(arg))
+        if expr.dtype is NativeComplex():
+            args = [self._print(a) for a in expr.args]
+        else:
+            args = []
+            for arg in expr.args:
+                if arg.dtype is not NativeFloat() and not func_name.startswith("pyc"):
+                    args.append(self._print(NumpyFloat(arg)))
+                else:
+                    args.append(self._print(arg))
         code_args = ', '.join(args)
-        if expr.dtype == NativeInteger():
+        if expr.dtype is NativeInteger():
             cast_type = self.find_in_dtype_registry('int', expr.precision)
             return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
@@ -2256,8 +2277,9 @@ class CCodePrinter(CodePrinter):
 
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)
-        return methods
+        interfaces = ''.join(self._print(function) for interface in expr.interfaces for function in interface.functions)
 
+        return methods + interfaces
     #=================== MACROS ==================
 
     def _print_MacroShape(self, expr):

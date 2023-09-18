@@ -18,7 +18,6 @@ from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
 __all__ = (
-    'ClassHeader',
     'FunctionHeader',
     'Header',
     'InterfaceHeader',
@@ -563,41 +562,6 @@ class MethodHeader(FunctionHeader):
                 self.results,
                 self.is_static,)
         return (self.__class__, args)
-
-#==============================================================================
-class ClassHeader(Header):
-    """Represents class header in the code.
-
-    name: str
-        class name
-
-    options: str, list, tuple
-        a list of options
-
-    Examples
-
-    >>> from pyccel.ast.headers import ClassHeader
-    >>> ClassHeader('Matrix', ('abstract', 'public'))
-    ClassHeader(Matrix, (abstract, public))
-    """
-    __slots__ = ('_name','_options')
-
-    def __init__(self, name, options):
-        if not(iterable(options)):
-            raise TypeError("Expecting options to be iterable.")
-
-        self._name    = name
-        self._options = options
-
-        super().__init__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def options(self):
-        return self._options
 
 #==============================================================================
 class InterfaceHeader(Header):

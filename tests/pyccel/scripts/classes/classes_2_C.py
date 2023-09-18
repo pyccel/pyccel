@@ -1,19 +1,14 @@
 # pylint: disable=missing-class-docstring,  missing-function-docstring, missing-module-docstring
 import numpy as np
 
-#$ header class Point(public)
-#$ header method __init__(Point)
-#$ header method addition(Point, float, float)
-#$ header method subtraction(Point, float[:], float[:])
-
 class Point:
-    def __init__(self):
+    def __init__(self : 'Point'):
         pass
 
-    def addition(self, a, b):
+    def addition(self : 'Point', a : float, b : float):
         return a + b
 
-    def subtraction(self, a, b):
+    def subtraction(self : 'Point', a : 'float[:]', b : 'float[:]'):
         return a - b
 
 if __name__ == '__main__':

@@ -5,7 +5,10 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1476 : Add C support for a class containing `Interfaces`.
 -   #1472 : Add C printing support for a class containing scalar data.
+-   #1492 : Types of arguments for class methods can be declared like function arguments.
+-   #1511 : Add support for the `cmath` library.
 
 ### Fixed
 
@@ -16,6 +19,8 @@ All notable changes to this project will be documented in this file.
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
 
 ### Deprecated
+
+-   #1513 : Stop printing `@types` decorators in generated Python code.
 
 ## \[1.9.1\] - 2023-08-31
 
