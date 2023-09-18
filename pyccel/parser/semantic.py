@@ -62,7 +62,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
-from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex,
@@ -1851,6 +1851,38 @@ class SemanticParser(BasicParser):
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
 
+    def _visit_UnionTypeStmt(self, expr):
+        dtypes = annotation.dtypes
+
+        for type_annot in dtypes:
+            dtype, prec = dtype_and_precision_registry[type_annot.dtype]
+
+        rank = annotation.
+        trailer = annotation.trailer
+        order = 'C'
+
+        if trailer:
+            if trailer.order:
+                order = str(trailer.order)
+            rank = len(trailer.args)
+        else:
+            rank = 0
+        d_var={}
+        d_var['datatype']=dtype
+        d_var['rank'] = len(trailer)
+        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
+        d_var['precision']  = precision
+        d_var['is_const'] = annotation.const
+        if d_var['rank']>1:
+            d_var['order'] = order
+
+    def _visit_FunctionDefArgument(self, expr):
+        print(expr)
+        annotation = self._visit(expr.annotation)
+        if len(dtypes) == 0:
+            errors.report(f'Missing type annotation for argument {expr.var}',
+                    severity='fatal', symbol=expr)
+
     def _visit_CodeBlock(self, expr):
         ls = []
         self._additional_exprs.append([])
@@ -3204,64 +3236,22 @@ class SemanticParser(BasicParser):
         is_private      = expr.is_private
         is_inline       = expr.is_inline
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        args_number = len(expr.arguments)
         templates = self.scope.find_all('templates')
         if decorators['template']:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
-        tmp_headers = expr.headers
         python_name = expr.scope.get_python_name(name)
-        if cls_name:
-            tmp_headers += self.get_headers(cls_name + '.' + python_name)
-            args_number -= 1
-        else:
-            tmp_headers += self.get_headers(python_name)
-        for header in tmp_headers:
-            if all(header.dtypes != hd.dtypes for hd in headers):
-                headers.append(header)
-            else:
-                errors.report(DUPLICATED_SIGNATURE, symbol=header,
-                        severity='warning')
-        for hd in headers:
-            if (args_number != len(hd.dtypes)):
-                n_types = len(hd.dtypes)
-                msg = f"""The number of arguments in the function {name} ({args_number}) does not match the number
-                        of types in decorator/header ({n_types})."""
-                if (args_number < len(hd.dtypes)):
-                    errors.report(msg, symbol=expr.arguments, severity='warning')
-                else:
-                    errors.report(msg, symbol=expr.arguments, severity='fatal')
 
-        interfaces = []
-        if len(headers) == 0:
-            # check if a header is imported from a header file
-            # TODO improve in the case of multiple headers ( interface )
-            func       = self.scope.find(name, 'functions')
-            if func and func.is_header:
-                interfaces = [func]
+        arguments = [self._visit(a) for a in expr.arguments]
 
-        if expr.arguments and not headers and not interfaces:
-
-            # TODO ERROR wrong position
-
-            errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='error')
-
-        # We construct a FunctionDef from each function header
-        for hd in headers:
-            interfaces += hd.create_definition(templates)
-
-        if not interfaces:
-            # this for the case of a function without arguments => no headers
-            interfaces = [FunctionDef(name, [], [], [])]
+        # this for the case of a function without arguments => no headers
+        interfaces = [FunctionDef(name, [], [], [])]
 
 #        TODO move this to codegen
 #        vec_func = None
