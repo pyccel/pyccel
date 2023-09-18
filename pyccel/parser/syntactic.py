@@ -367,8 +367,10 @@ class SyntaxParser(BasicParser):
                     annotation = types_meta.model_from_str(annotation.python_value)
                 elif annotation is Nil():
                     annotation = UnionTypeStmt(const = None)
-                arguments.append(FunctionDefArgument(PyccelSymbol(a.arg),
-                                            annotation=annotation))
+                new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                                            annotation=annotation)
+                new_arg.set_fst(a)
+                arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
                 annotation=self._visit(a.annotation)
@@ -376,9 +378,11 @@ class SyntaxParser(BasicParser):
                     annotation = types_meta.model_from_str(annotation.python_value)
                 elif annotation is Nil():
                     annotation = UnionTypeStmt(const = None)
-                arguments.append(FunctionDefArgument(PyccelSymbol(a.arg),
+                new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=annotation,
-                                            value = self._visit(d)))
+                                            value = self._visit(d))
+                new_arg.set_fst(a)
+                arguments.append(new_arg)
 
             self.scope.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
 
