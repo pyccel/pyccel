@@ -3394,8 +3394,7 @@ class SemanticParser(BasicParser):
             # we annotate the body
             if cls_name and expr.name == '__Pyccel__del__':
                 attributes = self.scope.find(cls_name, 'classes').attributes
-                attribute = []
-                attribute.extend(attr for attr in attributes if not attr.on_stack)
+                attribute = [attr for attr in attributes if not attr.on_stack]
                 self._allocs.append(attribute) if len(attribute) > 0 else None
             body = self._visit(expr.body)
 
