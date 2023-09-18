@@ -1444,6 +1444,8 @@ class CCodePrinter(CodePrinter):
         variable_address = self._print(ObjectAddress(expr.variable))
         if expr.variable.is_alias:
             return f'free_pointer({variable_address});\n'
+        if isinstance(expr.variable.dtype, CustomDataType):
+            return(f"{str(expr.variable.dtype).capitalize()}__Pyccel__del({variable_address});\n")
         return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):

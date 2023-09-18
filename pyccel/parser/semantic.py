@@ -494,6 +494,9 @@ class SemanticParser(BasicParser):
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and not self._current_function == '__Pyccel__del__':
                         continue
+                if isinstance(i, ConstructorCall):
+                    deallocs.append(Deallocate(i.cls_variable))
+                    continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
@@ -2393,6 +2396,7 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable)
+            self._allocs.append([expr])
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
