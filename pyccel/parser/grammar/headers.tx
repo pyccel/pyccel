@@ -17,15 +17,15 @@ TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' 
 
 DataType: ID|STAR;
 
-Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
+Type: dtype=DataType (trailer=TrailerSubscriptList)?;
 
 FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
 
 TypeHeader: FuncType|Type;
-UnionTypeStmt: (const=Const)? dtypes+=TypeHeader['|'] ;
+UnionTypeStmt: (const?=Const) dtypes+=TypeHeader['|'] ;
 Const: 'const';
 
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
   ((name=ID '(') | ((kind=FunctionKind)? (static=Static)? name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
@@ -80,5 +80,4 @@ FunctionMacroStmt:
 // ****************
 
 STAR: '*';
-OPTIONAL: '!';
 
