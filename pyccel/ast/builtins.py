@@ -240,7 +240,7 @@ class PythonComplex(PyccelAstNode):
             else:
                 imag_part += arg1.python_value
 
-            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+            return LiteralComplex(real_part, imag_part, precision = cls.precision)
 
 
         # Split arguments depending on their type to ensure that the arguments are
@@ -359,10 +359,10 @@ class PythonFloat(PyccelAstNode):
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
+        if isinstance(arg, LiteralFloat) and arg.precision == cls.precision:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
-            return LiteralFloat(arg.python_value, precision = cls._precision)
+            return LiteralFloat(arg.python_value, precision = cls.precision)
         return super().__new__(cls)
 
     def __init__(self, arg):
@@ -392,7 +392,7 @@ class PythonInt(PyccelAstNode):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.python_value, precision = cls._precision)
+            return LiteralInteger(arg.python_value, precision = cls.precision)
         else:
             return super().__new__(cls)
 
