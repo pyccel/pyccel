@@ -7,8 +7,10 @@
 See the developer docs for more details
 """
 
-from itertools import chain
+from itertools import chain, product
 import warnings
+
+from math import prod
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -1869,6 +1871,9 @@ class SemanticParser(BasicParser):
             else:
                 rank = 0
 
+            if rank < 2:
+                order = None
+
             dtype = dtype_registry[dtype]
 
             cls_base = get_cls_base(dtype, prec, rank)
@@ -1878,7 +1883,6 @@ class SemanticParser(BasicParser):
         return UnionTypeAnnotation(*types)
 
     def _visit_FunctionDefArgument(self, expr):
-        print(expr)
         types = self._visit(expr.annotation)
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
@@ -1892,19 +1896,10 @@ class SemanticParser(BasicParser):
 
         possible_args = []
         for t in types.type_list:
-            new_expressions = []
-            d_var = {}
-            d_var['datatype'       ] = t.datatype
-            d_var['precision'      ] = t.precision
-            d_var['memory_handling'] = 'heap' if t.rank > 0 else 'stack'
-            d_var['shape'          ] = None
-            d_var['rank'           ] = t.rank
-            d_var['order'          ] = t.order
-            d_var['cls_base'       ] = t.cls_base
-            print(self.scope._used_symbols)
-            v = self._assign_lhs_variable(expr.name, d_var, None, new_expressions, is_augassign = False)
+            v = Variable(t.datatype, self.scope.get_expected_name(expr.name), precision = t.precision,
+                    shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base, is_const = t.is_const,
+                    memory_handling = 'heap' if t.rank > 0 else 'stack')
             print(v)
-            print(new_expressions)
             possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
 
         return possible_args
@@ -3274,7 +3269,16 @@ class SemanticParser(BasicParser):
 
         python_name = expr.scope.get_python_name(name)
 
+        # Change to syntactic FunctionDef scope to ensure get_expected_name is available
+        current_scope = self.scope
+        self.scope = expr.scope
         arguments = [self._visit(a) for a in expr.arguments]
+        self.scope = current_scope
+
+        n_interface_funcs = prod(len(a) for a in arguments)
+        argument_vars = list(product(*arguments))
+
+        print("Ninterfaces : ", n_interface_funcs)
 
         # this for the case of a function without arguments => no headers
         interfaces = [FunctionDef(name, [], [], [])]
