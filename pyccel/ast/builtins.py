@@ -66,11 +66,11 @@ class PythonComplexProperty(PyccelInternalFunction):
     arg : Variable, Literal
     """
     __slots__ = ()
-    _dtype = NativeFloat()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeFloat()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -146,11 +146,11 @@ class PythonConjugate(PyccelInternalFunction):
         conjugate function.
     """
     __slots__ = ()
-    _dtype = NativeComplex()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeComplex()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     name = 'conjugate'
 
     def __new__(cls, arg):
@@ -178,11 +178,11 @@ class PythonBool(PyccelAstNode):
     """
     __slots__ = ('_arg',)
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeBool()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -211,11 +211,11 @@ class PythonComplex(PyccelAstNode):
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
 
-    _dtype = NativeComplex()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeComplex()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     _real_cast = PythonReal
     _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
@@ -240,6 +240,7 @@ class PythonComplex(PyccelAstNode):
             else:
                 imag_part += arg1.python_value
 
+            print(cls, cls.precision)
             return LiteralComplex(real_part, imag_part, precision = cls.precision)
 
 
@@ -351,11 +352,11 @@ class PythonFloat(PyccelAstNode):
     """
     __slots__ = ('_arg')
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeFloat()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -383,11 +384,11 @@ class PythonInt(PyccelAstNode):
 
     __slots__ = ('_arg')
     name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeInteger()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
@@ -547,11 +548,11 @@ class PythonLen(PyccelInternalFunction):
 
     __slots__ = ()
     name      = 'len'
-    _dtype     = NativeInteger()
-    _precision = -1
-    _rank      = 0
-    _shape     = None
-    _order     = None
+    dtype     = NativeInteger()
+    precision = -1
+    rank      = 0
+    shape     = None
+    order     = None
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -761,9 +762,9 @@ class PythonSum(PyccelInternalFunction):
     """
     __slots__ = ('_dtype','_precision')
     name   = 'sum'
-    _rank  = 0
-    _shape = None
-    _order = None
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
@@ -784,9 +785,9 @@ class PythonMax(PyccelInternalFunction):
     """
     __slots__ = ('_dtype','_precision')
     name   = 'max'
-    _rank  = 0
-    _shape = None
-    _order = None
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, *x):
         if len(x)==1:
@@ -813,9 +814,9 @@ class PythonMin(PyccelInternalFunction):
     """
     __slots__ = ('_dtype','_precision')
     name   = 'min'
-    _rank  = 0
-    _shape = None
-    _order = None
+    rank  = 0
+    shape = None
+    order = None
     def __init__(self, *x):
         if len(x)==1:
             x = x[0]
