@@ -48,12 +48,25 @@ class TypeAnnotation(Basic):
     def is_const(self):
         return self._is_const
 
+    def __eq__(self, other):
+        if isinstance(other, TypeAnnotation):
+            return self.datatype == other.datatype and \
+                   self.cls_base == other.cls_base and \
+                   self.precision == other.precision and \
+                   self.rank == other.rank and \
+                   self.order == other.order
+        else:
+            return False
+
+    def __hash__(self):
+        return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
+
 class UnionTypeAnnotation(Basic):
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
-        self._type_annotations = type_annotations
+        self._type_annotations = tuple(set(type_annotations))
 
         if any(not isinstance(t, TypeAnnotation) for t in type_annotations):
             raise TypeError("Type annotations should have type TypeAnnotation")
