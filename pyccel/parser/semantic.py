@@ -1856,22 +1856,20 @@ class SemanticParser(BasicParser):
         return a
 
     def _visit_UnionTypeStmt(self, expr):
-        is_const = expr.const is not None
+        is_const = expr.const
         types = []
         for type_annot in expr.dtypes:
             dtype, prec = dtype_and_precision_registry[type_annot.dtype]
 
             trailer = type_annot.trailer
-            order = 'C'
-
             if trailer:
-                if trailer.order:
-                    order = str(trailer.order)
                 rank = len(trailer.args)
+                if rank > 1:
+                    order = trailer.order or 'C'
+                else:
+                    order = None
             else:
                 rank = 0
-
-            if rank < 2:
                 order = None
 
             dtype = dtype_registry[dtype]
@@ -1888,18 +1886,23 @@ class SemanticParser(BasicParser):
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
 
-        if expr.value:
-            value = self._visit(expr.value)
-        else:
-            value = None
+        value = None if expr.value is None else self._visit(expr.value)
         kwonly = expr.is_kwonly
+        is_optional = isinstance(value, Nil)
 
         possible_args = []
         for t in types.type_list:
-            v = Variable(t.datatype, self.scope.get_expected_name(expr.name), precision = t.precision,
-                    shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base, is_const = t.is_const,
-                    memory_handling = 'heap' if t.rank > 0 else 'stack')
-            print(v)
+            dtype = t.datatype
+            prec  = t.precision
+            rank  = t.rank
+            v = Variable(dtype, self.scope.get_expected_name(expr.name), precision = prec,
+                    shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
+                    is_const = t.is_const, is_optional = is_optional,
+                    memory_handling = 'heap' if rank > 0 else 'stack')
+            if isinstance(value, Literal) and \
+                    value.dtype is dtype and \
+                    value.precision != prec:
+                value = convert_to_literal(value.python_value, dtype, prec)
             possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
 
         return possible_args
@@ -3281,42 +3284,18 @@ class SemanticParser(BasicParser):
         print("Ninterfaces : ", n_interface_funcs)
 
         # this for the case of a function without arguments => no headers
-        interfaces = [FunctionDef(name, [], [], [])]
-
-#        TODO move this to codegen
-#        vec_func = None
-#        if 'vectorize' in decorators:
-#            #TODO move to another place
-#            vec_name  = 'vec_' + name
-#            arg       = decorators['vectorize'][0]
-#            arg       = str(arg.name)
-#            args      = [str(i.name) for i in expr.arguments]
-#            index_arg = args.index(arg)
-#            arg       = Symbol(arg)
-#            vec_arg   = arg
-#            index     = self.namespace.get_new_name()
-#            range_    = Function('range')(Function('len')(arg))
-#            args      = symbols(args)
-#            args[index_arg] = vec_arg[index]
-#            body_vec        = Assign(args[index_arg], Function(name)(*args))
-#            body_vec.set_fst(expr.fst)
-#            body_vec   = [For(index, range_, [body_vec])]
-#            header_vec = header.vectorize(index_arg)
-#            vec_func   = expr.vectorize(body_vec, header_vec)
-
         interface_name = name
 
-        for i, m in enumerate(interfaces):
-            args           = []
+        for i in range(n_interface_funcs):
             arg_vars       = []
             results        = []
             global_vars    = []
             imports        = []
             arg            = None
-            arguments      = expr.arguments
-            header_results = m.results
+            arguments      = argument_vars[i]
+            header_results = None
 
-            if len(interfaces) > 1:
+            if n_interface_funcs > 1:
                 name = interface_name + '_' + str(i).zfill(2)
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
@@ -3331,58 +3310,13 @@ class SemanticParser(BasicParser):
                 var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
                 self.scope.insert_variable(var)
 
-            if arguments:
-                for (a, ah) in zip(arguments, m.arguments):
-                    ahv = ah.var
-                    if isinstance(ahv, FunctionAddress):
-                        d_var = {}
-                        d_var['is_argument'] = True
-                        d_var['memory_handling'] = 'alias'
-                        if a.has_default:
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
-                        a_new = FunctionAddress(self.scope.get_expected_name(a.name),
-                                        ahv.arguments, ahv.results, [], **d_var)
-                    else:
-                        d_var = self._infer_type(ahv)
-                        d_var['shape'] = ahv.alloc_shape
-                        d_var['is_argument'] = True
-                        d_var['is_const'] = ahv.is_const
-                        dtype = d_var.pop('datatype')
-                        if not d_var['cls_base']:
-                            try:
-                                d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
-                            except KeyError:
-                                d_var['cls_base'] = self.scope.find( dtype, 'classes' )
+            for a in arguments:
+                a_var = a.var
+                if isinstance(a_var, FunctionAddress):
+                    self.insert_function(a_var)
+                else:
+                    self.scope.insert_variable(a_var, a.name)
 
-                        if 'allow_negative_index' in self.scope.decorators:
-                            if a.name in decorators['allow_negative_index']:
-                                d_var.update(allows_negative_indexes=True)
-                        if a.has_default:
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
-                        a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
-
-
-                    value = None if a.value is None else self._visit(a.value)
-                    if isinstance(value, Literal) and \
-                            value.dtype is a_new.dtype and \
-                            value.precision != a_new.precision:
-                        value = convert_to_literal(value.python_value, a_new.dtype, a_new.precision)
-
-                    arg_new = FunctionDefArgument(a_new,
-                                value=value,
-                                kwonly=a.is_kwonly,
-                                annotation=ah.annotation)
-
-                    args.append(arg_new)
-                    arg_vars.append(a_new)
-                    if isinstance(a_new, FunctionAddress):
-                        self.insert_function(a_new)
-                    else:
-                        self.scope.insert_variable(a_new, a.name)
             results = expr.results
             if header_results:
                 new_results = []
@@ -3401,7 +3335,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, args, results, [])
+            recursive_func_obj = FunctionDef(name, arguments, results, [])
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
@@ -3421,7 +3355,7 @@ class SemanticParser(BasicParser):
                 dt       = self.get_class_construct(cls_name)()
                 cls_base = self.scope.find(cls_name, 'classes')
                 var      = Variable(dt, 'self', cls_base=cls_base)
-                args     = [FunctionDefArgument(var)] + args
+                arguments     = [FunctionDefArgument(var)] + arguments
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -3464,7 +3398,7 @@ class SemanticParser(BasicParser):
                             (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
             # ... computing inout arguments
-            for a in args:
+            for a in arguments:
                 if a.name in chain(results_names, ['self']) or a.var in all_assigned:
                     v = a.var
                     if isinstance(v, Variable) and v.is_const:
@@ -3505,7 +3439,7 @@ class SemanticParser(BasicParser):
             else:
                 cls = FunctionDef
             func = cls(name,
-                    args,
+                    arguments,
                     results,
                     body,
                     **func_kwargs)
