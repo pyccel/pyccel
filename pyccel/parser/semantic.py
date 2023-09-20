@@ -1882,6 +1882,14 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefArgument(self, expr):
         types = self._visit(expr.annotation)
+        if isinstance(types, PyccelFunctionDef):
+            type_func = types.cls_name
+            dtype = type_func.dtype
+            prec = type_func.precision
+            rank = 0
+            order = None
+            cls_base = get_cls_base(dtype, prec, rank)
+            types = UnionTypeAnnotation(TypeAnnotation(dtype, cls_base, prec, rank, order))
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
