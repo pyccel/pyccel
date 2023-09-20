@@ -4,6 +4,7 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+from .basic import Basic
 
 class TypeAnnotation(Basic):
     __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
@@ -23,38 +24,33 @@ class TypeAnnotation(Basic):
 
         super().__init__()
 
-    @parameter
+    @property
     def datatype(self):
         return self._datatype
 
-    @parameter
+    @property
     def cls_base(self):
         return self._cls_base
 
-    @parameter
+    @property
     def precision(self):
         return self._precision
 
-    @parameter
+    @property
     def rank(self):
         return self._rank
 
-    @parameter
+    @property
     def order(self):
         return self._order
 
-    @parameter
+    @property
     def is_const(self):
         return self._is_const
 
 class UnionTypeAnnotation(Basic):
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
-    def __new__(cls, *type_annotations):
-        if len(type_annotations) == 1:
-            return type_annotations[0]
-        else:
-            super().__new__(cls)
 
     def __init__(self, *type_annotations):
         self._type_annotations = type_annotations
@@ -63,3 +59,7 @@ class UnionTypeAnnotation(Basic):
             raise TypeError("Type annotations should have type TypeAnnotation")
 
         super().__init__()
+
+    @property
+    def type_list(self):
+        return self._type_annotations
