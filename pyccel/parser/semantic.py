@@ -1857,7 +1857,6 @@ class SemanticParser(BasicParser):
         for type_annot in dtypes:
             dtype, prec = dtype_and_precision_registry[type_annot.dtype]
 
-        rank = annotation.
         trailer = annotation.trailer
         order = 'C'
 
