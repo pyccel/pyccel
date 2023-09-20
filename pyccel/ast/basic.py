@@ -469,6 +469,35 @@ class PyccelAstNode(Basic):
         This is only relevant if rank > 1 """
         return self._order # pylint: disable=no-member
 
+    @classmethod
+    def static_shape(self):
+        """ Number of dimensions of the object
+        """
+        return self._shape # pylint: disable=no-member
+
+    @classmethod
+    def static_rank(self):
+        """ Number of dimensions of the object
+        """
+        return self._rank # pylint: disable=no-member
+
+    @classmethod
+    def static_dtype(self):
+        """ Datatype of the object """
+        return self._dtype # pylint: disable=no-member
+
+    @classmethod
+    def static_precision(self):
+        """ Precision of the datatype of the object """
+        return self._precision # pylint: disable=no-member
+
+    @classmethod
+    def static_order(self):
+        """ Indicates whether the data is stored in
+        row-major ('C') or column-major ('F') format.
+        This is only relevant if rank > 1 """
+        return self._order # pylint: disable=no-member
+
     def copy_attributes(self, x):
         self._shape     = x.shape
         self._rank      = x.rank

@@ -1884,8 +1884,8 @@ class SemanticParser(BasicParser):
         types = self._visit(expr.annotation)
         if isinstance(types, PyccelFunctionDef):
             type_func = types.cls_name
-            dtype = type_func.dtype
-            prec = type_func.precision
+            dtype = type_func.static_dtype()
+            prec = type_func.static_precision()
             rank = 0
             order = None
             cls_base = get_cls_base(dtype, prec, rank)
