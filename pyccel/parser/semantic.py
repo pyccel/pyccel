@@ -60,7 +60,7 @@ from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
-from pyccel.ast.datatypes import NativeRange, str_dtype
+from pyccel.ast.datatypes import NativeRange, str_dtype, dtype_registry
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
@@ -102,6 +102,8 @@ from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, Pycc
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+
+from pyccel.ast.type_annotations import TypeAnnotation, UnionTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -1852,35 +1854,60 @@ class SemanticParser(BasicParser):
         return a
 
     def _visit_UnionTypeStmt(self, expr):
-        dtypes = annotation.dtypes
-
-        for type_annot in dtypes:
+        is_const = expr.const is not None
+        types = []
+        for type_annot in expr.dtypes:
             dtype, prec = dtype_and_precision_registry[type_annot.dtype]
 
-        trailer = annotation.trailer
-        order = 'C'
+            trailer = type_annot.trailer
+            order = 'C'
 
-        if trailer:
-            if trailer.order:
-                order = str(trailer.order)
-            rank = len(trailer.args)
-        else:
-            rank = 0
-        d_var={}
-        d_var['datatype']=dtype
-        d_var['rank'] = len(trailer)
-        d_var['memory_handling'] = 'heap' if len(trailer) > 0 else 'stack'
-        d_var['precision']  = precision
-        d_var['is_const'] = annotation.const
-        if d_var['rank']>1:
-            d_var['order'] = order
+            if trailer:
+                if trailer.order:
+                    order = str(trailer.order)
+                rank = len(trailer.args)
+            else:
+                rank = 0
+
+            dtype = dtype_registry[dtype]
+
+            cls_base = get_cls_base(dtype, prec, rank)
+
+            types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+
+        return UnionTypeAnnotation(*types)
 
     def _visit_FunctionDefArgument(self, expr):
         print(expr)
-        annotation = self._visit(expr.annotation)
-        if len(dtypes) == 0:
+        types = self._visit(expr.annotation)
+        if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
+
+        if expr.value:
+            value = self._visit(expr.value)
+        else:
+            value = None
+        kwonly = expr.is_kwonly
+
+        possible_args = []
+        for t in types.type_list:
+            new_expressions = []
+            d_var = {}
+            d_var['datatype'       ] = t.datatype
+            d_var['precision'      ] = t.precision
+            d_var['memory_handling'] = 'heap' if t.rank > 0 else 'stack'
+            d_var['shape'          ] = None
+            d_var['rank'           ] = t.rank
+            d_var['order'          ] = t.order
+            d_var['cls_base'       ] = t.cls_base
+            print(self.scope._used_symbols)
+            v = self._assign_lhs_variable(expr.name, d_var, None, new_expressions, is_augassign = False)
+            print(v)
+            print(new_expressions)
+            possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
+
+        return possible_args
 
     def _visit_CodeBlock(self, expr):
         ls = []
