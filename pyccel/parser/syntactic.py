@@ -192,6 +192,12 @@ class SyntaxParser(BasicParser):
             elif env.startswith('header'):
                 header_stmt = hdr_meta.model_from_str(line).statements[0].stmt
                 if isinstance(header_stmt, FunctionHeaderStmt):
+                    warnings.warn("Support for specifying types via headers will be removed in a " +
+                                  "future version of Pyccel. Please use type hints. The @template " +
+                                  "decorator can be used to specify multiple types. See the " +
+                                  "documentation at " +
+                                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                                  "for examples.", FutureWarning)
                     self.scope.insert_header(header_stmt)
                     expr = EmptyNode()
                 else:
