@@ -4301,11 +4301,11 @@ class InProgram(PyccelAstNode):
     Class representing the boolean:
     __name__ == '__main__'
     """
-    _dtype = NativeBool()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeBool()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
     _attribute_nodes = ()
     __slots__ = ()
 

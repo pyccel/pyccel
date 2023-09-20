@@ -69,9 +69,9 @@ class PyccelBitOperator(PyccelOperator):
     arg2: PyccelAstNode
         The second argument passed to the operator
     """
-    _shape = None
-    _rank  = 0
-    _order = None
+    shape = None
+    rank  = 0
+    order = None
     __slots__ = ('_dtype','_precision')
 
     def _set_order(self):

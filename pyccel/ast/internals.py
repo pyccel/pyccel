@@ -85,11 +85,11 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeInteger()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -132,11 +132,11 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _dtype = NativeInteger()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
+    dtype = NativeInteger()
+    precision = -1
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg, index):
         if not isinstance(arg, PyccelAstNode):

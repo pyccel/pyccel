@@ -160,14 +160,14 @@ class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['float32'][1]
+    precision = dtype_registry['float32'][1]
     name = 'float32'
 
 class NumpyFloat64(NumpyFloat):
     """ Represents a call to numpy.float64() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['float64'][1]
+    precision = dtype_registry['float64'][1]
     name = 'float64'
 
 #=======================================================================================
@@ -199,28 +199,28 @@ class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['int8'][1]
+    precision = dtype_registry['int8'][1]
     name = 'int8'
 
 class NumpyInt16(NumpyInt):
     """ Represents a call to numpy.int16() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['int16'][1]
+    precision = dtype_registry['int16'][1]
     name = 'int16'
 
 class NumpyInt32(NumpyInt):
     """ Represents a call to numpy.int32() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['int32'][1]
+    precision = dtype_registry['int32'][1]
     name = 'int32'
 
 class NumpyInt64(NumpyInt):
     """ Represents a call to numpy.int64() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['int64'][1]
+    precision = dtype_registry['int64'][1]
     name = 'int64'
 
 #==============================================================================
@@ -308,14 +308,14 @@ class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['complex64'][1]
+    precision = dtype_registry['complex64'][1]
     name = 'complex64'
 
 class NumpyComplex128(NumpyComplex):
     """ Represents a call to numpy.complex128() function.
     """
     __slots__ = ()
-    _precision = dtype_registry['complex128'][1]
+    precision = dtype_registry['complex128'][1]
     name = 'complex128'
 
 DtypePrecisionToCastFunction = {
@@ -355,9 +355,9 @@ class NumpyResultType(PyccelInternalFunction):
         and no dtypes).
     """
     __slots__ = ('_dtype','_precision')
-    _rank = 0
-    _shape = None
-    _order = None
+    rank = 0
+    shape = None
+    order = None
     name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
@@ -618,8 +618,8 @@ class NumpyArange(NumpyNewArray):
     """
     __slots__ = ('_start','_step','_stop','_dtype','_precision','_shape')
     _attribute_nodes = ('_start','_step','_stop')
-    _rank = 1
-    _order = None
+    rank = 1
+    order = None
     name = 'arange'
 
     def __init__(self, start, stop = None, step = None, dtype = None):
@@ -672,9 +672,9 @@ class NumpySum(PyccelInternalFunction):
     """
     __slots__ = ('_dtype','_precision')
     name = 'sum'
-    _rank  = 0
-    _shape = None
-    _order = None
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
@@ -698,9 +698,9 @@ class NumpyProduct(PyccelInternalFunction):
     """
     __slots__ = ('_arg','_dtype','_precision')
     name = 'product'
-    _rank  = 0
-    _shape = None
-    _order = None
+    rank  = 0
+    shape = None
+    order = None
 
     def __init__(self, arg):
         if not isinstance(arg, PyccelAstNode):
@@ -1034,8 +1034,8 @@ class NumpyRand(PyccelInternalFunction):
     """
     __slots__ = ('_shape','_rank','_order')
     name = 'rand'
-    _dtype = NativeFloat()
-    _precision = default_precision['float']
+    dtype = NativeFloat()
+    precision = default_precision['float']
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -1052,8 +1052,8 @@ class NumpyRandint(PyccelInternalFunction):
     """
     __slots__ = ('_rand','_low','_high','_shape','_rank','_order')
     name = 'randint'
-    _dtype     = NativeInteger()
-    _precision = -1
+    dtype     = NativeInteger()
+    precision = -1
     _attribute_nodes = ('_low', '_high')
 
     def __init__(self, low, high = None, size = None):
@@ -1405,7 +1405,7 @@ class NumpyNorm(PyccelInternalFunction):
     """ Represents call to numpy.norm"""
     __slots__ = ('_shape','_rank','_order','_arg','_precision')
     name = 'norm'
-    _dtype = NativeFloat()
+    dtype = NativeFloat()
 
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
@@ -1804,10 +1804,10 @@ class NumpyNonZeroElement(NumpyNewArray):
     __slots__ = ('_arr','_dim','_shape')
     _attribute_nodes = ('_arr',)
     name = 'nonzero'
-    _dtype = NativeInteger()
-    _precision = 8
-    _rank = 1
-    _order = None
+    dtype = NativeInteger()
+    precision = 8
+    rank = 1
+    order = None
 
     def __init__(self, a, dim):
         self._arr = a
@@ -1849,10 +1849,10 @@ class NumpyNonZero(NumpyNewArray):
     __slots__ = ('_elements','_arr','_shape')
     _attribute_nodes = ('_elements',)
     name = 'nonzero'
-    _dtype = NativeInteger()
-    _precision = 8
-    _rank  = 2
-    _order = 'C'
+    dtype = NativeInteger()
+    precision = 8
+    rank  = 2
+    order = 'C'
     def __init__(self, a):
         if (a.rank > 1):
             raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
@@ -1894,7 +1894,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
     __slots__ = ('_precision', '_rank', '_shape', '_order', '_arr', '_axis', '_keep_dims')
     _attribute_nodes = ('_arr','_axis')
     name   = 'count_nonzero'
-    _dtype = NativeInteger()
+    dtype = NativeInteger()
     def __init__(self, a, axis = None, *, keepdims = LiteralFalse()):
         if not isinstance(keepdims, (LiteralTrue, LiteralFalse)):
             errors.report(NON_LITERAL_KEEP_DIMS, symbol=keepdims, severity="fatal")

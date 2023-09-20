@@ -29,11 +29,11 @@ class SysExit(PyccelInternalFunction):
     """
     __slots__ = ()
     name      = 'exit'
-    _dtype     = NativeVoid()
-    _precision = -1
-    _rank      = 0
-    _shape     = None
-    _order     = None
+    dtype     = NativeVoid()
+    precision = -1
+    rank      = 0
+    shape     = None
+    order     = None
 
     def __init__(self, status=LiteralInteger(0)):
         super().__init__(status)

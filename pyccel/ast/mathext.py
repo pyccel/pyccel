@@ -78,30 +78,30 @@ __all__ = (
 class MathFunctionBase(PyccelInternalFunction):
     """Abstract base class for the Math Functions"""
     __slots__ = ()
-    _shape = None
-    _rank  = 0
-    _order = None
+    shape = None
+    rank  = 0
+    order = None
 
 
 class MathFunctionFloat(MathFunctionBase):
     __slots__ = ()
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
+    dtype = NativeFloat()
+    precision = -1
 
 
 class MathFunctionInt(MathFunctionBase):
     __slots__ = ()
     name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
+    dtype = NativeInteger()
+    precision = -1
 
 
 class MathFunctionBool(MathFunctionBase):
     __slots__ = ()
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
+    dtype = NativeBool()
+    precision = -1
 
 #==============================================================================
 # Functions that return one value

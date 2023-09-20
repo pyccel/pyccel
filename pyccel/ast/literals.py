@@ -32,9 +32,9 @@ class Literal(PyccelAstNode):
     """
     __slots__ = ('_precision',)
     _attribute_nodes  = ()
-    _rank      = 0
-    _shape     = None
-    _order     = None
+    rank      = 0
+    shape     = None
+    order     = None
 
     def __init__(self, precision):
         if not isinstance(precision, int):
@@ -70,7 +70,7 @@ class Literal(PyccelAstNode):
 class LiteralTrue(Literal):
     """Represents the python value True"""
     __slots__ = ()
-    _dtype     = NativeBool()
+    dtype     = NativeBool()
 
     def __init__(self, precision = -1):
         super().__init__(precision)
@@ -83,7 +83,7 @@ class LiteralTrue(Literal):
 class LiteralFalse(Literal):
     """Represents the python value False"""
     __slots__ = ()
-    _dtype     = NativeBool()
+    dtype     = NativeBool()
 
     def __init__(self, precision = -1):
         super().__init__(precision)
@@ -96,7 +96,7 @@ class LiteralFalse(Literal):
 class LiteralInteger(Literal):
     """Represents an integer literal in python"""
     __slots__ = ('_value',)
-    _dtype     = NativeInteger()
+    dtype     = NativeInteger()
 
     def __init__(self, value, precision = -1):
         super().__init__(precision)
@@ -116,7 +116,7 @@ class LiteralInteger(Literal):
 class LiteralFloat(Literal):
     """Represents a float literal in python"""
     __slots__ = ('_value',)
-    _dtype     = NativeFloat()
+    dtype     = NativeFloat()
 
     def __init__(self, value, *, precision = -1):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -136,7 +136,7 @@ class LiteralFloat(Literal):
 class LiteralComplex(Literal):
     """Represents a complex literal in python"""
     __slots__ = ('_real_part','_imag_part')
-    _dtype     = NativeComplex()
+    dtype     = NativeComplex()
 
     def __new__(cls, real, imag, precision = -1):
         if cls is LiteralImaginaryUnit:
@@ -194,7 +194,7 @@ class LiteralImaginaryUnit(LiteralComplex):
 class LiteralString(Literal):
     """Represents a string literal in python"""
     __slots__ = ('_string',)
-    _dtype     = NativeString()
+    dtype     = NativeString()
 
     def __init__(self, arg):
         self._precision = 0
@@ -232,11 +232,11 @@ class Nil(PyccelAstNode, metaclass=Singleton):
     """
     __slots__ = ()
     _attribute_nodes = ()
-    _dtype = NativeGeneric
-    _precision = 0
-    _rank = 0
-    _shape = None
-    _order = None
+    dtype = NativeGeneric
+    precision = 0
+    rank = 0
+    shape = None
+    order = None
 
     def __str__(self):
         return 'None'

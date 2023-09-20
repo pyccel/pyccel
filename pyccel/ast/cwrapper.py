@@ -214,11 +214,11 @@ class PyBuildValueNode(PyccelAstNode):
     """
     __slots__ = ('_flags','_result_args')
     _attribute_nodes = ('_result_args',)
-    _dtype = PyccelPyObject
-    _rank = 0
-    _precision = 0
-    _shape = ()
-    _order = None
+    dtype = PyccelPyObject
+    rank = 0
+    precision = 0
+    shape = ()
+    order = None
 
     def __init__(self, result_args = ()):
         self._flags = ''
@@ -255,10 +255,11 @@ class PyModule_AddObject(PyccelAstNode):
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
-    _dtype = NativeInteger()
-    _precision = 4
-    _rank = 0
-    _shape = None
+    dtype = NativeInteger()
+    precision = 4
+    rank = 0
+    shape = None
+    order = None
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, LiteralString):

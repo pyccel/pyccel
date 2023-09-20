@@ -58,8 +58,8 @@ class CmathFunctionBool(MathFunctionBase):
         The expression passed as argument to the function.
     """
     __slots__ = ()
-    _dtype = NativeBool()
-    _precision = -1
+    dtype = NativeBool()
+    precision = -1
 
 class CmathFunctionComplex(MathFunctionBase):
     """
@@ -74,11 +74,11 @@ class CmathFunctionComplex(MathFunctionBase):
         The expression passed as argument to the function.
     """
     __slots__ = ()
-    _dtype = NativeComplex()
-    _precision = -1
-    _shape = None
-    _rank  = 0
-    _order = None
+    dtype = NativeComplex()
+    precision = -1
+    shape = None
+    rank  = 0
+    order = None
 
     def __init__(self, z : 'PyccelAstNode'):
         super().__init__(z)
@@ -428,11 +428,11 @@ class CmathPolar(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'polar'
-    _dtype = NativeFloat()
-    _precision = -1
-    _shape = (LiteralInteger(2),)
-    _rank  = 1
-    _order = None
+    dtype = NativeFloat()
+    precision = -1
+    shape = (LiteralInteger(2),)
+    rank  = 1
+    order = None
 
     def __init__(self, z):
         super().__init__(z)
@@ -452,11 +452,11 @@ class CmathRect(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'rect'
-    _dtype = NativeComplex()
-    _precision = -1
-    _shape = None
-    _rank  = 0
-    _order = None
+    dtype = NativeComplex()
+    precision = -1
+    shape = None
+    rank  = 0
+    order = None
     def __init__(self, r, phi):
         super().__init__(r, phi)
 

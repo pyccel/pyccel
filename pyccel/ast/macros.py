@@ -51,9 +51,9 @@ class MacroShape(Macro):
     """."""
     __slots__ = ('_index','_rank','_shape')
     _name      = 'shape'
-    _dtype     = NativeInteger()
-    _precision = -1
-    _order     = None
+    dtype     = NativeInteger()
+    precision = -1
+    order     = None
 
     def __init__(self, argument, index=None):
         if index is not None:
@@ -84,11 +84,11 @@ class MacroType(Macro):
     """."""
     __slots__ = ()
     _name      = 'dtype'
-    _dtype     = NativeGeneric()
-    _precision = 0
-    _rank      = 0
-    _shape     = None
-    _order     = None
+    dtype     = NativeGeneric()
+    precision = 0
+    rank      = 0
+    shape     = None
+    order     = None
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -98,11 +98,11 @@ class MacroCount(Macro):
     """."""
     __slots__ = ()
     _name      = 'count'
-    _dtype     = NativeInteger()
-    _precision = -1
-    _rank      = 0
-    _shape     = None
-    _order     = None
+    dtype     = NativeInteger()
+    precision = -1
+    rank      = 0
+    shape     = None
+    order     = None
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
