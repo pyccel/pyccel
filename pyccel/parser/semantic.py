@@ -1865,7 +1865,9 @@ class SemanticParser(BasicParser):
             if isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
             else:
-                dtype, prec = dtype_and_precision_registry[dtype]
+                if dtype in dtype_and_precision_registry:
+                    dtype, prec = dtype_and_precision_registry[dtype]
+                dtype = dtype_registry[dtype]
 
                 trailer = type_annot.trailer
                 if trailer:
@@ -1877,8 +1879,6 @@ class SemanticParser(BasicParser):
                 else:
                     rank = 0
                     order = None
-
-                dtype = dtype_registry[dtype]
 
                 cls_base = get_cls_base(dtype, prec, rank)
 
