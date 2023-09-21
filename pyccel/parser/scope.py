@@ -58,7 +58,7 @@ class Scope(object):
             '_dummy_counter','_original_symbol')
 
     categories = ('functions','variables','classes',
-            'imports','symbolic_functions',
+            'imports','symbolic_functions', 'symbolic_alias',
             'macros','templates','headers','decorators',
             'cls_constructs')
 
@@ -192,6 +192,16 @@ class Scope(object):
         current scope
         """
         return self._sons_scopes
+
+    @property
+    def symbolic_alias(self):
+        """
+        A dictionary of symbolic alias defined in this scope.
+
+        A symbolic alias is a symbol declared in the scope which is mapped
+        to a constant object. E.g. a symbol which represents a type.
+        """
+        return self._locals['symbolic_alias']
 
     @property
     def symbolic_functions(self):
@@ -432,6 +442,18 @@ class Scope(object):
             self._used_symbols[symbol] = collisionless_symbol
             self._original_symbol[collisionless_symbol] = symbol
 
+    def insert_symbolic_alias(self, symbol, alias):
+        """
+        Add a new symbolic alias to the scope.
+
+        A symbolic alias is a symbol declared in the scope which is mapped
+        to a constant object. E.g. a symbol which represents a type.
+        """
+        if symbol in self._locals['symbolic_alias']:
+            errors.report(f"{symbol} cannot represent multiple static concepts",
+                    symbol=symbol, severity='error')
+
+        self._locals['symbolic_alias'][symbol] = alias
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope

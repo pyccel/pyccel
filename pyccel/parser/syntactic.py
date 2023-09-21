@@ -715,20 +715,22 @@ class SyntaxParser(BasicParser):
 
                 if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
                     type_name = dec_args[1].value.python_value
-                    possible_types = dec_args[0].value
+                    type_descriptors = dec_args[0].value
                 else:
                     type_name = dec_args[0].value.python_value
-                    possible_types = dec_args[1].value
+                    type_descriptors = dec_args[1].value
 
-                if not isinstance(possible_types, (PythonTuple, PythonList)):
-                    possible_types = PythonTuple(*possible_types)
+                if not isinstance(type_descriptors, (PythonTuple, PythonList)):
+                    type_descriptors = PythonTuple(*type_descriptors)
 
                 if type_name in template['template_dict']:
                     errors.report(f'The template "{type_name}" is duplicated',
                                 symbol = template_decorator, severity='warning')
 
+                possible_types = fill_types(type_descriptors)
+
                 # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][type_name] = fill_types(possible_types)
+                template['template_dict'][type_name] = possible_types
 
             # Make template decorator list accessible from decorators dict
             template['decorator_list'] = decorators['template']

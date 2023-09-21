@@ -6,6 +6,10 @@
 #------------------------------------------------------------------------------------------#
 from .basic import Basic
 
+from pyccel.utilities.stage import PyccelStage
+
+pyccel_stage = PyccelStage()
+
 class TypeAnnotation(Basic):
     __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
                  '_order', '_is_const')
@@ -61,18 +65,23 @@ class TypeAnnotation(Basic):
     def __hash__(self):
         return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
 
+    def __repr__(self):
+        return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
+
 class UnionTypeAnnotation(Basic):
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
-        self._type_annotations = tuple(set(type_annotations))
-
-        if any(not isinstance(t, TypeAnnotation) for t in type_annotations):
+        if any(not isinstance(t, (TypeAnnotation, UnionTypeAnnotation)) for t in type_annotations):
             raise TypeError("Type annotations should have type TypeAnnotation")
+
+        annots = [ti for t in type_annotations for ti in ([t] if isinstance(t, TypeAnnotation) else t.type_list)]
+        self._type_annotations = tuple(set(annots))
 
         super().__init__()
 
     @property
     def type_list(self):
         return self._type_annotations
+

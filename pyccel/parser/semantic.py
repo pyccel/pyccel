@@ -18,7 +18,6 @@ from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
-from sympy.core import cache
 
 #==============================================================================
 
@@ -1859,24 +1858,31 @@ class SemanticParser(BasicParser):
         is_const = expr.const
         types = []
         for type_annot in expr.dtypes:
-            dtype, prec = dtype_and_precision_registry[type_annot.dtype]
+            dtype = type_annot.dtype
 
-            trailer = type_annot.trailer
-            if trailer:
-                rank = len(trailer.args)
-                if rank > 1:
-                    order = trailer.order or 'C'
-                else:
-                    order = None
+            dtype_from_scope = self.scope.find(dtype)
+
+            if isinstance(dtype_from_scope, TypeAnnotation):
+                types.append(dtype_from_scope)
             else:
-                rank = 0
-                order = None
+                dtype, prec = dtype_and_precision_registry[dtype]
 
-            dtype = dtype_registry[dtype]
+                trailer = type_annot.trailer
+                if trailer:
+                    rank = len(trailer.args)
+                    if rank > 1:
+                        order = trailer.order or 'C'
+                    else:
+                        order = None
+                else:
+                    rank = 0
+                    order = None
 
-            cls_base = get_cls_base(dtype, prec, rank)
+                dtype = dtype_registry[dtype]
 
-            types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+                cls_base = get_cls_base(dtype, prec, rank)
+
+                types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         return UnionTypeAnnotation(*types)
 
@@ -3278,194 +3284,202 @@ class SemanticParser(BasicParser):
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
+        for t,v in templates.items():
+            templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
+        template_combinations = list(product(*[v.type_list for v in templates.values()]))
+        template_names = list(templates.keys())
+        n_templates = len(template_combinations)
+
         python_name = expr.scope.get_python_name(name)
-
-        # Change to syntactic FunctionDef scope to ensure get_expected_name is available
-        current_scope = self.scope
-        self.scope = expr.scope
-        arguments = [self._visit(a) for a in expr.arguments]
-        self.scope = current_scope
-
-        n_interface_funcs = prod(len(a) for a in arguments)
-        argument_vars = list(product(*arguments))
-
-        print("Ninterfaces : ", n_interface_funcs)
 
         # this for the case of a function without arguments => no headers
         interface_name = name
 
-        for i in range(n_interface_funcs):
-            arg_vars       = []
-            results        = []
-            global_vars    = []
-            imports        = []
-            arg            = None
-            arguments      = argument_vars[i]
-            header_results = None
+        for tmpl_idx in range(n_templates):
+            # Change to syntactic FunctionDef scope to ensure get_expected_name is available
+            current_scope = self.scope
+            self.scope = expr.scope
+            for n, v in zip(template_names, template_combinations[tmpl_idx]):
+                self.scope.insert_symbolic_alias(n, v)
+            arguments = [self._visit(a) for a in expr.arguments]
+            for n in template_names:
+                self.scope.symbolic_alias.pop(n)
+            self.scope = current_scope
 
-            if n_interface_funcs > 1:
-                name = interface_name + '_' + str(i).zfill(2)
-            scope = self.create_new_function_scope(name, decorators = decorators,
-                    used_symbols = expr.scope.local_used_symbols.copy(),
-                    original_symbols = expr.scope.python_names.copy())
+            n_interface_funcs = prod(len(a) for a in arguments)
+            argument_vars = list(product(*arguments))
 
-            if cls_name and str(arguments[0].name) == 'self':
-                arg       = arguments[0]
-                arguments = arguments[1:]
-                dt        = self.get_class_construct(cls_name)()
-                cls_base  = self.scope.find(cls_name, 'classes')
-                cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
-                var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
-                self.scope.insert_variable(var)
+            is_interface = n_templates > 1 or n_interface_funcs > 1
 
-            for a in arguments:
-                a_var = a.var
-                if isinstance(a_var, FunctionAddress):
-                    self.insert_function(a_var)
+            for i in range(n_interface_funcs):
+                arg_vars       = []
+                results        = []
+                global_vars    = []
+                imports        = []
+                arg            = None
+                arguments      = argument_vars[i]
+                header_results = None
+
+                if is_interface:
+                    name = interface_name + '_' + str(tmpl_idx*n_interface_funcs + i).zfill(2)
+                scope = self.create_new_function_scope(name, decorators = decorators,
+                        used_symbols = expr.scope.local_used_symbols.copy(),
+                        original_symbols = expr.scope.python_names.copy())
+
+                if cls_name and str(arguments[0].name) == 'self':
+                    arg       = arguments[0]
+                    arguments = arguments[1:]
+                    dt        = self.get_class_construct(cls_name)()
+                    cls_base  = self.scope.find(cls_name, 'classes')
+                    cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
+                    var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
+                    self.scope.insert_variable(var)
+
+                for a in arguments:
+                    a_var = a.var
+                    if isinstance(a_var, FunctionAddress):
+                        self.insert_function(a_var)
+                    else:
+                        self.scope.insert_variable(a_var, a.name)
+
+                results = expr.results
+                if header_results:
+                    new_results = []
+
+                    for a, ah in zip(results, header_results):
+                        av = a.var
+                        d_var = self._infer_type(ah.var)
+                        dtype = d_var.pop('datatype')
+                        a_new = Variable(dtype, self.scope.get_expected_name(av),
+                                **d_var, is_temp = av.is_temp)
+                        self.scope.insert_variable(a_new, av)
+                        new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
+
+                    results = new_results
+
+                # insert the FunctionDef into the scope
+                # to handle the case of a recursive function
+                # TODO improve in the case of an interface
+                recursive_func_obj = FunctionDef(name, arguments, results, [])
+                self.insert_function(recursive_func_obj)
+
+                # Create a new list that store local variables for each FunctionDef to handle nested functions
+                self._allocs.append([])
+
+                # we annotate the body
+                body = self._visit(expr.body)
+
+                # Calling the Garbage collecting,
+                # it will add the necessary Deallocate nodes
+                # to the body of the function
+                body.insert2body(*self._garbage_collector(body))
+
+                results = [self._visit(a) for a in results]
+
+                if arg and cls_name:
+                    dt       = self.get_class_construct(cls_name)()
+                    cls_base = self.scope.find(cls_name, 'classes')
+                    var      = Variable(dt, 'self', cls_base=cls_base)
+                    arguments     = [FunctionDefArgument(var)] + arguments
+
+                # Determine local and global variables
+                global_vars = list(self.get_variables(self.scope.parent_scope))
+                global_vars = [g for g in global_vars if body.is_user_of(g)]
+
+                # get the imports
+                imports   = self.scope.imports['imports'].values()
+                # Prefer dict to set to preserve order
+                imports   = list({imp:None for imp in imports}.keys())
+
+                # remove the FunctionDef from the function scope
+                # TODO improve func_ is None in the case of an interface
+                func_     = self.scope.functions.pop(name, None)
+                is_recursive = False
+                # check if the function is recursive if it was called on the same scope
+                if func_ and func_.is_recursive:
+                    is_recursive = True
+
+                sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+
+                func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
+                if func_args:
+                    func_interfaces.append(Interface('', func_args, is_argument = True))
+
+                namespace_imports = self.scope.imports
+                self.exit_function_scope()
+
+                results_names = [i.var.name for i in results]
+
+                # Find all nodes which can modify variables
+                assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+                calls   = body.get_attribute_nodes(FunctionCall)
+
+                # Collect the modified objects
+                lhs_assigns   = [a.lhs for a in assigns]
+                modified_args = [call_arg.value for f in calls
+                                    for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
+                # Collect modified variables
+                all_assigned = [v for a in (lhs_assigns + modified_args) for v in
+                                (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
+
+                # ... computing inout arguments
+                for a in arguments:
+                    if a.name in chain(results_names, ['self']) or a.var in all_assigned:
+                        v = a.var
+                        if isinstance(v, Variable) and v.is_const:
+                            msg = f"Cannot modify 'const' argument ({v})"
+                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset),
+                                severity='fatal')
+                    else:
+                        a.make_const()
+                # ...
+
+                # Raise an error if one of the return arguments is an alias.
+                for r in results:
+                    if r.var.is_alias:
+                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                        symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
+
+                func_kwargs = {
+                        'global_vars':global_vars,
+                        'cls_name':cls_name,
+                        'is_pure':is_pure,
+                        'is_elemental':is_elemental,
+                        'is_private':is_private,
+                        'imports':imports,
+                        'decorators':decorators,
+                        'is_recursive':is_recursive,
+                        'functions': sub_funcs,
+                        'interfaces': func_interfaces,
+                        'doc_string': doc_string,
+                        'scope': scope
+                        }
+                if is_inline:
+                    func_kwargs['namespace_imports'] = namespace_imports
+                    global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
+                    func_kwargs['global_funcs'] = global_funcs
+                    cls = InlineFunctionDef
                 else:
-                    self.scope.insert_variable(a_var, a.name)
+                    cls = FunctionDef
+                func = cls(name,
+                        arguments,
+                        results,
+                        body,
+                        **func_kwargs)
+                if not is_recursive:
+                    recursive_func_obj.invalidate_node()
 
-            results = expr.results
-            if header_results:
-                new_results = []
+                if cls_name:
+                    cls = self.scope.find(cls_name, 'classes')
 
-                for a, ah in zip(results, header_results):
-                    av = a.var
-                    d_var = self._infer_type(ah.var)
-                    dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, self.scope.get_expected_name(av),
-                            **d_var, is_temp = av.is_temp)
-                    self.scope.insert_variable(a_new, av)
-                    new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
+                    # update the class methods
+                    if expr.name == func.name:
+                        cls.add_new_method(func)
 
-                results = new_results
+                funcs += [func]
 
-            # insert the FunctionDef into the scope
-            # to handle the case of a recursive function
-            # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, results, [])
-            self.insert_function(recursive_func_obj)
-
-            # Create a new list that store local variables for each FunctionDef to handle nested functions
-            self._allocs.append([])
-
-            # we annotate the body
-            body = self._visit(expr.body)
-
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the body of the function
-            body.insert2body(*self._garbage_collector(body))
-
-            results = [self._visit(a) for a in results]
-
-            if arg and cls_name:
-                dt       = self.get_class_construct(cls_name)()
-                cls_base = self.scope.find(cls_name, 'classes')
-                var      = Variable(dt, 'self', cls_base=cls_base)
-                arguments     = [FunctionDefArgument(var)] + arguments
-
-            # Determine local and global variables
-            global_vars = list(self.get_variables(self.scope.parent_scope))
-            global_vars = [g for g in global_vars if body.is_user_of(g)]
-
-            # get the imports
-            imports   = self.scope.imports['imports'].values()
-            # Prefer dict to set to preserve order
-            imports   = list({imp:None for imp in imports}.keys())
-
-            # remove the FunctionDef from the function scope
-            # TODO improve func_ is None in the case of an interface
-            func_     = self.scope.functions.pop(name, None)
-            is_recursive = False
-            # check if the function is recursive if it was called on the same scope
-            if func_ and func_.is_recursive:
-                is_recursive = True
-
-            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
-
-            func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
-            if func_args:
-                func_interfaces.append(Interface('', func_args, is_argument = True))
-
-            namespace_imports = self.scope.imports
-            self.exit_function_scope()
-
-            results_names = [i.var.name for i in results]
-
-            # Find all nodes which can modify variables
-            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
-            calls   = body.get_attribute_nodes(FunctionCall)
-
-            # Collect the modified objects
-            lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [call_arg.value for f in calls
-                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
-            # Collect modified variables
-            all_assigned = [v for a in (lhs_assigns + modified_args) for v in
-                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
-
-            # ... computing inout arguments
-            for a in arguments:
-                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
-                    v = a.var
-                    if isinstance(v, Variable) and v.is_const:
-                        msg = f"Cannot modify 'const' argument ({v})"
-                        errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                            severity='fatal')
-                else:
-                    a.make_const()
-            # ...
-
-            # Raise an error if one of the return arguments is an alias.
-            for r in results:
-                if r.var.is_alias:
-                    errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                    symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error')
-
-            func_kwargs = {
-                    'global_vars':global_vars,
-                    'cls_name':cls_name,
-                    'is_pure':is_pure,
-                    'is_elemental':is_elemental,
-                    'is_private':is_private,
-                    'imports':imports,
-                    'decorators':decorators,
-                    'is_recursive':is_recursive,
-                    'functions': sub_funcs,
-                    'interfaces': func_interfaces,
-                    'doc_string': doc_string,
-                    'scope': scope
-                    }
-            if is_inline:
-                func_kwargs['namespace_imports'] = namespace_imports
-                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
-                func_kwargs['global_funcs'] = global_funcs
-                cls = InlineFunctionDef
-            else:
-                cls = FunctionDef
-            func = cls(name,
-                    arguments,
-                    results,
-                    body,
-                    **func_kwargs)
-            if not is_recursive:
-                recursive_func_obj.invalidate_node()
-
-            if cls_name:
-                cls = self.scope.find(cls_name, 'classes')
-
-                # update the class methods
-                if expr.name == func.name:
-                    cls.add_new_method(func)
-
-            funcs += [func]
-
-            #clear the sympy cache
-            #TODO clear all variable except the global ones
-            cache.clear_cache()
         if len(funcs) == 1:
             funcs = funcs[0]
             self.insert_function(funcs)
