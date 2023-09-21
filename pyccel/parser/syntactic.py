@@ -12,10 +12,6 @@ import warnings
 
 #==============================================================================
 
-from sympy.core import cache
-
-#==============================================================================
-
 from pyccel.ast.basic import Basic
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
@@ -706,51 +702,34 @@ class SyntaxParser(BasicParser):
         template['template_dict'] = {}
         # extract the templates
         if 'template' in decorators:
-            for comb_types in decorators['template']:
-                cache.clear_cache()
-                types = []
-                if len(comb_types.args) != 2:
+            for template_decorator in decorators['template']:
+                dec_args = template_decorator.args
+                if len(dec_args) != 2:
                     msg = 'Number of Arguments provided to the template decorator is not valid'
-                    errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
+                    errors.report(msg, symbol = template_decorator,
                                     severity='error')
 
-                for i in comb_types.args:
-                    if i.has_keyword and i.keyword not in ('name', 'types'):
-                        msg = 'Argument provided to the template decorator is not valid'
-                        errors.report(msg,
-                                        symbol = comb_types,
-                                        bounding_box = (stmt.lineno, stmt.col_offset),
-                                        severity='error')
-                if all(i.has_keyword for i in comb_types.args):
-                    tp_name, ls = (comb_types.args[0].value, comb_types.args[1].value) if\
-                            comb_types.args[0].keyword == 'name' else\
-                            (comb_types.args[1].value, comb_types.args[0].value)
+                if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
+                        errors.report('Argument provided to the template decorator is not valid',
+                                        symbol = template_decorator, severity='error')
+
+                if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
+                    type_name = dec_args[1].value.python_value
+                    possible_types = dec_args[0].value
                 else:
-                    tp_name = comb_types.args[0].value
-                    ls = comb_types.args[1].value
-                try:
-                    tp_name = str(tp_name)
-                    ls = ls if isinstance(ls, PythonTuple) else list(ls)
-                except TypeError:
-                    msg = 'Argument provided to the template decorator is not valid'
-                    errors.report(msg,
-                                    symbol = comb_types,
-                                    bounding_box = (stmt.lineno, stmt.col_offset),
-                                    severity='fatal')
+                    type_name = dec_args[0].value.python_value
+                    possible_types = dec_args[1].value
 
-                types = fill_types(ls)
+                if not isinstance(possible_types, (PythonTuple, PythonList)):
+                    possible_types = PythonTuple(*possible_types)
 
-                txt  = '#$ header template ' + tp_name
-                txt += '(' + '|'.join(types) + ')'
-                if tp_name in template['template_dict']:
-                    msg = 'The template "{}" is duplicated'.format(tp_name)
-                    errors.report(msg,
-                                bounding_box = (stmt.lineno, stmt.col_offset),
-                                severity='warning')
+                if type_name in template['template_dict']:
+                    errors.report(f'The template "{type_name}" is duplicated',
+                                symbol = template_decorator, severity='warning')
+
                 # Make templates decorator dict accessible from decorators dict
-                template['template_dict'][tp_name] = hdr_parse(stmts=txt)
+                template['template_dict'][type_name] = fill_types(possible_types)
+
             # Make template decorator list accessible from decorators dict
             template['decorator_list'] = decorators['template']
             decorators['template'] = template
