@@ -55,7 +55,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import MetaVariable
+from pyccel.ast.headers  import MetaVariable, FunctionHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
@@ -71,7 +71,7 @@ from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
-from pyccel.parser.syntax.headers import meta as hdr_meta, FunctionHeaderStmt, types_meta, UnionTypeStmt
+from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
@@ -191,29 +191,20 @@ class SyntaxParser(BasicParser):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):
                 try:
-                    header_stmt = hdr_meta.model_from_str(line).statements[0].stmt
+                    expr = hdr_parse(stmts=line)
                 except TextXSyntaxError as e:
                     errors.report(f"Invalid header. {e.message}",
                             symbol = stmt, column = e.col,
                               severity='fatal')
-                if isinstance(header_stmt, FunctionHeaderStmt):
-                    warnings.warn("Support for specifying types via headers will be removed in a " +
-                                  "future version of Pyccel. Please use type hints. The @template " +
-                                  "decorator can be used to specify multiple types. See the " +
-                                  "documentation at " +
-                                  "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
-                                  "for examples.", FutureWarning)
-                    self.scope.insert_header(header_stmt)
+                if isinstance(expr, FunctionHeader):
+                    self.scope.insert_header(expr)
                     expr = EmptyNode()
-                else:
-                    expr = header_stmt.expr
-                    if isinstance(expr, MetaVariable):
+                elif isinstance(expr, MetaVariable):
+                    # a metavar will not appear in the semantic stage.
+                    # but can be used to modify the ast
 
-                        # a metavar will not appear in the semantic stage.
-                        # but can be used to modify the ast
-
-                        self._metavars[str(expr.name)] = expr.value
-                        expr = EmptyNode()
+                    self._metavars[str(expr.name)] = expr.value
+                    expr = EmptyNode()
             else:
                 errors.report(PYCCEL_INVALID_HEADER,
                               symbol = stmt,
@@ -230,6 +221,8 @@ class SyntaxParser(BasicParser):
         if isinstance(annotation, FunctionCallArgument):
             annotation = annotation.value
 
+        if isinstance(annotation, (tuple, list)):
+            return tuple(self._treat_type_annotation(stmt, a) for a in annotation)
         if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
             return annotation
         elif isinstance(annotation, LiteralString):
@@ -239,12 +232,7 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
-            is_const = annotation.const
-            dtypes = annotation.dtypes
-            dtype_names = [d.dtype for d in dtypes]
-            ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes]
-            orders = [getattr(d.trailer, 'order', None) for d in dtypes]
-            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+            return SyntacticTypeAnnotation.build_from_textx(annotation)
         elif annotation is Nil():
             return None
         else:
@@ -752,16 +740,23 @@ class SyntaxParser(BasicParser):
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
         if headers:
+            warnings.warn("Support for specifying types via headers will be removed in a " +
+                          "future version of Pyccel. Please use type hints. The @template " +
+                          "decorator can be used to specify multiple types. See the " +
+                          "documentation at " +
+                          "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                          "for examples.", FutureWarning)
             for head in headers:
                 for i,arg in enumerate(head.decs):
                     if argument_annotations[i] is not None:
                         errors.report("Type annotations and type specification via headers should not be mixed",
                                 symbol=expr, severity='error')
-                    argument_annotations[i] = arg
+                    argument_annotations[i] = SyntacticTypeAnnotation.build_from_textx(arg)
                 if result_annotation is not None:
                     errors.report("Type annotations and type specification via headers should not be mixed",
                                 symbol=expr, severity='error')
-                result_annotation = head.results
+                if head.results:
+                    result_annotation = SyntacticTypeAnnotation.build_from_textx(head.results.decs[0])
 
         # extract the types to construct a header
         if 'types' in decorators:

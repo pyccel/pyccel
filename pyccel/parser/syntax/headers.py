@@ -19,6 +19,7 @@ from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry,
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
@@ -180,7 +181,7 @@ class HeaderResults(BasicStmt):
 
     @property
     def expr(self):
-        decs = [i.expr for i in self.decs]
+        decs = SyntacticTypeAnnotation.build_from_textx(self.decs)
         return decs
 
 
@@ -234,11 +235,7 @@ class FunctionHeaderStmt(BasicStmt):
 
     @property
     def expr(self):
-        # TODO: do we need dtypes and results to be attributs of the class?
-        dtypes = []
-        for dec in self.decs:
-            if isinstance(dec,UnionTypeStmt):
-                dtypes += [dec.expr]
+        dtypes = SyntacticTypeAnnotation.build_from_textx(self.decs)
 
         if self.kind is None:
             kind = 'function'
@@ -254,13 +251,9 @@ class FunctionHeaderStmt(BasicStmt):
             results = self.results.expr
 
         if kind == 'method':
-            dtype = dtypes[0]
-            if isinstance(dtype, UnionType):
-                cls_instance = dtype.args[0]['datatype']
-            else:
-                cls_instance = dtype['datatype']
-            dtypes = dtypes[1:] # remove the attribut
-            return MethodHeader((cls_instance, self.name), dtypes, [] )
+            return MethodHeader(self.name, dtypes,
+                                  results=results,
+                                  is_static=is_static)
         else:
             return FunctionHeader(self.name,
                                   dtypes,

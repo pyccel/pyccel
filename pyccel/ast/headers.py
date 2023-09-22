@@ -228,7 +228,6 @@ class FunctionHeader(Header):
     """
     __slots__ = ('_name','_dtypes','_results','_is_static')
 
-    # TODO dtypes should be a dictionary (useful in syntax)
     def __init__(self, name, dtypes,
                  results=None,
                  is_static=False):

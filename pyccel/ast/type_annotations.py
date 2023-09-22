@@ -4,6 +4,9 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+
+from pyccel.parser.syntax.basic import BasicStmt
+
 from .basic import Basic
 
 from pyccel.utilities.stage import PyccelStage
@@ -99,10 +102,21 @@ class SyntacticTypeAnnotation(Basic):
         super().__init__()
 
     @staticmethod
-    def build_from_textx():
-        is_const = annotation.const 
-         dtypes = annotation.dtypes 
-         dtype_names = [d.dtype for d in dtypes] 
-         ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes] 
-         orders = [getattr(d.trailer, 'order', None) for d in dtypes] 
-         return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+    def build_from_textx(annotation):
+        if isinstance(annotation, (list, tuple)):
+            return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
+        elif hasattr(annotation, 'const'):
+            is_const = annotation.const
+            dtypes = annotation.dtypes
+            dtype_names = [d.dtype for d in dtypes]
+            ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes]
+            orders = [getattr(d.trailer, 'order', None) for d in dtypes]
+            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+        elif hasattr(annotation, 'dtype'):
+            is_const = None
+            dtype_names = [annotation.dtype]
+            ranks = [len(getattr(annotation.trailer, 'args', ()))]
+            orders = [getattr(annotation.trailer, 'order', None)]
+            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+        else:
+            raise TypeError("Unexpected type")
