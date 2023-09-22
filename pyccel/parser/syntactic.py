@@ -10,6 +10,8 @@ import re
 import ast
 import warnings
 
+from textx.exceptions import TextXSyntaxError
+
 #==============================================================================
 
 from pyccel.ast.basic import Basic
@@ -62,12 +64,14 @@ from pyccel.ast.variable  import DottedName
 
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
+
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
 from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
-from pyccel.parser.syntax.headers import parse as hdr_parse, meta as hdr_meta, FunctionHeaderStmt, types_meta, UnionTypeStmt
+from pyccel.parser.syntax.headers import meta as hdr_meta, FunctionHeaderStmt, types_meta, UnionTypeStmt
 from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
@@ -186,7 +190,12 @@ class SyntaxParser(BasicParser):
             elif env.startswith('acc'):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):
-                header_stmt = hdr_meta.model_from_str(line).statements[0].stmt
+                try:
+                    header_stmt = hdr_meta.model_from_str(line).statements[0].stmt
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
                 if isinstance(header_stmt, FunctionHeaderStmt):
                     warnings.warn("Support for specifying types via headers will be removed in a " +
                                   "future version of Pyccel. Please use type hints. The @template " +
@@ -216,6 +225,31 @@ class SyntaxParser(BasicParser):
 
         expr.set_fst(stmt)
         return expr
+
+    def _treat_type_annotation(self, stmt, annotation):
+        if isinstance(annotation, FunctionCallArgument):
+            annotation = annotation.value
+
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return annotation
+        elif isinstance(annotation, LiteralString):
+            try:
+                annotation = types_meta.model_from_str(annotation.python_value)
+            except TextXSyntaxError as e:
+                errors.report(f"Invalid header. {e.message}",
+                        symbol = stmt, column = e.col,
+                        severity='fatal')
+            is_const = annotation.const
+            dtypes = annotation.dtypes
+            dtype_names = [d.dtype for d in dtypes]
+            ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes]
+            orders = [getattr(d.trailer, 'order', None) for d in dtypes]
+            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+        elif annotation is Nil():
+            return None
+        else:
+            errors.report('Invalid type annotation',
+                        symbol = stmt, severity='error')
 
     #====================================================
     #                 _visit functions
@@ -364,22 +398,14 @@ class SyntaxParser(BasicParser):
 
             arguments = []
             for a in stmt.args[:n_expl]:
-                annotation=self._visit(a.annotation)
-                if isinstance(annotation, LiteralString):
-                    annotation = types_meta.model_from_str(annotation.python_value)
-                elif annotation is Nil():
-                    annotation = UnionTypeStmt([], const = None)
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=annotation)
                 new_arg.set_fst(a)
                 arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
-                annotation=self._visit(a.annotation)
-                if isinstance(annotation, LiteralString):
-                    annotation = types_meta.model_from_str(annotation.python_value)
-                elif annotation is Nil():
-                    annotation = UnionTypeStmt([], const = None)
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
                                             annotation=annotation,
                                             value = self._visit(d))
@@ -646,23 +672,6 @@ class SyntaxParser(BasicParser):
         imports      = []
         doc_string   = None
 
-        def fill_types(ls):
-            container = []
-            for arg in ls:
-                if isinstance(arg, FunctionCallArgument):
-                    arg = arg.value
-
-                if isinstance(arg, PyccelSymbol):
-                    container.append(arg)
-                elif isinstance(arg, LiteralString):
-                    container.append(types_meta.model_from_str(arg.python_value))
-                else:
-                    msg = 'Invalid argument of type {} passed to types decorator'.format(type(arg))
-                    errors.report(msg,
-                                bounding_box = (stmt.lineno, stmt.col_offset),
-                                severity='error')
-            return container
-
         decorators = {}
 
         for d in self._visit(stmt.decorator_list):
@@ -727,7 +736,7 @@ class SyntaxParser(BasicParser):
                     errors.report(f'The template "{type_name}" is duplicated',
                                 symbol = template_decorator, severity='warning')
 
-                possible_types = fill_types(type_descriptors)
+                possible_types = self._treat_type_annotation(template_decorator, type_descriptors.args)
 
                 # Make templates decorator dict accessible from decorators dict
                 template['template_dict'][type_name] = possible_types
@@ -740,26 +749,29 @@ class SyntaxParser(BasicParser):
             decorators['template'] = None
 
         argument_annotations = [a.annotation for a in arguments]
-        result_annotation = self._visit(stmt.returns)
-        if isinstance(result_annotation, LiteralString):
-            result_annotation = types_meta.model_from_str(annotation.python_value)
-        elif result_annotation is Nil():
-            result_annotation = UnionTypeStmt([], const = None)
+        result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
         if headers:
             for head in headers:
                 for i,arg in enumerate(head.decs):
-                    if argument_annotations[i].const is None:
-                        argument_annotations[i].const = arg.const
-                    elif isinstance(arg.const, bool) and arg.const != argument_annotations[i].const:
-                        errors.report('Headers have conflicting constness',
+                    if argument_annotations[i] is not None:
+                        errors.report("Type annotations and type specification via headers should not be mixed",
                                 symbol=expr, severity='error')
-                    argument_annotations[i].dtypes += arg.dtypes
-                if head.results:
-                    result_annotation.dtypes += (head.results,)
+                    argument_annotations[i] = arg
+                if result_annotation is not None:
+                    errors.report("Type annotations and type specification via headers should not be mixed",
+                                symbol=expr, severity='error')
+                result_annotation = head.results
 
         # extract the types to construct a header
         if 'types' in decorators:
+            if any(a is not None for a in argument_annotations):
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                        symbol=arg, severity='error')
+
+            for i, _ in enumerate(argument_annotations):
+                argument_annotations[i] = UnionTypeAnnotation()
+
             for types_decorator in decorators['types']:
                 type_args = types_decorator.args
 
@@ -780,17 +792,7 @@ class SyntaxParser(BasicParser):
                     result_annotation.dtypes += (kwargs[0].value,)
 
                 for i,arg in enumerate(args):
-                    annotation = arg.value
-                    if isinstance(annotation, LiteralString):
-                        annotation = types_meta.model_from_str(annotation.python_value)
-                        argument_annotations[i].dtypes += annotation.dtypes
-                        if argument_annotations[i].const is None:
-                            argument_annotations[i].const = annotation.const
-                        elif isinstance(annotation.const, bool) and annotation.const != argument_annotations[i].const:
-                            errors.report('Headers have conflicting constness',
-                                    symbol=expr, severity='error')
-                    elif annotation is not Nil():
-                        argument_annotations[i].dtypes += annotation
+                    argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
 
         for a, annot in zip(arguments, argument_annotations):
             a.annotation = annot
