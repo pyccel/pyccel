@@ -747,16 +747,16 @@ class SyntaxParser(BasicParser):
                           "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
                           "for examples.", FutureWarning)
             for head in headers:
-                for i,arg in enumerate(head.decs):
+                for i,arg in enumerate(head.dtypes):
                     if argument_annotations[i] is not None:
                         errors.report("Type annotations and type specification via headers should not be mixed",
                                 symbol=expr, severity='error')
-                    argument_annotations[i] = SyntacticTypeAnnotation.build_from_textx(arg)
+                    argument_annotations[i] = arg
                 if result_annotation is not None:
                     errors.report("Type annotations and type specification via headers should not be mixed",
                                 symbol=expr, severity='error')
                 if head.results:
-                    result_annotation = SyntacticTypeAnnotation.build_from_textx(head.results.decs[0])
+                    result_annotation = head.results
 
         # extract the types to construct a header
         if 'types' in decorators:

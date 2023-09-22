@@ -1854,36 +1854,29 @@ class SemanticParser(BasicParser):
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
 
-    def _visit_UnionTypeStmt(self, expr):
-        is_const = expr.const
+    def _visit_SyntacticTypeAnnotation(self, expr):
+        is_const = expr.is_const
         types = []
-        for type_annot in expr.dtypes:
-            dtype = type_annot.dtype
 
+        for dtype, rank ,order in zip(expr.dtypes, expr.ranks, expr.orders):
             dtype_from_scope = self.scope.find(dtype)
 
             if isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
             else:
+                prec = -1
                 if dtype in dtype_and_precision_registry:
                     dtype, prec = dtype_and_precision_registry[dtype]
                 dtype = dtype_registry[dtype]
-
-                trailer = type_annot.trailer
-                if trailer:
-                    rank = len(trailer.args)
-                    if rank > 1:
-                        order = trailer.order or 'C'
-                    else:
-                        order = None
-                else:
-                    rank = 0
-                    order = None
 
                 cls_base = get_cls_base(dtype, prec, rank)
 
                 types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
+        return UnionTypeAnnotation(*types)
+
+    def _visit_UnionTypeAnnotation(self, expr):
+        types = [t for syntax_type_annot in expr.type_list for t in self._visit(syntax_type_annot).type_list]
         return UnionTypeAnnotation(*types)
 
     def _visit_FunctionDefArgument(self, expr):

@@ -96,10 +96,26 @@ class SyntacticTypeAnnotation(Basic):
     _attribute_nodes = ()
     def __init__(self, dtypes, ranks, orders, is_const):
         self._dtypes = list(dtypes)
-        self._ranks = list(dtypes)
-        self._orders = list(dtypes)
+        self._ranks = list(ranks)
+        self._orders = [o if o != '' else None for o in orders]
         self._is_const = is_const
         super().__init__()
+
+    @property
+    def dtypes(self):
+        return self._dtypes
+
+    @property
+    def ranks(self):
+        return self._ranks
+
+    @property
+    def orders(self):
+        return self._orders
+
+    @property
+    def is_const(self):
+        return self._is_const
 
     @staticmethod
     def build_from_textx(annotation):
@@ -120,3 +136,4 @@ class SyntacticTypeAnnotation(Basic):
             return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
         else:
             raise TypeError("Unexpected type")
+
