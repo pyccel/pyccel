@@ -205,7 +205,7 @@ class VariableHeaderStmt(BasicStmt):
 
     @property
     def expr(self):
-        dtype = self.dec.expr
+        dtype = SyntacticTypeAnnotation.build_from_textx(self.dec)
 
         return VariableHeader(self.name, dtype)
 
