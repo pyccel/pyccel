@@ -97,8 +97,6 @@ class VariableHeader(Header):
     __slots__ = ('_name','_dtypes')
 
     def __init__(self, name, dtypes):
-        if not(isinstance(dtypes, dict)):
-            raise TypeError("Expecting dtypes to be a dict.")
 
         self._name   = name
         self._dtypes = dtypes
