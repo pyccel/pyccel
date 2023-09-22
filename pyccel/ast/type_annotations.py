@@ -98,3 +98,11 @@ class SyntacticTypeAnnotation(Basic):
         self._is_const = is_const
         super().__init__()
 
+    @staticmethod
+    def build_from_textx():
+        is_const = annotation.const 
+         dtypes = annotation.dtypes 
+         dtype_names = [d.dtype for d in dtypes] 
+         ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes] 
+         orders = [getattr(d.trailer, 'order', None) for d in dtypes] 
+         return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
