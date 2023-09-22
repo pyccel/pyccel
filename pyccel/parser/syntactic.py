@@ -206,7 +206,7 @@ class SyntaxParser(BasicParser):
                     self.scope.insert_header(header_stmt)
                     expr = EmptyNode()
                 else:
-                    expr = header_stmt.stmt
+                    expr = header_stmt.expr
                     if isinstance(expr, MetaVariable):
 
                         # a metavar will not appear in the semantic stage.
