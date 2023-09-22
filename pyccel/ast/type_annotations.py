@@ -85,3 +85,16 @@ class UnionTypeAnnotation(Basic):
     def type_list(self):
         return self._type_annotations
 
+    def add_type(self, annot):
+        self._type_annotations += (annot,)
+        annot.set_current_user_node(self)
+
+class SyntacticTypeAnnotation(Basic):
+    _attribute_nodes = ()
+    def __init__(self, dtypes, ranks, orders, is_const):
+        self._dtypes = list(dtypes)
+        self._ranks = list(dtypes)
+        self._orders = list(dtypes)
+        self._is_const = is_const
+        super().__init__()
+
