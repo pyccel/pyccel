@@ -76,8 +76,7 @@ class TemplateStmt(BasicStmt):
                         severity='error')
             return EmptyNode()
 
-        possible_dtypes = {tuple(t.expr.items())  for t in self.dtypes}
-        dtypes = tuple(dict(d_type) for d_type in possible_dtypes)
+        dtypes = {SyntacticTypeAnnotation.build_from_textx(t)  for t in self.dtypes}
         return Template(self.name, dtypes)
 
 class Type(BasicStmt):

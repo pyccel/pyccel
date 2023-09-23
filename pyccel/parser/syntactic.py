@@ -746,15 +746,18 @@ class SyntaxParser(BasicParser):
                           "documentation at " +
                           "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
                           "for examples.", FutureWarning)
+            if any(a is not None for a in argument_annotations):
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                        symbol=stmt, severity='error')
+
+            for i, _ in enumerate(argument_annotations):
+                argument_annotations[i] = UnionTypeAnnotation()
+            if result_annotation is not None:
+                errors.report("Type annotations and type specification via headers should not be mixed",
+                            symbol=stmt, severity='error')
             for head in headers:
                 for i,arg in enumerate(head.dtypes):
-                    if argument_annotations[i] is not None:
-                        errors.report("Type annotations and type specification via headers should not be mixed",
-                                symbol=expr, severity='error')
-                    argument_annotations[i] = arg
-                if result_annotation is not None:
-                    errors.report("Type annotations and type specification via headers should not be mixed",
-                                symbol=expr, severity='error')
+                    argument_annotations[i].add_type(arg)
                 if head.results:
                     result_annotation = head.results
 
@@ -762,7 +765,7 @@ class SyntaxParser(BasicParser):
         if 'types' in decorators:
             if any(a is not None for a in argument_annotations):
                 errors.report("Type annotations and type specification via headers should not be mixed",
-                        symbol=arg, severity='error')
+                        symbol=stmt, severity='error')
 
             for i, _ in enumerate(argument_annotations):
                 argument_annotations[i] = UnionTypeAnnotation()

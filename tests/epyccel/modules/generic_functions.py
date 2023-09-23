@@ -4,7 +4,6 @@ from pyccel.decorators import template
 #$ header function gen_2(real, int)
 #$ header function gen_2(int, real)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, real)
 #$ header template T(int|real)
 #$ header template R(int|real)
 #$ header template O(real|complex)
