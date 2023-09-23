@@ -1783,7 +1783,24 @@ class SemanticParser(BasicParser):
                         not isinstance(v, MethodHeader) for v in headers):
                     F = self.scope.find(name, 'functions')
                     if F is None:
-                        func_defs = [vi for v in headers for vi in v.create_definition(is_external=is_external)]
+                        func_defs = []
+                        for v in headers:
+                            types = [self._visit(d).type_list[0] for d in v.dtypes]
+                            args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
+                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                is_const = t.is_const, is_optional = False,
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                            types = [self._visit(d).type_list[0] for d in v.results]
+                            results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
+                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                is_const = t.is_const, is_optional = False,
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                            args = [FunctionDefArgument(a) for a in args]
+                            results = [FunctionDefResult(r) for r in results]
+                            func_defs.append(FunctionDef(v.name, args, results, []))
+
                         if len(func_defs) == 1:
                             F = func_defs[0]
                             funcs.append(F)
