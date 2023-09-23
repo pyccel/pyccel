@@ -169,6 +169,9 @@ class Template(Header):
         "Types the template represents."
         return self._dtypes
 
+    def __iter__(self):
+        return self._dtypes.__iter__()
+
     def __reduce_ex__(self, i):
 
         """ Used by pickle to create an object of this class.
