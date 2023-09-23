@@ -1871,6 +1871,9 @@ class SemanticParser(BasicParser):
 
                 cls_base = get_cls_base(dtype, prec, rank)
 
+                if rank > 1 and order is None:
+                    order = 'C'
+
                 types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         return UnionTypeAnnotation(*types)
