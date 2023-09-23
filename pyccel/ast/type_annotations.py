@@ -26,9 +26,6 @@ class TypeAnnotation(Basic):
         self._order = order
         self._is_const = is_const
 
-        if rank > 1:
-            assert order is not None
-
         super().__init__()
 
     @property
