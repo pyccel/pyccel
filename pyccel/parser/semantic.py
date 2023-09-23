@@ -3285,8 +3285,9 @@ class SemanticParser(BasicParser):
             templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
 
         # Filter out unused templates
-        arg_annotations = [annot for a in expr.arguments for annot in ([a.annotation] \
-                                        if isinstance(a.annotation, SyntacticTypeAnnotation) else a.annotation.type_list)]
+        templatable_args = [a.annotation for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+        arg_annotations = [annot for a in templatable_args for annot in ([a] \
+                                        if isinstance(a, SyntacticTypeAnnotation) else a.type_list)]
         used_type_names = set(type_names for a in arg_annotations for type_names in a.dtypes)
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
