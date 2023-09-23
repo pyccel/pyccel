@@ -104,7 +104,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
-from pyccel.ast.type_annotations import TypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.type_annotations import TypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -1855,7 +1855,7 @@ class SemanticParser(BasicParser):
         return a
 
     def _visit_SyntacticTypeAnnotation(self, expr):
-        is_const = expr.is_const
+        is_const = expr.is_const is True
         types = []
 
         for dtype, rank ,order in zip(expr.dtypes, expr.ranks, expr.orders):
@@ -3283,6 +3283,13 @@ class SemanticParser(BasicParser):
 
         for t,v in templates.items():
             templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
+
+        # Filter out unused templates
+        arg_annotations = [annot for a in expr.arguments for annot in ([a.annotation] \
+                                        if isinstance(a.annotation, SyntacticTypeAnnotation) else a.annotation.type_list)]
+        used_type_names = set(type_names for a in arg_annotations for type_names in a.dtypes)
+        templates = {t: v for t,v in templates.items() if t in used_type_names}
+
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
