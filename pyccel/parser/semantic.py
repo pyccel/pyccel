@@ -1884,10 +1884,9 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefArgument(self, expr):
         types = self._visit(expr.annotation)
-        if isinstance(types, type) and PyccelFunctionDef in types.__mro__:
-            type_func = types.cls_name
-            dtype = type_func.static_dtype()
-            prec = type_func.static_precision()
+        if isinstance(types, type) and PyccelAstNode in types.__mro__:
+            dtype = types.static_dtype()
+            prec = types.static_precision()
             rank = 0
             order = None
             cls_base = get_cls_base(dtype, prec, rank)
