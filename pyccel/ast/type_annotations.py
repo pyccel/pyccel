@@ -9,7 +9,7 @@ from pyccel.parser.syntax.basic import BasicStmt
 
 from .basic import Basic
 
-from .core import FunctionDefArgument, FunctionDefResult
+from .core import FunctionDefArgument
 
 from .internals import PyccelSymbol
 
