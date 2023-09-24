@@ -104,9 +104,6 @@ class UnionTypeAnnotation(Basic):
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
-        if any(not isinstance(t, (TypeAnnotation, UnionTypeAnnotation, FunctionTypeAnnotation)) for t in type_annotations):
-            raise TypeError("Type annotations should have type TypeAnnotation")
-
         annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
         self._type_annotations = tuple(set(annots))
 
