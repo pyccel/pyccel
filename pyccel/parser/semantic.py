@@ -1914,19 +1914,31 @@ class SemanticParser(BasicParser):
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
 
+        name = self.scope.get_expected_name(expr.name)
         value = None if expr.value is None else self._visit(expr.value)
         kwonly = expr.is_kwonly
         is_optional = isinstance(value, Nil)
+        allows_negative_indexes = False
+        array_memory_handling = 'heap'
+        decorators = self.scope.decorators
+        if decorators:
+            if 'stack_array' in decorators:
+                if name in decorators['stack_array']:
+                    array_memory_handling = 'stack'
+            if 'allow_negative_index' in decorators:
+                if expr.name in decorators['allow_negative_index']:
+                    allows_negative_indexes = True
 
         possible_args = []
         for t in types.type_list:
             dtype = t.datatype
             prec  = t.precision
             rank  = t.rank
-            v = Variable(dtype, self.scope.get_expected_name(expr.name), precision = prec,
+            v = Variable(dtype, name, precision = prec,
                     shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
                     is_const = t.is_const, is_optional = is_optional,
-                    memory_handling = 'heap' if rank > 0 else 'stack')
+                    memory_handling = array_memory_handling if rank > 0 else 'stack',
+                    allows_negative_indexes = allows_negative_indexes)
             if isinstance(value, Literal) and \
                     value.dtype is dtype and \
                     value.precision != prec:
@@ -3323,6 +3335,7 @@ class SemanticParser(BasicParser):
             self.scope = expr.scope
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
+            self.scope.decorators.update(decorators)
             arguments = [self._visit(a) for a in expr.arguments]
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
