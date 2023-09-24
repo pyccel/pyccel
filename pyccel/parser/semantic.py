@@ -1605,6 +1605,19 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
+    def _PyccelAstNode_to_TypeAnnotation(self, expr):
+        dtype = expr.static_dtype()
+        prec = expr.static_precision()
+        try:
+            rank = expr.static_rank()
+        except AttributeError:
+            rank = 0
+        try:
+            order = expr.static_order()
+        except AttributeError:
+            order = None
+        cls_base = get_cls_base(dtype, prec, rank)
+        return TypeAnnotation(dtype, cls_base, prec, rank, order)
 
     #====================================================
     #                 _visit functions
@@ -1879,7 +1892,9 @@ class SemanticParser(BasicParser):
         for dtype, rank ,order in zip(expr.dtypes, expr.ranks, expr.orders):
             dtype_from_scope = self.scope.find(dtype)
 
-            if isinstance(dtype_from_scope, TypeAnnotation):
+            if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
+            elif isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
             else:
                 prec = -1
@@ -1912,12 +1927,7 @@ class SemanticParser(BasicParser):
         if isinstance(types, PyccelFunctionDef):
             types = types.cls_name
         if isinstance(types, type) and PyccelAstNode in types.__mro__:
-            dtype = types.static_dtype()
-            prec = types.static_precision()
-            rank = 0
-            order = None
-            cls_base = get_cls_base(dtype, prec, rank)
-            types = UnionTypeAnnotation(TypeAnnotation(dtype, cls_base, prec, rank, order))
+            types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
