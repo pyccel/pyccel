@@ -2123,7 +2123,7 @@ class FunctionCall(PyccelAstNode):
 
         # Handle function as argument
         arg_vals = [None if a is None else a.value for a in args]
-        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, []), keyword=a.keyword)
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
@@ -3066,7 +3066,10 @@ class Interface(Basic):
 
 class FunctionAddress(FunctionDef):
 
-    """Represents a function address.
+    """
+    Represents a function address.
+
+    A function definition can have a FunctionAddress as an argument.
 
     Parameters
     ----------
@@ -3096,14 +3099,10 @@ class FunctionAddress(FunctionDef):
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-
-    a function definition can have a FunctionAddress as an argument
-
-    >>> FunctionDef('g', [FunctionAddress('f', [x], [y], [])], [], [])
-
-    we can also Declare a FunctionAddress
-
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    >>> # a function definition can have a FunctionAddress as an argument
+    >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
+    >>> # we can also Declare a FunctionAddress
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
@@ -3112,14 +3111,13 @@ class FunctionAddress(FunctionDef):
         name,
         arguments,
         results,
-        body,
         is_optional=False,
         is_kwonly=False,
         is_argument=False,
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, results, body, scope=1,**kwargs)
+        super().__init__(name, arguments, results, body=[], scope=1,**kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3702,7 +3700,7 @@ class FuncAddressDeclare(Basic):
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_variable','_intent','_value','_static')
     _attribute_nodes = ('_variable', '_value')

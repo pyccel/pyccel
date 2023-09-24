@@ -407,7 +407,7 @@ class FunctionHeader(Header):
                         var, annotation = build_argument(_name, dc)
                         results.append(FunctionDefResult(var, annotation=annotation))
                     arg_name = 'arg_{0}'.format(str(i))
-                    arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
+                    arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results))
 
                 else:
                     arg_name = 'arg_{0}'.format(str(i))
