@@ -838,7 +838,7 @@ class SyntaxParser(BasicParser):
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
-            results.append(FunctionDefResult(result_name))
+            results.append(FunctionDefResult(result_name, annotation = result_annotation))
 
         self.exit_function_scope()
 
