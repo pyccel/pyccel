@@ -9,6 +9,10 @@ from pyccel.parser.syntax.basic import BasicStmt
 
 from .basic import Basic
 
+from .core import FunctionDefArgument, FunctionDefResult
+
+from .internals import PyccelSymbol
+
 from pyccel.utilities.stage import PyccelStage
 
 pyccel_stage = PyccelStage()
@@ -68,15 +72,42 @@ class TypeAnnotation(Basic):
     def __repr__(self):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
+class FunctionTypeAnnotation(Basic):
+    __slots__ = ('_args', '_results',)
+    _attribute_nodes = ('_args', '_results')
+
+    def __init__(self, args, results):
+        if pyccel_stage == 'syntactic':
+            self._args = [FunctionDefArgument(PyccelSymbol('_'), annotation = a) \
+                            for i, a in enumerate(args)]
+            self._results = [FunctionDefArgument(PyccelSymbol('_'), annotation = r) \
+                            for i, r in enumerate(results)]
+        else:
+            self._args = args
+            self._results = results
+
+        super().__init__()
+
+    @property
+    def args(self):
+        return self._args
+
+    @property
+    def results(self):
+        return self._results
+
+    def __repr__(self):
+        return f'func({repr(self.args)}) -> {repr(self.results)}'
+
 class UnionTypeAnnotation(Basic):
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
-        if any(not isinstance(t, (TypeAnnotation, UnionTypeAnnotation)) for t in type_annotations):
+        if any(not isinstance(t, (TypeAnnotation, UnionTypeAnnotation, FunctionTypeAnnotation)) for t in type_annotations):
             raise TypeError("Type annotations should have type TypeAnnotation")
 
-        annots = [ti for t in type_annotations for ti in ([t] if isinstance(t, TypeAnnotation) else t.type_list)]
+        annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
         self._type_annotations = tuple(set(annots))
 
         super().__init__()
@@ -120,17 +151,26 @@ class SyntacticTypeAnnotation(Basic):
             return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
         elif hasattr(annotation, 'const'):
             is_const = annotation.const
-            dtypes = annotation.dtypes
-            dtype_names = [d.dtype for d in dtypes]
-            ranks = [len(getattr(d.trailer, 'args', ())) for d in dtypes]
-            orders = [getattr(d.trailer, 'order', None) for d in dtypes]
-            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+            dtypes = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.dtypes]
+            if any(isinstance(d, FunctionTypeAnnotation) for d in dtypes):
+                if any(not isinstance(d, FunctionTypeAnnotation) for d in dtypes):
+                    raise TypeError("Can't mix function address with basic types")
+                return UnionTypeAnnotation(*dtypes)
+            else:
+                dtype_names = [n for d in dtypes for n in d.dtypes]
+                ranks = [r for d in dtypes for r in d.ranks]
+                orders = [o for d in dtypes for o in d.orders]
+                return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
         elif hasattr(annotation, 'dtype'):
             is_const = None
             dtype_names = [annotation.dtype]
             ranks = [len(getattr(annotation.trailer, 'args', ()))]
             orders = [getattr(annotation.trailer, 'order', None)]
             return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
+        elif hasattr(annotation, 'results'):
+            args = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.decs]
+            results = [SyntacticTypeAnnotation.build_from_textx(r) for r in annotation.results]
+            return FunctionTypeAnnotation(args, results)
         else:
             raise TypeError("Unexpected type")
 
