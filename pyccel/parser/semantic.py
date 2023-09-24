@@ -105,6 +105,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.type_annotations import TypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
+from pyccel.ast.type_annotations import FunctionTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -1896,11 +1897,18 @@ class SemanticParser(BasicParser):
         return UnionTypeAnnotation(*types)
 
     def _visit_UnionTypeAnnotation(self, expr):
-        types = [t for syntax_type_annot in expr.type_list for t in self._visit(syntax_type_annot).type_list]
+        annotations = [self._visit(syntax_type_annot) for syntax_type_annot in expr.type_list]
+        types = [t for a in annotations for t in (a.type_list if isinstance(a, UnionTypeAnnotation) else [a])]
         return UnionTypeAnnotation(*types)
+
+    def _visit_FunctionTypeAnnotation(self, expr):
+        arg_types = [self._visit(a)[0] for a in expr.args]
+        res_types = [self._visit(r)[0] for r in expr.results]
+        return FunctionTypeAnnotation(arg_types, res_types)
 
     def _visit_FunctionDefArgument(self, expr):
         types = self._visit(expr.annotation)
+
         if isinstance(types, PyccelFunctionDef):
             types = types.cls_name
         if isinstance(types, type) and PyccelAstNode in types.__mro__:
@@ -1931,19 +1939,25 @@ class SemanticParser(BasicParser):
 
         possible_args = []
         for t in types.type_list:
-            dtype = t.datatype
-            prec  = t.precision
-            rank  = t.rank
-            v = Variable(dtype, name, precision = prec,
-                    shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
-                    is_const = t.is_const, is_optional = is_optional,
-                    memory_handling = array_memory_handling if rank > 0 else 'stack',
-                    allows_negative_indexes = allows_negative_indexes)
-            if isinstance(value, Literal) and \
-                    value.dtype is dtype and \
-                    value.precision != prec:
-                value = convert_to_literal(value.python_value, dtype, prec)
-            possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
+            if isinstance(t, FunctionTypeAnnotation):
+                args = t.args
+                results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
+                address = FunctionAddress(name, args, results, is_argument = True, is_kwonly = kwonly)
+                possible_args.append(FunctionDefArgument(address, value = value, kwonly = kwonly, annotation = t))
+            else:
+                dtype = t.datatype
+                prec  = t.precision
+                rank  = t.rank
+                v = Variable(dtype, name, precision = prec,
+                        shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
+                        is_const = t.is_const, is_optional = is_optional,
+                        memory_handling = array_memory_handling if rank > 0 else 'stack',
+                        allows_negative_indexes = allows_negative_indexes)
+                if isinstance(value, Literal) and \
+                        value.dtype is dtype and \
+                        value.precision != prec:
+                    value = convert_to_literal(value.python_value, dtype, prec)
+                possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
 
         return possible_args
 
@@ -3315,8 +3329,9 @@ class SemanticParser(BasicParser):
 
         # Filter out unused templates
         templatable_args = [a.annotation for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
-        arg_annotations = [annot for a in templatable_args for annot in ([a] \
-                                        if isinstance(a, SyntacticTypeAnnotation) else a.type_list)]
+        arg_annotations = [annot for a in templatable_args for annot in (a.type_list \
+                                        if isinstance(a, UnionTypeAnnotation) else [a]) \
+                                        if isinstance(annot, SyntacticTypeAnnotation)]
         used_type_names = set(type_names for a in arg_annotations for type_names in a.dtypes)
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
