@@ -230,7 +230,9 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
-            return SyntacticTypeAnnotation.build_from_textx(annotation)
+            annot = SyntacticTypeAnnotation.build_from_textx(annotation)
+            annot.set_fst(stmt)
+            return annot
         elif annotation is Nil():
             return None
         else:

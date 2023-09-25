@@ -1906,6 +1906,10 @@ class SemanticParser(BasicParser):
 
                 if rank > 1 and order is None:
                     order = 'C'
+                elif order is not None:
+                    errors.report(f"Ordering is not applicable to objects with rank {rank}",
+                            symbol=expr.fst, severity='warning')
+                    order = None
 
                 types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
