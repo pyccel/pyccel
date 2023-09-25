@@ -236,6 +236,7 @@ class SyntaxParser(BasicParser):
         else:
             errors.report('Invalid type annotation',
                         symbol = stmt, severity='error')
+            return None
 
     #====================================================
     #                 _visit functions
