@@ -705,8 +705,8 @@ class SyntaxParser(BasicParser):
                                     severity='error')
 
                 if any(i.keyword not in (None, 'name', 'types') for i in dec_args):
-                        errors.report('Argument provided to the template decorator is not valid',
-                                        symbol = template_decorator, severity='error')
+                    errors.report('Argument provided to the template decorator is not valid',
+                                    symbol = template_decorator, severity='error')
 
                 if dec_args[0].has_keyword and dec_args[0].keyword != 'name':
                     type_name = dec_args[1].value.python_value
