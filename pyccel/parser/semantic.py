@@ -3400,7 +3400,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_var, FunctionAddress):
                         self.insert_function(a_var)
                     else:
-                        self.scope.insert_variable(a_var, a.name)
+                        self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
                 results = expr.results
                 if header_results:
