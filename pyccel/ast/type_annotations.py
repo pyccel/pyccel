@@ -5,15 +5,13 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.parser.syntax.basic import BasicStmt
+from pyccel.utilities.stage import PyccelStage
 
 from .basic import Basic
 
 from .core import FunctionDefArgument
 
 from .internals import PyccelSymbol
-
-from pyccel.utilities.stage import PyccelStage
 
 pyccel_stage = PyccelStage()
 
