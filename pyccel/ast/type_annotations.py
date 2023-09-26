@@ -26,7 +26,30 @@ pyccel_stage = PyccelStage()
 
 class TypeAnnotation(Basic):
     """
-    A class
+    A class which describes a type annotation.
+
+    A class which stores all information which may be provided in a type annotation
+    in order to declare a variable.
+
+    Parameters
+    ----------
+    datatype : DataType
+        The requested internal data type.
+
+    cls_base : ClassDef
+        The description of the class describing the variable.
+
+    precision : int
+        The precision of the internal datatype.
+
+    rank : int
+        The rank of the variable.
+
+    order : str
+        The order of the variable.
+
+    is_const : bool, default=False
+        True if the variable cannot be modified, false otherwise.
     """
     __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
                  '_order', '_is_const')
