@@ -1923,7 +1923,13 @@ class SemanticParser(BasicParser):
         res_types = [self._visit(r)[0] for r in expr.results]
         return FunctionTypeAnnotation(arg_types, res_types)
 
-    def _visit_FunctionDefArgument(self, expr):
+    def _visit_AnnotatedPyccelSymbol(self, expr):
+        var = self.check_for_variable(expr)
+        print(expr, var)
+        if var is not None:
+            errors.report("Variable has been declared multiple times",
+                    symbol=expr, severity='error')
+
         types = self._visit(expr.annotation)
 
         if isinstance(types, PyccelFunctionDef):
@@ -1934,10 +1940,8 @@ class SemanticParser(BasicParser):
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
 
-        name = self.scope.get_expected_name(expr.name)
-        value = None if expr.value is None else self._visit(expr.value)
-        kwonly = expr.is_kwonly
-        is_optional = isinstance(value, Nil)
+        name = self.scope.get_expected_name(expr)
+
         allows_negative_indexes = False
         array_memory_handling = 'heap'
         decorators = self.scope.decorators
@@ -1955,23 +1959,41 @@ class SemanticParser(BasicParser):
                 args = t.args
                 results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
                 address = FunctionAddress(name, args, results, is_argument = True, is_kwonly = kwonly)
-                possible_args.append(FunctionDefArgument(address, value = value, kwonly = kwonly, annotation = t))
+                possible_args.append(address)
             else:
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
                 v = Variable(dtype, name, precision = prec,
                         shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
-                        is_const = t.is_const, is_optional = is_optional,
+                        is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
                         allows_negative_indexes = allows_negative_indexes)
-                if isinstance(value, Literal) and \
-                        value.dtype is dtype and \
-                        value.precision != prec:
-                    value = convert_to_literal(value.python_value, dtype, prec)
-                possible_args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = t))
+                possible_args.append(v)
 
-        return possible_args
+        if len(possible_args) == 1:
+            return possible_args[0]
+        else:
+            return possible_args
+
+    def _visit_FunctionDefArgument(self, expr):
+        arg = self._visit(expr.var)
+        value = None if expr.value is None else self._visit(expr.value)
+        kwonly = expr.is_kwonly
+        is_optional = isinstance(value, Nil)
+        if not isinstance(arg, list):
+            arg = [arg]
+
+        args = []
+        for v in arg:
+            dtype = v.dtype
+            prec = v.precision
+            if isinstance(value, Literal) and \
+                    value.dtype is dtype and \
+                    value.precision != prec:
+                value = convert_to_literal(value.python_value, dtype, prec)
+            args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = expr.annotation))
+        return args
 
     def _visit_CodeBlock(self, expr):
         ls = []
