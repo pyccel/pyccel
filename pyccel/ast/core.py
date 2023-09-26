@@ -3119,7 +3119,7 @@ class FunctionAddress(FunctionDef):
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, results, body=[], scope=1,**kwargs)
+        super().__init__(name, arguments, results, body=[], scope=None, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3164,6 +3164,16 @@ class FunctionAddress(FunctionDef):
     @property
     def is_optional(self):
         return self._is_optional
+
+    def __getnewargs__(self):
+        args, kwargs = super().__getnewargs__()
+        args = args[:-1]
+        kwargs.pop('scope')
+        kwargs['is_argument'] = self.is_argument
+        kwargs['is_kwonly'] = self.is_kwonly
+        kwargs['is_optional'] = self.is_optional
+        kwargs['memory_handling'] = self.memory_handling
+        return args, kwargs
 
 class SympyFunction(FunctionDef):
 
