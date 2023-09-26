@@ -796,8 +796,8 @@ class SyntaxParser(BasicParser):
                 for i,arg in enumerate(args):
                     argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
 
-        for a, annot in zip(arguments, argument_annotations):
-            a.annotation = annot
+        arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
+                           for a, annot in zip(arguments, argument_annotations)]
 
         body = stmt.body
 
