@@ -1909,6 +1909,9 @@ class SemanticParser(BasicParser):
                             symbol=expr.fst, severity='warning')
                     order = None
 
+                if prec == -1 and cls_base is NumpyArrayClass:
+                    prec = default_precision[str(dtype)]
+
                 types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         return UnionTypeAnnotation(*types)
