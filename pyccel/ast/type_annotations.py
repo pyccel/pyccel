@@ -11,7 +11,7 @@ from .basic import Basic
 
 from .core import FunctionDefArgument
 
-from .internals import PyccelSymbol
+from .internals import AnnotatedPyccelSymbol
 
 pyccel_stage = PyccelStage()
 
@@ -76,9 +76,9 @@ class FunctionTypeAnnotation(Basic):
 
     def __init__(self, args, results):
         if pyccel_stage == 'syntactic':
-            self._args = [FunctionDefArgument(PyccelSymbol('_'), annotation = a) \
+            self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
-            self._results = [FunctionDefArgument(PyccelSymbol('_'), annotation = r) \
+            self._results = [FunctionDefArgument(AnnotatedPyccelSymbol('_', r), annotation = r) \
                             for i, r in enumerate(results)]
         else:
             self._args = args
