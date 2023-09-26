@@ -3410,7 +3410,6 @@ class SemanticParser(BasicParser):
                 imports        = []
                 arg            = None
                 arguments      = argument_vars[i]
-                header_results = None
 
                 if is_interface:
                     name = interface_name + '_' + str(tmpl_idx*n_interface_funcs + i).zfill(2)
@@ -3435,19 +3434,8 @@ class SemanticParser(BasicParser):
                         self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
                 results = expr.results
-                if header_results:
-                    new_results = []
-
-                    for a, ah in zip(results, header_results):
-                        av = a.var
-                        d_var = self._infer_type(ah.var)
-                        dtype = d_var.pop('datatype')
-                        a_new = Variable(dtype, self.scope.get_expected_name(av),
-                                **d_var, is_temp = av.is_temp)
-                        self.scope.insert_variable(a_new, av)
-                        new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
-
-                    results = new_results
+                if results and results[0].annotation:
+                    results = [self._visit(r) for r in expr.results]
 
                 # insert the FunctionDef into the scope
                 # to handle the case of a recursive function
