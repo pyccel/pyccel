@@ -25,6 +25,9 @@ __all__ = (
 pyccel_stage = PyccelStage()
 
 class TypeAnnotation(Basic):
+    """
+    A class
+    """
     __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
                  '_order', '_is_const')
     _attribute_nodes = ()
@@ -125,6 +128,28 @@ class UnionTypeAnnotation(Basic):
         annot.set_current_user_node(self)
 
 class SyntacticTypeAnnotation(Basic):
+    """
+    A class describing the type annotation parsed in the syntactic stage.
+
+    A class which holds all the type information parsed from literal string
+    annotations in the syntactic stage. Annotations can describe multiple
+    different possible types. This function stores lists of the critical
+    properties.
+
+    Parameters
+    ----------
+    dtypes : list of str
+        The dtypes named in the type annotation.
+
+    ranks : list of int
+        The number of ranks requested for each possible annotation.
+
+    orders : list of str
+        The orders requested in the type annotation.
+
+    is_const : bool
+        The constness as specified in the type annotation.
+    """
     _attribute_nodes = ()
     def __init__(self, dtypes, ranks, orders, is_const):
         self._dtypes = list(dtypes)
