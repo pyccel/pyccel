@@ -1971,6 +1971,7 @@ class SemanticParser(BasicParser):
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
                         allows_negative_indexes = allows_negative_indexes)
+                self.scope.insert_variable(v, expr)
                 possible_args.append(v)
 
         if len(possible_args) == 1:
