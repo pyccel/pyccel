@@ -60,7 +60,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction, AnnotatedPyccelSymbol
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
@@ -231,7 +231,10 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, column = e.col,
                         severity='fatal')
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
-            annot.set_fst(stmt)
+            if isinstance(stmt, Basic):
+                annot.set_fst(stmt.fst)
+            else:
+                annot.set_fst(stmt)
             return annot
         elif annotation is Nil():
             return None
@@ -388,31 +391,31 @@ class SyntaxParser(BasicParser):
             arguments = []
             for a in stmt.args[:n_expl]:
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
-                new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation)
                 new_arg.set_fst(a)
                 arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
-                new_arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation,
                                             value = self._visit(d))
                 new_arg.set_fst(a)
                 arguments.append(new_arg)
 
-            self.scope.insert_symbols(PyccelSymbol(a.arg) for a in stmt.args)
-
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
                 annotation = self._visit(a.annotation)
                 val = self._visit(d) if d is not None else d
-                arg = FunctionDefArgument(PyccelSymbol(a.arg),
+                arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
                             value=val, kwonly=True)
+                arg.set_fst(a)
 
                 arguments.append(arg)
-                self.scope.insert_symbol(a.arg)
+
+        self.scope.insert_symbols(a.var for a in arguments)
 
         return arguments
 
@@ -840,6 +843,8 @@ class SyntaxParser(BasicParser):
                 result_name = r0
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
+
+            result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
 
