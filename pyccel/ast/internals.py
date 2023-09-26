@@ -353,6 +353,10 @@ class AnnotatedPyccelSymbol(PyccelSymbol):
         self._annotation = annotation
         super().__init__(name, is_temp)
 
+    @property
+    def annotation(self):
+        return self._annotation
+
 class PrecomputedCode(Basic):
     """
     Internal helper class for storing code which must be defined by the printer
