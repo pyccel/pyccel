@@ -4,6 +4,8 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+""" Module containing all classes useful for type annotation.
+"""
 
 from pyccel.utilities.stage import PyccelStage
 
@@ -12,6 +14,13 @@ from .basic import Basic
 from .core import FunctionDefArgument
 
 from .internals import AnnotatedPyccelSymbol
+
+__all__ = (
+        'FunctionTypeAnnotation',
+        'SyntacticTypeAnnotation',
+        'TypeAnnotation',
+        'UnionTypeAnnotation',
+        )
 
 pyccel_stage = PyccelStage()
 
