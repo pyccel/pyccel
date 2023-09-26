@@ -283,13 +283,22 @@ class Slice(Basic):
 
 
 class PyccelSymbol(str, Immutable):
-    """Symbolic placeholder for a Python variable, which has a name but no type yet.
+    """
+    Class representing a symbol in the code.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
     Parameters
     ----------
-    name : String
-        name of the symbol
+    name : str
+        Name of the symbol.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
 
     Examples
     --------
@@ -314,6 +323,35 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
+class AnnotatedPyccelSymbol(PyccelSymbol):
+    """
+    Class representing a symbol in the code which has an annotation.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
+
+    Parameters
+    ----------
+    name : str
+        Name of the symbol.
+
+    annotation : TypeAnnotation
+        The annotation describing the type that the object will have.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
+    """
+    __slots__ = ('_annotation',)
+
+    def __new__(cls, name, annotation, is_temp = False):
+        return super().__new__(cls, name, is_temp)
+
+    def __init__(self, name, annotation, is_temp = False):
+        self._annotation = annotation
+        super().__init__(name, is_temp)
 
 class PrecomputedCode(Basic):
     """
