@@ -1608,13 +1608,11 @@ class SemanticParser(BasicParser):
     def _PyccelAstNode_to_TypeAnnotation(self, expr):
         dtype = expr.static_dtype()
         prec = expr.static_precision()
-        try:
-            rank = expr.static_rank()
-        except AttributeError:
+        rank = expr.static_rank()
+        order = expr.static_order()
+        if not isinstance(rank, int):
             rank = 0
-        try:
-            order = expr.static_order()
-        except AttributeError:
+        if order is not None and not isinstance(order, str):
             order = None
         cls_base = get_cls_base(dtype, prec, rank)
         return TypeAnnotation(dtype, cls_base, prec, rank, order)
