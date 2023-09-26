@@ -931,9 +931,11 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += [FunctionCallArgument(self._visit(a)) for a in stmt.args]
+            args += [FunctionCallArgument(self._visit(a), fst=a) for a in stmt.args]
         if stmt.keywords:
-            args += self._visit(stmt.keywords)
+            kwargs = self._visit(stmt.keywords)
+            for k, a in zip(kwargs, stmt.keywords):
+                k.set_fst(a)
 
         if len(args) == 0:
             args = ()

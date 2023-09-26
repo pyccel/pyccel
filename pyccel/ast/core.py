@@ -1781,10 +1781,12 @@ class FunctionCallArgument(Basic):
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
-    def __init__(self, value, keyword = None):
+    def __init__(self, value, keyword = None, *, fst = None):
         self._value = value
         self._keyword = keyword
         super().__init__()
+        if fst:
+            self.set_fst(fst)
 
     @property
     def value(self):
