@@ -937,6 +937,8 @@ class SyntaxParser(BasicParser):
             for k, a in zip(kwargs, stmt.keywords):
                 k.set_fst(a)
 
+            args += kwargs
+
         if len(args) == 0:
             args = ()
 

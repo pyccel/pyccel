@@ -1887,7 +1887,7 @@ class SemanticParser(BasicParser):
         is_const = expr.is_const is True
         types = []
 
-        for dtype, rank ,order in zip(expr.dtypes, expr.ranks, expr.orders):
+        for dtype, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
             dtype_from_scope = self.scope.find(dtype)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
@@ -1904,7 +1904,7 @@ class SemanticParser(BasicParser):
 
                 if rank > 1 and order is None:
                     order = 'C'
-                elif order is not None:
+                elif order is not None and rank < 2:
                     errors.report(f"Ordering is not applicable to objects with rank {rank}",
                             symbol=expr.fst, severity='warning')
                     order = None
@@ -1925,7 +1925,6 @@ class SemanticParser(BasicParser):
 
     def _visit_AnnotatedPyccelSymbol(self, expr):
         var = self.check_for_variable(expr)
-        print(expr, var)
         if var is not None:
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
@@ -1950,7 +1949,7 @@ class SemanticParser(BasicParser):
                 if name in decorators['stack_array']:
                     array_memory_handling = 'stack'
             if 'allow_negative_index' in decorators:
-                if expr.name in decorators['allow_negative_index']:
+                if expr in decorators['allow_negative_index']:
                     allows_negative_indexes = True
 
         possible_args = []
@@ -1992,7 +1991,8 @@ class SemanticParser(BasicParser):
                     value.dtype is dtype and \
                     value.precision != prec:
                 value = convert_to_literal(value.python_value, dtype, prec)
-            args.append(FunctionDefArgument(v, value = value, kwonly = kwonly, annotation = expr.annotation))
+            args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional, is_argument = True),
+                                    value = value, kwonly = kwonly, annotation = expr.annotation))
         return args
 
     def _visit_CodeBlock(self, expr):
