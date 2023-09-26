@@ -832,7 +832,10 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        for r in zip(*returns):
+        if result_annotation and not isinstance(result_annotation, tuple):
+            result_annotation = [result_annotation]
+
+        for i,r in enumerate(zip(*returns)):
             r0 = r[0]
 
             pyccel_symbol  = isinstance(r0, PyccelSymbol)
@@ -845,7 +848,7 @@ class SyntaxParser(BasicParser):
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
+                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
 
