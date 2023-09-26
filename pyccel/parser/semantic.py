@@ -1960,7 +1960,7 @@ class SemanticParser(BasicParser):
             if isinstance(t, FunctionTypeAnnotation):
                 args = t.args
                 results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
-                address = FunctionAddress(name, args, results, is_argument = True, is_kwonly = kwonly)
+                address = FunctionAddress(name, args, results)
                 possible_args.append(address)
             else:
                 dtype = t.datatype
@@ -1988,14 +1988,19 @@ class SemanticParser(BasicParser):
 
         args = []
         for v in arg:
-            dtype = v.dtype
-            prec = v.precision
-            if isinstance(value, Literal) and \
-                    value.dtype is dtype and \
-                    value.precision != prec:
-                value = convert_to_literal(value.python_value, dtype, prec)
-            args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional, is_argument = True),
-                                    value = value, kwonly = kwonly, annotation = expr.annotation))
+            if isinstance(v, Variable):
+                dtype = v.dtype
+                prec = v.precision
+                if isinstance(value, Literal) and \
+                        value.dtype is dtype and \
+                        value.precision != prec:
+                    value = convert_to_literal(value.python_value, dtype, prec)
+                args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional, is_argument = True),
+                                        value = value, kwonly = kwonly, annotation = expr.annotation))
+            else:
+                args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
+                                is_kwonly = kwonly, is_argument = True),
+                                value = value, kwonly = kwonly, annotation = expr.annotation))
         return args
 
     def _visit_CodeBlock(self, expr):
