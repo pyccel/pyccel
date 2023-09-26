@@ -844,7 +844,8 @@ class SyntaxParser(BasicParser):
             else:
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
-            result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
+            if result_annotation:
+                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
 
