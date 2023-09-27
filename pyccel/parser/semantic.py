@@ -1887,8 +1887,8 @@ class SemanticParser(BasicParser):
         is_const = expr.is_const is True
         types = []
 
-        for dtype, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            dtype_from_scope = self.scope.find(dtype)
+        for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
+            dtype_from_scope = self.scope.find(dtype_name)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
@@ -1896,11 +1896,17 @@ class SemanticParser(BasicParser):
                 types.append(dtype_from_scope)
             else:
                 prec = -1
-                if dtype in dtype_and_precision_registry:
-                    dtype, prec = dtype_and_precision_registry[dtype]
-                dtype = dtype_registry[dtype]
+                if dtype_name in dtype_and_precision_registry:
+                    dtype, prec = dtype_and_precision_registry[dtype_name]
+                    dtype = dtype_registry[dtype]
+                else:
+                    dtype = dtype_registry[dtype_name]
+                    prec = 0
 
-                cls_base = get_cls_base(dtype, prec, rank)
+                try:
+                    cls_base = get_cls_base(dtype, prec, rank)
+                except KeyError:
+                    cls_base = self.scope.find(dtype_name, 'classes')
 
                 if rank > 1 and order is None:
                     order = 'C'
@@ -1998,7 +2004,8 @@ class SemanticParser(BasicParser):
                         value.dtype is dtype and \
                         value.precision != prec:
                     value = convert_to_literal(value.python_value, dtype, prec)
-                args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional, is_argument = True),
+                clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
+                args.append(FunctionDefArgument(clone_var,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
@@ -3391,20 +3398,16 @@ class SemanticParser(BasicParser):
 
         for tmpl_idx in range(n_templates):
             # Change to syntactic FunctionDef scope to ensure get_expected_name is available
-            current_scope = self.scope
-            self.scope = expr.scope
+            scope = self.create_new_function_scope(name, decorators = decorators,
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy())
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
             self.scope.decorators.update(decorators)
             arguments = [self._visit(a) for a in expr.arguments]
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
-            # Remove new Variable from syntactic scope to prevent problems
-            # for subsequent template definitions
-            for symbolic_arg, semantic_arg in zip(expr.arguments, arguments):
-                if len(semantic_arg) == 1 and isinstance(semantic_arg[0].var, Variable):
-                    self.scope.variables.pop(symbolic_arg.name)
-            self.scope = current_scope
+            self.exit_function_scope()
 
             n_interface_funcs = prod(len(a) for a in arguments)
             argument_vars = list(product(*arguments))
@@ -3418,6 +3421,7 @@ class SemanticParser(BasicParser):
                 imports        = []
                 arg            = None
                 arguments      = argument_vars[i]
+                arg_dict = {a.name:a.var for a in arguments}
 
                 if is_interface:
                     name = interface_name + '_' + str(tmpl_idx*n_interface_funcs + i).zfill(2)
@@ -3425,14 +3429,15 @@ class SemanticParser(BasicParser):
                         used_symbols = expr.scope.local_used_symbols.copy(),
                         original_symbols = expr.scope.python_names.copy())
 
-                if cls_name and str(arguments[0].name) == 'self':
-                    arg       = arguments[0]
-                    arguments = arguments[1:]
-                    dt        = self.get_class_construct(cls_name)()
-                    cls_base  = self.scope.find(cls_name, 'classes')
-                    cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
-                    var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
-                    self.scope.insert_variable(var)
+                if cls_name:
+                    if arguments[0].var.cls_base.name != cls_name:
+                        errors.report('Class method self argument does not have the expected type',
+                                severity='error', symbol=arguments[0])
+                    for s in expr.scope.dotted_symbols:
+                        base = s.name[0]
+                        if base in arg_dict:
+                            cls_base = arg_dict[base].cls_base
+                            cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
 
                 for a in arguments:
                     a_var = a.var
