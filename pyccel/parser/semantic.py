@@ -1971,11 +1971,12 @@ class SemanticParser(BasicParser):
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
                         allows_negative_indexes = allows_negative_indexes)
-                self.scope.insert_variable(v, expr)
                 possible_args.append(v)
 
         if len(possible_args) == 1:
-            return possible_args[0]
+            v = possible_args[0]
+            self.scope.insert_variable(v, expr)
+            return v
         else:
             return possible_args
 
@@ -3397,6 +3398,11 @@ class SemanticParser(BasicParser):
             arguments = [self._visit(a) for a in expr.arguments]
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
+            # Remove new Variable from syntactic scope to prevent problems
+            # for subsequent template definitions
+            for symbolic_arg, semantic_arg in zip(expr.arguments, arguments):
+                if len(semantic_arg) == 1:
+                    self.scope.variables.pop(symbolic_arg.name)
             self.scope = current_scope
 
             n_interface_funcs = prod(len(a) for a in arguments)
