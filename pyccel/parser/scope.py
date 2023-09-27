@@ -434,15 +434,18 @@ class Scope(object):
     def insert_symbol(self, symbol):
         """ Add a new symbol to the scope
         """
-        if not self.allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbol(symbol)
-        elif symbol not in self._used_symbols:
-            collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                    self._used_symbols.values())
-            collisionless_symbol = PyccelSymbol(collisionless_symbol,
-                    is_temp = getattr(symbol, 'is_temp', False))
-            self._used_symbols[symbol] = collisionless_symbol
-            self._original_symbol[collisionless_symbol] = symbol
+        if isinstance(symbol, DottedName):
+            self._dotted_symbols.append(symbol)
+        else:
+            if not self.allow_loop_scoping and self.is_loop:
+                self.parent_scope.insert_symbol(symbol)
+            elif symbol not in self._used_symbols:
+                collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
+                        self._used_symbols.values())
+                collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                        is_temp = getattr(symbol, 'is_temp', False))
+                self._used_symbols[symbol] = collisionless_symbol
+                self._original_symbol[collisionless_symbol] = symbol
 
     def insert_symbolic_alias(self, symbol, alias):
         """
@@ -456,9 +459,6 @@ class Scope(object):
                     symbol=symbol, severity='error')
 
         self._locals['symbolic_alias'][symbol] = alias
-
-    def insert_dotted_symbol(self, dotted):
-        self._dotted_symbols.append(dotted)
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope

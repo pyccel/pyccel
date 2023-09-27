@@ -927,7 +927,7 @@ class SyntaxParser(BasicParser):
         attr = PyccelSymbol(stmt.attr)
         dotted = DottedName(val, attr)
         if self._in_lhs_assign:
-            self.scope.insert_dotted_symbol(dotted)
+            self.scope.insert_symbol(dotted)
         return dotted
 
 
