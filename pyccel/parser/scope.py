@@ -55,7 +55,7 @@ class Scope(object):
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol')
+            '_dummy_counter','_original_symbol', '_dotted_symbols')
 
     categories = ('functions','variables','classes',
             'imports','symbolic_functions', 'symbolic_alias',
@@ -90,6 +90,8 @@ class Scope(object):
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
+
+        self._dotted_symbols = []
 
     def __setstate__(self, state):
         state = state[1] # Retrieve __dict__ ignoring None
@@ -455,11 +457,18 @@ class Scope(object):
 
         self._locals['symbolic_alias'][symbol] = alias
 
+    def insert_dotted_symbol(self, dotted):
+        self._dotted_symbols.append(dotted)
+
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
         """
         for s in symbols:
             self.insert_symbol(s)
+
+    @property
+    def dotted_symbols(self):
+        return self._dotted_symbols
 
     @property
     def all_used_symbols(self):
