@@ -924,10 +924,11 @@ class SyntaxParser(BasicParser):
 
     def _visit_Attribute(self, stmt):
         val  = self._visit(stmt.value)
-        if self._in_lhs_assign:
-            self.scope.insert_symbol(stmt.attr)
         attr = PyccelSymbol(stmt.attr)
-        return DottedName(val, attr)
+        dotted = DottedName(val, attr)
+        if self._in_lhs_assign:
+            self.scope.insert_dotted_symbol(dotted)
+        return dotted
 
 
     def _visit_Call(self, stmt):
