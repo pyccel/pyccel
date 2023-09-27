@@ -586,6 +586,12 @@ class DottedName(Basic):
     __slots__ = ('_name',)
     _attribute_nodes = ()
 
+    def __new__(cls, *args):
+        if len(args) == 1:
+            return args[0]
+        else:
+            return super().__new__(cls)
+
     def __init__(self, *args):
 
         self._name = args
