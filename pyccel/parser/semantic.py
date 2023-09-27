@@ -1975,7 +1975,8 @@ class SemanticParser(BasicParser):
 
         if len(possible_args) == 1:
             v = possible_args[0]
-            self.scope.insert_variable(v, expr)
+            if isinstance(v, Variable):
+                self.scope.insert_variable(v, expr)
             return v
         else:
             return possible_args
@@ -3401,7 +3402,7 @@ class SemanticParser(BasicParser):
             # Remove new Variable from syntactic scope to prevent problems
             # for subsequent template definitions
             for symbolic_arg, semantic_arg in zip(expr.arguments, arguments):
-                if len(semantic_arg) == 1:
+                if len(semantic_arg) == 1 and isinstance(semantic_arg[0].var, Variable):
                     self.scope.variables.pop(symbolic_arg.name)
             self.scope = current_scope
 
