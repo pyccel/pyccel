@@ -1895,16 +1895,20 @@ class SemanticParser(BasicParser):
             elif isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
             elif dtype_from_scope is not None:
-                raise errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
+                errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
                         severity='fatal', symbol=expr)
             else:
                 prec = -1
                 if dtype_name in dtype_and_precision_registry:
                     dtype, prec = dtype_and_precision_registry[dtype_name]
                     dtype = dtype_registry[dtype]
-                else:
-                    dtype = dtype_registry[dtype_name]
-                    prec = 0
+                elif dtype_name in dtype_registry:
+                    try:
+                        dtype = dtype_registry[dtype_name]
+                        prec = 0
+                    except KeyError:
+                        errors.report(f'Could not identify type : {dtype_name}',
+                                severity='fatal', symbol=expr)
 
                 try:
                     cls_base = get_cls_base(dtype, prec, rank)
