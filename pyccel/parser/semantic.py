@@ -1933,7 +1933,7 @@ class SemanticParser(BasicParser):
         return FunctionTypeAnnotation(arg_types, res_types)
 
     def _visit_AnnotatedPyccelSymbol(self, expr):
-        var = self.check_for_variable(expr)
+        var = self.scope.find(expr, 'variables', local_only = True)
         if var is not None:
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
