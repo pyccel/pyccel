@@ -1944,6 +1944,13 @@ class SemanticParser(BasicParser):
             types = types.cls_name
         if isinstance(types, type) and PyccelAstNode in types.__mro__:
             types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
+        if isinstance(types, ClassDef):
+            dtype = self.get_class_construct(types.name)
+            prec = 0
+            rank = 0
+            order = None
+            cls_base = types
+            types = UnionTypeAnnotation(TypeAnnotation(dtype, cls_base, prec, rank, order))
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)
@@ -2539,7 +2546,7 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error')
-            d_var = {'datatype': self.get_class_construct(method.cls_name)(),
+            d_var = {'datatype': self.get_class_construct(method.cls_name),
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
@@ -3470,7 +3477,7 @@ class SemanticParser(BasicParser):
                 results = [self._visit(a) for a in results]
 
                 if arg and cls_name:
-                    dt       = self.get_class_construct(cls_name)()
+                    dt       = self.get_class_construct(cls_name)
                     cls_base = self.scope.find(cls_name, 'classes')
                     var      = Variable(dt, 'self', cls_base=cls_base)
                     arguments     = [FunctionDefArgument(var)] + arguments
@@ -3646,7 +3653,7 @@ class SemanticParser(BasicParser):
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, '_name')
-        self.scope.cls_constructs[name] = dtype
+        self.scope.cls_constructs[name] = dtype()
 
         parent = self._find_superclasses(expr)
 
