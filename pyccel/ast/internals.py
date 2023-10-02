@@ -323,7 +323,7 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-class AnnotatedPyccelSymbol(PyccelSymbol):
+class AnnotatedPyccelSymbol(Basic):
     """
     Class representing a symbol in the code which has an annotation.
 
@@ -344,18 +344,28 @@ class AnnotatedPyccelSymbol(PyccelSymbol):
         symbol represents an object created by Pyccel in order to assign a
         temporary object. This is sometimes necessary to facilitate the translation.
     """
-    __slots__ = ('_annotation',)
-
-    def __new__(cls, name, annotation, is_temp = False):
-        return super().__new__(cls, name, is_temp)
+    __slots__ = ('_name', '_annotation', '_fst')
+    _attribute_nodes = ()
 
     def __init__(self, name, annotation, is_temp = False):
+        self._name = PyccelSymbol(name, is_temp)
         self._annotation = annotation
-        super().__init__(name, is_temp)
+        super().__init__()
 
     @property
     def annotation(self):
         return self._annotation
+
+    def set_fst(self, fst):
+        self._fst = fst
+
+    @property
+    def fst(self):
+        return self._fst
+
+    @property
+    def name(self):
+        return self._name
 
 class PrecomputedCode(Basic):
     """

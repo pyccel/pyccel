@@ -1967,7 +1967,7 @@ class SemanticParser(BasicParser):
             errors.report(f'Missing type annotation for argument {expr}',
                     severity='fatal', symbol=expr)
 
-        name = self.scope.get_expected_name(expr)
+        name = self.scope.get_expected_name(expr.name)
 
         allows_negative_indexes = False
         array_memory_handling = 'heap'
@@ -2001,7 +2001,7 @@ class SemanticParser(BasicParser):
         if len(possible_args) == 1:
             v = possible_args[0]
             if isinstance(v, Variable):
-                self.scope.insert_variable(v, expr)
+                self.scope.insert_variable(v, expr.name)
             return v
         else:
             return possible_args
