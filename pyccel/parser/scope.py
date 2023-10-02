@@ -241,7 +241,7 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope and (self.is_loop or not local_only):
-            return self.parent_scope.find(name, category)
+            return self.parent_scope.find(name, category, local_only)
         else:
             return None
 

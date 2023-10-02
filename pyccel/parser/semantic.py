@@ -1894,6 +1894,9 @@ class SemanticParser(BasicParser):
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
             elif isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
+            elif dtype_from_scope is not None:
+                raise errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
+                        severity='fatal', symbol=expr)
             else:
                 prec = -1
                 if dtype_name in dtype_and_precision_registry:
