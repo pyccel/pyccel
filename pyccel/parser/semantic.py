@@ -1917,6 +1917,11 @@ class SemanticParser(BasicParser):
                         errors.report(f'Could not identify type : {dtype_name}',
                                 severity='fatal', symbol=expr)
 
+                if isinstance(dtype_name, PyccelSymbol):
+                    rank = 0
+                elif isinstance(dtype_name, IndexedElement):
+                    rank = len(dtype_name.indices)
+
                 try:
                     cls_base = get_cls_base(dtype, prec, rank)
                 except KeyError:
