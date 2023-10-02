@@ -1894,6 +1894,13 @@ class SemanticParser(BasicParser):
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
             elif isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
+            elif isinstance(dtype_from_scope, ClassDef):
+                dtype = self.get_class_construct(dtype_name)
+                prec = 0
+                rank = 0
+                order = None
+                cls_base = types
+                types.append(TypeAnnotation(dtype, cls_base, prec, rank, order))
             elif dtype_from_scope is not None:
                 errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
                         severity='fatal', symbol=expr)
@@ -1951,13 +1958,6 @@ class SemanticParser(BasicParser):
             types = types.cls_name
         if isinstance(types, type) and PyccelAstNode in types.__mro__:
             types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
-        if isinstance(types, ClassDef):
-            dtype = self.get_class_construct(types.name)
-            prec = 0
-            rank = 0
-            order = None
-            cls_base = types
-            types = UnionTypeAnnotation(TypeAnnotation(dtype, cls_base, prec, rank, order))
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr.var}',
                     severity='fatal', symbol=expr)

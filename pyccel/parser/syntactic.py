@@ -222,7 +222,7 @@ class SyntaxParser(BasicParser):
         if isinstance(annotation, (tuple, list)):
             return tuple(self._treat_type_annotation(stmt, a) for a in annotation)
         if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
-            return annotation
+            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[], orders=[], is_const=False)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
