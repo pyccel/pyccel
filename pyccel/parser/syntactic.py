@@ -760,8 +760,12 @@ class SyntaxParser(BasicParser):
                 errors.report("Type annotations and type specification via headers should not be mixed",
                             symbol=stmt, severity='error')
             for head in headers:
-                for i,arg in enumerate(head.dtypes):
-                    argument_annotations[i].add_type(arg)
+                if len(head.dtypes) != len(argument_annotations):
+                    errors.report(f"Wrong number of types in header for function {name}",
+                            severity='error', symbol=stmt)
+                else:
+                    for i,arg in enumerate(head.dtypes):
+                        argument_annotations[i].add_type(arg)
                 if head.results:
                     result_annotation = head.results
 
@@ -793,8 +797,12 @@ class SyntaxParser(BasicParser):
                                     severity='error')
                     result_annotation.dtypes += (kwargs[0].value,)
 
-                for i,arg in enumerate(args):
-                    argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
+                if len(args) != len(argument_annotations):
+                    errors.report(f"Wrong number of types in header for function {name}",
+                            severity='error', symbol=stmt)
+                else:
+                    for i,arg in enumerate(args):
+                        argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
 
         arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
                            for a, annot in zip(arguments, argument_annotations)]
