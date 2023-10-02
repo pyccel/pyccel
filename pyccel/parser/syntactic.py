@@ -197,6 +197,8 @@ class SyntaxParser(BasicParser):
                 if isinstance(expr, FunctionHeader):
                     self.scope.insert_header(expr)
                     expr = EmptyNode()
+                elif isinstance(expr, AnnotatedPyccelSymbol):
+                    self.scope.insert_symbol(expr.name)
                 elif isinstance(expr, MetaVariable):
                     # a metavar will not appear in the semantic stage.
                     # but can be used to modify the ast

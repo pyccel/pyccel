@@ -10,7 +10,7 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, MethodHeader, VariableHeader, Template
+from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
@@ -18,7 +18,7 @@ from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, AnnotatedPyccelSymbol
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
@@ -206,7 +206,7 @@ class VariableHeaderStmt(BasicStmt):
     def expr(self):
         dtype = SyntacticTypeAnnotation.build_from_textx(self.dec)
 
-        return VariableHeader(self.name, dtype)
+        return AnnotatedPyccelSymbol(self.name, annotation=dtype)
 
 class FunctionHeaderStmt(BasicStmt):
     """Base class representing a function header statement in the grammar."""

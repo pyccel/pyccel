@@ -26,7 +26,6 @@ __all__ = (
     'MetaVariable',
     'MethodHeader',
     'Template',
-    'VariableHeader',
 )
 
 #==============================================================================
@@ -79,57 +78,6 @@ class MetaVariable(Header):
            and its arguments
         """
         return (self.__class__, (self.name, self.value))
-
-#==============================================================================
-# TODO rename dtypes to arguments
-class VariableHeader(Header):
-    """Represents a variable header in the code.
-
-    name: str
-        variable name
-
-    dtypes: dict
-        a dictionary for typing
-
-    Examples
-
-    """
-    __slots__ = ('_name','_dtypes')
-
-    def __init__(self, name, dtypes):
-
-        self._name   = name
-        self._dtypes = dtypes
-
-        super().__init__()
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def dtypes(self):
-        return self._dtypes
-
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable that can be called
-           to create the initial version of the object
-           and its arguments
-        """
-        return (self.__class__, (self.name, self.dtypes))
 
 #==============================================================================
 class Template(Header):
