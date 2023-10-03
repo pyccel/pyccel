@@ -255,13 +255,15 @@ class VariableHeaderStmt(BasicStmt):
 
     Parameters
     ----------
-    name: str
+    name : str
         Variable name.
-    dec: list, tuple
+    dec : list, tuple
         List of argument types.
+    **kwargs : dict
+        TextX keyword arguments
     """
 
-    def __init__(self, name, dec):
+    def __init__(self, name, dec, **kwargs):
         self.name = name
         self.dec  = dec
 
