@@ -18,6 +18,7 @@ from .literals  import LiteralInteger
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'AnnotatedPyccelSymbol',
     'PrecomputedCode',
     'PyccelArraySize',
     'PyccelArrayShapeElement',
