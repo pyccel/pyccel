@@ -175,21 +175,23 @@ class SyntacticTypeAnnotation(Basic):
     ranks : list of int
         The number of ranks requested for each possible annotation.
 
-    orders : list of str
+    orders : list of str or None
         The orders requested in the type annotation.
 
-    is_const : bool
+    is_const : bool, optional
         The constness as specified in the type annotation.
+        If the constness is unknown then its value will be fixed in the
+        semantic stage.
     """
     _attribute_nodes = ()
-    def __init__(self, dtypes, ranks, orders, is_const):
+    def __init__(self, dtypes, ranks, orders, is_const = None):
         if any(not isinstance(d, str) for d in dtypes):
             raise ValueError("Syntactic datatypes should be strings")
         if any(not isinstance(r, int) for r in ranks):
             raise ValueError("Ranks should have integer values")
-        if any(not isinstance(o, str) for o in orders):
+        if not all(o is None or isinstance(o, str) for o in orders):
             raise ValueError("Orders should be strings")
-        if not isinstance(is_const, bool):
+        if not (isinstance(is_const, bool) or is_const is None):
             raise ValueError("Is const should be a boolean")
         self._dtypes = dtypes
         self._ranks = ranks
