@@ -181,6 +181,26 @@ class SyntaxParser(BasicParser):
         return (self._visit(i) for i in stmt)
 
     def _treat_comment_line(self, line, stmt):
+        """
+        Parse a comment line.
+
+        Parse a comment which fits in a single line. If the comment
+        begins with `#$` then it should contain a header recognised
+        by Pyccel and should be parsed using textx.
+
+        Parameters
+        ----------
+        line : str
+            The comment line.
+        stmt : ast.Ast
+            The comment object in the code. This is useful for raising
+            neat errors.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The treated object as a Pyccel ast node.
+        """
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
