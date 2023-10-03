@@ -260,7 +260,7 @@ class VariableHeaderStmt(BasicStmt):
     dec : list, tuple
         List of argument types.
     **kwargs : dict
-        TextX keyword arguments
+        TextX keyword arguments.
     """
 
     def __init__(self, name, dec, **kwargs):
