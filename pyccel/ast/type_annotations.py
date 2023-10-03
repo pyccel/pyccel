@@ -141,6 +141,16 @@ class TypeAnnotation(Basic):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
 class UnionTypeAnnotation(Basic):
+    """
+    A class which holds multiple possible type annotations.
+
+    A class which holds multiple possible type annotations.
+
+    Parameters
+    ----------
+    *type_annotations : tuple of TypeAnnotation
+        The TypeAnnotation objects describing the possible type annotations.
+    """
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
 
@@ -152,11 +162,12 @@ class UnionTypeAnnotation(Basic):
 
     @property
     def type_list(self):
-        return self._type_annotations
+        """
+        Get the list of possible type annotations.
 
-    def add_type(self, annot):
-        self._type_annotations += (annot,)
-        annot.set_current_user_node(self)
+        Get the list of possible type annotations (stored in a tuple).
+        """
+        return self._type_annotations
 
 class SyntacticTypeAnnotation(Basic):
     """
@@ -183,6 +194,7 @@ class SyntacticTypeAnnotation(Basic):
         If the constness is unknown then its value will be fixed in the
         semantic stage.
     """
+    __slots__ = ()
     _attribute_nodes = ()
     def __init__(self, dtypes, ranks, orders, is_const = None):
         if any(not isinstance(d, str) for d in dtypes):
