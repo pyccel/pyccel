@@ -116,16 +116,6 @@ class TypeAnnotation(Basic):
         """
         return self._is_const
 
-    def __eq__(self, other):
-        if isinstance(other, TypeAnnotation):
-            return self.datatype == other.datatype and \
-                   self.cls_base == other.cls_base and \
-                   self.precision == other.precision and \
-                   self.rank == other.rank and \
-                   self.order == other.order
-        else:
-            return False
-
     def __hash__(self):
         return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
 
@@ -269,13 +259,6 @@ class SyntacticTypeAnnotation(Basic):
         """
         if isinstance(annotation, (list, tuple)):
             return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
-        elif hasattr(annotation, 'const'):
-            is_const = annotation.const
-            dtypes = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.dtypes]
-            dtype_names = [n for d in dtypes for n in d.dtypes]
-            ranks = [r for d in dtypes for r in d.ranks]
-            orders = [o for d in dtypes for o in d.orders]
-            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
         elif hasattr(annotation, 'dtype'):
             is_const = None
             dtype_names = [annotation.dtype]
