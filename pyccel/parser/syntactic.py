@@ -204,11 +204,26 @@ class SyntaxParser(BasicParser):
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
-                expr = omp_parse(stmts=line)
+                try:
+                    expr = omp_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenMP header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('acc'):
-                expr = acc_parse(stmts=line)
+                try:
+                    expr = acc_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenACC header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('header'):
-                expr = hdr_parse(stmts=line)
+                try:
+                    expr = hdr_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
                 if isinstance(expr, AnnotatedPyccelSymbol):
                     self.scope.insert_symbol(expr.name)
                 if isinstance(expr, MetaVariable):
