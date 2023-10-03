@@ -62,7 +62,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction, AnnotatedPyccelSymbol
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
@@ -189,6 +189,8 @@ class SyntaxParser(BasicParser):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):
                 expr = hdr_parse(stmts=line)
+                if isinstance(expr, AnnotatedPyccelSymbol):
+                    self.scope.insert_symbol(expr.name)
                 if isinstance(expr, MetaVariable):
 
                     # a metavar will not appear in the semantic stage.
