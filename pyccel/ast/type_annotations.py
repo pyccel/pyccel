@@ -7,21 +7,13 @@
 """ Module containing all classes useful for type annotation.
 """
 
-from pyccel.utilities.stage import PyccelStage
-
 from .basic import Basic
-
-from .core import FunctionDefArgument
-
-from .internals import AnnotatedPyccelSymbol
 
 __all__ = (
         'SyntacticTypeAnnotation',
         'TypeAnnotation',
         'UnionTypeAnnotation',
         )
-
-pyccel_stage = PyccelStage()
 
 class TypeAnnotation(Basic):
     """
