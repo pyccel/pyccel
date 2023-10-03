@@ -186,7 +186,7 @@ class SyntacticTypeAnnotation(Basic):
         If the constness is unknown then its value will be fixed in the
         semantic stage.
     """
-    __slots__ = ()
+    __slots__ = ('_dtypes', '_ranks', '_orders', '_is_const')
     _attribute_nodes = ()
     def __init__(self, dtypes, ranks, orders, is_const = None):
         if any(not isinstance(d, str) for d in dtypes):
