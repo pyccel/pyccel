@@ -10,6 +10,8 @@ import re
 import ast
 import warnings
 
+from textx.exceptions import TextXSyntaxError
+
 #==============================================================================
 
 from sympy.core import cache
