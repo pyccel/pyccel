@@ -16,6 +16,7 @@ from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
@@ -151,7 +152,7 @@ class Type(BasicStmt):
         d_var['is_func'] = False
         d_var['is_const'] = False
         if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
+            if dtype in NativeNumeric:
                 d_var['precision'] = default_precision[dtype]
 
         if d_var['rank']>1:

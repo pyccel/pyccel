@@ -57,7 +57,6 @@ __all__ = (
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
-    'dtype_registry'
 )
 
 #==============================================================================
@@ -93,39 +92,6 @@ iso_c_binding_shortcut_mapping = {
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
     'C_BOOL'                : 'b1'
 }
-default_precision = {'float': 8,
-                    'int': numpy.dtype(int).alignment,
-                    'integer': numpy.dtype(int).alignment,
-                    'complex': 8,
-                    'bool':-1}
-dtype_and_precision_registry = { 'float':('float', -1),
-                                 'double':('float', -1),
-                                 'real':('float', -1),
-                                 'pythonfloat':('float', -1), # built-in float
-                                 'float32':('float',4),
-                                 'float64':('float',8),
-                                 'f4':('float',4),
-                                 'f8':('float',8),
-                                 'pythoncomplex':('complex', -1),
-                                 'complex':('complex', -1),  # to create numpy array with dtype='complex'
-                                 'complex64':('complex',4),
-                                 'complex128':('complex',8),
-                                 'c8':('complex',4),
-                                 'c16':('complex',8),
-                                 'int8' :('int',1),
-                                 'int16':('int',2),
-                                 'int32':('int',4),
-                                 'int64':('int',8),
-                                 'i1' :('int',1),
-                                 'i2':('int',2),
-                                 'i4':('int',4),
-                                 'i8':('int',8),
-                                 'int'  :('int', -1),
-                                 'pythonint'  :('int', -1),
-                                 'integer':('int',-1),
-                                 'bool' :('bool',-1),
-                                 'b1' :('bool',-1),
-                                 'pythonbool' :('bool',-1)}
 
 
 class DataType(metaclass=Singleton):
@@ -218,17 +184,41 @@ String         = NativeString()
 _Symbol        = NativeSymbol()
 Generic        = NativeGeneric()
 
-dtype_registry = {'bool': Bool,
-                  'int': Int,
-                  'integer': Int,
-                  'float'   : Float,
-                  'complex': Cmplx,
-                  'void': Void,
-                  'nil': Nil,
-                  'symbol': _Symbol,
-                  '*': Generic,
-                  'str': String}
+dtype_and_precision_registry = { 'float' : (Float, -1),
+                                 'double' : (Float, -1),
+                                 'real' : (Float, -1),
+                                 'float32' : (Float,4),
+                                 'float64' : (Float,8),
+                                 'f4' : (Float,4),
+                                 'f8' : (Float,8),
+                                 'complex' : (Cmplx, -1),
+                                 'complex64' : (Cmplx,4),
+                                 'complex128' : (Cmplx,8),
+                                 'c8' : (Cmplx,4),
+                                 'c16' : (Cmplx,8),
+                                 'int8' :(Int,1),
+                                 'int16' : (Int,2),
+                                 'int32' : (Int,4),
+                                 'int64' : (Int,8),
+                                 'i1' :(Int,1),
+                                 'i2' : (Int,2),
+                                 'i4' : (Int,4),
+                                 'i8' : (Int,8),
+                                 'int'  :(Int, -1),
+                                 'integer' : (Int,-1),
+                                 'bool' :(Bool,-1),
+                                 'b1' :(Bool,-1),
+                                 'void' : (Void, 0),
+                                 'nil' : (Nil, 0),
+                                 'symbol' : (_Symbol, 0),
+                                 '*' : (Generic, 0),
+                                 'str' : (String, 0),
+                                 }
 
+default_precision = {Float : 8,
+                     Int : numpy.dtype(int).alignment,
+                     Cmplx : 8,
+                     Bool : -1}
 
 class UnionType:
     """ Class representing multiple different possible
@@ -296,7 +286,7 @@ def DataTypeFactory(name, argnames=["_name"],
                      "prefix": prefix,
                      "alias": name})
 
-    dtype_registry[name] = newclass()
+    dtype_and_precision_registry[name] = (newclass(), 0)
     return newclass
 
 def is_pyccel_datatype(expr):
@@ -335,13 +325,13 @@ def datatype(arg):
 
     """
 
+    if isinstance(arg, DataType):
+        arg = arg.name.lower()
 
     if isinstance(arg, str):
-        if arg not in dtype_registry:
+        if arg not in dtype_and_precision_registry:
             raise ValueError("Unrecognized datatype " + arg)
-        return dtype_registry[arg]
-    if isinstance(arg, DataType):
-        return dtype_registry[arg.name.lower()]
+        return dtype_and_precision_registry[arg][0]
     else:
         raise TypeError('Expecting a DataType')
 
