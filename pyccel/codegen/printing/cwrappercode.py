@@ -16,8 +16,6 @@ from pyccel.ast.cwrapper    import PyBuildValueNode
 from pyccel.ast.cwrapper    import Py_None
 from pyccel.ast.cwrapper    import PyccelPyObject
 
-from pyccel.ast.datatypes import NativeVoid
-
 from pyccel.ast.literals  import LiteralString, Nil
 
 from pyccel.ast.c_concepts import ObjectAddress
