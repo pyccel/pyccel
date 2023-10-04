@@ -22,7 +22,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1513 : Stop printing `@types` decorators in generated Python code.
 -   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
--   \[INTERNALS\] Prefer DataType keys over string keys which describe data types.
+-   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
 
 ## \[1.9.1\] - 2023-08-31
 
