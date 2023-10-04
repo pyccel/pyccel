@@ -3190,8 +3190,7 @@ class SemanticParser(BasicParser):
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
-        code = assigns + [Deallocate(i if not isinstance(i, ConstructorCall) else i.cls_variable) for i in self._allocs[-1] \
-                            if (i if not isinstance(i, ConstructorCall) else i.cls_variable) not in results]
+        code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
