@@ -453,7 +453,6 @@ def process_dtype(dtype):
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision = default_precision[dtype]
-    dtype = datatype(dtype)
 
     return dtype, precision
 
