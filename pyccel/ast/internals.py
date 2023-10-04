@@ -374,7 +374,7 @@ def symbols(names):
     return tuple(symbols)
 
 
-def max_precision(objs : list, dtype = None, allow_native = True):
+def max_precision(objs : list, allow_native = True):
     """
     Return the largest precision amongst the object in the list.
 
