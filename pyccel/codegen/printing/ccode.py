@@ -19,7 +19,7 @@ from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName
+from pyccel.ast.core      import Module, AsName, Del
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
@@ -1445,8 +1445,8 @@ class CCodePrinter(CodePrinter):
         if expr.variable.is_alias:
             return f'free_pointer({variable_address});\n'
         if isinstance(expr.variable.dtype, CustomDataType):
-            Pyccel__del = next(method.name for method in expr.variable.cls_base.methods if method.name.endswith('__Pyccel__del__'))
-            return(f"{Pyccel__del}({variable_address});\n")
+            self._print_Del(Del([expr.variable]))
+            return ''
         return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):
@@ -2276,6 +2276,12 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_Del(self, expr):
+        for variable in expr.variables:
+            if isinstance(variable.dtype, CustomDataType) and not variable.cls_base.is_deallocated:
+                variable_address = self._print(ObjectAddress(variable))
+                Pyccel__del = next(method.name for method in variable.cls_base.methods if method.name.endswith('__del__'))
+                variable.cls_base.is_deallocated = True
+                return(f"{Pyccel__del}({variable_address});\n")
         return ""
 
     def _print_ClassDef(self, expr):

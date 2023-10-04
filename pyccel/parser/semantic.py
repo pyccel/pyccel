@@ -492,7 +492,7 @@ class SemanticParser(BasicParser):
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
-                    if isinstance(i.lhs.dtype, CustomDataType) and not self._current_function == '__Pyccel__del__':
+                    if isinstance(i.lhs.dtype, CustomDataType) and not self._current_function == '__del__':
                         continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
@@ -3394,7 +3394,7 @@ class SemanticParser(BasicParser):
             self._allocs.append([])
 
             # we annotate the body
-            if cls_name and expr.name == '__Pyccel__del__':
+            if cls_name and expr.name == '__del__':
                 attributes = self.scope.find(cls_name, 'classes').attributes
                 attribute = [attr for attr in attributes if not attr.on_stack]
                 self._allocs[-1].extend(attribute) 
