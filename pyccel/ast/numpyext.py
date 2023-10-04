@@ -1494,7 +1494,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
     inherit from this class have one argument and operate on it
     elementally. In other words it should be equivalent to write:
     >>> for i in iterable: NumpyUfuncUnary(i)
-    
+
     or
     >>> NumpyUfuncUnary(iterable)
 
@@ -1530,7 +1530,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
     inherit from this class have two arguments and operate on them
     in lockstep. In other words it should be equivalent to write:
     >>> for i,_ in enumerate(iterable1): NumpyUfuncUnary(iterable1(i), iterable2(i))
-    
+
     or
     >>> NumpyUfuncUnary(iterable1, iterable2)
 
