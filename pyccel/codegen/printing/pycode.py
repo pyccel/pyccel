@@ -215,7 +215,7 @@ class PythonCodePrinter(CodePrinter):
         else:
             dtype = self._print(expr.dtype)
             if expr.precision != -1:
-                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[datatype(dtype).name][expr.precision])
+                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[expr.dtype.name][expr.precision])
         return f"dtype = {dtype}"
 
     def _print_Header(self, expr):
