@@ -28,8 +28,6 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
-dtype_registry = {(PyccelPyObject() , 0) : 'PyObject',
-                  (BindCPointer()   , 0) : 'void'}
 
 module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
@@ -56,6 +54,12 @@ class CWrapperCodePrinter(CCodePrinter):
     **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
     """
+
+
+    dtype_registry = {**CCodePrinter.dtype_registry,
+                      (PyccelPyObject() , 0) : 'PyObject',
+                      (BindCPointer()   , 0) : 'void'}
+
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)
         self._target_language = target_language
@@ -162,28 +166,6 @@ class CWrapperCodePrinter(CCodePrinter):
         if expr.dtype is BindCPointer():
             return 'void*'
         return CCodePrinter.get_declare_type(self, expr)
-
-    def find_in_dtype_registry(self, dtype, prec):
-        """
-        Find the corresponding C dtype in the dtype_registry
-        raise PYCCEL_RESTRICTION_TODO if not found
-
-        Parameters
-        -----------
-        dtype : String
-            expression data type
-
-        prec  : Integer
-            expression precision
-
-        Returns
-        -------
-        dtype : String
-        """
-        try :
-            return dtype_registry[(dtype, prec)]
-        except KeyError:
-            return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
     def _handle_is_operator(self, Op, expr):
         """

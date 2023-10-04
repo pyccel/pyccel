@@ -27,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
-from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import CustomDataType, NativeString
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -218,40 +218,6 @@ c_library_headers = (
     "inttypes",
 )
 
-dtype_registry = {(NativeFloat(),8)   : 'double',
-                  (NativeFloat(),4)   : 'float',
-                  (NativeComplex(),8) : 'double complex',
-                  (NativeComplex(),4) : 'float complex',
-                  (NativeInteger(),4)     : 'int32_t',
-                  (NativeInteger(),8)     : 'int64_t',
-                  (NativeInteger(),2)     : 'int16_t',
-                  (NativeInteger(),1)     : 'int8_t',
-                  (NativeBool(),-1) : 'bool',
-                  (NativeVoid(), 0) : 'void',
-                  }
-
-ndarray_type_registry = {
-                  (NativeFloat(),8)   : 'nd_double',
-                  (NativeFloat(),4)   : 'nd_float',
-                  (NativeComplex(),8) : 'nd_cdouble',
-                  (NativeComplex(),4) : 'nd_cfloat',
-                  (NativeInteger(),8)     : 'nd_int64',
-                  (NativeInteger(),4)     : 'nd_int32',
-                  (NativeInteger(),2)     : 'nd_int16',
-                  (NativeInteger(),1)     : 'nd_int8',
-                  (NativeBool(),-1)   : 'nd_bool'}
-
-type_to_format = {('float',8)   : '%.12lf',
-                  ('float',4)   : '%.12f',
-                  ('complex',8) : '(%.12lf + %.12lfj)',
-                  ('complex',4) : '(%.12f + %.12fj)',
-                  ('int',4)     : '%d',
-                  ('int',8)     : LiteralString("%") + CMacro('PRId64'),
-                  ('int',2)     : LiteralString("%") + CMacro('PRId16'),
-                  ('int',1)     : LiteralString("%") + CMacro('PRId8'),
-                  ('bool',-1)   : '%s',
-                  ('string', 0) : '%s'}
-
 import_dict = {'omp_lib' : 'omp' }
 
 c_imports = {n : Import(n, Module(n, (), ())) for n in
@@ -289,6 +255,40 @@ class CCodePrinter(CodePrinter):
     _default_settings = {
         'tabwidth': 4,
     }
+
+    dtype_registry = {(NativeFloat(),8)   : 'double',
+                      (NativeFloat(),4)   : 'float',
+                      (NativeComplex(),8) : 'double complex',
+                      (NativeComplex(),4) : 'float complex',
+                      (NativeInteger(),4)     : 'int32_t',
+                      (NativeInteger(),8)     : 'int64_t',
+                      (NativeInteger(),2)     : 'int16_t',
+                      (NativeInteger(),1)     : 'int8_t',
+                      (NativeBool(),-1) : 'bool',
+                      (NativeVoid(), 0) : 'void',
+                      }
+
+    ndarray_type_registry = {
+                      (NativeFloat(),8)   : 'nd_double',
+                      (NativeFloat(),4)   : 'nd_float',
+                      (NativeComplex(),8) : 'nd_cdouble',
+                      (NativeComplex(),4) : 'nd_cfloat',
+                      (NativeInteger(),8)     : 'nd_int64',
+                      (NativeInteger(),4)     : 'nd_int32',
+                      (NativeInteger(),2)     : 'nd_int16',
+                      (NativeInteger(),1)     : 'nd_int8',
+                      (NativeBool(),-1)   : 'nd_bool'}
+
+    type_to_format = {(NativeFloat(),8)   : '%.12lf',
+                      (NativeFloat(),4)   : '%.12f',
+                      (NativeComplex(),8) : '(%.12lf + %.12lfj)',
+                      (NativeComplex(),4) : '(%.12f + %.12fj)',
+                      (NativeInteger(),4)     : '%d',
+                      (NativeInteger(),8)     : LiteralString("%") + CMacro('PRId64'),
+                      (NativeInteger(),2)     : LiteralString("%") + CMacro('PRId16'),
+                      (NativeInteger(),1)     : LiteralString("%") + CMacro('PRId8'),
+                      (NativeBool(),-1)   : '%s',
+                      (NativeString(), 0) : '%s'}
 
     def __init__(self, filename, prefix_module = None):
 
@@ -956,7 +956,7 @@ class CCodePrinter(CodePrinter):
 
     def get_print_format_and_arg(self, var):
         try:
-            arg_format = type_to_format[(self._print(var.dtype), get_final_precision(var))]
+            arg_format = self.type_to_format[(var.dtype, get_final_precision(var))]
         except KeyError:
             errors.report("{} type is not supported currently".format(var.dtype), severity='fatal')
         if var.dtype is NativeComplex():
@@ -1071,6 +1071,25 @@ class CCodePrinter(CodePrinter):
         return code
 
     def find_in_dtype_registry(self, dtype, prec):
+        """
+        Find the corresponding C dtype in the dtype_registry.
+
+        Find the corresponding C dtype in the dtype_registry.
+        Raise PYCCEL_RESTRICTION_TODO if not found.
+
+        Parameters
+        -----------
+        dtype : DataType
+            The data type of the expression.
+
+        prec  : int
+            The precision of the expression.
+
+        Returns
+        -------
+        str
+            The code which declares the datatype in C.
+        """
         if prec == -1:
             prec = default_precision[dtype]
 
@@ -1082,18 +1101,38 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['complex'])
 
         try :
-            return dtype_registry[(dtype, prec)]
+            return self.dtype_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
+        """
+        Find the descriptor for the datatype in the ndarray_type_registry.
+
+        Find the tag which allows the user to access data of the specified
+        type and precision within a ndarray.
+        Raise PYCCEL_RESTRICTION_TODO if not found.
+
+        Parameters
+        -----------
+        dtype : DataType
+            The data type of the expression.
+
+        prec  : int
+            The precision of the expression.
+
+        Returns
+        -------
+        str
+            The code which declares the datatype in C.
+        """
         if prec == -1:
             prec = default_precision[dtype]
 
         try :
-            return ndarray_type_registry[(dtype, prec)]
+            return self.ndarray_type_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = "{}[kind = {}]".format(dtype, prec),
