@@ -130,6 +130,9 @@ class Type(BasicStmt):
     trailer : TrailerSubscriptList
         An object created by textx describing the trailing decorators of the
         type. These describe the rank and order.
+
+    **kwargs : dict
+        The textx arguments.
     """
 
     def __init__(self, dtype, prec, trailer = (), **kwargs):

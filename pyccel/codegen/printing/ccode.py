@@ -467,16 +467,20 @@ class CCodePrinter(CodePrinter):
         return operations
 
     def arrayFill(self, expr):
-        """ print the assignment of a NdArray
+        """
+        Print the assignment of a NdArray.
 
-        parameters
+        Print the code necessary to create and fill an ndarray.
+
+        Parameters
         ----------
-            expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs
-        Return
-        ------
-            String
-                Return a str that contains a call to the C function array_fill,
+        expr : PyccelAstNode
+            The Assign Node used to get the lhs and rhs.
+
+        Returns
+        -------
+        str
+            Return a str that contains a call to the C function array_fill.
         """
         rhs = expr.rhs
         lhs = expr.lhs
@@ -491,18 +495,22 @@ class CCodePrinter(CodePrinter):
         return code_init
 
     def _init_stack_array(self, expr):
-        """ return a string which handles the assignment of a stack ndarray
+        """
+        Return a string which handles the assignment of a stack ndarray.
+
+        Print the code necessary to initialise a ndarray on the stack.
 
         Parameters
         ----------
-            expr : PyccelAstNode
-                The Assign Node used to get the lhs and rhs
+        expr : PyccelAstNode
+            The Assign Node used to get the lhs and rhs
+
         Returns
         -------
-            buffer_array : str
-                String initialising the stack (C) array which stores the data
-            array_init   : str
-                String containing the rhs of the initialization of a stack array
+        buffer_array : str
+            String initialising the stack (C) array which stores the data
+        array_init   : str
+            String containing the rhs of the initialization of a stack array
         """
         var = expr
         dtype = self.find_in_dtype_registry(var.dtype, var.precision)
@@ -955,6 +963,26 @@ class CCodePrinter(CodePrinter):
         return '"{}"'.format(format_str)
 
     def get_print_format_and_arg(self, var):
+        """
+        Get the C print format string for the object var.
+
+        Get the C print format string which will allow the generated code
+        to print the variable passed as argument.
+
+        Parameters
+        ----------
+        var : PyccelAstNode
+            The object which will be printed.
+
+        Returns
+        -------
+        arg_format : str
+            The format which should be printed in the format string of the
+            generated print expression.
+        arg : str
+            The code which should be printed in the arguments of the generated
+            print expression to print the object.
+        """
         try:
             arg_format = self.type_to_format[(var.dtype, get_final_precision(var))]
         except KeyError:
@@ -1082,7 +1110,7 @@ class CCodePrinter(CodePrinter):
         dtype : DataType
             The data type of the expression.
 
-        prec  : int
+        prec : int
             The precision of the expression.
 
         Returns
@@ -1120,7 +1148,7 @@ class CCodePrinter(CodePrinter):
         dtype : DataType
             The data type of the expression.
 
-        prec  : int
+        prec : int
             The precision of the expression.
 
         Returns
@@ -1339,21 +1367,28 @@ class CCodePrinter(CodePrinter):
 
 
     def _cast_to(self, expr, dtype, precision):
-        """ add cast to an expression when needed
+        """
+        Add a cast to an expression when needed.
+
+        Get a format string which provides the code to cast the object `expr`
+        to the specified dtype and precision. If the dtype and precision already
+        match then the format string will simply print the expression.
+
         parameters
         ----------
-            expr      : PyccelAstNode
-                the expression to be cast
-            dtype     : Datatype
-                base type of the cast
-            precision : integer
-                precision of the base type of the cast
+        expr : PyccelAstNode
+            The expression to be cast.
+        dtype : Datatype
+            The target type of the cast.
+        precision : int
+            The target precision of the of the cast.
 
-        Return
-        ------
-            String
-                Return format string that contains the desired cast type
-                NB: You should insert the expression to be cast in the string after using this function.
+        Returns
+        -------
+        str
+            A format string that contains the desired cast type.
+            NB: You should insert the expression to be cast in the string
+            after using this function.
         """
         if (expr.dtype != dtype or expr.precision != precision):
             cast=self.find_in_dtype_registry(dtype, precision)
