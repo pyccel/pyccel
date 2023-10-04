@@ -115,6 +115,7 @@ class DataType(metaclass=Singleton):
         Function called during pickling.
 
         For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
 
         Returns
         -------
