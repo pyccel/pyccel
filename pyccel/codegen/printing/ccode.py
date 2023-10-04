@@ -400,7 +400,7 @@ class CCodePrinter(CodePrinter):
             return f"array_copy_data({lhs_address}, {self._print(arg)}, 0);\n"
 
         order = lhs.order
-        rhs_dtype = self._print(rhs.dtype)
+        rhs_dtype = rhs.dtype
         declare_dtype = self.find_in_dtype_registry(rhs_dtype, rhs.precision)
         dtype = self.find_in_ndarray_type_registry(rhs_dtype, rhs.precision)
 
@@ -479,7 +479,7 @@ class CCodePrinter(CodePrinter):
         rhs = expr.rhs
         lhs = expr.lhs
         code_init = ''
-        declare_dtype = self.find_in_dtype_registry(self._print(rhs.dtype), rhs.precision)
+        declare_dtype = self.find_in_dtype_registry(rhs.dtype, rhs.precision)
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
@@ -503,13 +503,12 @@ class CCodePrinter(CodePrinter):
                 String containing the rhs of the initialization of a stack array
         """
         var = expr
-        dtype_str = self._print(var.dtype)
-        dtype = self.find_in_dtype_registry(dtype_str, var.precision)
-        np_dtype = self.find_in_ndarray_type_registry(dtype_str, var.precision)
+        dtype = self.find_in_dtype_registry(var.dtype, var.precision)
+        np_dtype = self.find_in_ndarray_type_registry(var.dtype, var.precision)
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.find_in_dtype_registry('int', 8)
+        declare_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
 
         dummy_array_name = self.scope.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
@@ -680,13 +679,13 @@ class CCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('float', expr.precision)
+        type_name = self.find_in_dtype_registry(NativeFloat(), expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonInt(self, expr):
         self.add_import(c_imports['stdint'])
         value = self._print(expr.arg)
-        type_name = self.find_in_dtype_registry('int', expr.precision)
+        type_name = self.find_in_dtype_registry(NativeInteger(), expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_PythonBool(self, expr):
@@ -720,7 +719,7 @@ class CCodePrinter(CodePrinter):
         else:
             value = self._print(PyccelAssociativeParenthesis(PyccelAdd(expr.real,
                             PyccelMul(expr.imag, LiteralImaginaryUnit()))))
-        type_name = self.find_in_dtype_registry('complex', expr.precision)
+        type_name = self.find_in_dtype_registry(NativeComplex(), expr.precision)
         return '({0})({1})'.format(type_name, value)
 
     def _print_LiteralImaginaryUnit(self, expr):
@@ -909,9 +908,8 @@ class CCodePrinter(CodePrinter):
         e = self._print(e if e.dtype is NativeFloat() else NumpyFloat(e))
         code = 'pow({}, {})'.format(b, e)
         if expr.dtype is NativeInteger():
-            dtype = self._print(expr.dtype)
             prec  = expr.precision
-            cast_type = self.find_in_dtype_registry(dtype, prec)
+            cast_type = self.find_in_dtype_registry(expr.dtype, prec)
             return '({}){}'.format(cast_type, code)
         return code
 
@@ -1073,21 +1071,23 @@ class CCodePrinter(CodePrinter):
     def find_in_dtype_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
+        dtype_str = self._print(dtype)
         try :
-            return dtype_registry[(dtype, prec)]
+            return dtype_registry[(dtype_str, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    symbol = "{}[kind = {}]".format(dtype_str, prec),
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
+        dtype_str = self._print(dtype)
         try :
-            return ndarray_type_registry[(dtype, prec)]
+            return ndarray_type_registry[(dtype_str, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = "{}[kind = {}]".format(dtype, prec),
+                    symbol = "{}[kind = {}]".format(dtype_str, prec),
                     severity='fatal')
 
     def get_declare_type(self, expr):
@@ -1126,13 +1126,11 @@ class CCodePrinter(CodePrinter):
         >>> self.get_declare_type(v)
         't_ndarray*'
         """
-        dtype = self._print(expr.dtype)
+        dtype = expr.dtype
         prec  = expr.precision
         rank  = expr.rank
         if isinstance(expr.dtype, NativeInteger):
             self.add_import(c_imports['stdint'])
-        if not dtype.startswith("struct"):
-            dtype = self.find_in_dtype_registry(dtype, prec)
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
@@ -1141,6 +1139,10 @@ class CCodePrinter(CodePrinter):
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
+        elif not isinstance(dtype, CustomDataType):
+            dtype = self.find_in_dtype_registry(dtype, prec)
+        else:
+            dtype = self._print(expr.dtype)
 
         if self.is_c_pointer(expr):
             return f'{dtype}*'
@@ -1288,8 +1290,7 @@ class CCodePrinter(CodePrinter):
                     inds[i] = IfTernaryOperator(PyccelLt(ind, LiteralInteger(0)),
                         PyccelAdd(base_shape[i], ind, simplify = True), ind)
         #set dtype to the C struct types
-        dtype = self._print(expr.dtype)
-        dtype = self.find_in_ndarray_type_registry(dtype, expr.precision)
+        dtype = self.find_in_ndarray_type_registry(expr.dtype, expr.precision)
         base_name = self._print(base)
         if getattr(base, 'is_ndarray', False) or isinstance(base, HomogeneousTupleVariable):
             if expr.rank > 0:
@@ -1327,7 +1328,7 @@ class CCodePrinter(CodePrinter):
                 NB: You should insert the expression to be cast in the string after using this function.
         """
         if (expr.dtype != dtype or expr.precision != precision):
-            cast=self.find_in_dtype_registry(self._print(dtype), precision)
+            cast=self.find_in_dtype_registry(dtype, precision)
             return '({}){{}}'.format(cast)
         return '{}'
 
@@ -1429,9 +1430,8 @@ class CCodePrinter(CodePrinter):
             free_code += self._print(Deallocate(variable))
         self.add_import(c_imports['ndarrays'])
         shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self._print(variable.dtype)
-        dtype = self.find_in_ndarray_type_registry(dtype, variable.precision)
-        shape_dtype = self.find_in_dtype_registry('int', 8)
+        dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
+        shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
         shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
         is_view = 'false' if variable.on_heap else 'true'
         order = "order_f" if expr.order == "F" else "order_c"
@@ -1574,7 +1574,7 @@ class CCodePrinter(CodePrinter):
                     args.append(self._print(arg))
         code_args = ', '.join(args)
         if expr.dtype is NativeInteger():
-            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            cast_type = self.find_in_dtype_registry(NativeInteger(), expr.precision)
             return '({0}){1}({2})'.format(cast_type, func_name, code_args)
         return '{0}({1})'.format(func_name, code_args)
 
@@ -1878,7 +1878,7 @@ class CCodePrinter(CodePrinter):
         need_to_cast = all(a.dtype is NativeInteger() for a in expr.args)
         code = ' / '.join(self._print(a if a.dtype is NativeFloat() else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):
-            cast_type = self.find_in_dtype_registry('int', expr.precision)
+            cast_type = self.find_in_dtype_registry(NativeInteger(), expr.precision)
             return "({})floor({})".format(cast_type, code)
         return "floor({})".format(code)
 

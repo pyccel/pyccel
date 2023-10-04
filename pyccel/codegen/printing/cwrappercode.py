@@ -161,17 +161,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if expr.dtype is BindCPointer():
             return 'void*'
-        dtype = self._print(expr.dtype)
-        prec  = expr.precision
-        if dtype != "pyarrayobject":
-            return CCodePrinter.get_declare_type(self, expr)
-        else :
-            dtype = self.find_in_dtype_registry(dtype, prec)
-
-        if self.is_c_pointer(expr):
-            return f'{dtype}*'
-        else:
-            return dtype
+        return CCodePrinter.get_declare_type(self, expr)
 
     def find_in_dtype_registry(self, dtype, prec):
         """
@@ -191,7 +181,7 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype : String
         """
         try :
-            return dtype_registry[(dtype, prec)]
+            return dtype_registry[(self._print(dtype), prec)]
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
