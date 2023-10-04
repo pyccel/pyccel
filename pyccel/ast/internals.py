@@ -376,9 +376,9 @@ def symbols(names):
 
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
-    Returns the largest precision of an object in the list.
+    Returns the largest precision amongst the object in the list.
 
-    Returns the largest precision of an object in the list.
+    Returns the largest precision amongst the object in the list.
 
     Parameters
     ----------

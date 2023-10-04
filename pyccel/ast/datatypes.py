@@ -96,12 +96,21 @@ iso_c_binding_shortcut_mapping = {
 #==============================================================================
 
 class DataType(metaclass=Singleton):
-    """Base class representing native datatypes"""
+    """
+    Base class representing native datatypes.
+
+    The base class from which all data types must inherit.
+    """
     __slots__ = ()
     _name = '__UNDEFINED__'
 
     @property
     def name(self):
+        """
+        Get the name of the datatype.
+
+        Get the name of the datatype.
+        """
         return self._name
 
     def __str__(self):
