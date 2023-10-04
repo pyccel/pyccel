@@ -1515,6 +1515,16 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
 
     def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x : PyccelAstNode
+            The argument passed to the function.
+        """
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeFloat()
         self._precision  = default_precision[self._dtype]
 
@@ -1553,6 +1563,16 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank  = 0 if self._shape is None else len(self._shape)
 
     def _set_dtype_precision(self, x1, x2):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x : PyccelAstNode
+            The argument passed to the function.
+        """
         self._dtype     = NativeFloat()
         self._precision = default_precision[self._dtype]
 
@@ -1671,10 +1691,30 @@ class NumpyAbs(NumpyUfuncUnary):
         self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
-    """Represent a call to the floor function in the Numpy library"""
+    """
+    Represent a call to the floor function in the Numpy library.
+
+    Represent a call to the floor function in the Numpy library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The argument passed to the function.
+    """
     __slots__ = ()
     name = 'floor'
+
     def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x : PyccelAstNode
+            The argument passed to the function.
+        """
         self._dtype     = NativeFloat()
         self._precision = default_precision[self._dtype]
 
