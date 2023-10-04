@@ -15,35 +15,25 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
+
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
+
+from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonFloat, PythonTuple
+from pyccel.ast.builtins import PythonComplex, PythonBool, PythonAbs
+from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
+
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return, Module
-from pyccel.ast.core import Import
-from pyccel.ast.itertoolsext import Product
-from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, AsName, EmptyNode,
-                             If, IfSection, For, Deallocate)
+from pyccel.ast.core import Return, Module, If, IfSection, For
+from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
+from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
+from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
-from pyccel.ast.variable  import (Variable,
-                             IndexedElement,
-                             InhomogeneousTupleVariable,
-                             DottedName, )
-
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
-from pyccel.ast.operators      import PyccelMod
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
-
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall, PyccelFunctionDef
-
-from pyccel.ast.builtins  import (PythonInt, PythonType,
-                                  PythonPrint, PythonRange,
-                                  PythonFloat, PythonTuple)
-from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
@@ -55,6 +45,8 @@ from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelInternalFunction, get_final_precision
+
+from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
@@ -71,8 +63,14 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.operators import PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
+
+from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -177,13 +175,6 @@ INF = math_constants['inf']
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
-}
-
-python_builtin_datatypes = {
-    'integer' : PythonInt,
-    'float'   : PythonFloat,
-    'bool'    : PythonBool,
-    'complex' : PythonComplex
 }
 
 type_to_print_format = {
