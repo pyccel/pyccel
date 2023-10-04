@@ -16,6 +16,8 @@ from pyccel.ast.cwrapper    import PyBuildValueNode
 from pyccel.ast.cwrapper    import Py_None
 from pyccel.ast.cwrapper    import PyccelPyObject
 
+from pyccel.ast.datatypes import NativeVoid
+
 from pyccel.ast.literals  import LiteralString, Nil
 
 from pyccel.ast.c_concepts import ObjectAddress
@@ -26,10 +28,8 @@ errors = Errors()
 
 __all__ = ["CWrapperCodePrinter", "cwrappercode"]
 
-dtype_registry = {('pyobject'     , 0) : 'PyObject',
-                  ('pyarrayobject', 0) : 'PyArrayObject',
-                  ('void'         , 0) : 'void',
-                  ('bind_c_ptr'   , 0) : 'void'}
+dtype_registry = {(PyccelPyObject() , 0) : 'PyObject',
+                  (BindCPointer()   , 0) : 'void'}
 
 module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
@@ -181,7 +181,7 @@ class CWrapperCodePrinter(CCodePrinter):
         dtype : String
         """
         try :
-            return dtype_registry[(self._print(dtype), prec)]
+            return dtype_registry[(dtype, prec)]
         except KeyError:
             return CCodePrinter.find_in_dtype_registry(self, dtype, prec)
 
@@ -220,13 +220,6 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             return super()._handle_is_operator(Op, expr)
 
-    # -------------------------------------------------------------------
-    # Functions managing the creation of wrapper body
-    # -------------------------------------------------------------------
-
-    def _print_BindCPointer(self, expr):
-        return 'bind_c_ptr'
-
     #--------------------------------------------------------------------
     #                 _print_ClassName functions
     #--------------------------------------------------------------------
@@ -238,9 +231,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyInterface(self, expr):
         funcs_to_print = (*expr.functions, expr.type_check_func, expr.interface_func)
         return '\n'.join(self._print(f) for f in funcs_to_print)
-
-    def _print_PyccelPyObject(self, expr):
-        return 'pyobject'
 
     def _print_PyArg_ParseTupleNode(self, expr):
         name    = 'PyArg_ParseTupleAndKeywords'

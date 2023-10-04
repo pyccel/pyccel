@@ -218,26 +218,28 @@ c_library_headers = (
     "inttypes",
 )
 
-dtype_registry = {('float',8)   : 'double',
-                  ('float',4)   : 'float',
-                  ('complex',8) : 'double complex',
-                  ('complex',4) : 'float complex',
-                  ('int',4)     : 'int32_t',
-                  ('int',8)     : 'int64_t',
-                  ('int',2)     : 'int16_t',
-                  ('int',1)     : 'int8_t',
-                  ('bool',-1)   : 'bool'}
+dtype_registry = {(NativeFloat(),8)   : 'double',
+                  (NativeFloat(),4)   : 'float',
+                  (NativeComplex(),8) : 'double complex',
+                  (NativeComplex(),4) : 'float complex',
+                  (NativeInteger(),4)     : 'int32_t',
+                  (NativeInteger(),8)     : 'int64_t',
+                  (NativeInteger(),2)     : 'int16_t',
+                  (NativeInteger(),1)     : 'int8_t',
+                  (NativeBool(),-1) : 'bool',
+                  (NativeVoid(), 0) : 'void',
+                  }
 
 ndarray_type_registry = {
-                  ('float',8)   : 'nd_double',
-                  ('float',4)   : 'nd_float',
-                  ('complex',8) : 'nd_cdouble',
-                  ('complex',4) : 'nd_cfloat',
-                  ('int',8)     : 'nd_int64',
-                  ('int',4)     : 'nd_int32',
-                  ('int',2)     : 'nd_int16',
-                  ('int',1)     : 'nd_int8',
-                  ('bool',-1)   : 'nd_bool'}
+                  (NativeFloat(),8)   : 'nd_double',
+                  (NativeFloat(),4)   : 'nd_float',
+                  (NativeComplex(),8) : 'nd_cdouble',
+                  (NativeComplex(),4) : 'nd_cfloat',
+                  (NativeInteger(),8)     : 'nd_int64',
+                  (NativeInteger(),4)     : 'nd_int32',
+                  (NativeInteger(),2)     : 'nd_int16',
+                  (NativeInteger(),1)     : 'nd_int8',
+                  (NativeBool(),-1)   : 'nd_bool'}
 
 type_to_format = {('float',8)   : '%.12lf',
                   ('float',4)   : '%.12f',
@@ -1071,23 +1073,30 @@ class CCodePrinter(CodePrinter):
     def find_in_dtype_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
-        dtype_str = self._print(dtype)
+
+        if dtype is NativeBool():
+            self.add_import(c_imports['stdbool'])
+        elif dtype is NativeInteger():
+            self.add_import(c_imports['stdint'])
+        elif dtype is NativeComplex():
+            self.add_import(c_imports['complex'])
+
         try :
-            return dtype_registry[(dtype_str, prec)]
+            return dtype_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = "{}[kind = {}]".format(dtype_str, prec),
+                    symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype, prec):
         if prec == -1:
             prec = default_precision[dtype]
-        dtype_str = self._print(dtype)
+
         try :
-            return ndarray_type_registry[(dtype_str, prec)]
+            return ndarray_type_registry[(dtype, prec)]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO,
-                    symbol = "{}[kind = {}]".format(dtype_str, prec),
+                    symbol = "{}[kind = {}]".format(dtype, prec),
                     severity='fatal')
 
     def get_declare_type(self, expr):
@@ -1129,8 +1138,7 @@ class CCodePrinter(CodePrinter):
         dtype = expr.dtype
         prec  = expr.precision
         rank  = expr.rank
-        if isinstance(expr.dtype, NativeInteger):
-            self.add_import(c_imports['stdint'])
+
         if rank > 0:
             if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
                 if expr.rank > 15:
@@ -1190,25 +1198,6 @@ class CCodePrinter(CodePrinter):
 
         return preface + declaration
 
-    def _print_NativeBool(self, expr):
-        self.add_import(c_imports['stdbool'])
-        return 'bool'
-
-    def _print_NativeInteger(self, expr):
-        return 'int'
-
-    def _print_NativeFloat(self, expr):
-        return 'float'
-
-    def _print_NativeVoid(self, expr):
-        return 'void'
-
-    def _print_NativeComplex(self, expr):
-        self.add_import(c_imports['complex'])
-        return 'complex'
-    def _print_NativeString(self, expr):
-        return 'string'
-
     def function_signature(self, expr, print_arg_names = True):
         """
         Get the C representation of the function signature.
@@ -1242,11 +1231,11 @@ class CCodePrinter(CodePrinter):
         if n_results == 1:
             ret_type = self.get_declare_type(result_vars[0])
         elif n_results > 1:
-            ret_type = self._print(datatype('int'))
+            ret_type = self.find_in_dtype_registry(NativeInteger(), -1)
             arg_vars.extend(result_vars)
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         else:
-            ret_type = self._print(datatype('void'))
+            ret_type = self.find_in_dtype_registry(NativeVoid(), 0)
 
         name = expr.name
         if not arg_vars:
@@ -1681,8 +1670,7 @@ class CCodePrinter(CodePrinter):
             else:
                 cond_template = lhs + ' = {cond} ? {stop} : ' + lhs
 
-        dtype = self._print(expr.dtype)
-        v = self._cast_to(expr.stop, dtype, expr.precision).format(self._print(expr.stop))
+        v = self._cast_to(expr.stop, expr.dtype, expr.precision).format(self._print(expr.stop))
 
         init_value = template.format(
             start = self._print(expr.start),
