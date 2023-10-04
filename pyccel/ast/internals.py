@@ -385,10 +385,6 @@ def max_precision(objs : list, dtype = None, allow_native = True):
     objs : list
        A list of PyccelAstNodes.
 
-    dtype : DataType, optional
-        If this argument is provided then only the precision
-        of objects with this dtype are considered.
-
     allow_native : bool, default=True
         Allow the final result to be a native precision (i.e. -1).
 
@@ -399,10 +395,6 @@ def max_precision(objs : list, dtype = None, allow_native = True):
     """
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
-    elif dtype:
-        def_prec = default_precision[dtype]
-        return max(def_prec if o.precision == -1 \
-                else o.precision for o in objs if o.dtype is dtype)
     else:
         ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
         if ndarray_list:
