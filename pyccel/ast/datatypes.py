@@ -93,6 +93,7 @@ iso_c_binding_shortcut_mapping = {
     'C_BOOL'                : 'b1'
 }
 
+#==============================================================================
 
 class DataType(metaclass=Singleton):
     """Base class representing native datatypes"""
@@ -108,6 +109,21 @@ class DataType(metaclass=Singleton):
 
     def __repr__(self):
         return str(self.__class__.__name__)+'()'
+
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
 
 class NativeBool(DataType):
     """Class representing boolean datatype"""
