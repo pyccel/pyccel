@@ -665,9 +665,15 @@ class NumpyArange(NumpyNewArray):
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
-    """Represents a call to  numpy.sum for code generation.
+    """
+    Represents a call to  numpy.sum for code generation.
 
+    Represents a call to  numpy.sum for code generation.
+
+    Parameters
+    ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
+        The argument passed to the sum function.
     """
     __slots__ = ('_dtype','_precision')
     name = 'sum'
@@ -691,9 +697,15 @@ class NumpySum(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyProduct(PyccelInternalFunction):
-    """Represents a call to  numpy.prod for code generation.
+    """
+    Represents a call to numpy.prod for code generation.
 
+    Represents a call to numpy.prod for code generation.
+
+    Parameters
+    ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
+        The argument passed to the prod function.
     """
     __slots__ = ('_arg','_dtype','_precision')
     name = 'product'
@@ -1026,10 +1038,15 @@ class NumpyWhere(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyRand(PyccelInternalFunction):
-
     """
-      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+    Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
+    Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelAstNode
+        The arguments passed to the function.
     """
     __slots__ = ('_shape','_rank','_order')
     name = 'rand'
@@ -1159,7 +1176,21 @@ class NumpyAutoFill(NumpyFull):
 
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
-    """ Represents a call to numpy.empty for code generation.
+    """
+    Represents a call to numpy.empty for code generation.
+
+    Represents a call to numpy.empty for code generation.
+
+    Parameters
+    ----------
+    shape : PyccelAstNode
+        The shape of the array to be created.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The actual dtype passed to the NumPy function.
+
+    order : str, LiteralString
+        The order passed to the function.
     """
     __slots__ = ()
     name = 'empty'
@@ -1456,7 +1487,21 @@ class NumpyUfuncBase(PyccelInternalFunction):
 
 #------------------------------------------------------------------------------
 class NumpyUfuncUnary(NumpyUfuncBase):
-    """Numpy's universal function with one argument.
+    """
+    Class representing Numpy's universal function with one argument.
+
+    Class representing Numpy's universal function. All classes which
+    inherit from this class have one argument and operate on it
+    elementally. In other words it should be equivalent to write:
+    >>> for i in iterable: NumpyUfuncUnary(i)
+    
+    or
+    >>> NumpyUfuncUnary(iterable)
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     def __init__(self, x):
@@ -1478,10 +1523,25 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
-    """Numpy's universal function with two arguments.
+    """
+    Class representing Numpy's universal function with two arguments.
+
+    Class representing Numpy's universal function. All classes which
+    inherit from this class have two arguments and operate on them
+    in lockstep. In other words it should be equivalent to write:
+    >>> for i,_ in enumerate(iterable1): NumpyUfuncUnary(iterable1(i), iterable2(i))
+    
+    or
+    >>> NumpyUfuncUnary(iterable1, iterable2)
+
+    Parameters
+    ----------
+    x1 : PyccelAstNode
+        The first argument passed to the function.
+    x2 : PyccelAstNode
+        The second argument passed to the function.
     """
     __slots__ = ()
-    # TODO: apply Numpy's broadcasting rules to get shape/rank of output
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
         self._set_dtype_precision(x1, x2)

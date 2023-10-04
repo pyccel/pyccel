@@ -412,10 +412,17 @@ def max_precision(objs : list, dtype = None, allow_native = True):
 
 def get_final_precision(obj):
     """
+    Get the the usable precision of an object.
+
     Get the the usable precision of an object. Ie. the precision that you
-    can use to print, eg 8 instead of -1 for a default precision float
+    can use to print, eg 8 instead of -1 for a default precision float.
 
     If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned
+    precision is returned, otherwise the provided precision is returned.
+
+    Parameters
+    ----------
+    obj : PyccelAstNode
+        The object whose precision we want to investigate.
     """
     return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
