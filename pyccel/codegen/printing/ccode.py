@@ -1106,7 +1106,7 @@ class CCodePrinter(CodePrinter):
         Raise PYCCEL_RESTRICTION_TODO if not found.
 
         Parameters
-        -----------
+        ----------
         dtype : DataType
             The data type of the expression.
 
@@ -1144,7 +1144,7 @@ class CCodePrinter(CodePrinter):
         Raise PYCCEL_RESTRICTION_TODO if not found.
 
         Parameters
-        -----------
+        ----------
         dtype : DataType
             The data type of the expression.
 
