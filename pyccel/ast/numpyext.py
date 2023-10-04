@@ -1570,8 +1570,10 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
         Parameters
         ----------
-        x : PyccelAstNode
-            The argument passed to the function.
+        x1 : PyccelAstNode
+            The first argument passed to the function.
+        x2 : PyccelAstNode
+            The second argument passed to the function.
         """
         self._dtype     = NativeFloat()
         self._precision = default_precision[self._dtype]

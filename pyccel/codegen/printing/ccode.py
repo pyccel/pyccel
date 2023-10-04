@@ -503,14 +503,14 @@ class CCodePrinter(CodePrinter):
         Parameters
         ----------
         expr : PyccelAstNode
-            The Assign Node used to get the lhs and rhs
+            The Assign Node used to get the lhs and rhs.
 
         Returns
         -------
         buffer_array : str
-            String initialising the stack (C) array which stores the data
+            String initialising the stack (C) array which stores the data.
         array_init   : str
-            String containing the rhs of the initialization of a stack array
+            String containing the rhs of the initialization of a stack array.
         """
         var = expr
         dtype = self.find_in_dtype_registry(var.dtype, var.precision)
@@ -1374,7 +1374,7 @@ class CCodePrinter(CodePrinter):
         to the specified dtype and precision. If the dtype and precision already
         match then the format string will simply print the expression.
 
-        parameters
+        Parameters
         ----------
         expr : PyccelAstNode
             The expression to be cast.
