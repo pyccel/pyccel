@@ -310,24 +310,23 @@ def is_with_construct_datatype(dtype):
     else:
         return False
 
-# TODO check the use of Floats
 def datatype(arg):
-    """Returns the datatype singleton for the given dtype.
-
-    arg : str or pyccel expression
-        If a str ('bool', 'int', 'float','complex', or 'void'), return the
-        singleton for the corresponding dtype. If a pyccel expression, return
-        the datatype that best fits the expression. This is determined from the
-        assumption system. For more control, use the `DataType` class directly.
-
-    Returns:
-        DataType
-
     """
+    Get the datatype indicated by a string.
 
-    if isinstance(arg, DataType):
-        arg = arg.name.lower()
+    Return the datatype singleton for the dtype described
+    by the argument.
 
+    Parameters
+    ----------
+    arg : str
+        Return the singleton for the corresponding dtype.
+
+    Returns
+    -------
+    DataType
+        The data type described by the string.
+    """
     if isinstance(arg, str):
         if arg not in dtype_and_precision_registry:
             raise ValueError("Unrecognized datatype " + arg)

@@ -376,16 +376,26 @@ def symbols(names):
 
 def max_precision(objs : list, dtype = None, allow_native = True):
     """
-    Returns the largest precision of an object in the list
+    Returns the largest precision of an object in the list.
+
+    Returns the largest precision of an object in the list.
 
     Parameters
     ----------
     objs : list
-           A list of PyccelAstNodes
-    dtype : Dtype class
-            If this argument is provided then only the
-            precision of objects with this dtype are
-            considered
+       A list of PyccelAstNodes.
+
+    dtype : DataType, optional
+        If this argument is provided then only the precision
+        of objects with this dtype are considered.
+
+    allow_native : bool, default=True
+        Allow the final result to be a native precision (i.e. -1).
+
+    Returns
+    -------
+    int
+        The largest precision found.
     """
     if allow_native and all(o.precision == -1 for o in objs):
         return -1

@@ -114,23 +114,38 @@ class ListType(BasicStmt):
         return d_var
 
 class Type(BasicStmt):
-    """Base class representing a header type in the grammar."""
+    """
+    Base class representing a header type in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Type.
+    Base class representing a header type in the grammar.
 
-        dtype: str
-            variable type
-        """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
+    Parameters
+    ----------
+    dtype : str
+        The variable type.
+
+    prec : int
+        The precision of the object.
+
+    trailer : TrailerSubscriptList
+        An object created by textx describing the trailing decorators of the
+        type. These describe the rank and order.
+    """
+
+    def __init__(self, dtype, prec, trailer = (), **kwargs):
+        self.dtype   = dtype
+        self.prec    = prec
+        self.trailer = trailer
 
         super(Type, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Get the dictionary describing the type.
+
+        Get the dictionary describing the type.
+        """
         dtype = self.dtype
         precision = self.prec
         if dtype in dtype_registry.keys():
