@@ -6,32 +6,28 @@
 
 from pyccel.codegen.printing.ccode import CCodePrinter
 
-from pyccel.ast.bind_c   import BindCPointer
-from pyccel.ast.bind_c   import BindCModule, BindCFunctionDef
-
-from pyccel.ast.core import FunctionAddress, SeparatorComment
-from pyccel.ast.core import Import, Module
-
-from pyccel.ast.cwrapper    import PyBuildValueNode
-from pyccel.ast.cwrapper    import Py_None
-from pyccel.ast.cwrapper    import PyccelPyObject
-
-from pyccel.ast.literals  import LiteralString, Nil
-
+from pyccel.ast.bind_c     import BindCPointer
+from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
+from pyccel.ast.core       import FunctionAddress, SeparatorComment
+from pyccel.ast.core       import Import, Module
+from pyccel.ast.cwrapper   import PyBuildValueNode
+from pyccel.ast.cwrapper   import Py_None
+from pyccel.ast.cwrapper   import PyccelPyObject
+from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
 
-from pyccel.errors.errors   import Errors
+from pyccel.errors.errors  import Errors
+
+__all__ = ("CWrapperCodePrinter", "cwrappercode")
 
 errors = Errors()
 
-__all__ = ["CWrapperCodePrinter", "cwrappercode"]
-
-
-module_imports  = [Import('numpy_version', Module('numpy_version',(),())),
+module_imports = [Import('numpy_version', Module('numpy_version',(),())),
             Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
             Import('cwrapper', Module('cwrapper',(),()))]
 
 cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+
 
 class CWrapperCodePrinter(CCodePrinter):
     """
@@ -52,8 +48,6 @@ class CWrapperCodePrinter(CCodePrinter):
     **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
     """
-
-
     dtype_registry = {**CCodePrinter.dtype_registry,
                       (PyccelPyObject() , 0) : 'PyObject',
                       (BindCPointer()   , 0) : 'void'}
@@ -64,7 +58,6 @@ class CWrapperCodePrinter(CCodePrinter):
         self._to_free_PyObject_list = []
         self._function_wrapper_names = dict()
         self._module_name = None
-
 
     # --------------------------------------------------------------------
     #                       Helper functions
