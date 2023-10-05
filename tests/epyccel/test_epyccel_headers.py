@@ -4,8 +4,8 @@
 Once headers are deprecated this file can be removed.
 """
 
-import pytest
 import warnings
+import pytest
 
 from pyccel.epyccel import epyccel
 from pyccel.errors.errors import PyccelSemanticError
