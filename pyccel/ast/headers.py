@@ -281,18 +281,19 @@ class FunctionHeader(Header):
             shape = None
             annotation = None
 
-            if rank and precision == -1:
-                precision = default_precision[dtype]
-
-            if rank >1:
-                order = dc['order']
-
             if isinstance(dtype, str):
                 annotation = dtype
                 try:
                     dtype = datatype(dtype)
                 except ValueError:
                     dtype = DataTypeFactory(str(dtype), ("_name"))()
+
+            if rank and precision == -1:
+                precision = default_precision[dtype]
+
+            if rank >1:
+                order = dc['order']
+
             var = Variable(dtype, var_name,
                            memory_handling=memory_handling, is_const=is_const,
                            rank=rank, shape=shape ,order=order, precision=precision,

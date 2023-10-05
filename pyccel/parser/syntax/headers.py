@@ -17,6 +17,7 @@ from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol, AnnotatedPyccelSymbol
@@ -115,23 +116,42 @@ class ListType(BasicStmt):
         return d_var
 
 class Type(BasicStmt):
-    """Base class representing a header type in the grammar."""
+    """
+    Base class representing a header type in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Type.
+    Base class representing a header type in the grammar.
 
-        dtype: str
-            variable type
-        """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
+    Parameters
+    ----------
+    dtype : str
+        The variable type.
+
+    prec : int
+        The precision of the object.
+
+    trailer : iterable, TrailerSubscriptsList
+        An object created by textx describing the trailing decorators of the
+        type. The number of elements is equal to the rank. The order is also
+        described when the iterable is non-empty.
+
+    **kwargs : dict
+        The textx arguments.
+    """
+
+    def __init__(self, dtype, prec, trailer = (), **kwargs):
+        self.dtype   = dtype
+        self.prec    = prec
+        self.trailer = trailer
 
         super(Type, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Get the dictionary describing the type.
+
+        Get the dictionary describing the type.
+        """
         dtype = self.dtype
         precision = self.prec
         if dtype in dtype_registry.keys():
@@ -153,7 +173,7 @@ class Type(BasicStmt):
         d_var['is_func'] = False
         d_var['is_const'] = False
         if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
+            if dtype in NativeNumeric:
                 d_var['precision'] = default_precision[dtype]
 
         if d_var['rank']>1:
