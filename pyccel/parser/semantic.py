@@ -62,7 +62,7 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
-from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry, dtype_registry
+from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex,
@@ -2078,16 +2078,11 @@ class SemanticParser(BasicParser):
         for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
             # Find the DataType instance and the associated precision
             prec = -1
-            if dtype_name in dtype_and_precision_registry:
+            try:
                 dtype, prec = dtype_and_precision_registry[dtype_name]
-                dtype = dtype_registry[dtype]
-            elif dtype_name in dtype_registry:
-                try:
-                    dtype = dtype_registry[dtype_name]
-                    prec = 0
-                except KeyError:
-                    errors.report(f'Could not identify type : {dtype_name}',
-                            severity='fatal', symbol=expr)
+            except KeyError:
+                errors.report(f'Could not identify type : {dtype_name}',
+                        severity='fatal', symbol=expr)
 
             try:
                 cls_base = get_cls_base(dtype, prec, rank)
