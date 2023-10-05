@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
+-   Stop raising warning for unrecognised functions imported via intermediate modules.
 
 ### Changed
 
