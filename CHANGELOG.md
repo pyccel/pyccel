@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 -   #1472 : Add C printing support for a class containing scalar data.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
+-   Output readable header syntax errors.
 
 ### Fixed
 
@@ -17,6 +18,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
+-   \[INTERNALS\] Move handling of variable headers to semantic stage.
 
 ### Deprecated
 
