@@ -24,7 +24,7 @@ def test_local_type_annotation(language):
 
 def test_local_wrong_type_annotation(language):
     def local_wrong_type_annotation():
-        #$ header variable gift int32
+        #$ header variable gift float
         gift = 10
         return gift
 
