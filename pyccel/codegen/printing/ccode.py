@@ -1381,7 +1381,7 @@ class CCodePrinter(CodePrinter):
         dtype : Datatype
             The target type of the cast.
         precision : int
-            The target precision of the of the cast.
+            The target precision of the cast.
 
         Returns
         -------
