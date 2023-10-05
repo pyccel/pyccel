@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 # coding: utf-8
 """ Tests for headers. This ensures intermediate steps are tested before headers are deprecated.
 Once headers are deprecated this file can be removed.
@@ -68,6 +68,6 @@ def test_class_annoation(language):
                 pass
 
         #$ header variable myA A
-        myA = A()
+        myA = A() #pylint: disable=unused-variable
 
-    epyc_class_annotation = epyccel(class_annotation, language=language)
+    epyccel(class_annotation, language=language)
