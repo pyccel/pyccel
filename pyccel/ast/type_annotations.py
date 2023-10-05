@@ -257,9 +257,7 @@ class SyntacticTypeAnnotation(Basic):
         TypeError
             Raised if the type of the argument is not handled.
         """
-        if isinstance(annotation, (list, tuple)):
-            return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
-        elif hasattr(annotation, 'dtype'):
+        if hasattr(annotation, 'dtype'):
             is_const = None
             dtype_names = [annotation.dtype]
             ranks = [len(getattr(annotation.trailer, 'args', ()))]
