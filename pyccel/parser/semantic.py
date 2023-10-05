@@ -3615,6 +3615,15 @@ class SemanticParser(BasicParser):
         for i in methods:
             self._visit_FunctionDef(i)
 
+        if not any(method.name == '__del__' for method in methods):
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            body = []
+            scope = self.create_new_function_scope('__del__')
+            del_method = FunctionDef('__del__', [argument], (), body, cls_name=cls.name, scope=scope)
+            self.exit_function_scope()
+            self.insert_function(del_method)
+            cls.add_new_method(del_method)
+
         self.exit_class_scope()
 
         return EmptyNode()
