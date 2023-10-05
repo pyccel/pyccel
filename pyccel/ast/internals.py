@@ -19,8 +19,8 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
-    'PyccelArraySize',
     'PyccelArrayShapeElement',
+    'PyccelArraySize',
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
@@ -374,11 +374,11 @@ def symbols(names):
     return tuple(symbols)
 
 
-def max_precision(objs : list, allow_native = True):
+def max_precision(objs : list, allow_native : bool = True):
     """
-    Return the largest precision amongst the object in the list.
+    Return the largest precision amongst the objects in the list.
 
-    Return the largest precision amongst the object in the list.
+    Return the largest precision amongst the objects in the list.
 
     Parameters
     ----------
@@ -404,10 +404,10 @@ def max_precision(objs : list, allow_native = True):
 
 def get_final_precision(obj):
     """
-    Get the the usable precision of an object.
+    Get the usable precision of an object.
 
-    Get the the usable precision of an object. Ie. the precision that you
-    can use to print, eg 8 instead of -1 for a default precision float.
+    Get the usable precision of an object. I.e. the precision that you
+    can use to print, e.g. 8 instead of -1 for a default precision float.
 
     If the precision is set to the default then the value of the default
     precision is returned, otherwise the provided precision is returned.
