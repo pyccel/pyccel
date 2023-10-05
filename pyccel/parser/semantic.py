@@ -1400,29 +1400,29 @@ class SemanticParser(BasicParser):
                 else:
                     var.set_changeable_shape()
                     previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-                    if not previous_allocations:
-                        errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
-                                symbol=var, severity='fatal')
+                    if previous_allocations:
+                        last_allocation = previous_allocations[-1]
 
-                    last_allocation = previous_allocations[-1]
+                        # Find outermost IfSection of last allocation
+                        last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                        alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                        while len(last_alloc_ifsection)>0:
+                            alloc_ifsection = last_alloc_ifsection[-1]
+                            last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
 
-                    # Find outermost IfSection of last allocation
-                    last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
-                    alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
-                    while len(last_alloc_ifsection)>0:
-                        alloc_ifsection = last_alloc_ifsection[-1]
-                        last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+                        ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                            lambda x: isinstance(x,If))) == 1 \
+                                        if alloc_ifsection else False
 
-                    ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
-                                                        lambda x: isinstance(x,If))) == 1 \
-                                    if alloc_ifsection else False
-
-                    if alloc_ifsection and not ifsection_has_if:
-                        status = last_allocation.status
-                    elif last_allocation.get_user_nodes((If, For, While)):
-                        status='unknown'
+                        if alloc_ifsection and not ifsection_has_if:
+                            status = last_allocation.status
+                        elif last_allocation.get_user_nodes((If, For, While)):
+                            status='unknown'
+                        else:
+                            status='allocated'
                     else:
-                        status='allocated'
+                        status = 'unallocated'
+
                     new_expressions.append(Allocate(var,
                         shape=d_var['shape'], order=d_var['order'],
                         status=status))
@@ -2038,10 +2038,10 @@ class SemanticParser(BasicParser):
         decorators = self.scope.decorators
         if decorators:
             if 'stack_array' in decorators:
-                if name in decorators['stack_array']:
+                if expr.name in decorators['stack_array']:
                     array_memory_handling = 'stack'
             if 'allow_negative_index' in decorators:
-                if expr in decorators['allow_negative_index']:
+                if expr.name in decorators['allow_negative_index']:
                     allows_negative_indexes = True
 
         # For each possible data type create the necessary variables
@@ -2051,6 +2051,9 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
+                if rank > 0 and array_memory_handling == 'stack':
+                    errors.report("Cannot pre-declare stack array as shape is unknown.",
+                            severity='error', symbol=expr)
                 v = Variable(dtype, name, precision = prec,
                         shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
                         is_const = t.is_const, is_optional = False,
