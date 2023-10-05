@@ -2569,6 +2569,14 @@ class FunctionDef(ScopedNode):
         """ CodeBlock containing all the statements in the function """
         return self._body
 
+    @body.setter
+    def body(self, body):
+        if iterable(body):
+            body = CodeBlock(body)
+        elif not isinstance(body, CodeBlock):
+            raise TypeError('body must be an iterable or a CodeBlock')
+        self._body = body
+
     @property
     def local_vars(self):
         """
@@ -3218,7 +3226,7 @@ class ClassDef(ScopedNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclasses','_interfaces', '_is_deallocated')
+                 '_imports','_superclasses','_interfaces')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
 
     def __init__(
@@ -3314,7 +3322,6 @@ class ClassDef(ScopedNode):
         self._imports = imports
         self._superclasses  = superclasses
         self._interfaces = interfaces
-        self._is_deallocated = False
 
         super().__init__(scope = scope)
 
@@ -3331,22 +3338,6 @@ class ClassDef(ScopedNode):
         Each element within the tuple is of type Variable.
         """
         return self._attributes
-
-    @property
-    def is_deallocated(self):
-        """
-        Indicates whether the class has been deallocated.
-
-        Returns True if the class instance has been deallocated, False otherwise.
-        """
-
-        return self._is_deallocated
-
-    @is_deallocated.setter
-    def is_deallocated(self, value):
-        if not isinstance(value, bool):
-            raise TypeError("is_deallocated must be a boolean (Bool)")
-        self._is_deallocated = value
 
     @property
     def methods(self):

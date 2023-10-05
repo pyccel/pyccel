@@ -1445,8 +1445,8 @@ class CCodePrinter(CodePrinter):
         if expr.variable.is_alias:
             return f'free_pointer({variable_address});\n'
         if isinstance(expr.variable.dtype, CustomDataType):
-            self._print_Del(Del([expr.variable]))
-            return ''
+            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
+            return f"{Pyccel__del}({variable_address});\n"
         return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):
@@ -2276,14 +2276,7 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_Del(self, expr):
-        Del_Calls = ""
-        for variable in expr.variables:
-            if isinstance(variable.dtype, CustomDataType) and not variable.cls_base.is_deallocated:
-                variable_address = self._print(ObjectAddress(variable))
-                Pyccel__del = next(method.name for method in variable.cls_base.methods if method.name.endswith('__del__'))
-                variable.cls_base.is_deallocated = True
-                Del_Calls += f"{Pyccel__del}({variable_address});\n"
-        return(Del_Calls)
+        return ''.join(self._print(Deallocate(var)) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)

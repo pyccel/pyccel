@@ -3393,10 +3393,6 @@ class SemanticParser(BasicParser):
             self._allocs.append([])
 
             # we annotate the body
-            if cls_name and expr.name == '__del__':
-                attributes = self.scope.find(cls_name, 'classes').attributes
-                attribute = [attr for attr in attributes if not attr.on_stack]
-                self._allocs[-1].extend(attribute) 
             body = self._visit(expr.body)
 
             # Calling the Garbage collecting,
@@ -3605,6 +3601,14 @@ class SemanticParser(BasicParser):
                 self._visit_FunctionDef(method)
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
+
+                # creat a new attribute to check allocation
+                deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
+                deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
+                deallocater = DottedVariable(*deallocater_rhs, lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                cls.add_new_attribute(deallocater)
+                deallocater_assign = Assign(deallocater, LiteralFalse())
+                cls.methods[i].body.insert2body(deallocater_assign, back=False)
                 break
 
         if not init_func:
@@ -3617,12 +3621,24 @@ class SemanticParser(BasicParser):
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
-            body = []
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), body, cls_name=cls.name, scope=scope)
+            del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)
+
+        for method in cls.methods:
+            if method.name == '__del__':
+                self._current_function = method.name
+                attribute = [attr for attr in cls.attributes if not attr.on_stack]
+                if attribute:
+                    self._allocs[-1].extend(attribute)
+                    is_freed = next(is_freed for is_freed in cls.attributes if is_freed.name.startswith("is_freed"))
+                    method.body.insert2body(*self._garbage_collector(method.body))
+                    condition = If(IfSection(PyccelNot(is_freed),
+                                    [method.body]+[Assign(is_freed, LiteralTrue())]))
+                    method.body = [condition]
+                self._current_function = None
 
         self.exit_class_scope()
 
