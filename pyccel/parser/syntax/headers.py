@@ -127,9 +127,10 @@ class Type(BasicStmt):
     prec : int
         The precision of the object.
 
-    trailer : TrailerSubscriptList
+    trailer : iterable, TrailerSubscriptsList
         An object created by textx describing the trailing decorators of the
-        type. These describe the rank and order.
+        type. The number of elements is equal to the rank. The order is also
+        described when the iterable is non-empty.
 
     **kwargs : dict
         The textx arguments.
