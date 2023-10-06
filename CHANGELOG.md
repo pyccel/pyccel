@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
+-   Stop raising warning for unrecognised functions imported via intermediate modules.
 
 ### Changed
 
@@ -22,6 +23,8 @@ All notable changes to this project will be documented in this file.
 
 -   #1513 : Stop printing `@types` decorators in generated Python code.
 -   Removed support for untested, undocumented `lambidify` function.
+-   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
+-   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
 -   \[INTERNALS\] Remove unused `Declare.dtype`.
 -   \[INTERNALS\] Remove unused functions `subs`, `inline`, `get_iterable_ranges` from `pyccel.ast.core`.
 -   \[INTERNALS\] Remove unused class `pyccel.ast.core.ForIterator`.
