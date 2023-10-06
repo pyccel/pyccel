@@ -2098,7 +2098,7 @@ class SemanticParser(BasicParser):
 
             # NumPy objects cannot have default precision
             if prec == -1 and cls_base is NumpyArrayClass:
-                prec = default_precision[str(dtype)]
+                prec = default_precision[dtype]
 
             # Save the potential type
             types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
