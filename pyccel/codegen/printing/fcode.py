@@ -19,17 +19,16 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
 from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonFloat, PythonTuple
-from pyccel.ast.builtins import PythonComplex, PythonBool, PythonAbs
+from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonBool, PythonAbs
 from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
 
-from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return, Module, If, IfSection, For
+from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import Return, Module, For
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
