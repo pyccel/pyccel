@@ -13,6 +13,7 @@ pyccelised
 pyccelising
 allocatable
 deallocate
+deallocation
 conda
 PyPI
 CentOS

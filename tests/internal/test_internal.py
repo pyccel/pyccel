@@ -84,9 +84,11 @@ if __name__ == '__main__':
     print('***  TESTING INTERNAL/OPENMP  ***')
     print('***                           ***')
     print('*********************************')
-    for f in get_files_from_folder('openmp'):
-        print('> testing {0}'.format(str(os.path.basename(f))))
-        test_openmp(f)
+    for lang in ('fortran', 'c'):
+        print("--- Translating to", lang, "---")
+        for f in get_files_from_folder('openmp'):
+            print('> testing {0}'.format(str(os.path.basename(f))))
+            test_openmp(f, lang)
     print('\n')
 
 #    print('*********************************')

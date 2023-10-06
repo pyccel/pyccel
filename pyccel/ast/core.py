@@ -482,6 +482,8 @@ class Assign(Basic):
 #------------------------------------------------------------------------------
 class Allocate(Basic):
     """
+    Represents memory allocation for code generation.
+
     Represents memory allocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
     where the programmer must take care of heap memory allocation.
@@ -505,7 +507,6 @@ class Allocate(Basic):
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
-
     """
     __slots__ = ('_variable', '_shape', '_order', '_status')
     _attribute_nodes = ('_variable',)
@@ -1766,67 +1767,6 @@ class ForIterator(For):
     def ranges(self):
         return get_iterable_ranges(self.iterable)
 
-class ConstructorCall(Basic):
-
-    """
-    It  serves as a constructor for undefined function classes.
-
-    Parameters
-    ----------
-    func: FunctionDef, str
-        an instance of FunctionDef or function name
-
-    arguments: list, tuple, None
-        a list of arguments.
-
-    """
-    __slots__ = ('_cls_variable', '_func', '_arguments')
-    _attribute_nodes = ('_func', '_arguments')
-
-    is_commutative = True
-
-    # TODO improve
-
-    def __init__(
-        self,
-        func,
-        arguments,
-        cls_variable=None,
-        ):
-        if not isinstance(func, (FunctionDef, Interface, str)):
-            raise TypeError('Expecting func to be a FunctionDef or str')
-
-        self._cls_variable = cls_variable
-        self._func = func
-        self._arguments = arguments
-        super().__init__()
-
-    def __str__(self):
-        name = str(self.name)
-        args = ''
-        if not self.arguments is None:
-            args = ', '.join(str(i) for i in self.arguments)
-        return '{0}({1})'.format(name, args)
-
-    @property
-    def func(self):
-        return self._func
-
-    @property
-    def arguments(self):
-        return self._arguments
-
-    @property
-    def cls_variable(self):
-        return self._cls_variable
-
-    @property
-    def name(self):
-        if isinstance(self.func, FunctionDef):
-            return self.func.name
-        else:
-            return self.func
-
 class FunctionCallArgument(Basic):
     """
     An argument passed in a function call
@@ -2120,6 +2060,8 @@ class FunctionCall(PyccelAstNode):
 
     def __init__(self, func, args, current_function=None):
 
+        for a in args:
+            assert not isinstance(a, FunctionDefArgument)
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
@@ -2270,6 +2212,60 @@ class DottedFunctionCall(FunctionCall):
         """ The object in which the function is defined
         """
         return self._prefix
+
+class ConstructorCall(DottedFunctionCall):
+
+    """
+    Represents a Constructor call in the code.
+
+    A node which holds all information necessary to represent a Constructor
+    call in the code.
+
+    Parameters
+    ----------
+    func : FunctionDef, str
+        An instance of FunctionDef or function name.
+
+    arguments : list, tuple, None
+        A list of arguments.
+
+    cls_variable : CustomDataType, optional
+        The variable on the left-hand side of an assignment,
+        where the right-hand side is a constructor call.
+        Used to store data inside the class, set during object creation.
+    """
+    __slots__ = ('_cls_variable',)
+    _attribute_nodes = ()
+
+    # TODO improve
+
+    def __init__(
+        self,
+        func,
+        arguments,
+        cls_variable=None,
+        ):
+        if not isinstance(func, (FunctionDef, Interface, str)):
+            raise TypeError('Expecting func to be a FunctionDef or str')
+
+        self._cls_variable = cls_variable
+        super().__init__(func, arguments, self._cls_variable)
+
+    @property
+    def cls_variable(self):
+        """
+        Get the class variable associated with the constructor.
+
+        The `cls_variable` property allows accessing the class
+        variable associated with the constructor.
+
+        Returns
+        -------
+        CustomDataType or None
+            The class variable associated with the constructor, or None if not provided.
+        """
+        return self._cls_variable
+
 
 class Return(Basic):
 
@@ -2699,17 +2695,29 @@ class FunctionDef(ScopedNode):
         """ Mark the function as a recursive function """
         self._is_recursive = True
 
-    def clone(self, newname):
+    def clone(self, newname, **new_kwargs):
         """
-        Create an identical FunctionDef with name
-        newname.
+        Create an almost identical FunctionDef with name `newname`.
+
+        Create an almost identical FunctionDef with name `newname`.
+        Additional parameters can be passed to alter the resulting
+        FunctionDef.
 
         Parameters
         ----------
-        newname: str
-            new name for the FunctionDef
+        newname : str
+            New name for the FunctionDef.
+
+        **new_kwargs : dict
+            Any new keyword arguments to be passed to the new FunctionDef.
+
+        Returns
+        -------
+        FunctionDef
+            The clone of the function definition.
         """
         args, kwargs = self.__getnewargs__()
+        kwargs.update(new_kwargs)
         cls = type(self)
         new_func = cls(*args, **kwargs)
         new_func.rename(newname)
@@ -2916,25 +2924,43 @@ class PyccelFunctionDef(FunctionDef):
     Parameters
     ----------
     name : str
-           The name of the function.
+        The name of the function.
 
     func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
-         The class which should be instantiated upon a FunctionCall
-         to this FunctionDef object.
+        The class which should be instantiated upon a FunctionCall
+        to this FunctionDef object.
 
     decorators : dictionary
         A dictionary whose keys are the names of decorators and whose values
         contain their implementation.
+
+    argument_description : dict, optional
+        A dictionary containing all arguments and their default values. This
+        is useful in order to reuse types with similar functionalities but
+        different default values.
     """
-    __slots__ = ()
-    def __init__(self, name, func_class, *, decorators = {}):
+    __slots__ = ('_argument_description',)
+    def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
                 issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
+        assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
         body = ()
         super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class
+        self._argument_description = argument_description
+
+    @property
+    def argument_description(self):
+        """
+        Get a description of the arguments.
+
+        Return a dictionary whose keys are the arguments with default values
+        and whose values are the default values for the function described by
+        the `PyccelFunctionDef`
+        """
+        return self._argument_description
 
 class Interface(Basic):
 
@@ -3297,6 +3323,12 @@ class ClassDef(ScopedNode):
 
     @property
     def attributes(self):
+        """
+        The attributes of a class.
+
+        Returns a tuple containing the attributes of a ClassDef.
+        Each element within the tuple is of type Variable.
+        """
         return self._attributes
 
     @property
@@ -3345,8 +3377,56 @@ class ClassDef(ScopedNode):
             d_attributes[i.name] = i
         return d_attributes
 
-    # TODO add other attributes?
+    def add_new_attribute(self, attr):
+        """
+        Add a new attribute to the current class.
 
+        Add a new attribute to the current ClassDef.
+
+        Parameters
+        ----------
+        attr : Variable
+            The Variable that will be added.
+        """
+
+        if not isinstance(attr, Variable):
+            raise TypeError("Attributes must be Variables")
+        attr.set_current_user_node(self)
+        self._attributes += (attr,)
+
+    def add_new_method(self, method):
+        """
+        Add a new method to the current class.
+
+        Add a new method to the current ClassDef.
+
+        Parameters
+        ----------
+        method : FunctionDef
+            The Method that will be added.
+        """
+
+        if not isinstance(method, FunctionDef):
+            raise TypeError("Method must be FunctionDef")
+        method.set_current_user_node(self)
+        self._methods += (method,)
+
+    def add_new_interface(self, interface):
+        """
+        Add a new interface to the current class.
+
+        Add a new interface to the current ClassDef.
+
+        Parameters
+        ----------
+        interface : FunctionDef
+            The interface that will be added.
+        """
+
+        if not isinstance(interface, Interface):
+            raise TypeError("Argument 'interface' must be of type Interface")
+        interface.set_current_user_node(self)
+        self._interfaces += (interface,)
 
     def get_attribute(self, O, attr):
         """Returns the attribute attr of the class O of instance self."""

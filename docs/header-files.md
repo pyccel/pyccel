@@ -1,5 +1,7 @@
 # Header files
 
+**Warning** : We intend to replace header files with [stub files](https://www.python.org/dev/peps/pep-0484/#stub-files) at some point.
+
 ## Using header files
 
 A header file in Pyccel is a file with a name ending with `.pyh`, which contains function/variable declarations, macro definitions, templates and metavariable declarations.\
@@ -72,10 +74,7 @@ In order to use this library the user needs to create a header file, we call it 
 After that we can create a Python file `test_funcs.py`,where we can import the Fortran functions and use them
 
 ```python
-from pyccel.decorators import types
-
-@types('int')
-def print_fib(x):
+def print_fib(x : int):
     from  funcs_headers import fib
     print(fib(x))
 ```

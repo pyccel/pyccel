@@ -10,6 +10,7 @@ from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_vers
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper   import FortranToCWrapper
+from pyccel.codegen.wrapper.c_to_python_wrapper    import CToPythonWrapper
 from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
@@ -156,7 +157,10 @@ def create_shared_library(codegen,
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper_code = wrapper_codegen.doprint(c_ast)
+    wrapper = CToPythonWrapper()
+    cwrap_ast = wrapper.wrap(c_ast)
+    wrapper_code = wrapper_codegen.doprint(cwrap_ast)
+    #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
         return
 

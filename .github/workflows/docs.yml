@@ -48,24 +48,26 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ inputs.python_version }}
-      - name: "Setup"
+      - name: "Setup check run"
         id: token
         run: |
           pip install jwt requests
           cd compare
           python ../base/ci_tools/setup_check_run.py
           cd ..
-      - name: Install python dependencies
+      - name: Install python CI dependencies
         run: |
           python -m pip install --upgrade pip
           python -m pip install docstr-coverage
           python -m pip install numpydoc
+          python -m pip install defusedxml # All imported modules must be available for numpydoc
         shell: bash
-      - name: Setup imports
+      - name: Install dependencies
+        uses: ./compare/.github/actions/linux_install
+      - name: Install python dependencies for pyccel and tests
         run: |
-          echo "PYTHONPATH=$(pwd)/compare" >> $GITHUB_ENV
           cd compare
-          pip3 install .
+          pip3 install .[test]
           cd ..
         shell: bash
       - name: Check doc coverage
@@ -85,19 +87,14 @@ jobs:
           git checkout ${{ inputs.base }} # Make sure there is a local copy in case of a branch
           git checkout ${{ env.COMMIT }}
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          python ../base/ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt ci_objects.txt
+          python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
           touch report.txt
           while read line; do
-            python -m numpydoc --validate $line >> report.txt 2>&1 || true 
+            echo "python -m numpydoc --validate $line"
+            python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
           done < objects.txt
-          cd ci_tools
-          while read line; do
-            python -m numpydoc --validate $line >> ../report.txt 2>&1 || true 
-          done < ../ci_objects.txt
           cd ..
-          cat report.txt
-          cd ..
-          python base/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
+          python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()
