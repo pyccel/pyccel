@@ -1727,7 +1727,6 @@ class CCodePrinter(CodePrinter):
         start = self._print(expr.start)
         step  = self._print(expr.step)
         index = self._print(expr.ind)
-        dtype = self._print(expr.dtype)
         stop = self._cast_to(expr.stop, expr.dtype, expr.precision).format(self._print(expr.stop))
 
         init_value = f'({start} + {index}*{step})'
