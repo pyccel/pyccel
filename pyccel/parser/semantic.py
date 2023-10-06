@@ -103,7 +103,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
-from pyccel.ast.type_annotations import TypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -2049,7 +2049,7 @@ class SemanticParser(BasicParser):
         # For each possible data type create the necessary variables
         possible_args = []
         for t in types.type_list:
-            if isinstance(t, TypeAnnotation):
+            if isinstance(t, VariableTypeAnnotation):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
@@ -2101,7 +2101,7 @@ class SemanticParser(BasicParser):
                 prec = default_precision[dtype]
 
             # Save the potential type
-            types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+            types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         # Collect all possible types into a UnionTypeAnnotation
         return UnionTypeAnnotation(*types)

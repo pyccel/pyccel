@@ -34,11 +34,11 @@ Each of these cases must be handled in different ways however there are many uni
 
 ### Inferring types from type annotations
 
-After the syntactic stage any type annotations should be stored in a `pyccel.ast.type_annotations.SyntacticTypeAnnotation`. The critical function is therefore `pyccel.parser.semantic.SemanticParser._visit_SyntacticTypeAnnotation`. This function converts the annotation to either a `pyccel.ast.type_annotations.TypeAnnotation` or a `pyccel.ast.type_annotations.FunctionTypeAnnotation`. Union types exist in Python. As a result a type annotation may indicate more than one type. E.g:
+After the syntactic stage any type annotations should be stored in a `pyccel.ast.type_annotations.SyntacticTypeAnnotation`. The critical function is therefore `pyccel.parser.semantic.SemanticParser._visit_SyntacticTypeAnnotation`. This function converts the annotation to either a `pyccel.ast.type_annotations.VariableTypeAnnotation` or a `pyccel.ast.type_annotations.FunctionTypeAnnotation`. Union types exist in Python. As a result a type annotation may indicate more than one type. E.g:
 ```python
 a : (int | float)
 ```
-In order to make it easier to handle the result of `pyccel.parser.semantic.SemanticParser._visit_SyntacticTypeAnnotation`, the `TypeAnnotation`s and `FunctionTypeAnnotation`s are always stored in a `pyccel.ast.type_annotations.UnionTypeAnnotation`, even if there is only one possible type.
+In order to make it easier to handle the result of `pyccel.parser.semantic.SemanticParser._visit_SyntacticTypeAnnotation`, the `VariableTypeAnnotation`s and `FunctionTypeAnnotation`s are always stored in a `pyccel.ast.type_annotations.UnionTypeAnnotation`, even if there is only one possible type.
 
 These objects contain all the information necessary to create a Variable from a type annotation.
 

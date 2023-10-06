@@ -11,11 +11,11 @@ from .basic import Basic
 
 __all__ = (
         'SyntacticTypeAnnotation',
-        'TypeAnnotation',
+        'VariableTypeAnnotation',
         'UnionTypeAnnotation',
         )
 
-class TypeAnnotation(Basic):
+class VariableTypeAnnotation(Basic):
     """
     A class which describes a type annotation.
 
@@ -130,8 +130,8 @@ class UnionTypeAnnotation(Basic):
 
     Parameters
     ----------
-    *type_annotations : tuple of TypeAnnotation
-        The TypeAnnotation objects describing the possible type annotations.
+    *type_annotations : tuple of VariableTypeAnnotation
+        The VariableTypeAnnotation objects describing the possible type annotations.
     """
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)

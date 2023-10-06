@@ -336,7 +336,7 @@ class AnnotatedPyccelSymbol(Basic):
     name : str
         Name of the symbol.
 
-    annotation : TypeAnnotation
+    annotation : SyntacticTypeAnnotation
         The annotation describing the type that the object will have.
 
     is_temp : bool
