@@ -474,7 +474,7 @@ class PythonTuple(PyccelAstNode):
             if self._rank == 1:
                 self._shape     = (LiteralInteger(len(args)), )
             else:
-                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+                self._shape     = (LiteralInteger(len(args)), ) + (None,)*(self._rank-1)
 
         self._order = None if self._rank < 2 else 'C'
 
