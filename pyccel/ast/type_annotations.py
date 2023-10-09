@@ -112,7 +112,7 @@ class VariableTypeAnnotation(Basic):
         Indicates whether the object will remain constant.
 
         Returns a boolean which is false if the value of the object can be
-        modified, and false otherwise.
+        modified, and true otherwise.
         """
         return self._is_const
 
