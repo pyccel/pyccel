@@ -22,6 +22,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
 from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import AnnotatedPyccelSymbol
 
 from .literals  import LiteralInteger, Nil, LiteralFalse
 from .literals  import NilArgument, LiteralTrue
@@ -1861,6 +1862,9 @@ class FunctionDefArgument(PyccelAstNode):
         elif isinstance(name, PyccelSymbol):
             self._var  = name
             self._name = name
+        elif isinstance(name, AnnotatedPyccelSymbol):
+            self._var  = name
+            self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
         self._value      = value

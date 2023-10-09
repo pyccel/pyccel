@@ -9,7 +9,7 @@
 from pyccel.ast.core      import ClassDef
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import Variable, DottedName
 
 from pyccel.parser.syntax.headers import FunctionHeaderStmt
@@ -443,6 +443,9 @@ class Scope(object):
     def insert_symbol(self, symbol):
         """ Add a new symbol to the scope
         """
+        if isinstance(symbol, AnnotatedPyccelSymbol):
+            symbol = symbol.name
+
         if isinstance(symbol, DottedName):
             self._dotted_symbols.append(symbol)
         else:
