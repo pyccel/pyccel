@@ -384,7 +384,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(name, DottedName):
             prefix = self.get_class_prefix(name)
-            class_def = prefix.class_base
+            class_def = prefix.cls_base
             attr_name = name.name[-1]
             attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
             if attribute:
@@ -1154,7 +1154,7 @@ class SemanticParser(BasicParser):
 
             if isinstance(name, DottedName):
                 prefix = self.get_class_prefix(name)
-                class_def = prefix.class_base
+                class_def = prefix.cls_base
                 attr_name = name.name[-1]
                 attribute = class_def.scope.find(attr_name) if class_def else None
                 if attribute:
