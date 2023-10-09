@@ -1892,6 +1892,8 @@ class SemanticParser(BasicParser):
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
+            elif isinstance(dtype_from_scope, PyccelFunctionDef):
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name))
             elif isinstance(dtype_from_scope, TypeAnnotation):
                 types.append(dtype_from_scope)
             elif isinstance(dtype_from_scope, ClassDef):
@@ -1909,7 +1911,7 @@ class SemanticParser(BasicParser):
                 if dtype_name in dtype_and_precision_registry:
                     dtype, prec = dtype_and_precision_registry[dtype_name]
                     dtype = dtype_registry[dtype]
-                elif dtype_name in dtype_registry:
+                else:
                     try:
                         dtype = dtype_registry[dtype_name]
                         prec = 0
