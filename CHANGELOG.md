@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1156 : Raise an error for variable name collisions with non-variable objects.
 
 ### Changed
 
