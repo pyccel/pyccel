@@ -486,13 +486,27 @@ class SemanticParser(BasicParser):
     def _garbage_collector(self, expr):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        The primary purpose of _garbage_collector is to search within a CodeBlock
+        instance for cases where no trailing Return node is present, and when such
+        situations occur, it adds the necessary deallocate operations to free up resources.
+
+        Parameters
+        ----------
+        expr : CodeBlock
+            The body where the method searches for the absence of trailing `Return` nodes.
+
+        Returns
+        -------
+        List
+            A list of instances of the `Deallocate` type.
         """
 
         deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
-                    if isinstance(i.lhs.dtype, CustomDataType) and not self._current_function == '__del__':
+                    if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                         continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()

@@ -2566,7 +2566,11 @@ class FunctionDef(ScopedNode):
 
     @property
     def body(self):
-        """ CodeBlock containing all the statements in the function """
+        """
+        CodeBlock containing all the statements in the function.
+
+        Returns a CodeBlock contains all the statements in the function.
+        """
         return self._body
 
     @body.setter
