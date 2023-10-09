@@ -342,14 +342,13 @@ class SemanticParser(BasicParser):
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
-    def get_class_prefix_definition(self, name):
+    def get_class_prefix(self, name):
         """
-        Search for the class definition of the prefix of a dotted name in the current scope.
+        Search for the class prefix of a dotted name in the current scope.
 
         Search for a Variable object with the class prefix found in the given
         name inside the current scope, defined by the local and global Python
-        scopes. Extract the class definition from this object if it is found.
-        Return None if not found.
+        scopes. Return None if not found.
 
         Parameters
         ----------
@@ -358,13 +357,12 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        ClassDef
+        Variable
             Returns the class definition if found or None otherwise.
         """
         prefix_parts = name.name[:-1]
         syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
-        prefix = self._visit(syntactic_prefix)
-        return self.scope.find(prefix.dtype.name, 'classes')
+        return self._visit(syntactic_prefix)
 
     def check_for_variable(self, name):
         """
@@ -385,7 +383,8 @@ class SemanticParser(BasicParser):
         """
 
         if isinstance(name, DottedName):
-            class_def = get_class_prefix_definition(name)
+            prefix = self.get_class_prefix(name)
+            class_def = prefix.class_base
             attr_name = name.name[-1]
             attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
             if attribute:
@@ -1154,7 +1153,8 @@ class SemanticParser(BasicParser):
                 self._ensure_target(rhs, d_lhs)
 
             if isinstance(name, DottedName):
-                class_def = get_class_prefix_definition(name)
+                prefix = self.get_class_prefix(name)
+                class_def = prefix.class_base
                 attr_name = name.name[-1]
                 var = class_def.scope.find(attr_name) if class_def else None
                 if var:
