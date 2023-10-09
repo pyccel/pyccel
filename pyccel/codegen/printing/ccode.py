@@ -2338,7 +2338,7 @@ class CCodePrinter(CodePrinter):
         return "struct " + expr.name
 
     def _print_Del(self, expr):
-        return ''.join(self._print(Deallocate(var)) for var in expr.variables)
+        return ''.join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
         methods = ''.join(self._print(method) for method in expr.methods)
