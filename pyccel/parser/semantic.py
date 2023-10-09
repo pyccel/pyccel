@@ -1391,7 +1391,7 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
 
-            elif previous_allocations and d_var['shape'] != shape:
+            elif d_var['shape'] != shape:
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
@@ -1400,15 +1400,15 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset))
 
                 elif var.is_stack_array:
-                    errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
-                        severity='error',
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset))
+                    if previous_allocations:
+                        errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
 
                 else:
-                    var.set_changeable_shape()
-                    previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
                     if previous_allocations:
+                        var.set_changeable_shape()
                         last_allocation = previous_allocations[-1]
 
                         # Find outermost IfSection of last allocation
