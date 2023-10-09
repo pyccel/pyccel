@@ -3635,11 +3635,10 @@ class SemanticParser(BasicParser):
                 attribute = [attr for attr in cls.attributes if not attr.on_stack]
                 if attribute:
                     self._allocs[-1].extend(attribute)
-                    is_freed = next(is_freed for is_freed in cls.attributes if is_freed.name.startswith("is_freed"))
                     method.body.insert2body(*self._garbage_collector(method.body))
-                    condition = If(IfSection(PyccelNot(is_freed),
-                                    [method.body]+[Assign(is_freed, LiteralTrue())]))
-                    method.body = [condition]
+                condition = If(IfSection(PyccelNot(deallocater),
+                                [method.body]+[Assign(deallocater, LiteralTrue())]))
+                method.body = [condition]
                 self._current_function = None
                 break
 
