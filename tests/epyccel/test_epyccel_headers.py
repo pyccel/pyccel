@@ -57,8 +57,10 @@ def test_stack_array_annotation(language):
         array = np.array([[1,2],[3,4],[5,6]])
         return array[2,0]
 
-    with pytest.raises(PyccelSemanticError):
-        epyccel(stack_array_annotation, language=language)
+    epyc_stack_array_annotation = epyccel(stack_array_annotation, language=language)
+
+    assert epyc_stack_array_annotation() == stack_array_annotation()
+    assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
 
 @pytest.mark.skip(reason="Failing due to #1527")
 def test_class_annoation(language):

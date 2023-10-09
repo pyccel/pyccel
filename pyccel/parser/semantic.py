@@ -1374,6 +1374,12 @@ class SemanticParser(BasicParser):
             order = getattr(var, 'order', 'None')
             shape = getattr(var, 'shape', 'None')
 
+            # Get previous allocation calls
+            previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+
+            if len(previous_allocations) == 0:
+                var.set_init_shape(d_var['shape'])
+
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
@@ -1385,7 +1391,7 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='error')
 
-            elif d_var['shape'] != shape:
+            elif previous_allocations and d_var['shape'] != shape:
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
@@ -1434,18 +1440,14 @@ class SemanticParser(BasicParser):
                             severity='warning',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
-            else:
-                # Same shape as before
-                previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-
-                if previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
+            elif previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
                         and not previous_allocations[-1].get_user_nodes((If)):
-                    # If previously allocated in If still under construction
-                    status = previous_allocations[-1].status
+                # If previously allocated in If still under construction
+                status = previous_allocations[-1].status
 
-                    new_expressions.append(Allocate(var,
-                        shape=d_var['shape'], order=d_var['order'],
-                        status=status))
+                new_expressions.append(Allocate(var,
+                    shape=d_var['shape'], order=d_var['order'],
+                    status=status))
 
         if var.precision == -1 and precision != var.precision:
             var.use_exact_precision()
@@ -2055,9 +2057,6 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
-                if rank > 0 and array_memory_handling == 'stack':
-                    errors.report("Cannot pre-declare stack array as shape is unknown.",
-                            severity='error', symbol=expr)
                 v = Variable(dtype, name, precision = prec,
                         shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
                         is_const = t.is_const, is_optional = False,
