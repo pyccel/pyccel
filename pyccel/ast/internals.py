@@ -344,7 +344,7 @@ class AnnotatedPyccelSymbol(Basic):
         symbol represents an object created by Pyccel in order to assign a
         temporary object. This is sometimes necessary to facilitate the translation.
     """
-    __slots__ = ('_name', '_annotation', '_fst')
+    __slots__ = ('_name', '_annotation')
     _attribute_nodes = ()
 
     def __init__(self, name, annotation, is_temp = False):
