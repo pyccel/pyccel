@@ -1156,9 +1156,11 @@ class SemanticParser(BasicParser):
                 prefix = self.get_class_prefix(name)
                 class_def = prefix.class_base
                 attr_name = name.name[-1]
-                var = class_def.scope.find(attr_name) if class_def else None
-                if var:
-                    var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+                attribute = class_def.scope.find(attr_name) if class_def else None
+                if attribute:
+                    attribute = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+                else:
+                    var = None
             else:
                 var = self.scope.find(lhs)
 
