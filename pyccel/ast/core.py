@@ -2579,7 +2579,6 @@ class FunctionDef(ScopedNode):
         self._body.remove_user_node(self)
         self._body = body
         self._body.set_current_user_node(self)
-        self._body.set_current_user_node(self)
 
     @property
     def local_vars(self):
