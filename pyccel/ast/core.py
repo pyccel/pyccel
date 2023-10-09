@@ -2576,7 +2576,6 @@ class FunctionDef(ScopedNode):
         elif not isinstance(body, CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
         self._body.remove_user_node(self)
-        self._body.remove_user_node(self)
         self._body = body
         self._body.set_current_user_node(self)
 
