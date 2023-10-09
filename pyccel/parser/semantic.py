@@ -342,6 +342,30 @@ class SemanticParser(BasicParser):
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
+    def get_class_prefix_definition(self, name):
+        """
+        Search for the class definition of the prefix of a dotted name in the current scope.
+
+        Search for a Variable object with the class prefix found in the given
+        name inside the current scope, defined by the local and global Python
+        scopes. Extract the class definition from this object if it is found.
+        Return None if not found.
+
+        Parameters
+        ----------
+        name : DottedName
+            The dotted name which begins with a class definition.
+
+        Returns
+        -------
+        ClassDef
+            Returns the class definition if found or None otherwise.
+        """
+        prefix_parts = name.name[:-1]
+        syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+        prefix = self._visit(syntactic_prefix)
+        return self.scope.find(prefix.dtype.name, 'classes')
+
     def check_for_variable(self, name):
         """
         Search for a Variable object with the given name in the current scope.
@@ -351,7 +375,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        name : str
+        name : str | DottedName
             The object describing the variable.
 
         Returns
@@ -361,10 +385,7 @@ class SemanticParser(BasicParser):
         """
 
         if isinstance(name, DottedName):
-            prefix_parts = name.name[:-1]
-            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
-            prefix = self._visit(syntactic_prefix)
-            class_def = self.scope.find(prefix.dtype.name, 'classes')
+            class_def = get_class_prefix_definition(name)
             attr_name = name.name[-1]
             attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
             if attribute:
@@ -1132,7 +1153,14 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            var = self.check_for_variable(lhs)
+            if isinstance(name, DottedName):
+                class_def = get_class_prefix_definition(name)
+                attr_name = name.name[-1]
+                var = class_def.scope.find(attr_name) if class_def else None
+                if var:
+                    var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+            else:
+                var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
@@ -1308,7 +1336,7 @@ class SemanticParser(BasicParser):
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
             name = var.name
-            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), dtype),
                     symbol=f'{name}={dtype}',
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
