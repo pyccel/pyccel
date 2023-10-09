@@ -2575,7 +2575,9 @@ class FunctionDef(ScopedNode):
             body = CodeBlock(body)
         elif not isinstance(body, CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
+        self._body.invalidate_node()
         self._body = body
+        self._body.set_current_user_node(self)
 
     @property
     def local_vars(self):
