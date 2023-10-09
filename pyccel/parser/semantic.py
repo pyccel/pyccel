@@ -3641,6 +3641,7 @@ class SemanticParser(BasicParser):
                                     [method.body]+[Assign(is_freed, LiteralTrue())]))
                     method.body = [condition]
                 self._current_function = None
+                break
 
         self.exit_class_scope()
 
