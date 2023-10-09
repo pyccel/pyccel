@@ -468,13 +468,16 @@ class PythonTuple(PyccelAstNode):
                 self._rank  = len(self._shape)
 
         else:
-            self._rank      = max(a.rank for a in args) + 1
+            max_rank = max(a.rank for a in args)
+            self._rank      = max_rank + 1
             self._dtype     = NativeGeneric()
             self._precision = 0
             if self._rank == 1:
                 self._shape     = (LiteralInteger(len(args)), )
-            else:
+            elif any(a.rank != max_rank for a in args):
                 self._shape     = (LiteralInteger(len(args)), ) + (None,)*(self._rank-1)
+            else:
+                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
 
         self._order = None if self._rank < 2 else 'C'
 
