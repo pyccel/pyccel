@@ -19,7 +19,7 @@ from pyccel.ast.core      import Allocate, Deallocate
 from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
-from pyccel.ast.core      import Module, AsName, Del
+from pyccel.ast.core      import Module, AsName
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
