@@ -1254,7 +1254,7 @@ class SemanticParser(BasicParser):
                 # Add memory deallocation for array variables
                 if lhs.is_ndarray and not lhs.on_stack:
                     # Create Deallocate node
-                    self._allocs[-1].append(lhs)
+                    self._allocs[-1].append(lhs) if self._allocs else self._allocs.append([lhs])
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
@@ -2409,7 +2409,7 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable)
-            self._allocs[-1].append(cls_variable)
+            self._allocs[-1].append(cls_variable) if self._allocs else self._allocs.append([cls_variable])
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
