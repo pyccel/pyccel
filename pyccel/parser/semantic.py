@@ -1400,7 +1400,7 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset))
 
                 elif var.is_stack_array:
-                    if previous_allocations:
+                    if var.get_direct_user_nodes(lambda a: isinstance(a, Assign) and a.lhs is var):
                         errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
                             severity='error',
                             bounding_box=(self._current_fst_node.lineno,
