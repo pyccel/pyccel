@@ -3717,8 +3717,6 @@ class SemanticParser(BasicParser):
             self.insert_function(del_method)
             cls.add_new_method(del_method)
 
-        if not self._allocs:
-            self._allocs.append([])
         for method in cls.methods:
             if method.name == '__del__':
                 self._current_function = method.name
@@ -3726,6 +3724,8 @@ class SemanticParser(BasicParser):
                 if attribute:
                     self._allocs[-1].extend(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
+                    if not self._allocs:
+                        self._allocs.append([])
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))
                 method.body = [condition]
