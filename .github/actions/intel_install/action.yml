@@ -1,4 +1,4 @@
-name: 'Linux installation commands'
+name: 'Intel installation commands'
 
 runs:
   using: "composite"
