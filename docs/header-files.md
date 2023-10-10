@@ -7,6 +7,7 @@
 A header file in Pyccel is a file with a name ending with `.pyh`, which contains function/variable declarations, macro definitions, templates and metavariable declarations.\
 Header files serve two purposes:
 -   Link external libraries in the targeted languages by providing their function declarations;
+-   Accelerate the parsing process of an imported Python module by parsing only its header file (automatically generated) instead of the full module.
 
 ### Examples
 #### Link with OpenMP
