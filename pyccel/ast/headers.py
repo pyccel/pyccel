@@ -14,6 +14,7 @@ from .core              import FunctionDefArgument, FunctionDefResult
 from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
+from .type_annotations  import SyntacticTypeAnnotation
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
@@ -465,19 +466,19 @@ class MethodHeader(FunctionHeader):
     __slots__ = ()
 
     def __init__(self, name, dtypes, results=None, is_static=False):
-        if not isinstance(name, (list, tuple)):
-            raise TypeError("Expecting a list/tuple of strings.")
+        if not isinstance(name, str):
+            raise TypeError("Expecting a string.")
         name      = '.'.join(str(n) for n in name)
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, UnionType) and not isinstance(d, dict):
+            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, UnionType):
+            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
 
