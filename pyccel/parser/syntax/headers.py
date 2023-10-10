@@ -10,12 +10,13 @@ from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
-from pyccel.ast.headers   import FunctionHeader, ClassHeader, MethodHeader, VariableHeader, Template
+from pyccel.ast.headers   import FunctionHeader, MethodHeader, VariableHeader, Template
 from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry, default_precision
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol
@@ -113,23 +114,42 @@ class ListType(BasicStmt):
         return d_var
 
 class Type(BasicStmt):
-    """Base class representing a header type in the grammar."""
+    """
+    Base class representing a header type in the grammar.
 
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Type.
+    Base class representing a header type in the grammar.
 
-        dtype: str
-            variable type
-        """
-        self.dtype   = kwargs.pop('dtype')
-        self.prec    = kwargs.pop('prec')
-        self.trailer = kwargs.pop('trailer', [])
+    Parameters
+    ----------
+    dtype : str
+        The variable type.
+
+    prec : int
+        The precision of the object.
+
+    trailer : iterable, TrailerSubscriptsList
+        An object created by textx describing the trailing decorators of the
+        type. The number of elements is equal to the rank. The order is also
+        described when the iterable is non-empty.
+
+    **kwargs : dict
+        The textx arguments.
+    """
+
+    def __init__(self, dtype, prec, trailer = (), **kwargs):
+        self.dtype   = dtype
+        self.prec    = prec
+        self.trailer = trailer
 
         super(Type, self).__init__(**kwargs)
 
     @property
     def expr(self):
+        """
+        Get the dictionary describing the type.
+
+        Get the dictionary describing the type.
+        """
         dtype = self.dtype
         precision = self.prec
         if dtype in dtype_registry.keys():
@@ -151,7 +171,7 @@ class Type(BasicStmt):
         d_var['is_func'] = False
         d_var['is_const'] = False
         if not(precision):
-            if dtype in ['double' ,'float','complex', 'int']:
+            if dtype in NativeNumeric:
                 d_var['precision'] = default_precision[dtype]
 
         if d_var['rank']>1:
@@ -326,28 +346,6 @@ class FunctionHeaderStmt(BasicStmt):
                                   dtypes,
                                   results=results,
                                   is_static=is_static)
-
-class ClassHeaderStmt(BasicStmt):
-    """Base class representing a class header statement in the grammar."""
-
-    def __init__(self, **kwargs):
-        """
-        Constructor for a Header statement
-
-        name: str
-            class name
-        options: list, tuple
-            list of class options
-        """
-        self.name    = kwargs.pop('name')
-        self.options = kwargs.pop('options')
-
-        super(ClassHeaderStmt, self).__init__(**kwargs)
-
-    @property
-    def expr(self):
-        options = [str(i) for i in self.options]
-        return ClassHeader(self.name, options)
 
 
 class MetavarHeaderStmt(BasicStmt):
@@ -547,7 +545,6 @@ hdr_classes = [Header, TypeHeader,
                HeaderResults,
                FunctionHeaderStmt,
                TemplateStmt,
-               ClassHeaderStmt,
                VariableHeaderStmt,
                MetavarHeaderStmt,
                InterfaceStmt,
@@ -607,7 +604,6 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
-    print(parse(stmts='#$ header class Square(public)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))
     print(parse(stmts='#$ header interface funcs=fun1|fun2|fun3'))

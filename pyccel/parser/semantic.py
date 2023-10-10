@@ -8,6 +8,7 @@ See the developer docs for more details
 """
 
 from itertools import chain
+import warnings
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -23,10 +24,10 @@ from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype
+from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda)
+                                 PythonTuple, Lambda, PythonMap)
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -60,7 +61,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol
+from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
 from pyccel.ast.datatypes import default_precision
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
@@ -77,10 +78,10 @@ from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
-from pyccel.ast.literals import Nil, LiteralString
+from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
 from pyccel.ast.literals import Literal, convert_to_literal
 
-from pyccel.ast.mathext  import math_constants
+from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
 from pyccel.ast.numpyext import NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
@@ -130,7 +131,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
-        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_MISSING_HEADER, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
@@ -343,18 +344,34 @@ class SemanticParser(BasicParser):
 
     def check_for_variable(self, name):
         """
+        Search for a Variable object with the given name in the current scope.
+
         Search for a Variable object with the given name in the current scope,
         defined by the local and global Python scopes. Return None if not found.
+
+        Parameters
+        ----------
+        name : str
+            The object describing the variable.
+
+        Returns
+        -------
+        Variable
+            Returns the variable if found or None.
         """
 
-        if self.current_class:
-            for i in self._current_class.attributes:
-                if i.name == name:
-                    var = i
-                    return var
-            return None
-        else:
-            return self.scope.find(name, 'variables')
+        if isinstance(name, DottedName):
+            prefix_parts = name.name[:-1]
+            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+            prefix = self._visit(syntactic_prefix)
+            class_def = self.scope.find(prefix.dtype.name, 'classes')
+            attr_name = name.name[-1]
+            attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
+            if attribute:
+                return attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+            else:
+                return None
+        return self.scope.find(name, 'variables')
 
     def get_variable(self, name):
         """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
@@ -526,7 +543,7 @@ class SemanticParser(BasicParser):
             d_var['memory_handling'] = expr.memory_handling
             d_var['shape'          ] = expr.shape
             d_var['rank'           ] = expr.rank
-            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype, 'classes')
+            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype.name, 'classes')
             d_var['is_target'      ] = expr.is_target
             d_var['order'          ] = expr.order
             d_var['precision'      ] = expr.precision
@@ -891,8 +908,15 @@ class SemanticParser(BasicParser):
             The semantic representation of the call.
         """
         if isinstance(func, PyccelFunctionDef):
+            argument_description = func.argument_description
             func = func.cls_name
             args, kwargs = split_positional_keyword_arguments(*args)
+
+            # Ignore values passed by position but add any unspecified keywords
+            # with the correct default value
+            for kw, val in list(argument_description.items())[len(args):]:
+                if kw not in kwargs:
+                    kwargs[kw] = val
 
             try:
                 new_expr = func(*args, **kwargs)
@@ -1096,9 +1120,9 @@ class SemanticParser(BasicParser):
 
         if isinstance(lhs, IndexedElement):
             lhs = self._visit(lhs)
-        elif isinstance(lhs, PyccelSymbol):
+        elif isinstance(lhs, (PyccelSymbol, DottedName)):
 
-            name = lhs
+            name = str(lhs)
             if lhs == '_':
                 name = self.scope.get_new_name()
             dtype = d_var.pop('datatype')
@@ -1108,11 +1132,37 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            var = self.check_for_variable(name)
+            var = self.check_for_variable(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
 
+                if isinstance(lhs, DottedName):
+                    prefix_parts = lhs.name[:-1]
+                    syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+                    prefix = self._visit(syntactic_prefix)
+                    class_def = prefix.cls_base
+                    if prefix.name == 'self':
+                        var = self.get_variable('self')
+
+                        # Collect the name that should be used in the generated code
+                        attribute_name = lhs.name[-1]
+                        new_name = class_def.scope.get_expected_name(attribute_name)
+                        # Create the attribute
+                        member = self._create_variable(new_name, dtype, rhs, d_lhs)
+
+                        # Insert the attribute to the class scope
+                        # Passing the original name ensures that the attribute can be found under this name
+                        class_def.scope.insert_variable(member, attribute_name)
+
+                        # Create the local DottedVariable
+                        lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
+
+                        # update the attributes of the class and push it to the scope
+                        class_def.add_new_attribute(member)
+
+                    else:
+                        errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
                 # Update variable's dictionary with information from function decorators
                 decorators = self.scope.decorators
                 if decorators:
@@ -1140,13 +1190,13 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
 
-                new_name = self.scope.get_expected_name(name)
+                if not isinstance(lhs, DottedVariable):
+                    new_name = self.scope.get_expected_name(name)
+                    # Create new variable
+                    lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
-                # Create new variable
-                lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
-
-                # Add variable to scope
-                self.scope.insert_variable(lhs, name)
+                    # Add variable to scope
+                    self.scope.insert_variable(lhs, name)
 
                 # ...
                 # Add memory allocation if needed
@@ -1216,42 +1266,10 @@ class SemanticParser(BasicParser):
                 # TODO d_lhs must be consistent with var!
                 # the following is a small fix, since lhs must be already
                 # declared
-                lhs = var
-
-        elif isinstance(lhs, DottedName):
-
-            dtype = d_var.pop('datatype')
-            name = self.scope.get_expected_name(lhs.name[-1])
-            if self._current_function == '__init__':
-
-                cls      = self.get_variable('self')
-                cls_name = str(cls.cls_base.name)
-                cls      = self.scope.find(cls_name, 'classes')
-
-                attributes = cls.attributes
-                parent     = cls.superclasses
-                attributes = list(attributes)
-                n_name     = str(lhs.name[-1])
-
-                # update the self variable with the new attributes
-
-                var      = self.get_variable('self')
-                d_lhs    = d_var.copy()
-
-
-                # ISSUES #177: lhs must be a pointer when rhs is heap array
-                if not arr_in_multirets:
-                    self._ensure_target(rhs, d_lhs)
-
-                member = self._create_variable(n_name, dtype, rhs, d_lhs)
-                lhs    = member.clone(member.name, new_class = DottedVariable, lhs = var)
-
-                # update the attributes of the class and push it to the scope
-                attributes += [member]
-                new_cls = ClassDef(cls_name, attributes, [], superclasses=parent)
-                self.scope.parent_scope.update_class(new_cls)
-            else:
-                lhs = self._visit(lhs)
+                if isinstance(lhs, DottedName):
+                    lhs = var.clone(var.name, new_class = DottedVariable, lhs = self._visit(lhs.name[0]))
+                else:
+                    lhs = var
         else:
             lhs_type = str(type(lhs))
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
@@ -1260,6 +1278,8 @@ class SemanticParser(BasicParser):
 
     def _ensure_inferred_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
         """
+        Ensure that the inferred type matches the existing variable.
+
         Ensure that the inferred type of the new variable, matches the existing variable (which has the
         same name). If this is not the case then errors are raised preventing pyccel reaching the codegen
         stage.
@@ -1269,21 +1289,21 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         dtype : DataType
-                The inferred DataType
+            The inferred DataType.
         d_var : dict
-                The inferred information about the variable. Usually created by the _infer_type function
-        var   : Variable
-                The existing variable
+            The inferred information about the variable. Usually created by the _infer_type function.
+        var : Variable
+            The existing variable.
         is_augassign : bool
-                A boolean indicating if the assign statement is an augassign (tests are less strict)
+            A boolean indicating if the assign statement is an augassign (tests are less strict).
         new_expressions : list
-                A list to which any new expressions created are appended
-        rhs   : PyccelAstNode
-                The right hand side of the expression : lhs=rhs
-                If is_augassign is False, this value is not used
+            A list to which any new expressions created are appended.
+        rhs : PyccelAstNode
+            The right hand side of the expression : lhs=rhs.
+            If is_augassign is False, this value is not used.
         """
         precision = d_var.get('precision',None)
-        internal_precision = default_precision[str(dtype)] if precision == -1 else precision
+        internal_precision = default_precision[dtype] if precision == -1 else precision
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
@@ -1826,7 +1846,7 @@ class SemanticParser(BasicParser):
     def _visit_FunctionCallArgument(self, expr):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
-        if isinstance(a.value, PyccelArithmeticOperator) and a.value.rank:
+        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
             tmp_var = self.scope.get_new_name()
             assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
             self._additional_exprs[-1].append(assign)
@@ -2016,7 +2036,6 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             first = results[0].var
         rhs_name = _get_name(rhs)
-        attr_name = []
 
         # Handle case of imported module
         if isinstance(first, Module):
@@ -2073,9 +2092,6 @@ class SemanticParser(BasicParser):
 
         cls_base = d_var['cls_base']
 
-        if cls_base:
-            attr_name = [i.name for i in cls_base.attributes]
-
         # look for a class method
         if isinstance(rhs, FunctionCall):
             macro = self.scope.find(rhs_name, 'macros')
@@ -2097,11 +2113,9 @@ class SemanticParser(BasicParser):
         # look for a class attribute / property
         elif isinstance(rhs, PyccelSymbol) and cls_base:
             # standard class attribute
-            if rhs in attr_name:
-                self._current_class = cls_base
-                second = self._visit(rhs)
-                self._current_class = None
-                return second.clone(second.name, new_class = DottedVariable, lhs = visited_lhs)
+            second = self.check_for_variable(expr)
+            if second:
+                return second
 
             # class property?
             else:
@@ -2260,6 +2274,40 @@ class SemanticParser(BasicParser):
 
         return self._handle_function(expr, func, (arg,))
 
+    def _visit_CmathPolar(self, expr):
+        arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
+        z = arg.value
+        x = PythonReal(z)
+        y = PythonImag(z)
+        x_var = self.scope.get_temporary_variable(z, dtype=NativeFloat())
+        y_var = self.scope.get_temporary_variable(z, dtype=NativeFloat())
+        self._additional_exprs[-1].append(Assign(x_var, x))
+        self._additional_exprs[-1].append(Assign(y_var, y))
+        r = MathSqrt(PyccelAdd(PyccelMul(x_var,x_var), PyccelMul(y_var,y_var)))
+        t = MathAtan2(y_var, x_var)
+        self.insert_import('math', AsName(MathSqrt, 'sqrt'))
+        self.insert_import('math', AsName(MathAtan2, 'atan2'))
+        return PythonTuple(r,t)
+
+    def _visit_CmathRect(self, expr):
+        arg_r, arg_phi = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
+        r = arg_r.value
+        phi = arg_phi.value
+        x = PyccelMul(r, MathCos(phi))
+        y = PyccelMul(r, MathSin(phi))
+        self.insert_import('math', AsName(MathCos, 'cos'))
+        self.insert_import('math', AsName(MathSin, 'sin'))
+        return PyccelAdd(x, PyccelMul(y, LiteralImaginaryUnit()))
+
+    def _visit_CmathPhase(self, expr):
+        arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
+        var = arg.value
+        if var.dtype is not NativeComplex():
+            return LiteralFloat(0.0)
+        else:
+            self.insert_import('math', AsName(MathAtan2, 'atan2'))
+            return MathAtan2(PythonImag(var), PythonReal(var))
+
     def _visit_Lambda(self, expr):
         expr_names = set(str(a) for a in expr.expr.get_attribute_nodes(PyccelSymbol))
         var_names = map(str, expr.variables)
@@ -2413,6 +2461,8 @@ class SemanticParser(BasicParser):
             macro = self.scope.find(name, 'macros')
             if macro is None:
                 rhs = self._visit(rhs)
+                if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
+                    errors.report(f"{type(rhs)} cannot be saved to variables", symbol=expr, severity='fatal')
             else:
 
                 # TODO check types from FunctionDef
@@ -3076,6 +3126,11 @@ class SemanticParser(BasicParser):
             return IfTernaryOperator(cond, value_true, value_false)
 
     def _visit_VariableHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in " +
+                      "a future version of Pyccel. This annotation may be unnecessary " +
+                      "in your code. If you find it is necessary please open a discussion " +
+                      "at https://github.com/pyccel/pyccel/discussions so we do not " +
+                      "remove support until an alternative is in place.", FutureWarning)
 
         # TODO improve
         #      move it to the ast like create_definition for FunctionHeader?
@@ -3090,6 +3145,12 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionHeader(self, expr):
+        warnings.warn("Support for specifying types via headers will be removed in a " +
+                      "future version of Pyccel. Please use type hints. The @template " +
+                      "decorator can be used to specify multiple types. See the " +
+                      "documentation at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations " +
+                      "for examples.", FutureWarning)
         # TODO should we return it and keep it in the AST?
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
@@ -3097,16 +3158,14 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_Template(self, expr):
+        warnings.warn("Support for specifying templates via headers will be removed in " +
+                      "a future version of Pyccel. Please use the @template decorator. " +
+                      "See the documentatiosn at " +
+                      "https://github.com/pyccel/pyccel/blob/devel/docs/templates.md " +
+                      "for examples.", FutureWarning)
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
         self.scope.insert_template(expr)
-        return expr
-
-    def _visit_ClassHeader(self, expr):
-        # TODO should we return it and keep it in the AST?
-        expr.clear_syntactic_user_nodes()
-        expr.update_pyccel_staging()
-        self.scope.insert_header(expr)
         return expr
 
     def _visit_Return(self, expr):
@@ -3250,7 +3309,8 @@ class SemanticParser(BasicParser):
                 arguments = arguments[1:]
                 dt        = self.get_class_construct(cls_name)()
                 cls_base  = self.scope.find(cls_name, 'classes')
-                var       = Variable(dt, 'self', cls_base=cls_base)
+                cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
+                var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
                 self.scope.insert_variable(var)
 
             if arguments:
@@ -3436,12 +3496,10 @@ class SemanticParser(BasicParser):
 
             if cls_name:
                 cls = self.scope.find(cls_name, 'classes')
-                methods = list(cls.methods) + [func]
 
                 # update the class methods
-                superclasses = self._find_superclasses(cls)
-                self.scope.update_class(ClassDef(cls_name, cls.attributes,
-                        methods, superclasses=superclasses))
+                if expr.name == func.name:
+                    cls.add_new_method(func)
 
             funcs += [func]
 
@@ -3457,6 +3515,9 @@ class SemanticParser(BasicParser):
                 self.insert_function(f)
 
             funcs = Interface(interface_name, funcs)
+            if cls_name:
+                cls = self.scope.find(cls_name, 'classes')
+                cls.add_new_interface(funcs)
             self.insert_function(funcs)
 #        TODO move this to codegen
 #        if vec_func:
@@ -3515,63 +3576,39 @@ class SemanticParser(BasicParser):
         #      - wouldn't be better if it is done inside ClassDef?
 
         name = expr.name
-        # remove quotes for str representation
-        name = name.replace("'", '')
+
+        #  create a new Datatype for the current class
+        dtype = DataTypeFactory(name, '_name')
+        self.scope.cls_constructs[name] = dtype
 
         parent = self._find_superclasses(expr)
 
-        cls = ClassDef(name, [], [], superclasses=parent)
-        self.scope.insert_class(cls)
-
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
+
+        cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
+        self.scope.parent_scope.insert_class(cls)
+
         methods = list(expr.methods)
-        interfaces = []
-        const = None
+        init_func = None
 
         for (i, method) in enumerate(methods):
-            m_name = method.name.replace("'", '')
-
+            m_name = method.name
             if m_name == '__init__':
                 self._visit_FunctionDef(method)
                 methods.pop(i)
-                const = self.scope.functions.pop(m_name)
+                init_func = self.scope.functions.pop(m_name)
                 break
 
-
-
-        if not const:
+        if not init_func:
             errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                    severity='error')
 
-        ms = []
         for i in methods:
             self._visit_FunctionDef(i)
-            m_name = i.name.replace("'", '')
-            m = self.scope.functions.pop(m_name)
-            ms.append(m)
-
-        methods = [const] + ms
-        header = self.get_headers(name)
-
-        if not header:
-            errors.report(PYCCEL_MISSING_HEADER, symbol=name,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='fatal')
-
-        attributes = self.scope.find(name, 'classes').attributes
-
-        for i in methods.copy():
-            if isinstance(i, Interface):
-                methods.remove(i)
-                interfaces += [i]
 
         self.exit_class_scope()
-
-        cls = ClassDef(name, attributes, methods,
-              interfaces=interfaces, superclasses=parent, scope=scope)
-        self.scope.update_class(cls)
 
         return EmptyNode()
 
@@ -3704,8 +3741,13 @@ class SemanticParser(BasicParser):
             if expr.target:
                 targets = {i.target if isinstance(i,AsName) else i:None for i in expr.target}
                 names = [i.name if isinstance(i,AsName) else i for i in expr.target]
-                for entry in ['variables', 'classes', 'functions']:
-                    d_son = getattr(p.scope, entry)
+
+                p_scope = p.scope
+                p_imports = p_scope.imports
+                entries = ['variables', 'classes', 'functions']
+                direct_sons = ((e,getattr(p.scope, e)) for e in entries)
+                import_sons = ((e,p_imports[e]) for e in entries)
+                for entry, d_son in chain(direct_sons, import_sons):
                     for t,n in zip(targets.keys(),names):
                         if n in d_son:
                             e = d_son[n]
