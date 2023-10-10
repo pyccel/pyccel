@@ -75,6 +75,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import AnnotatedPyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -3929,7 +3930,13 @@ class SemanticParser(BasicParser):
         else:
             interfaces = []
             for hd in header:
-                interfaces += hd.create_definition()
+                for i,_ in enumerate(hd.dtypes):
+                    self.scope.insert_symbol(f'arg_{i}')
+                arguments = [FunctionDefArgument(self._visit(AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg))[0]) \
+                        for i, arg in enumerate(hd.dtypes)]
+                results = [FunctionDefResult(self._visit(AnnotatedPyccelSymbol(f'out_{i}', annotation = arg))[0]) \
+                        for i, arg in enumerate(hd.results)]
+                interfaces.append(FunctionDef(f_name, arguments, results, []))
 
             # TODO -> Said: must handle interface
 
