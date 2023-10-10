@@ -20,7 +20,6 @@ runs:
         source /opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh
         echo $PATH
         echo $LD_LIBRARY_PATH
-        which mpicc
         echo $CC
         printenv
         echo "INTEL_SOURCE_FILE=/opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh"
@@ -37,6 +36,8 @@ runs:
         echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
         echo "NLSPATH=$NLSPATH" >> $GITHUB_ENV
         echo "DIAGUTIL_PATH=$DIAGUTIL_PATH" >> $GITHUB_ENV
+        which mpiicc
+        which mpicc
       shell: bash
     - name: Install Valgrind
       run:
