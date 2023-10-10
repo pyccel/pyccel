@@ -3976,7 +3976,7 @@ class SemanticParser(BasicParser):
         if header is None:
             var = self.get_variable(master)
         else:
-            var = Variable(header.dtype, header.name)
+            var = self.get_variable(master)
 
                 # TODO -> Said: must handle interface
 
