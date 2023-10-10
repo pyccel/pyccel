@@ -1,4 +1,4 @@
-name: Intel unit tests
+name: Nvidia unit tests
 
 on:
   workflow_dispatch:
