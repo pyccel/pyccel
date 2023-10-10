@@ -287,6 +287,23 @@ class Variable(PyccelAstNode):
         """
         self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
 
+    def set_init_shape(self, shape):
+        """
+        Set the shape that was passed to the variable upon creation.
+
+        Set the shape that was passed to the variable upon creation. Normally this can be
+        deduced when the variable was created, however this may not be the case if the
+        variable was predeclared via a header or an annotation.
+
+        Parameters
+        ----------
+        shape : tuple
+            The shape of the array. A tuple whose elements indicate the number of elements along
+            each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
+        """
+        self._alloc_shape = shape
+        self._shape = self.process_shape(shape)
+
     @property
     def name(self):
         """ Name of the variable
