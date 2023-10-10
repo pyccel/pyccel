@@ -17,6 +17,7 @@ default_python_versions = {
         'intel': '3.9',
         'linux': '3.7',
         'macosx': '3.10',
+        'nvidia': '3.9',
         'pickle_wheel': '3.7',
         'pickle': '3.8',
         'editable_pickle': '3.8',
@@ -34,6 +35,7 @@ test_names = {
         'intel': "Unit tests on Linux with Intel compiler",
         'linux': "Unit tests on Linux",
         'macosx': "Unit tests on MacOSX",
+        'nvidia': "Unit tests on Linux with Nvidia compiler",
         'pickle_wheel': "Test pickling during wheel installation",
         'pickle': "Test pickling during source installation",
         'editable_pickle': "Test pickling during editable source installation",
@@ -421,7 +423,7 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel'):
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel', 'nvidia'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) \
                                                     and f.endswith('.py') and f != 'pyccel/version.py' \
                                                     for f in diff) #pylint: disable=unnecessary-lambda-assignment

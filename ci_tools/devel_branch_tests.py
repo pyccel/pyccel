@@ -15,3 +15,4 @@ if __name__ == '__main__':
     bot.run_tests(['anaconda_linux'], '3.10', force_run = True)
     bot.run_tests(['anaconda_windows'], '3.10', force_run = True)
     bot.run_tests(['intel'], '3.9', force_run = True)
+    bot.run_tests(['nvidia'], '3.9', force_run = True)
