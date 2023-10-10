@@ -32,6 +32,23 @@ runs:
         echo "MANPATH=$MANPATH" >> $GITHUB_ENV
         echo "PKG_CONFIG_PATH=$PKG_CONFIG_PATH" >> $GITHUB_ENV
         echo "CMAKE_PREFIX_PATH=$CMAKE_PREFIX_PATH" >> $GITHUB_ENV
+        echo "TBB_ROOT=$TBB_ROOT" >> $GITHUB_ENV
+        echo "ONEAPI_ROOT=$ONEAPI_ROOT" >> $GITHUB_ENV
+        echo "ACL_BOARD_VENDOR_PATH=$ACL_BOARD_VENDOR_PATH" >> $GITHUB_ENV
+        echo "FPGA_VARS_DIR=$FPGA_VARS_DIR" >> $GITHUB_ENV
+        echo "I_MPI_ROOT=$I_MPI_ROOT" >> $GITHUB_ENV
+        echo "FI_PROVIDER_PATH=$FI_PROVIDER_PATH" >> $GITHUB_ENV
+        echo "DIAGUTIL_PATH=$DIAGUTIL_PATH" >> $GITHUB_ENV
+        echo "GDB_INFO=$GDB_INFO" >> $GITHUB_ENV
+        echo "CMPLR_ROOT=$CMPLR_ROOT" >> $GITHUB_ENV
+        echo "INFOPATH=$INFOPATH" >> $GITHUB_ENV
+        echo "OCL_ICD_FILENAMES=$OCL_ICD_FILENAMES" >> $GITHUB_ENV
+        echo "CLASSPATH=$CLASSPATH" >> $GITHUB_ENV
+        echo "INTELFPGAOCLSDKROOT=$INTELFPGAOCLSDKROOT" >> $GITHUB_ENV
+        echo "MKLROOT=$MKLROOT" >> $GITHUB_ENV
+        echo "NLSPATH=$NLSPATH" >> $GITHUB_ENV
+        echo "INTEL_PYTHONHOME=$INTEL_PYTHONHOME" >> $GITHUB_ENV
+        echo "CPATH=$CPATH" >> $GITHUB_ENV
         which mpiicc
         which mpicc
       shell: bash
