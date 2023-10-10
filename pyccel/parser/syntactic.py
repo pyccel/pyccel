@@ -181,12 +181,42 @@ class SyntaxParser(BasicParser):
         return (self._visit(i) for i in stmt)
 
     def _treat_comment_line(self, line, stmt):
+        """
+        Parse a comment line.
+
+        Parse a comment which fits in a single line. If the comment
+        begins with `#$` then it should contain a header recognised
+        by Pyccel and should be parsed using textx.
+
+        Parameters
+        ----------
+        line : str
+            The comment line.
+        stmt : ast.Ast
+            The comment object in the code. This is useful for raising
+            neat errors.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The treated object as a Pyccel ast node.
+        """
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
-                expr = omp_parse(stmts=line)
+                try:
+                    expr = omp_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenMP header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('acc'):
-                expr = acc_parse(stmts=line)
+                try:
+                    expr = acc_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenACC header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('header'):
                 try:
                     expr = hdr_parse(stmts=line)

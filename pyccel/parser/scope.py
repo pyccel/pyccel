@@ -231,6 +231,11 @@ class Scope(object):
             Indicates whether we should look for variables in the
             entire scope or whether we should limit ourselves to the
             local scope.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The object stored in the scope.
         """
         for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:

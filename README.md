@@ -89,4 +89,5 @@ We can also be contacted via the [Pyccel Discord Server](https://discord.gg/2Q6h
 -   [Development Conventions](https://github.com/pyccel/pyccel/blob/devel/developer_docs/development_conventions.md)
 -   [Tips and Tricks](https://github.com/pyccel/pyccel/blob/devel/developer_docs/tips_and_tricks.md)
 -   [Scope](https://github.com/pyccel/pyccel/blob/devel/developer_docs/scope.md)
+-   [Type Inference](https://github.com/pyccel/pyccel/blob/devel/developer_docs/type_inference.md)
 -   [Array Ordering](https://github.com/pyccel/pyccel/blob/devel/developer_docs/order_docs.md)
