@@ -1,0 +1,83 @@
+name: Intel unit tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        required: true
+        type: string
+      ref:
+        required: false
+        type: string
+      check_run_id:
+        required: false
+        type: string
+      pr_repo:
+        required: false
+        type: string
+
+env:
+  COMMIT: ${{ inputs.ref || github.event.ref }}
+  PEM: ${{ secrets.BOT_PEM }}
+  GITHUB_RUN_ID: ${{ github.run_id }}
+  GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
+  PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYCCEL_DEFAULT_COMPILER: 'nvidia'
+
+jobs:
+  Intel:
+
+    runs-on: ubuntu-latest
+    name: Unit tests
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ env.COMMIT }}
+          repository: ${{ env.PR_REPO }}
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python_version }}
+      - name: "Setup"
+        id: token
+        run: |
+          pip install jwt requests
+          python ci_tools/setup_check_run.py
+      - name: Install dependencies
+        uses: ./.github/actions/nvhpc_install
+      - name: Install Pyccel with tests
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
+        shell: bash
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
+      - name: Fortran/C tests with pytest
+        id: f_c_pytest
+        timeout-minutes: 60
+        uses: ./.github/actions/pytest_run
+      - name: Python tests with pytest
+        id: python_pytest
+        timeout-minutes: 20
+        uses: ./.github/actions/pytest_run_python
+      - name: Parallel tests with pytest
+        id: parallel
+        timeout-minutes: 20
+        uses: ./.github/actions/pytest_parallel
+      - name: Test with valgrind for memory leaks
+        id: valgrind
+        uses: ./.github/actions/valgrind_run
+      - name: Collect coverage information
+        continue-on-error: True
+        uses: ./.github/actions/coverage_collection
+      - name: Save code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact
+          path: .coverage
+          retention-days: 1
+      - name: "Post completed"
+        if: always()
+        run:
+          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
