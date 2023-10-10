@@ -24,6 +24,7 @@ def get_unique_test_list(keys):
         A set of tests to run.
     """
     tests = set(keys)
+    print(f'DEBUG mkaddani: {tests}')
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     tests.discard('pr_tests')
@@ -44,6 +45,7 @@ if __name__ == '__main__':
     # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
+    print(f'mkaddani Debug: {os.environ["GITHUB_EVENT_PATH"]}')
 
     # If bot called explicitly (comment event)
 

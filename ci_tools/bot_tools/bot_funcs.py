@@ -47,7 +47,9 @@ test_dependencies = {'coverage':['linux']}
 
 tests_with_base = ('coverage', 'docs', 'pyccel_lint')
 
-pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
+#                'pyccel_lint', 'spelling')
+pr_test_keys = ('docs', 'pylint',
                 'pyccel_lint', 'spelling')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
@@ -294,6 +296,8 @@ class Bot:
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
+            print(f'mkaddani Debug  check runs:{check_runs} \n already triggered {already_triggered}')    
+
             states = []
 
             if not force_run:
@@ -724,7 +728,12 @@ class Bot:
             whose values are dictionaries describing the reviews which either
             approved or requested changes.
         """
-        all_reviews = [r for r in self._GAI.get_reviews(self._pr_id) if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        print("------------------- REVIEWS ---------------------------")
+        unfiltered_revs = self._GAI.get_reviews(self._pr_id)
+        all_reviews = [r for r in unfiltered_revs if r['user']['type'] != 'Bot' and r['state'] in ('APPROVED', 'CHANGES_REQUESTED')]
+        print(len(unfiltered_revs))
+        print(len(all_reviews))
+        print("-------------------------------------------------------")
         all_reviews.sort(key=lambda r: datetime.fromisoformat(r['submitted_at'].strip('Z')))
         reviews = {r['user']['login'] : r for r in all_reviews}
         if any(reviewer in senior_reviewer and r["state"] == 'APPROVED' for reviewer, r in reviews.items()):

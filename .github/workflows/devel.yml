@@ -8,6 +8,7 @@ jobs:
   Bot:
     name: Launch tests
     runs-on: ubuntu-latest
+    if: github.repository == 'pyccel/pyccel'
     steps:
       - uses: actions/checkout@v3
         with:
