@@ -45,7 +45,7 @@ jobs:
           pip install jwt requests
           python ci_tools/setup_check_run.py
       - name: Install dependencies
-        uses: ./.github/actions/linux_install
+        uses: ./.github/actions/intel_install
       - name: Install Pyccel with tests
         run: |
           python -m pip install --upgrade pip
