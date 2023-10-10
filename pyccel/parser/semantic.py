@@ -1815,7 +1815,7 @@ class SemanticParser(BasicParser):
 
                             args = [FunctionDefArgument(a) for a in args]
                             results = [FunctionDefResult(r) for r in results]
-                            func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external))
+                            func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
 
                         if len(func_defs) == 1:
                             F = func_defs[0]
