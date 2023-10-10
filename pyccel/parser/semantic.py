@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
-from pyccel.ast.datatypes import NativeRange, str_dtype, dtype_registry
+from pyccel.ast.datatypes import NativeRange, str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
@@ -1619,7 +1619,7 @@ class SemanticParser(BasicParser):
         if order is not None and not isinstance(order, str):
             order = None
         cls_base = get_cls_base(dtype, prec, rank)
-        return TypeAnnotation(dtype, cls_base, prec, rank, order)
+        return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
 
     #====================================================
     #                 _visit functions
@@ -1887,66 +1887,6 @@ class SemanticParser(BasicParser):
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
 
-    def _visit_SyntacticTypeAnnotation(self, expr):
-        is_const = expr.is_const is True
-        types = []
-
-        for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            dtype_from_scope = self.scope.find(dtype_name)
-
-            if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
-            elif isinstance(dtype_from_scope, PyccelFunctionDef):
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name))
-            elif isinstance(dtype_from_scope, TypeAnnotation):
-                types.append(dtype_from_scope)
-            elif isinstance(dtype_from_scope, ClassDef):
-                dtype = self.get_class_construct(dtype_name)
-                prec = 0
-                rank = 0
-                order = None
-                cls_base = dtype_from_scope
-                types.append(TypeAnnotation(dtype, cls_base, prec, rank, order))
-            elif dtype_from_scope is not None:
-                errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
-                        severity='fatal', symbol=expr)
-            else:
-                prec = -1
-                if dtype_name in dtype_and_precision_registry:
-                    dtype, prec = dtype_and_precision_registry[dtype_name]
-                    dtype = dtype_registry[dtype]
-                else:
-                    try:
-                        dtype = dtype_registry[dtype_name]
-                        prec = 0
-                    except KeyError:
-                        errors.report(f'Could not identify type : {dtype_name}',
-                                severity='fatal', symbol=expr)
-
-                if isinstance(dtype_name, PyccelSymbol):
-                    rank = 0
-                elif isinstance(dtype_name, IndexedElement):
-                    rank = len(dtype_name.indices)
-
-                try:
-                    cls_base = get_cls_base(dtype, prec, rank)
-                except KeyError:
-                    cls_base = self.scope.find(dtype_name, 'classes')
-
-                if rank > 1 and order is None:
-                    order = 'C'
-                elif order is not None and rank < 2:
-                    errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                            symbol=expr.fst, severity='warning')
-                    order = None
-
-                if prec == -1 and cls_base is NumpyArrayClass:
-                    prec = default_precision[str(dtype)]
-
-                types.append(TypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
-
-        return UnionTypeAnnotation(*types)
-
     def _visit_UnionTypeAnnotation(self, expr):
         annotations = [self._visit(syntax_type_annot) for syntax_type_annot in expr.type_list]
         types = [t for a in annotations for t in (a.type_list if isinstance(a, UnionTypeAnnotation) else [a])]
@@ -1956,61 +1896,6 @@ class SemanticParser(BasicParser):
         arg_types = [self._visit(a)[0] for a in expr.args]
         res_types = [self._visit(r)[0] for r in expr.results]
         return FunctionTypeAnnotation(arg_types, res_types)
-
-    def _visit_AnnotatedPyccelSymbol(self, expr):
-        var = self.scope.find(expr, 'variables', local_only = True)
-        if var is not None:
-            errors.report("Variable has been declared multiple times",
-                    symbol=expr, severity='error')
-
-        types = self._visit(expr.annotation)
-
-        if isinstance(types, PyccelFunctionDef):
-            types = types.cls_name
-        if isinstance(types, type) and PyccelAstNode in types.__mro__:
-            types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
-        if len(types.type_list) == 0:
-            errors.report(f'Missing type annotation for argument {expr}',
-                    severity='fatal', symbol=expr)
-
-        name = self.scope.get_expected_name(expr.name)
-
-        allows_negative_indexes = False
-        array_memory_handling = 'heap'
-        decorators = self.scope.decorators
-        if decorators:
-            if 'stack_array' in decorators:
-                if name in decorators['stack_array']:
-                    array_memory_handling = 'stack'
-            if 'allow_negative_index' in decorators:
-                if expr in decorators['allow_negative_index']:
-                    allows_negative_indexes = True
-
-        possible_args = []
-        for t in types.type_list:
-            if isinstance(t, FunctionTypeAnnotation):
-                args = t.args
-                results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
-                address = FunctionAddress(name, args, results)
-                possible_args.append(address)
-            else:
-                dtype = t.datatype
-                prec  = t.precision
-                rank  = t.rank
-                v = Variable(dtype, name, precision = prec,
-                        shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
-                        is_const = t.is_const, is_optional = False,
-                        memory_handling = array_memory_handling if rank > 0 else 'stack',
-                        allows_negative_indexes = allows_negative_indexes)
-                possible_args.append(v)
-
-        if len(possible_args) == 1:
-            v = possible_args[0]
-            if isinstance(v, Variable):
-                self.scope.insert_variable(v, expr.name)
-            return v
-        else:
-            return possible_args
 
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
@@ -2216,6 +2101,14 @@ class SemanticParser(BasicParser):
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
 
+        if isinstance(types, PyccelFunctionDef):
+            types = types.cls_name
+        if isinstance(types, type) and PyccelAstNode in types.__mro__:
+            types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
+        if len(types.type_list) == 0:
+            errors.report(f'Missing type annotation for argument {expr}',
+                    severity='fatal', symbol=expr)
+
         # Get the collisionless name from the scope
         name = self.scope.get_expected_name(expr.name)
 
@@ -2234,7 +2127,12 @@ class SemanticParser(BasicParser):
         # For each possible data type create the necessary variables
         possible_args = []
         for t in types.type_list:
-            if isinstance(t, VariableTypeAnnotation):
+            if isinstance(t, FunctionTypeAnnotation):
+                args = t.args
+                results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
+                address = FunctionAddress(name, args, results)
+                possible_args.append(address)
+            elif isinstance(t, VariableTypeAnnotation):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
@@ -2258,32 +2156,50 @@ class SemanticParser(BasicParser):
         types = []
 
         for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            # Find the DataType instance and the associated precision
-            prec = -1
-            try:
-                dtype, prec = dtype_and_precision_registry[dtype_name]
-            except KeyError:
-                errors.report(f'Could not identify type : {dtype_name}',
-                        severity='fatal', symbol=expr)
+            dtype_from_scope = self.scope.find(dtype_name)
 
-            try:
-                cls_base = get_cls_base(dtype, prec, rank)
-            except KeyError:
-                cls_base = self.scope.find(dtype_name, 'classes')
-
-            if rank > 1 and order is None:
-                order = 'C'
-            elif order is not None and rank < 2:
-                errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                        symbol=expr.fst, severity='warning')
+            if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
+            elif isinstance(dtype_from_scope, PyccelFunctionDef):
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name))
+            elif isinstance(dtype_from_scope, VariableTypeAnnotation):
+                types.append(dtype_from_scope)
+            elif isinstance(dtype_from_scope, ClassDef):
+                dtype = self.get_class_construct(dtype_name)
+                prec = 0
+                rank = 0
                 order = None
+                cls_base = dtype_from_scope
+                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order))
+            elif dtype_from_scope is not None:
+                errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
+                        severity='fatal', symbol=expr)
+            else:
+                # Find the DataType instance and the associated precision
+                try:
+                    dtype, prec = dtype_and_precision_registry[dtype_name]
+                except KeyError:
+                    errors.report(f'Could not identify type : {dtype_name}',
+                            severity='fatal', symbol=expr)
 
-            # NumPy objects cannot have default precision
-            if prec == -1 and cls_base is NumpyArrayClass:
-                prec = default_precision[dtype]
+                try:
+                    cls_base = get_cls_base(dtype, prec, rank)
+                except KeyError:
+                    cls_base = self.scope.find(dtype_name, 'classes')
 
-            # Save the potential type
-            types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+                if rank > 1 and order is None:
+                    order = 'C'
+                elif order is not None and rank < 2:
+                    errors.report(f"Ordering is not applicable to objects with rank {rank}",
+                            symbol=expr.fst, severity='warning')
+                    order = None
+
+                # NumPy objects cannot have default precision
+                if prec == -1 and cls_base is NumpyArrayClass:
+                    prec = default_precision[dtype]
+
+                # Save the potential type
+                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         # Collect all possible types into a UnionTypeAnnotation
         return UnionTypeAnnotation(*types)
