@@ -92,7 +92,7 @@ class Type(BasicStmt):
     dtype : str
         The variable type.
 
-    prec : int
+    prec : int, optional
         The precision of the object.
 
     trailer : iterable, TrailerSubscriptsList
@@ -104,7 +104,7 @@ class Type(BasicStmt):
         The textx arguments.
     """
 
-    def __init__(self, dtype, prec, trailer = (), **kwargs):
+    def __init__(self, dtype, prec = None, trailer = (), **kwargs):
         self.dtype   = dtype
         self.prec    = prec
         if trailer:
