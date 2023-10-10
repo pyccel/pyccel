@@ -3170,8 +3170,20 @@ class FunctionAddress(FunctionDef):
         return self._is_optional
 
     def __getnewargs__(self):
+        """
+        Function called during unpickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__getnewargs__.
+
+        Returns
+        -------
+        args
+            A tuple containing any arguments to be passed to the constructor.
+        kwargs
+            A dict containing any keyword arguments to be passed to the constructor.
+        """
         args, kwargs = super().__getnewargs__()
-        args = args[:-1]
+        args = args[:-1] # Remove body argument
         kwargs.pop('scope')
         kwargs['is_argument'] = self.is_argument
         kwargs['is_kwonly'] = self.is_kwonly
