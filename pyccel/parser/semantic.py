@@ -4020,4 +4020,14 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefResult(self, expr):
         var = self._visit(expr.var)
+        if isinstance(var, list):
+            n_types = len(var)
+            if n_types == 0:
+                errors.report("Can't deduce type for function definition result.",
+                        severity = 'fatal', symbol = expr)
+            elif n_types != 1:
+                errors.report("The type of the result of a function definition cannot be a union of multiple types.",
+                        severity = 'error', symbol = expr)
+            var = var[0]
+            self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)
