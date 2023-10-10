@@ -31,4 +31,4 @@ if __name__ == '__main__':
     a = np.array([1.,1.,1.])
 
     p.translate(a)
-    p.print_x()
+    l = Line(p)

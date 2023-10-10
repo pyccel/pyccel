@@ -3605,8 +3605,6 @@ class SemanticParser(BasicParser):
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
-        self._allocs.append([])
-
         cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
         self.scope.parent_scope.insert_class(cls)
 
@@ -3620,7 +3618,7 @@ class SemanticParser(BasicParser):
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
 
-                # creat a new attribute to check allocation
+                # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
                 deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
                 deallocater = DottedVariable(*deallocater_rhs, lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
@@ -3645,6 +3643,8 @@ class SemanticParser(BasicParser):
             self.insert_function(del_method)
             cls.add_new_method(del_method)
 
+        if not self._allocs:
+            self._allocs.append([])
         for method in cls.methods:
             if method.name == '__del__':
                 self._current_function = method.name

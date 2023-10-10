@@ -10,11 +10,13 @@ All notable changes to this project will be documented in this file.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
 -   #1508 : Add C support for a class destructor.
+-   #1508 : Add support for array data in classes.
 
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1508 : Generate deallocations for classes and their attributes.
 
 ### Changed
 

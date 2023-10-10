@@ -45,6 +45,16 @@ def arrays_in_multi_returns():
     b = zeros(4)
     return a, b, 4
 
+class Point(object):
+    def __init__(self : 'Point', x : 'int[:]'):
+        self._x = x
+
+    def __del__(self : 'Point'):
+        pass
+
+    def add(self : 'Point', a : 'int[:]'):
+        self._x[:]   =  self._x + a
+
 # testing garbage collecting in a Function
 
 if __name__ == '__main__':
@@ -66,3 +76,5 @@ if __name__ == '__main__':
     c = a[1:]
     b = c[1:]
     b = c
+    p = Point(array([1, 2, 3, 4, 5]))
+    p.add(p._x)
