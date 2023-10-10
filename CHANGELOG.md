@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
 -   Set status of header variables to 'unallocated'.
+-   #1536 : Fix allocation of arrays in classes.
 
 ### Changed
 
