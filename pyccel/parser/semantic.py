@@ -3722,10 +3722,10 @@ class SemanticParser(BasicParser):
                 self._current_function = method.name
                 attribute = [attr for attr in cls.attributes if not attr.on_stack]
                 if attribute:
+                    # Create a new list that store local attributes
+                    self._allocs.append([])
                     self._allocs[-1].extend(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
-                    if not self._allocs:
-                        self._allocs.append([])
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))
                 method.body = [condition]
