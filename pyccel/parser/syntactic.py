@@ -10,6 +10,8 @@ import re
 import ast
 import warnings
 
+from textx.exceptions import TextXSyntaxError
+
 #==============================================================================
 
 from sympy.core import cache
@@ -62,7 +64,7 @@ from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction, AnnotatedPyccelSymbol
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
@@ -181,14 +183,51 @@ class SyntaxParser(BasicParser):
         return (self._visit(i) for i in stmt)
 
     def _treat_comment_line(self, line, stmt):
+        """
+        Parse a comment line.
+
+        Parse a comment which fits in a single line. If the comment
+        begins with `#$` then it should contain a header recognised
+        by Pyccel and should be parsed using textx.
+
+        Parameters
+        ----------
+        line : str
+            The comment line.
+        stmt : ast.Ast
+            The comment object in the code. This is useful for raising
+            neat errors.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The treated object as a Pyccel ast node.
+        """
         if line.startswith('#$'):
             env = line[2:].lstrip()
             if env.startswith('omp'):
-                expr = omp_parse(stmts=line)
+                try:
+                    expr = omp_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenMP header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('acc'):
-                expr = acc_parse(stmts=line)
+                try:
+                    expr = acc_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid OpenACC header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
             elif env.startswith('header'):
-                expr = hdr_parse(stmts=line)
+                try:
+                    expr = hdr_parse(stmts=line)
+                except TextXSyntaxError as e:
+                    errors.report(f"Invalid header. {e.message}",
+                            symbol = stmt, column = e.col,
+                              severity='fatal')
+                if isinstance(expr, AnnotatedPyccelSymbol):
+                    self.scope.insert_symbol(expr.name)
                 if isinstance(expr, MetaVariable):
 
                     # a metavar will not appear in the semantic stage.
