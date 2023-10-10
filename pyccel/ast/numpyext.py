@@ -26,7 +26,7 @@ from .datatypes      import (dtype_and_precision_registry as dtype_registry,
                              NativeFloat, NativeComplex, NativeBool, str_dtype,
                              NativeNumeric)
 
-from .internals      import PyccelInternalFunction, Slice, max_precision, get_final_precision
+from .internals      import PyccelInternalFunction, Slice, get_final_precision
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
@@ -108,6 +108,7 @@ __all__ = (
     'NumpyRand',
     'NumpyRandint',
     'NumpyReal',
+    'NumpyResultType',
     'NumpyTranspose',
     'NumpyWhere',
     'NumpyZeros',
@@ -337,6 +338,63 @@ DtypePrecisionToCastFunction = {
         4 : NumpyBool}
 }
 
+#=======================================================================================
+
+class NumpyResultType(PyccelInternalFunction):
+    """
+    Class representing a call to the `numpy.result_type` function.
+
+    A class representing a call to the NumPy function `result_type` which returns
+    the datatype of an expression. This function can be used to access the `dtype`
+    property of a NumPy array.
+
+    Parameters
+    ----------
+    *arrays_and_dtypes : PyccelAstNode
+        Any arrays and dtypes passed to the function (currently only accepts one array
+        and no dtypes).
+    """
+    __slots__ = ('_dtype','_precision')
+    _rank = 0
+    _shape = None
+    _order = None
+    name = 'result_type'
+
+    def __init__(self, *arrays_and_dtypes):
+        dtype_and_precs = [process_dtype(a) if isinstance(a, PyccelFunctionDef) else (a.dtype, a.precision) \
+                            for a in arrays_and_dtypes]
+        dtypes = [d[0] for d in dtype_and_precs]
+        precisions = [d[1] for d in dtype_and_precs]
+
+        if any(d not in NativeNumeric for d in dtypes):
+            raise TypeError(f'cannot determine the type of {self}')
+        elif any(d is NativeComplex() for d in dtypes):
+            self._dtype     = NativeComplex()
+        elif any(d is NativeFloat() for d in dtypes):
+            self._dtype     = NativeFloat()
+        elif any(d is NativeInteger() for d in dtypes):
+            self._dtype     = NativeInteger()
+        else:
+            self._dtype     = NativeBool()
+
+        # An integer cannot be described accurately in a float of the same precision due to the mantissa
+        # If the user wants to store the maximum value of an integer they will need the next largest precision
+        if self._dtype in (NativeFloat(), NativeComplex()):
+            precisions = [p*2 if (isinstance(d, NativeInteger) and isinstance(a,PyccelFunctionDef) and p!=-1) else p \
+                            for a,d,p in zip(arrays_and_dtypes, dtypes, precisions)]
+
+        # Arrays and NumPy datatype objects have priority
+        dtype_array_precisions = [p for a,d,p in zip(arrays_and_dtypes, dtypes, precisions) \
+                                  if (getattr(a,'rank', 0) != 0 or isinstance(a,PyccelFunctionDef))]
+        if dtype_array_precisions:
+            self._precision = max(dtype_array_precisions)
+        else:
+            if -1 in precisions:
+                precisions.append(default_precision[self.dtype])
+            self._precision = max(precisions)
+
+        super().__init__(*arrays_and_dtypes)
+
 #==============================================================================
 
 def process_dtype(dtype):
@@ -373,6 +431,9 @@ def process_dtype(dtype):
             errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
                     symbol=dtype, severity="fatal")
         return dtype.dtype, get_final_precision(dtype)
+    if isinstance(dtype, NumpyResultType):
+        return dtype.dtype, dtype.precision
+
     if isinstance(dtype, PyccelFunctionDef):
         dtype = dtype.cls_name
 
@@ -392,16 +453,40 @@ def process_dtype(dtype):
     dtype, precision = dtype_registry[dtype]
     if precision == -1:
         precision = default_precision[dtype]
-    dtype = datatype(dtype)
 
     return dtype, precision
 
 #==============================================================================
 class NumpyNewArray(PyccelInternalFunction):
-    """ Class from which all numpy functions which imply a call to Allocate
-    inherit
     """
-    __slots__ = ()
+    Superclass for nodes representing NumPy array allocation functions.
+
+    Class from which all nodes representing a NumPy function which implies a call
+    to `Allocate` should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelAstNode
+        The arguments of the superclass PyccelInternalFunction.
+    init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The actual dtype passed to the NumPy function.
+    """
+    __slots__ = ('_init_dtype',)
+
+    def __init__(self, *args, init_dtype = None):
+        self._init_dtype = init_dtype
+
+        super().__init__(*args)
+
+    @property
+    def init_dtype(self):
+        """
+        The dtype provided to the function when it was initialised in Python.
+
+        The dtype provided to the function when it was initialised in Python.
+        If no dtype was provided then this should equal `None`.
+        """
+        return self._init_dtype
 
     #--------------------------------------------------------------------------
     @staticmethod
@@ -416,21 +501,32 @@ class NumpyNewArray(PyccelInternalFunction):
         return order
 
 #==============================================================================
-# TODO [YG, 18.02.2020]: accept Numpy array argument
-# TODO [YG, 18.02.2020]: use order='K' as default, like in numpy.array
-# TODO [YG, 22.05.2020]: move dtype & prec processing to __init__
 class NumpyArray(NumpyNewArray):
     """
-    Represents a call to  numpy.array for code generation.
+    Represents a call to `numpy.array` for code generation.
 
+    A class representing a call to the NumPy `array` function.
+
+    Parameters
+    ----------
     arg : list, tuple, PythonList
+        The data from which the array is initialised.
 
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The data type passed to the NumPy function.
+
+    order : str
+        The ordering of the array (C/Fortran).
+
+    ndmin : LiteralInteger, int, optional
+        The minimum number of dimensions that the resulting array should
+        have.
     """
     __slots__ = ('_arg','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_arg',)
     name = 'array'
 
-    def __init__(self, arg, dtype=None, order='C'):
+    def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
@@ -442,17 +538,32 @@ class NumpyArray(NumpyNewArray):
         if not (is_homogeneous_tuple or is_array):
             raise TypeError('we only accept homogeneous arguments')
 
+        if not isinstance(order, (LiteralString, str)):
+            raise TypeError("The order must be specified explicitly with a string.")
+        elif isinstance(order, LiteralString):
+            order = order.python_value
+
+        if ndmin is not None:
+            if not isinstance(ndmin, (LiteralInteger, int)):
+                raise TypeError("The minimum number of dimensions must be specified explicitly with an integer.")
+            elif isinstance(ndmin, LiteralInteger):
+                ndmin = ndmin.python_value
+
+        init_dtype = dtype
+
         # Verify dtype and get precision
         if dtype is None:
             dtype = arg.dtype
             prec = get_final_precision(arg)
         else:
             dtype, prec = process_dtype(dtype)
-        # ... Determine ordering
-        order = str(order).strip("\'")
 
         shape = process_shape(False, arg.shape)
         rank  = len(shape)
+
+        if ndmin and ndmin>rank:
+            shape = (LiteralInteger(1),)*(ndmin-rank) + shape
+            rank = ndmin
 
         if rank < 2:
             order = None
@@ -463,9 +574,8 @@ class NumpyArray(NumpyNewArray):
             if order not in ('K', 'A', 'C', 'F'):
                 raise ValueError(f"Cannot recognize '{order}' order")
 
-            # TODO [YG, 18.02.2020]: set correct order based on input array
             if order in ('K', 'A'):
-                order = 'C'
+                order = arg.order or 'C'
             # ...
 
         self._arg   = arg
@@ -474,7 +584,7 @@ class NumpyArray(NumpyNewArray):
         self._dtype = dtype
         self._order = order
         self._precision = prec
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     def __str__(self):
         return str(self.arg)
@@ -488,16 +598,18 @@ class NumpyArange(NumpyNewArray):
     """
     Represents a call to  numpy.arange for code generation.
 
+    A class representing a call to the NumPy `arange` function.
+
     Parameters
     ----------
     start : Numeric
-        Start of interval, default value 0
+        Start of interval, default value 0.
 
     stop : Numeric
-        End of interval
+        End of interval.
 
     step : Numeric
-        Spacing between values, default value 1
+        Spacing between values, default value 1.
 
     dtype : Datatype
         The type of the output array, if dtype is not given,
@@ -519,15 +631,17 @@ class NumpyArange(NumpyNewArray):
             self._stop = stop
         self._step = step if step is not None else LiteralInteger(1)
 
+        init_dtype = dtype
         if dtype is None:
-            self._dtype = max([i.dtype for i in self.arg], key = NativeNumeric.index)
-            self._precision = max_precision(self.arg, allow_native=False)
+            type_info = NumpyResultType(*self.arg)
+            self._dtype = type_info.dtype
+            self._precision = type_info.precision
         else:
             self._dtype, self._precision = process_dtype(dtype)
 
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     @property
     def arg(self):
@@ -551,9 +665,15 @@ class NumpyArange(NumpyNewArray):
 
 #==============================================================================
 class NumpySum(PyccelInternalFunction):
-    """Represents a call to  numpy.sum for code generation.
+    """
+    Represents a call to  numpy.sum for code generation.
 
+    Represents a call to  numpy.sum for code generation.
+
+    Parameters
+    ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
+        The argument passed to the sum function.
     """
     __slots__ = ('_dtype','_precision')
     name = 'sum'
@@ -569,7 +689,7 @@ class NumpySum(PyccelInternalFunction):
             self._dtype = NativeInteger()
         else:
             self._dtype = arg.dtype
-        self._precision = max(arg.precision, default_precision[str(self._dtype)])
+        self._precision = max(arg.precision, default_precision[self._dtype])
 
     @property
     def arg(self):
@@ -577,9 +697,15 @@ class NumpySum(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyProduct(PyccelInternalFunction):
-    """Represents a call to  numpy.prod for code generation.
+    """
+    Represents a call to numpy.prod for code generation.
 
+    Represents a call to numpy.prod for code generation.
+
+    Parameters
+    ----------
     arg : list , tuple , PythonTuple, PythonList, Variable
+        The argument passed to the prod function.
     """
     __slots__ = ('_arg','_dtype','_precision')
     name = 'product'
@@ -593,7 +719,7 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision['int']))\
+                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision[NativeInteger()]))\
                     else self._arg
         self._dtype = self._arg.dtype
         self._precision = get_final_precision(self._arg)
@@ -605,8 +731,17 @@ class NumpyProduct(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyMatmul(PyccelInternalFunction):
-    """Represents a call to numpy.matmul for code generation.
-    arg : list , tuple , PythonTuple, PythonList, Variable
+    """
+    Represents a call to numpy.matmul for code generation.
+
+    Represents a call to NumPy's `matmul` function for code generation.
+
+    Parameters
+    ----------
+    a : PyccelAstNode
+        The first argument of the matrix multiplication.
+    b : PyccelAstNode
+        The second argument of the matrix multiplication.
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
     name = 'matmul'
@@ -622,25 +757,9 @@ class NumpyMatmul(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(a))
 
         args      = (a, b)
-        integers  = [e for e in args if e.dtype is NativeInteger()]
-        booleans  = [e for e in args if e.dtype is NativeBool()]
-        floats    = [e for e in args if e.dtype is NativeFloat()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max_precision(complexs, allow_native = False)
-        elif floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(floats, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max_precision(integers, allow_native = False)
-        elif booleans:
-            self._dtype     = NativeBool()
-            self._precision = max_precision(booleans, allow_native = False)
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+        type_info = NumpyResultType(*args)
+        self._dtype = type_info.dtype
+        self._precision = type_info.precision
 
         if not (a.shape is None or b.shape is None):
 
@@ -706,21 +825,28 @@ class NumpyShape(PyccelInternalFunction):
 class NumpyLinspace(NumpyNewArray):
 
     """
-    Represents numpy.linspace which returns num evenly spaced samples, calculated over the interval [start, stop].
+    Represents a call to the function `numpy.linspace`.
+
+    A class representing a call to the NumPy `linspace` function which returns `num`
+    evenly spaced samples, calculated over the interval [start, stop].
 
     Parameters
       ----------
-      start           : list , tuple , PythonTuple, PythonList, Variable, Literals
-                        Represents the starting value of the sequence.
-      stop            : list , tuple , PythonTuple, PythonList, Variable, Literals
-                        Represents the ending value of the sequence (if endpoint is set to False).
-      num             : int, optional
-                        Number of samples to generate. Default is 50. Must be non-negative.
-      endpoint        : bool, optional
-                        If True, stop is the last sample. Otherwise, it is not included. Default is True.
-      dtype           : str, DataType
-                        The type of the output array. If dtype is not given, the data type is calculated
-                        from start and stop, the calculated dtype will never be an integer.
+      start : list , tuple , PythonTuple, PythonList, Variable, Literals
+           Represents the starting value of the sequence.
+
+      stop : list , tuple , PythonTuple, PythonList, Variable, Literals
+           Represents the ending value of the sequence (if endpoint is set to False).
+
+      num : int, optional
+           Number of samples to generate. Default is 50. Must be non-negative.
+
+      endpoint : bool, optional
+           If True, stop is the last sample. Otherwise, it is not included. Default is True.
+
+      dtype : str, DataType
+           The type of the output array. If dtype is not given, the data type is calculated
+           from start and stop, the calculated dtype will never be an integer.
     """
 
     __slots__ = ('_dtype','_precision','_index','_start','_stop',
@@ -741,25 +867,18 @@ class NumpyLinspace(NumpyNewArray):
         if any(not isinstance(arg, PyccelAstNode) for arg in (start, stop, num)):
             raise TypeError('Expecting valid args.')
 
+        init_dtype = dtype
         if dtype:
             self._dtype, self._precision = process_dtype(dtype)
         else:
             args      = (start, stop)
-            integers  = [e for e in args if e.dtype is NativeInteger()]
-            floats    = [e for e in args if e.dtype is NativeFloat()]
-            complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-            if complexs:
-                self._dtype     = NativeComplex()
-                self._precision = max_precision(complexs, allow_native = False)
-            elif floats:
+            type_info = NumpyResultType(*args)
+            if type_info.dtype is NativeInteger():
                 self._dtype     = NativeFloat()
-                self._precision = max_precision(floats, allow_native = False)
-            elif integers:
-                self._dtype     = NativeFloat()
-                self._precision = default_precision['float']
+                self._precision = default_precision[self._dtype]
             else:
-                raise TypeError('cannot determine the type of {}'.format(self))
+                self._dtype = type_info.dtype
+                self._precision = type_info.precision
 
         self._index = Variable('int', 'linspace_index')
         self._start = start
@@ -790,7 +909,7 @@ class NumpyLinspace(NumpyNewArray):
         else:
             self._step = PyccelDiv(PyccelMinus(self.stop, self.start), PyccelMinus(self.num, PythonInt(self.endpoint)))
 
-        super().__init__()
+        super().__init__(init_dtype = init_dtype)
 
     @property
     def dtype(self):
@@ -847,7 +966,22 @@ class NumpyLinspace(NumpyNewArray):
 
 #==============================================================================
 class NumpyWhere(PyccelInternalFunction):
-    """ Represents a call to  numpy.where """
+    """
+    Represents a call to `numpy.where`.
+
+    Represents a call to NumPy's `where` function.
+
+    Parameters
+    ----------
+    condition : PyccelAstNode
+        The condition which determines which value is returned.
+
+    x : PyccelAstNode, optional
+        The value if True. If `x` is provided, `y` should also be provided.
+
+    y : PyccelAstNode, optional
+        The value if False. If `y` is provided, `x` should also be provided.
+    """
 
     __slots__ = ('_condition', '_value_true', '_value_false', '_dtype',
                  '_rank', '_shape', '_order', '_precision')
@@ -857,30 +991,20 @@ class NumpyWhere(PyccelInternalFunction):
     def __new__(cls, condition, x = None, y = None):
         if x is None and y is None:
             return NumpyNonZero(condition)
+        elif x is None or y is None:
+            raise TypeError("Either both or neither of x and y should be given")
         else:
             return super().__new__(cls)
 
-    def __init__(self, condition, x = None, y = None):
+    def __init__(self, condition, x, y):
         self._condition = condition
         self._value_true = x
         self._value_false = y
 
         args      = (x, y)
-        integers  = [e for e in args if e.dtype is NativeInteger() or e.dtype is NativeBool()]
-        floats    = [e for e in args if e.dtype is NativeFloat()]
-        complexs  = [e for e in args if e.dtype is NativeComplex()]
-
-        if complexs:
-            self._dtype     = NativeComplex()
-            self._precision = max_precision(args, allow_native = False)
-        elif floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(args, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            self._precision = max_precision(args, allow_native = False)
-        else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+        type_info = NumpyResultType(*args)
+        self._dtype = type_info.dtype
+        self._precision = type_info.precision
 
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
@@ -914,15 +1038,20 @@ class NumpyWhere(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyRand(PyccelInternalFunction):
-
     """
-      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+    Represents a call to  numpy.random.random or numpy.random.rand for code generation.
 
+    Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+
+    Parameters
+    ----------
+    *args : tuple of PyccelAstNode
+        The arguments passed to the function.
     """
     __slots__ = ('_shape','_rank','_order')
     name = 'rand'
     _dtype = NativeFloat()
-    _precision = default_precision['float']
+    _precision = default_precision[NativeFloat()]
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -1007,6 +1136,7 @@ class NumpyFull(NumpyNewArray):
         # Convert shape to PythonTuple
         shape = process_shape(False, shape)
 
+        init_dtype = dtype
         # If there is no dtype, extract it from fill_value
         # TODO: must get dtype from an annotated node
         if dtype is None:
@@ -1026,7 +1156,7 @@ class NumpyFull(NumpyNewArray):
         self._order = NumpyNewArray._process_order(self._rank, order)
         self._precision = precision
 
-        super().__init__(fill_value)
+        super().__init__(fill_value, init_dtype = init_dtype)
 
     #--------------------------------------------------------------------------
     @property
@@ -1046,14 +1176,28 @@ class NumpyAutoFill(NumpyFull):
 
 #==============================================================================
 class NumpyEmpty(NumpyAutoFill):
-    """ Represents a call to numpy.empty for code generation.
+    """
+    Represents a call to numpy.empty for code generation.
+
+    Represents a call to numpy.empty for code generation.
+
+    Parameters
+    ----------
+    shape : PyccelAstNode
+        The shape of the array to be created.
+
+    dtype : PythonType, PyccelFunctionDef, LiteralString, str
+        The actual dtype passed to the NumPy function.
+
+    order : str, LiteralString
+        The order passed to the function.
     """
     __slots__ = ()
     name = 'empty'
 
     def __init__(self, shape, dtype='float', order='C'):
         if dtype in NativeNumeric:
-            precision = default_precision[str_dtype(dtype)]
+            precision = default_precision[dtype]
             dtype = DtypePrecisionToCastFunction[dtype.name][precision]
         super().__init__(shape, dtype, order)
     @property
@@ -1144,7 +1288,7 @@ class NumpyFullLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
         return NumpyFull(shape, fill_value, dtype, order)
@@ -1189,7 +1333,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1234,7 +1378,7 @@ class NumpyOnesLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1280,7 +1424,7 @@ class NumpyZerosLike(PyccelInternalFunction):
 
         # NOTE: we ignore 'subok' argument
         if dtype is None:
-            dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+            dtype = NumpyResultType(a)
         order = a.order if str(order).strip('\'"') in ('K', 'A') else order
         shape = NumpyShape(a) if shape is None else shape
 
@@ -1343,7 +1487,21 @@ class NumpyUfuncBase(PyccelInternalFunction):
 
 #------------------------------------------------------------------------------
 class NumpyUfuncUnary(NumpyUfuncBase):
-    """Numpy's universal function with one argument.
+    """
+    Class representing Numpy's universal function with one argument.
+
+    Class representing Numpy's universal function. All classes which
+    inherit from this class have one argument and operate on it
+    elementally. In other words it should be equivalent to write:
+    >>> for i in iterable: NumpyUfuncUnary(i)
+
+    or
+    >>> NumpyUfuncUnary(iterable)
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     def __init__(self, x):
@@ -1357,18 +1515,43 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._rank       = x.rank
 
     def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x : PyccelAstNode
+            The argument passed to the function.
+        """
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeFloat()
-        self._precision  = default_precision[str_dtype(self._dtype)]
+        self._precision  = default_precision[self._dtype]
 
     def _set_order(self, x):
         self._order      = x.order
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
-    """Numpy's universal function with two arguments.
+    """
+    Class representing Numpy's universal function with two arguments.
+
+    Class representing Numpy's universal function. All classes which
+    inherit from this class have two arguments and operate on them
+    in lockstep. In other words it should be equivalent to write:
+    >>> for i,_ in enumerate(iterable1): NumpyUfuncUnary(iterable1(i), iterable2(i))
+
+    or
+    >>> NumpyUfuncUnary(iterable1, iterable2)
+
+    Parameters
+    ----------
+    x1 : PyccelAstNode
+        The first argument passed to the function.
+    x2 : PyccelAstNode
+        The second argument passed to the function.
     """
     __slots__ = ()
-    # TODO: apply Numpy's broadcasting rules to get shape/rank of output
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
         self._set_dtype_precision(x1, x2)
@@ -1380,8 +1563,20 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._rank  = 0 if self._shape is None else len(self._shape)
 
     def _set_dtype_precision(self, x1, x2):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x1 : PyccelAstNode
+            The first argument passed to the function.
+        x2 : PyccelAstNode
+            The second argument passed to the function.
+        """
         self._dtype     = NativeFloat()
-        self._precision = default_precision['float']
+        self._precision = default_precision[self._dtype]
 
     def _set_order(self, x1, x2):
         if x1.order == x2.order:
@@ -1498,15 +1693,46 @@ class NumpyAbs(NumpyUfuncUnary):
         self._precision = get_final_precision(x)
 
 class NumpyFloor(NumpyUfuncUnary):
-    """Represent a call to the floor function in the Numpy library"""
+    """
+    Represent a call to the floor function in the Numpy library.
+
+    Represent a call to the floor function in the Numpy library.
+
+    Parameters
+    ----------
+    x : PyccelAstNode
+        The argument passed to the function.
+    """
     __slots__ = ()
     name = 'floor'
+
     def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+
+        Parameters
+        ----------
+        x : PyccelAstNode
+            The argument passed to the function.
+        """
         self._dtype     = NativeFloat()
-        self._precision = default_precision[str_dtype(self._dtype)]
+        self._precision = default_precision[self._dtype]
 
 class NumpyMod(NumpyUfuncBinary):
-    """Represent a call to the mod function in the Numpy library"""
+    """
+    Represent a call to the `numpy.mod` function.
+
+    Represent a call to the mod function in the Numpy library.
+
+    Parameters
+    ----------
+    x1 : PyccelAstNode
+        Dividend of the operator.
+    x2 : PyccelAstNode
+        Divisor of the operator.
+    """
     __slots__ = ()
     name = 'mod'
 
@@ -1537,26 +1763,29 @@ class NumpyMod(NumpyUfuncBinary):
             self._rank  = len(shape)
 
     def _set_dtype_precision(self, x1, x2):
+        """
+        Set the datatype of the object.
+
+        Set the datatype of the object by calculating how the types
+        may be promoted.
+
+        Parameters
+        ----------
+        x1 : PyccelAstNode
+            The first argument which helps determine the datatype.
+        x2 : PyccelAstNode
+            The second argument which helps determine the datatype.
+        """
         args      = (x1, x2)
-        integers  = [a for a in args if a.dtype is NativeInteger() or a.dtype is NativeBool()]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        others    = [a for a in args if a not in integers+floats]
-
-        if others:
-            raise TypeError('{} not supported'.format(others[0].dtype))
-
-        if floats:
-            self._dtype     = NativeFloat()
-            self._precision = max_precision(floats, allow_native = False)
-        elif integers:
-            self._dtype     = NativeInteger()
-            integers  = [a for a in args if a.dtype is NativeInteger()]
-            if integers:
-                self._precision = max_precision(integers, NativeInteger(), allow_native = False)
-            else:
-                self._precision = 1
+        if x1.dtype is NativeComplex() or x2.dtype is NativeComplex():
+            raise TypeError("Complex modulo not supported")
+        type_info = NumpyResultType(*args)
+        if type_info.dtype is NativeBool():
+            self._dtype = NativeInteger()
+            self._precision = 1
         else:
-            raise TypeError('cannot determine the type of {}'.format(self))
+            self._dtype = type_info.dtype
+            self._precision = type_info.precision
 
 class NumpyAmin(NumpyUfuncUnary):
     """Represent a call to the amin function in the Numpy library"""
@@ -1660,15 +1889,18 @@ class NumpyConjugate(PythonConjugate):
         return True
 
 class NumpyNonZeroElement(NumpyNewArray):
-    """ Represents an element of the tuple returned by
-    NumpyNonZero which represents a call to numpy.nonzero
+    """
+    Represents an element of the tuple returned by `NumpyNonZero`.
+
+    Represents an element of the tuple returned by `NumpyNonZero` which
+    represents a call to `numpy.nonzero`.
 
     Parameters
     ----------
-    a   : array_like
-          The argument which was passed to numpy.nonzero
+    a : PyccelAstNode
+        The argument which was passed to numpy.nonzero.
     dim : int
-          The index of the element in the tuple
+        The index of the element in the tuple.
     """
     __slots__ = ('_arr','_dim','_shape')
     _attribute_nodes = ('_arr',)
@@ -1699,16 +1931,21 @@ class NumpyNonZeroElement(NumpyNewArray):
 
 class NumpyNonZero(NumpyNewArray):
     """
-    Class representing a call to the function numpy.nonzero
+    Class representing a call to the function `numpy.nonzero`.
 
-    Example:
-    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
-    >>> np.nonzero(x)
-    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
+    Class representing a call to the NumPy function `nonzero` which indicates
+    which elements of an array are non-zero.
 
     Parameters
     ----------
-    a : array_like
+    a : PyccelAstNode
+        The array argument that was passed to the function.
+
+    Examples
+    --------
+    >>> x = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]])
+    >>> np.nonzero(x)
+    (array([0, 1, 2, 2]), array([0, 1, 0, 1]))
     """
     __slots__ = ('_elements','_arr','_shape')
     _attribute_nodes = ('_elements',)
@@ -1878,6 +2115,7 @@ numpy_funcs = {
     'ones_like' : PyccelFunctionDef('ones_like' , NumpyOnesLike),
     'array'     : PyccelFunctionDef('array'     , NumpyArray),
     'arange'    : PyccelFunctionDef('arange'    , NumpyArange),
+    'copy'      : PyccelFunctionDef('copy'      , NumpyArray),
     # ...
     'shape'     : PyccelFunctionDef('shape'     , NumpyShape),
     'size'      : PyccelFunctionDef('size'      , NumpySize),
@@ -1939,6 +2177,7 @@ numpy_funcs = {
     'transpose' : PyccelFunctionDef('transpose' , NumpyTranspose),
     'nonzero'   : PyccelFunctionDef('nonzero'   , NumpyNonZero),
     'count_nonzero' : PyccelFunctionDef('count_nonzero', NumpyCountNonZero),
+    'result_type' : PyccelFunctionDef('result_type', NumpyResultType),
 }
 
 numpy_mod = Module('numpy',

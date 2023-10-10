@@ -30,7 +30,13 @@ def get_unique_test_list(keys):
     tests.discard('pr_tests')
     if 'coverage' in tests:
         tests.add('linux')
-    return tests
+        # Ensure coverage is last in case dependencies are ready
+        tests.discard('coverage')
+        result = list(tests)
+        result.append('coverage')
+    else:
+        result = list(tests)
+    return result
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable

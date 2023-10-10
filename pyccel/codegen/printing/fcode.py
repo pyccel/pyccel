@@ -15,35 +15,25 @@ from collections import OrderedDict
 import functools
 
 from pyccel.ast.basic import PyccelAstNode
+
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
+
+from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonFloat, PythonTuple
+from pyccel.ast.builtins import PythonComplex, PythonBool, PythonAbs
+from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
+
 from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
 from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return, Module
-from pyccel.ast.core import Import
-from pyccel.ast.itertoolsext import Product
-from pyccel.ast.core import (Assign, AliasAssign, Declare,
-                             CodeBlock, AsName, EmptyNode,
-                             If, IfSection, For, Deallocate)
+from pyccel.ast.core import Return, Module, If, IfSection, For
+from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
+from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
+from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
-from pyccel.ast.variable  import (Variable,
-                             IndexedElement,
-                             InhomogeneousTupleVariable,
-                             DottedName, )
-
-from pyccel.ast.operators      import PyccelAdd, PyccelMul, PyccelMinus
-from pyccel.ast.operators      import PyccelMod
-from pyccel.ast.operators      import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
-
-from pyccel.ast.core      import FunctionCall, DottedFunctionCall, PyccelFunctionDef
-
-from pyccel.ast.builtins  import (PythonInt, PythonType,
-                                  PythonPrint, PythonRange,
-                                  PythonFloat, PythonTuple)
-from pyccel.ast.builtins  import PythonComplex, PythonBool, PythonAbs
 from pyccel.ast.datatypes import is_pyccel_datatype
 from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
@@ -55,6 +45,8 @@ from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import PyccelInternalFunction, get_final_precision
+
+from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
@@ -71,8 +63,14 @@ from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
+from pyccel.ast.operators import PyccelMod
+from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
+
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
+
+from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -155,6 +153,21 @@ math_function_to_fortran = {
     'MathDegrees'   : 'pyc_degrees',
     'MathRadians'   : 'pyc_radians',
     'MathLcm'       : 'pyc_lcm',
+    # --------------------------- cmath functions --------------------------
+    'CmathAcos'  : 'acos',
+    'CmathAcosh' : 'acosh',
+    'CmathAsin'  : 'asin',
+    'CmathAsinh' : 'asinh',
+    'CmathAtan'  : 'atan',
+    'CmathAtanh' : 'atanh',
+    'CmathCos'   : 'cos',
+    'CmathCosh'  : 'cosh',
+    'CmathExp'   : 'exp',
+    'CmathSin'   : 'sin',
+    'CmathSinh'  : 'sinh',
+    'CmathSqrt'  : 'sqrt',
+    'CmathTan'   : 'tan',
+    'CmathTanh'  : 'tanh',
 }
 
 INF = math_constants['inf']
@@ -162,13 +175,6 @@ INF = math_constants['inf']
 _default_methods = {
     '__init__': 'create',
     '__del__' : 'free',
-}
-
-python_builtin_datatypes = {
-    'integer' : PythonInt,
-    'float'   : PythonFloat,
-    'bool'    : PythonBool,
-    'complex' : PythonComplex
 }
 
 type_to_print_format = {
@@ -1075,50 +1081,49 @@ class FCodePrinter(CodePrinter):
         return stmt
 
     def _print_NumpyArray(self, expr):
-        """Fortran print."""
-
+        expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
+        order = expr.order
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
-        if expr.order == 'F':
-            if expr.rank == 2:
-                rhs_code = self._print(expr.arg)
-                rhs_code = 'transpose({})'.format(rhs_code)
-            elif expr.rank > 2:
-                args     = [self._print(a) for a in expr.arg]
-                new_args = []
-                for ac, a in zip(args, expr.arg):
-                    if a.order == 'C':
-                        shape    = ', '.join(self._print(i) for i in a.shape)
-                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
-                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
-                    new_args.append(ac)
-
-                args     = new_args
-                rhs_code = '[' + ' ,'.join(args) + ']'
-                shape    = ', '.join(self._print(i) for i in expr.shape)
-                order    = [LiteralInteger(i) for i in range(1, expr.rank+1)]
-                order    = order[1:]+ order[:1]
-                order    = ', '.join(self._print(i) for i in order)
-                rhs_code = 'reshape({}, [{}], order=[{}])'.format(rhs_code, shape, order)
-        elif expr.order == 'C':
-            if expr.rank > 2:
-                args     = [self._print(a) for a in expr.arg]
-                new_args = []
-                for ac, a in zip(args, expr.arg):
-                    if a.order == 'F':
-                        shape    = ', '.join(self._print(i) for i in a.shape[::-1])
-                        order    = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
-                        ac       = 'reshape({}, [{}], order=[{}])'.format(ac, shape, order)
-                    new_args.append(ac)
-
-                args     = new_args
-                rhs_code = '[' + ' ,'.join(args) + ']'
-                shape    = ', '.join(self._print(i) for i in expr.shape[::-1])
-                rhs_code = 'reshape({}, [{}])'.format(rhs_code, shape)
-            else:
-                rhs_code = self._print(expr.arg)
-        elif expr.order is None:
+        if expr.rank <= 2:
             rhs_code = self._print(expr.arg)
+            if expr.arg.order and expr.arg.order != expr.order:
+                rhs_code = f'transpose({rhs_code})'
+            if expr.arg.rank < expr.rank:
+                if order == 'F':
+                    shape_code = ', '.join(self._print(i) for i in expr.shape)
+                else:
+                    shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
+                rhs_code = f"reshape({rhs_code}, [{shape_code}])"
+        else:
+            new_args = []
+            inv_order = 'C' if order == 'F' else 'F'
+            for a in expr_args:
+                ac = self._print(a)
+                if a.order == inv_order:
+                    shape = a.shape if a.order == 'C' else a.shape[::-1]
+                    shape_code = ', '.join(self._print(i) for i in shape)
+                    order_code = ', '.join(self._print(LiteralInteger(i)) for i in range(a.rank, 0, -1))
+                    ac = f'reshape({ac}, [{shape_code}], order=[{order_code}])'
+                new_args.append(ac)
+
+            if len(new_args) == 1:
+                rhs_code = new_args[0]
+            else:
+                rhs_code = '[' + ' ,'.join(new_args) + ']'
+
+            if len(new_args) != 1 or expr.arg.rank < expr.rank:
+                if order == 'C':
+                    shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
+                    rhs_code = f'reshape({rhs_code}, [{shape_code}])'
+                else:
+                    shape_code = ', '.join(self._print(i) for i in expr.shape)
+                    order_index = [LiteralInteger(i) for i in range(1, expr.rank+1)]
+                    order_index = order_index[1:]+ order_index[:1]
+                    order_code = ', '.join(self._print(i) for i in order_index)
+                    rhs_code = f'reshape({rhs_code}, [{shape_code}], order=[{order_code}])'
+
+
         return rhs_code
 
     def _print_NumpyFloor(self, expr):
@@ -2652,19 +2657,6 @@ class FCodePrinter(CodePrinter):
     def _print_Header(self, expr):
         return ''
 
-    def _print_ConstructorCall(self, expr):
-        func = expr.func
-        name = str(func.name)
-        if name == "__init__":
-            name = "create"
-        name = self._print(name)
-
-        code_args = ''
-        if expr.arguments is not None:
-            code_args = ', '.join(self._print(i) for i in expr.arguments)
-        code = '{0}({1})'.format(name, code_args)
-        return self._get_statement(code)
-
     def _print_SysExit(self, expr):
         code = ""
         if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
@@ -2948,6 +2940,8 @@ class FCodePrinter(CodePrinter):
         func = expr.funcdef
 
         f_name = self._print(expr.func_name if not expr.interface else expr.interface_name)
+        for k, m in _default_methods.items():
+            f_name = f_name.replace(k, m)
         args   = expr.args
         func_results  = [r.var for r in func.results]
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
@@ -3215,6 +3209,9 @@ class FCodePrinter(CodePrinter):
             level += increase[i]
 
         return new_code
+
+    def _print_BindCArrayVariable(self, expr):
+        return self._print(expr.wrapper_function)
 
 
 def fcode(expr, filename, assign_to=None, **settings):

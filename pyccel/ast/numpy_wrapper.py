@@ -103,26 +103,26 @@ is_numpy_array = FunctionDef(
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias')),
+                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(dtype=NativeInteger(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(dtype=NativeInteger(), name = 'd'))])
 
 # Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_c_step = FunctionDef(name    = 'nd_nstep_C',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias')),
+                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(dtype=NativeInteger(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(dtype=NativeInteger(), name = 'd'))])
 array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias')),
+                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional = True)),
                                         FunctionDefArgument(Variable(dtype=NativeInteger(), name = 'idx'))],
                            results   = [FunctionDefResult(Variable(dtype=NativeInteger(), name = 'd'))])
 
 # Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', memory_handling='alias'))],
+                           arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional=True))],
                            results   = [FunctionDefResult(Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1))])
 
 # Basic Array Flags
@@ -181,7 +181,7 @@ numpy_int_type_precision_map = {
         4 : np.dtype(np.int32).num,
         8 : np.dtype(np.int64).num}
 
-numpy_dtype_registry = {('bool',4)     : numpy_bool_type,
+numpy_dtype_registry = {('bool',-1)    : numpy_bool_type,
                         ('int',1)      : numpy_num_to_type[numpy_int_type_precision_map[1]],
                         ('int',2)      : numpy_num_to_type[numpy_int_type_precision_map[2]],
                         ('int',4)      : numpy_num_to_type[numpy_int_type_precision_map[4]],

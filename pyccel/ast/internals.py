@@ -19,8 +19,8 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
-    'PyccelArraySize',
     'PyccelArrayShapeElement',
+    'PyccelArraySize',
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
@@ -374,25 +374,27 @@ def symbols(names):
     return tuple(symbols)
 
 
-def max_precision(objs : list, dtype = None, allow_native = True):
+def max_precision(objs : list, allow_native : bool = True):
     """
-    Returns the largest precision of an object in the list
+    Return the largest precision amongst the objects in the list.
+
+    Return the largest precision amongst the objects in the list.
 
     Parameters
     ----------
     objs : list
-           A list of PyccelAstNodes
-    dtype : Dtype class
-            If this argument is provided then only the
-            precision of objects with this dtype are
-            considered
+       A list of PyccelAstNodes.
+
+    allow_native : bool, default=True
+        Allow the final result to be a native precision (i.e. -1).
+
+    Returns
+    -------
+    int
+        The largest precision found.
     """
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
-    elif dtype:
-        def_prec = default_precision[str(dtype)]
-        return max(def_prec if o.precision == -1 \
-                else o.precision for o in objs if o.dtype is dtype)
     else:
         ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
         if ndarray_list:
@@ -402,10 +404,22 @@ def max_precision(objs : list, dtype = None, allow_native = True):
 
 def get_final_precision(obj):
     """
-    Get the the usable precision of an object. Ie. the precision that you
-    can use to print, eg 8 instead of -1 for a default precision float
+    Get the usable precision of an object.
+
+    Get the usable precision of an object. I.e. the precision that you
+    can use to print, e.g. 8 instead of -1 for a default precision float.
 
     If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned
+    precision is returned, otherwise the provided precision is returned.
+
+    Parameters
+    ----------
+    obj : PyccelAstNode
+        The object whose precision we want to investigate.
+
+    Returns
+    -------
+    int
+        The precision of the object to be used in the code.
     """
-    return default_precision[str(obj.dtype)] if obj.precision == -1 else obj.precision
+    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
