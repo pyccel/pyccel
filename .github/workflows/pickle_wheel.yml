@@ -41,7 +41,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py pickle_wheel
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install Pyccel from wheel
