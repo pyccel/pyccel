@@ -47,6 +47,7 @@ jobs:
   Anaconda-Linux:
     runs-on: ubuntu-latest
     name: Unit tests
+    needs: Python_version_picker
 
     steps:
       - uses: actions/checkout@v3

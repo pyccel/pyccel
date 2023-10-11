@@ -48,6 +48,7 @@ jobs:
 
     runs-on: macos-latest
     name: Unit tests
+    needs: Python_version_picker
 
     steps:
       - uses: actions/checkout@v3
