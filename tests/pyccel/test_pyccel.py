@@ -863,12 +863,14 @@ def test_basic_header():
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
-                                        "scripts/classes/classes_5.py",
-                                        "scripts/classes/classes_3.py",
-                                        "scripts/classes/classes_1.py",
+@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
                                         "scripts/classes/classes.py",
-                                        "scripts/classes/generic_methods.py",
+                                        "scripts/classes/classes_1.py",
+                                        "scripts/classes/classes_2.py",
+                                        "scripts/classes/classes_3.py",
+                                        "scripts/classes/classes_4.py",
+                                        "scripts/classes/classes_5.py",
+                                        "scripts/classes/classes_6.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
