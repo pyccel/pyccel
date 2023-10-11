@@ -7,6 +7,15 @@ runs:
       run:
         sudo apt-get update
       shell: bash
+    - name: Restore cached Intel
+      id: cache-intel-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: |
+          /opt/intel/oneapi/
+        key: ${{ runner.os }}-intel-2023
+        restore-keys: |
+          ${{ runner.os }}-intel-
     - name: Install Intel OneAPI
       run: |
         # See https://github.com/oneapi-src/oneapi-ci
@@ -46,6 +55,13 @@ runs:
         echo "CPATH=$CPATH" >> $GITHUB_ENV
         mpicc --version
       shell: bash
+    - name: Save Intel Cache
+      id: cache-intel-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          /opt/intel/oneapi/
+        key: ${{ steps.cache-intel-restore.outputs.cache-primary-key }}
     - name: Install Valgrind
       run:
         sudo apt-get install valgrind
