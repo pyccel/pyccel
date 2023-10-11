@@ -6,7 +6,6 @@ from pyccel.decorators import types
 #$ header function gen_2(float, int)
 #$ header function gen_2(int, float)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, float)
 #$ header template T(int|float)
 #$ header template R(int|float)
 #$ header template O(bool|complex)
