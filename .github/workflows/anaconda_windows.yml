@@ -15,6 +15,8 @@ on:
       pr_repo:
         required: false
         type: string
+  push:
+    branches: devel
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -24,6 +26,24 @@ env:
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
+  Python_version_picker:
+    runs-on: windows-latest
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    outputs:
+      python_version: ${{ steps.set-python_version.outputs.python_version }}
+    steps:
+    - if: github.event_name == 'push'
+      run: |
+        echo "version='3.9'" >> $GITHUB_ENV
+    - id: dispatch-matrix
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
+    # This step is explained more in a following section
+    - id: set-python_version
+      run: |
+        echo "python_version=$version" >> $GITHUB_OUTPUT
+
   Anaconda-Windows:
     runs-on: windows-latest
     name: Unit tests
@@ -37,7 +57,7 @@ jobs:
         with:
           auto-update-conda: true
           auto-activate-base: true
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: Install dependencies
         uses: ./.github/actions/windows_install
       - name: Install python dependencies

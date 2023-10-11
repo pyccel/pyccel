@@ -27,10 +27,8 @@ env:
 
 jobs:
   matrix_prep:
-    # Using a separate job and agent so as to be able to use tools
-    # like 'sed' and 'jq'.
     runs-on: ubuntu-latest
-    # Defining outputs of a job allows for easier consumption and use.
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -42,7 +40,6 @@ jobs:
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo "matrix=[${{ inputs.python_version }}]" >> $GITHUB_ENV
-    # This step is explained more in a following section
     - id: set-matrix
       run: |
         echo "$matrix"
