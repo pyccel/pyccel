@@ -75,7 +75,7 @@ pgfortran_info = {'exec' : 'pgfortran',
 
 #------------------------------------------------------------
 nvfort_info = {'exec' : 'nvfort',
-              'mpi_exec' : 'nvfort',
+              'mpi_exec' : 'mpifort',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-Mbounds","-g","-O0"),
@@ -124,7 +124,7 @@ elif sys.platform == "win32":
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icc',
-            'mpi_exec' : 'mpiicc',
+            'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
@@ -158,7 +158,7 @@ pgcc_info = {'exec' : 'pgcc',
 
 #------------------------------------------------------------
 nvc_info = {'exec' : 'nvc',
-            'mpi_exec' : 'nvc',
+            'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-Munroll",),
