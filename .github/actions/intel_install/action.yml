@@ -17,6 +17,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-intel-
     - name: Install Intel OneAPI
+      if: steps.cache-intel-restore.outputs.cache-hit != 'true'
       run: |
         # See https://github.com/oneapi-src/oneapi-ci
         wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB
