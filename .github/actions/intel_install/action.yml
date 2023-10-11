@@ -17,12 +17,7 @@ runs:
         sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-openmp intel-oneapi-mkl intel-oneapi-mpi-devel
         LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tail -1)
         # shellcheck source=/dev/null
-        #source /opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh
         source /opt/intel/oneapi/setvars.sh
-        echo $PATH
-        echo $LD_LIBRARY_PATH
-        echo $CC
-        printenv
         echo "INTEL_SOURCE_FILE=/opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh"
         echo "INTEL_SOURCE_FILE=/opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh" >> $GITHUB_ENV
         echo "$PATH" > $GITHUB_PATH
@@ -49,8 +44,7 @@ runs:
         echo "NLSPATH=$NLSPATH" >> $GITHUB_ENV
         echo "INTEL_PYTHONHOME=$INTEL_PYTHONHOME" >> $GITHUB_ENV
         echo "CPATH=$CPATH" >> $GITHUB_ENV
-        which mpiicc
-        which mpicc
+        mpicc --version
       shell: bash
     - name: Install Valgrind
       run:
