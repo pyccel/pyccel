@@ -46,7 +46,7 @@ jobs:
     - id: set-matrix
       run: |
         echo "$matrix"
-        echo "matrix={\"python-version\": $matrix}" >> $GITHUB_OUTPUT
+        echo "matrix={\"python_version\": $matrix}" >> $GITHUB_OUTPUT
 
   Linux:
 
@@ -61,7 +61,7 @@ jobs:
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
-      - name: Set up Python ${{ inputs.python_version }}
+      - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python_version }}
