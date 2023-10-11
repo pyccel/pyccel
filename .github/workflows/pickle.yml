@@ -39,15 +39,16 @@ jobs:
     - if: github.event_name == 'push'
       run: |
         echo "editable=['-e', '']" >> $GITHUB_ENV
-        echo "version='3.9'" >> $GITHUB_ENV
+        #echo "version='3.9'" >> $GITHUB_ENV
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
-        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
+        #echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
     - id: set-matrix
       run: |
         echo "$editable"
+        version=3.8
         echo "$version"
         echo "matrix={\"editable_string\": $editable}"
         echo "python_version=$version" >> $GITHUB_OUTPUT
