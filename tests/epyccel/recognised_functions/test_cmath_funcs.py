@@ -258,7 +258,7 @@ def test_tanh_phrase(language):
         )
     )
 )
-@pytest.mark.skipif(os.environ['PYCCEL_DEFAULT_COMPILER'] == 'intel')
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel')
 def test_isfinite_call(language): # isfinite
     @template('T', [float, complex])
     def isfinite_call(x : 'T'):
