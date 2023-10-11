@@ -31,7 +31,7 @@ env:
 jobs:
   Python_version_picker:
     runs-on: windows-latest
-    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    #if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-matrix.outputs.python_version }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
