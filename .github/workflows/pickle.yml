@@ -48,10 +48,10 @@ jobs:
     - id: set-matrix
       run: |
         echo "$editable"
-        version=3.8
-        echo "$version"
+        #echo "$version"
         echo "matrix={\"editable_string\": $editable}"
-        echo "python_version=$version" >> $GITHUB_OUTPUT
+        #echo "python_version=$version" >> $GITHUB_OUTPUT
+        echo "python_version=3.8" >> $GITHUB_OUTPUT
         echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
 
   Pickled-installation:
