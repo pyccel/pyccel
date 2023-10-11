@@ -27,7 +27,7 @@ env:
 
 jobs:
   Python_version_picker:
-    runs-on: windows-latest
+    runs-on: macos-latest
     if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-python_version.outputs.python_version }}
