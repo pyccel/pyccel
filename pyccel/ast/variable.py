@@ -489,19 +489,27 @@ class Variable(PyccelAstNode):
 
     def clone(self, name, new_class = None, **kwargs):
         """
+        Create a clone of the current variable.
+
         Create a new Variable object of the chosen class
-        with the provided name and options
+        with the provided name and options. All non-specified
+        options will match the current instance.
 
         Parameters
-        ==========
-        name      : str
-                    The name of the new Variable
-        new_class : type
-                    The class of the new Variable
-                    The default is the same class
-        kwargs    : dict
-                    Dictionary containing any keyword-value
-                    pairs which are valid constructor keywords
+        ----------
+        name : str
+            The name of the new Variable.
+        new_class : type, optional
+            The class type of the new Variable (e.g. DottedVariable).
+            The default is the same class type.
+        **kwargs : dict
+            Dictionary containing any keyword-value
+            pairs which are valid constructor keywords.
+
+        Returns
+        -------
+        Variable
+            The cloned variable.
         """
 
         if (new_class is None):
@@ -515,6 +523,7 @@ class Variable(PyccelAstNode):
                             if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
+        new_kwargs['shape'] = self.alloc_shape
 
         return cls(**new_kwargs)
 
