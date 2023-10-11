@@ -47,6 +47,8 @@ jobs:
         echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
     - id: set-matrix
       run: |
+        echo $editable
+        echo "matrix={\"editable_string\": $editable}"
         echo "python_version=$version" >> $GITHUB_OUTPUT
         echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
 
