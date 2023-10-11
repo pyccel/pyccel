@@ -25,11 +25,10 @@ runs:
         echo "deb https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
         sudo apt-get update -o Dir::Etc::sourcelist="sources.list.d/oneAPI.list" -o APT::Get::List-Cleanup="0"
         sudo apt-get install -y intel-oneapi-compiler-fortran intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic intel-oneapi-openmp intel-oneapi-mkl intel-oneapi-mpi-devel
-        LATEST_VERSION=$(ls -1 /opt/intel/oneapi/compiler/ | grep -v latest | sort | tail -1)
-        # shellcheck source=/dev/null
+      shell: bash
+    - name: Save Intel environment variables
+      run: |
         source /opt/intel/oneapi/setvars.sh
-        echo "INTEL_SOURCE_FILE=/opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh"
-        echo "INTEL_SOURCE_FILE=/opt/intel/oneapi/compiler/$LATEST_VERSION/env/vars.sh" >> $GITHUB_ENV
         echo "$PATH" > $GITHUB_PATH
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "LIBRARY_PATH=$LIBRARY_PATH" >> $GITHUB_ENV
