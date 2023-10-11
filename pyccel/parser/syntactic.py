@@ -248,6 +248,27 @@ class SyntaxParser(BasicParser):
         return expr
 
     def _treat_type_annotation(self, stmt, annotation):
+        """
+        Treat an object passed as a type annotation.
+
+        Ensure that an object that was passed as a type annotation can be
+        recognised in the semantic stage by packing it into a SyntacticTypeAnnotation
+        in the correct way. Also check the syntax of any string type
+        annotations.
+
+        Parameters
+        ----------
+        stmt : ast.Ast
+            The ast node about which any errors should be raised.
+
+        annotation : pyccel.ast.basic.Basic
+            A visited object which is describing a type annotation.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The type annotation.
+        """
         if isinstance(annotation, FunctionCallArgument):
             annotation = annotation.value
 
