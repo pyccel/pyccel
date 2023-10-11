@@ -20,6 +20,7 @@ runs:
         POSSIBLE_NVC_EXECS=($(find /opt/nvidia/hpc_sdk/Linux_x86_64/ -name nvc))
         ls $(dirname ${POSSIBLE_NVC_EXECS[-1]})
         echo $(dirname ${POSSIBLE_NVC_EXECS[-1]}) >> $GITHUB_PATH
+        echo "CFLAGS=-noswitcherror" >> $GITHUB_ENV # No error for unrecognised flags. Necessary for mpi4py installation. See https://github.com/mpi4py/mpi4py/issues/114
       shell: bash
     - name: Install Valgrind
       run:
