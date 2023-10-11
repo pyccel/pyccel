@@ -50,6 +50,7 @@ jobs:
   Pickled-installation:
     runs-on: ubuntu-latest
     name: Deploy tests
+    needs: Python_version_picker
 
     steps:
       - uses: actions/checkout@v3
