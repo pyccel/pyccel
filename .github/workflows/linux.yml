@@ -32,7 +32,7 @@ jobs:
     name: Unit tests
     strategy:
       matrix:
-        python_version: ${{ github.action == "push" && ['3.8', '3.9', '3.10', '3.11'] || [${{ output.python_version }}] }}
+        python_version: ${{ github.action == 'push' && ['3.8', '3.9', '3.10', '3.11'] || [${{ output.python_version }}] }}
 
     steps:
       - uses: actions/checkout@v3
