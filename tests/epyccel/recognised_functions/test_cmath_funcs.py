@@ -258,7 +258,7 @@ def test_tanh_phrase(language):
         )
     )
 )
-@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel')
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Nan not correctly passed to intel function')
 def test_isfinite_call(language): # isfinite
     @template('T', [float, complex])
     def isfinite_call(x : 'T'):
