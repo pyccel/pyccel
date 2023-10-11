@@ -42,7 +42,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py macosx
       - name: Install dependencies
         uses: ./.github/actions/macos_install
       - name: Install Pyccel with tests

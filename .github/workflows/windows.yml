@@ -42,7 +42,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py windows
       # Uncomment to examine DLL requirements with 'objdump -x FILE'
       #- name: Install mingw tools
       #  uses: msys2/setup-msys2@v2
