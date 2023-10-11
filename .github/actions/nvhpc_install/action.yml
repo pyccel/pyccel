@@ -13,11 +13,13 @@ runs:
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-23-9
+        echo $PATH
         POSSIBLE_MPI_EXECS=($(find /opt/nvidia/hpc_sdk/Linux_x86_64/ -name mpicc | grep openmpi | grep "\.bin" -v))
         ls $(dirname ${POSSIBLE_MPI_EXECS[-1]})
         echo $(dirname ${POSSIBLE_MPI_EXECS[-1]}) >> $GITHUB_PATH
       shell: bash
     - name: Install Valgrind
       run:
+        echo $PATH
         sudo apt-get install valgrind
       shell: bash
