@@ -38,7 +38,7 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "editable=['-e', ' ']" >> $GITHUB_ENV
+        echo "editable=\"['-e', ' ']\"" >> $GITHUB_ENV
         #echo "version='3.9'" >> $GITHUB_ENV
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
