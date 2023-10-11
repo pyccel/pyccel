@@ -13,6 +13,7 @@ runs:
         echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
         sudo apt-get update -y
         sudo apt-get install -y nvhpc-23-9
+        find /opt/nvidia/hpc_sdk/ -name mpi*
       shell: bash
     - name: Install Valgrind
       run:
