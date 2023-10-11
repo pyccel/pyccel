@@ -123,7 +123,7 @@ elif sys.platform == "win32":
     gcc_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
-icc_info = {'exec' : 'icc',
+icc_info = {'exec' : 'icx',
             'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
