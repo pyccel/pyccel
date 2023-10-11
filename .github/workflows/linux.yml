@@ -34,10 +34,6 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-    # Checking out code as the set-matrix step utilizes a
-    # file named matrix_includes.json.
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
     - id: push-matrix
       if: github.event_name == 'push'
       run: |
@@ -49,7 +45,8 @@ jobs:
     # This step is explained more in a following section
     - id: set-matrix
       run: |
-        echo "matrix={$matrix}" >> $GITHUB_OUTPUT
+        echo "$matrix"
+        echo "matrix={\"python-version\": $matrix}" >> $GITHUB_OUTPUT
 
   Linux:
 
@@ -57,8 +54,7 @@ jobs:
     name: Unit tests
     needs: matrix_prep
     strategy:
-      matrix:
-        python_version: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
+      matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
 
     steps:
       - uses: actions/checkout@v3
