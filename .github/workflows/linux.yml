@@ -40,10 +40,12 @@ jobs:
       uses: actions/checkout@v2
     - id: push-matrix
       if: github.action == 'push'
-      echo "matrix=['3.8', '3.9', '3.10', '3.11']" >> $GITHUB_ENV
+      run: |
+        echo "matrix=['3.8', '3.9', '3.10', '3.11']" >> $GITHUB_ENV
     - id: dispatch-matrix
       if: github.action == 'workflow_dispatch'
-      echo "matrix=[${{ inputs.python_version }}]" >> $GITHUB_ENV
+      run: |
+        echo "matrix=[${{ inputs.python_version }}]" >> $GITHUB_ENV
     # This step is explained more in a following section
     - id: set-matrix
       run: |
