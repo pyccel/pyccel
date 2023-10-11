@@ -30,7 +30,7 @@ env:
 
 jobs:
   Python_version_picker:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-matrix.outputs.python_version }}
@@ -38,8 +38,8 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "version='3.9'" >> $GITHUB_ENV
-        echo "editable=['-e', '']" >> $GITHUB_ENV
+        echo "version=3.9" >> $GITHUB_ENV
+        echo "editable=['-e', ' ']" >> $GITHUB_ENV
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
@@ -56,7 +56,7 @@ jobs:
     needs: Python_version_picker
 
     strategy:
-      matrix: ${{fromJson(needs.matrix_prep.outputs.matrix)}}
+      matrix: ${{fromJson(needs.Python_version_picker.outputs.matrix)}}
 
     steps:
       - uses: actions/checkout@v3
