@@ -1121,10 +1121,15 @@ class PythonCodePrinter(CodePrinter):
     def _print_SyntacticTypeAnnotation(self, expr):
         dtypes = expr.dtypes
         ranks = [f"[{','.join(':'*r)}]" if r>0 else '' for r in expr.ranks]
-        order = [f"(order='{o}')" if o else '' for o in expr.orders]
+        order = [f"(order={o})" if o else '' for o in expr.orders]
         annot = [f'{d}{r}{o}' for d,r,o in zip(dtypes, ranks, order)]
         const = 'const ' if expr.is_const else ''
         return "'" + const + ' | '.join(annot) + "'"
+
+    def _print_FunctionTypeAnnotation(self, expr):
+        args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
+        results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
+        return "'" + f"({results})({args})" + "'"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
