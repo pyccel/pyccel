@@ -15,6 +15,8 @@ on:
       pr_repo:
         required: false
         type: string
+  push:
+    branches: devel
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -24,25 +26,44 @@ env:
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
 
 jobs:
+  Python_version_picker:
+    runs-on: macos-latest
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    outputs:
+      python_version: ${{ steps.set-python_version.outputs.python_version }}
+    steps:
+    - if: github.event_name == 'push'
+      run: |
+        echo "version='3.9'" >> $GITHUB_ENV
+    - id: dispatch-matrix
+      if: github.event_name == 'workflow_dispatch'
+      run: |
+        echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
+    # This step is explained more in a following section
+    - id: set-python_version
+      run: |
+        echo "python_version=$version" >> $GITHUB_OUTPUT
+
   MacOSX:
 
     runs-on: macos-latest
     name: Unit tests
+    needs: Python_version_picker
 
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
-      - name: Set up Python ${{ inputs.python_version }}
+      - name: Set up Python ${{ needs.Python_version_picker.outputs.python_version }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.Python_version_picker.outputs.python_version }}
       - name: "Setup"
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py macosx
       - name: Install dependencies
         uses: ./.github/actions/macos_install
       - name: Install Pyccel with tests

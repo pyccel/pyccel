@@ -53,7 +53,7 @@ jobs:
         run: |
           pip install jwt requests
           cd compare
-          python ../base/ci_tools/setup_check_run.py
+          python ../base/ci_tools/setup_check_run.py docs
           cd ..
       - name: Install python CI dependencies
         run: |
