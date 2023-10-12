@@ -1112,6 +1112,20 @@ class PythonCodePrinter(CodePrinter):
         omp_expr = '#$omp {}\n'.format(omp_expr)
         return omp_expr
 
+    #------------------Annotation Printer------------------
+
+    def _print_UnionTypeAnnotation(self, expr):
+        types = [self._print(t)[1:-1] for t in expr.type_list]
+        return "'" + ' | '.join(types) + "'"
+
+    def _print_SyntacticTypeAnnotation(self, expr):
+        dtypes = expr.dtypes
+        ranks = [f"[{','.join(':'*r)}]" if r>0 else '' for r in expr.ranks]
+        order = [f"(order='{o}')" if o else '' for o in expr.orders]
+        annot = [f'{d}{r}{o}' for d,r,o in zip(dtypes, ranks, order)]
+        const = 'const ' if expr.is_const else ''
+        return "'" + const + ' | '.join(annot) + "'"
+
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code
