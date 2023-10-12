@@ -345,7 +345,9 @@ class SyntacticTypeAnnotation(Basic):
         Build a SyntacticTypeAnnotation from a textx annotation.
 
         Build a SyntacticTypeAnnotation from a textx annotation. This function should
-        be moved to the SyntacticParser once headers are deprecated.
+        be moved to the SyntacticParser once headers are deprecated. When that is
+        done there should only be 1 textx object handling types so the if conditions
+        can be changed to use isinstance.
 
         Parameters
         ----------
@@ -366,6 +368,7 @@ class SyntacticTypeAnnotation(Basic):
         if isinstance(annotation, (list, tuple)):
             return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
         elif hasattr(annotation, 'const'):
+            # Handle UnionTypeStmt
             is_const = annotation.const
             dtypes = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.dtypes]
             if any(isinstance(d, FunctionTypeAnnotation) for d in dtypes):
@@ -378,12 +381,14 @@ class SyntacticTypeAnnotation(Basic):
                 orders = [o for d in dtypes for o in d.orders]
                 return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
         elif hasattr(annotation, 'dtype'):
+            # Handle VariableType
             is_const = None
             dtype_names = [annotation.dtype]
             ranks = [len(getattr(annotation.trailer, 'args', ()))]
             orders = [getattr(annotation.trailer, 'order', None)]
             return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
         elif hasattr(annotation, 'results'):
+            # Handle FuncType
             args = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.decs]
             results = [SyntacticTypeAnnotation.build_from_textx(r) for r in annotation.results]
             return FunctionTypeAnnotation(args, results)
