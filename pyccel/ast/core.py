@@ -351,8 +351,11 @@ class Concatenate(PyccelAstNode):
 
 
 class Assign(Basic):
+    """
+    Represents variable assignment for code generation.
 
-    """Represents variable assignment for code generation.
+    Class representing an assignment node, where the result of an expression
+    (rhs: right hand side) is saved into a variable (lhs: left hand side).
 
     Parameters
     ----------
@@ -363,20 +366,23 @@ class Assign(Basic):
            include PyccelSymbol, and IndexedElement. Types that
            subclass these types are also supported.
         In the semantic stage:
-           Variable or IndexedElement
+           Variable or IndexedElement.
 
     rhs : PyccelAstNode
         In the syntactic stage:
-          Object representing the rhs of the expression
+          Object representing the rhs of the expression.
         In the semantic stage :
-          PyccelAstNode with the same shape as the lhs
+          PyccelAstNode with the same shape as the lhs.
 
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
+    status : str, optional
+        If lhs is not allocatable, then status is None.
+        otherwise, status is {'allocated', 'unallocated'}.
 
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+    like : Variable, optional
+        Contains the name of the variable from which the lhs will be cloned.
+
+    fst : ast.Ast
+        The ast object parsed by Python's ast module.
 
     Examples
     --------
@@ -1770,15 +1776,20 @@ class ForIterator(For):
 
 class FunctionCallArgument(Basic):
     """
-    An argument passed in a function call
+    An argument passed in a function call.
+
+    Class describing an argument passed to a function in a
+    function call.
 
     Parameters
     ---------
-    value   : PyccelAstNode
-              The expression passed as an argument
-    keyword : str
-              If the argument is passed by keyword then this
-              is that keyword
+    value : PyccelAstNode
+        The expression passed as an argument.
+    keyword : str, optional
+        If the argument is passed by keyword then this
+        is that keyword.
+    fst : ast.Ast
+        The ast object parsed by Python's ast module.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
@@ -1901,7 +1912,10 @@ class FunctionDefArgument(PyccelAstNode):
 
     @property
     def annotation(self):
-        """ The argument annotation providing dtype information
+        """
+        The argument annotation providing dtype information.
+
+        The argument annotation providing dtype information.
         """
         return self._annotation
 
@@ -3071,7 +3085,6 @@ class Interface(Basic):
                         severity='fatal')
 
 class FunctionAddress(FunctionDef):
-
     """
     Represents a function address.
 
@@ -3100,6 +3113,9 @@ class FunctionAddress(FunctionDef):
     memory_handling : str
         Must be 'heap', 'stack' or 'alias' [Default value: 'stack'].
 
+    **kwargs : dict
+        Any keyword arguments which should be passed to the super class FunctionDef.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
@@ -3109,6 +3125,11 @@ class FunctionAddress(FunctionDef):
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
     >>> # we can also Declare a FunctionAddress
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
+
+    See also
+    --------
+    FunctionDef
+        The super class from which this object derives.
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
