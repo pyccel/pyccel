@@ -1610,7 +1610,29 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
-    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = -1, input_order = None):
+    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = 0, input_order = None):
+        """
+        Convert a PyccelAstNode class type to a TypeAnnotation.
+
+        Convert a PyccelAstNode class type to a TypeAnnotation. This is done using
+        the static dtype, precision and rank stored in the class.
+
+        Parameters
+        ----------
+        expr : type deriving from PyccelAstNode
+            The object which was passed to the type annotation.
+
+        input_rank : int, default=0
+            The rank that was deduced from the annotation.
+
+        input_order : str, optional
+            The order that was deduced from the annotation.
+
+        Returns
+        -------
+        VariableTypeAnnotation
+            Object describing the type that should be created.
+        """
         dtype = expr.static_dtype()
         prec = expr.static_precision()
         if input_rank != 0:
