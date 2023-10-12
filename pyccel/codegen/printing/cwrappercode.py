@@ -104,7 +104,7 @@ class CWrapperCodePrinter(CCodePrinter):
         scope : pyccel.parser.scope.Scope
             The scope where the object was defined.
 
-        obj : pyccel.ast.basic.Basic
+        obj : pyccel.ast.basic.PyccelAstNode
             The object whose name we wish to identify.
 
         Returns

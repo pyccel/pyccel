@@ -12,7 +12,7 @@ import inspect
 from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, TypedAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
@@ -588,7 +588,7 @@ class Variable(TypedAstNode):
             raise ValueError("Variables cannot become temporary")
         self._is_temp = is_temp
 
-class DottedName(Basic):
+class DottedName(PyccelAstNode):
 
     """
     Represents a dotted object.

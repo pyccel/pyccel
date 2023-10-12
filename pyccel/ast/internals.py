@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, TypedAstNode, Immutable
+from .basic     import PyccelAstNode, TypedAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
@@ -180,7 +180,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
             return False
 
 
-class Slice(Basic):
+class Slice(PyccelAstNode):
     """
     Represents a slice in the code.
 
@@ -324,7 +324,7 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-class AnnotatedPyccelSymbol(Basic):
+class AnnotatedPyccelSymbol(PyccelAstNode):
     """
     Class representing a symbol in the code which has an annotation.
 
@@ -371,13 +371,13 @@ class AnnotatedPyccelSymbol(Basic):
         """
         return self._annotation
 
-class PrecomputedCode(Basic):
+class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
     before it is needed chronologically (e.g. for inline functions as arguments
     to the same function).
     This class should be avoided if at all possible as it may break code which
-    searches through attribute nodes, where possible use Basic's methods,
+    searches through attribute nodes, where possible use PyccelAstNode's methods,
     e.g. substitute
 
     Parameters

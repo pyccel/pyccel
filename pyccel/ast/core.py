@@ -15,7 +15,7 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 from pyccel.utilities.strings import create_incremented_string
 
-from .basic     import Basic, TypedAstNode, iterable, ScopedAstNode
+from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -205,7 +205,7 @@ def create_variable(forbidden_names, prefix = None, counter = 1):
     return PyccelSymbol(name, is_temp=True), counter
 
 
-class AsName(Basic):
+class AsName(PyccelAstNode):
 
     """
     Represents a renaming of a variable, used with Import.
@@ -222,7 +222,7 @@ class AsName(Basic):
 
     Parameters
     ==========
-    obj    : Basic or BasicType
+    obj    : PyccelAstNode or PyccelAstNodeType
              The variable, function, or module being renamed
     target : str
              name of variable or function in this context
@@ -232,9 +232,9 @@ class AsName(Basic):
 
     def __init__(self, obj, target):
         if pyccel_stage != "syntactic":
-            assert (isinstance(obj, Basic) and \
+            assert (isinstance(obj, PyccelAstNode) and \
                     not isinstance(obj, PyccelSymbol)) or \
-                   (isinstance(obj, type) and issubclass(obj, Basic))
+                   (isinstance(obj, type) and issubclass(obj, PyccelAstNode))
         self._obj = obj
         self._target = target
         super().__init__()
@@ -349,7 +349,7 @@ class Concatenate(TypedAstNode):
         return self._args
 
 
-class Assign(Basic):
+class Assign(PyccelAstNode):
 
     """Represents variable assignment for code generation.
 
@@ -480,7 +480,7 @@ class Assign(Basic):
         return False
 
 #------------------------------------------------------------------------------
-class Allocate(Basic):
+class Allocate(PyccelAstNode):
     """
     Represents memory allocation for code generation.
 
@@ -577,7 +577,7 @@ class Allocate(Basic):
         return hash((id(self.variable), self.shape, self.order, self.status))
 
 #------------------------------------------------------------------------------
-class Deallocate(Basic):
+class Deallocate(PyccelAstNode):
     """
     Represents memory deallocation (usually of an array) for code generation.
     This is relevant to low-level target languages, such as C or Fortran,
@@ -622,7 +622,7 @@ class Deallocate(Basic):
         return hash(id(self.variable))
 
 #------------------------------------------------------------------------------
-class CodeBlock(Basic):
+class CodeBlock(PyccelAstNode):
 
     """Represents a list of stmt for code generation.
        we use it when a single statement in python
@@ -705,7 +705,7 @@ class CodeBlock(Basic):
             if not l.fst:
                 l.set_fst(fst)
 
-class AliasAssign(Basic):
+class AliasAssign(PyccelAstNode):
 
     """Represents aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
@@ -758,7 +758,7 @@ class AliasAssign(Basic):
         return self._rhs
 
 
-class SymbolicAssign(Basic):
+class SymbolicAssign(PyccelAstNode):
 
     """Represents symbolic aliasing for code generation. An alias is any statement of the
     form `lhs := rhs` where
@@ -1351,7 +1351,7 @@ class Module(ScopedAstNode):
         """
         return self._internal_dictionary.keys()
 
-class ModuleHeader(Basic):
+class ModuleHeader(PyccelAstNode):
     """
     Represents the header file for a module.
 
@@ -1494,7 +1494,7 @@ class Program(ScopedAstNode):
 
 
 #==============================================================================
-class Iterable(Basic):
+class Iterable(PyccelAstNode):
     """
     Wrapper around iterable types helping to convert between those
     types and a range (necessary in low level languages, e.g. C and Fortran)
@@ -1767,7 +1767,7 @@ class ForIterator(For):
     def ranges(self):
         return get_iterable_ranges(self.iterable)
 
-class FunctionCallArgument(Basic):
+class FunctionCallArgument(PyccelAstNode):
     """
     An argument passed in a function call
 
@@ -2267,7 +2267,7 @@ class ConstructorCall(DottedFunctionCall):
         return self._cls_variable
 
 
-class Return(Basic):
+class Return(PyccelAstNode):
 
     """Represents a function return in the code.
 
@@ -2962,7 +2962,7 @@ class PyccelFunctionDef(FunctionDef):
         """
         return self._argument_description
 
-class Interface(Basic):
+class Interface(PyccelAstNode):
 
     """Represents an Interface.
 
@@ -3540,7 +3540,7 @@ class ClassDef(ScopedAstNode):
         return False
 
 
-class Import(Basic):
+class Import(PyccelAstNode):
 
     """Represents inclusion of dependencies in the code.
 
@@ -3676,7 +3676,7 @@ class Import(Basic):
 
 # TODO: Should Declare have an optional init value for each var?
 
-class FuncAddressDeclare(Basic):
+class FuncAddressDeclare(PyccelAstNode):
 
     """Represents a FunctionAddress declaration in the code.
 
@@ -3754,7 +3754,7 @@ class FuncAddressDeclare(Basic):
         return self._static
 
 # ARA : issue-999 add is_external for external function exported through header files
-class Declare(Basic):
+class Declare(PyccelAstNode):
 
     """Represents a variable declaration in the code.
 
@@ -3876,21 +3876,21 @@ class Declare(Basic):
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))
 
-class Break(Basic):
+class Break(PyccelAstNode):
 
     """Represents a break in the code."""
     __slots__ = ()
     _attribute_nodes = ()
 
 
-class Continue(Basic):
+class Continue(PyccelAstNode):
 
     """Represents a continue in the code."""
     __slots__ = ()
     _attribute_nodes = ()
 
 
-class Raise(Basic):
+class Raise(PyccelAstNode):
 
     """Represents a raise in the code."""
     __slots__ = ()
@@ -3898,7 +3898,7 @@ class Raise(Basic):
 
 
 
-class SymbolicPrint(Basic):
+class SymbolicPrint(PyccelAstNode):
 
     """Represents a print function of symbolic expressions in the code.
 
@@ -3936,7 +3936,7 @@ class SymbolicPrint(Basic):
         return self._expr
 
 
-class Del(Basic):
+class Del(PyccelAstNode):
 
     """Represents a memory deallocation in the code.
 
@@ -3970,7 +3970,7 @@ class Del(Basic):
         return self._variables
 
 
-class EmptyNode(Basic):
+class EmptyNode(PyccelAstNode):
     """
     Represents an empty node in the abstract syntax tree (AST).
     When a subtree is removed from the AST, we replace it with an EmptyNode
@@ -3996,7 +3996,7 @@ class EmptyNode(Basic):
         return ''
 
 
-class Comment(Basic):
+class Comment(PyccelAstNode):
 
     """Represents a Comment in the code.
 
@@ -4068,7 +4068,7 @@ class SeparatorComment(Comment):
         text = """.""" * n
         super().__init__(text)
 
-class AnnotatedComment(Basic):
+class AnnotatedComment(PyccelAstNode):
 
     """Represents a Annotated Comment in the code.
 
@@ -4108,7 +4108,7 @@ class AnnotatedComment(Basic):
         args = (self.accel, self.txt)
         return args
 
-class CommentBlock(Basic):
+class CommentBlock(PyccelAstNode):
 
     """ Represents a Block of Comments
 
@@ -4144,7 +4144,7 @@ class CommentBlock(Basic):
         self._header = header
 
 
-class Assert(Basic):
+class Assert(PyccelAstNode):
     """
     Represents an assert statement in the code.
 
@@ -4168,13 +4168,13 @@ class Assert(Basic):
         return self._test
 
 
-class Pass(Basic):
+class Pass(PyccelAstNode):
 
     """Basic class for pass instruction."""
     __slots__ = ()
     _attribute_nodes = ()
 
-class Exit(Basic):
+class Exit(PyccelAstNode):
 
     """Basic class for exits."""
     __slots__ = ()
@@ -4186,7 +4186,7 @@ class ErrorExit(Exit):
     """Exit with error."""
     __slots__ = ()
 
-class IfSection(Basic):
+class IfSection(PyccelAstNode):
     """Represents a condition and associated code block
     in an if statement in the code.
 
@@ -4239,7 +4239,7 @@ class IfSection(Basic):
     def __str__(self):
         return "IfSec({},{})".format(str(self.condition), str(self.body))
 
-class If(Basic):
+class If(PyccelAstNode):
 
     """Represents a if statement in the code.
 
@@ -4283,7 +4283,7 @@ class If(Basic):
     def __str__(self):
         return "If({})".format(','.join(str(b) for b in self.blocks))
 
-class StarredArguments(Basic):
+class StarredArguments(PyccelAstNode):
     __slots__ = ('_starred_obj',)
     _attribute_nodes = ('_starred_obj',)
     def __init__(self, args):
@@ -4311,7 +4311,7 @@ class InProgram(TypedAstNode):
 
 # ...
 
-class Decorator(Basic):
+class Decorator(PyccelAstNode):
     """ Class representing a function decorator.
     For now this is just designed to handle the pyccel decorators
 

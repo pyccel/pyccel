@@ -6,7 +6,7 @@
 """
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic              import TypedAstNode, Basic
+from .basic              import TypedAstNode, PyccelAstNode
 from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
                                   NativeComplex, NativeString)
 
@@ -252,7 +252,7 @@ class Nil(TypedAstNode, metaclass=Singleton):
 
 #------------------------------------------------------------------------------
 
-class NilArgument(Basic):
+class NilArgument(PyccelAstNode):
     """Represents the python value None when passed as an argument
     to an inline function. This class is necessary as to avoid
     accidental substitution due to Singletons"""

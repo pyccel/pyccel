@@ -417,7 +417,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST object describing the code which must be printed in
             the wrapping module to expose the variable.
         """

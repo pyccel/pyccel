@@ -7,7 +7,7 @@
 Module representing object address.
 """
 
-from .basic import TypedAstNode, Basic
+from .basic import TypedAstNode, PyccelAstNode
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
@@ -41,7 +41,7 @@ class ObjectAddress(TypedAstNode):
         return self._obj
 
 #------------------------------------------------------------------------------
-class CStringExpression(Basic):
+class CStringExpression(PyccelAstNode):
     """
     Internal class used to hold a C string that has LiteralStrings and C macros.
 
@@ -182,7 +182,7 @@ class CStringExpression(Basic):
         return self._expression
 
 #------------------------------------------------------------------------------
-class CMacro(Basic):
+class CMacro(PyccelAstNode):
     """Represents a c macro"""
     __slots__ = ('_macro',)
     _attribute_nodes  = ()

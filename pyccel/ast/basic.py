@@ -6,14 +6,14 @@
 """
 This module contains classes from which all pyccel nodes inherit.
 They are:
-- Basic, which provides a python AST
+- PyccelAstNode, which provides a python AST
 - TypedAstNode which describes each TypedAstNode
 """
 import ast
 
 from pyccel.utilities.stage   import PyccelStage
 
-__all__ = ('Basic', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
+__all__ = ('PyccelAstNode', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
@@ -25,13 +25,13 @@ pyccel_stage = PyccelStage()
 #==============================================================================
 class Immutable:
     """ Superclass for classes which cannot inherit
-    from Basic """
+    from PyccelAstNode """
     __slots__ = ()
 
 #==============================================================================
-class Basic:
+class PyccelAstNode:
     """
-    Basic class from which all objects in the Pyccel AST inherit.
+    PyccelAstNode class from which all objects in the Pyccel AST inherit.
 
     This foundational class provides all the functionalities that are common to
     objects in the Pyccel AST. This includes the construction and navigation of
@@ -52,7 +52,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if Basic._ignore(c):
+            if PyccelAstNode._ignore(c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -63,19 +63,19 @@ class Basic:
             elif iterable(c):
                 size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or Basic._ignore(ci)) \
+                                 or PyccelAstNode._ignore(ci)) \
                         else convert_to_literal(ci) for ci in c if not iterable(ci))
                 if len(c) != size:
-                    raise TypeError("Basic child cannot be a tuple of tuples")
+                    raise TypeError("PyccelAstNode child cannot be a tuple of tuples")
                 setattr(self, c_name, c)
 
-            elif not isinstance(c, Basic):
-                raise TypeError("Basic child must be a Basic or a tuple not {}".format(type(c)))
+            elif not isinstance(c, PyccelAstNode):
+                raise TypeError("PyccelAstNode child must be a PyccelAstNode or a tuple not {}".format(type(c)))
 
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not Basic._ignore(ci):
+                    if not PyccelAstNode._ignore(ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
@@ -184,7 +184,7 @@ class Basic:
 
         Parameters
         ----------
-        node : Basic
+        node : PyccelAstNode
                The object whose attributes we are interested in
 
         Results
@@ -199,7 +199,7 @@ class Basic:
 
         Parameters
         ----------
-        node           : Basic
+        node           : PyccelAstNode
                       The object whose users we are interested in
         excluded_nodes : tuple of types
                       Types for which is_user_of should not be called
@@ -344,7 +344,7 @@ class Basic:
 
     def get_all_user_nodes(self):
         """ Returns all the objects user nodes.
-        This function should only be called in Basic
+        This function should only be called in PyccelAstNode
         """
         return self._user_nodes
 
@@ -391,7 +391,7 @@ class Basic:
 
         Parameters
         ----------
-        user_node : Basic
+        user_node : PyccelAstNode
                     Node which previously used the current node
         invalidate : bool
                     Indicates whether the removed object should
@@ -435,7 +435,7 @@ class Basic:
         """
         self._pyccel_staging = pyccel_stage.current_stage
 
-class TypedAstNode(Basic):
+class TypedAstNode(PyccelAstNode):
     """Class from which all nodes containing objects inherit
     """
     __slots__  = ()
@@ -478,7 +478,7 @@ class TypedAstNode(Basic):
 
 
 #------------------------------------------------------------------------------
-class ScopedAstNode(Basic):
+class ScopedAstNode(PyccelAstNode):
     """ Class from which all objects with a scope inherit
     """
     __slots__ = ('_scope',)

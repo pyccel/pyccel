@@ -53,7 +53,7 @@ In the syntactic, semantic, and code generation stages a similar strategy is use
 #### Example
 Suppose we want to generate the code for an object of the class `NumpyTanh`, first we collect the inheritance tree of `NumpyTanh`. This gives us:
 ```python
-('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelInternalFunction', 'TypedAstNode', 'Basic')
+('NumpyTanh', 'NumpyUfuncUnary', 'NumpyUfuncBase', 'PyccelInternalFunction', 'TypedAstNode', 'PyccelAstNode')
 ```
 Therefore the print functions which are acceptable for visiting this object are:
 
@@ -62,7 +62,7 @@ Therefore the print functions which are acceptable for visiting this object are:
 -   `_print_NumpyUfuncBase` 
 -   `_print_PyccelInternalFunction` 
 -   `_print_TypedAstNode` 
--   `_print_Basic` 
+-   `_print_PyccelAstNode` 
 
 We run through these possible functions choosing the one which is the most specialised. If none of these methods exist, then an error is raised.
 
@@ -70,7 +70,7 @@ In the case of `NumpyTanh` the function which will be selected is `_print_NumpyU
 
 ### AST
 
-The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.Basic](../pyccel/ast/basic.py).
+The objects as understood by Pyccel are each described by classes which inherit from [pyccel.ast.basic.PyccelAstNode](../pyccel/ast/basic.py).
 These classes are found in the [ast](../pyccel/ast) folder.
 The objects in the Abstract Syntax Tree (AST) are described in several files.
 There is one file for each supported extension module and files to group concepts, e.g. literals/operators/built-in functions.

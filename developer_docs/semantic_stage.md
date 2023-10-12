@@ -155,12 +155,12 @@ Variable declarations are created in the printer when needed from the scope vari
 
 ## Object Tree
 
-All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py).
+All the objects in the Pyccel AST inherit from [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
 This super-class stores information about how the various objects are related.
 This allows the class to provide functions such as `get_user_nodes` (which returns all objects of a given type which use the node), `get_attribute_nodes` (which returns all objects of a given type which are used by the node), `is_attribute_of` (which indicates if the node is used by the argument), `is_user_of` (which indicates if the node uses the argument), and `substitute` (which allows all occurrences of an object in the node to be replaced by a different object).
-See [`pyccel.ast.basic.Basic`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
+See [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py) for more information about these functions and other useful utility functions.
 
-The tree is constructed in `Basic.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
+The tree is constructed in `PyccelAstNode.__init__` using the `_attribute_nodes` attribute to recognise the names of attributes which must be added to the tree.
 Nevertheless the object tree should be considered in two situations.
 
 Firstly, if the object is constructed and AST objects are then added to it (e.g. the member function `pyccel.ast.core.CodeBlock.insert2body` used for the garbage collector).
@@ -176,7 +176,7 @@ However if this were done there would be multiple user nodes from both the seman
 For example, if we need to have access to the containing function we could do `expr.get_user_nodes(FunctionDef)`.
 We expect that this only returns semantic objects if `expr` is a result of the semantic stage.
 However if objects such as `pyccel.ast.core.Continue` are returned as is, then we would get access to both the syntactic and the semantic versions of the containing function without any way to distinguish between the two.
-To avoid this it is important to call the `pyccel.ast.basic.Basic.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
+To avoid this it is important to call the `pyccel.ast.basic.PyccelAstNode.clear_user_nodes` function to remove the syntactic objects from the tree before returning the object:
 ```python
 def _visit_Continue(self, expr):
     expr.clear_user_nodes()

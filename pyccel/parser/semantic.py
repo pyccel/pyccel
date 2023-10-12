@@ -20,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, TypedAstNode, ScopedAstNode
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
@@ -285,7 +285,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             An annotated object which can be printed.
         """
 
@@ -513,7 +513,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
                 An AST object representing an object in the code whose type
                 must be determined.
 
@@ -1625,12 +1625,12 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             Object to visit of type X.
         
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             AST object which is the semantic equivalent of expr.
         """
 
@@ -1647,7 +1647,7 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr)
-                if isinstance(obj, Basic) and self._current_fst_node:
+                if isinstance(obj, PyccelAstNode) and self._current_fst_node:
                     obj.set_fst(self._current_fst_node)
                 self._current_fst_node = current_fst
                 return obj

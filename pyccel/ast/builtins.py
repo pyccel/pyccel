@@ -14,7 +14,7 @@ from pyccel.errors.errors import PyccelError
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, TypedAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric)
@@ -307,7 +307,7 @@ class PythonComplex(TypedAstNode):
         return "complex({}, {})".format(str(self.real), str(self.imag))
 
 #==============================================================================
-class PythonEnumerate(Basic):
+class PythonEnumerate(PyccelAstNode):
 
     """
     Represents the enumerate stmt
@@ -570,7 +570,7 @@ class PythonList(PythonTuple):
     __slots__ = ()
 
 #==============================================================================
-class PythonMap(Basic):
+class PythonMap(PyccelAstNode):
     """ Represents the map stmt
     """
     __slots__ = ('_func','_func_args')
@@ -604,7 +604,7 @@ class PythonMap(Basic):
         return PythonLen(self.func_args)
 
 #==============================================================================
-class PythonPrint(Basic):
+class PythonPrint(PyccelAstNode):
 
     """Represents a print function in the code.
 
@@ -642,7 +642,7 @@ class PythonPrint(Basic):
         return self._file
 
 #==============================================================================
-class PythonRange(Basic):
+class PythonRange(PyccelAstNode):
 
     """
     Represents a range.
@@ -833,7 +833,7 @@ class PythonMin(PyccelInternalFunction):
         super().__init__(x)
 
 #==============================================================================
-class Lambda(Basic):
+class Lambda(PyccelAstNode):
     """Represents a call to python lambda for temporary functions
 
     Parameters
@@ -876,7 +876,7 @@ class Lambda(Basic):
                 expr = self.expr)
 
 #==============================================================================
-class PythonType(Basic):
+class PythonType(PyccelAstNode):
     """
     Represents a call to the Python builtin `type` function.
 
