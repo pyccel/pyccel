@@ -13,11 +13,8 @@ int_types = ['int8', 'int16', 'int32', 'int64']
 float_types = ['float32', 'float64']
 
 def test_array_int_1d_scalar_add(language):
-    @types( 'int8[:]' , 'int8' , 'int')
-    @types( 'int16[:]', 'int16', 'int')
-    @types( 'int32[:]', 'int32', 'int')
-    @types( 'int64[:]', 'int64', 'int')
-    def array_int_1d_scalar_add( x, a, x_len ):
+    @template('T', ['int8', 'int16', 'int32', 'int64'])
+    def array_int_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_int_1d_scalar_add
@@ -35,9 +32,8 @@ def test_array_int_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_real_1d_scalar_add(language):
-    @types( 'float32[:]', 'float32', 'int')
-    @types( 'double[:]' , 'double' , 'int')
-    def array_real_1d_scalar_add( x, a, x_len ):
+    @template('T', ['float32', 'double'])
+    def array_real_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_real_1d_scalar_add
@@ -55,9 +51,8 @@ def test_array_real_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_complex_1d_scalar_add(language):
-    @types( 'complex64[:]' , 'complex64' , 'int')
-    @types( 'complex128[:]' , 'complex128' , 'int')
-    def array_complex_1d_scalar_add( x, a, x_len ):
+    @template('T', ['complex64', 'complex128'])
+    def array_complex_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_complex_1d_scalar_add
@@ -77,11 +72,8 @@ def test_array_complex_1d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_int_2d_scalar_add(language):
-    @types( 'int8[:,:]' , 'int8' , 'int', 'int')
-    @types( 'int16[:,:]', 'int16', 'int', 'int')
-    @types( 'int32[:,:]', 'int32', 'int', 'int')
-    @types( 'int64[:,:]', 'int64', 'int', 'int')
-    def array_int_2d_scalar_add( x, a, d1, d2 ):
+    @template('T', ['int8', 'int16', 'int32', 'int64'])
+    def array_int_2d_scalar_add( x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
@@ -101,9 +93,8 @@ def test_array_int_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_real_2d_scalar_add(language):
-    @types( 'float32[:,:]', 'float32', 'int', 'int')
-    @types( 'double[:,:]' , 'double' , 'int', 'int')
-    def array_real_2d_scalar_add( x, a, d1, d2 ):
+    @template('T', ['float32', 'double'])
+    def array_real_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
@@ -123,9 +114,8 @@ def test_array_real_2d_scalar_add(language):
         assert np.array_equal( x1, x2 )
 
 def test_array_complex_2d_scalar_add(language):
-    @types( 'complex64[:,:]' , 'complex64' , 'int', 'int')
-    @types( 'complex128[:,:]' , 'complex128' , 'int', 'int')
-    def array_complex_2d_scalar_add( x, a, d1, d2 ):
+    @template('T', ['complex64', 'complex128'])
+    def array_complex_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
