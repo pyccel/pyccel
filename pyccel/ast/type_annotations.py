@@ -242,8 +242,9 @@ class UnionTypeAnnotation(Basic):
         annot : VariableTypeAnnotation | FunctionTypeAnnotation
             The object describing the additional type annotation.
         """
-        self._type_annotations += (annot,)
-        annot.set_current_user_node(self)
+        if annot not in self._type_annotations:
+            self._type_annotations += (annot,)
+            annot.set_current_user_node(self)
 
 class SyntacticTypeAnnotation(Basic):
     """
@@ -326,6 +327,15 @@ class SyntacticTypeAnnotation(Basic):
         modified, and false otherwise.
         """
         return self._is_const
+
+    def __hash__(self):
+        return hash((self._dtypes, self._ranks, self._orders))
+
+    def __eq__(self, o):
+        if isinstance(o, SyntacticTypeAnnotation):
+            return self.dtypes == o.dtypes and \
+                    self.ranks == o.ranks and \
+                    self.orders == o.orders
 
     @staticmethod
     def build_from_textx(annotation):
