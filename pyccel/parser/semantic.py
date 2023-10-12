@@ -1610,15 +1610,19 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
-    def _PyccelAstNode_to_TypeAnnotation(self, expr):
+    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank, input_order):
         dtype = expr.static_dtype()
         prec = expr.static_precision()
-        rank = expr.static_rank()
-        order = expr.static_order()
-        if not isinstance(rank, int):
-            rank = 0
-        if order is not None and not isinstance(order, str):
-            order = None
+        if input_rank != -1:
+            rank = input_rank
+            order = input_order
+        else:
+            rank = expr.static_rank()
+            if not isinstance(rank, int):
+                rank = 0
+            order = expr.static_order()
+            if order is not None and not isinstance(order, str):
+                order = None
         cls_base = get_cls_base(dtype, prec, rank)
         return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
 
@@ -2160,9 +2164,9 @@ class SemanticParser(BasicParser):
             dtype_from_scope = self.scope.find(dtype_name)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope))
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
             elif isinstance(dtype_from_scope, PyccelFunctionDef):
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name))
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name, rank, order))
             elif isinstance(dtype_from_scope, VariableTypeAnnotation):
                 types.append(dtype_from_scope)
             elif isinstance(dtype_from_scope, ClassDef):
@@ -2182,6 +2186,9 @@ class SemanticParser(BasicParser):
                 except KeyError:
                     errors.report(f'Could not identify type : {dtype_name}',
                             severity='fatal', symbol=expr)
+
+                if rank == -1:
+                    rank = 0
 
                 try:
                     cls_base = get_cls_base(dtype, prec, rank)
