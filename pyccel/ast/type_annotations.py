@@ -282,9 +282,9 @@ class SyntacticTypeAnnotation(Basic):
             raise ValueError("Orders should be strings")
         if not (isinstance(is_const, bool) or is_const is None):
             raise ValueError("Is const should be a boolean")
-        self._dtypes = dtypes
-        self._ranks = ranks
-        self._orders = [o if o != '' else None for o in orders]
+        self._dtypes = tuple(dtypes)
+        self._ranks = tuple(ranks)
+        self._orders = tuple([o if o != '' else None for o in orders])
         self._is_const = is_const
         super().__init__()
 
