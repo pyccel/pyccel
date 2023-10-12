@@ -76,6 +76,8 @@ class TemplateStmt(BasicStmt):
         The name of the template type symbol.
     dtypes : list of str
         A list of the types that the template describes.
+    **kwargs : dict
+        The textx arguments.
     """
     def __init__(self, *, name, dtypes, **kwargs):
         self.dtypes = dtypes
@@ -204,8 +206,13 @@ class UnionTypeStmt(BasicStmt):
 
     @property
     def expr(self):
+        """
+        Get the Pyccel equivalent of this object.
+
+        Get the Pyccel equivalent of this object.
+        To be removed when header support is deprecated.
+        """
         dtypes = [i.expr for i in self.dtypes]
-        print([type(i) for i in self.dtypes])
         if self.const:
             for d_type in dtypes:
                 d_type["is_const"] = True
@@ -306,6 +313,8 @@ class FunctionHeaderStmt(BasicStmt):
         List of argument types.
     kind : str
         One among {function, method}.
+    static : bool
+        Indicates if the function is a static function.
     results : list, tuple
         List of output types.
     **kwargs : dict
@@ -335,9 +344,7 @@ class FunctionHeaderStmt(BasicStmt):
         else:
             kind = str(self.kind)
 
-        is_static = False
-        if self.static == 'static':
-            is_static = True
+        is_static = self.static
 
         results = []
         if self.results:

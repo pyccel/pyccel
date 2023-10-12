@@ -28,7 +28,7 @@ Const: 'const';
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static=Static)? name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
 TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
