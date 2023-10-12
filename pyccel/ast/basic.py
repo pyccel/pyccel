@@ -436,66 +436,142 @@ class Basic:
         self._pyccel_staging = pyccel_stage.current_stage
 
 class PyccelAstNode(Basic):
-    """Class from which all nodes containing objects inherit
+    """
+    Class from which all typed objects inherit.
+
+    The class from which all objects which can be described with type information
+    must inherit. Objects with type information are objects which take up memory
+    in a runnning program (e.g. a variable or the result of a function call).
+    Each typed object is described by an underlying datatype, a precision, a rank,
+    a shape, and a data layout ordering.
     """
     __slots__  = ()
 
     @property
     def shape(self):
-        """ Tuple containing the length of each dimension
-        of the object """
+        """
+        Tuple containing the length of each dimension of the object or None.
+
+        A tuple containing the length of each dimension of the object if the object
+        is an array (with rank>0). Otherwise None.
+        """
         return self._shape # pylint: disable=no-member
 
     @property
     def rank(self):
-        """ Number of dimensions of the object
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
         """
         return self._rank # pylint: disable=no-member
 
     @property
     def dtype(self):
-        """ Datatype of the object """
+        """
+        Datatype of the object.
+
+        The underlying datatype of the object. In the case of scalars this is
+        equivalent to the type of the object in Python. For objects in (homogeneous)
+        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
+        of the container.
+        """
         return self._dtype # pylint: disable=no-member
 
     @property
     def precision(self):
-        """ Precision of the datatype of the object """
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
         return self._precision # pylint: disable=no-member
 
     @property
     def order(self):
-        """ Indicates whether the data is stored in
-        row-major ('C') or column-major ('F') format.
-        This is only relevant if rank > 1 """
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
         return self._order # pylint: disable=no-member
 
     @classmethod
     def static_shape(cls):
-        """ Number of dimensions of the object
+        """
+        Tuple containing the length of each dimension of the object or None.
+
+        A tuple containing the length of each dimension of the object if the object
+        is an array (with rank>0). Otherwise None.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined shape.
         """
         return cls._shape # pylint: disable=no-member
 
     @classmethod
     def static_rank(cls):
-        """ Number of dimensions of the object
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined rank.
         """
         return cls._rank # pylint: disable=no-member
 
     @classmethod
     def static_dtype(cls):
-        """ Datatype of the object """
+        """
+        Datatype of the object.
+
+        The underlying datatype of the object. In the case of scalars this is
+        equivalent to the type of the object in Python. For objects in (homogeneous)
+        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
+        of the container.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined datatype.
+        """
         return cls._dtype # pylint: disable=no-member
 
     @classmethod
     def static_precision(cls):
-        """ Precision of the datatype of the object """
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined precision.
+        """
         return cls._precision # pylint: disable=no-member
 
     @classmethod
     def static_order(cls):
-        """ Indicates whether the data is stored in
-        row-major ('C') or column-major ('F') format.
-        This is only relevant if rank > 1 """
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined order.
+        """
         return cls._order # pylint: disable=no-member
 
     def copy_attributes(self, x):
