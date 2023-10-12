@@ -20,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
+from pyccel.ast.basic import Basic, PyccelAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
@@ -1704,11 +1704,11 @@ class SemanticParser(BasicParser):
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
-                if isinstance(b, ScopedNode):
+                if isinstance(b, ScopedAstNode):
                     b.scope.update_parent_scope(init_scope, is_loop = True)
                 if isinstance(b, FunctionalFor):
                     for l in b.loops:
-                        if isinstance(l, ScopedNode):
+                        if isinstance(l, ScopedAstNode):
                             l.scope.update_parent_scope(init_scope, is_loop = True)
 
             self.exit_function_scope()

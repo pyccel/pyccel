@@ -7,7 +7,7 @@ import functools
 from itertools import chain
 import re
 
-from pyccel.ast.basic     import ScopedNode
+from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -557,7 +557,7 @@ class CCodePrinter(CodePrinter):
         body = func.body
 
         for b in body.body:
-            if isinstance(b, ScopedNode):
+            if isinstance(b, ScopedAstNode):
                 b.scope.update_parent_scope(self.scope, is_loop=True)
 
         # Print any arguments using the same inline function
@@ -623,7 +623,7 @@ class CCodePrinter(CodePrinter):
                 self.scope.insert_symbol(v.name)
 
         for b in body.body:
-            if isinstance(b, ScopedNode):
+            if isinstance(b, ScopedAstNode):
                 b.scope.update_parent_scope(func.scope, is_loop=True)
 
         return code

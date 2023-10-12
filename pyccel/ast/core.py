@@ -15,7 +15,7 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 from pyccel.utilities.strings import create_incremented_string
 
-from .basic     import Basic, PyccelAstNode, iterable, ScopedNode
+from .basic     import Basic, PyccelAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -889,7 +889,7 @@ class AugAssign(Assign):
                 like   = self.like)
 
 
-class While(ScopedNode):
+class While(ScopedAstNode):
 
     """Represents a 'while' statement in the code.
 
@@ -946,7 +946,7 @@ class While(ScopedNode):
         return tuple(self.scope.variables.values())
 
 
-class With(ScopedNode):
+class With(ScopedAstNode):
 
     """Represents a 'with' statement in the code.
 
@@ -1015,7 +1015,7 @@ class With(ScopedNode):
 
 # TODO add a name to a block?
 
-class Block(ScopedNode):
+class Block(ScopedAstNode):
 
     """Represents a block in the code. A block consists of the following inputs
 
@@ -1081,7 +1081,7 @@ class Block(ScopedNode):
 
 
 
-class Module(ScopedNode):
+class Module(ScopedAstNode):
     """
     Represents a module in the code.
 
@@ -1407,7 +1407,7 @@ class ModuleHeader(Basic):
     def module(self):
         return self._module
 
-class Program(ScopedNode):
+class Program(ScopedAstNode):
 
     """Represents a Program in the code. A block consists of the following inputs
 
@@ -1620,7 +1620,7 @@ class Iterable(Basic):
 
 #==============================================================================
 
-class For(ScopedNode):
+class For(ScopedAstNode):
 
     """Represents a 'for-loop' in the code.
 
@@ -2312,7 +2312,7 @@ class Return(Basic):
             code = ''
         return code+"Return({})".format(','.join([repr(e) for e in self.expr]))
 
-class FunctionDef(ScopedNode):
+class FunctionDef(ScopedAstNode):
 
     """
     Represents a function definition.
@@ -3166,7 +3166,7 @@ class SympyFunction(FunctionDef):
 
 
 
-class ClassDef(ScopedNode):
+class ClassDef(ScopedAstNode):
     """
     Represents a class definition.
 

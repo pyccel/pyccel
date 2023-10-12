@@ -13,7 +13,7 @@ import ast
 
 from pyccel.utilities.stage   import PyccelStage
 
-__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedNode')
+__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
@@ -478,7 +478,7 @@ class PyccelAstNode(Basic):
 
 
 #------------------------------------------------------------------------------
-class ScopedNode(Basic):
+class ScopedAstNode(Basic):
     """ Class from which all objects with a scope inherit
     """
     __slots__ = ('_scope',)

@@ -119,7 +119,7 @@ body = self._visit(stmt.body)
 
 ### Scoped Node
 
-Any functions visiting a class which inherits from `ScopedNode` must create a new scope before visiting objects and exit it after everything inside the scope has been visited.
+Any functions visiting a class which inherits from `ScopedAstNode` must create a new scope before visiting objects and exit it after everything inside the scope has been visited.
 The scope must then be passed to the class using the keyword argument `scope`.
 Care should be taken here as this keyword is not compulsory[^1].
 
