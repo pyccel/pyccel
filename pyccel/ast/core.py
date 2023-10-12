@@ -3101,14 +3101,14 @@ class FunctionAddress(FunctionDef):
     results : iterable
         The direct outputs of the function address.
 
-    is_argument : bool
-        If object is the argument of a function [Default value: False].
+    is_optional : bool
+        If object is an optional argument of a function [Default value: False].
 
     is_kwonly : bool
         If object is an argument which can only be specified using its keyword.
 
-    is_optional : bool
-        If object is an optional argument of a function [Default value: False].
+    is_argument : bool
+        If object is the argument of a function [Default value: False].
 
     memory_handling : str
         Must be 'heap', 'stack' or 'alias' [Default value: 'stack'].
