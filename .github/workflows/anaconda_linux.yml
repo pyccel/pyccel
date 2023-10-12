@@ -34,7 +34,7 @@ jobs:
     steps:
     - if: github.event_name == 'push'
       run: |
-        echo "version='3.9'" >> $GITHUB_ENV
+        echo "version=3.9" >> $GITHUB_ENV
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
