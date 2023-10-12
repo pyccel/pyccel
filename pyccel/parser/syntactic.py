@@ -798,6 +798,9 @@ class SyntaxParser(BasicParser):
         argument_annotations = [a.annotation for a in arguments]
         result_annotation = self._treat_type_annotation(stmt, self._visit(stmt.returns))
 
+        #---------------------------------------------------------------------------------------------------------
+        #                   To remove when headers are deprecated
+        #---------------------------------------------------------------------------------------------------------
         if headers:
             warnings.warn("Support for specifying types via headers will be removed in a " +
                           "future version of Pyccel. Please use type hints. The @template " +
@@ -858,7 +861,11 @@ class SyntaxParser(BasicParser):
                 else:
                     for i,arg in enumerate(args):
                         argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
+        #---------------------------------------------------------------------------------------------------------
+        #                   End of : To remove when headers are deprecated
+        #---------------------------------------------------------------------------------------------------------
 
+        # Repack AnnotatedPyccelSymbols to insert argument_annotations from headers or types decorators
         arguments = [FunctionDefArgument(AnnotatedPyccelSymbol(a.var.name, annot), annotation=annot, value=a.value, kwonly=a.is_kwonly)
                            for a, annot in zip(arguments, argument_annotations)]
 
