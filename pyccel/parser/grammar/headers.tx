@@ -17,11 +17,11 @@ TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' 
 
 DataType: ID|STAR;
 
-Type: dtype=DataType (trailer=TrailerSubscriptList)?;
+VariableType: dtype=DataType (trailer=TrailerSubscriptList)?;
 
 FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
 
-TypeHeader: FuncType|Type;
+TypeHeader: FuncType|VariableType;
 UnionTypeStmt: (const?=Const) dtypes+=TypeHeader['|'] ;
 Const: 'const';
 
