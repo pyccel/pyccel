@@ -135,8 +135,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
         INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
-        UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
-        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
@@ -3436,8 +3435,6 @@ class SemanticParser(BasicParser):
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
 
-        python_name = expr.scope.get_python_name(name)
-
         # this for the case of a function without arguments => no headers
         interface_name = name
 
@@ -3460,11 +3457,6 @@ class SemanticParser(BasicParser):
             is_interface = n_templates > 1 or n_interface_funcs > 1
 
             for i in range(n_interface_funcs):
-                arg_vars       = []
-                results        = []
-                global_vars    = []
-                imports        = []
-                arg            = None
                 arguments      = argument_vars[i]
                 arg_dict = {a.name:a.var for a in arguments}
 
@@ -3513,12 +3505,6 @@ class SemanticParser(BasicParser):
                 body.insert2body(*self._garbage_collector(body))
 
                 results = [self._visit(a) for a in results]
-
-                if arg and cls_name:
-                    dt       = self.get_class_construct(cls_name)
-                    cls_base = self.scope.find(cls_name, 'classes')
-                    var      = Variable(dt, 'self', cls_base=cls_base)
-                    arguments     = [FunctionDefArgument(var)] + arguments
 
                 # Determine local and global variables
                 global_vars = list(self.get_variables(self.scope.parent_scope))
