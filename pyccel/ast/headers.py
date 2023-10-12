@@ -82,15 +82,18 @@ class MetaVariable(Header):
 
 #==============================================================================
 class Template(Header):
-    """Represents a template.
+    """
+    Represents a template.
+
+    Represents a call to the template decorator.
 
     Parameters
     ----------
-    name: str
+    name : str
         The name of the template.
 
-    dtypes: iterable
-        The types the template represents
+    dtypes : iterable
+        The types the template represents.
 
     Examples
     --------

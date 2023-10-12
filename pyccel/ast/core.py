@@ -3709,18 +3709,20 @@ class Import(Basic):
 # TODO: Should Declare have an optional init value for each var?
 
 class FuncAddressDeclare(Basic):
+    """
+    Represents a FunctionAddress declaration in the code.
 
-    """Represents a FunctionAddress declaration in the code.
+    Represents a FunctionAddress declaration in the code.
 
     Parameters
     ----------
-    variable:
+    variable : FunctionAddress
         An instance of FunctionAddress.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: PyccelAstNode
-        variable value
-    static: bool
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : PyccelAstNode
+        Variable value.
+    static : bool
         True for a static declaration of an array.
 
     Examples
