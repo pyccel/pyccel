@@ -36,14 +36,17 @@ jobs:
       if: github.event_name == 'push'
       run: |
         echo "matrix=['3.8', '3.9', '3.10', '3.11']" >> $GITHUB_ENV
+      shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo "matrix=[${{ inputs.python_version }}]" >> $GITHUB_ENV
+      shell: bash
     - id: set-matrix
       run: |
         echo "$matrix"
         echo "matrix={\"python_version\": $matrix}" >> $GITHUB_OUTPUT
+      shell: bash
 
   Linux:
 
