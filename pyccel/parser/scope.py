@@ -446,7 +446,20 @@ class Scope(object):
             raise TypeError(msg)
 
     def insert_symbol(self, symbol):
-        """ Add a new symbol to the scope
+        """
+        Add a new symbol to the scope.
+
+        Add a new symbol to the scope in the syntactic stage. This should be used to
+        declare symbols defined by the user. Once the symbol is declared the Scope
+        generates a collisionless name if necessary which can be used in the target
+        language without causing problems by being a keyword or being confused with
+        other symbols (e.g. in Fortran which is not case-sensitive). This new name
+        can be retrieved later using `Scope.get_expected_name`.
+
+        Parameters
+        ----------
+        symbol : PyccelSymbol | AnnotatedPyccelSymbol | DottedName
+            The symbol to be added to the scope.
         """
         if isinstance(symbol, AnnotatedPyccelSymbol):
             symbol = symbol.name
@@ -470,6 +483,13 @@ class Scope(object):
 
         A symbolic alias is a symbol declared in the scope which is mapped
         to a constant object. E.g. a symbol which represents a type.
+
+        Parameters
+        ----------
+        symbol : PyccelSymbol
+            The symbol which will represent the object in the code.
+        alias : pyccel.ast.basic.Basic
+            The object which will be represented by the symbol.
         """
         if symbol in self._locals['symbolic_alias']:
             errors.report(f"{symbol} cannot represent multiple static concepts",

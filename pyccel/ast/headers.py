@@ -437,25 +437,30 @@ class FunctionHeader(Header):
 
 
 #==============================================================================
-# TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
-    """Represents method header in the code.
+    """
+    Represents a method header in the code.
 
-    name: iterable
-        method name as a list/tuple
+    Represents a method header in the code.
+    To be removed when header support is deprecated.
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+    Parameters
+    ----------
+    name : iterable
+        Method name as a list/tuple.
 
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+    dtypes : tuple/list
+        A list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr).
 
-    is_static: bool
+    results : tuple/list
+        A list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr).
+
+    is_static : bool
         True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
+        argument declaration. default value: False.
 
     Examples
 
