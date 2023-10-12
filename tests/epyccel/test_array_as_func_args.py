@@ -7,7 +7,7 @@ import numpy as np
 from numpy.random import randint, uniform
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import types
+from pyccel.decorators import template
 
 int_types = ['int8', 'int16', 'int32', 'int64']
 float_types = ['float32', 'float64']
