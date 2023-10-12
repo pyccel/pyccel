@@ -1782,7 +1782,7 @@ class FunctionCallArgument(Basic):
     function call.
 
     Parameters
-    ---------
+    ----------
     value : PyccelAstNode
         The expression passed as an argument.
     keyword : str, optional
@@ -3126,7 +3126,7 @@ class FunctionAddress(FunctionDef):
     >>> # we can also Declare a FunctionAddress
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
 
-    See also
+    See Also
     --------
     FunctionDef
         The super class from which this object derives.
