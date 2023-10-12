@@ -128,6 +128,17 @@ class VariableTypeAnnotation(Basic):
     def __hash__(self):
         return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
 
+    def __eq__(self, other):
+        # Needed for set
+        if isinstance(other, VariableTypeAnnotation):
+            return self.datatype == other.datatype and \
+                   self.cls_base == other.cls_base and \
+                   self.precision == other.precision and \
+                   self.rank == other.rank and \
+                   self.order == other.order
+        else:
+            return False
+
     def __repr__(self):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
