@@ -1613,7 +1613,7 @@ class SemanticParser(BasicParser):
     def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = -1, input_order = None):
         dtype = expr.static_dtype()
         prec = expr.static_precision()
-        if input_rank != -1:
+        if input_rank != 0:
             rank = input_rank
             order = input_order
         else:
@@ -2164,17 +2164,17 @@ class SemanticParser(BasicParser):
 
         for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
             dtype_from_scope = self.scope.find(dtype_name)
+            if rank > 1 and order is None:
+                order = 'C'
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
             elif isinstance(dtype_from_scope, PyccelFunctionDef):
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name, rank, order))
             elif isinstance(dtype_from_scope, VariableTypeAnnotation):
-                if rank == -1:
+                if rank == 0:
                     types.append(dtype_from_scope)
                 else:
-                    if rank > 1 and order is None:
-                        order = 'C'
                     types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
                         dtype_from_scope.cls_base, dtype_from_scope.precision,
                         rank, order, dtype_from_scope.is_const))
@@ -2196,17 +2196,12 @@ class SemanticParser(BasicParser):
                     errors.report(f'Could not identify type : {dtype_name}',
                             severity='fatal', symbol=expr)
 
-                if rank == -1:
-                    rank = 0
-
                 try:
                     cls_base = get_cls_base(dtype, prec, rank)
                 except KeyError:
                     cls_base = self.scope.find(dtype_name, 'classes')
 
-                if rank > 1 and order is None:
-                    order = 'C'
-                elif order is not None and rank < 2:
+                if order is not None and rank < 2:
                     errors.report(f"Ordering is not applicable to objects with rank {rank}",
                             symbol=expr.fst, severity='warning')
                     order = None
