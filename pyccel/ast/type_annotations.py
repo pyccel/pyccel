@@ -284,7 +284,7 @@ class SyntacticTypeAnnotation(Basic):
             raise ValueError("Is const should be a boolean")
         self._dtypes = tuple(dtypes)
         self._ranks = tuple(ranks)
-        self._orders = tuple([o if o != '' else None for o in orders])
+        self._orders = tuple(o if o != '' else None for o in orders)
         self._is_const = is_const
         super().__init__()
 
@@ -336,6 +336,8 @@ class SyntacticTypeAnnotation(Basic):
             return self.dtypes == o.dtypes and \
                     self.ranks == o.ranks and \
                     self.orders == o.orders
+        else:
+            return False
 
     @staticmethod
     def build_from_textx(annotation):
