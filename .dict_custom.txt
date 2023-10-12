@@ -95,3 +95,4 @@ Güçlü
 Hadjout
 Ratnani
 unallocated
+mypy

@@ -10,17 +10,21 @@ All notable changes to this project will be documented in this file.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
 -   Output readable header syntax errors.
+-   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
+-   #1336 : Use template as a partial type.
 
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
 -   Set status of header variables to 'unallocated'.
+-   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
 
 ### Changed
 
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
 -   \[INTERNALS\] Move handling of variable headers to semantic stage.
+-   \[INTERNALS\] Moved handling of type annotations to the semantic stage.
 
 ### Deprecated
 
