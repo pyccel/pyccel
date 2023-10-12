@@ -1610,7 +1610,7 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
-    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank, input_order):
+    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = -1, input_order = None):
         dtype = expr.static_dtype()
         prec = expr.static_precision()
         if input_rank != -1:
@@ -1623,6 +1623,8 @@ class SemanticParser(BasicParser):
             order = expr.static_order()
             if order is not None and not isinstance(order, str):
                 order = None
+        if rank > 1 and order is None:
+            order = 'C'
         cls_base = get_cls_base(dtype, prec, rank)
         return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
 
@@ -2168,7 +2170,14 @@ class SemanticParser(BasicParser):
             elif isinstance(dtype_from_scope, PyccelFunctionDef):
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name, rank, order))
             elif isinstance(dtype_from_scope, VariableTypeAnnotation):
-                types.append(dtype_from_scope)
+                if rank == -1:
+                    types.append(dtype_from_scope)
+                else:
+                    if rank > 1 and order is None:
+                        order = 'C'
+                    types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
+                        dtype_from_scope.cls_base, dtype_from_scope.precision,
+                        rank, order, dtype_from_scope.is_const))
             elif isinstance(dtype_from_scope, ClassDef):
                 dtype = self.get_class_construct(dtype_name)
                 prec = 0
