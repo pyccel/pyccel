@@ -463,7 +463,7 @@ class MethodHeader(FunctionHeader):
         argument declaration. default value: False.
 
     Examples
-
+    --------
     >>> from pyccel.ast.headers import MethodHeader
     >>> m = MethodHeader(('point', 'rotate'), ['double'])
     >>> m

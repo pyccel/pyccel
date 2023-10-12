@@ -3116,6 +3116,11 @@ class FunctionAddress(FunctionDef):
     **kwargs : dict
         Any keyword arguments which should be passed to the super class FunctionDef.
 
+    See Also
+    --------
+    FunctionDef
+        The super class from which this object derives.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
@@ -3125,11 +3130,6 @@ class FunctionAddress(FunctionDef):
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
     >>> # we can also Declare a FunctionAddress
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
-
-    See Also
-    --------
-    FunctionDef
-        The super class from which this object derives.
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
