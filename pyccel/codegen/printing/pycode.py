@@ -120,7 +120,7 @@ class PythonCodePrinter(CodePrinter):
 
         Returns
         -------
-        body      : PyccelAstNode
+        body      : TypedAstNode
                     The expression inside the for loops
         iterables : list of Iterables
                     The iterables over which the for loops iterate
@@ -194,7 +194,7 @@ class PythonCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The expression whose datatype is being determined.
 
         init_dtype : PythonType, PyccelFunctionDef, LiteralString, str

@@ -15,7 +15,7 @@ from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 from pyccel.utilities.stage   import PyccelStage
 from pyccel.utilities.strings import create_incremented_string
 
-from .basic     import Basic, PyccelAstNode, iterable, ScopedAstNode
+from .basic     import Basic, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol,
@@ -161,7 +161,7 @@ def subs(expr, new_elements):
         new_expr = expr.subs(new_elements)
         new_expr.set_fst(expr.fst)
         return new_expr
-    elif isinstance(expr, PyccelAstNode):
+    elif isinstance(expr, TypedAstNode):
         return expr.subs(new_elements)
 
     else:
@@ -282,13 +282,13 @@ class AsName(Basic):
         return hash(self.target)
 
 
-class Duplicate(PyccelAstNode):
+class Duplicate(TypedAstNode):
 
     """ this is equivalent to the * operator for python tuples.
 
     Parameters
     ----------
-    value : PyccelAstNode
+    value : TypedAstNode
            an expression which represents the initilized value of the list
 
     shape : the shape of the array
@@ -321,13 +321,13 @@ class Duplicate(PyccelAstNode):
     def __repr__(self):
         return '{} * {}'.format(repr(self.val), repr(self.length))
 
-class Concatenate(PyccelAstNode):
+class Concatenate(TypedAstNode):
 
     """ this is equivalent to the + operator for python tuples
 
     Parameters
     ----------
-    args : PyccelAstNodes
+    args : TypedAstNodes
            The tuples
     """
     __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
@@ -355,7 +355,7 @@ class Assign(Basic):
 
     Parameters
     ----------
-    lhs : PyccelAstNode
+    lhs : TypedAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -364,11 +364,11 @@ class Assign(Basic):
         In the semantic stage:
            Variable or IndexedElement
 
-    rhs : PyccelAstNode
+    rhs : TypedAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
-          PyccelAstNode with the same shape as the lhs
+          TypedAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -805,7 +805,7 @@ class AugAssign(Assign):
 
     Parameters
     ----------
-    lhs : PyccelAstNode
+    lhs : TypedAstNode
         In the syntactic stage:
            Object representing the lhs of the expression. These should be
            singular objects, such as one would use in writing code. Notable types
@@ -817,11 +817,11 @@ class AugAssign(Assign):
     op : str
         Operator (+, -, /, \*, %).
 
-    rhs : PyccelAstNode
+    rhs : TypedAstNode
         In the syntactic stage:
           Object representing the rhs of the expression
         In the semantic stage :
-          PyccelAstNode with the same shape as the lhs
+          TypedAstNode with the same shape as the lhs
 
     status: None, str
         if lhs is not allocatable, then status is None.
@@ -899,7 +899,7 @@ class While(ScopedAstNode):
 
     Parameters
     ----------
-    test : PyccelAstNode
+    test : TypedAstNode
         test condition given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the While statement.
@@ -956,7 +956,7 @@ class With(ScopedAstNode):
 
     Parameters
     ----------
-    test : PyccelAstNode
+    test : TypedAstNode
         with definition statement given as an expression
     body : list of Pyccel objects
         list of statements representing the body of the With statement.
@@ -1773,7 +1773,7 @@ class FunctionCallArgument(Basic):
 
     Parameters
     ---------
-    value   : PyccelAstNode
+    value   : TypedAstNode
               The expression passed as an argument
     keyword : str
               If the argument is passed by keyword then this
@@ -1816,7 +1816,7 @@ class FunctionCallArgument(Basic):
         else:
             return '{}'.format(str(self.value))
 
-class FunctionDefArgument(PyccelAstNode):
+class FunctionDefArgument(TypedAstNode):
     """
     Node describing the argument of a function.
 
@@ -1829,7 +1829,7 @@ class FunctionDefArgument(PyccelAstNode):
     name : PyccelSymbol, Variable, FunctionAddress
         The name of the argument.
 
-    value : PyccelAstNode, default: None
+    value : TypedAstNode, default: None
         The default value of the argument.
 
     kwonly : bool
@@ -1955,7 +1955,7 @@ class FunctionDefArgument(PyccelAstNode):
         else:
             return 'FunctionDefArgument({})'.format(repr(self.name))
 
-class FunctionDefResult(PyccelAstNode):
+class FunctionDefResult(TypedAstNode):
     """
     Node describing the result of a function.
 
@@ -2036,7 +2036,7 @@ class FunctionDefResult(PyccelAstNode):
     def __str__(self):
         return str(self.var)
 
-class FunctionCall(PyccelAstNode):
+class FunctionCall(TypedAstNode):
     """
     Represents a function call in the code.
 
@@ -2121,7 +2121,7 @@ class FunctionCall(PyccelAstNode):
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
-            if len(func.results)>0 and not isinstance(func.results[0], PyccelAstNode):
+            if len(func.results)>0 and not isinstance(func.results[0], TypedAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
         self._funcdef       = func
@@ -2188,7 +2188,7 @@ class DottedFunctionCall(FunctionCall):
                        The definition of the function being called
     args             : tuple
                        The arguments being passed to the function
-    prefix           : PyccelAstNode
+    prefix           : TypedAstNode
                        The object in which the function is defined
                        E.g. for a.f()
                        prefix will contain a
@@ -2273,7 +2273,7 @@ class Return(Basic):
 
     Parameters
     ----------
-    expr : PyccelAstNode
+    expr : TypedAstNode
         The expression to return.
 
     stmts :represent assign stmts in the case of expression return
@@ -2926,7 +2926,7 @@ class PyccelFunctionDef(FunctionDef):
     name : str
         The name of the function.
 
-    func_class : type inheriting from PyccelInternalFunction / PyccelAstNode
+    func_class : type inheriting from PyccelInternalFunction / TypedAstNode
         The class which should be instantiated upon a FunctionCall
         to this FunctionDef object.
 
@@ -2942,7 +2942,7 @@ class PyccelFunctionDef(FunctionDef):
     __slots__ = ('_argument_description',)
     def __init__(self, name, func_class, *, decorators = {}, argument_description = {}):
         assert isinstance(func_class, type) and \
-                issubclass(func_class, (PyccelInternalFunction, PyccelAstNode))
+                issubclass(func_class, (PyccelInternalFunction, TypedAstNode))
         assert isinstance(argument_description, dict)
         arguments = ()
         results = ()
@@ -3686,7 +3686,7 @@ class FuncAddressDeclare(Basic):
         An instance of FunctionAddress.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: PyccelAstNode
+    value: TypedAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3767,7 +3767,7 @@ class Declare(Basic):
         Variables must be of the same type.
     intent: None, str
         one among {'in', 'out', 'inout'}
-    value: PyccelAstNode
+    value: TypedAstNode
         variable value
     static: bool
         True for a static declaration of an array.
@@ -3904,7 +3904,7 @@ class SymbolicPrint(Basic):
 
     Parameters
     ----------
-    expr : PyccelAstNode
+    expr : TypedAstNode
         The expression to print
 
     Examples
@@ -4150,7 +4150,7 @@ class Assert(Basic):
 
     Parameters
     ----------
-    test: PyccelAstNode
+    test: TypedAstNode
         boolean expression to check
     """
     __slots__ = ('_test',)
@@ -4192,7 +4192,7 @@ class IfSection(Basic):
 
     Parameters
     ----------
-    cond : PyccelAstNode
+    cond : TypedAstNode
            A boolean expression indicating whether or not the block
            should be executed
     body : CodeBlock
@@ -4296,7 +4296,7 @@ class StarredArguments(Basic):
 
 # ...
 
-class InProgram(PyccelAstNode):
+class InProgram(TypedAstNode):
     """
     Class representing the boolean:
     __name__ == '__main__'

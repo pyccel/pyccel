@@ -23,7 +23,7 @@ class SysExit(PyccelInternalFunction):
     Parameters
     ----------
 
-    arg : PyccelAstNode (optional)
+    arg : TypedAstNode (optional)
         if arg.dtype is NativeInteger it will be used as the exit_code
         else the arg will be printed to the stderror
     """

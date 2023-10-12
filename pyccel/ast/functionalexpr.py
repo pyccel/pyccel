@@ -7,7 +7,7 @@
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import PyccelAstNode
+from .basic import TypedAstNode
 
 pyccel_stage = PyccelStage()
 
@@ -20,7 +20,7 @@ __all__ = (
 )
 
 #==============================================================================
-class FunctionalFor(PyccelAstNode):
+class FunctionalFor(TypedAstNode):
 
     """
     Represents any generator expression e.g:

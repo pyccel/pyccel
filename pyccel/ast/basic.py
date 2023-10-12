@@ -7,13 +7,13 @@
 This module contains classes from which all pyccel nodes inherit.
 They are:
 - Basic, which provides a python AST
-- PyccelAstNode which describes each PyccelAstNode
+- TypedAstNode which describes each TypedAstNode
 """
 import ast
 
 from pyccel.utilities.stage   import PyccelStage
 
-__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedAstNode')
+__all__ = ('Basic', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
@@ -435,7 +435,7 @@ class Basic:
         """
         self._pyccel_staging = pyccel_stage.current_stage
 
-class PyccelAstNode(Basic):
+class TypedAstNode(Basic):
     """Class from which all nodes containing objects inherit
     """
     __slots__  = ()

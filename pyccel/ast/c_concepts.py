@@ -7,14 +7,14 @@
 Module representing object address.
 """
 
-from .basic import PyccelAstNode, Basic
+from .basic import TypedAstNode, Basic
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
            'CStringExpression',
            'ObjectAddress')
 
-class ObjectAddress(PyccelAstNode):
+class ObjectAddress(TypedAstNode):
     """Represents the address of an object.
     ObjectAddress(Variable('int','a'))                            is  &a
     ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
@@ -24,8 +24,8 @@ class ObjectAddress(PyccelAstNode):
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
-        if not isinstance(obj, PyccelAstNode):
-            raise TypeError("object must be an instance of PyccelAstNode")
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
         self._obj       = obj
         self._rank      = obj.rank
         self._shape     = obj.shape

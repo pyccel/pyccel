@@ -72,7 +72,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         Parameters
         ----------
-        a : PyccelAstNode
+        a : TypedAstNode
             The object whose storage we are enquiring about.
 
         Returns

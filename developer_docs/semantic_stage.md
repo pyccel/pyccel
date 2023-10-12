@@ -31,7 +31,7 @@ Each of these `_visit_X` functions should internally call the `_visit` function 
 
 Variables and objects which can be saved in variables (e.g. literals and arrays), are  characterised by their type.
 The type indicates all the information that allows the object to be declared in a low-level language.
-The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.PyccelAstNode`](../pyccel/ast/basic.py).
+The interface to access these characteristics is defined in the super class [`pyccel.ast.basic.TypedAstNode`](../pyccel/ast/basic.py).
 The characteristics are:
 -   **data type** : boolean/integer/float/complex/class type/etc
 -   **precision** : The number of bytes required to store an object of this data type
@@ -42,7 +42,7 @@ The characteristics are:
 The type of the different objects is determined in 2 different places.
 
 `Variable` objects are created in the `SemanticParser._visit_Assign` function.
-Their type is determined from the type of the right hand side, which should be a `PyccelAstNode`.
+Their type is determined from the type of the right hand side, which should be a `TypedAstNode`.
 The function `SemanticParser._infer_type` infers the type from the right hand side object and returns a dictionary describing the different characteristics.
 This dictionary is passed to the function `SemanticParser._assign_lhs_variable` which should always be used to create variables as it runs various checks including the validity of the type (e.g checking if the datatype has changed).
 In addition to the above characteristics `Variable` objects also have a few additional characteristics such as the `memory_location` which are also determined in the `SemanticParser._infer_type` function.

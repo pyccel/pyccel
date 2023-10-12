@@ -20,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, PyccelAstNode, ScopedAstNode
+from pyccel.ast.basic import Basic, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
@@ -614,7 +614,7 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = var.precision
             return d_var
 
-        elif isinstance(expr, PyccelAstNode):
+        elif isinstance(expr, TypedAstNode):
 
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -845,7 +845,7 @@ class SemanticParser(BasicParser):
                      The arguments provided to the function
         func_args  : list
                      The arguments expected by the function
-        expr       : PyccelAstNode
+        expr       : TypedAstNode
                      The expression where this call is found (used for error output)
         elemental  : bool
                      Indicates if the function is elemental
@@ -892,7 +892,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
                The expression where this call is found (used for error output).
 
         func : FunctionDef instance, Interface instance or PyccelInternalFunction type
@@ -930,7 +930,7 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
             if self._current_function == func.name:
-                if len(func.results)>0 and not isinstance(func.results[0].var, PyccelAstNode):
+                if len(func.results)>0 and not isinstance(func.results[0].var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
@@ -1300,7 +1300,7 @@ class SemanticParser(BasicParser):
             A boolean indicating if the assign statement is an augassign (tests are less strict).
         new_expressions : list
             A list to which any new expressions created are appended.
-        rhs : PyccelAstNode
+        rhs : TypedAstNode
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """

@@ -127,7 +127,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        PyccelAstNode
+        TypedAstNode
             An object which can be passed to a function call of the function
             being wrapped.
         """

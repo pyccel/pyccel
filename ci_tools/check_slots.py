@@ -7,7 +7,7 @@ import os
 import sys
 import json
 from pyccel import ast
-from pyccel.ast.basic import Basic, PyccelAstNode, ScopedAstNode
+from pyccel.ast.basic import Basic, TypedAstNode, ScopedAstNode
 
 def extract_dict_elements(input_dict):
     """
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                             inspect.getfile(mod), sourceline, sourceline, "failure", f"Slot values are overwritten between `{mod_name}.{cls_name}` and `{c.__name__}`"))
 
             if Basic in super_classes:
-                if cls_obj not in (PyccelAstNode, ScopedAstNode) and not isinstance(cls_obj._attribute_nodes, tuple): #pylint: disable=W0212
+                if cls_obj not in (TypedAstNode, ScopedAstNode) and not isinstance(cls_obj._attribute_nodes, tuple): #pylint: disable=W0212
                     sourceline = inspect.getsourcelines(cls_obj)[1]
                     error_collection['missing_attribute_nodes'].append(fill_dictionary("Classes with no `_attribute_nodes`", f"pyccel.ast.{mod_name}.{cls_name}",
                             inspect.getfile(mod), sourceline, sourceline, "failure", f"Missing attribute nodes in : `{mod_name}.{cls_name}`"))

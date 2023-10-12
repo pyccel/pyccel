@@ -6,7 +6,7 @@
 """
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic              import PyccelAstNode, Basic
+from .basic              import TypedAstNode, Basic
 from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
                                   NativeComplex, NativeString)
 
@@ -25,7 +25,7 @@ __all__ = (
 )
 
 #------------------------------------------------------------------------------
-class Literal(PyccelAstNode):
+class Literal(TypedAstNode):
     """
     Represents a python literal
     This class is abstract and should be implemented for each dtype
@@ -42,7 +42,7 @@ class Literal(PyccelAstNode):
         self._precision = precision
         super().__init__()
 
-    @PyccelAstNode.precision.setter
+    @TypedAstNode.precision.setter
     def precision(self, precision):
         """ Set precision for a literal class"""
         self._precision = precision
@@ -58,7 +58,7 @@ class Literal(PyccelAstNode):
         return str(self.python_value)
 
     def __eq__(self, other):
-        if isinstance(other, PyccelAstNode):
+        if isinstance(other, TypedAstNode):
             return isinstance(other, type(self)) and self.python_value == other.python_value
         else:
             return self.python_value == other
@@ -225,7 +225,7 @@ class LiteralString(Literal):
 
 #------------------------------------------------------------------------------
 
-class Nil(PyccelAstNode, metaclass=Singleton):
+class Nil(TypedAstNode, metaclass=Singleton):
 
     """
     class for None object in the code.

@@ -349,7 +349,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        a : PyccelAstNode
+        a : TypedAstNode
             The object whose storage we are enquiring about.
 
         Returns
@@ -381,7 +381,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -474,7 +474,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -502,7 +502,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -971,7 +971,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        var : PyccelAstNode
+        var : TypedAstNode
             The object which will be printed.
 
         Returns
@@ -1376,7 +1376,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The expression to be cast.
         dtype : Datatype
             The target type of the cast.

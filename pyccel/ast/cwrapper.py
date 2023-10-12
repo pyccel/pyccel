@@ -11,7 +11,7 @@ between Python code and C code (using Python/C Api and cwrapper.c).
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import Basic, TypedAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
@@ -198,7 +198,7 @@ class PyArg_ParseTupleNode(Basic):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyBuildValueNode(PyccelAstNode):
+class PyBuildValueNode(TypedAstNode):
     """
     Represents a call to the function PyBuildValueNode.
 
@@ -236,7 +236,7 @@ class PyBuildValueNode(PyccelAstNode):
         return self._result_args
 
 #-------------------------------------------------------------------
-class PyModule_AddObject(PyccelAstNode):
+class PyModule_AddObject(TypedAstNode):
     """
     Represents a call to the PyModule_AddObject function.
 
