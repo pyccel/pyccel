@@ -485,6 +485,13 @@ class Scope(object):
 
     @property
     def dotted_symbols(self):
+        """
+        Return all dotted symbols that were inserted into the scope.
+
+        Return all dotted symbols that were inserted into the scope.
+        This is useful to ensure that class variable names are
+        in the class scope.
+        """
         return self._dotted_symbols
 
     @property

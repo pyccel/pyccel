@@ -26,7 +26,7 @@ pyccel_stage = PyccelStage()
 
 class VariableTypeAnnotation(Basic):
     """
-    A class which describes a type annotation.
+    A class which describes a type annotation on a variable.
 
     A class which stores all information which may be provided in a type annotation
     in order to declare a variable.
@@ -143,6 +143,25 @@ class VariableTypeAnnotation(Basic):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
 class FunctionTypeAnnotation(Basic):
+    """
+    A class which describes a type annotation on a function address.
+
+    A class which stores all information necessary to describe the prototype
+    of the function being referenced. This includes the type annotations for
+    the arguments and the results.
+
+    Parameters
+    ----------
+    args : list of SyntacticTypeAnnotation | UnionTypeAnnotation
+        The type annotations describing the arguments of the function address.
+        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
+        In the semantic stage these objects are of type UnionTypeAnnotation.
+
+    results : list of SyntacticTypeAnnotation | UnionTypeAnnotation
+        The type annotations describing the results of the function address.
+        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
+        In the semantic stage these objects are of type UnionTypeAnnotation.
+    """
     __slots__ = ('_args', '_results',)
     _attribute_nodes = ('_args', '_results')
 
@@ -160,10 +179,24 @@ class FunctionTypeAnnotation(Basic):
 
     @property
     def args(self):
+        """
+        Get the type annotations describing the arguments of the function address.
+
+        Get the type annotations describing the arguments of the function address.
+        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
+        In the semantic stage these objects are of type UnionTypeAnnotation.
+        """
         return self._args
 
     @property
     def results(self):
+        """
+        Get the type annotations describing the results of the function address.
+
+        Get the type annotations describing the results of the function address.
+        In the syntactic stage these objects are of type SyntacticTypeAnnotation.
+        In the semantic stage these objects are of type UnionTypeAnnotation.
+        """
         return self._results
 
     def __repr__(self):
@@ -177,8 +210,8 @@ class UnionTypeAnnotation(Basic):
 
     Parameters
     ----------
-    *type_annotations : tuple of VariableTypeAnnotation
-        The VariableTypeAnnotation objects describing the possible type annotations.
+    *type_annotations : tuple of VariableTypeAnnotation | FunctionTypeAnnotation
+        The objects describing the possible type annotations.
     """
     __slots__ = ('_type_annotations',)
     _attribute_nodes = ('_type_annotations',)
@@ -199,6 +232,16 @@ class UnionTypeAnnotation(Basic):
         return self._type_annotations
 
     def add_type(self, annot):
+        """
+        Add an additional type to the type annotations.
+
+        Add an additional type to the type annotations stored in this UnionTypeAnnotation.
+
+        Parameters
+        ----------
+        annot : VariableTypeAnnotation | FunctionTypeAnnotation
+            The object describing the additional type annotation.
+        """
         self._type_annotations += (annot,)
         annot.set_current_user_node(self)
 
