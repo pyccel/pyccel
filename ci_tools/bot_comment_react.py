@@ -61,6 +61,9 @@ if __name__ == '__main__':
     if command_words[:2] == ['show', 'tests']:
         bot.show_tests()
 
+    elif command_words[0] == 'checklist':
+        bot.fill_checklist(event['comment']['url'], event['comment']['user']['login'])
+
     elif command_words[0] == 'run':
         if bot.is_user_trusted(event['comment']['user']['login']):
             bot.run_tests(get_unique_test_list(command_words[1:]), force_run = bot.is_pr_fork())
