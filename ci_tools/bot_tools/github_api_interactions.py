@@ -461,6 +461,11 @@ class GitHubAPIInteractions:
             The url of the comment to be modified.
         new_body : str
             The new body of the comment.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
         """
         return self._post_request("PATCH", comment_url, json={"body":new_body})
 
