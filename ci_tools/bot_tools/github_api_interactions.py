@@ -449,6 +449,21 @@ class GitHubAPIInteractions:
         print(url)
         return self._post_request("POST", url, json={"body":comment})
 
+    def modify_comment(self, comment_url, new_body):
+        """
+        Modify an existing comment.
+
+        Modify an existing comment by replacing the body with the new text.
+
+        Parameters
+        ----------
+        comment_url : str
+            The url of the comment to be modified.
+        new_body : str
+            The new body of the comment.
+        """
+        return self._post_request("PATCH", comment_url, json={"body":new_body})
+
     def create_review(self, pr_id, commit, comment, status, comments = ()):
         """
         Create a review on the specified pull request.
