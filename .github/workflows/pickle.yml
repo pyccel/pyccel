@@ -31,7 +31,7 @@ env:
 jobs:
   Python_version_picker:
     runs-on: ubuntu-latest
-    #if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-matrix.outputs.python_version }}
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -40,19 +40,18 @@ jobs:
       run: |
         echo "version=3.9" >> $GITHUB_ENV
         echo "editable=['-e', ' ']" >> $GITHUB_ENV
+      shell: bash
     - id: dispatch-matrix
       if: github.event_name == 'workflow_dispatch'
       run: |
         echo "version=${{ inputs.python_version }}" >> $GITHUB_ENV
         echo "editable=['${{ inputs.editable_string }}']" >> $GITHUB_ENV
+      shell: bash
     - id: set-matrix
       run: |
-        echo "$editable"
-        echo "$version"
-        printenv
-        echo "matrix={\"editable_string\": $editable}"
         echo "python_version=$version" >> $GITHUB_OUTPUT
         echo "matrix={\"editable_string\": $editable}" >> $GITHUB_OUTPUT
+      shell: bash
 
   Pickled-installation:
     runs-on: ubuntu-latest

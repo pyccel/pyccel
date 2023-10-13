@@ -197,17 +197,31 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find(self, name, category = None):
-        """ Find and return the specified object in the scope.
-        If the object cannot be found then None is returned
+    def find(self, name, category = None, local_only = False):
+        """
+        Find and return the specified object in the scope.
+
+        Find a specified object in the scope and return it.
+        The object is identified by a string contianing its name.
+        If the object cannot be found then None is returned.
 
         Parameters
         ----------
         name : str
-            The name of the object we are searching for
-        category : str
+            The name of the object we are searching for.
+        category : str, optional
             The type of object we are searching for.
-            This must be one of the strings in Scope.categories
+            This must be one of the strings in Scope.categories.
+            If no value is provided then we look in all categories.
+        local_only : bool, default=False
+            Indicates whether we should look for variables in the
+            entire scope or whether we should limit ourselves to the
+            local scope.
+
+        Returns
+        -------
+        pyccel.ast.basic.Basic
+            The object stored in the scope.
         """
         for l in ([category] if category else self._locals.keys()):
             if name in self._locals[l]:
@@ -217,8 +231,8 @@ class Scope(object):
                 return self.imports[l][name]
 
         # Walk up the tree of Scope objects, until the root if needed
-        if self.parent_scope:
-            return self.parent_scope.find(name, category)
+        if self.parent_scope and (self.is_loop or not local_only):
+            return self.parent_scope.find(name, category, local_only)
         else:
             return None
 
