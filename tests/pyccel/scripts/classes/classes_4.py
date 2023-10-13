@@ -9,6 +9,7 @@ class A:
         self.x = np.ones(n)
 
     def __del__(self : 'A'):
+        print(self.x)
         del self.x
 
 if __name__ == '__main__':
