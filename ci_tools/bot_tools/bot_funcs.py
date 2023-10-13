@@ -909,6 +909,19 @@ class Bot:
         """
         return self._pr_details['draft']
 
+    def is_pr_fork(self):
+        """
+        Indicate whether the pull request is created from a fork.
+
+        Indicate whether the pull request is created from a fork.
+
+        Returns
+        -------
+        bool
+            True if fork, False otherwise.
+        """
+        return self._pr_details['isCrossRepository']
+
     def leave_comment(self, comment):
         """
         Leave a comment on the pull request.
