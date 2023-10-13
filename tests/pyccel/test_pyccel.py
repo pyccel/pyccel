@@ -862,27 +862,15 @@ def test_basic_header():
     compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
-                                        "scripts/classes/classes_1.py",
-                                        ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
-
-def test_classes_f_only( test_file , language):
-    if language == "python":
-        pyccel_test(test_file, language=language)
-    else:
-        pyccel_test(test_file, compile_with_pyccel = False, language=language)
-
-#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
-                                        "scripts/classes/classes_5.py",
+@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
+                                        "scripts/classes/classes.py",
+                                        "scripts/classes/classes_1.py",
+                                        "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_3.py",
-                                        "scripts/classes/generic_methods.py",
+                                        "scripts/classes/classes_4.py",
+                                        "scripts/classes/classes_5.py",
+                                        "scripts/classes/classes_6.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
