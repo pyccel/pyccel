@@ -654,7 +654,7 @@ class Bot:
         """
         print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team["message"] != "Not found":
+        if in_team["message"] != "Not Found":
             print("In team")
             return True
         print("User not in team")
