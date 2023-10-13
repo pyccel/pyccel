@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Changed
+
+-   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
+-   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
+-   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
+
 ### Added
 
 -   #1476 : Add C support for a class containing `Interfaces`.
