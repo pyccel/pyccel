@@ -659,7 +659,7 @@ class Bot:
         """
         print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team["message"] != "Not found":
+        if in_team["message"] != "Not Found":
             print("In team")
             return True
         print("User not in team")
@@ -934,6 +934,19 @@ class Bot:
             True if draft, False otherwise.
         """
         return self._pr_details['draft']
+
+    def is_pr_fork(self):
+        """
+        Indicate whether the pull request is created from a fork.
+
+        Indicate whether the pull request is created from a fork.
+
+        Returns
+        -------
+        bool
+            True if fork, False otherwise.
+        """
+        return self._pr_details['isCrossRepository']
 
     def leave_comment(self, comment):
         """

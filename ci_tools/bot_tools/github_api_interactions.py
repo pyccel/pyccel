@@ -528,7 +528,7 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the result.
         """
-        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
+        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/memberships/{user}'
         return self._post_request("GET", url).json()
 
     def get_prs(self, state='open'):
