@@ -326,23 +326,24 @@ class PyccelAstNode:
 
     @property
     def fst(self):
-    	"""
-    	Get the AST object which Python parsed in the orignal code.
+        """
+        Get the AST object which Python parsed in the original code.
 
-	Get the AST (abstract syntax tree) object which Python parsed
-	in the orignal code. This object describes the Python code being
-	translated. It provides line numbers and columns which can be
-	used to report the origin of any potential errors.
+        Get the AST (abstract syntax tree) object which Python parsed
+        in the original code. This object describes the Python code being
+        translated. It provides line numbers and columns which can be
+        used to report the origin of any potential errors.
 
-	Returns
-	-------
-	ast.AST
-    		The AST object which was parsed.
-    	"""
+        Returns
+        -------
+        ast.AST
+            The AST object which was parsed.
+        """
         if len(self._fst) == 1:
             return self._fst[0]
         else:
             return None
+
 
     def toggle_recursion(self):
         """ Change the recursion state
@@ -483,18 +484,18 @@ class TypedAstNode(PyccelAstNode):
         return self._order # pylint: disable=no-member
 
     def copy_attributes(self, x):
-    	"""
-    	Copy the attributes describing a TypedAstNode into this node.
+        """
+        Copy the attributes describing a TypedAstNode into this node.
 
-	Copy the attributes which describe the TypedAstNode passed as
-	argument (dtype, precision, shape, rank, order) into this node
-	so that the two nodes can be stored in the same object.
+        Copy the attributes which describe the TypedAstNode passed as
+        argument (dtype, precision, shape, rank, order) into this node
+        so that the two nodes can be stored in the same object.
 
-	Parameters
-	----------
-	x : TypedAstNode
-		The node from which the attributes should be copied.
-    	"""
+        Parameters
+        ----------
+        x : TypedAstNode
+            The node from which the attributes should be copied.
+        """
         self._shape     = x.shape
         self._rank      = x.rank
         self._dtype     = x.dtype
