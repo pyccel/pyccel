@@ -95,5 +95,6 @@ Bourne
 Güçlü
 Hadjout
 Ratnani
+unhandled
 unallocated
 destructor

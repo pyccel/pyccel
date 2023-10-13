@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
 -   Set status of header variables to 'unallocated'.
 -   #1508 : Generate deallocations for classes and their attributes.
 
