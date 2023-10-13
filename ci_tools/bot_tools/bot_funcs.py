@@ -946,7 +946,7 @@ class Bot:
         bool
             True if fork, False otherwise.
         """
-        return self._pr_details['isCrossRepository']
+        return self._pr_details['head']['repo']['full_name'] != 'pyccel/pyccel'
 
     def leave_comment(self, comment):
         """
