@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
+## \[1.9.2\] - 2023-10-13
 
 ### Added
 
@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
 -   Output readable header syntax errors.
+-   New environment variable `PYCCEL_DEFAULT_COMPILER`.
 -   #1508 : Add C support for a class destructor.
 -   #1508 : Add support for array data in classes.
 
