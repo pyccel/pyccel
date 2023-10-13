@@ -2,7 +2,7 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, pr_test_keys
+from bot_tools.bot_funcs import Bot, pr_test_keys, trust_givers
 
 def get_unique_test_list(keys):
     """
@@ -24,6 +24,7 @@ def get_unique_test_list(keys):
         A set of tests to run.
     """
     tests = set(keys)
+    print(f'DEBUG mkaddani: {tests}')
     if 'pr_tests' in tests:
         tests.update(pr_test_keys)
     tests.discard('pr_tests')
@@ -44,6 +45,7 @@ if __name__ == '__main__':
     # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
     with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
         event = json.load(event_file)
+    print(f'mkaddani Debug: {os.environ["GITHUB_EVENT_PATH"]}')
 
     # If bot called explicitly (comment event)
 
@@ -64,7 +66,7 @@ if __name__ == '__main__':
 
     elif command_words[0] == 'run':
         if bot.is_user_trusted(event['comment']['user']['login']):
-            bot.run_tests(get_unique_test_list(command_words[1:]))
+            bot.run_tests(get_unique_test_list(command_words[1:]), force_run = bot.is_pr_fork())
         else:
             bot.warn_untrusted()
 
@@ -81,7 +83,7 @@ if __name__ == '__main__':
         else:
             bot.warn_untrusted()
 
-    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in Bot.trust_givers:
+    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in trust_givers:
 
         bot.indicate_trust(command_words[2])
 

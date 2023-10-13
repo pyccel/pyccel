@@ -25,14 +25,14 @@ def get_authorization():
     # Issued at time
     # JWT expiration time (10 minutes maximum)
     # GitHub App's identifier
-    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 364561}
+    payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 337566}
 
     jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
 
     headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
 
     # Create JWT
-    reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers)
+    reply = requests.post("https://api.github.com/app/installations/37820767/access_tokens", headers=headers)
 
     token  = reply.json()["token"]
     expiry = reply.json()["expires_at"]
@@ -528,7 +528,7 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the result.
         """
-        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
+        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/memberships/{user}'
         return self._post_request("GET", url).json()
 
     def get_prs(self, state='open'):

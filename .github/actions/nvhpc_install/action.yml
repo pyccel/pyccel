@@ -1,0 +1,46 @@
+name: 'Nvidia installation commands'
+
+runs:
+  using: "composite"
+  steps:
+    - name: update the package list
+      run:
+        sudo apt-get update
+      shell: bash
+    - name: Restore cached Nvidia
+      id: cache-nvidia-restore
+      uses: actions/cache/restore@v3
+      with:
+        path: |
+          /opt/nvidia/hpc_sdk/Linux_x86_64/
+        key: ${{ runner.os }}-nvidia-23-9
+        restore-keys: |
+          ${{ runner.os }}-nvidia-
+    - name: Install NVHPC
+      if: steps.cache-nvidia-restore.outputs.cache-hit != 'true'
+      run: |
+        curl https://developer.download.nvidia.com/hpc-sdk/ubuntu/DEB-GPG-KEY-NVIDIA-HPC-SDK | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg
+        echo 'deb [signed-by=/usr/share/keyrings/nvidia-hpcsdk-archive-keyring.gpg] https://developer.download.nvidia.com/hpc-sdk/ubuntu/amd64 /' | sudo tee /etc/apt/sources.list.d/nvhpc.list
+        sudo apt-get update -y
+        sudo apt-get install -y nvhpc-23-9
+        echo $PATH
+        POSSIBLE_MPI_EXECS=($(find /opt/nvidia/hpc_sdk/Linux_x86_64/ -name mpicc | grep openmpi | grep "\.bin" -v))
+        ls $(dirname ${POSSIBLE_MPI_EXECS[-1]})
+        echo $(dirname ${POSSIBLE_MPI_EXECS[-1]}) >> $GITHUB_PATH
+        POSSIBLE_NVC_EXECS=($(find /opt/nvidia/hpc_sdk/Linux_x86_64/ -name nvc))
+        ls $(dirname ${POSSIBLE_NVC_EXECS[-1]})
+        echo $(dirname ${POSSIBLE_NVC_EXECS[-1]}) >> $GITHUB_PATH
+        echo "CFLAGS=-noswitcherror" >> $GITHUB_ENV # No error for unrecognised flags. Necessary for mpi4py installation. See https://github.com/mpi4py/mpi4py/issues/114
+      shell: bash
+    - name: Save Nvidia Cache
+      id: cache-nvidia-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          /opt/nvidia/hpc_sdk/Linux_x86_64/
+        key: ${{ steps.cache-nvidia-restore.outputs.cache-primary-key }}
+    - name: Install Valgrind
+      run:
+        echo $PATH
+        sudo apt-get install valgrind
+      shell: bash

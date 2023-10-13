@@ -28,7 +28,11 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Pytest with options (1)
-      run: python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s1_outfile.out
+      run: |
+        python -c "print('hello world')"
+        python -m pytest --version
+        python -m pytest -vs -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays
+        python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s1_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_1
