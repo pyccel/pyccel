@@ -659,8 +659,8 @@ class Bot:
         """
         print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team["message"] != "Not Found":
-            print("In team")
+        if "message" not in in_team:
+            print("In team: ", in_team)
             return True
         print("User not in team")
         merged_prs = self._GAI.get_prs('all')
