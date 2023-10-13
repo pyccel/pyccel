@@ -406,7 +406,17 @@ class PythonInt(TypedAstNode):
 
 #==============================================================================
 class PythonTuple(TypedAstNode):
-    """ Represents a call to Python's native tuple() function.
+    """
+    Class representing a call to Python's native tuple() function.
+
+    Class representing a call to Python's native tuple() function
+    which either converts an object to a tuple or initialises a
+    literal tuple.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the tuple function.
     """
     __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
             '_dtype','_precision','_rank','_shape','_order')
