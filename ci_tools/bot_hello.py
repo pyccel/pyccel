@@ -39,6 +39,8 @@ def post_first_time_message(event, bot):
     # Choose appropriate message to welcome author
     file = 'welcome_newcomer.txt' if new_user else 'welcome_friend.txt'
 
+    bot.leave_comment(message_from_file(file))
+
     # Ensure PR is draft
     if not event['pull_request']['draft']:
         bot.mark_as_draft()
