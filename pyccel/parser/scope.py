@@ -220,7 +220,7 @@ class Scope(object):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The object stored in the scope.
         """
         for l in ([category] if category else self._locals.keys()):
