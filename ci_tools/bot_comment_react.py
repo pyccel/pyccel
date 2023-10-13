@@ -2,7 +2,7 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, pr_test_keys
+from bot_tools.bot_funcs import Bot, pr_test_keys, trust_givers
 
 def get_unique_test_list(keys):
     """
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     elif command_words[0] == 'run':
         if bot.is_user_trusted(event['comment']['user']['login']):
-            bot.run_tests(get_unique_test_list(command_words[1:]))
+            bot.run_tests(get_unique_test_list(command_words[1:]), force_run = bot.is_pr_fork())
         else:
             bot.warn_untrusted()
 
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         else:
             bot.warn_untrusted()
 
-    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in Bot.trust_givers:
+    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in trust_givers:
 
         bot.indicate_trust(command_words[2])
 
