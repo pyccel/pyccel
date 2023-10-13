@@ -525,7 +525,12 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['user']['type'] == 'Bot' and c['body'].startswith('Hello'))
+        try:
+            welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['body'].startswith('Here is your checklist.'))
+        except StopIteration:
+            self._GAI.create_comment(self._pr_id, message_from_file('missing_checklist.txt'))
+            return False
+
         if '- [ ]' in welcome_comment['body']:
             self._GAI.create_comment(self._pr_id, message_from_file('set_draft_checklist_incomplete.txt').format(url = welcome_comment['html_url']))
             self.mark_as_draft()
@@ -656,8 +661,8 @@ class Bot:
         """
         print("Trusted?")
         in_team = self._GAI.check_for_user_in_team(user, 'pyccel-dev')
-        if in_team["message"] != "Not found":
-            print("In team")
+        if "message" not in in_team:
+            print("In team: ", in_team)
             return True
         print("User not in team")
         merged_prs = self._GAI.get_prs('all')
@@ -898,6 +903,27 @@ class Bot:
                                  reply_to = comment_id)
         print(reply.text)
 
+    def fill_checklist(self, comment_url, user):
+        """
+        Create the PR checklist for the user.
+
+        Create the PR checklist for the user.
+
+        Parameters
+        ----------
+        comment_url : str
+            The url where the comment was left.
+
+        user : str
+            The username of the person who left the comment.
+        """
+        body = message_from_file('checklist.txt')
+        merged_prs = self._GAI.get_prs('all')
+        has_merged_pr = any(pr for pr in merged_prs if pr['user']['login'] == user and pr['merged_at'])
+        if not has_merged_pr:
+            body += message_from_file('first_checklist.txt')
+        self._GAI.modify_comment(comment_url, body)
+
     def is_pr_draft(self):
         """
         Indicate whether the pull request is a draft.
@@ -910,6 +936,19 @@ class Bot:
             True if draft, False otherwise.
         """
         return self._pr_details['draft']
+
+    def is_pr_fork(self):
+        """
+        Indicate whether the pull request is created from a fork.
+
+        Indicate whether the pull request is created from a fork.
+
+        Returns
+        -------
+        bool
+            True if fork, False otherwise.
+        """
+        return self._pr_details['head']['repo']['full_name'] != 'pyccel/pyccel'
 
     def leave_comment(self, comment):
         """
