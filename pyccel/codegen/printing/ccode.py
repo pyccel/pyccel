@@ -89,6 +89,9 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    'NumpyIsInfinte':'isinf',
+    'NumpyIsFinite':'isfinite',
+    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
