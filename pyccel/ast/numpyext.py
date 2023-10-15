@@ -114,6 +114,9 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
     'NumpyShape',
+    'NumpyIsInfinte'
+    'NumpyIsFinite'
+    'NumpyIsNan'
 )
 
 #=======================================================================================
@@ -2087,6 +2090,33 @@ class NumpySize(PyccelInternalFunction):
 
         return PyccelArrayShapeElement(a, axis)
 
+class NumpyIsNan(PyccelInternalFunction):
+    """ Represents a call to numpy.isnan() function.
+    """
+    __slots__ = ('_arg',)
+    name = 'isnan'
+
+    def __init__(self, arg):
+        self._arg = arg
+
+class NumpyIsInf(PyccelInternalFunction):
+    """ Represents a call to numpy.isinf() function.
+    """
+    __slots__ = ('_arg',)
+    name = 'isinf'
+
+    def __init__(self, arg):
+        self._arg = arg
+
+class NumpyIsFinite(PyccelInternalFunction):
+    """ Represents a call to numpy.isfinite() function.
+    """
+    __slots__ = ('_arg',)
+    name = 'isfinite'
+
+    def __init__(self, arg):
+        self._arg = arg
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -2149,6 +2179,9 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'isnan'     : PyccelFunctionDef('isnan'     ,NumpyIsNan),
+    'isinf'     : PyccelFunctionDef('isinf'     ,NumpyIsInf),
+    'isfinite'  : PyccelFunctionDef('isfinite'  ,NumpyIsFinite),
     'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
