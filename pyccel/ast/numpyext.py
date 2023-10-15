@@ -114,7 +114,7 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
     'NumpyShape',
-    'NumpyIsInfinte',
+    'NumpyIsInf',
     'NumpyIsFinite',
     'NumpyIsNan',
 )
@@ -2097,7 +2097,7 @@ class NumpyIsNan(PyccelInternalFunction):
     name = 'isnan'
 
     def __init__(self, arg):
-        super().__init()
+        super().__init__()
         self._arg = arg
 
 class NumpyIsInf(PyccelInternalFunction):
@@ -2107,7 +2107,7 @@ class NumpyIsInf(PyccelInternalFunction):
     name = 'isinf'
 
     def __init__(self, arg):
-        super().__init()
+        super().__init__()
         self._arg = arg
 
 class NumpyIsFinite(PyccelInternalFunction):
@@ -2117,7 +2117,7 @@ class NumpyIsFinite(PyccelInternalFunction):
     name = 'isfinite'
 
     def __init__(self, arg):
-        super().__init()
+        super().__init__()
         self._arg = arg
 
 #==============================================================================
