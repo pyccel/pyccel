@@ -2500,7 +2500,7 @@ class SemanticParser(BasicParser):
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
             new_expression = []
-            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, [], False)
+            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
