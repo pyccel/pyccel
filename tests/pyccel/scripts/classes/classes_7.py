@@ -10,6 +10,9 @@ class A:
 def get_A():
     return A(4)
 
+def get_A_int():
+    return A(2), 2
+
 def get_x_from_A(a : 'A' = None):
     if a is not None:
         return a.x
@@ -23,3 +26,4 @@ if __name__ == '__main__':
     x = get_A()
     x.update(10)
     print(get_x_from_A(x))
+    x, p = get_A_int()

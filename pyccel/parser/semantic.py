@@ -1467,7 +1467,8 @@ class SemanticParser(BasicParser):
                     shape=d_var['shape'], order=d_var['order'],
                     status=status))
             elif isinstance(var.dtype, CustomDataType):
-                self._allocs[-1].remove(var)
+                if var in self._allocs[-1]:
+                    self._allocs[-1].remove(var)
                 new_expressions.append(Deallocate(var))
 
         if var.precision == -1 and precision != var.precision:
