@@ -1322,8 +1322,8 @@ class SemanticParser(BasicParser):
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
-         precision = d_var.get('precision', 0)
-         internal_precision = default_precision[dtype] if precision == -1 else precision
+        precision = d_var.get('precision', 0)
+        internal_precision = default_precision[dtype] if precision == -1 else precision
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
