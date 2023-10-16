@@ -829,24 +829,12 @@ class Bot:
         if self._pr_id:
             return self._pr_id
         else:
-            cmds = [git, 'branch', '-a', '--contains', self._ref]
+            cmds = [github_cli, 'pr', 'list', '--json', 'headRefOid,number']
             with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
                 out, err = p.communicate()
                 print(err)
                 assert p.returncode == 0
-            branches = out.split('\n')
-            if len(branches) == 1:
-                branch = branches[0].split('/')[-1]
-                cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
-                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                    out, err = p.communicate()
-                    print(err)
-                    assert p.returncode == 0
-                self._pr_id = json.loads(out)[0]['number']
-            else:
-                possible_prs = self._GAI.get_prs()
-                print(possible_prs)
-                self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+            self._pr_id = next(pr['number'] for pr in json.loads(out) if pr['headRefOid'] == self._ref)
             self._pr_details = self._GAI.get_pr_details(self._pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
