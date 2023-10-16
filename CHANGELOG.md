@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   Set status of header variables to 'unallocated'.
 -   #1508 : Generate deallocations for classes and their attributes.
 -   #1557 : Fix return a new instance of a class
+-   #1557 : Fix save multiple class instances to the same variable
 
 ### Changed
 
