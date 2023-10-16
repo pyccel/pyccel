@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Deprecated
+
+-   Drop official support for Python 3.7 due to End of Life.
+
 ## \[1.9.2\] - 2023-10-13
 
 ### Added
