@@ -137,6 +137,52 @@ def test_fabs_phrase_i_r(language):
     assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=RTOL, atol=ATOL))
 
+#------------------------------ isnan function ----------------------------#
+def test_numpy_isnan(language):
+    def numpy_isnan_test(x):
+        from numpy import isnan
+        return isnan(x)
+
+    f = epyccel(numpy_isnan_test, language=language)
+
+    input_data = np.random.rand(10, 10)
+    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.nan
+    expected_output = np.isnan(input_data)
+    
+    assert np.array_equal(f(input_data), expected_output)
+    assert matching_types(f(input_data), expected_output)
+
+#------------------------------ isinf function ----------------------------#
+def test_numpy_isinf(language):
+    def numpy_isinf_test(x):
+        from numpy import isinf
+        return isinf(x)
+
+    f = epyccel(numpy_isinf_test, language=language)
+
+    input_data = np.random.rand(10, 10)
+    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.inf
+    expected_output = np.isinf(input_data)
+    
+    assert np.array_equal(f(input_data), expected_output)
+    assert matching_types(f(input_data), expected_output)
+
+#------------------------------ isfinite function ----------------------------#
+def test_numpy_isfinite(language):
+    def numpy_isfinite_test(x):
+        from numpy import isfinite
+        return isfinite(x)
+
+    f = epyccel(numpy_isfinite_test, language=language)
+
+    input_data = np.random.rand(10, 10)
+    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.nan
+    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.inf
+    expected_output = np.isfinite(input_data)
+    
+    assert np.array_equal(f(input_data), expected_output)
+    assert matching_types(f(input_data), expected_output)
+
 #------------------------------ absolute function ----------------------------#
 def test_absolute_call_r(language):
     def absolute_call_r(x : 'float'):
@@ -720,7 +766,7 @@ def test_sinh_phrase(language):
     assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- cosh function -------------------------------#
 def test_cosh_call_i(language):
     def cosh_call_i(x : 'int'):
         from numpy import cosh
@@ -757,7 +803,7 @@ def test_cosh_phrase(language):
     assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- tanh function -------------------------------#
 def test_tanh_call_i(language):
     def tanh_call_i(x : 'int'):
         from numpy import tanh
