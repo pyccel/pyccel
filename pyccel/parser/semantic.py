@@ -1323,7 +1323,8 @@ class SemanticParser(BasicParser):
             If is_augassign is False, this value is not used.
         """
         precision = d_var.get('precision',None)
-        internal_precision = default_precision[dtype] if (default_precision[dtype] if precision == -1 else precision) else 0
+        internal_precision = default_precision[dtype] if precision == -1 else precision
+        internal_precision = internal_precision if internal_precision is not None else 0
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
