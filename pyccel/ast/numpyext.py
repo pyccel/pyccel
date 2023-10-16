@@ -2091,7 +2091,20 @@ class NumpySize(PyccelInternalFunction):
         return PyccelArrayShapeElement(a, axis)
 
 class NumpyIsNan(PyccelInternalFunction):
-    """ Represents a call to numpy.isnan() function.
+    """ 
+    Represents a call to numpy.isnan() function.
+
+    This class encapsulates a call to the Numpy 'isnan' function. It is used to
+    check whether the elements of a given array or expression are NaN (Not-a-Number).
+
+    Parameters
+    ----------
+    arg: A Pyccel expression or array to be checked for NaN values.
+
+    See Also
+    --------
+    numpy.isnan :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
     """
     __slots__ = ('_arg',)
     name = 'isnan'
@@ -2101,7 +2114,21 @@ class NumpyIsNan(PyccelInternalFunction):
         self._arg = arg
 
 class NumpyIsInf(PyccelInternalFunction):
-    """ Represents a call to numpy.isinf() function.
+    """ 
+    Represents a call to numpy.isinf() function.
+
+    This class represents a call to the Numpy 'isinf' function, which is used
+    to determine whether elements in a given array or expression are positive or
+    negative infinity.
+
+    Parameters
+    ----------
+    arg: A Pyccel expression or array to be checked for infinity values.
+
+    See Also
+    --------
+    numpy.isinf :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
     """
     __slots__ = ('_arg',)
     name = 'isinf'
@@ -2111,7 +2138,21 @@ class NumpyIsInf(PyccelInternalFunction):
         self._arg = arg
 
 class NumpyIsFinite(PyccelInternalFunction):
-    """ Represents a call to numpy.isfinite() function.
+    """ 
+    Represents a call to numpy.isfinite() function.
+
+    This class corresponds to a call to the Numpy 'isfinite' function, which is
+    used to determine whether elements in a given array or expression are finite
+    (neither NaN nor infinity).
+
+    Parameters
+    ----------
+    arg: A Pyccel expression or array to be checked for finiteness.
+
+    See Also
+    --------
+    numpy.isfinite :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
     """
     __slots__ = ('_arg',)
     name = 'isfinite'
