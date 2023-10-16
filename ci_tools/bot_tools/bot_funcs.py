@@ -529,6 +529,7 @@ class Bot:
             welcome_comment = next(c for c in self._GAI.get_comments(self._pr_id) if c['body'].startswith('Here is your checklist.'))
         except StopIteration:
             self._GAI.create_comment(self._pr_id, message_from_file('missing_checklist.txt'))
+            self.mark_as_draft()
             return False
 
         if '- [ ]' in welcome_comment['body']:
