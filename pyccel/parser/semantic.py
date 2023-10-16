@@ -2496,7 +2496,7 @@ class SemanticParser(BasicParser):
                     'rank' : 0,
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
-            cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
+            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, [], True)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
@@ -3275,6 +3275,8 @@ class SemanticParser(BasicParser):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
+                if isinstance(a, ConstructorCall):
+                    a.cls_variable.is_temp = False
 
         results = [self._visit(i.var) for i in return_objs]
 
