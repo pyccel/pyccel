@@ -287,6 +287,23 @@ class Variable(PyccelAstNode):
         """
         self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
 
+    def set_init_shape(self, shape):
+        """
+        Set the shape that was passed to the variable upon creation.
+
+        Set the shape that was passed to the variable upon creation. Normally this can be
+        deduced when the variable was created, however this may not be the case if the
+        variable was predeclared via a header or an annotation.
+
+        Parameters
+        ----------
+        shape : tuple
+            The shape of the array. A tuple whose elements indicate the number of elements along
+            each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
+        """
+        self._alloc_shape = shape
+        self._shape = self.process_shape(shape)
+
     @property
     def name(self):
         """ Name of the variable
@@ -472,19 +489,27 @@ class Variable(PyccelAstNode):
 
     def clone(self, name, new_class = None, **kwargs):
         """
+        Create a clone of the current variable.
+
         Create a new Variable object of the chosen class
-        with the provided name and options
+        with the provided name and options. All non-specified
+        options will match the current instance.
 
         Parameters
-        ==========
-        name      : str
-                    The name of the new Variable
-        new_class : type
-                    The class of the new Variable
-                    The default is the same class
-        kwargs    : dict
-                    Dictionary containing any keyword-value
-                    pairs which are valid constructor keywords
+        ----------
+        name : str
+            The name of the new Variable.
+        new_class : type, optional
+            The class type of the new Variable (e.g. DottedVariable).
+            The default is the same class type.
+        **kwargs : dict
+            Dictionary containing any keyword-value
+            pairs which are valid constructor keywords.
+
+        Returns
+        -------
+        Variable
+            The cloned variable.
         """
 
         if (new_class is None):
@@ -498,6 +523,7 @@ class Variable(PyccelAstNode):
                             if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
+        new_kwargs['shape'] = self.alloc_shape
 
         return cls(**new_kwargs)
 

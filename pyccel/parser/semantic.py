@@ -61,8 +61,8 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
-from pyccel.ast.datatypes import default_precision
+from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
+from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
                                   NativeGeneric, NativeComplex,
@@ -102,6 +102,8 @@ from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, Pycc
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
+
+from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -486,11 +488,29 @@ class SemanticParser(BasicParser):
     def _garbage_collector(self, expr):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        The primary purpose of _garbage_collector is to search within a CodeBlock
+        instance for cases where no trailing Return node is present, and when such
+        situations occur, it adds the necessary deallocate operations to free up resources.
+
+        Parameters
+        ----------
+        expr : CodeBlock
+            The body where the method searches for the absence of trailing `Return` nodes.
+
+        Returns
+        -------
+        List
+            A list of instances of the `Deallocate` type.
         """
+
+        deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            deallocs = [Deallocate(i) for i in self._allocs[-1]]
-        else:
-            deallocs = []
+            for i in self._allocs[-1]:
+                if isinstance(i, DottedVariable):
+                    if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                        continue
+                deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
 
@@ -1159,7 +1179,7 @@ class SemanticParser(BasicParser):
                         lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                         # update the attributes of the class and push it to the scope
-                        class_def.add_new_attribute(member)
+                        class_def.add_new_attribute(lhs)
 
                     else:
                         errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
@@ -1372,6 +1392,12 @@ class SemanticParser(BasicParser):
             order = getattr(var, 'order', 'None')
             shape = getattr(var, 'shape', 'None')
 
+            # Get previous allocation calls
+            previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
+
+            if len(previous_allocations) == 0:
+                var.set_init_shape(d_var['shape'])
+
             if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
 
                 txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
@@ -1392,37 +1418,37 @@ class SemanticParser(BasicParser):
                             self._current_fst_node.col_offset))
 
                 elif var.is_stack_array:
-                    errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
-                        severity='error',
-                        bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset))
+                    if var.get_direct_user_nodes(lambda a: isinstance(a, Assign) and a.lhs is var):
+                        errors.report(INCOMPATIBLE_REDEFINITION_STACK_ARRAY, symbol=var.name,
+                            severity='error',
+                            bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset))
 
                 else:
-                    var.set_changeable_shape()
-                    previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-                    if not previous_allocations:
-                        errors.report("PYCCEL INTERNAL ERROR : Variable exists already, but it has never been allocated",
-                                symbol=var, severity='fatal')
+                    if previous_allocations:
+                        var.set_changeable_shape()
+                        last_allocation = previous_allocations[-1]
 
-                    last_allocation = previous_allocations[-1]
+                        # Find outermost IfSection of last allocation
+                        last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
+                        alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
+                        while len(last_alloc_ifsection)>0:
+                            alloc_ifsection = last_alloc_ifsection[-1]
+                            last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
 
-                    # Find outermost IfSection of last allocation
-                    last_alloc_ifsection = last_allocation.get_user_nodes(IfSection)
-                    alloc_ifsection = last_alloc_ifsection[-1] if last_alloc_ifsection else None
-                    while len(last_alloc_ifsection)>0:
-                        alloc_ifsection = last_alloc_ifsection[-1]
-                        last_alloc_ifsection = alloc_ifsection.get_user_nodes(IfSection)
+                        ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
+                                                            lambda x: isinstance(x,If))) == 1 \
+                                        if alloc_ifsection else False
 
-                    ifsection_has_if = len(alloc_ifsection.get_direct_user_nodes(
-                                                        lambda x: isinstance(x,If))) == 1 \
-                                    if alloc_ifsection else False
-
-                    if alloc_ifsection and not ifsection_has_if:
-                        status = last_allocation.status
-                    elif last_allocation.get_user_nodes((If, For, While)):
-                        status='unknown'
+                        if alloc_ifsection and not ifsection_has_if:
+                            status = last_allocation.status
+                        elif last_allocation.get_user_nodes((If, For, While)):
+                            status='unknown'
+                        else:
+                            status='allocated'
                     else:
-                        status='allocated'
+                        status = 'unallocated'
+
                     new_expressions.append(Allocate(var,
                         shape=d_var['shape'], order=d_var['order'],
                         status=status))
@@ -1432,18 +1458,14 @@ class SemanticParser(BasicParser):
                             severity='warning',
                             bounding_box=(self._current_fst_node.lineno,
                                 self._current_fst_node.col_offset))
-            else:
-                # Same shape as before
-                previous_allocations = var.get_direct_user_nodes(lambda p: isinstance(p, Allocate))
-
-                if previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
+            elif previous_allocations and previous_allocations[-1].get_user_nodes(IfSection) \
                         and not previous_allocations[-1].get_user_nodes((If)):
-                    # If previously allocated in If still under construction
-                    status = previous_allocations[-1].status
+                # If previously allocated in If still under construction
+                status = previous_allocations[-1].status
 
-                    new_expressions.append(Allocate(var,
-                        shape=d_var['shape'], order=d_var['order'],
-                        status=status))
+                new_expressions.append(Allocate(var,
+                    shape=d_var['shape'], order=d_var['order'],
+                    status=status))
 
         if var.precision == -1 and precision != var.precision:
             var.use_exact_precision()
@@ -1864,6 +1886,13 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1] = []
             if isinstance(line, CodeBlock):
                 ls.extend(line.body)
+            # ----- If block to handle VariableHeader. To be removed when headers are deprecated. ---
+            elif isinstance(line, list) and isinstance(line[0], Variable):
+                self.scope.insert_variable(line[0])
+                if len(line) != 1:
+                    errors.report(f"Variable {line[0]} cannot have multiple types",
+                            severity='error', symbol=line[0])
+            # ---------------------------- End of if block ------------------------------------------
             else:
                 ls.append(line)
         self._additional_exprs.pop()
@@ -2013,6 +2042,88 @@ class SemanticParser(BasicParser):
                     bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                     severity='fatal')
         return var
+
+    def _visit_AnnotatedPyccelSymbol(self, expr):
+        # Check if the variable already exists
+        var = self.scope.find(expr, 'variables', local_only = True)
+        if var is not None:
+            errors.report("Variable has been declared multiple times",
+                    symbol=expr, severity='error')
+
+        # Get the semantic type annotation (should be UnionTypeAnnotation)
+        types = self._visit(expr.annotation)
+
+        # Get the collisionless name from the scope
+        name = self.scope.get_expected_name(expr.name)
+
+        # Use the local decorators to define the memory and index handling
+        allows_negative_indexes = False
+        array_memory_handling = 'heap'
+        decorators = self.scope.decorators
+        if decorators:
+            if 'stack_array' in decorators:
+                if expr.name in decorators['stack_array']:
+                    array_memory_handling = 'stack'
+            if 'allow_negative_index' in decorators:
+                if expr.name in decorators['allow_negative_index']:
+                    allows_negative_indexes = True
+
+        # For each possible data type create the necessary variables
+        possible_args = []
+        for t in types.type_list:
+            if isinstance(t, VariableTypeAnnotation):
+                dtype = t.datatype
+                prec  = t.precision
+                rank  = t.rank
+                v = Variable(dtype, name, precision = prec,
+                        shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
+                        is_const = t.is_const, is_optional = False,
+                        memory_handling = array_memory_handling if rank > 0 else 'stack',
+                        allows_negative_indexes = allows_negative_indexes)
+                possible_args.append(v)
+            else:
+                errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
+                        severity='fatal', symbol=expr)
+
+        # An annotated variable must have a type
+        assert len(possible_args) != 0
+
+        return possible_args
+
+    def _visit_SyntacticTypeAnnotation(self, expr):
+        is_const = expr.is_const is True
+        types = []
+
+        for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
+            # Find the DataType instance and the associated precision
+            prec = -1
+            try:
+                dtype, prec = dtype_and_precision_registry[dtype_name]
+            except KeyError:
+                errors.report(f'Could not identify type : {dtype_name}',
+                        severity='fatal', symbol=expr)
+
+            try:
+                cls_base = get_cls_base(dtype, prec, rank)
+            except KeyError:
+                cls_base = self.scope.find(dtype_name, 'classes')
+
+            if rank > 1 and order is None:
+                order = 'C'
+            elif order is not None and rank < 2:
+                errors.report(f"Ordering is not applicable to objects with rank {rank}",
+                        symbol=expr.fst, severity='warning')
+                order = None
+
+            # NumPy objects cannot have default precision
+            if prec == -1 and cls_base is NumpyArrayClass:
+                prec = default_precision[dtype]
+
+            # Save the potential type
+            types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+
+        # Collect all possible types into a UnionTypeAnnotation
+        return UnionTypeAnnotation(*types)
 
 
     def _visit_DottedName(self, expr):
@@ -2391,6 +2502,7 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable)
+            self._allocs[-1].append(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -3125,25 +3237,6 @@ class SemanticParser(BasicParser):
             value_false = self._visit(expr.value_false)
             return IfTernaryOperator(cond, value_true, value_false)
 
-    def _visit_VariableHeader(self, expr):
-        warnings.warn("Support for specifying types via headers will be removed in " +
-                      "a future version of Pyccel. This annotation may be unnecessary " +
-                      "in your code. If you find it is necessary please open a discussion " +
-                      "at https://github.com/pyccel/pyccel/discussions so we do not " +
-                      "remove support until an alternative is in place.", FutureWarning)
-
-        # TODO improve
-        #      move it to the ast like create_definition for FunctionHeader?
-
-        name  = expr.name
-        d_var = expr.dtypes.copy()
-        dtype = d_var.pop('datatype')
-        d_var.pop('is_func')
-
-        var = Variable(dtype, name, **d_var)
-        self.scope.insert_variable(var)
-        return expr
-
     def _visit_FunctionHeader(self, expr):
         warnings.warn("Support for specifying types via headers will be removed in a " +
                       "future version of Pyccel. Please use type hints. The @template " +
@@ -3598,6 +3691,14 @@ class SemanticParser(BasicParser):
                 self._visit_FunctionDef(method)
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
+
+                # create a new attribute to check allocation
+                deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
+                deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
+                deallocater = DottedVariable(*deallocater_rhs, lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                cls.add_new_attribute(deallocater)
+                deallocater_assign = Assign(deallocater, LiteralFalse())
+                cls.methods[i].body.insert2body(deallocater_assign, back=False)
                 break
 
         if not init_func:
@@ -3608,13 +3709,36 @@ class SemanticParser(BasicParser):
         for i in methods:
             self._visit_FunctionDef(i)
 
+        if not any(method.name == '__del__' for method in methods):
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            scope = self.create_new_function_scope('__del__')
+            del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
+            self.exit_function_scope()
+            self.insert_function(del_method)
+            cls.add_new_method(del_method)
+
+        for method in cls.methods:
+            if method.name == '__del__':
+                self._current_function = method.name
+                attribute = [attr for attr in cls.attributes if not attr.on_stack]
+                if attribute:
+                    # Create a new list that store local attributes
+                    self._allocs.append([])
+                    self._allocs[-1].extend(attribute)
+                    method.body.insert2body(*self._garbage_collector(method.body))
+                condition = If(IfSection(PyccelNot(deallocater),
+                                [method.body]+[Assign(deallocater, LiteralTrue())]))
+                method.body = [condition]
+                self._current_function = None
+                break
+
         self.exit_class_scope()
 
         return EmptyNode()
 
     def _visit_Del(self, expr):
 
-        ls = [self._visit(i) for i in expr.variables]
+        ls = [Deallocate(self._visit(i)) for i in expr.variables]
         return Del(ls)
 
     def _visit_PyccelIs(self, expr):

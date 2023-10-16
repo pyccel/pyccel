@@ -1,7 +1,7 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
+## \[1.9.2\] - 2023-10-13
 
 ### Added
 
@@ -9,15 +9,23 @@ All notable changes to this project will be documented in this file.
 -   #1472 : Add C printing support for a class containing scalar data.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
+-   Output readable header syntax errors.
+-   New environment variable `PYCCEL_DEFAULT_COMPILER`.
+-   #1508 : Add C support for a class destructor.
+-   #1508 : Add support for array data in classes.
 
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
+-   Set status of header variables to 'unallocated'.
+-   #1508 : Generate deallocations for classes and their attributes.
 
 ### Changed
 
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
+-   \[INTERNALS\] Move handling of variable headers to semantic stage.
 
 ### Deprecated
 

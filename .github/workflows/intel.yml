@@ -1,4 +1,4 @@
-name: Windows unit tests
+name: Intel unit tests
 
 on:
   workflow_dispatch:
@@ -24,10 +24,11 @@ env:
   GITHUB_RUN_ID: ${{ github.run_id }}
   GITHUB_CHECK_RUN_ID: ${{ inputs.check_run_id }}
   PR_REPO: ${{ inputs.pr_repo || github.repository }}
+  PYCCEL_DEFAULT_COMPILER: 'intel'
 
 jobs:
   Python_version_picker:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
     outputs:
       python_version: ${{ steps.set-python_version.outputs.python_version }}
@@ -46,9 +47,9 @@ jobs:
         echo "python_version=$version" >> $GITHUB_OUTPUT
       shell: bash
 
-  Windows:
+  Intel:
 
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     name: Unit tests
     needs: Python_version_picker
 
@@ -65,17 +66,16 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py windows
-      # Uncomment to examine DLL requirements with 'objdump -x FILE'
-      #- name: Install mingw tools
-      #  uses: msys2/setup-msys2@v2
+          python ci_tools/setup_check_run.py intel
       - name: Install dependencies
-        uses: ./.github/actions/windows_install
+        uses: ./.github/actions/intel_install
       - name: Install Pyccel with tests
         run: |
-            python -m pip install --upgrade pip
-            python -m pip install .[test]
+          python -m pip install --upgrade pip
+          python -m pip install .[test]
         shell: bash
+      - name: Coverage install
+        uses: ./.github/actions/coverage_install
       - name: Fortran/C tests with pytest
         id: f_c_pytest
         timeout-minutes: 60
@@ -88,7 +88,19 @@ jobs:
         id: parallel
         timeout-minutes: 20
         uses: ./.github/actions/pytest_parallel
+      - name: Test with valgrind for memory leaks
+        id: valgrind
+        uses: ./.github/actions/valgrind_run
+      - name: Collect coverage information
+        continue-on-error: True
+        uses: ./.github/actions/coverage_collection
+      - name: Save code coverage report
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-artifact
+          path: .coverage
+          retention-days: 1
       - name: "Post completed"
         if: always()
         run:
-          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
