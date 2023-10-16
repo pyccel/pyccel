@@ -1323,7 +1323,7 @@ class SemanticParser(BasicParser):
             If is_augassign is False, this value is not used.
         """
         precision = d_var.get('precision',None)
-        internal_precision = default_precision[dtype] if precision == -1 else precision
+        internal_precision = default_precision[dtype] if (default_precision[dtype] if precision == -1 else precision) else 0
 
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
@@ -1466,6 +1466,9 @@ class SemanticParser(BasicParser):
                 new_expressions.append(Allocate(var,
                     shape=d_var['shape'], order=d_var['order'],
                     status=status))
+            elif isinstance(var.dtype, CustomDataType):
+                self._allocs[-1].remove(var)
+                new_expressions.append(Deallocate(var))
 
         if var.precision == -1 and precision != var.precision:
             var.use_exact_precision()
@@ -2496,7 +2499,9 @@ class SemanticParser(BasicParser):
                     'rank' : 0,
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
-            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, [], True)
+            new_expression = []
+            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, [], False)
+            self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
