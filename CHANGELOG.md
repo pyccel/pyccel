@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Deprecated
+
+-   Drop official support for Python 3.7 due to End of Life.
+
 ## \[1.9.2\] - 2023-10-13
 
 ### Added
@@ -29,7 +41,6 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
--   Drop official support for Python 3.7 due to End of Life.
 -   #1513 : Stop printing `@types` decorators in generated Python code.
 -   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
 -   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
