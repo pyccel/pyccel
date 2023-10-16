@@ -3,6 +3,8 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+ - a
+
 ### Added
 
 -   #1476 : Add C support for a class containing `Interfaces`.
