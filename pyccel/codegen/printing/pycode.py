@@ -1092,7 +1092,7 @@ class PythonCodePrinter(CodePrinter):
         return f"{cls_variable} = {cls_name}({args})\n"
 
     def _print_Del(self, expr):
-        return ''.join(f'del {var}\n' for var in expr.variables)
+        return ''.join(f'del {var.variable}\n' for var in expr.variables)
 
     #------------------OmpAnnotatedComment Printer------------------
 
