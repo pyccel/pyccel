@@ -682,19 +682,29 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep, expr):
-        """ Produce a write statement from a list of formats, args and an end
-        statement
+        """
+        Produce a write statement from all necessary information.
+
+        Produce a write statement from a list of formats, arguments, an end
+        statement, and a separator.
 
         Parameters
         ----------
         fargs_format : iterable
-                       The format strings for the objects described by fargs
-        fargs        : iterable
-                       The args to be printed
-        fend         : PyccelAstNode
-                       The character describing the end of the line
-        expr         : PyccelAstNode
-                        The PythonPrint currently printed
+            The format strings for the objects described by fargs.
+        fargs : iterable
+            The arguments to be printed.
+        fend : PyccelAstNode
+            The character describing the end of the line.
+        fsep : PyccelAstNode
+            The character describing the separator between elements.
+        expr : PyccelAstNode
+            The PythonPrint currently printed.
+
+        Returns
+        -------
+        str
+            The Fortran code describing the write statement.
         """
         if fargs_format == ['*']:
             # To print the result of a FunctionCall
