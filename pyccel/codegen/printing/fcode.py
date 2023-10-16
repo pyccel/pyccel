@@ -714,7 +714,7 @@ class FCodePrinter(CodePrinter):
             args_list.append(fend_code)
 
         args_code       = ' , '.join(args_list)
-        args_formatting = ' '.join(fargs_format)
+        args_formatting = ', '.join(fargs_format)
         if expr.file == "stderr":
             self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stderr", "error_unit"))
