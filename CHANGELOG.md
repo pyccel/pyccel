@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Added
+
+### Fixed
+
+-   #1556 : Fixed print format string for Intel compatibility.
+
+### Changed
+
+### Deprecated
+
 ## \[1.9.2\] - 2023-10-13
 
 ### Added
