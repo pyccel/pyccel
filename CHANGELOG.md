@@ -21,6 +21,7 @@ All notable changes to this project will be documented in this file.
 -   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
 -   Set status of header variables to 'unallocated'.
 -   #1508 : Generate deallocations for classes and their attributes.
+-   #1557 : Fix return a new instance of a class
 
 ### Changed
 
