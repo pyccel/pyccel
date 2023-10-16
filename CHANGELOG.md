@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Unreleased\]
+
+### Added
+
+### Fixed
+
+-   #1557 : Fix return a new instance of a class.
+-   #1557 : Fix save multiple class instances to the same variable.
+
+### Changed
+
+### Deprecated
+
 ## \[1.9.2\] - 2023-10-13
 
 ### Added
@@ -21,8 +34,6 @@ All notable changes to this project will be documented in this file.
 -   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
 -   Set status of header variables to 'unallocated'.
 -   #1508 : Generate deallocations for classes and their attributes.
--   #1557 : Fix return a new instance of a class.
--   #1557 : Fix save multiple class instances to the same variable.
 
 ### Changed
 
