@@ -53,7 +53,7 @@ from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
 from pyccel.ast.builtins import PythonPrint, Lambda
-from pyccel.ast.headers  import MetaVariable, FunctionHeader
+from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
@@ -224,7 +224,7 @@ class SyntaxParser(BasicParser):
                     errors.report(f"Invalid header. {e.message}",
                             symbol = stmt, column = e.col,
                               severity='fatal')
-                if isinstance(expr, FunctionHeader):
+                if isinstance(expr, (MethodHeader, FunctionHeader)):
                     self.scope.insert_header(expr)
                     expr = EmptyNode()
                 elif isinstance(expr, AnnotatedPyccelSymbol):
@@ -705,7 +705,7 @@ class SyntaxParser(BasicParser):
         name = PyccelSymbol(self._visit(stmt.name))
         self.scope.insert_symbol(name)
 
-        headers = self.scope.headers.get(name, None)
+        headers = self.scope.find(name, 'headers')
 
         scope = self.create_new_function_scope(name)
 

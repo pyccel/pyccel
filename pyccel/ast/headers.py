@@ -302,7 +302,7 @@ class MethodHeader(FunctionHeader):
     def __init__(self, name, dtypes, results=None, is_static=False):
         if not isinstance(name, str):
             raise TypeError("Expecting a string.")
-        name      = '.'.join(str(n) for n in name)
+        name      = name
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
