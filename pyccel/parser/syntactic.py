@@ -461,7 +461,7 @@ class SyntaxParser(BasicParser):
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
-                annotation = self._visit(a.annotation)
+                annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 val = self._visit(d) if d is not None else d
                 arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
