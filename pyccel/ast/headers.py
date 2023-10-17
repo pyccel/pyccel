@@ -7,7 +7,7 @@
 from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
 from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
-from .basic             import Basic, iterable
+from .basic             import PyccelAstNode, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionDef, FunctionCall, FunctionAddress
 from .core              import FunctionDefArgument, FunctionDefResult
@@ -33,7 +33,7 @@ __all__ = (
 errors = Errors()
 
 #==============================================================================
-class Header(Basic):
+class Header(PyccelAstNode):
     __slots__ = ()
     _attribute_nodes = ()
 

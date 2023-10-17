@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode, Immutable
+from .basic     import PyccelAstNode, TypedAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
@@ -30,7 +30,7 @@ __all__ = (
 )
 
 
-class PyccelInternalFunction(PyccelAstNode):
+class PyccelInternalFunction(TypedAstNode):
     """
     Abstract class for function calls translated to Pyccel objects.
 
@@ -80,7 +80,7 @@ class PyccelArraySize(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown size.
     """
     __slots__ = ()
@@ -124,7 +124,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown shape.
 
     index : int
@@ -140,12 +140,12 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg, index):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type {type(arg)} of {arg}.')
 
         if isinstance(index, int):
             index = LiteralInteger(index)
-        elif not isinstance(index, PyccelAstNode):
+        elif not isinstance(index, TypedAstNode):
             raise TypeError(f'Unknown type {type(index)} of {index}.')
 
         super().__init__(arg, index)
@@ -180,7 +180,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
             return False
 
 
-class Slice(Basic):
+class Slice(PyccelAstNode):
     """
     Represents a slice in the code.
 
@@ -324,7 +324,7 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-class AnnotatedPyccelSymbol(Basic):
+class AnnotatedPyccelSymbol(PyccelAstNode):
     """
     Class representing a symbol in the code which has an annotation.
 
@@ -376,13 +376,13 @@ class AnnotatedPyccelSymbol(Basic):
         """
         return self._annotation
 
-class PrecomputedCode(Basic):
+class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
     before it is needed chronologically (e.g. for inline functions as arguments
     to the same function).
     This class should be avoided if at all possible as it may break code which
-    searches through attribute nodes, where possible use Basic's methods,
+    searches through attribute nodes, where possible use PyccelAstNode's methods,
     e.g. substitute
 
     Parameters
@@ -444,7 +444,7 @@ def max_precision(objs : list, allow_native : bool = True):
     Parameters
     ----------
     objs : list
-       A list of PyccelAstNodes.
+       A list of TypedAstNodes.
 
     allow_native : bool, default=True
         Allow the final result to be a native precision (i.e. -1).
@@ -475,7 +475,7 @@ def get_final_precision(obj):
 
     Parameters
     ----------
-    obj : PyccelAstNode
+    obj : TypedAstNode
         The object whose precision we want to investigate.
 
     Returns

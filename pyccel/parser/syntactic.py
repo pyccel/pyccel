@@ -14,7 +14,7 @@ from textx.exceptions import TextXSyntaxError
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core import FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Module
@@ -158,7 +158,7 @@ class SyntaxParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The Pyccel AST object.
         """
 
@@ -198,7 +198,7 @@ class SyntaxParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The treated object as a Pyccel ast node.
         """
         if line.startswith('#$'):
@@ -314,7 +314,7 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, ast.AST):
+            if isinstance(result, PyccelAstNode) and result.fst is None and isinstance(stmt, ast.AST):
                 result.set_fst(stmt)
             self._context.pop()
             return result

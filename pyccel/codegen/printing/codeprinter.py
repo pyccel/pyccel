@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 
 from pyccel.ast.core      import Assign
 from pyccel.ast.internals import PyccelSymbol
@@ -41,7 +41,7 @@ class CodePrinter:
 
         if isinstance(assign_to, str):
             assign_to = PyccelSymbol(assign_to)
-        elif not isinstance(assign_to, (Basic, type(None))):
+        elif not isinstance(assign_to, (PyccelAstNode, type(None))):
             raise TypeError("{0} cannot assign to object of type {1}".format(
                     type(self).__name__, type(assign_to)))
 

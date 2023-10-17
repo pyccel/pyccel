@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 import functools
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
@@ -682,19 +682,29 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep, expr):
-        """ Produce a write statement from a list of formats, args and an end
-        statement
+        """
+        Produce a write statement from all necessary information.
+
+        Produce a write statement from a list of formats, arguments, an end
+        statement, and a separator.
 
         Parameters
         ----------
         fargs_format : iterable
-                       The format strings for the objects described by fargs
-        fargs        : iterable
-                       The args to be printed
-        fend         : PyccelAstNode
-                       The character describing the end of the line
-        expr         : PyccelAstNode
-                        The PythonPrint currently printed
+            The format strings for the objects described by fargs.
+        fargs : iterable
+            The arguments to be printed.
+        fend : TypedAstNode
+            The character describing the end of the line.
+        fsep : TypedAstNode
+            The character describing the separator between elements.
+        expr : TypedAstNode
+            The PythonPrint currently printed.
+
+        Returns
+        -------
+        str
+            The Fortran code describing the write statement.
         """
         if fargs_format == ['*']:
             # To print the result of a FunctionCall
@@ -714,7 +724,7 @@ class FCodePrinter(CodePrinter):
             args_list.append(fend_code)
 
         args_code       = ' , '.join(args_list)
-        args_formatting = ' '.join(fargs_format)
+        args_formatting = ', '.join(fargs_format)
         if expr.file == "stderr":
             self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stderr", "error_unit"))
@@ -732,7 +742,7 @@ class FCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        var : PyccelAstNode
+        var : TypedAstNode
               The object to be printed
 
         Results
@@ -1450,7 +1460,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or on_stack)):
+        if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):

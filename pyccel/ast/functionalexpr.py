@@ -7,7 +7,7 @@
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import PyccelAstNode
+from .basic import TypedAstNode
 
 pyccel_stage = PyccelStage()
 
@@ -20,7 +20,7 @@ __all__ = (
 )
 
 #==============================================================================
-class FunctionalFor(PyccelAstNode):
+class FunctionalFor(TypedAstNode):
 
     """
     Represents any generator expression e.g:
@@ -30,7 +30,7 @@ class FunctionalFor(PyccelAstNode):
     ----------
     loops   : CodeBlock/For
               The loops contained in the expression
-    expr    : Basic
+    expr    : PyccelAstNode
               The expression at the origin of the expression
               E.g. 'i' for '[i for i in range(10)]'
     lhs     : Variable

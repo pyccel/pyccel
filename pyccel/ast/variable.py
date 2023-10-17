@@ -12,7 +12,7 @@ import inspect
 from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
@@ -35,7 +35,7 @@ __all__ = (
     'Variable'
 )
 
-class Variable(PyccelAstNode):
+class Variable(TypedAstNode):
     """
     Represents a typed variable.
 
@@ -74,7 +74,7 @@ class Variable(PyccelAstNode):
 
     shape : tuple, default: None
         The shape of the array. A tuple whose elements indicate the number of elements along
-        each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
+        each of the dimensions of an array. The elements of the tuple should be None or TypedAstNodes.
 
     cls_base : class, default: None
         Class base if variable is an object or an object member.
@@ -180,7 +180,7 @@ class Variable(PyccelAstNode):
         self._is_argument    = is_argument
         self._is_temp        = is_temp
 
-        # ------------ PyccelAstNode Properties ---------------
+        # ------------ TypedAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(dtype)
@@ -252,11 +252,11 @@ class Variable(PyccelAstNode):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
-            elif s is None or isinstance(s, PyccelAstNode):
+            elif s is None or isinstance(s, TypedAstNode):
                 new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
-                                'Variable, Slice, PyccelAstNode, int, Function')
+                                'Variable, Slice, TypedAstNode, int, Function')
         return tuple(new_shape)
 
     def shape_can_change(self, i):
@@ -299,7 +299,7 @@ class Variable(PyccelAstNode):
         ----------
         shape : tuple
             The shape of the array. A tuple whose elements indicate the number of elements along
-            each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
+            each of the dimensions of an array. The elements of the tuple should be None or TypedAstNodes.
         """
         self._alloc_shape = shape
         self._shape = self.process_shape(shape)
@@ -588,7 +588,7 @@ class Variable(PyccelAstNode):
             raise ValueError("Variables cannot become temporary")
         self._is_temp = is_temp
 
-class DottedName(Basic):
+class DottedName(PyccelAstNode):
 
     """
     Represents a dotted object.
@@ -840,7 +840,7 @@ class Constant(Variable):
 
 
 
-class IndexedElement(PyccelAstNode):
+class IndexedElement(TypedAstNode):
 
     """
     Represents a mathematical object with indices.
@@ -886,7 +886,7 @@ class IndexedElement(PyccelAstNode):
         if len(args) < rank:
             args = args + tuple([Slice(None, None)]*(rank-len(args)))
 
-        if any(not isinstance(a, (int, PyccelAstNode, Slice)) for a in args):
+        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in args):
             errors.report("Index is not of valid type",
                     symbol = args, severity = 'fatal')
 

@@ -3,6 +3,12 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Changed
+
+-   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
+-   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
+-   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
+
 ### Added
 
 -   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
@@ -11,6 +17,9 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
+-   #1556 : Fixed print format string for Intel compatibility.
+-   #1557 : Fix return a new instance of a class.
+-   #1557 : Fix save multiple class instances to the same variable.
 
 ### Changed
 

@@ -9,7 +9,7 @@
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
@@ -24,7 +24,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-class VariableTypeAnnotation(Basic):
+class VariableTypeAnnotation(PyccelAstNode):
     """
     A class which describes a type annotation on a variable.
 
@@ -142,7 +142,7 @@ class VariableTypeAnnotation(Basic):
     def __repr__(self):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
-class FunctionTypeAnnotation(Basic):
+class FunctionTypeAnnotation(PyccelAstNode):
     """
     A class which describes a type annotation on a function address.
 
@@ -202,7 +202,7 @@ class FunctionTypeAnnotation(Basic):
     def __repr__(self):
         return f'func({repr(self.args)}) -> {repr(self.results)}'
 
-class UnionTypeAnnotation(Basic):
+class UnionTypeAnnotation(PyccelAstNode):
     """
     A class which holds multiple possible type annotations.
 
@@ -246,7 +246,7 @@ class UnionTypeAnnotation(Basic):
             self._type_annotations += (annot,)
             annot.set_current_user_node(self)
 
-class SyntacticTypeAnnotation(Basic):
+class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.
 
