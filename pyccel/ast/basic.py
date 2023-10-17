@@ -518,19 +518,6 @@ class TypedAstNode(PyccelAstNode):
         return self._order # pylint: disable=no-member
 
     @classmethod
-    def static_shape(cls):
-        """
-        Tuple containing the length of each dimension of the object or None.
-
-        A tuple containing the length of each dimension of the object if the object
-        is an array (with rank>0). Otherwise None.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined shape.
-        """
-        return cls._shape # pylint: disable=no-member
-
-    @classmethod
     def static_rank(cls):
         """
         Number of dimensions of the object.
