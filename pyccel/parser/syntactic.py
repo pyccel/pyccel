@@ -261,12 +261,12 @@ class SyntaxParser(BasicParser):
         stmt : ast.Ast
             The ast node about which any errors should be raised.
 
-        annotation : pyccel.ast.basic.Basic
+        annotation : pyccel.ast.basic.PyccelAstNode
             A visited object which is describing a type annotation.
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The type annotation.
         """
         if isinstance(annotation, FunctionCallArgument):
@@ -286,7 +286,7 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, column = e.col,
                         severity='fatal')
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
-            if isinstance(stmt, Basic):
+            if isinstance(stmt, PyccelAstNode):
                 annot.set_fst(stmt.fst)
             else:
                 annot.set_fst(stmt)
