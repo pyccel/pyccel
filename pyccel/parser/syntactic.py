@@ -777,7 +777,7 @@ class SyntaxParser(BasicParser):
                     type_descriptors = dec_args[1].value
 
                 if not isinstance(type_descriptors, (PythonTuple, PythonList)):
-                    type_descriptors = PythonTuple(*type_descriptors)
+                    type_descriptors = PythonTuple(type_descriptors)
 
                 if type_name in template['template_dict']:
                     errors.report(f'The template "{type_name}" is duplicated',

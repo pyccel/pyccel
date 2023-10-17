@@ -62,7 +62,7 @@ def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
 def array_elem1(x):
     return x[0]
 
-@template('k', types=['int'])
+@template('k', types='int')
 @template('g', types=['int', 'float'])
 def multi_tmplt_2(y : 'k', z : 'g'):
     return y + z
