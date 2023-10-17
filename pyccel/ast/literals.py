@@ -43,7 +43,11 @@ class Literal(TypedAstNode):
 
     @property
     def python_value(self):
-        """ Get Python literal represented by this instance """
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
 
     def __repr__(self):
         return "Literal({})".format(repr(self.python_value))
@@ -83,7 +87,9 @@ class LiteralNumeric(Literal):
 
     @TypedAstNode.precision.setter
     def precision(self, precision):
-        """ Set precision for a literal class"""
+        """
+        Change the precision of a literal class instance.
+        """
         self._precision = precision
 
 #------------------------------------------------------------------------------
@@ -92,6 +98,11 @@ class LiteralTrue(LiteralNumeric):
     Class representing the Python value True.
 
     Class representing the Python value True.
+
+    Parameters
+    ----------
+    precision : int
+        The precision of the data type.
     """
     __slots__ = ()
     _dtype     = NativeBool()
@@ -109,6 +120,11 @@ class LiteralFalse(LiteralNumeric):
     Class representing the Python value False.
 
     Class representing the Python value False.
+
+    Parameters
+    ----------
+    precision : int
+        The precision of the data type.
     """
     __slots__ = ()
     _dtype     = NativeBool()
@@ -193,8 +209,11 @@ class LiteralComplex(LiteralNumeric):
 
     Parameters
     ----------
-    value : complex
-        The Python literal.
+    real : float
+        The real part of the Python literal.
+
+    imag : float
+        The imaginary part of the Python literal.
 
     precision : int
         The precision of the complex number.
@@ -228,12 +247,20 @@ class LiteralComplex(LiteralNumeric):
 
     @property
     def real(self):
-        """ Return the real part of the complex literal """
+        """
+        Return the real part of the complex literal.
+
+        Return the real part of the complex literal.
+        """
         return self._real_part
 
     @property
     def imag(self):
-        """ Return the imaginary part of the complex literal """
+        """
+        Return the imaginary part of the complex literal.
+
+        Return the imaginary part of the complex literal.
+        """
         return self._imag_part
 
     @property
@@ -280,15 +307,6 @@ class LiteralString(Literal):
             raise TypeError('arg must be of type str')
         self._string = arg
 
-    @property
-    def arg(self):
-        """
-        Return the Python string literal.
-
-        Return the Python string literal.
-        """
-        return self._string
-
     def __repr__(self):
         return "'{}'".format(str(self.python_value))
 
@@ -302,7 +320,7 @@ class LiteralString(Literal):
 
     @property
     def python_value(self):
-        return self.arg
+        return self._string
 
 #------------------------------------------------------------------------------
 
