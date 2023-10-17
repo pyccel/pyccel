@@ -85,13 +85,6 @@ class LiteralNumeric(Literal):
         self._precision = precision
         super().__init__()
 
-    @TypedAstNode.precision.setter
-    def precision(self, precision):
-        """
-        Change the precision of a literal class instance.
-        """
-        self._precision = precision
-
 #------------------------------------------------------------------------------
 class LiteralTrue(LiteralNumeric):
     """
