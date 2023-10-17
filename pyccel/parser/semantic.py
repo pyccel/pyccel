@@ -1952,8 +1952,6 @@ class SemanticParser(BasicParser):
         value = None if expr.value is None else self._visit(expr.value)
         kwonly = expr.is_kwonly
         is_optional = isinstance(value, Nil)
-        if not isinstance(arg, list):
-            arg = [arg]
 
         args = []
         for v in arg:
