@@ -72,4 +72,4 @@ class MyClass:
         self.myInstanceVar = 1
 ```
 
-In order to save memory any variables which will remain constant over all instances of a class should be class variables. This discussion usually arises for the properties of the [`PyccelAstNode`](../pyccel/ast/basic.py) and its sub classes. The variables `_dtype`, `_precision`, `_rank`, `_shape`, and `_order` are often seen as instance variables, however for some classes (e.g. [`LiteralInteger`](../pyccel/ast/literals.py)) the values are known and never change. In this case they can be stored as class variables.
+In order to save memory any variables which will remain constant over all instances of a class should be class variables. This discussion usually arises for the properties of the [`TypedAstNode`](../pyccel/ast/basic.py) and its sub classes. The variables `_dtype`, `_precision`, `_rank`, `_shape`, and `_order` are often seen as instance variables, however for some classes (e.g. [`LiteralInteger`](../pyccel/ast/literals.py)) the values are known and never change. In this case they can be stored as class variables.

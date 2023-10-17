@@ -3,15 +3,25 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Changed
+
+-   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
+-   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
+-   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
+
 ### Added
 
 ### Fixed
 
 -   #1556 : Fixed print format string for Intel compatibility.
+-   #1557 : Fix return a new instance of a class.
+-   #1557 : Fix save multiple class instances to the same variable.
 
 ### Changed
 
 ### Deprecated
+
+-   Drop official support for Python 3.7 due to End of Life.
 
 ## \[1.9.2\] - 2023-10-13
 

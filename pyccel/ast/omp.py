@@ -10,7 +10,7 @@ These types are detailed on our documentation:
 https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
 """
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 __all__ = ('OmpAnnotatedComment',
            'OMP_For_Loop',
@@ -30,7 +30,7 @@ __all__ = ('OmpAnnotatedComment',
            'OMP_Section_Construct',
            'Omp_End_Clause')
 
-class OmpAnnotatedComment(Basic):
+class OmpAnnotatedComment(PyccelAstNode):
 
     """Represents an OpenMP Annotated Comment in the code.
 

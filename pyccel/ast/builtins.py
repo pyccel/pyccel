@@ -14,7 +14,7 @@ from pyccel.errors.errors import PyccelError
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric)
@@ -141,7 +141,7 @@ class PythonConjugate(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The variable/expression which was passed to the
         conjugate function.
     """
@@ -173,7 +173,7 @@ class PythonConjugate(PyccelInternalFunction):
         return 'Conjugate({0})'.format(str(self.internal_var))
 
 #==============================================================================
-class PythonBool(PyccelAstNode):
+class PythonBool(TypedAstNode):
     """ Represents a call to Python's native bool() function.
     """
     __slots__ = ('_arg',)
@@ -205,7 +205,7 @@ class PythonBool(PyccelAstNode):
         return 'Bool({})'.format(str(self.arg))
 
 #==============================================================================
-class PythonComplex(PyccelAstNode):
+class PythonComplex(TypedAstNode):
     """ Represents a call to Python's native complex() function.
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
@@ -307,7 +307,7 @@ class PythonComplex(PyccelAstNode):
         return "complex({}, {})".format(str(self.real), str(self.imag))
 
 #==============================================================================
-class PythonEnumerate(Basic):
+class PythonEnumerate(PyccelAstNode):
 
     """
     Represents the enumerate stmt
@@ -319,7 +319,7 @@ class PythonEnumerate(Basic):
 
     def __init__(self, arg, start = None):
         if pyccel_stage != "syntactic" and \
-                not isinstance(arg, PyccelAstNode):
+                not isinstance(arg, TypedAstNode):
             raise TypeError('Expecting an arg of valid type')
         self._element = arg
         self._start   = start or LiteralInteger(0)
@@ -346,7 +346,7 @@ class PythonEnumerate(Basic):
         return PythonLen(self.element)
 
 #==============================================================================
-class PythonFloat(PyccelAstNode):
+class PythonFloat(TypedAstNode):
     """ Represents a call to Python's native float() function.
     """
     __slots__ = ('_arg')
@@ -377,7 +377,7 @@ class PythonFloat(PyccelAstNode):
         return 'float({0})'.format(str(self.arg))
 
 #==============================================================================
-class PythonInt(PyccelAstNode):
+class PythonInt(TypedAstNode):
     """ Represents a call to Python's native int() function.
     """
 
@@ -405,7 +405,7 @@ class PythonInt(PyccelAstNode):
         return self._arg
 
 #==============================================================================
-class PythonTuple(PyccelAstNode):
+class PythonTuple(TypedAstNode):
     """
     Class representing a call to Python's native tuple() function.
 
@@ -415,7 +415,7 @@ class PythonTuple(PyccelAstNode):
 
     Parameters
     ----------
-    *args : tuple of PyccelAstNode
+    *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
     """
     __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
@@ -583,7 +583,7 @@ class PythonList(PythonTuple):
     __slots__ = ()
 
 #==============================================================================
-class PythonMap(Basic):
+class PythonMap(PyccelAstNode):
     """ Represents the map stmt
     """
     __slots__ = ('_func','_func_args')
@@ -617,11 +617,11 @@ class PythonMap(Basic):
         return PythonLen(self.func_args)
 
 #==============================================================================
-class PythonPrint(Basic):
+class PythonPrint(PyccelAstNode):
 
     """Represents a print function in the code.
 
-    expr : PyccelAstNode
+    expr : TypedAstNode
         The expression to print
     file: String (Optional)
         Select 'stdout' (default) or 'stderr' to print to
@@ -655,7 +655,7 @@ class PythonPrint(Basic):
         return self._file
 
 #==============================================================================
-class PythonRange(Basic):
+class PythonRange(PyccelAstNode):
 
     """
     Represents a range.
@@ -779,7 +779,7 @@ class PythonSum(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
         self._precision = -1
@@ -846,14 +846,14 @@ class PythonMin(PyccelInternalFunction):
         super().__init__(x)
 
 #==============================================================================
-class Lambda(Basic):
+class Lambda(PyccelAstNode):
     """Represents a call to python lambda for temporary functions
 
     Parameters
     ==========
     variables : tuple of symbols
                 The arguments to the lambda expression
-    expr      : PyccelAstNode
+    expr      : TypedAstNode
                 The expression carried out when the lambda function is called
     """
     __slots__ = ('_variables', '_expr')
@@ -889,7 +889,7 @@ class Lambda(Basic):
                 expr = self.expr)
 
 #==============================================================================
-class PythonType(Basic):
+class PythonType(PyccelAstNode):
     """
     Represents a call to the Python builtin `type` function.
 
@@ -902,14 +902,14 @@ class PythonType(Basic):
 
     Parameters
     ==========
-    obj : PyccelAstNode
+    obj : TypedAstNode
           The object whose type we wish to investigate.
     """
     __slots__ = ('_dtype','_precision','_obj')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
-        if not isinstance (obj, PyccelAstNode):
+        if not isinstance (obj, TypedAstNode):
             raise PyccelError("Python's type function is not implemented for {} object".format(type(obj)))
         self._dtype = obj.dtype
         self._precision = obj.precision

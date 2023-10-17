@@ -7,7 +7,7 @@ import functools
 from itertools import chain
 import re
 
-from pyccel.ast.basic     import ScopedNode
+from pyccel.ast.basic     import ScopedAstNode
 
 from pyccel.ast.builtins  import PythonRange, PythonComplex
 from pyccel.ast.builtins  import PythonPrint, PythonType
@@ -349,7 +349,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        a : PyccelAstNode
+        a : TypedAstNode
             The object whose storage we are enquiring about.
 
         Returns
@@ -381,7 +381,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -474,7 +474,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -502,7 +502,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The Assign Node used to get the lhs and rhs.
 
         Returns
@@ -557,7 +557,7 @@ class CCodePrinter(CodePrinter):
         body = func.body
 
         for b in body.body:
-            if isinstance(b, ScopedNode):
+            if isinstance(b, ScopedAstNode):
                 b.scope.update_parent_scope(self.scope, is_loop=True)
 
         # Print any arguments using the same inline function
@@ -623,7 +623,7 @@ class CCodePrinter(CodePrinter):
                 self.scope.insert_symbol(v.name)
 
         for b in body.body:
-            if isinstance(b, ScopedNode):
+            if isinstance(b, ScopedAstNode):
                 b.scope.update_parent_scope(func.scope, is_loop=True)
 
         return code
@@ -971,7 +971,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        var : PyccelAstNode
+        var : TypedAstNode
             The object which will be printed.
 
         Returns
@@ -1376,7 +1376,7 @@ class CCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The expression to be cast.
         dtype : Datatype
             The target type of the cast.

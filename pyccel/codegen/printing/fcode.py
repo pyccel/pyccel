@@ -14,7 +14,7 @@ from collections import OrderedDict
 
 import functools
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
@@ -694,11 +694,11 @@ class FCodePrinter(CodePrinter):
             The format strings for the objects described by fargs.
         fargs : iterable
             The arguments to be printed.
-        fend : PyccelAstNode
+        fend : TypedAstNode
             The character describing the end of the line.
-        fsep : PyccelAstNode
+        fsep : TypedAstNode
             The character describing the separator between elements.
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The PythonPrint currently printed.
 
         Returns
@@ -742,7 +742,7 @@ class FCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        var : PyccelAstNode
+        var : TypedAstNode
               The object to be printed
 
         Results
@@ -1460,7 +1460,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or on_stack)):
+        if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):

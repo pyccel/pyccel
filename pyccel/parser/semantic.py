@@ -20,7 +20,7 @@ from sympy.core import cache
 
 #==============================================================================
 
-from pyccel.ast.basic import Basic, PyccelAstNode, ScopedNode
+from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
@@ -285,7 +285,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             An annotated object which can be printed.
         """
 
@@ -531,7 +531,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
                 An AST object representing an object in the code whose type
                 must be determined.
 
@@ -632,7 +632,7 @@ class SemanticParser(BasicParser):
             d_var['precision'     ] = var.precision
             return d_var
 
-        elif isinstance(expr, PyccelAstNode):
+        elif isinstance(expr, TypedAstNode):
 
             d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -863,7 +863,7 @@ class SemanticParser(BasicParser):
                      The arguments provided to the function
         func_args  : list
                      The arguments expected by the function
-        expr       : PyccelAstNode
+        expr       : TypedAstNode
                      The expression where this call is found (used for error output)
         elemental  : bool
                      Indicates if the function is elemental
@@ -910,7 +910,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
                The expression where this call is found (used for error output).
 
         func : FunctionDef instance, Interface instance or PyccelInternalFunction type
@@ -948,7 +948,7 @@ class SemanticParser(BasicParser):
             return new_expr
         else:
             if self._current_function == func.name:
-                if len(func.results)>0 and not isinstance(func.results[0].var, PyccelAstNode):
+                if len(func.results)>0 and not isinstance(func.results[0].var, TypedAstNode):
                     errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
@@ -1318,11 +1318,11 @@ class SemanticParser(BasicParser):
             A boolean indicating if the assign statement is an augassign (tests are less strict).
         new_expressions : list
             A list to which any new expressions created are appended.
-        rhs : PyccelAstNode
+        rhs : TypedAstNode
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
-        precision = d_var.get('precision',None)
+        precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
 
         # TODO improve check type compatibility
@@ -1466,6 +1466,10 @@ class SemanticParser(BasicParser):
                 new_expressions.append(Allocate(var,
                     shape=d_var['shape'], order=d_var['order'],
                     status=status))
+            elif isinstance(var.dtype, CustomDataType):
+                if var in self._allocs[-1]:
+                    self._allocs[-1].remove(var)
+                new_expressions.append(Deallocate(var))
 
         if var.precision == -1 and precision != var.precision:
             var.use_exact_precision()
@@ -1643,12 +1647,12 @@ class SemanticParser(BasicParser):
         
         Parameters
         ----------
-        expr : pyccel.ast.basic.Basic
+        expr : pyccel.ast.basic.PyccelAstNode
             Object to visit of type X.
         
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             AST object which is the semantic equivalent of expr.
         """
 
@@ -1665,7 +1669,7 @@ class SemanticParser(BasicParser):
             annotation_method = '_visit_' + cls.__name__
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr)
-                if isinstance(obj, Basic) and self._current_fst_node:
+                if isinstance(obj, PyccelAstNode) and self._current_fst_node:
                     obj.set_fst(self._current_fst_node)
                 self._current_fst_node = current_fst
                 return obj
@@ -1722,11 +1726,11 @@ class SemanticParser(BasicParser):
             # Ensure that the function is correctly defined within the namespaces
             init_scope = self.create_new_function_scope(init_func_name)
             for b in init_func_body:
-                if isinstance(b, ScopedNode):
+                if isinstance(b, ScopedAstNode):
                     b.scope.update_parent_scope(init_scope, is_loop = True)
                 if isinstance(b, FunctionalFor):
                     for l in b.loops:
-                        if isinstance(l, ScopedNode):
+                        if isinstance(l, ScopedAstNode):
                             l.scope.update_parent_scope(init_scope, is_loop = True)
 
             self.exit_function_scope()
@@ -2496,7 +2500,9 @@ class SemanticParser(BasicParser):
                     'rank' : 0,
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
-            cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
+            new_expression = []
+            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
+            self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
@@ -3275,6 +3281,8 @@ class SemanticParser(BasicParser):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
+                if isinstance(a, ConstructorCall):
+                    a.cls_variable.is_temp = False
 
         results = [self._visit(i.var) for i in return_objs]
 

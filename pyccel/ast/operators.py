@@ -13,7 +13,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from ..errors.errors        import Errors, PyccelSemanticError
 
-from .basic                 import PyccelAstNode
+from .basic                 import TypedAstNode
 
 from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString,
@@ -122,7 +122,7 @@ def broadcast(shape_1, shape_2):
 
 #==============================================================================
 
-class PyccelOperator(PyccelAstNode):
+class PyccelOperator(TypedAstNode):
     """
     Abstract superclass for all builtin operators.
     The __init__ function is common
@@ -230,7 +230,7 @@ class PyccelUnaryOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg: TypedAstNode
         The argument passed to the operator
     """
     __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
@@ -267,7 +267,7 @@ class PyccelUnary(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg: TypedAstNode
         The argument passed to the operator
     """
     __slots__ = ()
@@ -292,7 +292,7 @@ class PyccelUnarySub(PyccelUnary):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg: TypedAstNode
         The argument passed to the operator
     """
     __slots__ = ()
@@ -312,7 +312,7 @@ class PyccelNot(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg: TypedAstNode
         The argument passed to the operator
     """
     __slots__ = ()
@@ -349,7 +349,7 @@ class PyccelAssociativeParenthesis(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg: PyccelAstNode
+    arg: TypedAstNode
         The argument in the PyccelAssociativeParenthesis
     """
     __slots__ = () # ok
@@ -368,9 +368,9 @@ class PyccelBinaryOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
@@ -475,9 +475,9 @@ class PyccelArithmeticOperator(PyccelBinaryOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -498,9 +498,9 @@ class PyccelPow(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -537,9 +537,9 @@ class PyccelAdd(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -592,9 +592,9 @@ class PyccelMul(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -634,9 +634,9 @@ class PyccelMinus(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -676,9 +676,9 @@ class PyccelDiv(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -711,9 +711,9 @@ class PyccelMod(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -734,9 +734,9 @@ class PyccelFloorDiv(PyccelArithmeticOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -753,9 +753,9 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -778,9 +778,9 @@ class PyccelEq(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -804,9 +804,9 @@ class PyccelNe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -830,9 +830,9 @@ class PyccelLt(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -850,9 +850,9 @@ class PyccelLe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -870,9 +870,9 @@ class PyccelGt(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -890,9 +890,9 @@ class PyccelGe(PyccelComparisonOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -908,9 +908,9 @@ class PyccelBooleanOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     dtype = NativeBool()
@@ -942,9 +942,9 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()
@@ -969,9 +969,9 @@ class PyccelOr(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1: PyccelAstNode
+    arg1: TypedAstNode
         The first argument passed to the operator
-    arg2: PyccelAstNode
+    arg2: TypedAstNode
         The second argument passed to the operator
     """
     __slots__ = ()

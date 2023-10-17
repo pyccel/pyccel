@@ -12,12 +12,12 @@ from .github_api_interactions import GitHubAPIInteractions
 default_python_versions = {
         'anaconda_linux': '3.10',
         'anaconda_windows': '3.10',
-        'coverage': '3.7',
+        'coverage': '3.8',
         'docs': '3.8',
         'intel': '3.9',
-        'linux': '3.7',
-        'macosx': '3.10',
-        'pickle_wheel': '3.7',
+        'linux': '3.8',
+        'macosx': '3.11',
+        'pickle_wheel': '3.8',
         'pickle': '3.8',
         'editable_pickle': '3.8',
         'pyccel_lint': '3.8',
@@ -819,24 +819,8 @@ class Bot:
         if self._pr_id:
             return self._pr_id
         else:
-            cmds = [git, 'branch', '-a', '--contains', self._ref]
-            with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                out, err = p.communicate()
-                print(err)
-                assert p.returncode == 0
-            branches = out.split('\n')
-            if len(branches) == 1:
-                branch = branches[0].split('/')[-1]
-                cmds = [github_cli, 'pr', 'list', '--head', branch, '--json', 'number']
-                with subprocess.Popen(cmds, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as p:
-                    out, err = p.communicate()
-                    print(err)
-                    assert p.returncode == 0
-                self._pr_id = json.loads(out)[0]['number']
-            else:
-                possible_prs = self._GAI.get_prs()
-                print(possible_prs)
-                self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
+            possible_prs = self._GAI.get_prs()
+            self._pr_id = next(pr['number'] for pr in possible_prs if pr['head']['sha'] == self._ref)
             self._pr_details = self._GAI.get_pr_details(self._pr_id)
             self._base = self._pr_details["base"]["sha"]
             self._source_repo = self._pr_details["base"]["repo"]["full_name"]
