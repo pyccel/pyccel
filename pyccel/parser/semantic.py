@@ -1322,7 +1322,7 @@ class SemanticParser(BasicParser):
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
-        precision = d_var.get('precision',None)
+        precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
 
         # TODO improve check type compatibility
@@ -1466,6 +1466,10 @@ class SemanticParser(BasicParser):
                 new_expressions.append(Allocate(var,
                     shape=d_var['shape'], order=d_var['order'],
                     status=status))
+            elif isinstance(var.dtype, CustomDataType):
+                if var in self._allocs[-1]:
+                    self._allocs[-1].remove(var)
+                new_expressions.append(Deallocate(var))
 
         if var.precision == -1 and precision != var.precision:
             var.use_exact_precision()
@@ -2496,7 +2500,9 @@ class SemanticParser(BasicParser):
                     'rank' : 0,
                     'is_target' : False,
                     'cls_base' : self.scope.find(method.cls_name, 'classes')}
-            cls_variable = self._assign_lhs_variable(expr.current_user_node.lhs, d_var, expr, [], True)
+            new_expression = []
+            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
+            self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
             # TODO treat parametrized arguments.
@@ -3275,6 +3281,8 @@ class SemanticParser(BasicParser):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, fst=expr.fst))
                 assigns.append(a)
+                if isinstance(a, ConstructorCall):
+                    a.cls_variable.is_temp = False
 
         results = [self._visit(i.var) for i in return_objs]
 
