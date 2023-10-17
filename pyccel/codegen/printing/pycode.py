@@ -250,7 +250,7 @@ class PythonCodePrinter(CodePrinter):
         default = ''
 
         if expr.annotation:
-            type_annotation = self._print(expr.annotation)
+            type_annotation = "'" + self._print(expr.annotation) + "'"
         else:
             var = expr.var
             def get_type_annotation(var):
