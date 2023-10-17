@@ -2151,10 +2151,6 @@ class SemanticParser(BasicParser):
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
 
-        if isinstance(types, PyccelFunctionDef):
-            types = types.cls_name
-        if isinstance(types, type) and PyccelAstNode in types.__mro__:
-            types = UnionTypeAnnotation(self._PyccelAstNode_to_TypeAnnotation(types))
         if len(types.type_list) == 0:
             errors.report(f'Missing type annotation for argument {expr}',
                     severity='fatal', symbol=expr)
@@ -2206,9 +2202,13 @@ class SemanticParser(BasicParser):
         types = []
 
         for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            dtype_from_scope = self.scope.find(dtype_name)
             if rank > 1 and order is None:
                 order = 'C'
+
+            if isinstance(dtype_name, (PyccelSymbol, DottedName)):
+                dtype_from_scope = self._visit(dtype_name)
+            else:
+                dtype_from_scope = self.scope.find(dtype_name)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
