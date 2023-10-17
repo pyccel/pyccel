@@ -251,7 +251,7 @@ class LiteralImaginaryUnit(LiteralComplex):
     def __new__(cls):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self, precision = -1):
+    def __init__(self, real = 0, imag = 1, precision = -1):
         super().__init__(0, 1)
 
     @property
