@@ -54,7 +54,7 @@ class CmathFunctionBool(MathFunctionBase):
 
     Paramters
     ---------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -70,7 +70,7 @@ class CmathFunctionComplex(MathFunctionBase):
 
     Paramters
     ---------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -80,7 +80,7 @@ class CmathFunctionComplex(MathFunctionBase):
     _rank  = 0
     _order = None
 
-    def __init__(self, z : 'PyccelAstNode'):
+    def __init__(self, z : 'TypedAstNode'):
         super().__init__(z)
 
 #==============================================================================
@@ -99,7 +99,7 @@ class CmathAcos    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -115,7 +115,7 @@ class CmathAcosh   (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -131,7 +131,7 @@ class CmathAsin    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -147,7 +147,7 @@ class CmathAsinh   (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -163,7 +163,7 @@ class CmathAtan    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -179,7 +179,7 @@ class CmathAtanh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -195,7 +195,7 @@ class CmathCos     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -211,7 +211,7 @@ class CmathCosh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -227,7 +227,7 @@ class CmathExp     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -243,7 +243,7 @@ class CmathSin     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -259,7 +259,7 @@ class CmathSinh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -275,7 +275,7 @@ class CmathSqrt    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -291,7 +291,7 @@ class CmathTan     (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -307,7 +307,7 @@ class CmathTanh    (CmathFunctionComplex):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -325,7 +325,7 @@ class CmathIsclose (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -341,7 +341,7 @@ class CmathIsfinite(CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -362,7 +362,7 @@ class CmathIsinf   (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -383,7 +383,7 @@ class CmathIsnan   (CmathFunctionBool):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -407,7 +407,7 @@ class CmathPhase(PyccelInternalFunction):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -423,7 +423,7 @@ class CmathPolar(PyccelInternalFunction):
 
     Parameters
     ----------
-    z : PyccelAstNode
+    z : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -445,9 +445,9 @@ class CmathRect(PyccelInternalFunction):
 
     Parameters
     ----------
-    r : PyccelAstNode
+    r : TypedAstNode
         The first argument to the function, representing the radius.
-    phi : PyccelAstNode
+    phi : TypedAstNode
         The second argument to the function, representing the polar angle.
     """
     __slots__ = ()

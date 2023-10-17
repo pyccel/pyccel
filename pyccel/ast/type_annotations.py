@@ -7,7 +7,7 @@
 """ Module containing all classes useful for type annotation.
 """
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
 __all__ = (
         'SyntacticTypeAnnotation',
@@ -15,7 +15,7 @@ __all__ = (
         'UnionTypeAnnotation',
         )
 
-class VariableTypeAnnotation(Basic):
+class VariableTypeAnnotation(PyccelAstNode):
     """
     A class which describes a type annotation.
 
@@ -122,7 +122,7 @@ class VariableTypeAnnotation(Basic):
     def __repr__(self):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
-class UnionTypeAnnotation(Basic):
+class UnionTypeAnnotation(PyccelAstNode):
     """
     A class which holds multiple possible type annotations.
 
@@ -151,7 +151,7 @@ class UnionTypeAnnotation(Basic):
         """
         return self._type_annotations
 
-class SyntacticTypeAnnotation(Basic):
+class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.
 
