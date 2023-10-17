@@ -2,7 +2,7 @@
 import numpy as np
 
 def incr_(x : np.int32):
-    x = x + 2
+    x = x + np.int32(2)
     return x
 
 def helloworld():
