@@ -4,10 +4,10 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains classes from which all pyccel nodes inherit.
-They are:
-- PyccelAstNode, which provides a python AST
-- TypedAstNode which describes each TypedAstNode
+This module contains classes from which all pyccel nodes inherit. They are:
+- PyccelAstNode, which provides a base class for our Python AST nodes;
+- TypedAstNode, which inherits from PyccelAstNode and provides a base class for
+  AST nodes requiring type descriptors.
 """
 import ast
 
