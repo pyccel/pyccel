@@ -853,7 +853,7 @@ class SyntaxParser(BasicParser):
                                     symbol = types_decorator,
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
-                    result_annotation.dtypes += (kwargs[0].value,)
+                    result_annotation = self._treat_type_annotation(kwargs[0], kwargs[0].value.args)
 
                 if len(args) != len(argument_annotations):
                     errors.report(f"Wrong number of types in header for function {name}",

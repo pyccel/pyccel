@@ -32,7 +32,7 @@ def gen_6(x : 'S', y : 'S'):
 def gen_7(x : 'T', y : 'T', z : 'R'):
     return x + y + z
 
-@types('int', 'int')
+@types('int', 'int', results=['int'])
 @types('int', 'float')
 def multi_heads_1(x, y):
     return x + y
