@@ -1672,6 +1672,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
+        if isinstance(var.dtype, CustomDataType):
+            Pyccel__del = expr.variable.cls_base.scope.find('__del__')
+            Pyccel_del_args = [FunctionCallArgument(arg) for arg in Pyccel__del.arguments]
+            return self._print(DottedFunctionCall(Pyccel__del, Pyccel_del_args, var))
+
         if var.is_alias:
             return ''
         else:
@@ -1973,19 +1978,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Del(self, expr):
-        # TODO: treate class case
-        code = ''
-        for var in expr.variables:
-            if isinstance(var, Variable):
-                dtype = var.dtype
-                if is_pyccel_datatype(dtype):
-                    code = 'call {0} % free()'.format(self._print(var))
-                else:
-                    code = 'deallocate({0}){1}'.format(self._print(var), code)
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-        return code + '\n'
+        return ''.join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
         # ... we don't print 'hidden' classes

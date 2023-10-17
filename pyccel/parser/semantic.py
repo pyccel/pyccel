@@ -62,7 +62,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import NativeRange, str_dtype
-from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory
+from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
                                   NativeFloat, NativeString,
@@ -490,11 +490,29 @@ class SemanticParser(BasicParser):
     def _garbage_collector(self, expr):
         """
         Search in a CodeBlock if no trailing Return Node is present add the needed frees.
+
+        The primary purpose of _garbage_collector is to search within a CodeBlock
+        instance for cases where no trailing Return node is present, and when such
+        situations occur, it adds the necessary deallocate operations to free up resources.
+
+        Parameters
+        ----------
+        expr : CodeBlock
+            The body where the method searches for the absence of trailing `Return` nodes.
+
+        Returns
+        -------
+        List
+            A list of instances of the `Deallocate` type.
         """
+
+        deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            deallocs = [Deallocate(i) for i in self._allocs[-1]]
-        else:
-            deallocs = []
+            for i in self._allocs[-1]:
+                if isinstance(i, DottedVariable):
+                    if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                        continue
+                deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
 
@@ -1163,7 +1181,7 @@ class SemanticParser(BasicParser):
                         lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
 
                         # update the attributes of the class and push it to the scope
-                        class_def.add_new_attribute(member)
+                        class_def.add_new_attribute(lhs)
 
                     else:
                         errors.report(f"{lhs.name[0]} should be named : self", symbol=lhs, severity='fatal')
@@ -2614,6 +2632,7 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable)
+            self._allocs[-1].append(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -3696,6 +3715,14 @@ class SemanticParser(BasicParser):
                 self._visit_FunctionDef(method)
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
+
+                # create a new attribute to check allocation
+                deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
+                deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
+                deallocater = DottedVariable(*deallocater_rhs, lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                cls.add_new_attribute(deallocater)
+                deallocater_assign = Assign(deallocater, LiteralFalse())
+                cls.methods[i].body.insert2body(deallocater_assign, back=False)
                 break
 
         if not init_func:
@@ -3706,13 +3733,36 @@ class SemanticParser(BasicParser):
         for i in methods:
             self._visit_FunctionDef(i)
 
+        if not any(method.name == '__del__' for method in methods):
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            scope = self.create_new_function_scope('__del__')
+            del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
+            self.exit_function_scope()
+            self.insert_function(del_method)
+            cls.add_new_method(del_method)
+
+        for method in cls.methods:
+            if method.name == '__del__':
+                self._current_function = method.name
+                attribute = [attr for attr in cls.attributes if not attr.on_stack]
+                if attribute:
+                    # Create a new list that store local attributes
+                    self._allocs.append([])
+                    self._allocs[-1].extend(attribute)
+                    method.body.insert2body(*self._garbage_collector(method.body))
+                condition = If(IfSection(PyccelNot(deallocater),
+                                [method.body]+[Assign(deallocater, LiteralTrue())]))
+                method.body = [condition]
+                self._current_function = None
+                break
+
         self.exit_class_scope()
 
         return EmptyNode()
 
     def _visit_Del(self, expr):
 
-        ls = [self._visit(i) for i in expr.variables]
+        ls = [Deallocate(self._visit(i)) for i in expr.variables]
         return Del(ls)
 
     def _visit_PyccelIs(self, expr):

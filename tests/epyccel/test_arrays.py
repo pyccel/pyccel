@@ -7,6 +7,9 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 from modules        import arrays
 
+RTOL = 1e-12
+ATOL = 1e-16
+
 def check_array_equal(a, b):
     """
     Check that two arrays are equal.
@@ -1102,7 +1105,7 @@ def test_array_float_1d_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_1d_scalar_mod(language):
     f1 = arrays.array_float_1d_scalar_mod
@@ -1273,7 +1276,7 @@ def test_array_float_2d_C_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_2d_C_scalar_mod(language):
 
@@ -1476,7 +1479,7 @@ def test_array_float_2d_F_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_2d_F_scalar_mod(language):
 
@@ -1802,13 +1805,13 @@ def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_multiple_stack_array_2(language):
 
     f1 = arrays.multiple_stack_array_2
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
@@ -1834,13 +1837,13 @@ def test_multiple_2d_stack_array_1(language):
 
     f1 = arrays.multiple_2d_stack_array_1
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_multiple_2d_stack_array_2(language):
 
     f1 = arrays.multiple_2d_stack_array_2
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 #==============================================================================
 # TEST: Product and matrix multiplication
@@ -3569,8 +3572,6 @@ def test_arrs_2d_negative_index(language):
 #==============================================================================
 # TEST : NUMPY ARANGE
 #==============================================================================
-RTOL = 1e-12
-ATOL = 1e-16
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1

@@ -5,20 +5,39 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #1476 : Add C support for a class containing `Interfaces`.
--   #1472 : Add C printing support for a class containing scalar data.
--   #1492 : Types of arguments for class methods can be declared like function arguments.
--   #1511 : Add support for the `cmath` library.
--   Output readable header syntax errors.
 -   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
 -   #1336 : Use template as a partial type.
 
 ### Fixed
 
+-   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
+
+### Changed
+
+### Deprecated
+
+-   Drop official support for Python 3.7 due to End of Life.
+
+## \[1.9.2\] - 2023-10-13
+
+### Added
+
+-   #1476 : Add C support for a class containing `Interfaces`.
+-   #1472 : Add C printing support for a class containing scalar data.
+-   #1492 : Types of arguments for class methods can be declared like function arguments.
+-   #1511 : Add support for the `cmath` library.
+-   Output readable header syntax errors.
+-   New environment variable `PYCCEL_DEFAULT_COMPILER`.
+-   #1508 : Add C support for a class destructor.
+-   #1508 : Add support for array data in classes.
+
+### Fixed
+
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
 -   Set status of header variables to 'unallocated'.
--   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
+-   #1508 : Generate deallocations for classes and their attributes.
 
 ### Changed
 
