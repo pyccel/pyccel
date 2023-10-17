@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1556 : Fixed print format string for Intel compatibility.
 -   #1557 : Fix return a new instance of a class.
 -   #1557 : Fix save multiple class instances to the same variable.
 
