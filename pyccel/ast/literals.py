@@ -106,6 +106,11 @@ class LiteralTrue(LiteralNumeric):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return True
 
 #------------------------------------------------------------------------------
@@ -128,6 +133,11 @@ class LiteralFalse(LiteralNumeric):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return False
 
 #------------------------------------------------------------------------------
@@ -157,6 +167,11 @@ class LiteralInteger(LiteralNumeric):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._value
 
     def __index__(self):
@@ -191,6 +206,11 @@ class LiteralFloat(LiteralNumeric):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._value
 
 
@@ -259,6 +279,11 @@ class LiteralComplex(LiteralNumeric):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self.real.python_value + self.imag.python_value*1j
 
 #------------------------------------------------------------------------------
@@ -277,6 +302,11 @@ class LiteralImaginaryUnit(LiteralComplex):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return 1j
 
 #------------------------------------------------------------------------------
@@ -314,6 +344,11 @@ class LiteralString(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._string
 
 #------------------------------------------------------------------------------
