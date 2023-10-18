@@ -81,7 +81,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
-from pyccel.ast.literals import Literal, convert_to_literal
+from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
@@ -1671,6 +1671,24 @@ class SemanticParser(BasicParser):
         cls_base = get_cls_base(dtype, prec, rank)
         return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
 
+    def _get_indexed_type(self, base, args, expr):
+        if all(isinstance(a, Slice) for a in args):
+            rank = len(args)
+            var_annot = self._PyccelAstNode_to_TypeAnnotation(base, rank)
+        elif not any(isinstance(a, Slice) for a in args):
+            rank = 1
+            print(args, len(args), args[1])
+            if len(args) == 2 and args[1] is LiteralEllipsis():
+                internal_datatypes = args[0]
+                for u in internal_datatype.type_list:
+                    u.clone(class_def = tuple_class_def)
+            else:
+                errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='fatal', symbol=expr)
+        else:
+            errors.report("Unrecognised type slice",
+                    severity='fatal', symbol=expr)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -2101,6 +2119,9 @@ class SemanticParser(BasicParser):
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
+        if isinstance(var, type):
+            return self._get_indexed_type(var, args, expr)
+
         if (len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple))):
             args = args[0]
 
@@ -2203,10 +2224,12 @@ class SemanticParser(BasicParser):
             if rank > 1 and order is None:
                 order = 'C'
 
-            if isinstance(dtype_name, (PyccelSymbol, DottedName)):
+            if isinstance(dtype_name, (PyccelSymbol, DottedName, IndexedElement)):
                 dtype_from_scope = self._visit(dtype_name)
             else:
                 dtype_from_scope = self.scope.find(dtype_name)
+
+            print(dtype_name, dtype_from_scope)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
