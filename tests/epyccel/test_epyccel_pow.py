@@ -4,7 +4,6 @@ from numpy.random import rand, randint, uniform
 from numpy import isclose
 
 from pyccel.epyccel import epyccel
-from pyccel.decorators import template
 
 RTOL = 2e-14
 ATOL = 1e-15
@@ -138,8 +137,7 @@ def test_pow_chain(language):
         assert isinstance(f(x, y, z), type(c(x, y, z)))
 
 def test_square(language):
-    @template('T', ['float', 'int'])
-    def square(x : 'T'):
+    def square(x : int | float):
         return x**2
 
     f = epyccel(square, language=language)
@@ -152,8 +150,7 @@ def test_square(language):
     assert isinstance(f(y), type(square(y)))
 
 def test_sqrt(language):
-    @template('T', ['float', 'int'])
-    def sqrt(x : 'T'):
+    def sqrt(x : int | float):
         return x**0.5
 
     f = epyccel(sqrt, language=language)
@@ -166,8 +163,7 @@ def test_sqrt(language):
     assert isinstance(f(y), type(sqrt(y)))
 
 def test_fabs(language):
-    @template('T', ['float', 'int'])
-    def fabs(x : 'T'):
+    def fabs(x : int | float):
         return (x*x)**0.5
 
     f = epyccel(fabs, language=language)
