@@ -139,7 +139,7 @@ def test_fabs_phrase_i_r(language):
 
 #------------------------------ isnan function ----------------------------#
 def test_numpy_isnan(language):
-    def numpy_isnan_test(x):
+    def numpy_isnan_test(x : 'float[:]'):
         from numpy import isnan
         return isnan(x)
 
@@ -154,7 +154,7 @@ def test_numpy_isnan(language):
 
 #------------------------------ isinf function ----------------------------#
 def test_numpy_isinf(language):
-    def numpy_isinf_test(x):
+    def numpy_isinf_test(x : 'float[:]'):
         from numpy import isinf
         return isinf(x)
 
@@ -169,7 +169,7 @@ def test_numpy_isinf(language):
 
 #------------------------------ isfinite function ----------------------------#
 def test_numpy_isfinite(language):
-    def numpy_isfinite_test(x):
+    def numpy_isfinite_test(x : 'float[:]'):
         from numpy import isfinite
         return isfinite(x)
 

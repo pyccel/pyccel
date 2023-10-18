@@ -2099,7 +2099,7 @@ class NumpyIsNan(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         A Pyccel expression or array to be checked for NaN values.
 
     See Also
@@ -2124,7 +2124,7 @@ class NumpyIsInf(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         A Pyccel expression or array to be checked for infinity values.
 
     See Also
@@ -2149,7 +2149,7 @@ class NumpyIsFinite(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         A Pyccel expression or array to be checked for finiteness.
 
     See Also
