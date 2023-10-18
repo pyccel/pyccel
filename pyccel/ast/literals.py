@@ -11,7 +11,7 @@ from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, Nativ
                                   NativeComplex, NativeString)
 
 __all__ = (
-    'get_default_literal_value',
+    'convert_to_literal',
     'Literal',
     'LiteralComplex',
     'LiteralFalse',
