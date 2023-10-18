@@ -56,7 +56,7 @@ from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
-from pyccel.ast.literals import Nil
+from pyccel.ast.literals import Nil, LiteralEllipsis
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 from pyccel.ast.variable  import DottedName
 
@@ -495,6 +495,9 @@ class SyntaxParser(BasicParser):
 
         elif isinstance(stmt.value, str):
             return self._visit_Str(stmt)
+
+        elif stmt.value is Ellipsis:
+            return LiteralEllipsis()
 
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
