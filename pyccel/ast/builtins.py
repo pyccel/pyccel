@@ -966,7 +966,9 @@ python_builtin_datatypes_dict = {
     'float'  : PythonFloat,
     'int'    : PythonInt,
     'complex': PythonComplex,
-    'str'    : LiteralString
+    'str'    : LiteralString,
+    'tuple'  : PythonTuple,
+    'list'   : PythonList,
 }
 
 def python_builtin_datatype(name):
@@ -1001,4 +1003,6 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'tuple'    : PythonTuple,
+    'list'     : PythonList,
 }
