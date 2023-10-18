@@ -248,6 +248,9 @@ class UnionTypeAnnotation(PyccelAstNode):
             self._type_annotations += (annot,)
             annot.set_current_user_node(self)
 
+    def __len__(self):
+        return len(self._type_annotations)
+
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.

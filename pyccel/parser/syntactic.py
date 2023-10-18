@@ -830,8 +830,12 @@ class SyntaxParser(BasicParser):
                     if result_annotation is None:
                         result_annotation = head.results
                     else:
-                        for r in head.results:
-                            result_annotation.add_type(r)
+                        if len(result_annotation) != len(head.results):
+                            errors.report("Different length results in headers.",
+                                    severity='error', symbol=stmt)
+                        else:
+                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
+                                                        for r,t in zip(head.results, result_annotation))
                     n_results += 1
 
             if n_results and n_results != len(headers):
@@ -869,8 +873,12 @@ class SyntaxParser(BasicParser):
                     if result_annotation is None:
                         result_annotation = annots
                     else:
-                        for a in annots:
-                            result_annotation.add_type(a)
+                        if len(result_annotation) != len(annots):
+                            errors.report("Different length results in headers.",
+                                    severity='error', symbol=stmt)
+                        else:
+                            result_annotation = tuple(UnionTypeAnnotation(r, *getattr(t, 'type_list', [t])) \
+                                                        for r,t in zip(annots, result_annotation))
                     n_results += 1
 
                 if len(args) != len(argument_annotations):
