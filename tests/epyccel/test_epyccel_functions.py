@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 # coding: utf-8
+import sys
 
 import pytest
 import numpy as np
-import sys
 
 from pyccel.epyccel import epyccel
 
