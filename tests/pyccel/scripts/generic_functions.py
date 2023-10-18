@@ -11,7 +11,8 @@ from pyccel.decorators import types
 #$ header template O(bool|complex)
 #$ header template S(int|float)
 
-def gen_1(a : 'float'):
+@types('float', results=['float'])
+def gen_1(a):
     return a * 10
 
 def gen_2(y, x):
@@ -32,7 +33,7 @@ def gen_6(x : 'S', y : 'S'):
 def gen_7(x : 'T', y : 'T', z : 'R'):
     return x + y + z
 
-@types('int', 'int', results=['int'])
+@types('int', 'int')
 @types('int', 'float')
 def multi_heads_1(x, y):
     return x + y

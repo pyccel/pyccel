@@ -879,6 +879,9 @@ class SyntaxParser(BasicParser):
 
             if n_results != len(decorators['types']):
                 warnings.warn("Results have only been provided for some of the types decorators. This may result in unexpected result types.", RuntimeWarning)
+
+        if result_annotation and len(result_annotation.type_list) == 0:
+            result_annotation = None
         #---------------------------------------------------------------------------------------------------------
         #                   End of : To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
