@@ -11,17 +11,18 @@ from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, Nativ
                                   NativeComplex, NativeString)
 
 __all__ = (
+    'get_default_literal_value',
     'Literal',
-    'LiteralTrue',
-    'LiteralFalse',
-    'LiteralInteger',
-    'LiteralFloat',
     'LiteralComplex',
+    'LiteralFalse',
+    'LiteralFloat',
     'LiteralImaginaryUnit',
+    'LiteralInteger',
+    'LiteralNumeric',
     'LiteralString',
+    'LiteralTrue',
     'Nil',
     'NilArgument',
-    'get_default_literal_value'
 )
 
 #------------------------------------------------------------------------------
@@ -35,7 +36,7 @@ class Literal(TypedAstNode):
 
     This class is abstract and should be implemented for each dtype
     """
-    __slot__ = ()
+    __slots__ = ()
     _attribute_nodes  = ()
     _rank      = 0
     _shape     = None
