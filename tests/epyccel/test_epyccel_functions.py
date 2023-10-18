@@ -3,6 +3,7 @@
 
 import pytest
 import numpy as np
+import sys
 
 from pyccel.epyccel import epyccel
 
@@ -342,6 +343,20 @@ def test_decorator_f22(language):
         return b
     f = epyccel(f22, language=language)
     assert f(np.complex128(1+ 2.2j)) == f22(np.complex128(1+ 2.2j))
+
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="PEP604 (writing union types as X | Y) implemented in Python 3.10")
+def test_union_type(language):
+    def square(a : int | float):
+        return a*a
+
+    f = epyccel(square, language=language)
+    x = np.random.randint(40)
+    y = np.random.uniform()
+
+    assert np.isclose(f(x), square(x), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(x), type(square(x)))
+    assert np.isclose(f(y), square(y), rtol=RTOL, atol=ATOL)
+    assert isinstance(f(y), type(square(y)))
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
