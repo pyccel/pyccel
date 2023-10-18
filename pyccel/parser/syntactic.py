@@ -274,7 +274,8 @@ class SyntaxParser(BasicParser):
         if isinstance(annotation, (PyccelSymbol, DottedName)):
             return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
         elif isinstance(annotation, IndexedElement):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[len(annotation.indices)], orders=[None], is_const=False)
+            indices = [self._treat_type_annotation(stmt, i) for i in annotation.indices]
+            return SyntacticTypeAnnotation(dtypes=[IndexedElement(annotation.base, *indices)], ranks=[len(indices)], orders=[None], is_const=False)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
@@ -290,6 +291,8 @@ class SyntaxParser(BasicParser):
             return annot
         elif annotation is Nil():
             return None
+        elif annotation is LiteralEllipsis():
+            return annotation
         elif isinstance(annotation, PyccelBitOr):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation.args])
         else:
