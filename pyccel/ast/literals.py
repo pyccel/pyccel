@@ -398,7 +398,7 @@ class NilArgument(PyccelAstNode):
 
 #------------------------------------------------------------------------------
 
-class LiteralEllipsis(Literal):
+class LiteralEllipsis(Literal, metaclass=Singleton):
     """
     Class representing an Ellipsis object in the code.
 
@@ -408,6 +408,15 @@ class LiteralEllipsis(Literal):
 
     def __str__(self):
         return '...'
+
+    @property
+    def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
+        return ...
 
 #------------------------------------------------------------------------------
 
