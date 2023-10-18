@@ -269,9 +269,6 @@ class SyntaxParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             The type annotation.
         """
-        if isinstance(annotation, FunctionCallArgument):
-            annotation = annotation.value
-
         if isinstance(annotation, (tuple, list)):
             return tuple(self._treat_type_annotation(stmt, a) for a in annotation)
         if isinstance(annotation, (PyccelSymbol, DottedName)):
@@ -293,6 +290,8 @@ class SyntaxParser(BasicParser):
             return annot
         elif annotation is Nil():
             return None
+        elif isinstance(annotation, PyccelBitOr):
+            return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation.args])
         else:
             errors.report('Invalid type annotation',
                         symbol = stmt, severity='error')
@@ -945,6 +944,7 @@ class SyntaxParser(BasicParser):
                 result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
+            results[-1].set_fst(stmt)
 
         self.exit_function_scope()
 
