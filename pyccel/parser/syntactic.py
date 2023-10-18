@@ -818,8 +818,6 @@ class SyntaxParser(BasicParser):
                 errors.report("Type annotations and type specification via headers should not be mixed",
                             symbol=stmt, severity='error')
 
-            if result_annotation is None:
-                result_annotation = UnionTypeAnnotation()
             n_results = 0
 
             for head in headers:
@@ -830,11 +828,16 @@ class SyntaxParser(BasicParser):
                     for i,arg in enumerate(head.dtypes):
                         argument_annotations[i].add_type(arg)
                 if head.results:
-                    result_annotation.add_type(head.results)
+                    if result_annotation is None:
+                        result_annotation = head.results
+                    else:
+                        for r in head.results:
+                            result_annotation.add_type(r)
                     n_results += 1
 
-            if n_results != len(headers):
-                warnings.warn("Results have only been provided for some of the types decorators. This may result in unexpected result types.", RuntimeWarning)
+            if n_results and n_results != len(headers):
+                errors.report("Results have only been provided for some of the headers. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
+                        severity='warning', symbol=stmt)
 
         # extract the types to construct a header
         if 'types' in decorators:
@@ -844,8 +847,6 @@ class SyntaxParser(BasicParser):
 
             for i, _ in enumerate(argument_annotations):
                 argument_annotations[i] = UnionTypeAnnotation()
-            if result_annotation is None:
-                result_annotation = UnionTypeAnnotation()
             n_results = 0
 
             for types_decorator in decorators['types']:
@@ -866,9 +867,12 @@ class SyntaxParser(BasicParser):
                                     bounding_box = (stmt.lineno, stmt.col_offset),
                                     severity='error')
                     annots = self._treat_type_annotation(kwargs[0], kwargs[0].value.args)
+                    if result_annotation is None:
+                        result_annotation = annots
+                    else:
+                        for a in annots:
+                            result_annotation.add_type(a)
                     n_results += 1
-                    for a in annots:
-                        result_annotation.add_type(a)
 
                 if len(args) != len(argument_annotations):
                     errors.report(f"Wrong number of types in header for function {name}",
@@ -877,11 +881,10 @@ class SyntaxParser(BasicParser):
                     for i,arg in enumerate(args):
                         argument_annotations[i].add_type(self._treat_type_annotation(arg, arg.value))
 
-            if n_results != len(decorators['types']):
-                warnings.warn("Results have only been provided for some of the types decorators. This may result in unexpected result types.", RuntimeWarning)
+            if n_results and n_results != len(decorators['types']):
+                errors.report("Results have only been provided for some of the types decorators. The types of the results will all be chosen from the provided types. This may result in unexpected result types.",
+                        severity='warning', symbol=stmt)
 
-        if result_annotation and len(result_annotation.type_list) == 0:
-            result_annotation = None
         #---------------------------------------------------------------------------------------------------------
         #                   End of : To remove when headers are deprecated
         #---------------------------------------------------------------------------------------------------------
