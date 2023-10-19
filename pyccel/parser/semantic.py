@@ -75,7 +75,6 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
-from pyccel.ast.internals import AnnotatedPyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -117,7 +116,7 @@ from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
-from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
 from pyccel.errors.errors import Errors

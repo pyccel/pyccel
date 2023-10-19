@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
-from .internals import PyccelArrayShapeElement, Slice, get_final_precision
+from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -25,6 +25,7 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'AnnotatedPyccelSymbol',
     'Constant',
     'DottedName',
     'DottedVariable',
@@ -1019,3 +1020,55 @@ class DottedVariable(Variable):
         dtype = repr(self.dtype)
         classname = type(self).__name__
         return f'{classname}({lhs}.{name}, dtype={dtype}'
+
+class AnnotatedPyccelSymbol(PyccelAstNode):
+    """
+    Class representing a symbol in the code which has an annotation.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
+
+    Parameters
+    ----------
+    name : str
+        Name of the symbol.
+
+    annotation : SyntacticTypeAnnotation
+        The annotation describing the type that the object will have.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
+    """
+    __slots__ = ('_name', '_annotation')
+    _attribute_nodes = ()
+
+    def __init__(self, name, annotation, is_temp = False):
+        if isinstance(name, (PyccelSymbol, DottedName)):
+            self._name = name
+        elif isinstance(name, str):
+            self._name = PyccelSymbol(name, is_temp)
+        else:
+            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
+        self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        """
+        Get the PyccelSymbol describing the name.
+
+        Get the PyccelSymbol describing the name of the symbol in the code.
+        """
+        return self._name
+
+    @property
+    def annotation(self):
+        """
+        Get the annotation.
+
+        Get the annotation left on the symbol. This should be a type annotation.
+        """
+        return self._annotation

@@ -58,9 +58,9 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.variable  import DottedName
+from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction, AnnotatedPyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 

@@ -13,9 +13,7 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
-from .internals import AnnotatedPyccelSymbol
-
-from .variable import DottedName
+from .variable import DottedName, AnnotatedPyccelSymbol
 
 __all__ = (
         'FunctionTypeAnnotation',

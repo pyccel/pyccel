@@ -20,7 +20,8 @@ from pyccel.ast.datatypes import dtype_and_precision_registry as dtype_registry,
 from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
-from pyccel.ast.internals import PyccelSymbol, AnnotatedPyccelSymbol
+from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.variable  import AnnotatedPyccelSymbol
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
