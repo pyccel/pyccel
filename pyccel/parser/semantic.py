@@ -2627,14 +2627,24 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error')
+            cls_def = self.scope.find(method.cls_name, 'classes')
             d_var = {'datatype': self.get_class_construct(method.cls_name),
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
                     'is_target' : False,
-                    'cls_base' : self.scope.find(method.cls_name, 'classes')}
+                    'cls_base' : cls_def}
             new_expression = []
-            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
+
+            lhs = expr.get_user_nodes(Assign)[0].lhs
+            if isinstance(lhs, AnnotatedPyccelSymbol):
+                annotation = self._visit(lhs.annotation)
+                if len(annotation.type_list) != 1 or annotation.type_list[0].cls_base != cls_def:
+                    errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
+                            symbol=annotation, severity='error')
+                lhs = lhs.name
+
+            cls_variable = self._assign_lhs_variable(lhs, d_var, expr, new_expression, False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
@@ -3715,7 +3725,18 @@ class SemanticParser(BasicParser):
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
-        cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
+        attribute_annotations = [self._visit(a) for a in expr.attributes]
+        attributes = []
+        for a in attribute_annotations:
+            if len(a) != 1:
+                errors.report(f"Couldn't determine type of {a}",
+                        severity='error', symbol=a)
+            else:
+                v = a[0]
+                scope.insert_variable(v)
+                attributes.append(v)
+
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
