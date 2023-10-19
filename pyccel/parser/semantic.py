@@ -2157,8 +2157,22 @@ class SemanticParser(BasicParser):
             errors.report(f'Missing type annotation for argument {expr}',
                     severity='fatal', symbol=expr)
 
+        python_name = expr.name
         # Get the collisionless name from the scope
-        name = self.scope.get_expected_name(expr.name)
+        if isinstance(python_name, DottedName):
+            prefix_parts = python_name.name[:-1]
+            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+            prefix = self._visit(syntactic_prefix)
+            class_def = prefix.cls_base
+            attribute_name = python_name.name[-1]
+
+            name = class_def.scope.get_expected_name(attribute_name)
+            var_class = DottedVariable
+            kwargs = {'lhs': prefix}
+        else:
+            name = self.scope.get_expected_name(python_name)
+            var_class = Variable
+            kwargs = {}
 
         # Use the local decorators to define the memory and index handling
         allows_negative_indexes = False
@@ -2170,7 +2184,7 @@ class SemanticParser(BasicParser):
                     array_memory_handling = 'stack'
             if 'allow_negative_index' in decorators:
                 if expr.name in decorators['allow_negative_index']:
-                    allows_negative_indexes = True
+                    kwargs['allows_negative_indexes'] = True
 
         # For each possible data type create the necessary variables
         possible_args = []
@@ -2184,11 +2198,11 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
-                v = Variable(dtype, name, precision = prec,
+                v = var_class(dtype, name, precision = prec,
                         shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
-                        allows_negative_indexes = allows_negative_indexes)
+                        **kwargs)
                 possible_args.append(v)
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
@@ -2884,7 +2898,17 @@ class SemanticParser(BasicParser):
             if len(semantic_lhs) != 1:
                 errors.report("Cannot declare variable with multiple types",
                         symbol=expr, severity='error')
-            self.scope.insert_variable(semantic_lhs[0])
+            semantic_lhs_var = semantic_lhs[0]
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
+                insert_scope = cls_def.scope
+                cls_def.add_new_attribute(semantic_lhs_var)
+            else:
+                insert_scope = self.scope
+            try:
+                insert_scope.insert_variable(semantic_lhs_var)
+            except RuntimeError as e:
+                errors.report(e, symbol=expr, severity='error')
             lhs = lhs.name
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
