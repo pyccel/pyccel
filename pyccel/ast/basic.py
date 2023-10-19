@@ -455,7 +455,7 @@ class TypedAstNode(PyccelAstNode):
 
     The class from which all objects which can be described with type information
     must inherit. Objects with type information are objects which take up memory
-    in a runnning program (e.g. a variable or the result of a function call).
+    in a running program (e.g. a variable or the result of a function call).
     Each typed object is described by an underlying datatype, a precision, a rank,
     a shape, and a data layout ordering.
     """
