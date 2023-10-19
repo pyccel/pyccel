@@ -354,7 +354,7 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
         elif isinstance(name, str):
             self._name = PyccelSymbol(name, is_temp)
         else:
-            raise TypeError("Name should be a string")
+            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
         self._annotation = annotation
         super().__init__()
 
