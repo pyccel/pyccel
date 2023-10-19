@@ -16,14 +16,13 @@ runs:
     - name: Add DLL paths
       run: |
         # Add DLL paths for program execution
+        echo $CC
+        which gcc
         ls C:\
         ls C:\ProgramData
         ls C:\ProgramData\chocolatey
         ls C:\ProgramData\chocolatey\lib
         ls C:\ProgramData\chocolatey\lib\mingw
-        ls C:\ProgramData\chocolatey\lib\mingw\tools
-        ls C:\ProgramData\chocolatey\lib\mingw\tools\install
-        ls C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\
         $BIN_DIR="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin"
         $LIBRARY_DIR="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
         echo $BIN_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
