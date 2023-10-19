@@ -16,7 +16,7 @@ runs:
     - name: Add DLL paths
       run: |
         # Add DLL paths for program execution
-        $EXE=(Get-Command cmd).Path
+        $EXE=(Get-Command gcc).Path
         echo $EXE
         $BIN_DIR=(Split-Path -Parent ${EXE}) # Find folder containing c compiler
         $MINGW_DIR=(Split-Path -Parent ${BIN_DIR}) # Find the enclosing mingw directory
