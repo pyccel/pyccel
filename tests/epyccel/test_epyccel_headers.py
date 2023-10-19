@@ -4,7 +4,6 @@
 Once headers are deprecated this file can be removed.
 """
 
-import warnings
 import pytest
 
 from pyccel.epyccel import epyccel
