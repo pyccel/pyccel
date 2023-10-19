@@ -491,11 +491,12 @@ class Scope(object):
         alias : pyccel.ast.basic.Basic
             The object which will be represented by the symbol.
         """
-        if symbol in self._locals['symbolic_alias']:
+        symbolic_aliases = self._locals['symbolic_alias']
+        if symbol in symbolic_aliases:
             errors.report(f"{symbol} cannot represent multiple static concepts",
                     symbol=symbol, severity='error')
 
-        self._locals['symbolic_alias'][symbol] = alias
+        symbolic_aliases[symbol] = alias
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
