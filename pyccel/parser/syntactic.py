@@ -992,14 +992,20 @@ class SyntaxParser(BasicParser):
         name = stmt.name
         scope = self.create_new_class_scope(name)
         methods = []
+        attributes = []
         for i in stmt.body:
-            if isinstance(i, ast.FunctionDef):
-                methods.append(self._visit(i))
-            elif isinstance(i, ast.Pass):
+            visited_i = self._visit(i)
+            if isinstance(visited_i, FunctionDef):
+                methods.append(visited_i)
+            elif isinstance(visited_i, Pass):
                 return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+            elif isinstance(visited_i, AnnotatedPyccelSymbol):
+                attributes.append(visited_i)
+            else:
+                errors.report(f"{type(visited_i)} not currently supported in classes",
+                        severity='error', symbol=visited_i)
         for i in methods:
             i.cls_name = name
-        attributes = [a.var for a in methods[0].arguments]
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
