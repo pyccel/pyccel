@@ -1325,9 +1325,9 @@ class SemanticParser(BasicParser):
             If is_augassign is False, this value is not used.
         """
         if var.is_const and len(var.get_all_user_nodes()) > 0:
-            errors.report("Cannot modify 'const' argument",
+            errors.report("Cannot modify 'const' variable",
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                symbol=var, severity='fatal')
+                symbol=var, severity='error')
 
         precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
@@ -3585,14 +3585,7 @@ class SemanticParser(BasicParser):
 
                 # ... computing inout arguments
                 for a in arguments:
-                    if a.name in chain(results_names, ['self']) or a.var in all_assigned:
-                        v = a.var
-                        if isinstance(v, Variable) and v.is_const:
-                            msg = f"Cannot modify 'const' argument ({v})"
-                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                                self._current_fst_node.col_offset),
-                                severity='fatal')
-                    else:
+                    if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
                         a.make_const()
                 # ...
 
