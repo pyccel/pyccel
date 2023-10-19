@@ -1,9 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class A:
-    y : int = 5
+    x : int
     def __init__(self : 'A'):
         self.x = 3
+        self.z : float = 10.0
 
     def get_4(self : 'A'):
         return 4
