@@ -1324,6 +1324,11 @@ class SemanticParser(BasicParser):
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
+        if var.is_const and len(var.get_all_user_nodes()) > 0:
+            errors.report("Cannot modify 'const' argument",
+                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                symbol=var, severity='fatal')
+
         precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
 
@@ -2865,6 +2870,13 @@ class SemanticParser(BasicParser):
                     d['memory_handling'] = 'alias'
 
         lhs = expr.lhs
+        if isinstance(lhs, AnnotatedPyccelSymbol):
+            semantic_lhs = self._visit(lhs)
+            if len(semantic_lhs) != 1:
+                errors.report("Cannot declare variable with multiple types",
+                        symbol=expr, severity='error')
+            self.scope.insert_variable(semantic_lhs[0])
+
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
                 if len(d_var) == 1:
