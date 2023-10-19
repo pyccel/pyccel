@@ -431,6 +431,21 @@ class SyntaxParser(BasicParser):
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
 
+    def _visit_AnnAssign(self, stmt):
+        self._in_lhs_assign = True
+        lhs = self._visit(stmt.target)
+        self._in_lhs_assign = False
+
+        annotation = self._treat_type_annotation(stmt, self._visit(stmt.annotation))
+
+        annotated_lhs = AnnotatedPyccelSymbol(lhs, annotation=annotation)
+
+        if stmt.value is None:
+            return annotated_lhs
+        else:
+            rhs = self._visit(stmt.value)
+            return Assign(annotated_lhs, rhs)
+
     def _visit_arguments(self, stmt):
 
         if stmt.vararg or stmt.kwarg:
