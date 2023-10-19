@@ -22,6 +22,7 @@ from .datatypes import (datatype, DataType, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
 from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import AnnotatedPyccelSymbol
 
 from .literals  import LiteralInteger, Nil, LiteralFalse
 from .literals  import NilArgument, LiteralTrue
@@ -350,8 +351,11 @@ class Concatenate(TypedAstNode):
 
 
 class Assign(PyccelAstNode):
+    """
+    Represents variable assignment for code generation.
 
-    """Represents variable assignment for code generation.
+    Class representing an assignment node, where the result of an expression
+    (rhs: right hand side) is saved into a variable (lhs: left hand side).
 
     Parameters
     ----------
@@ -362,20 +366,23 @@ class Assign(PyccelAstNode):
            include PyccelSymbol, and IndexedElement. Types that
            subclass these types are also supported.
         In the semantic stage:
-           Variable or IndexedElement
+           Variable or IndexedElement.
 
     rhs : TypedAstNode
         In the syntactic stage:
-          Object representing the rhs of the expression
+          Object representing the rhs of the expression.
         In the semantic stage :
-          TypedAstNode with the same shape as the lhs
+          TypedAstNode with the same shape as the lhs.
 
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
+    status : str, optional
+        If lhs is not allocatable, then status is None.
+        otherwise, status is {'allocated', 'unallocated'}.
 
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+    like : Variable, optional
+        Contains the name of the variable from which the lhs will be cloned.
+
+    fst : ast.Ast
+        The ast object parsed by Python's ast module.
 
     Examples
     --------
@@ -1769,22 +1776,29 @@ class ForIterator(For):
 
 class FunctionCallArgument(PyccelAstNode):
     """
-    An argument passed in a function call
+    An argument passed in a function call.
+
+    Class describing an argument passed to a function in a
+    function call.
 
     Parameters
-    ---------
-    value   : TypedAstNode
-              The expression passed as an argument
-    keyword : str
-              If the argument is passed by keyword then this
-              is that keyword
+    ----------
+    value : TypedAstNode
+        The expression passed as an argument.
+    keyword : str, optional
+        If the argument is passed by keyword then this
+        is that keyword.
+    fst : ast.Ast
+        The ast object parsed by Python's ast module.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
-    def __init__(self, value, keyword = None):
+    def __init__(self, value, keyword = None, *, fst = None):
         self._value = value
         self._keyword = keyword
         super().__init__()
+        if fst:
+            self.set_fst(fst)
 
     @property
     def value(self):
@@ -1859,6 +1873,9 @@ class FunctionDefArgument(TypedAstNode):
         elif isinstance(name, PyccelSymbol):
             self._var  = name
             self._name = name
+        elif isinstance(name, AnnotatedPyccelSymbol):
+            self._var  = name
+            self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
         self._value      = value
@@ -1895,7 +1912,10 @@ class FunctionDefArgument(TypedAstNode):
 
     @property
     def annotation(self):
-        """ The argument annotation providing dtype information
+        """
+        The argument annotation providing dtype information.
+
+        The argument annotation providing dtype information.
         """
         return self._annotation
 
@@ -1990,10 +2010,10 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, PyccelSymbol):
-                raise TypeError("Var must be a PyccelSymbol")
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
+                raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
         elif not isinstance(var, Variable):
-            raise TypeError("Var must be a Variable")
+            raise TypeError(f"Var must be a Variable not a {type(var)}")
         else:
             self._is_argument = var.is_argument
 
@@ -2117,7 +2137,7 @@ class FunctionCall(TypedAstNode):
 
         # Handle function as argument
         arg_vals = [None if a is None else a.value for a in args]
-        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results, []), keyword=a.keyword)
+        args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
         if current_function == func.name:
@@ -3073,8 +3093,10 @@ class Interface(PyccelAstNode):
                         severity='fatal')
 
 class FunctionAddress(FunctionDef):
+    """
+    Represents a function address.
 
-    """Represents a function address.
+    A function definition can have a FunctionAddress as an argument.
 
     Parameters
     ----------
@@ -3087,31 +3109,35 @@ class FunctionAddress(FunctionDef):
     results : iterable
         The direct outputs of the function address.
 
-    is_argument: bool
-        if object is the argument of a function [Default value: False]
+    is_optional : bool
+        If object is an optional argument of a function [Default value: False].
 
-    is_kwonly: bool
-        if object is an argument which can only be specified using its keyword
+    is_kwonly : bool
+        If object is an argument which can only be specified using its keyword.
 
-    is_optional: bool
-        if object is an optional argument of a function [Default value: False]
+    is_argument : bool
+        If object is the argument of a function [Default value: False].
 
-    memory_handling: str
-        must be 'heap', 'stack' or 'alias' [Default value: 'stack']
+    memory_handling : str
+        Must be 'heap', 'stack' or 'alias' [Default value: 'stack'].
+
+    **kwargs : dict
+        Any keyword arguments which should be passed to the super class FunctionDef.
+
+    See Also
+    --------
+    FunctionDef
+        The super class from which this object derives.
 
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-
-    a function definition can have a FunctionAddress as an argument
-
-    >>> FunctionDef('g', [FunctionAddress('f', [x], [y], [])], [], [])
-
-    we can also Declare a FunctionAddress
-
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    >>> # a function definition can have a FunctionAddress as an argument
+    >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
+    >>> # we can also Declare a FunctionAddress
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_is_optional','_is_kwonly','_is_argument', '_memory_handling')
 
@@ -3120,14 +3146,13 @@ class FunctionAddress(FunctionDef):
         name,
         arguments,
         results,
-        body,
         is_optional=False,
         is_kwonly=False,
         is_argument=False,
         memory_handling='stack',
         **kwargs
         ):
-        super().__init__(name, arguments, results, body, scope=1,**kwargs)
+        super().__init__(name, arguments, results, body=[], scope=None, **kwargs)
         if not isinstance(is_argument, bool):
             raise TypeError('Expecting a boolean for is_argument')
 
@@ -3172,6 +3197,28 @@ class FunctionAddress(FunctionDef):
     @property
     def is_optional(self):
         return self._is_optional
+
+    def __getnewargs__(self):
+        """
+        Function called during unpickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__getnewargs__.
+
+        Returns
+        -------
+        args
+            A tuple containing any arguments to be passed to the constructor.
+        kwargs
+            A dict containing any keyword arguments to be passed to the constructor.
+        """
+        args, kwargs = super().__getnewargs__()
+        args = args[:-1] # Remove body argument
+        kwargs.pop('scope')
+        kwargs['is_argument'] = self.is_argument
+        kwargs['is_kwonly'] = self.is_kwonly
+        kwargs['is_optional'] = self.is_optional
+        kwargs['memory_handling'] = self.memory_handling
+        return args, kwargs
 
 class SympyFunction(FunctionDef):
 
@@ -3691,18 +3738,20 @@ class Import(PyccelAstNode):
 # TODO: Should Declare have an optional init value for each var?
 
 class FuncAddressDeclare(PyccelAstNode):
+    """
+    Represents a FunctionAddress declaration in the code.
 
-    """Represents a FunctionAddress declaration in the code.
+    Represents a FunctionAddress declaration in the code.
 
     Parameters
     ----------
-    variable:
+    variable : FunctionAddress
         An instance of FunctionAddress.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: TypedAstNode
-        variable value
-    static: bool
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : TypedAstNode
+        Variable value.
+    static : bool
         True for a static declaration of an array.
 
     Examples
@@ -3710,7 +3759,7 @@ class FuncAddressDeclare(PyccelAstNode):
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
     >>> x = Variable('float', 'x')
     >>> y = Variable('float', 'y')
-    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y], []))
+    >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_variable','_intent','_value','_static')
     _attribute_nodes = ('_variable', '_value')

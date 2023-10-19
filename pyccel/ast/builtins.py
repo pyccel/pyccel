@@ -20,7 +20,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeGeneric)
 from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
-from .literals  import Literal, LiteralImaginaryUnit, get_default_literal_value
+from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
@@ -106,20 +106,25 @@ class PythonReal(PythonComplexProperty):
 
 #==============================================================================
 class PythonImag(PythonComplexProperty):
-    """Represents a call to the .imag property
+    """
+    Represents a call to the .imag property.
 
+    Represents a call to the .imag property of an object with a complex type.
     e.g:
-    > a = 1+2j
-    > a.imag
+    >>> a = 1+2j
+    >>> a.imag
     1.0
 
+    Parameters
+    ----------
     arg : Variable, Literal
+        The object on which the property is called.
     """
     __slots__ = ()
     name = 'imag'
     def __new__(cls, arg):
         if arg.dtype is not NativeComplex():
-            return get_default_literal_value(arg.dtype)
+            return convert_to_literal(0, dtype = arg.dtype)
         else:
             return super().__new__(cls)
 
@@ -960,7 +965,8 @@ python_builtin_datatypes_dict = {
     'bool'   : PythonBool,
     'float'  : PythonFloat,
     'int'    : PythonInt,
-    'complex': PythonComplex
+    'complex': PythonComplex,
+    'str'    : LiteralString
 }
 
 def python_builtin_datatype(name):
