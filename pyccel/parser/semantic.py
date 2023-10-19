@@ -2876,6 +2876,7 @@ class SemanticParser(BasicParser):
                 errors.report("Cannot declare variable with multiple types",
                         symbol=expr, severity='error')
             self.scope.insert_variable(semantic_lhs[0])
+            lhs = lhs.name
 
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
