@@ -266,11 +266,11 @@ class SyntaxParser(BasicParser):
 
         Returns
         -------
-        pyccel.ast.basic.PyccelAstNode
+        SyntacticTypeAnnotation | UnionTypeAnnotation
             The type annotation.
         """
         if isinstance(annotation, (tuple, list)):
-            return tuple(self._treat_type_annotation(stmt, a) for a in annotation)
+            return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
         if isinstance(annotation, (PyccelSymbol, DottedName)):
             return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
         elif isinstance(annotation, IndexedElement):

@@ -251,6 +251,9 @@ class UnionTypeAnnotation(PyccelAstNode):
     def __len__(self):
         return len(self._type_annotations)
 
+    def __iter__(self):
+        return self._type_annotations.__iter__()
+
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.
