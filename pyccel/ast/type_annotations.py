@@ -254,6 +254,9 @@ class UnionTypeAnnotation(PyccelAstNode):
     def __iter__(self):
         return self._type_annotations.__iter__()
 
+    def __str__(self):
+        return '|'.join(str(t) for t in self._type_annotations)
+
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
     A class describing the type annotation parsed in the syntactic stage.
