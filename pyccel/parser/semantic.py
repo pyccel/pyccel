@@ -1323,10 +1323,6 @@ class SemanticParser(BasicParser):
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
-        if var.is_const and len(var.get_all_user_nodes()) > 0:
-            errors.report("Cannot modify 'const' variable",
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                symbol=var, severity='error')
 
         precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
@@ -3016,6 +3012,11 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
+            if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
+                # If constant and not the initialising declaration of a constant variable
+                errors.report("Cannot modify 'const' variable",
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    symbol=l, severity='error')
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
             else:
