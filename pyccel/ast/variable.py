@@ -882,7 +882,7 @@ class IndexedElement(TypedAstNode):
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
-    def __init__(self, base, indices):
+    def __init__(self, base, *indices):
 
         if not indices:
             raise IndexError('Indexed needs at least one index.')
