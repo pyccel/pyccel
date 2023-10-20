@@ -371,8 +371,11 @@ class Variable(TypedAstNode):
 
     @property
     def is_const(self):
-        """ Indicates if the Variable is constant
-        within its context
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
         """
         return self._is_const
 
@@ -970,6 +973,16 @@ class IndexedElement(TypedAstNode):
                 j += 1
             new_indexes.append(i)
         return IndexedElement(base, *new_indexes)
+
+    @property
+    def is_const(self):
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
+        """
+        return self.base.is_const
 
 class DottedVariable(Variable):
 
