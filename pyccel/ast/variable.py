@@ -1085,3 +1085,6 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
         Get the annotation left on the symbol. This should be a type annotation.
         """
         return self._annotation
+
+    def __str__(self):
+        return f'{self.name} : {self.annotation}'
