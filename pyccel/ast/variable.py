@@ -845,9 +845,28 @@ class Constant(Variable):
 
 
 class IndexedElement(TypedAstNode):
-
     """
-    Represents a mathematical object with indices.
+    Represents an indexed object in the code.
+
+    Represents an object which is a subset of a base object. The
+    indexed object is retrieved by passing indices to the base
+    object using the `[]` syntax.
+
+    In the semantic stage, the base object is an array, tuple or
+    list. This function then determines the new rank and shape of
+    the data block.
+
+    In the syntactic stage, this object is more versatile, it
+    stores anything which is indexed using `[]` syntax. This can
+    additionally include classes, maps, etc.
+
+    Parameters
+    ----------
+    base : Variable | PyccelSymbol | DottedName
+        The object being indexed.
+
+    indices : tuple of TypedAstNode
+        The values used to index the base.
 
     Examples
     --------
@@ -855,7 +874,7 @@ class IndexedElement(TypedAstNode):
     >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
     >>> i = Variable('i', dtype='int')
     >>> j = Variable('j', dtype='int')
-    >>> IndexedElement(A, i, j)
+    >>> IndexedElement(A, (i, j))
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
     True
@@ -863,20 +882,15 @@ class IndexedElement(TypedAstNode):
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
-    def __init__(
-        self,
-        base,
-        *args,
-        **kw_args
-        ):
+    def __init__(self, base, indices):
 
-        if not args:
+        if not indices:
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
 
         if pyccel_stage == 'syntactic':
-            self._indices = args
+            self._indices = indices
             super().__init__()
             return
 
@@ -887,14 +901,14 @@ class IndexedElement(TypedAstNode):
         rank  = base.rank
 
         # Add empty slices to fully index the object
-        if len(args) < rank:
-            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+        if len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
 
-        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in args):
+        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
             errors.report("Index is not of valid type",
-                    symbol = args, severity = 'fatal')
+                    symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
+        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
         super().__init__()
 
         # Calculate new shape
@@ -902,7 +916,7 @@ class IndexedElement(TypedAstNode):
         if shape is not None:
             new_shape = []
             from .mathext import MathCeil
-            for a,s in zip(args, shape):
+            for a,s in zip(indices, shape):
                 if isinstance(a, Slice):
                     start = a.start
                     stop  = a.stop if a.stop is not None else s
@@ -926,7 +940,7 @@ class IndexedElement(TypedAstNode):
         else:
             new_rank = rank
             for i in range(rank):
-                if not isinstance(args[i], Slice):
+                if not isinstance(indices[i], Slice):
                     new_rank -= 1
             self._rank = new_rank
 
