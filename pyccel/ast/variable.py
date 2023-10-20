@@ -912,37 +912,29 @@ class IndexedElement(TypedAstNode):
         super().__init__()
 
         # Calculate new shape
+        new_shape = []
+        from .mathext import MathCeil
+        for a,s in zip(indices, shape):
+            if isinstance(a, Slice):
+                start = a.start
+                stop  = a.stop if a.stop is not None else s
+                step  = a.step
+                if isinstance(start, PyccelUnarySub):
+                    start = PyccelAdd(s, start, simplify=True)
+                if isinstance(stop, PyccelUnarySub):
+                    stop = PyccelAdd(s, stop, simplify=True)
 
-        if shape is not None:
-            new_shape = []
-            from .mathext import MathCeil
-            for a,s in zip(indices, shape):
-                if isinstance(a, Slice):
-                    start = a.start
-                    stop  = a.stop if a.stop is not None else s
-                    step  = a.step
-                    if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
-                    if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                if step is not None:
+                    if isinstance(step, PyccelUnarySub):
+                        start = s if a.start is None else start
+                        _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                        step = PyccelUnarySub(step)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
-                    if step is not None:
-                        if isinstance(step, PyccelUnarySub):
-                            start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                            step = PyccelUnarySub(step)
-
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
-                    new_shape.append(_shape)
-            self._rank  = len(new_shape)
-            self._shape = None if self._rank == 0 else tuple(new_shape)
-        else:
-            new_rank = rank
-            for i in range(rank):
-                if not isinstance(indices[i], Slice):
-                    new_rank -= 1
-            self._rank = new_rank
+                    _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                new_shape.append(_shape)
+        self._rank  = len(new_shape)
+        self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
 
