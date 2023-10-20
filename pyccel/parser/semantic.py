@@ -3018,11 +3018,19 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
-            if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
-                # If constant and not the initialising declaration of a constant variable
-                errors.report("Cannot modify 'const' variable",
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    symbol=l, severity='error')
+            if isinstance(l, PythonTuple):
+                for li in l:
+                    if li.is_const:
+                        # If constant (can't use annotations on tuple assignment)
+                        errors.report("Cannot modify 'const' variable",
+                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            symbol=li, severity='error')
+            else:
+                if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
+                    # If constant and not the initialising declaration of a constant variable
+                    errors.report("Cannot modify 'const' variable",
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        symbol=l, severity='error')
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
             else:
