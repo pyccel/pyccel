@@ -126,7 +126,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
         INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
         UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
-        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
+        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP, MISSING_TYPE_ANNOTATIONS,
         INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
         INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
         INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, RECURSIVE_RESULTS_REQUIRED,
@@ -2146,12 +2146,18 @@ class SemanticParser(BasicParser):
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
 
+        if expr.annotation is None:
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    symbol=expr, severity='fatal')
+
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
 
         if len(types.type_list) == 0:
-            errors.report(f'Missing type annotation for argument {expr}',
-                    severity='fatal', symbol=expr)
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    symbol=expr, severity='fatal')
 
         python_name = expr.name
         # Get the collisionless name from the scope
@@ -3768,7 +3774,7 @@ class SemanticParser(BasicParser):
         for (i, method) in enumerate(methods):
             m_name = method.name
             if m_name == '__init__':
-                self._visit_FunctionDef(method)
+                self._visit(method)
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
 
@@ -3787,7 +3793,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit_FunctionDef(i)
+            self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
