@@ -2175,7 +2175,6 @@ class SemanticParser(BasicParser):
             kwargs = {}
 
         # Use the local decorators to define the memory and index handling
-        allows_negative_indexes = False
         array_memory_handling = 'heap'
         decorators = self.scope.decorators
         if decorators:
