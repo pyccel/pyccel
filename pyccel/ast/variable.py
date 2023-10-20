@@ -865,7 +865,7 @@ class IndexedElement(TypedAstNode):
     base : Variable | PyccelSymbol | DottedName
         The object being indexed.
 
-    indices : tuple of TypedAstNode
+    *indices : tuple of TypedAstNode
         The values used to index the base.
 
     Examples
