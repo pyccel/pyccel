@@ -13,6 +13,8 @@ All notable changes to this project will be documented in this file.
 
 -   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
 -   #1336 : Use template as a partial type.
+-   #1509 : Add type annotations for variables.
+-   #1528 : Add support for variable declarations in classes.
 
 ### Fixed
 
