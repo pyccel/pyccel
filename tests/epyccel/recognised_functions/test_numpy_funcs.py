@@ -139,48 +139,62 @@ def test_fabs_phrase_i_r(language):
 
 #------------------------------ isnan function ----------------------------#
 def test_numpy_isnan(language):
-    def numpy_isnan_test(x : 'float[:]'):
+    def numpy_isnan_test(x : 'float'):
         from numpy import isnan
         return isnan(x)
 
     f = epyccel(numpy_isnan_test, language=language)
 
-    input_data = np.random.rand(10, 10)
-    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.nan
-    expected_output = np.isnan(input_data)
+    input_data = np.nan
+    expected_output = numpy_isnan_test(input_data)
     
-    assert np.array_equal(f(input_data), expected_output)
+    assert f(input_data) == expected_output
+    assert matching_types(f(input_data), expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isnan_test(input_data)
+    
+    assert f(input_data) == expected_output
     assert matching_types(f(input_data), expected_output)
 
 #------------------------------ isinf function ----------------------------#
 def test_numpy_isinf(language):
-    def numpy_isinf_test(x : 'float[:]'):
+    def numpy_isinf_test(x : 'float'):
         from numpy import isinf
         return isinf(x)
 
     f = epyccel(numpy_isinf_test, language=language)
 
-    input_data = np.random.rand(10, 10)
-    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.inf
-    expected_output = np.isinf(input_data)
+    input_data = np.inf
+    expected_output = numpy_isinf_test(input_data)
+
+    assert f(input_data) == expected_output
+    assert matching_types(f(input_data), expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isinf_test(input_data)
     
-    assert np.array_equal(f(input_data), expected_output)
+    assert f(input_data) == expected_output
     assert matching_types(f(input_data), expected_output)
 
 #------------------------------ isfinite function ----------------------------#
 def test_numpy_isfinite(language):
-    def numpy_isfinite_test(x : 'float[:]'):
+    def numpy_isfinite_test(x : 'float'):
         from numpy import isfinite
         return isfinite(x)
 
     f = epyccel(numpy_isfinite_test, language=language)
 
-    input_data = np.random.rand(10, 10)
-    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.nan
-    input_data[np.random.randint(0, 10), np.random.randint(0, 10)] = np.inf
-    expected_output = np.isfinite(input_data)
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isfinite_test(input_data)
     
-    assert np.array_equal(f(input_data), expected_output)
+    assert f(input_data) == expected_output
+    assert matching_types(f(input_data), expected_output)
+
+    input_data = np.inf
+    expected_output = numpy_isfinite_test(input_data)
+    
+    assert f(input_data) == expected_output
     assert matching_types(f(input_data), expected_output)
 
 #------------------------------ absolute function ----------------------------#
