@@ -2109,6 +2109,7 @@ class NumpyIsNan(PyccelInternalFunction):
     """
     __slots__ = ('_arg',)
     name = 'isnan'
+    _dtype = NativeFloat()
 
     def __init__(self, arg):
         super().__init__()
@@ -2134,6 +2135,7 @@ class NumpyIsInf(PyccelInternalFunction):
     """
     __slots__ = ('_arg',)
     name = 'isinf'
+    _dtype = NativeFloat()
 
     def __init__(self, arg):
         super().__init__()
@@ -2159,6 +2161,7 @@ class NumpyIsFinite(PyccelInternalFunction):
     """
     __slots__ = ('_arg',)
     name = 'isfinite'
+    _dtype = NativeFloat()
 
     def __init__(self, arg):
         super().__init__()
