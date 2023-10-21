@@ -2107,13 +2107,17 @@ class NumpyIsNan(PyccelInternalFunction):
     numpy.isnan :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ('_arg','_rank','_shape','_order')
     name = 'isnan'
-    _dtype = NativeFloat()
+    _dtype = NativeBool()
+    _precision = -1
 
     def __init__(self, arg):
         super().__init__()
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
 
 class NumpyIsInf(PyccelInternalFunction):
     """ 
@@ -2133,13 +2137,17 @@ class NumpyIsInf(PyccelInternalFunction):
     numpy.isinf :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ('_arg','_rank','_shape','_order')
     name = 'isinf'
-    _dtype = NativeFloat()
+    _dtype = NativeBool()
+    _precision = -1
 
     def __init__(self, arg):
         super().__init__()
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
 
 class NumpyIsFinite(PyccelInternalFunction):
     """ 
@@ -2159,13 +2167,17 @@ class NumpyIsFinite(PyccelInternalFunction):
     numpy.isfinite :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ('_arg','_rank','_shape','_order')
     name = 'isfinite'
-    _dtype = NativeFloat()
+    _dtype = NativeBool()
+    _precision = -1
 
     def __init__(self, arg):
         super().__init__()
         self._arg = arg
+        self._shape = arg.shape
+        self._rank  = arg.rank
+        self._order = arg.order
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
