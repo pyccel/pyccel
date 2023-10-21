@@ -9,8 +9,10 @@
 from pyccel.ast.core      import ClassDef
 from pyccel.ast.headers   import MacroFunction, MacroVariable
 from pyccel.ast.headers   import FunctionHeader, MethodHeader
-from pyccel.ast.internals import PyccelSymbol
+from pyccel.ast.internals import PyccelSymbol, AnnotatedPyccelSymbol
 from pyccel.ast.variable  import Variable, DottedName
+
+from pyccel.parser.syntax.headers import FunctionHeaderStmt
 
 from pyccel.errors.errors import Errors
 
@@ -53,10 +55,10 @@ class Scope(object):
     name_clash_checker = PythonNameClashChecker()
     __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
-            '_dummy_counter','_original_symbol')
+            '_dummy_counter','_original_symbol', '_dotted_symbols')
 
     categories = ('functions','variables','classes',
-            'imports','symbolic_functions',
+            'imports','symbolic_functions', 'symbolic_alias',
             'macros','templates','headers','decorators',
             'cls_constructs')
 
@@ -88,6 +90,8 @@ class Scope(object):
         self._is_loop = is_loop
         # scoping for loops
         self._loops = []
+
+        self._dotted_symbols = []
 
     def __setstate__(self, state):
         state = state[1] # Retrieve __dict__ ignoring None
@@ -190,6 +194,16 @@ class Scope(object):
         current scope
         """
         return self._sons_scopes
+
+    @property
+    def symbolic_alias(self):
+        """
+        A dictionary of symbolic alias defined in this scope.
+
+        A symbolic alias is a symbol declared in the scope which is mapped
+        to a constant object. E.g. a symbol which represents a type.
+        """
+        return self._locals['symbolic_alias']
 
     @property
     def symbolic_functions(self):
@@ -421,7 +435,7 @@ class Scope(object):
         TypeError
             Raised if the header type is unknown.
         """
-        if isinstance(expr, (FunctionHeader, MethodHeader)):
+        if isinstance(expr, (FunctionHeader, MethodHeader, FunctionHeaderStmt)):
             if expr.name in self.headers:
                 self.headers[expr.name].append(expr)
             else:
@@ -432,24 +446,74 @@ class Scope(object):
             raise TypeError(msg)
 
     def insert_symbol(self, symbol):
-        """ Add a new symbol to the scope
         """
-        if not self.allow_loop_scoping and self.is_loop:
-            self.parent_scope.insert_symbol(symbol)
-        elif symbol not in self._used_symbols:
-            collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                    self._used_symbols.values())
-            collisionless_symbol = PyccelSymbol(collisionless_symbol,
-                    is_temp = getattr(symbol, 'is_temp', False))
-            self._used_symbols[symbol] = collisionless_symbol
-            self._original_symbol[collisionless_symbol] = symbol
+        Add a new symbol to the scope.
 
+        Add a new symbol to the scope in the syntactic stage. This should be used to
+        declare symbols defined by the user. Once the symbol is declared the Scope
+        generates a collisionless name if necessary which can be used in the target
+        language without causing problems by being a keyword or being confused with
+        other symbols (e.g. in Fortran which is not case-sensitive). This new name
+        can be retrieved later using `Scope.get_expected_name`.
+
+        Parameters
+        ----------
+        symbol : PyccelSymbol | AnnotatedPyccelSymbol | DottedName
+            The symbol to be added to the scope.
+        """
+        if isinstance(symbol, AnnotatedPyccelSymbol):
+            symbol = symbol.name
+
+        if isinstance(symbol, DottedName):
+            self._dotted_symbols.append(symbol)
+        else:
+            if not self.allow_loop_scoping and self.is_loop:
+                self.parent_scope.insert_symbol(symbol)
+            elif symbol not in self._used_symbols:
+                collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
+                        self._used_symbols.values())
+                collisionless_symbol = PyccelSymbol(collisionless_symbol,
+                        is_temp = getattr(symbol, 'is_temp', False))
+                self._used_symbols[symbol] = collisionless_symbol
+                self._original_symbol[collisionless_symbol] = symbol
+
+    def insert_symbolic_alias(self, symbol, alias):
+        """
+        Add a new symbolic alias to the scope.
+
+        A symbolic alias is a symbol declared in the scope which is mapped
+        to a constant object. E.g. a symbol which represents a type.
+
+        Parameters
+        ----------
+        symbol : PyccelSymbol
+            The symbol which will represent the object in the code.
+        alias : pyccel.ast.basic.Basic
+            The object which will be represented by the symbol.
+        """
+        symbolic_aliases = self._locals['symbolic_alias']
+        if symbol in symbolic_aliases:
+            errors.report(f"{symbol} cannot represent multiple static concepts",
+                    symbol=symbol, severity='error')
+
+        symbolic_aliases[symbol] = alias
 
     def insert_symbols(self, symbols):
         """ Add multiple new symbols to the scope
         """
         for s in symbols:
             self.insert_symbol(s)
+
+    @property
+    def dotted_symbols(self):
+        """
+        Return all dotted symbols that were inserted into the scope.
+
+        Return all dotted symbols that were inserted into the scope.
+        This is useful to ensure that class variable names are
+        in the class scope.
+        """
+        return self._dotted_symbols
 
     @property
     def all_used_symbols(self):

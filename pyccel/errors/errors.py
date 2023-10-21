@@ -319,8 +319,10 @@ class Errors(metaclass = Singleton):
                 fst = symbol.fst
 
         if fst:
-            line   = getattr(fst, 'lineno', None)
-            column = getattr(fst, 'col_offset', None)
+            if line is None:
+                line   = getattr(fst, 'lineno', None)
+            if column is None:
+                column = getattr(fst, 'col_offset', None)
 
         if self.mode == 'developer':
             if traceback:

@@ -952,7 +952,7 @@ class CCodePrinter(CodePrinter):
             return '#include "{0}.h"\n'.format(source)
 
     def _print_LiteralString(self, expr):
-        format_str = format(expr.arg)
+        format_str = format(expr.python_value)
         format_str = format_str.replace("\\", "\\\\")\
                                .replace('\a', '\\a')\
                                .replace('\b', '\\b')\

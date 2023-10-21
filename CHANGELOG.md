@@ -11,8 +11,12 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
+-   #1336 : Use template as a partial type.
+
 ### Fixed
 
+-   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
 -   #1556 : Fixed print format string for Intel compatibility.
 -   #1557 : Fix return a new instance of a class.
 -   #1557 : Fix save multiple class instances to the same variable.
@@ -48,10 +52,15 @@ All notable changes to this project will be documented in this file.
 
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
 -   \[INTERNALS\] Move handling of variable headers to semantic stage.
+-   \[INTERNALS\] Moved handling of type annotations to the semantic stage.
+-   \[INTERNALS\] Remove unnecessary body argument from `FunctionAddress`.
 
 ### Deprecated
 
 -   #1513 : Stop printing `@types` decorators in generated Python code.
+-   Remove support for undocumented type syntax specifying precision (e.g. `int*8`).
+-   No longer possible to combine header annotations and argument type annotations.
+-   Remove support for specifying header annotations in a separate file.
 -   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
 -   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
 

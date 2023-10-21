@@ -1,0 +1,13 @@
+UnionTypeStmt: (const ?= Const) dtypes += TypeHeader['|'];
+
+Const: 'const';
+TypeHeader: FuncType|Type;
+
+Type: dtype=DataType (trailer=TrailerSubscriptList)?;
+TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
+
+FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
+
+DataType: ID|STAR;
+STAR: '*';
+

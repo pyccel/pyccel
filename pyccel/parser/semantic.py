@@ -7,8 +7,10 @@
 See the developer docs for more details
 """
 
-from itertools import chain
+from itertools import chain, product
 import warnings
+
+from math import prod
 
 from sympy.utilities.iterables import iterable as sympy_iterable
 
@@ -16,7 +18,6 @@ from sympy import Sum as Summation
 from sympy import Symbol as sp_Symbol
 from sympy import Integer as sp_Integer
 from sympy import ceiling
-from sympy.core import cache
 
 #==============================================================================
 
@@ -74,6 +75,7 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import AnnotatedPyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -103,7 +105,8 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
-from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation
+from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
+from pyccel.ast.type_annotations import FunctionTypeAnnotation
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -132,8 +135,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNDEFINED_LAMBDA_FUNCTION, UNDEFINED_INIT_METHOD, UNDEFINED_FUNCTION,
         INVALID_MACRO_COMPOSITION, WRONG_NUMBER_OUTPUT_ARGS, INVALID_FOR_ITERABLE,
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
-        UNUSED_DECORATORS, DUPLICATED_SIGNATURE, FUNCTION_TYPE_EXPECTED,
-        UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
+        UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
 
@@ -1629,6 +1631,45 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
+    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = 0, input_order = None):
+        """
+        Convert a PyccelAstNode class type to a TypeAnnotation.
+
+        Convert a PyccelAstNode class type to a TypeAnnotation. This is done using
+        the static dtype, precision and rank stored in the class.
+
+        Parameters
+        ----------
+        expr : type deriving from PyccelAstNode
+            The object which was passed to the type annotation.
+
+        input_rank : int, default=0
+            The rank that was deduced from the annotation.
+
+        input_order : str, optional
+            The order that was deduced from the annotation.
+
+        Returns
+        -------
+        VariableTypeAnnotation
+            Object describing the type that should be created.
+        """
+        dtype = expr.static_dtype()
+        prec = expr.static_precision()
+        if input_rank != 0:
+            rank = input_rank
+            order = input_order
+        else:
+            rank = expr.static_rank()
+            if not isinstance(rank, int):
+                rank = 0
+            order = expr.static_order()
+            if order is not None and not isinstance(order, str):
+                order = None
+        if rank > 1 and order is None:
+            order = 'C'
+        cls_base = get_cls_base(dtype, prec, rank)
+        return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
 
     #====================================================
     #                 _visit functions
@@ -1808,7 +1849,24 @@ class SemanticParser(BasicParser):
                         not isinstance(v, MethodHeader) for v in headers):
                     F = self.scope.find(name, 'functions')
                     if F is None:
-                        func_defs = [vi for v in headers for vi in v.create_definition(is_external=is_external)]
+                        func_defs = []
+                        for v in headers:
+                            types = [self._visit(d).type_list[0] for d in v.dtypes]
+                            args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
+                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                is_const = t.is_const, is_optional = False,
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                            types = [self._visit(d).type_list[0] for d in v.results]
+                            results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
+                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                is_const = t.is_const, is_optional = False,
+                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                            args = [FunctionDefArgument(a) for a in args]
+                            results = [FunctionDefResult(r) for r in results]
+                            func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
+
                         if len(func_defs) == 1:
                             F = func_defs[0]
                             funcs.append(F)
@@ -1878,6 +1936,40 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].append(assign)
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
+
+    def _visit_UnionTypeAnnotation(self, expr):
+        annotations = [self._visit(syntax_type_annot) for syntax_type_annot in expr.type_list]
+        types = [t for a in annotations for t in (a.type_list if isinstance(a, UnionTypeAnnotation) else [a])]
+        return UnionTypeAnnotation(*types)
+
+    def _visit_FunctionTypeAnnotation(self, expr):
+        arg_types = [self._visit(a)[0] for a in expr.args]
+        res_types = [self._visit(r)[0] for r in expr.results]
+        return FunctionTypeAnnotation(arg_types, res_types)
+
+    def _visit_FunctionDefArgument(self, expr):
+        arg = self._visit(expr.var)
+        value = None if expr.value is None else self._visit(expr.value)
+        kwonly = expr.is_kwonly
+        is_optional = isinstance(value, Nil)
+
+        args = []
+        for v in arg:
+            if isinstance(v, Variable):
+                dtype = v.dtype
+                prec = v.precision
+                if isinstance(value, Literal) and \
+                        value.dtype is dtype and \
+                        value.precision != prec:
+                    value = convert_to_literal(value.python_value, dtype, prec)
+                clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
+                args.append(FunctionDefArgument(clone_var,
+                                        value = value, kwonly = kwonly, annotation = expr.annotation))
+            else:
+                args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
+                                is_kwonly = kwonly, is_argument = True),
+                                value = value, kwonly = kwonly, annotation = expr.annotation))
+        return args
 
     def _visit_CodeBlock(self, expr):
         ls = []
@@ -2057,6 +2149,10 @@ class SemanticParser(BasicParser):
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
 
+        if len(types.type_list) == 0:
+            errors.report(f'Missing type annotation for argument {expr}',
+                    severity='fatal', symbol=expr)
+
         # Get the collisionless name from the scope
         name = self.scope.get_expected_name(expr.name)
 
@@ -2075,7 +2171,12 @@ class SemanticParser(BasicParser):
         # For each possible data type create the necessary variables
         possible_args = []
         for t in types.type_list:
-            if isinstance(t, VariableTypeAnnotation):
+            if isinstance(t, FunctionTypeAnnotation):
+                args = t.args
+                results = [FunctionDefResult(r.var.clone(r.var.name, is_argument = False), annotation=r.annotation) for r in t.results]
+                address = FunctionAddress(name, args, results)
+                possible_args.append(address)
+            elif isinstance(t, VariableTypeAnnotation):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
@@ -2099,32 +2200,59 @@ class SemanticParser(BasicParser):
         types = []
 
         for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            # Find the DataType instance and the associated precision
-            prec = -1
-            try:
-                dtype, prec = dtype_and_precision_registry[dtype_name]
-            except KeyError:
-                errors.report(f'Could not identify type : {dtype_name}',
-                        severity='fatal', symbol=expr)
-
-            try:
-                cls_base = get_cls_base(dtype, prec, rank)
-            except KeyError:
-                cls_base = self.scope.find(dtype_name, 'classes')
-
             if rank > 1 and order is None:
                 order = 'C'
-            elif order is not None and rank < 2:
-                errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                        symbol=expr.fst, severity='warning')
+
+            if isinstance(dtype_name, (PyccelSymbol, DottedName)):
+                dtype_from_scope = self._visit(dtype_name)
+            else:
+                dtype_from_scope = self.scope.find(dtype_name)
+
+            if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
+            elif isinstance(dtype_from_scope, PyccelFunctionDef):
+                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name, rank, order))
+            elif isinstance(dtype_from_scope, VariableTypeAnnotation):
+                if rank == 0:
+                    types.append(dtype_from_scope)
+                else:
+                    types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
+                        dtype_from_scope.cls_base, dtype_from_scope.precision,
+                        rank, order, dtype_from_scope.is_const))
+            elif isinstance(dtype_from_scope, ClassDef):
+                dtype = self.get_class_construct(dtype_name)
+                prec = 0
+                rank = 0
                 order = None
+                cls_base = dtype_from_scope
+                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order))
+            elif dtype_from_scope is not None:
+                errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
+                        severity='fatal', symbol=expr)
+            else:
+                # Find the DataType instance and the associated precision
+                try:
+                    dtype, prec = dtype_and_precision_registry[dtype_name]
+                except KeyError:
+                    errors.report(f'Could not identify type : {dtype_name}',
+                            severity='fatal', symbol=expr)
 
-            # NumPy objects cannot have default precision
-            if prec == -1 and cls_base is NumpyArrayClass:
-                prec = default_precision[dtype]
+                try:
+                    cls_base = get_cls_base(dtype, prec, rank)
+                except KeyError:
+                    cls_base = self.scope.find(dtype_name, 'classes')
 
-            # Save the potential type
-            types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+                if order is not None and rank < 2:
+                    errors.report(f"Ordering is not applicable to objects with rank {rank}",
+                            symbol=expr.fst, severity='warning')
+                    order = None
+
+                # NumPy objects cannot have default precision
+                if prec == -1 and cls_base is NumpyArrayClass:
+                    prec = default_precision[dtype]
+
+                # Save the potential type
+                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
 
         # Collect all possible types into a UnionTypeAnnotation
         return UnionTypeAnnotation(*types)
@@ -2494,7 +2622,7 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='error')
-            d_var = {'datatype': self.get_class_construct(method.cls_name)(),
+            d_var = {'datatype': self.get_class_construct(method.cls_name),
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
@@ -3307,306 +3435,200 @@ class SemanticParser(BasicParser):
         is_private      = expr.is_private
         is_inline       = expr.is_inline
         doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
-        headers = []
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
             errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
-        args_number = len(expr.arguments)
         templates = self.scope.find_all('templates')
         if decorators['template']:
             # Load templates dict from decorators dict
             templates.update(decorators['template']['template_dict'])
 
-        tmp_headers = expr.headers
-        python_name = expr.scope.get_python_name(name)
-        if cls_name:
-            tmp_headers += self.get_headers(cls_name + '.' + python_name)
-            args_number -= 1
-        else:
-            tmp_headers += self.get_headers(python_name)
-        for header in tmp_headers:
-            if all(header.dtypes != hd.dtypes for hd in headers):
-                headers.append(header)
-            else:
-                errors.report(DUPLICATED_SIGNATURE, symbol=header,
-                        severity='warning')
-        for hd in headers:
-            if (args_number != len(hd.dtypes)):
-                n_types = len(hd.dtypes)
-                msg = f"""The number of arguments in the function {name} ({args_number}) does not match the number
-                        of types in decorator/header ({n_types})."""
-                if (args_number < len(hd.dtypes)):
-                    errors.report(msg, symbol=expr.arguments, severity='warning')
-                else:
-                    errors.report(msg, symbol=expr.arguments, severity='fatal')
+        for t,v in templates.items():
+            templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
 
-        interfaces = []
-        if len(headers) == 0:
-            # check if a header is imported from a header file
-            # TODO improve in the case of multiple headers ( interface )
-            func       = self.scope.find(name, 'functions')
-            if func and func.is_header:
-                interfaces = [func]
+        # Filter out unused templates
+        templatable_args = [a.annotation for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+        arg_annotations = [annot for a in templatable_args for annot in (a.type_list \
+                                        if isinstance(a, UnionTypeAnnotation) else [a]) \
+                                        if isinstance(annot, SyntacticTypeAnnotation)]
+        used_type_names = set(type_names for a in arg_annotations for type_names in a.dtypes)
+        templates = {t: v for t,v in templates.items() if t in used_type_names}
 
-        if expr.arguments and not headers and not interfaces:
+        template_combinations = list(product(*[v.type_list for v in templates.values()]))
+        template_names = list(templates.keys())
+        n_templates = len(template_combinations)
 
-            # TODO ERROR wrong position
-
-            errors.report(FUNCTION_TYPE_EXPECTED, symbol=name,
-                   bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                   severity='error')
-
-        # We construct a FunctionDef from each function header
-        for hd in headers:
-            interfaces += hd.create_definition(templates)
-
-        if not interfaces:
-            # this for the case of a function without arguments => no headers
-            interfaces = [FunctionDef(name, [], [], [])]
-
-#        TODO move this to codegen
-#        vec_func = None
-#        if 'vectorize' in decorators:
-#            #TODO move to another place
-#            vec_name  = 'vec_' + name
-#            arg       = decorators['vectorize'][0]
-#            arg       = str(arg.name)
-#            args      = [str(i.name) for i in expr.arguments]
-#            index_arg = args.index(arg)
-#            arg       = Symbol(arg)
-#            vec_arg   = arg
-#            index     = self.namespace.get_new_name()
-#            range_    = Function('range')(Function('len')(arg))
-#            args      = symbols(args)
-#            args[index_arg] = vec_arg[index]
-#            body_vec        = Assign(args[index_arg], Function(name)(*args))
-#            body_vec.set_fst(expr.fst)
-#            body_vec   = [For(index, range_, [body_vec])]
-#            header_vec = header.vectorize(index_arg)
-#            vec_func   = expr.vectorize(body_vec, header_vec)
-
+        # this for the case of a function without arguments => no headers
         interface_name = name
 
-        for i, m in enumerate(interfaces):
-            args           = []
-            arg_vars       = []
-            results        = []
-            global_vars    = []
-            imports        = []
-            arg            = None
-            arguments      = expr.arguments
-            header_results = m.results
-
-            if len(interfaces) > 1:
-                name = interface_name + '_' + str(i).zfill(2)
+        for tmpl_idx in range(n_templates):
+            # Change to syntactic FunctionDef scope to ensure get_expected_name is available
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
-
-            if cls_name and str(arguments[0].name) == 'self':
-                arg       = arguments[0]
-                arguments = arguments[1:]
-                dt        = self.get_class_construct(cls_name)()
-                cls_base  = self.scope.find(cls_name, 'classes')
-                cls_base.scope.insert_symbols(expr.scope.local_used_symbols.copy())
-                var       = Variable(dt, 'self', cls_base=cls_base, is_argument=True)
-                self.scope.insert_variable(var)
-
-            if arguments:
-                for (a, ah) in zip(arguments, m.arguments):
-                    ahv = ah.var
-                    if isinstance(ahv, FunctionAddress):
-                        d_var = {}
-                        d_var['is_argument'] = True
-                        d_var['memory_handling'] = 'alias'
-                        if a.has_default:
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
-                        a_new = FunctionAddress(self.scope.get_expected_name(a.name),
-                                        ahv.arguments, ahv.results, [], **d_var)
-                    else:
-                        d_var = self._infer_type(ahv)
-                        d_var['shape'] = ahv.alloc_shape
-                        d_var['is_argument'] = True
-                        d_var['is_const'] = ahv.is_const
-                        dtype = d_var.pop('datatype')
-                        if not d_var['cls_base']:
-                            try:
-                                d_var['cls_base'] = get_cls_base( dtype, d_var['precision'], d_var['rank'] )
-                            except KeyError:
-                                d_var['cls_base'] = self.scope.find( dtype, 'classes' )
-
-                        if 'allow_negative_index' in self.scope.decorators:
-                            if a.name in decorators['allow_negative_index']:
-                                d_var.update(allows_negative_indexes=True)
-                        if a.has_default:
-                            # optional argument only if the value is None
-                            if isinstance(a.value, Nil):
-                                d_var['is_optional'] = True
-                        a_new = Variable(dtype, self.scope.get_expected_name(a.name), **d_var)
-
-
-                    value = None if a.value is None else self._visit(a.value)
-                    if isinstance(value, Literal) and \
-                            value.dtype is a_new.dtype and \
-                            value.precision != a_new.precision:
-                        value = convert_to_literal(value.python_value, a_new.dtype, a_new.precision)
-
-                    arg_new = FunctionDefArgument(a_new,
-                                value=value,
-                                kwonly=a.is_kwonly,
-                                annotation=ah.annotation)
-
-                    args.append(arg_new)
-                    arg_vars.append(a_new)
-                    if isinstance(a_new, FunctionAddress):
-                        self.insert_function(a_new)
-                    else:
-                        self.scope.insert_variable(a_new, a.name)
-            results = expr.results
-            if header_results:
-                new_results = []
-
-                for a, ah in zip(results, header_results):
-                    av = a.var
-                    d_var = self._infer_type(ah.var)
-                    dtype = d_var.pop('datatype')
-                    a_new = Variable(dtype, self.scope.get_expected_name(av),
-                            **d_var, is_temp = av.is_temp)
-                    self.scope.insert_variable(a_new, av)
-                    new_results.append(FunctionDefResult(a_new, annotation = ah.annotation))
-
-                results = new_results
-
-            # insert the FunctionDef into the scope
-            # to handle the case of a recursive function
-            # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, args, results, [])
-            self.insert_function(recursive_func_obj)
-
-            # Create a new list that store local variables for each FunctionDef to handle nested functions
-            self._allocs.append([])
-
-            # we annotate the body
-            body = self._visit(expr.body)
-
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the body of the function
-            body.insert2body(*self._garbage_collector(body))
-
-            results = [self._visit(a) for a in results]
-
-            if arg and cls_name:
-                dt       = self.get_class_construct(cls_name)()
-                cls_base = self.scope.find(cls_name, 'classes')
-                var      = Variable(dt, 'self', cls_base=cls_base)
-                args     = [FunctionDefArgument(var)] + args
-
-            # Determine local and global variables
-            global_vars = list(self.get_variables(self.scope.parent_scope))
-            global_vars = [g for g in global_vars if body.is_user_of(g)]
-
-            # get the imports
-            imports   = self.scope.imports['imports'].values()
-            # Prefer dict to set to preserve order
-            imports   = list({imp:None for imp in imports}.keys())
-
-            # remove the FunctionDef from the function scope
-            # TODO improve func_ is None in the case of an interface
-            func_     = self.scope.functions.pop(name, None)
-            is_recursive = False
-            # check if the function is recursive if it was called on the same scope
-            if func_ and func_.is_recursive:
-                is_recursive = True
-
-            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
-
-            func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
-            if func_args:
-                func_interfaces.append(Interface('', func_args, is_argument = True))
-
-            namespace_imports = self.scope.imports
+            for n, v in zip(template_names, template_combinations[tmpl_idx]):
+                self.scope.insert_symbolic_alias(n, v)
+            self.scope.decorators.update(decorators)
+            arguments = [self._visit(a) for a in expr.arguments]
+            for n in template_names:
+                self.scope.symbolic_alias.pop(n)
             self.exit_function_scope()
 
-            results_names = [i.var.name for i in results]
+            n_interface_funcs = prod(len(a) for a in arguments)
+            argument_vars = list(product(*arguments))
 
-            # Find all nodes which can modify variables
-            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
-            calls   = body.get_attribute_nodes(FunctionCall)
+            is_interface = n_templates > 1 or n_interface_funcs > 1
 
-            # Collect the modified objects
-            lhs_assigns   = [a.lhs for a in assigns]
-            modified_args = [call_arg.value for f in calls
-                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
-            # Collect modified variables
-            all_assigned = [v for a in (lhs_assigns + modified_args) for v in
-                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
+            for i in range(n_interface_funcs):
+                arguments      = argument_vars[i]
+                arg_dict = {a.name:a.var for a in arguments}
 
-            # ... computing inout arguments
-            for a in args:
-                if a.name in chain(results_names, ['self']) or a.var in all_assigned:
-                    v = a.var
-                    if isinstance(v, Variable) and v.is_const:
-                        msg = f"Cannot modify 'const' argument ({v})"
-                        errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                            self._current_fst_node.col_offset),
-                            severity='fatal')
+                if is_interface:
+                    name = interface_name + '_' + str(tmpl_idx*n_interface_funcs + i).zfill(2)
+                scope = self.create_new_function_scope(name, decorators = decorators,
+                        used_symbols = expr.scope.local_used_symbols.copy(),
+                        original_symbols = expr.scope.python_names.copy())
+
+                if cls_name:
+                    if arguments[0].var.cls_base.name != cls_name:
+                        errors.report('Class method self argument does not have the expected type',
+                                severity='error', symbol=arguments[0])
+                    for s in expr.scope.dotted_symbols:
+                        base = s.name[0]
+                        if base in arg_dict:
+                            cls_base = arg_dict[base].cls_base
+                            cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
+
+                for a in arguments:
+                    a_var = a.var
+                    if isinstance(a_var, FunctionAddress):
+                        self.insert_function(a_var)
+                    else:
+                        self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
+
+                results = expr.results
+                if results and results[0].annotation:
+                    results = [self._visit(r) for r in expr.results]
+
+                # insert the FunctionDef into the scope
+                # to handle the case of a recursive function
+                # TODO improve in the case of an interface
+                recursive_func_obj = FunctionDef(name, arguments, results, [])
+                self.insert_function(recursive_func_obj)
+
+                # Create a new list that store local variables for each FunctionDef to handle nested functions
+                self._allocs.append([])
+
+                # we annotate the body
+                body = self._visit(expr.body)
+
+                # Calling the Garbage collecting,
+                # it will add the necessary Deallocate nodes
+                # to the body of the function
+                body.insert2body(*self._garbage_collector(body))
+
+                results = [self._visit(a) for a in results]
+
+                # Determine local and global variables
+                global_vars = list(self.get_variables(self.scope.parent_scope))
+                global_vars = [g for g in global_vars if body.is_user_of(g)]
+
+                # get the imports
+                imports   = self.scope.imports['imports'].values()
+                # Prefer dict to set to preserve order
+                imports   = list({imp:None for imp in imports}.keys())
+
+                # remove the FunctionDef from the function scope
+                # TODO improve func_ is None in the case of an interface
+                func_     = self.scope.functions.pop(name, None)
+                is_recursive = False
+                # check if the function is recursive if it was called on the same scope
+                if func_ and func_.is_recursive:
+                    is_recursive = True
+
+                sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+
+                func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
+                if func_args:
+                    func_interfaces.append(Interface('', func_args, is_argument = True))
+
+                namespace_imports = self.scope.imports
+                self.exit_function_scope()
+
+                results_names = [i.var.name for i in results]
+
+                # Find all nodes which can modify variables
+                assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+                calls   = body.get_attribute_nodes(FunctionCall)
+
+                # Collect the modified objects
+                lhs_assigns   = [a.lhs for a in assigns]
+                modified_args = [call_arg.value for f in calls
+                                    for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
+                # Collect modified variables
+                all_assigned = [v for a in (lhs_assigns + modified_args) for v in
+                                (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
+
+                # ... computing inout arguments
+                for a in arguments:
+                    if a.name in chain(results_names, ['self']) or a.var in all_assigned:
+                        v = a.var
+                        if isinstance(v, Variable) and v.is_const:
+                            msg = f"Cannot modify 'const' argument ({v})"
+                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
+                                self._current_fst_node.col_offset),
+                                severity='fatal')
+                    else:
+                        a.make_const()
+                # ...
+
+                # Raise an error if one of the return arguments is an alias.
+                for r in results:
+                    if r.var.is_alias:
+                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                        symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        severity='error')
+
+                func_kwargs = {
+                        'global_vars':global_vars,
+                        'cls_name':cls_name,
+                        'is_pure':is_pure,
+                        'is_elemental':is_elemental,
+                        'is_private':is_private,
+                        'imports':imports,
+                        'decorators':decorators,
+                        'is_recursive':is_recursive,
+                        'functions': sub_funcs,
+                        'interfaces': func_interfaces,
+                        'doc_string': doc_string,
+                        'scope': scope
+                        }
+                if is_inline:
+                    func_kwargs['namespace_imports'] = namespace_imports
+                    global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
+                    func_kwargs['global_funcs'] = global_funcs
+                    cls = InlineFunctionDef
                 else:
-                    a.make_const()
-            # ...
+                    cls = FunctionDef
+                func = cls(name,
+                        arguments,
+                        results,
+                        body,
+                        **func_kwargs)
+                if not is_recursive:
+                    recursive_func_obj.invalidate_node()
 
-            # Raise an error if one of the return arguments is an alias.
-            for r in results:
-                if r.var.is_alias:
-                    errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                    symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                    severity='error')
+                if cls_name:
+                    cls = self.scope.find(cls_name, 'classes')
 
-            func_kwargs = {
-                    'global_vars':global_vars,
-                    'cls_name':cls_name,
-                    'is_pure':is_pure,
-                    'is_elemental':is_elemental,
-                    'is_private':is_private,
-                    'imports':imports,
-                    'decorators':decorators,
-                    'is_recursive':is_recursive,
-                    'functions': sub_funcs,
-                    'interfaces': func_interfaces,
-                    'doc_string': doc_string,
-                    'scope': scope
-                    }
-            if is_inline:
-                func_kwargs['namespace_imports'] = namespace_imports
-                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
-                func_kwargs['global_funcs'] = global_funcs
-                cls = InlineFunctionDef
-            else:
-                cls = FunctionDef
-            func = cls(name,
-                    args,
-                    results,
-                    body,
-                    **func_kwargs)
-            if not is_recursive:
-                recursive_func_obj.invalidate_node()
+                    # update the class methods
+                    if expr.name == func.name:
+                        cls.add_new_method(func)
 
-            if cls_name:
-                cls = self.scope.find(cls_name, 'classes')
+                funcs += [func]
 
-                # update the class methods
-                if expr.name == func.name:
-                    cls.add_new_method(func)
-
-            funcs += [func]
-
-            #clear the sympy cache
-            #TODO clear all variable except the global ones
-            cache.clear_cache()
         if len(funcs) == 1:
             funcs = funcs[0]
             self.insert_function(funcs)
@@ -3680,7 +3702,7 @@ class SemanticParser(BasicParser):
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, '_name')
-        self.scope.cls_constructs[name] = dtype
+        self.scope.cls_constructs[name] = dtype()
 
         parent = self._find_superclasses(expr)
 
@@ -3983,7 +4005,13 @@ class SemanticParser(BasicParser):
         else:
             interfaces = []
             for hd in header:
-                interfaces += hd.create_definition()
+                for i,_ in enumerate(hd.dtypes):
+                    self.scope.insert_symbol(f'arg_{i}')
+                arguments = [FunctionDefArgument(self._visit(AnnotatedPyccelSymbol(f'arg_{i}', annotation = arg))[0]) \
+                        for i, arg in enumerate(hd.dtypes)]
+                results = [FunctionDefResult(self._visit(AnnotatedPyccelSymbol(f'out_{i}', annotation = arg))[0]) \
+                        for i, arg in enumerate(hd.results)]
+                interfaces.append(FunctionDef(f_name, arguments, results, []))
 
             # TODO -> Said: must handle interface
 
@@ -4023,7 +4051,7 @@ class SemanticParser(BasicParser):
         if header is None:
             var = self.get_variable(master)
         else:
-            var = Variable(header.dtype, header.name)
+            var = self.get_variable(master)
 
                 # TODO -> Said: must handle interface
 
@@ -4074,4 +4102,14 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDefResult(self, expr):
         var = self._visit(expr.var)
+        if isinstance(var, list):
+            n_types = len(var)
+            if n_types == 0:
+                errors.report("Can't deduce type for function definition result.",
+                        severity = 'fatal', symbol = expr)
+            elif n_types != 1:
+                errors.report("The type of the result of a function definition cannot be a union of multiple types.",
+                        severity = 'error', symbol = expr)
+            var = var[0]
+            self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)

@@ -5229,15 +5229,8 @@ def test_where_combined_types(language):
 def test_numpy_linspace_scalar(language):
     from numpy import linspace
 
-    @types('int', 'int', 'int')
-    @types('int8', 'int', 'int')
-    @types('int16', 'int', 'int')
-    @types('int32', 'int', 'int')
-    @types('int64', 'int', 'int')
-    @types('float', 'int', 'int')
-    @types('float32', 'int', 'int')
-    @types('float64', 'int', 'int')
-    def get_linspace(start, steps, num):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
+    def get_linspace(start : 'T', steps : int, num : int):
         from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)

@@ -16,16 +16,18 @@ runs:
     - name: Add DLL paths
       run: |
         # Add DLL paths for program execution
-        $BIN_DIR="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\bin"
-        $LIBRARY_DIR="C:\ProgramData\chocolatey\lib\mingw\tools\install\mingw64\lib"
-        echo $BIN_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        $EXE=(Get-Command gcc).Path
+        echo $EXE
+        $BIN_DIR=(Split-Path -Parent ${EXE}) # Find folder containing c compiler
+        $MINGW_DIR=(Split-Path -Parent ${BIN_DIR}) # Find the enclosing mingw directory
+        $LIBRARY_DIR="$MINGW_DIR/lib"
         echo $LIBRARY_DIR | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
         echo "LIBRARY_DIR=${LIBRARY_DIR}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
         # Add DLL paths for python imports
         $PYTHON_PREFIX=(python -c "import sys; print(sys.prefix)")
         $PYTHON_SITE_PATH="$PYTHON_PREFIX\lib\site-packages"
-        echo "import os; os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/lib'); os.add_dll_directory('C://ProgramData/chocolatey/lib/mingw/tools/install/mingw64/bin')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
+        echo "import os; os.add_dll_directory(r'$LIBRARY_DIR'); os.add_dll_directory(r'$BIN_DIR')" | Out-File -FilePath $PYTHON_SITE_PATH\\dll_path.pth -Encoding ascii
       shell: powershell
     - name: Install Lapack
       run: |

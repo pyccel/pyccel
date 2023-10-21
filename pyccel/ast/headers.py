@@ -14,6 +14,7 @@ from .core              import FunctionDefArgument, FunctionDefResult
 from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
+from .type_annotations  import SyntacticTypeAnnotation
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
@@ -81,15 +82,18 @@ class MetaVariable(Header):
 
 #==============================================================================
 class Template(Header):
-    """Represents a template.
+    """
+    Represents a template.
+
+    Represents a call to the template decorator.
 
     Parameters
     ----------
-    name: str
+    name : str
         The name of the template.
 
-    dtypes: iterable
-        The types the template represents
+    dtypes : iterable
+        The types the template represents.
 
     Examples
     --------
@@ -116,6 +120,9 @@ class Template(Header):
     def dtypes(self):
         "Types the template represents."
         return self._dtypes
+
+    def __iter__(self):
+        return self._dtypes.__iter__()
 
     def __reduce_ex__(self, i):
 
@@ -174,7 +181,6 @@ class FunctionHeader(Header):
     """
     __slots__ = ('_name','_dtypes','_results','_is_static')
 
-    # TODO dtypes should be a dictionary (useful in syntax)
     def __init__(self, name, dtypes,
                  results=None,
                  is_static=False):
@@ -210,180 +216,6 @@ class FunctionHeader(Header):
     @property
     def is_static(self):
         return self._is_static
-
-    def create_definition(self, templates = (), is_external=False):
-        """
-        Create a FunctionDef with the described types.
-
-        Create a FunctionDef with arguments and results whose types
-        are indicated by the information stored in the header. The
-        body of the function is left empty.
-
-        Parameters
-        ----------
-        templates : list/tuple, default: ()
-            A list of all templates defined in the context which can be used
-            to define argument or result types.
-
-        is_external : bool, default: False
-            Indicates whether the function is an external function which
-            is defined elsewhere in the linked files.
-
-        Returns
-        -------
-        list of FunctionDef
-            A list of all functions described by the header.
-        """
-        # TODO factorize what can be factorized
-        from itertools import product
-
-        name = self.name
-
-        body      = []
-        cls_name  = None
-        is_static = self.is_static
-        used_names = set(name)
-        imports   = []
-        funcs = []
-        dtypes = []
-
-        def build_argument(var_name, dc):
-            """
-            Construct an argument variable from a dictionary describing its properties.
-
-            Use a dictionary describing the properties of a variable which is either
-            an argument (in/inout) or a result (out) to create a variable and an
-            annotation string for the variable.
-
-            Parameters
-            ----------
-            var_name : srt
-                The name of the variable.
-
-            dc : dict
-                The properties of the variable.
-
-            Returns
-            -------
-            Variable
-                The newly created variable.
-
-            str
-                The annotation string.
-            """
-            dtype    = dc['datatype']
-            memory_handling = dc['memory_handling']
-            precision = dc['precision']
-            rank = dc['rank']
-            is_const = dc['is_const']
-
-            order = None
-            shape = None
-            annotation = None
-
-            if isinstance(dtype, str):
-                annotation = dtype
-                try:
-                    dtype = datatype(dtype)
-                except ValueError:
-                    dtype = DataTypeFactory(str(dtype), ("_name"))()
-
-            if rank and precision == -1:
-                precision = default_precision[dtype]
-
-            if rank >1:
-                order = dc['order']
-
-            var = Variable(dtype, var_name,
-                           memory_handling=memory_handling, is_const=is_const,
-                           rank=rank, shape=shape ,order=order, precision=precision,
-                           is_temp=True)
-
-            return var, annotation
-
-        def process_template(signature, Tname, d_type):
-            #Replaces templates named Tname inside signature, with the given type.
-            new_sig = tuple(d_type if 'datatype' in t and t['datatype'] == Tname\
-                            else t for t in signature)
-            return new_sig
-
-        def find_templates(signature, templates):
-            #Creates a dictionary of only used templates in signature.
-            new_templates = {d_type['datatype']:templates[d_type['datatype']]\
-                             for d_type in signature\
-                             if 'datatype' in d_type and d_type['datatype'] in templates}
-            return new_templates
-
-        for i in self.dtypes:
-            if isinstance(i, UnionType):
-                for d_type in i.args:
-                    if d_type['datatype'] in templates:
-                        errors.report(TEMPLATE_IN_UNIONTYPE,
-                                      symbol=self.name,
-                                      severity='error')
-                dtypes += [i.args]
-            elif isinstance(i, dict):
-                dtypes += [[i]]
-            else:
-                raise TypeError('element must be of type UnionType or dict')
-
-        #TODO: handle the case of functions arguments
-
-        signatures = list(product(*dtypes))
-        new_templates = find_templates(signatures[0], templates)
-
-        for tmplt in new_templates:
-            signatures = tuple(process_template(s, tmplt, d_type)\
-                               for s in signatures for d_type in new_templates[tmplt].dtypes)
-
-        for args_ in signatures:
-            args = []
-            for i, d in enumerate(args_):
-                # TODO  handle function as argument, which itself has a function argument
-                if (d['is_func']):
-                    decs = []
-                    results = []
-                    _count = 0
-                    for dc in d['decs']:
-                        _name, _count = create_incremented_string(used_names, 'in', _count)
-                        var, annotation = build_argument(_name, dc)
-                        decs.append(FunctionDefArgument(var, annotation=annotation))
-                    _count = 0
-                    for dc in d['results']:
-                        _name, _count = create_incremented_string(used_names, 'out', _count)
-                        var, annotation = build_argument(_name, dc)
-                        results.append(FunctionDefResult(var, annotation=annotation))
-                    arg_name = 'arg_{0}'.format(str(i))
-                    arg = FunctionDefArgument(FunctionAddress(arg_name, decs, results, []))
-
-                else:
-                    arg_name = 'arg_{0}'.format(str(i))
-                    var, annotation = build_argument(arg_name, d)
-                    arg = FunctionDefArgument(var, annotation=annotation)
-                args.append(arg)
-
-            # ... factorize the following 2 blocks
-            results = []
-            for i,d_var in enumerate(self.results):
-                is_func = d_var.pop('is_func')
-                dtype = d_var.pop('datatype')
-                var = Variable(dtype, 'res_{}'.format(i), **d_var, is_temp = True)
-                results.append(FunctionDefResult(var, annotation = str(dtype)))
-                # we put back dtype otherwise macro will crash when it tries to
-                # call create_definition
-                d_var['datatype'] = dtype
-                d_var['is_func'] = is_func
-
-            func= FunctionDef(name, args, results, body,
-                              global_vars=[],
-                              cls_name=cls_name,
-                              is_static=is_static,
-                              imports=imports,
-                              is_header=True,
-                              is_external=is_external)
-            funcs += [func]
-
-        return funcs
 
     def to_static(self):
         """returns a static function header. needed for bind(c)"""
@@ -431,28 +263,33 @@ class FunctionHeader(Header):
 
 
 #==============================================================================
-# TODO to be improved => use FunctionHeader
 class MethodHeader(FunctionHeader):
-    """Represents method header in the code.
+    """
+    Represents a method header in the code.
 
-    name: iterable
-        method name as a list/tuple
+    Represents a method header in the code.
+    To be removed when header support is deprecated.
 
-    dtypes: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+    Parameters
+    ----------
+    name : iterable
+        Method name as a list/tuple.
 
-    results: tuple/list
-        a list of datatypes. an element of this list can be str/DataType of a
-        tuple (str/DataType, attr)
+    dtypes : tuple/list
+        A list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr).
 
-    is_static: bool
+    results : tuple/list
+        A list of datatypes. an element of this list can be str/DataType of a
+        tuple (str/DataType, attr).
+
+    is_static : bool
         True if we want to pass arrays in bind(c) mode. every argument of type
         array will be preceeded by its shape, the later will appear in the
-        argument declaration. default value: False
+        argument declaration. default value: False.
 
     Examples
-
+    --------
     >>> from pyccel.ast.headers import MethodHeader
     >>> m = MethodHeader(('point', 'rotate'), ['double'])
     >>> m
@@ -463,19 +300,18 @@ class MethodHeader(FunctionHeader):
     __slots__ = ()
 
     def __init__(self, name, dtypes, results=None, is_static=False):
-        if not isinstance(name, (list, tuple)):
-            raise TypeError("Expecting a list/tuple of strings.")
-        name      = '.'.join(str(n) for n in name)
+        if not isinstance(name, str):
+            raise TypeError("Expecting a string.")
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, UnionType) and not isinstance(d, dict):
+            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, UnionType):
+            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
 
