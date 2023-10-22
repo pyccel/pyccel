@@ -1598,6 +1598,36 @@ class CCodePrinter(CodePrinter):
 
         return f'{func}({self._print(expr.args[0])})'
 
+    def _print_NumpyIsFinite(self, expr):
+        """
+        Convert a Python expression with a numpy isfinite function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isfinite({code_arg})"
+
+    def _print_NumpyIsInf(self, expr):
+        """
+        Convert a Python expression with a numpy isinf function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isinf({code_arg})"
+
+    def _print_NumpyIsNan(self, expr):
+        """
+        Convert a Python expression with a numpy isnan function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isnan({code_arg})"
+
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
         function call

@@ -2712,6 +2712,30 @@ class FCodePrinter(CodePrinter):
         func = PyccelFunctionDef('numpy_sign', NumpySign)
         self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
+    
+    def _print_NumpyIsNan(self, expr):
+        """
+        Convert a Python expression with a numpy isnan function call to Fortran function call
+        """
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isnan({code_arg})"
+
+    def _print_NumpyIsInf(self, expr):
+        """
+        convert a python expression with a numpy isinf function call to Fortran function call
+        """
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isinf({code_arg})"
+    
+    def _print_NumpyIsFinite(self,expr):
+        """
+        conver a pytho expression with a numpy isnan function call to Fortran function call
+        """
+        arg = expr.args[0]
+        code_arg = self._print(arg)
+        return f"isfinte({code_arg})"
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
