@@ -2735,7 +2735,7 @@ class FCodePrinter(CodePrinter):
         """
         arg = expr.args[0]
         code_arg = self._print(arg)
-        return f"isfinte({code_arg})"
+        return f"isfinite({code_arg})"
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
