@@ -13,7 +13,8 @@ class Point(object):
         self.y = self.y + b
 
 if __name__ == '__main__':
-    p = Point(0.0, 0.0)
+    i = (0.0, 0.0)
+    p = Point(*i)
     x=p.x
     p.x=x
     a = p.x
