@@ -322,7 +322,7 @@ class Assign(PyccelAstNode):
     like : Variable, optional
         Contains the name of the variable from which the lhs will be cloned.
 
-    fst : ast.Ast
+    ast : ast.Ast
         The ast object parsed by Python's ast module.
 
     Examples
@@ -957,11 +957,11 @@ class Block(ScopedAstNode):
 
     Parameters
     ----------
+    name : str
+        The name of the block.
+
     variables : list
         List of the variables that appear in the block.
-
-    declarations : list
-        List of declarations of the variables that appear in the block.
 
     body : list
         A list of statements.
@@ -3469,6 +3469,11 @@ class ClassDef(ScopedAstNode):
 
         attr : str
             The name of the attribute we are looking for.
+
+        Returns
+        -------
+        Variable
+            The variable which contains the attribute.
         """
 
         if not isinstance(attr, str):
@@ -3645,6 +3650,25 @@ class Import(PyccelAstNode):
 
     @staticmethod
     def _format(i):
+        """
+        Format an import name string into a Pyccel object.
+
+        Get the object passed as an import source or target in the
+        syntactic stage and ensure that it is correctly formatted
+        in a PyccelAstNode. Valid nodes are DottedName, AsName, or
+        PyccelSymbol. If a string is provided then it is converted
+        to either a DottedName or a PyccelSymbol.
+
+        Parameters
+        ----------
+        i : str | DottedName | AsName | PyccelSymbol
+            The import source or target.
+
+        Returns
+        -------
+        PyccelAstNode
+            The Pyccel object describing the import source or target.
+        """
         if isinstance(i, str):
             if '.' in i:
                 return DottedName(*i.split('.'))

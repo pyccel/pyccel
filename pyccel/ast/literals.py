@@ -35,11 +35,6 @@ class Literal(TypedAstNode):
     or the string "Hello".
 
     This class is abstract and should be implemented for each dtype.
-
-    Parameters
-    ----------
-    precision : int
-        The precision of the literal.
     """
     __slots__ = ()
     _attribute_nodes  = ()
