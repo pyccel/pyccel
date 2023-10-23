@@ -1003,6 +1003,4 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
-    'tuple'    : PythonTuple,
-    'list'     : PythonList,
 }
