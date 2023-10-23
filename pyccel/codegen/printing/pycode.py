@@ -167,7 +167,7 @@ class PythonCodePrinter(CodePrinter):
             self.add_import(Import('numpy', [AsName(cls, name)]))
         return name
 
-    def _get_type_annotation(var):
+    def _get_type_annotation(self, var):
         if isinstance(var, Variable):
             type_annotation = str(var.dtype)
             if var.rank:
@@ -177,6 +177,19 @@ class PythonCodePrinter(CodePrinter):
             results = ', '.join(self._get_type_annotation(r.var) for r in var.results)
             arguments = ', '.join(self._get_type_annotation(a.var) for a in var.arguments)
             return f'"({results})({arguments})"'
+
+    def _function_signature(self, func):
+        args = ', '.join(self._print(a) for a in func.arguments)
+        results = func.results
+        if results:
+            res_types = [self._get_type_annotation(r) for r in results]
+            if len(res_types) == 1:
+                res = f' -> {res_types[0]}'
+            else:
+                res = ''
+        else:
+            res = ' -> None'
+        return f"def {func.name}({args}){res}:\n"+self._indent_codestring('pass')
 
     #----------------------------------------------------------------------
 
@@ -1053,11 +1066,23 @@ class PythonCodePrinter(CodePrinter):
                         body    = body,
                         prog    = prog)
 
-    def _print_Module_Header(self, expr):
-        variables = expr.variables
+    def _print_ModuleHeader(self, expr):
+        mod = expr.module
+        variables = mod.variables
         var_decl = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in variables)
-        funcs = '\n'.join(self.function_signature(f) for f in expr.module.funcs)
-        return var_decl+'\n'+funcs
+        funcs = '\n'.join(self._function_signature(f) for f in mod.funcs)
+        classes = ''
+        for classDef in mod.classes:
+            classes += f"class {classDef.name}:\n"
+            class_body  = '\n'.join(f"{v.name} : {self._get_type_annotation(v)}" for v in classDef.attributes)
+            for method in classDef.methods:
+                class_body += f"{self.function_signature(method)};\n"
+            for func in classDef.interfaces:
+                class_body += f"{self.function_signature(func)};\n"
+
+            classes += self._indent_codestring(class_body)
+
+        return var_decl+'\n'+classes+'\n'+funcs
 
     def _print_AllDeclaration(self, expr):
         values = ',\n           '.join(self._print(v) for v in expr.values)
