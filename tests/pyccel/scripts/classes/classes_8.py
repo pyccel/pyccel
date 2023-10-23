@@ -2,38 +2,38 @@
 
 import numpy as np
 
-class A:
-    def __init__(self : 'A', x : 'float[:]', y : float):
+class MyClass:
+    def __init__(self : 'MyClass', x : 'float[:]', y : float):
         self.x = x
         self.y = y
-    
-    def set_attr(self : 'A', x : 'float[:]', y : float):
-        self.x = x
-        self.y = y
-    
-    def get_x(self : 'A'):
-        print(self.x)
 
-    def get_y(self : 'A'):
+    def set_attr(self : 'MyClass', x : 'float[:]', y : float):
+        self.x = x
+        self.y = y
+
+    def get_x(self : 'MyClass'):
+        for i in range(len(self.x)):
+            print(self.x[i])
+
+    def get_y(self : 'MyClass'):
         print(self.y)
 
-
 class B:
-    def __init__(self: 'B', a : 'A'):
-        self.A = a
+    def __init__(self: 'B', param : 'MyClass'):
+        self.A = param
 
-    def set_A(self : 'B' , a : 'A'):
-        self.A = a
+    def set_A(self : 'B' , param : 'MyClass'):
+        self.A = param
 
-def initiat_A(x : 'float[:]', y : float):
-    return A(x, y)
+def initiat_MyClass(x : 'float[:]', y : float):
+    return MyClass(x, y)
 
 if __name__ == "__main__":
-    x = B(initiat_A(np.ones(4), 1.))
+    x = B(initiat_MyClass(np.array([1., 1., 1., 1.]), 1.))
     x.A.get_x()
     x.A.get_y()
     x.A.set_attr(np.array([2., 3., 4., 5.]), 6.)
     x.A.get_x()
     x.A.get_y()
-    x.set_A(initiat_A(np.array([7., 8., 9., 10.]), 11.))
-    # print(x.A.y)
+    x.set_A(initiat_MyClass(np.array([7., 8., 9., 10.]), 11.))
+    print(x.A.y)
