@@ -32,6 +32,19 @@ def test_complex_imag_expr(language):
     assert r == epyc_r
     assert isinstance(r, type(epyc_r))
 
+def test_float_imag(language):
+    def f():
+        a = 1.5
+        return a.imag
+
+    epyc_f = epyccel(f, language=language)
+
+    r = f()
+    epyc_r = epyc_f()
+
+    assert r == epyc_r
+    assert isinstance(r, type(epyc_r))
+
 def test_complex_real(language):
     def f():
         a = 1+2j

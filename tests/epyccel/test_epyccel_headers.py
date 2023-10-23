@@ -61,15 +61,3 @@ def test_stack_array_annotation(language):
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
-
-@pytest.mark.skip(reason="Failing due to #1527")
-def test_class_annoation(language):
-    def class_annotation():
-        class A:
-            def __init__(self : 'A'):
-                pass
-
-        #$ header variable myA A
-        myA = A() #pylint: disable=unused-variable
-
-    epyccel(class_annotation, language=language)
