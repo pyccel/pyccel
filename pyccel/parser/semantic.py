@@ -2638,8 +2638,9 @@ class SemanticParser(BasicParser):
             cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
-            # TODO check compatibility
             # TODO treat parametrized arguments.
+            self._check_argument_compatibility(args, method.arguments,
+                            expr, method.is_elemental)
 
             expr = ConstructorCall(method, args, cls_variable)
             #if len(stmts) > 0:
