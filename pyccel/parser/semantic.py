@@ -1259,6 +1259,12 @@ class SemanticParser(BasicParser):
                     self._allocs[-1].append(lhs)
                 # ...
 
+                # Add memory deallocation for class constructor
+                if isinstance(lhs.dtype, CustomDataType):
+                    # Create Deallocate node
+                    self._allocs[-1].append(lhs)
+                # ...
+
                 # We cannot allow the definition of a stack array in a loop
                 if lhs.is_stack_array and self.scope.is_loop:
                     errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -2508,7 +2514,6 @@ class SemanticParser(BasicParser):
             # TODO treat parametrized arguments.
 
             expr = ConstructorCall(method, args, cls_variable)
-            self._allocs[-1].append(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -3728,7 +3733,7 @@ class SemanticParser(BasicParser):
         for method in cls.methods:
             if method.name == '__del__':
                 self._current_function = method.name
-                attribute = [attr for attr in cls.attributes if not attr.on_stack]
+                attribute = [attr for attr in cls.attributes if not attr.on_stack or isinstance(attr.dtype, CustomDataType)]
                 if attribute:
                     # Create a new list that store local attributes
                     self._allocs.append([])
