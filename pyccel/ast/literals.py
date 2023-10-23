@@ -6,53 +6,46 @@
 """
 from pyccel.utilities.metaclasses import Singleton
 
-from .basic              import PyccelAstNode, Basic
+from .basic              import TypedAstNode, PyccelAstNode
 from .datatypes          import (NativeGeneric, NativeInteger, NativeBool, NativeFloat,
                                   NativeComplex, NativeString)
 
 __all__ = (
+    'convert_to_literal',
     'Literal',
-    'LiteralTrue',
-    'LiteralFalse',
-    'LiteralInteger',
-    'LiteralFloat',
     'LiteralComplex',
+    'LiteralFalse',
+    'LiteralFloat',
     'LiteralImaginaryUnit',
+    'LiteralInteger',
+    'LiteralNumeric',
     'LiteralString',
+    'LiteralTrue',
     'Nil',
     'NilArgument',
-    'get_default_literal_value'
 )
 
 #------------------------------------------------------------------------------
-class Literal(PyccelAstNode):
+class Literal(TypedAstNode):
     """
-    Represents a Python literal.
+    Class representing a literal value.
 
-    The abstract class from which the representations of the literal value of
-    each dtype should derive.
+    Class representing a literal value. A literal is a value that is expressed
+    as itself rather than as a variable or an expression, e.g. the number 3
+    or the string "Hello".
+
+    This class is abstract and should be implemented for each dtype.
 
     Parameters
     ----------
     precision : int
         The precision of the literal.
     """
-    __slots__ = ('_precision',)
+    __slots__ = ()
     _attribute_nodes  = ()
     _rank      = 0
     _shape     = None
     _order     = None
-
-    def __init__(self, precision):
-        if not isinstance(precision, int):
-            raise TypeError("precision must be an integer")
-        self._precision = precision
-        super().__init__()
-
-    @PyccelAstNode.precision.setter
-    def precision(self, precision):
-        """ Set precision for a literal class"""
-        self._precision = precision
 
     @property
     def python_value(self):
@@ -69,7 +62,7 @@ class Literal(PyccelAstNode):
         return str(self.python_value)
 
     def __eq__(self, other):
-        if isinstance(other, PyccelAstNode):
+        if isinstance(other, TypedAstNode):
             return isinstance(other, type(self)) and self.python_value == other.python_value
         else:
             return self.python_value == other
@@ -78,11 +71,32 @@ class Literal(PyccelAstNode):
         return hash(self.python_value)
 
 #------------------------------------------------------------------------------
-class LiteralTrue(Literal):
+class LiteralNumeric(Literal):
     """
-    Represents the Python value True.
+    Class representing a literal numeric type.
 
-    Represents a True object in the code.
+    Class representing a literal numeric type. A numeric type is
+    a type representing a number (boolean/integer/float/complex).
+
+    Parameters
+    ----------
+    precision : int
+        The precision of the data type.
+    """
+    __slots__ = ('_precision',)
+
+    def __init__(self, precision):
+        if not isinstance(precision, int):
+            raise TypeError("precision must be an integer")
+        self._precision = precision
+        super().__init__()
+
+#------------------------------------------------------------------------------
+class LiteralTrue(LiteralNumeric):
+    """
+    Class representing the Python value True.
+
+    Class representing the Python value True.
 
     Parameters
     ----------
@@ -97,14 +111,19 @@ class LiteralTrue(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return True
 
 #------------------------------------------------------------------------------
-class LiteralFalse(Literal):
+class LiteralFalse(LiteralNumeric):
     """
     Represents the Python value False.
 
-    Represents a False object in the code.
+    Class representing the Python value False.
 
     Parameters
     ----------
@@ -119,14 +138,19 @@ class LiteralFalse(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return False
 
 #------------------------------------------------------------------------------
-class LiteralInteger(Literal):
+class LiteralInteger(LiteralNumeric):
     """
-    Represents an integer literal in Python.
+    Class representing an integer literal in Python.
 
-    Class, inheriting from Literal, representing a literal integer in the code.
+    Class representing an integer literal, such as 3, in Python.
 
     Parameters
     ----------
@@ -148,17 +172,22 @@ class LiteralInteger(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._value
 
     def __index__(self):
         return self.python_value
 
 #------------------------------------------------------------------------------
-class LiteralFloat(Literal):
+class LiteralFloat(LiteralNumeric):
     """
-    Represents a float literal in Python.
+    Class representing a float literal in Python.
 
-    Class, inheriting from Literal, representing a literal float in the code.
+    Class representing a float literal, such as 3.5, in Python.
 
     Parameters
     ----------
@@ -174,7 +203,7 @@ class LiteralFloat(Literal):
     def __init__(self, value, *, precision = -1):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
-        Literal.__init__(self, precision)
+        super().__init__(precision)
         if isinstance(value, LiteralFloat):
             self._value = value.python_value
         else:
@@ -182,16 +211,20 @@ class LiteralFloat(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._value
 
 
 #------------------------------------------------------------------------------
-class LiteralComplex(Literal):
+class LiteralComplex(LiteralNumeric):
     """
-    Represents a complex literal in Python.
+    Class representing a complex literal in Python.
 
-    Class, inheriting from Literal, representing a literal complex in the
-    code.
+    Class representing a complex literal, such as 3+2j, in Python.
 
     Parameters
     ----------
@@ -233,24 +266,37 @@ class LiteralComplex(Literal):
 
     @property
     def real(self):
-        """ Return the real part of the complex literal """
+        """
+        Return the real part of the complex literal.
+
+        Return the real part of the complex literal.
+        """
         return self._real_part
 
     @property
     def imag(self):
-        """ Return the imaginary part of the complex literal """
+        """
+        Return the imaginary part of the complex literal.
+
+        Return the imaginary part of the complex literal.
+        """
         return self._imag_part
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self.real.python_value + self.imag.python_value*1j
 
 #------------------------------------------------------------------------------
 class LiteralImaginaryUnit(LiteralComplex):
     """
-    Represents the Python value j.
+    Class representing the Python value j.
 
-    Represents the imaginary unit.
+    Class representing the imaginary unit j in Python.
 
     Parameters
     ----------
@@ -261,20 +307,24 @@ class LiteralImaginaryUnit(LiteralComplex):
     def __new__(cls, precision = -1):
         return super().__new__(cls, 0, 1, precision=precision)
 
-    def __init__(self, precision = -1):
-        super().__init__(0, 1, precision=precision)
+    def __init__(self, real = 0, imag = 1, precision = -1):
+        super().__init__(0, 1)
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return 1j
 
 #------------------------------------------------------------------------------
 class LiteralString(Literal):
     """
-    Represents a string literal in Python.
+    Class representing a string literal in Python.
 
-    Class, inheriting from Literal, which represents a literal string in the
-    code.
+    Class representing a string literal, such as 'hello' in Python.
 
     Parameters
     ----------
@@ -283,10 +333,10 @@ class LiteralString(Literal):
     """
     __slots__ = ('_string',)
     _dtype     = NativeString()
+    _precision = 0
 
     def __init__(self, arg):
-        self._precision = 0
-        super().__init__(self._precision)
+        super().__init__()
         if not isinstance(arg, str):
             raise TypeError('arg must be of type str')
         self._string = arg
@@ -304,23 +354,25 @@ class LiteralString(Literal):
 
     @property
     def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
         return self._string
 
 #------------------------------------------------------------------------------
 
-class Nil(PyccelAstNode, metaclass=Singleton):
+class Nil(Literal, metaclass=Singleton):
     """
     Class representing a None object in the code.
 
-    A class representing a None object.
+    Class representing the Python value None in the code.
     """
     __slots__ = ()
     _attribute_nodes = ()
     _dtype = NativeGeneric
     _precision = 0
-    _rank = 0
-    _shape = None
-    _order = None
 
     def __str__(self):
         return 'None'
@@ -336,13 +388,13 @@ class Nil(PyccelAstNode, metaclass=Singleton):
 
 #------------------------------------------------------------------------------
 
-class NilArgument(Basic):
+class NilArgument(PyccelAstNode):
     """
-    Represents None as an argument to an inline function.
+    Represents None when passed as an argument to an inline function.
 
     Represents the Python value None when passed as an argument
     to an inline function. This class is necessary as to avoid
-    accidental substitution due to Singletons
+    accidental substitution due to Singletons.
     """
     __slots__ = ()
     _attribute_nodes = ()
@@ -352,24 +404,6 @@ class NilArgument(Basic):
 
     def __bool__(self):
         return False
-
-#------------------------------------------------------------------------------
-
-def get_default_literal_value(dtype):
-    """Returns the default value of a native datatype."""
-    if isinstance(dtype, NativeInteger):
-        value = LiteralInteger(0)
-    elif isinstance(dtype, NativeFloat):
-        value = LiteralFloat(0.0)
-    elif isinstance(dtype, NativeComplex):
-        value = LiteralComplex(0.0, 0.0)
-    elif isinstance(dtype, NativeBool):
-        value = LiteralFalse()
-    elif isinstance(dtype, NativeString):
-        value = LiteralString('')
-    else:
-        raise TypeError('Unknown type')
-    return value
 
 #------------------------------------------------------------------------------
 

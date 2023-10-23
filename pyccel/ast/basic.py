@@ -4,16 +4,16 @@
 #------------------------------------------------------------------------------------------#
 
 """
-This module contains classes from which all pyccel nodes inherit.
-They are:
-- Basic, which provides a python AST
-- PyccelAstNode which describes each PyccelAstNode
+This module contains classes from which all pyccel nodes inherit. They are:
+- PyccelAstNode, which provides a base class for our Python AST nodes;
+- TypedAstNode, which inherits from PyccelAstNode and provides a base class for
+  AST nodes requiring type descriptors.
 """
 import ast
 
 from pyccel.utilities.stage   import PyccelStage
 
-__all__ = ('Basic', 'Immutable', 'PyccelAstNode', 'ScopedNode')
+__all__ = ('PyccelAstNode', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
@@ -25,13 +25,13 @@ pyccel_stage = PyccelStage()
 #==============================================================================
 class Immutable:
     """ Superclass for classes which cannot inherit
-    from Basic """
+    from PyccelAstNode """
     __slots__ = ()
 
 #==============================================================================
-class Basic:
+class PyccelAstNode:
     """
-    Basic class from which all objects in the Pyccel AST inherit.
+    PyccelAstNode class from which all objects in the Pyccel AST inherit.
 
     This foundational class provides all the functionalities that are common to
     objects in the Pyccel AST. This includes the construction and navigation of
@@ -52,7 +52,7 @@ class Basic:
 
             from pyccel.ast.literals import convert_to_literal
 
-            if Basic._ignore(c):
+            if PyccelAstNode._ignore(c):
                 continue
 
             elif isinstance(c, (int, float, complex, str, bool)):
@@ -63,19 +63,19 @@ class Basic:
             elif iterable(c):
                 size = len(c)
                 c = tuple(ci if (not isinstance(ci, (int, float, complex, str, bool)) \
-                                 or Basic._ignore(ci)) \
+                                 or PyccelAstNode._ignore(ci)) \
                         else convert_to_literal(ci) for ci in c if not iterable(ci))
                 if len(c) != size:
-                    raise TypeError("Basic child cannot be a tuple of tuples")
+                    raise TypeError("PyccelAstNode child cannot be a tuple of tuples")
                 setattr(self, c_name, c)
 
-            elif not isinstance(c, Basic):
-                raise TypeError(f"Basic child must be a Basic or a tuple not {type(c)}")
+            elif not isinstance(c, PyccelAstNode):
+                raise TypeError(f"PyccelAstNode child must be a Basic or a tuple not {type(c)}")
 
 
             if isinstance(c, tuple):
                 for ci in c:
-                    if not Basic._ignore(ci):
+                    if not PyccelAstNode._ignore(ci):
                         ci.set_current_user_node(self)
             else:
                 c.set_current_user_node(self)
@@ -184,7 +184,7 @@ class Basic:
 
         Parameters
         ----------
-        node : Basic
+        node : PyccelAstNode
                The object whose attributes we are interested in
 
         Results
@@ -199,7 +199,7 @@ class Basic:
 
         Parameters
         ----------
-        node           : Basic
+        node           : PyccelAstNode
                       The object whose users we are interested in
         excluded_nodes : tuple of types
                       Types for which is_user_of should not be called
@@ -310,10 +310,17 @@ class Basic:
     @property
     def ast(self):
         """
-        The AST obect which describes the current object.
+        Get the AST object which Python parsed in the original code.
 
-        The AST object from the Python `ast` module which describes the context
-        in the original Python code where the current object appeared.
+        Get the AST (abstract syntax tree) object which Python parsed
+        in the original code. This object describes the Python code being
+        translated. It provides line numbers and columns which can be
+        used to report the origin of any potential errors.
+
+        Returns
+        -------
+        ast.AST
+            The AST object which was parsed.
         """
         if len(self._ast) == 1:
             return self._ast[0]
@@ -337,6 +344,7 @@ class Basic:
 
             self._ast.append(ast_node)
 
+
     def toggle_recursion(self):
         """ Change the recursion state
         """
@@ -350,7 +358,7 @@ class Basic:
 
     def get_all_user_nodes(self):
         """ Returns all the objects user nodes.
-        This function should only be called in Basic
+        This function should only be called in PyccelAstNode
         """
         return self._user_nodes
 
@@ -397,7 +405,7 @@ class Basic:
 
         Parameters
         ----------
-        user_node : Basic
+        user_node : PyccelAstNode
                     Node which previously used the current node
         invalidate : bool
                     Indicates whether the removed object should
@@ -441,41 +449,145 @@ class Basic:
         """
         self._pyccel_staging = pyccel_stage.current_stage
 
-class PyccelAstNode(Basic):
-    """Class from which all nodes containing objects inherit
+class TypedAstNode(PyccelAstNode):
+    """
+    Class from which all typed objects inherit.
+
+    The class from which all objects which can be described with type information
+    must inherit. Objects with type information are objects which take up memory
+    in a running program (e.g. a variable or the result of a function call).
+    Each typed object is described by an underlying datatype, a precision, a rank,
+    a shape, and a data layout ordering.
     """
     __slots__  = ()
 
     @property
     def shape(self):
-        """ Tuple containing the length of each dimension
-        of the object """
+        """
+        Tuple containing the length of each dimension of the object or None.
+
+        A tuple containing the length of each dimension of the object if the object
+        is an array (with rank>0). Otherwise None.
+        """
         return self._shape # pylint: disable=no-member
 
     @property
     def rank(self):
-        """ Number of dimensions of the object
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
         """
         return self._rank # pylint: disable=no-member
 
     @property
     def dtype(self):
-        """ Datatype of the object """
+        """
+        Datatype of the object.
+
+        The underlying datatype of the object. In the case of scalars this is
+        equivalent to the type of the object in Python. For objects in (homogeneous)
+        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
+        of the container.
+        """
         return self._dtype # pylint: disable=no-member
 
     @property
     def precision(self):
-        """ Precision of the datatype of the object """
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
         return self._precision # pylint: disable=no-member
 
     @property
     def order(self):
-        """ Indicates whether the data is stored in
-        row-major ('C') or column-major ('F') format.
-        This is only relevant if rank > 1 """
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
         return self._order # pylint: disable=no-member
 
+    @classmethod
+    def static_rank(cls):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined rank.
+        """
+        return cls._rank # pylint: disable=no-member
+
+    @classmethod
+    def static_dtype(cls):
+        """
+        Datatype of the object.
+
+        The underlying datatype of the object. In the case of scalars this is
+        equivalent to the type of the object in Python. For objects in (homogeneous)
+        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
+        of the container.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined datatype.
+        """
+        return cls._dtype # pylint: disable=no-member
+
+    @classmethod
+    def static_precision(cls):
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined precision.
+        """
+        return cls._precision # pylint: disable=no-member
+
+    @classmethod
+    def static_order(cls):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined order.
+        """
+        return cls._order # pylint: disable=no-member
+
     def copy_attributes(self, x):
+        """
+        Copy the attributes describing a TypedAstNode into this node.
+
+        Copy the attributes which describe the TypedAstNode passed as
+        argument (dtype, precision, shape, rank, order) into this node
+        so that the two nodes can be stored in the same object.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The node from which the attributes should be copied.
+        """
         self._shape     = x.shape
         self._rank      = x.rank
         self._dtype     = x.dtype
@@ -484,7 +596,7 @@ class PyccelAstNode(Basic):
 
 
 #------------------------------------------------------------------------------
-class ScopedNode(Basic):
+class ScopedAstNode(PyccelAstNode):
     """ Class from which all objects with a scope inherit
     """
     __slots__ = ('_scope',)

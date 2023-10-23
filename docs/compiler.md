@@ -21,6 +21,8 @@ or
 epyccel(my_func, compiler='intel')
 ```
 
+It is also possible to change the default compiler family by setting the environment variable `PYCCEL_DEFAULT_COMPILER`.
+
 ## User-defined compiler
 
 The user can also define their own compiler in a JSON file. To use this definition, the location of the JSON file must be passed to the _compiler_ argument. The JSON file must define the following:

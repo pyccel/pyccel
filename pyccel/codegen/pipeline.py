@@ -178,7 +178,7 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        compiler = 'GNU'
+        compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()

@@ -4,7 +4,6 @@ from pyccel.decorators import template
 #$ header function gen_2(real, int)
 #$ header function gen_2(int, real)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, real)
 #$ header template T(int|real)
 #$ header template R(int|real)
 #$ header template O(real|complex)
@@ -89,8 +88,7 @@ def tst_gen_7():
 def tst_tmplt_head_1():
     x = tmplt_head_1(5, 5)
     y = tmplt_head_1(5.5, 7.3)
-    z = tmplt_head_1(5, 5.56)
-    return x, y, z
+    return x, y
 
 def tst_local_overide_1():
     x = local_overide_1(5, 4)

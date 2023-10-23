@@ -14,7 +14,7 @@ from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIM
 
 from pyccel.utilities.stage import PyccelStage
 
-from .basic          import PyccelAstNode
+from .basic          import TypedAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType, PythonConjugate)
@@ -124,7 +124,7 @@ def process_shape(is_scalar, shape):
     ----------
     is_scalar : bool
                 True if the result is a scalar, False if it is an array
-    shape     : PyccelAstNode/iterable/int
+    shape     : TypedAstNode/iterable/int
                 input shape
     """
     if is_scalar:
@@ -136,12 +136,12 @@ def process_shape(is_scalar, shape):
 
     new_shape = []
     for s in shape:
-        if isinstance(s,(LiteralInteger, Variable, Slice, PyccelAstNode, FunctionCall)):
+        if isinstance(s,(LiteralInteger, Variable, Slice, TypedAstNode, FunctionCall)):
             new_shape.append(s)
         elif isinstance(s, int):
             new_shape.append(LiteralInteger(s))
         else:
-            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, PyccelAstNode, int, FunctionCall')
+            raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger, Variable, Slice, TypedAstNode, int, FunctionCall')
     return tuple(new_shape)
 
 #=======================================================================================
@@ -350,7 +350,7 @@ class NumpyResultType(PyccelInternalFunction):
 
     Parameters
     ----------
-    *arrays_and_dtypes : PyccelAstNode
+    *arrays_and_dtypes : TypedAstNode
         Any arrays and dtypes passed to the function (currently only accepts one array
         and no dtypes).
     """
@@ -466,7 +466,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
     Parameters
     ----------
-    *args : tuple of PyccelAstNode
+    *args : tuple of TypedAstNode
         The arguments of the superclass PyccelInternalFunction.
     init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
         The actual dtype passed to the NumPy function.
@@ -682,7 +682,7 @@ class NumpySum(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         if isinstance(arg.dtype, NativeBool):
@@ -714,7 +714,7 @@ class NumpyProduct(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.' )
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
@@ -738,9 +738,9 @@ class NumpyMatmul(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : TypedAstNode
         The first argument of the matrix multiplication.
-    b : PyccelAstNode
+    b : TypedAstNode
         The second argument of the matrix multiplication.
     """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order')
@@ -751,9 +751,9 @@ class NumpyMatmul(PyccelInternalFunction):
         if pyccel_stage == 'syntactic':
             return
 
-        if not isinstance(a, PyccelAstNode):
+        if not isinstance(a, TypedAstNode):
             raise TypeError(f'Unknown type of {type(a)}.')
-        if not isinstance(b, PyccelAstNode):
+        if not isinstance(b, TypedAstNode):
             raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
@@ -803,7 +803,7 @@ class NumpyShape(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The Numpy array whose shape is being investigated.
 
     Returns
@@ -864,7 +864,7 @@ class NumpyLinspace(NumpyNewArray):
         if num.rank != 0 or not isinstance(num.dtype, NativeInteger):
             raise TypeError('Expecting positive integer num argument.')
 
-        if any(not isinstance(arg, PyccelAstNode) for arg in (start, stop, num)):
+        if any(not isinstance(arg, TypedAstNode) for arg in (start, stop, num)):
             raise TypeError('Expecting valid args.')
 
         init_dtype = dtype
@@ -973,13 +973,13 @@ class NumpyWhere(PyccelInternalFunction):
 
     Parameters
     ----------
-    condition : PyccelAstNode
+    condition : TypedAstNode
         The condition which determines which value is returned.
 
-    x : PyccelAstNode, optional
+    x : TypedAstNode, optional
         The value if True. If `x` is provided, `y` should also be provided.
 
-    y : PyccelAstNode, optional
+    y : TypedAstNode, optional
         The value if False. If `y` is provided, `x` should also be provided.
     """
 
@@ -1045,7 +1045,7 @@ class NumpyRand(PyccelInternalFunction):
 
     Parameters
     ----------
-    *args : tuple of PyccelAstNode
+    *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
     __slots__ = ('_shape','_rank','_order')
@@ -1112,12 +1112,12 @@ class NumpyFull(NumpyNewArray):
 
     Parameters
     ----------
-    shape : PyccelAstNode
+    shape : TypedAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
         For a 1D array this is either a `LiteralInteger` or an expression.
         For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
 
-    fill_value : PyccelAstNode
+    fill_value : TypedAstNode
         Fill value.
 
     dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
@@ -1183,7 +1183,7 @@ class NumpyEmpty(NumpyAutoFill):
 
     Parameters
     ----------
-    shape : PyccelAstNode
+    shape : TypedAstNode
         The shape of the array to be created.
 
     dtype : PythonType, PyccelFunctionDef, LiteralString, str
@@ -1260,7 +1260,7 @@ class NumpyFullLike(PyccelInternalFunction):
     a : Variable
         Numpy array which is used as a template.
 
-    fill_value : PyccelAstNode
+    fill_value : TypedAstNode
         Scalar value which will be assigned to each entry of the new array.
 
     dtype : PythonType, PyccelFunctionDef, LiteralString, str, optional
@@ -1272,7 +1272,7 @@ class NumpyFullLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of PyccelAstNode
+    shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
         For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
@@ -1316,7 +1316,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of PyccelAstNode
+    shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
         For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
@@ -1362,7 +1362,7 @@ class NumpyOnesLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of PyccelAstNode
+    shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
         For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
@@ -1407,7 +1407,7 @@ class NumpyZerosLike(PyccelInternalFunction):
     subok : bool, default=True
         This parameter is currently ignored.
 
-    shape : PythonTuple of PyccelAstNode
+    shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
         For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
@@ -1500,7 +1500,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The argument passed to the function.
     """
     __slots__ = ()
@@ -1522,7 +1522,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
         Parameters
         ----------
-        x : PyccelAstNode
+        x : TypedAstNode
             The argument passed to the function.
         """
         self._dtype      = x.dtype if x.dtype is NativeComplex() else NativeFloat()
@@ -1546,9 +1546,9 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     Parameters
     ----------
-    x1 : PyccelAstNode
+    x1 : TypedAstNode
         The first argument passed to the function.
-    x2 : PyccelAstNode
+    x2 : TypedAstNode
         The second argument passed to the function.
     """
     __slots__ = ()
@@ -1570,9 +1570,9 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
         Parameters
         ----------
-        x1 : PyccelAstNode
+        x1 : TypedAstNode
             The first argument passed to the function.
-        x2 : PyccelAstNode
+        x2 : TypedAstNode
             The second argument passed to the function.
         """
         self._dtype     = NativeFloat()
@@ -1700,7 +1700,7 @@ class NumpyFloor(NumpyUfuncUnary):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The argument passed to the function.
     """
     __slots__ = ()
@@ -1714,7 +1714,7 @@ class NumpyFloor(NumpyUfuncUnary):
 
         Parameters
         ----------
-        x : PyccelAstNode
+        x : TypedAstNode
             The argument passed to the function.
         """
         self._dtype     = NativeFloat()
@@ -1728,9 +1728,9 @@ class NumpyMod(NumpyUfuncBinary):
 
     Parameters
     ----------
-    x1 : PyccelAstNode
+    x1 : TypedAstNode
         Dividend of the operator.
-    x2 : PyccelAstNode
+    x2 : TypedAstNode
         Divisor of the operator.
     """
     __slots__ = ()
@@ -1771,9 +1771,9 @@ class NumpyMod(NumpyUfuncBinary):
 
         Parameters
         ----------
-        x1 : PyccelAstNode
+        x1 : TypedAstNode
             The first argument which helps determine the datatype.
-        x2 : PyccelAstNode
+        x2 : TypedAstNode
             The second argument which helps determine the datatype.
         """
         args      = (x1, x2)
@@ -1897,7 +1897,7 @@ class NumpyNonZeroElement(NumpyNewArray):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : TypedAstNode
         The argument which was passed to numpy.nonzero.
     dim : int
         The index of the element in the tuple.
@@ -1938,7 +1938,7 @@ class NumpyNonZero(NumpyNewArray):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : TypedAstNode
         The array argument that was passed to the function.
 
     Examples
@@ -1984,7 +1984,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
 
     Parameters
     ==========
-    arg   : PyccelAstNode
+    arg   : TypedAstNode
             An array for which the non-zero elements should be counted
     axis  : int
             The dimension along which the non-zero elements are counted
@@ -2063,10 +2063,10 @@ class NumpySize(PyccelInternalFunction):
 
     Parameters
     ----------
-    a : PyccelAstNode
+    a : TypedAstNode
         An array of unknown size.
 
-    axis : PyccelAstNode, optional
+    axis : TypedAstNode, optional
         The integer dimension along which the size is requested.
 
     See Also

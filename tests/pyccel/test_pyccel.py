@@ -569,7 +569,8 @@ def test_default_arguments(language):
             dependencies = "scripts/default_args_mod.py",
             output_dtype = [int, int, float, float, float,
                 float, float, float, float, bool, bool, bool,
-                float, float, float, float],
+                float, float, float, float, float, float,
+                float, float],
             language=language)
 
 #------------------------------------------------------------------------------
@@ -788,101 +789,23 @@ def test_array_binary_op(language):
     pyccel_test("scripts/array_binary_operation.py", language = language, output_dtype=types)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( 'language', (
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-        # Test does not make sense in pure python
-    )
-)
-def test_headers(language):
-    test_file = "scripts/runtest_headers.py"
-    test_file = os.path.normpath(test_file)
-    test_file = get_abs_path(test_file)
-
-    header_file = 'scripts/headers.pyh'
-    header_file = os.path.normpath(header_file)
-    header_file = get_abs_path(header_file)
-
-    with open(test_file, 'w') as f:
-        code = ("from headers import f\n"
-                "def f(x):\n"
-                "    y = x\n"
-                "    return y\n"
-                "if __name__ == '__main__':\n"
-                "    print(f(1))\n")
-
-        f.write(code)
-
-    with open(header_file, 'w') as f:
-        code =("#$ header metavar ignore_at_import=True\n"
-               "#$ header function f(int)")
-
-        f.write(code)
-
-    test_file = os.path.normpath(test_file)
-    cwd = os.path.dirname(test_file)
-    cwd = get_abs_path(cwd)
-
-    pyccel_commands = " --language="+language
-
-    compile_pyccel(cwd, test_file, pyccel_commands)
-
-    lang_out = get_lang_output(test_file, language)
-    assert int(lang_out) == 1
-
-    with open(test_file, 'w') as f:
-        code = ("from headers import f\n"
-                "def f(x):\n"
-                "    y = x\n"
-                "    return y\n"
-                "if __name__ == '__main__':\n"
-                "    print(f(1.5))\n")
-
-        f.write(code)
-
-    with open(header_file, 'w') as f:
-        code =("#$ header metavar ignore_at_import=True\n"
-               "#$ header function f(float)")
-
-        f.write(code)
-
-    compile_pyccel(cwd, test_file, pyccel_commands)
-
-    lang_out = get_lang_output(test_file, language)
-    assert float(lang_out) == 1.5
-
-    with open(test_file, 'w') as f:
-        code = ("")
-        f.write(code)
-
-#------------------------------------------------------------------------------
 def test_basic_header():
     filename='scripts/basic_header.pyh'
     cwd = get_abs_path('.')
     compile_pyccel(cwd, filename)
 
 #------------------------------------------------------------------------------
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
-                                        "scripts/classes/classes_1.py",
-                                        ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
-
-def test_classes_f_only( test_file , language):
-    if language == "python":
-        pyccel_test(test_file, language=language)
-    else:
-        pyccel_test(test_file, compile_with_pyccel = False, language=language)
-
-#------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes_2_C.py",
-                                        "scripts/classes/classes_5.py",
+@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
+                                        "scripts/classes/classes.py",
+                                        "scripts/classes/classes_1.py",
+                                        "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_3.py",
-                                        "scripts/classes/generic_methods.py",
+                                        "scripts/classes/classes_4.py",
+                                        "scripts/classes/classes_5.py",
+                                        "scripts/classes/classes_6.py",
+                                        "scripts/classes/classes_7.py",
+                                        "scripts/classes/class_headers.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),

@@ -14,7 +14,7 @@ import traceback as tb
 from collections import OrderedDict
 from os.path import basename
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton
 
 # ...
@@ -103,8 +103,8 @@ class ErrorInfo:
     severity : str, optional
         The severity of the error. This is one of : [warning/error/fatal].
 
-    symbol : pyccel.ast.basic.Basic, optional
-        The Basic object which caused the error to need to be raised.
+    symbol : pyccel.ast.basic.PyccelAstNode, optional
+        The PyccelAstNode object which caused the error to need to be raised.
         This object is printed in the error message.
 
     traceback : str, optional
@@ -281,8 +281,8 @@ class Errors(metaclass = Singleton):
             Indicates the seriousness of the error. Should be one of: 'warning', 'error', 'fatal'.
             Default: 'error'.
 
-        symbol : pyccel.ast.Basic, optional
-            The Basic object which caused the error to need to be raised.
+        symbol : pyccel.ast.PyccelAstNode, optional
+            The PyccelAstNode object which caused the error to need to be raised.
             This object is printed in the error message.
 
         filename : str, optional
@@ -315,12 +315,14 @@ class Errors(metaclass = Singleton):
                     symbol = ast.dump(ast_node)
                 else:
                     symbol = ast.unparse(ast_node) # pylint: disable=no-member
-            elif isinstance(symbol, Basic):
+            elif isinstance(symbol, PyccelAstNode):
                 ast_node = symbol.ast
 
         if ast_node:
-            line   = getattr(ast_node, 'lineno', None)
-            column = getattr(ast_node, 'col_offset', None)
+            if line is None:
+                line   = getattr(ast_node, 'lineno', None)
+            if column is None:
+                column = getattr(ast_node, 'col_offset', None)
 
         if self.mode == 'developer':
             if traceback:

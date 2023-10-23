@@ -39,7 +39,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the operator.
     """
     __slots__ = ()
@@ -85,9 +85,9 @@ class PyccelBitOperator(PyccelOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     _shape = None
@@ -165,9 +165,9 @@ class PyccelRShift(PyccelBitOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()
@@ -190,9 +190,9 @@ class PyccelLShift(PyccelBitOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()
@@ -212,9 +212,9 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()
@@ -243,9 +243,9 @@ class PyccelBitXor(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()
@@ -268,9 +268,9 @@ class PyccelBitOr(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()
@@ -293,9 +293,9 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
 
     Parameters
     ----------
-    arg1 : PyccelAstNode
+    arg1 : TypedAstNode
         The first argument passed to the operator.
-    arg2 : PyccelAstNode
+    arg2 : TypedAstNode
         The second argument passed to the operator.
     """
     __slots__ = ()

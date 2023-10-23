@@ -3,26 +3,65 @@ All notable changes to this project will be documented in this file.
 
 ## \[Unreleased\]
 
+### Changed
+
+-   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
+-   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
+-   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
+
+### Added
+
+-   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
+-   #1336 : Use template as a partial type.
+
+### Fixed
+
+-   #387 : Raise a clear error when an unrecognised type is used in a type annotation.
+-   #1556 : Fixed print format string for Intel compatibility.
+-   #1557 : Fix return a new instance of a class.
+-   #1557 : Fix save multiple class instances to the same variable.
+
+### Changed
+
+### Deprecated
+
+-   Removed support for untested, undocumented `lambidify` function.
+-   Drop official support for Python 3.7 due to End of Life.
+
+## \[1.9.2\] - 2023-10-13
+
 ### Added
 
 -   #1476 : Add C support for a class containing `Interfaces`.
 -   #1472 : Add C printing support for a class containing scalar data.
 -   #1492 : Types of arguments for class methods can be declared like function arguments.
 -   #1511 : Add support for the `cmath` library.
+-   Output readable header syntax errors.
+-   New environment variable `PYCCEL_DEFAULT_COMPILER`.
+-   #1508 : Add C support for a class destructor.
+-   #1508 : Add support for array data in classes.
 
 ### Fixed
 
 -   #1484 : Use scope for classes to avoid name clashes.
 -   Stop raising warning for unrecognised functions imported via intermediate modules.
+-   #1156 : Raise a neat error for unhandled inhomogeneous tuple expressions.
+-   Set status of header variables to 'unallocated'.
+-   #1508 : Generate deallocations for classes and their attributes.
 
 ### Changed
 
 -   #1484 : Improve handling of `DottedName` in `_assign_lhs_variable`.
+-   \[INTERNALS\] Move handling of variable headers to semantic stage.
+-   \[INTERNALS\] Moved handling of type annotations to the semantic stage.
+-   \[INTERNALS\] Remove unnecessary body argument from `FunctionAddress`.
 
 ### Deprecated
 
 -   #1513 : Stop printing `@types` decorators in generated Python code.
--   Removed support for untested, undocumented `lambidify` function.
+-   Remove support for undocumented type syntax specifying precision (e.g. `int*8`).
+-   No longer possible to combine header annotations and argument type annotations.
+-   Remove support for specifying header annotations in a separate file.
 -   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
 -   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
 -   \[INTERNALS\] Remove unused `Declare.dtype`.

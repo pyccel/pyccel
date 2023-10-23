@@ -44,7 +44,7 @@ def sympy_to_pyccel(expr, symbol_map):
 
     Returns
     -------
-    PyccelAstNode
+    TypedAstNode
         The Pyccel equivalent of the SymPy object `expr`.
     """
 
@@ -122,7 +122,7 @@ def pyccel_to_sympy(expr, symbol_map, used_names):
 
     Parameters
     ----------
-    expr : PyccelAstNode
+    expr : TypedAstNode
         The Pyccel node to be translated.
 
     symbol_map : dict

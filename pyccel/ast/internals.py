@@ -11,13 +11,14 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode, Immutable
+from .basic     import PyccelAstNode, TypedAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'AnnotatedPyccelSymbol',
     'PrecomputedCode',
     'PyccelArrayShapeElement',
     'PyccelArraySize',
@@ -29,7 +30,7 @@ __all__ = (
 )
 
 
-class PyccelInternalFunction(PyccelAstNode):
+class PyccelInternalFunction(TypedAstNode):
     """
     Abstract class for function calls translated to Pyccel objects.
 
@@ -79,7 +80,7 @@ class PyccelArraySize(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown size.
     """
     __slots__ = ()
@@ -123,7 +124,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown shape.
 
     index : int
@@ -139,12 +140,12 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _order = None
 
     def __init__(self, arg, index):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type {type(arg)} of {arg}.')
 
         if isinstance(index, int):
             index = LiteralInteger(index)
-        elif not isinstance(index, PyccelAstNode):
+        elif not isinstance(index, TypedAstNode):
             raise TypeError(f'Unknown type {type(index)} of {index}.')
 
         super().__init__(arg, index)
@@ -179,7 +180,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
             return False
 
 
-class Slice(Basic):
+class Slice(PyccelAstNode):
     """
     Represents a slice in the code.
 
@@ -283,13 +284,22 @@ class Slice(Basic):
 
 
 class PyccelSymbol(str, Immutable):
-    """Symbolic placeholder for a Python variable, which has a name but no type yet.
+    """
+    Class representing a symbol in the code.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
     Parameters
     ----------
-    name : String
-        name of the symbol
+    name : str
+        Name of the symbol.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
 
     Examples
     --------
@@ -314,14 +324,65 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
+class AnnotatedPyccelSymbol(PyccelAstNode):
+    """
+    Class representing a symbol in the code which has an annotation.
 
-class PrecomputedCode(Basic):
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
+
+    Parameters
+    ----------
+    name : str
+        Name of the symbol.
+
+    annotation : SyntacticTypeAnnotation
+        The annotation describing the type that the object will have.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
+    """
+    __slots__ = ('_name', '_annotation')
+    _attribute_nodes = ()
+
+    def __init__(self, name, annotation, is_temp = False):
+        if isinstance(name, PyccelSymbol):
+            self._name = name
+        elif isinstance(name, str):
+            self._name = PyccelSymbol(name, is_temp)
+        else:
+            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
+        self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        """
+        Get the PyccelSymbol describing the name.
+
+        Get the PyccelSymbol describing the name of the symbol in the code.
+        """
+        return self._name
+
+    @property
+    def annotation(self):
+        """
+        Get the annotation.
+
+        Get the annotation left on the symbol. This should be a type annotation.
+        """
+        return self._annotation
+
+class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
     before it is needed chronologically (e.g. for inline functions as arguments
     to the same function).
     This class should be avoided if at all possible as it may break code which
-    searches through attribute nodes, where possible use Basic's methods,
+    searches through attribute nodes, where possible use PyccelAstNode's methods,
     e.g. substitute
 
     Parameters
@@ -383,7 +444,7 @@ def max_precision(objs : list, allow_native : bool = True):
     Parameters
     ----------
     objs : list
-       A list of PyccelAstNodes.
+       A list of TypedAstNodes.
 
     allow_native : bool, default=True
         Allow the final result to be a native precision (i.e. -1).
@@ -414,7 +475,7 @@ def get_final_precision(obj):
 
     Parameters
     ----------
-    obj : PyccelAstNode
+    obj : TypedAstNode
         The object whose precision we want to investigate.
 
     Returns

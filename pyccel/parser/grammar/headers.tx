@@ -17,19 +17,18 @@ TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' 
 
 DataType: ID|STAR;
 
-Type: dtype=DataType ('*' prec=INT)? (trailer=TrailerSubscriptList)?;
-ListType : '[' dtype+=Type[','] ']';
+VariableType: dtype=DataType (trailer=TrailerSubscriptList)?;
 
 FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
 
-TypeHeader: FuncType|Type|ListType;
-UnionTypeStmt: (const=Const)? dtypes+=TypeHeader['|'] ;
+TypeHeader: FuncType|VariableType;
+UnionTypeStmt: (const?=Const) dtypes+=TypeHeader['|'] ;
 Const: 'const';
 
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=TypeHeader;
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static=Static)? name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
 TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
@@ -81,5 +80,4 @@ FunctionMacroStmt:
 // ****************
 
 STAR: '*';
-OPTIONAL: '!';
 
