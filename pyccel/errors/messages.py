@@ -8,6 +8,7 @@
 	that do not have any parameters.
 """
 
+MISSING_TYPE_ANNOTATIONS = 'Missing type annotation. Pyccel needs arguments to be annotated with types to know which types are required in the translated code. See https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations for information on how to specify the type information.'
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
