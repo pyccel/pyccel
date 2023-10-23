@@ -87,6 +87,10 @@ class VariableTypeAnnotation(PyccelAstNode):
         """
         return self._cls_base
 
+    @cls_base.setter
+    def cls_base(self, cls_base):
+        self._cls_base = cls_base
+
     @property
     def precision(self):
         """

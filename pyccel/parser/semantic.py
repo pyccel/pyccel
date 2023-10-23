@@ -1677,11 +1677,10 @@ class SemanticParser(BasicParser):
             var_annot = self._PyccelAstNode_to_TypeAnnotation(base, rank)
         elif not any(isinstance(a, Slice) for a in args):
             rank = 1
-            print(args, len(args), args[1])
             if len(args) == 2 and args[1] is LiteralEllipsis():
                 internal_datatypes = args[0]
-                for u in internal_datatype.type_list:
-                    u.clone(class_def = tuple_class_def)
+                for u in internal_datatypes.type_list:
+                    u.cls_base = tuple_class_def
             else:
                 errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
@@ -2228,8 +2227,6 @@ class SemanticParser(BasicParser):
                 dtype_from_scope = self._visit(dtype_name)
             else:
                 dtype_from_scope = self.scope.find(dtype_name)
-
-            print(dtype_name, dtype_from_scope)
 
             if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
                 types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
