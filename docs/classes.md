@@ -16,7 +16,7 @@ Pyccel strives to provide robust support for object-oriented programming concept
 -   One notable feature of Pyccel is its automatic management of destructor calls, even when constructors are invoked in different scopes. This ensures that resources are properly cleaned up when class instances are no longer in use.
 -   The first parameter of the `Destructor Method` should always be named `self`.
 
-#### - Python Example:
+### - Python Example
 
 ```python
 import numpy as np
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     obj = MyClass(1, np.ones(1))
 ```
 
-#### - Header File Equivalent:
+### - Header File Equivalent
 
 ```C
 #ifndef SBOOF_H
@@ -47,7 +47,7 @@ void MyClass__del__(struct MyClass* self);
 
 #endif // sboof_H
 ```
-#### - C File Equivalent:
+### - C File Equivalent
 
 ```C
 /*........................................*/
@@ -72,7 +72,7 @@ void MyClass__del__(struct MyClass* self)
 /*........................................*/
 ```
 
-#### - C Prog File Equivalent:
+### - C Prog File Equivalent
 ```C
 int main()
 {
@@ -94,7 +94,7 @@ int main()
 -   Pyccel enables classes to be passed as arguments to methods and functions and returned with modified data.
 -   The first parameter of the Class Method should always be named `self`.
 
-#### - Python Example:
+### - Python Example
 
 ```Python
 class MyClass:
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     obj.Method1(obj.Method2())
     print(obj.param.param1)
 ```
-#### - PYTHON _OUTPUT_ :
+### - PYTHON _OUTPUT_ :
 
 ```Shell
 MyClass1 Object created!
@@ -125,7 +125,7 @@ MyClass Object created!
 1
 ```
 
-#### - C Header File Equivalent:
+### - C Header File Equivalent
 
 ```C
 #ifndef SBOOF_H
@@ -149,7 +149,7 @@ void MyClass1__del__(struct MyClass1* self);
 
 #endif // sboof_H
 ```
-#### - C File Equivalent:
+### - C File Equivalent
 
 ```C
 /*........................................*/
@@ -204,7 +204,7 @@ void MyClass1__del__(struct MyClass1* self)
 /*........................................*/
 ```
 
-#### - C Prog File Equivalent:
+### - C Prog File Equivalent
 ```C
 int main()
 {
@@ -219,7 +219,7 @@ int main()
 }
 ```
 
-#### - C _OUTPUT_ :
+### - C _OUTPUT_ :
 
 ```Shell
 MyClass1 Object created!
