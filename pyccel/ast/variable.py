@@ -469,7 +469,12 @@ class Variable(TypedAstNode):
         return hash((type(self).__name__, self._name))
 
     def inspect(self):
-        """inspects the variable."""
+        """
+        Inspect the variable.
+
+        Inspect the parameters of the variable. This function is
+        useful for debugging purposes.
+        """
 
         print('>>> Variable')
         print(f'  name               = {self.name}')
@@ -805,16 +810,21 @@ class InhomogeneousTupleVariable(TupleVariable):
                 var.is_target = is_target
 
 class Constant(Variable):
-
     """
-    Class for expressing constant values (e.g. pi)
+    Class for expressing constant values (e.g. pi).
+
+    Class for expressing constant values (e.g. pi).
 
     Parameters
     ----------
-    *args, **kwargs : See pyccel.ast.variable.Variable
+    *args : tuple
+        See pyccel.ast.variable.Variable.
 
-    value : Type matching dtype
-            The value that the constant represents
+    value : Type matching dtype, default=Nil()
+            The value that the constant represents.
+
+    **kwargs : dict
+        See pyccel.ast.variable.Variable.
 
     Examples
     --------
