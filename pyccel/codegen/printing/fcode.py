@@ -724,7 +724,10 @@ class FCodePrinter(CodePrinter):
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self,var):
-        """ Get the format string and the printable argument for an object.
+        """
+        Get the format string and the printable argument for an object.
+
+        Get the format string and the printable argument for an object.
         In other words get arg_format and arg such that var can be printed
         by doing:
 
@@ -733,14 +736,14 @@ class FCodePrinter(CodePrinter):
         Parameters
         ----------
         var : TypedAstNode
-              The object to be printed
+            The object to be printed.
 
-        Results
+        Returns
         -------
         arg_format : str
-                     The format string
-        arg        : str
-                     The fortran code which represents var
+            The format string.
+        arg : str
+            The fortran code which represents var.
         """
         var_type = var.dtype
         try:
