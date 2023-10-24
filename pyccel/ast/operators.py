@@ -195,7 +195,7 @@ class PyccelOperator(TypedAstNode):
 
         Returns
         -------
-        args : tuple
+        tuple
             The arguments with the parentheses inserted.
         """
         precedence = [getattr(a, 'precedence', 17) for a in args]
@@ -218,9 +218,9 @@ class PyccelOperator(TypedAstNode):
 
     def _set_order(self):
         """
-        Sets the order of the result.
+        Set the order of the result.
 
-        Sets the order of the result of the operator.
+        Set the order of the result of the operator.
         This is chosen to match the arguments if they are in agreement.
         Otherwise it defaults to 'C'.
 
@@ -1217,16 +1217,16 @@ class IfTernaryOperator(PyccelOperator):
     ----------
     cond : TypedAstNode
         The condition which determines which result is returned.
-    value_if_true : TypedAstNode
+    value_true : TypedAstNode
         The value returned if the condition is true.
-    value_if_false : TypedAstNode
+    value_false : TypedAstNode
         The value returned if the condition is false.
 
     Examples
     --------
     >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import Assign
-	>>>	from pyccel.ast.operators import IfTernaryOperator
+    >>> from pyccel.ast.operators import IfTernaryOperator
     >>> n = PyccelSymbol('n')
     >>> x = 5 if n > 1 else 2
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
