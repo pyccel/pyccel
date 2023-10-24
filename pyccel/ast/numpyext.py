@@ -16,8 +16,8 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic          import TypedAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
-                             PythonComplex, PythonReal, PythonImag, PythonList,
-                             PythonType, PythonConjugate)
+                             PythonComplex, PythonList, PythonType)
+from .builtin_objects.complex_functions import PythonReal, PythonImag, PythonConjugate
 
 from .class_defs     import NumpyArrayClass
 

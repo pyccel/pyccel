@@ -25,10 +25,9 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate
-from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
-                                 PythonTuple, Lambda, PythonMap)
+from pyccel.ast.builtins import PythonList, PythonRange, PythonZip, PythonEnumerate
+from pyccel.ast.builtins import PythonTuple, Lambda, PythonMap, python_builtin_datatype
+from pyccel.ast.builtin_objects.complex_functions import PythonConjugate, PythonImag, PythonReal
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
