@@ -1136,21 +1136,3 @@ class PythonCodePrinter(CodePrinter):
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
         return "'" + f"({results})({args})" + "'"
 
-#==============================================================================
-def pycode(expr, assign_to=None, **settings):
-    """ Converts an expr to a string of Python code
-    Parameters
-    ==========
-    expr : Expr
-        A SymPy expression.
-    fully_qualified_modules : bool
-        Whether or not to write out full module names of functions
-        (``math.sin`` vs. ``sin``). default: ``True``.
-    Examples
-    ========
-    >>> from sympy import tan, Symbol
-    >>> from sympy.printing.pycode import pycode
-    >>> pycode(tan(Symbol('x')) + 1)
-    'math.tan(x) + 1'
-    """
-    return PythonCodePrinter(settings).doprint(expr, assign_to)

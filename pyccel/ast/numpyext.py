@@ -491,6 +491,32 @@ class NumpyNewArray(PyccelInternalFunction):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_order(rank, order):
+        """
+        Process the order to ensure that it has the expected format.
+
+        Process the order to ensure that it has the expected format.
+        In other words, ensure that it is None if the rank is less than
+        2. If the rank is 2 or more then ensure that it is one of the
+        valid orderings (C or Fortran).
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array.
+
+        order : str
+            The order passed during the creation of the array.
+
+        Returns
+        -------
+        str
+            The order in the expected format.
+
+        Raises
+        ------
+        ValueError
+            Raised if the specified order is not recognised.
+        """
 
         if rank < 2:
             return None

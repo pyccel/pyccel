@@ -22,36 +22,28 @@ errors = Errors()
 class CodePrinter:
     """
     The base class for code-printing subclasses.
+
+    The abstract class from which all code-printing subclasses
+    must inherit.
     """
     language = None
     def __init__(self):
         self._scope = None
 
-    def doprint(self, expr, assign_to=None):
+    def doprint(self, expr):
         """
         Print the expression as code.
 
-        expr : Expression
-            The expression to be printed.
+        Print the expression as code.
 
-        assign_to : PyccelSymbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        Parameters
+        ----------
+        expr : PyccelAstNode
+            The expression to be printed.
         """
 
-        if isinstance(assign_to, str):
-            assign_to = PyccelSymbol(assign_to)
-        elif not isinstance(assign_to, (PyccelAstNode, type(None))):
-            raise TypeError(f"{type(self).__name__} cannot assign to object of type {type(assign_to)}")
-
-        if assign_to:
-            expr = Assign(assign_to, expr)
-
         # Do the actual printing
-        lines = self._print(expr).splitlines(True)
-
-        # Format the output
-        return ''.join(self._format_code(lines))
+        return self._print(expr)
 
     @property
     def scope(self):

@@ -25,18 +25,22 @@ printer_registry    = {
 pyccel_stage = PyccelStage()
 
 class Codegen(object):
+    """
+    Class for code generator.
 
-    """Abstract class for code generator."""
+    The class which takes care of printing all necessary parts of the code
+    into the correct files.
+
+    Parameters
+    ----------
+    parser : SemanticParser
+        The parser which generated the ast which we are printing.
+
+    name : str
+        The name of the module which will be generated.
+    """
 
     def __init__(self, parser, name):
-        """Constructor for Codegen.
-
-        parser: pyccel parser
-
-
-        name: str
-            name of the generated module or program.
-        """
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
@@ -134,11 +138,35 @@ class Codegen(object):
 
         return self._language
 
-    def set_printer(self, **settings):
-        """ Set the current codeprinter instance"""
-        # Get language used (default language used is fortran)
-        language = settings.pop('language', 'fortran')
+    def set_printer(self, language='fortran', **settings):
+        """
+        Set the current codeprinter instance.
 
+        Check that the printer exists for the selected language and get
+        and save the associated printer for later use.
+
+        Parameters
+        ----------
+        language : str, default=fortran
+            The language we are translating to.
+
+        **settings : dict
+            See CodePrinter.
+
+        See Also
+        --------
+        CodePrinter
+            The object being created to which additional arguments can be passed.
+
+        FortranCodePrinter
+            The code printer for Fortran.
+
+        CCodePrinter
+            The code printer for C.
+
+        PythonCodePrinter
+            The code printer for Python.
+        """
         # Set language
         if not language in ['fortran', 'c', 'python']:
             raise ValueError(f'{language} language is not available')
@@ -185,7 +213,30 @@ class Codegen(object):
 
 
     def export(self, filename=None, **settings):
-        """Export code in filename"""
+        """
+        Export code in filename.
+
+        Export the code from the ast to the specified file. If no file
+        is specified then the filename is chosen to match the name of
+        the module.
+
+        Parameters
+        ----------
+        filename : str, optional
+            The basename of the file where the code should be printed.
+
+        **settings : dict
+            Additional arguments for set_printer.
+
+        Returns
+        -------
+        filename : str
+            The file where the module source code was printed.
+
+        prog_filename : str
+            In the case of a program, the file where the program code
+            was printed. Otherwise None.
+        """
         self.set_printer(**settings)
         ext = _extension_registry[self._language]
         header_ext = _header_extension_registry[self._language]
