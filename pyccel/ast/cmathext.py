@@ -7,7 +7,7 @@
 
 import cmath
 
-from pyccel.ast.builtins  import PythonReal, PythonImag
+from pyccel.ast.builtin_objects.complex_functions import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.internals import PyccelInternalFunction
