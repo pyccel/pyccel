@@ -18,7 +18,6 @@ from .literals  import LiteralInteger
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'AnnotatedPyccelSymbol',
     'PrecomputedCode',
     'PyccelArrayShapeElement',
     'PyccelArraySize',
@@ -323,58 +322,6 @@ class PyccelSymbol(str, Immutable):
         and was not present in the original Python code [default value : False].
         """
         return self._is_temp
-
-class AnnotatedPyccelSymbol(PyccelAstNode):
-    """
-    Class representing a symbol in the code which has an annotation.
-
-    Symbolic placeholder for a Python variable, which has a name but no type yet.
-    This is very generic, and it can also represent a function or a module.
-
-    Parameters
-    ----------
-    name : str
-        Name of the symbol.
-
-    annotation : SyntacticTypeAnnotation
-        The annotation describing the type that the object will have.
-
-    is_temp : bool
-        Indicates if the symbol is a temporary object. This either means that the
-        symbol represents an object originally named `_` in the code, or that the
-        symbol represents an object created by Pyccel in order to assign a
-        temporary object. This is sometimes necessary to facilitate the translation.
-    """
-    __slots__ = ('_name', '_annotation')
-    _attribute_nodes = ()
-
-    def __init__(self, name, annotation, is_temp = False):
-        if isinstance(name, PyccelSymbol):
-            self._name = name
-        elif isinstance(name, str):
-            self._name = PyccelSymbol(name, is_temp)
-        else:
-            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
-        self._annotation = annotation
-        super().__init__()
-
-    @property
-    def name(self):
-        """
-        Get the PyccelSymbol describing the name.
-
-        Get the PyccelSymbol describing the name of the symbol in the code.
-        """
-        return self._name
-
-    @property
-    def annotation(self):
-        """
-        Get the annotation.
-
-        Get the annotation left on the symbol. This should be a type annotation.
-        """
-        return self._annotation
 
 class PrecomputedCode(PyccelAstNode):
     """

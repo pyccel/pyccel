@@ -11,7 +11,6 @@ class Point(object):
 
 
 class Point2(object):
-    import inside_class
 
     def __init__(self, x):
         self.x = x

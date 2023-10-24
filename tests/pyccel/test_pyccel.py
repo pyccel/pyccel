@@ -807,6 +807,8 @@ def test_basic_header():
                                         "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
                                         "scripts/classes/class_headers.py",
+                                        "scripts/classes/pep526.py",
+                                        "scripts/classes/class_variables.py",
                                         ] )
 @pytest.mark.parametrize( 'language', (
         pytest.param("python", marks = pytest.mark.python),
