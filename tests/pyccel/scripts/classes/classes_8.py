@@ -12,8 +12,7 @@ class MyClass:
         self.y = y
 
     def get_x(self : 'MyClass'):
-        for i in range(len(self.x)):
-            print(self.x[i])
+        print(self.x)
 
     def get_y(self : 'MyClass'):
         print(self.y)
