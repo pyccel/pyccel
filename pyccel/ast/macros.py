@@ -26,7 +26,16 @@ __all__ = (
 
 #==============================================================================
 class Macro(TypedAstNode):
-    """."""
+    """
+    Class representing a macro, ie an inline definition.
+
+    Class representing a macro, ie an inline definition. TO BE DEPRECATED.
+
+    Parameters
+    ----------
+    argument : PyccelSymbol | Variable
+        The argument passed to the macro.
+    """
     __slots__ = ('_argument',)
     _name = '__UNDEFINED__'
     _attribute_nodes = ()
@@ -48,7 +57,18 @@ class Macro(TypedAstNode):
 
 #==============================================================================
 class MacroShape(Macro):
-    """."""
+    """
+    A macro indicating the shape of a variable.
+
+    A macro indicating the shape of a variable. TO BE DEPRECATED.
+
+    Parameters
+    ----------
+    argument : PyccelSymbol | Variable
+        The variable whose shape we are accessing.
+    index : int | LiteralInteger
+        The index of the element of the shape we are accessing.
+    """
     __slots__ = ('_index','_rank','_shape')
     _name      = 'shape'
     _dtype     = NativeInteger()
@@ -80,7 +100,11 @@ class MacroShape(Macro):
 
 #==============================================================================
 class MacroType(Macro):
-    """."""
+    """
+    A macro representing a type.
+
+    A macro representing a type. TO BE DEPRECATED.
+    """
     __slots__ = ()
     _name      = 'dtype'
     _dtype     = NativeGeneric()
@@ -94,7 +118,12 @@ class MacroType(Macro):
 
 #==============================================================================
 class MacroCount(Macro):
-    """."""
+    """
+    A macro representing the total number of elements in a variable.
+
+    A macro representing the total number of elements in a variable.
+    TO BE DEPRECATED.
+    """
     __slots__ = ()
     _name      = 'count'
     _dtype     = NativeInteger()

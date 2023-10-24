@@ -315,13 +315,6 @@ class Assign(PyccelAstNode):
         In the semantic stage :
           TypedAstNode with the same shape as the lhs.
 
-    status : str, optional
-        If lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}.
-
-    like : Variable, optional
-        Contains the name of the variable from which the lhs will be cloned.
-
     ast : ast.Ast
         The ast object parsed by Python's ast module.
 
