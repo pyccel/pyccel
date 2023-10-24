@@ -13,6 +13,7 @@ pyccelised
 pyccelising
 allocatable
 deallocate
+deallocated
 deallocation
 deallocations
 conda
@@ -99,3 +100,7 @@ unhandled
 unallocated
 mypy
 destructor
+destructor's
+VALGRIND
+initialize
+initialized

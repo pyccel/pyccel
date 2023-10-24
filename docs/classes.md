@@ -79,7 +79,7 @@ void MyClass__del__(struct MyClass* self)
 /*........................................*/
 ```
 
-### - C Prog File Equivalent
+### - C Program File Equivalent
 ```C
 int main()
 {
@@ -235,7 +235,7 @@ void MyClass1__del__(struct MyClass1* self)
 /*........................................*/
 ```
 
-### - C Prog File Equivalent
+### - C Program File Equivalent
 ```C
 int main()
 {
