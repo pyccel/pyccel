@@ -249,22 +249,24 @@ def compatible_operation(*args, language_has_vectors = True):
 #==============================================================================
 def insert_index(expr, pos, index_var):
     """
-    Function to insert an index into an expression at a given position
+    Function to insert an index into an expression at a given position.
+
+    Function to insert an index into an expression at a given position.
 
     Parameters
-    ==========
-    expr        : Ast Node
-                The expression to be modified
-    pos         : int
-                The index at which the expression is modified
-                (If negative then there is no index to insert)
-    index_var   : Variable
-                The variable which will be used for indexing
+    ----------
+    expr : PyccelAstNode
+        The expression to be modified.
+    pos : int
+        The index at which the expression is modified
+        (If negative then there is no index to insert).
+    index_var : Variable
+        The variable which will be used for indexing.
 
     Returns
-    =======
-    expr        : Ast Node
-                Either a modified version of expr or expr itself
+    -------
+    expr : PyccelAstNode
+        Either a modified version of expr or expr itself.
 
     Examples
     --------

@@ -821,7 +821,7 @@ class Constant(Variable):
         See pyccel.ast.variable.Variable.
 
     value : Type matching dtype, default=Nil()
-            The value that the constant represents.
+        The value that the constant represents.
 
     **kwargs : dict
         See pyccel.ast.variable.Variable.
@@ -832,7 +832,6 @@ class Constant(Variable):
     >>> import math
     >>> Constant('float', 'pi' , value=math.pi )
     Constant('pi', dtype=NativeFloat())
-
     """
     __slots__ = ('_value',)
     # The value of a constant is not a translated object
