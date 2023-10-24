@@ -15,16 +15,18 @@ from pyccel.errors.errors import PyccelError
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .class_defs import IntegerClass, FloatClass, ComplexClass
-from .datatypes import (NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeString, str_dtype,
-                        NativeGeneric)
+
+from .datatypes import NativeInteger, NativeBool, NativeFloat
+from .datatypes import NativeComplex, NativeString, NativeGeneric
+
 from .internals import PyccelInternalFunction, max_precision, Slice
+
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
-from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
-from .literals  import LiteralString
+from .literals  import Literal, LiteralImaginaryUnit, LiteralString
+
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
+
 from .variable  import IndexedElement
 
 pyccel_stage = PyccelStage()
@@ -32,10 +34,6 @@ pyccel_stage = PyccelStage()
 __all__ = (
     'Lambda',
     'PythonAbs',
-    'PythonComplexProperty',
-    'PythonReal',
-    'PythonImag',
-    'PythonConjugate',
     'PythonBool',
     'PythonComplex',
     'PythonEnumerate',
@@ -54,129 +52,6 @@ __all__ = (
     'PythonMin',
     'python_builtin_datatype'
 )
-
-#==============================================================================
-class PythonComplexProperty(PyccelInternalFunction):
-    """Represents a call to the .real or .imag property
-
-    e.g:
-    > a = 1+2j
-    > a.real
-    1.0
-
-    arg : Variable, Literal
-    """
-    __slots__ = ()
-    _dtype = NativeFloat()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
-
-    def __init__(self, arg):
-        super().__init__(arg)
-
-    @property
-    def internal_var(self):
-        """Return the variable on which the function was called"""
-        return self._args[0]
-
-#==============================================================================
-class PythonReal(PythonComplexProperty):
-    """Represents a call to the .real property
-
-    e.g:
-    > a = 1+2j
-    > a.real
-    1.0
-
-    arg : Variable, Literal
-    """
-    __slots__ = ()
-    name = 'real'
-    def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
-            return PythonInt(arg)
-        elif not isinstance(arg.dtype, NativeComplex):
-            return arg
-        else:
-            return super().__new__(cls)
-
-    def __str__(self):
-        return 'Real({0})'.format(str(self.internal_var))
-
-#==============================================================================
-class PythonImag(PythonComplexProperty):
-    """
-    Represents a call to the .imag property.
-
-    Represents a call to the .imag property of an object with a complex type.
-    e.g:
-    >>> a = 1+2j
-    >>> a.imag
-    1.0
-
-    Parameters
-    ----------
-    arg : Variable, Literal
-        The object on which the property is called.
-    """
-    __slots__ = ()
-    name = 'imag'
-    def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
-            return convert_to_literal(0, dtype = arg.dtype)
-        else:
-            return super().__new__(cls)
-
-    def __str__(self):
-        return 'Imag({0})'.format(str(self.internal_var))
-
-#==============================================================================
-class PythonConjugate(PyccelInternalFunction):
-    """
-    Represents a call to the .conjugate() function.
-
-    Represents a call to the conjugate function which is a member of
-    the builtin types int, float, complex. The conjugate function is
-    called from Python as follows:
-
-    > a = 1+2j
-    > a.conjugate()
-    1-2j
-
-    Parameters
-    ----------
-    arg : TypedAstNode
-        The variable/expression which was passed to the
-        conjugate function.
-    """
-    __slots__ = ()
-    _dtype = NativeComplex()
-    _precision = -1
-    _rank  = 0
-    _shape = None
-    _order = None
-    name = 'conjugate'
-
-    def __new__(cls, arg):
-        if arg.dtype is NativeBool():
-            return PythonInt(arg)
-        elif arg.dtype is not NativeComplex():
-            return arg
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, arg):
-        super().__init__(arg)
-
-    @property
-    def internal_var(self):
-        """Return the variable on which the function was called"""
-        return self._args[0]
-
-    def __str__(self):
-        return 'Conjugate({0})'.format(str(self.internal_var))
 
 #==============================================================================
 class PythonBool(TypedAstNode):
@@ -222,8 +97,8 @@ class PythonComplex(TypedAstNode):
     _rank  = 0
     _shape = None
     _order = None
-    _real_cast = PythonReal
-    _imag_cast = PythonImag
+    _real_cast = None
+    _imag_cast = None
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
 
     def __new__(cls, arg0, arg1=LiteralFloat(0)):
@@ -355,7 +230,7 @@ class PythonEnumerate(PyccelAstNode):
 class PythonFloat(TypedAstNode):
     """ Represents a call to Python's native float() function.
     """
-    __slots__ = ('_arg')
+    __slots__ = ('_arg',)
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
@@ -387,7 +262,7 @@ class PythonInt(TypedAstNode):
     """ Represents a call to Python's native int() function.
     """
 
-    __slots__ = ('_arg')
+    __slots__ = ('_arg',)
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
@@ -960,30 +835,6 @@ class PythonType(PyccelAstNode):
             return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
         else:
             return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
-
-#==============================================================================
-#                        Update class definitions
-#==============================================================================
-ComplexClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
-                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
-ComplexClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
-                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
-ComplexClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
-                decorators={'numpy_wrapper': 'numpy_wrapper'}))
-
-FloatClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
-                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
-FloatClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
-                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
-FloatClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
-                decorators={'numpy_wrapper': 'numpy_wrapper'}))
-
-IntegerClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
-                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
-IntegerClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
-                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
-IntegerClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
-                decorators={'numpy_wrapper': 'numpy_wrapper'}))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
