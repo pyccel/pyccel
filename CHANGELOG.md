@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\] -
+
+### Added
+
+### Fixed
+
+### Changed
+
+-   \[INTERNALS\] Move insertion of supported class methods to the files where they are defined.
+
+### Deprecated
+
 ## \[1.10.0\] - 2023-10-23
 
 ### Added
