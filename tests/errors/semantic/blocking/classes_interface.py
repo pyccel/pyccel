@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
 class MyClass:
     def __init__(self : 'MyClass', param1 : 'int'):
@@ -6,4 +6,4 @@ class MyClass:
         print("MyClass Object created!")
 
     def help(self : 'MyClass', param1 : 'int|float'):
-        self.param2 = param1
+        self.param1 = param1
