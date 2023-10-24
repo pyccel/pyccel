@@ -58,9 +58,9 @@ from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
 from pyccel.ast.literals import Nil
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
-from pyccel.ast.variable  import DottedName
+from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 
-from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction, AnnotatedPyccelSymbol
+from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
@@ -446,6 +446,21 @@ class SyntaxParser(BasicParser):
         else:
             return errors.report(PYCCEL_RESTRICTION_TODO, symbol = stmt,
                     severity='error')
+
+    def _visit_AnnAssign(self, stmt):
+        self._in_lhs_assign = True
+        lhs = self._visit(stmt.target)
+        self._in_lhs_assign = False
+
+        annotation = self._treat_type_annotation(stmt, self._visit(stmt.annotation))
+
+        annotated_lhs = AnnotatedPyccelSymbol(lhs, annotation=annotation)
+
+        if stmt.value is None:
+            return annotated_lhs
+        else:
+            rhs = self._visit(stmt.value)
+            return Assign(annotated_lhs, rhs)
 
     def _visit_arguments(self, stmt):
 
@@ -993,14 +1008,20 @@ class SyntaxParser(BasicParser):
         name = stmt.name
         scope = self.create_new_class_scope(name)
         methods = []
+        attributes = []
         for i in stmt.body:
-            if isinstance(i, ast.FunctionDef):
-                methods.append(self._visit(i))
-            elif isinstance(i, ast.Pass):
+            visited_i = self._visit(i)
+            if isinstance(visited_i, FunctionDef):
+                methods.append(visited_i)
+            elif isinstance(visited_i, Pass):
                 return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+            elif isinstance(visited_i, AnnotatedPyccelSymbol):
+                attributes.append(visited_i)
+            else:
+                errors.report(f"{type(visited_i)} not currently supported in classes",
+                        severity='error', symbol=visited_i)
         for i in methods:
             i.cls_name = name
-        attributes = [a.var for a in methods[0].arguments]
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,

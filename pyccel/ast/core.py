@@ -21,8 +21,8 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 from .datatypes import (datatype, NativeSymbol,
                         NativeBool, NativeRange,
                         NativeTuple, str_dtype)
+
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
-from .internals import AnnotatedPyccelSymbol
 
 from .literals  import Nil, LiteralFalse
 from .literals  import NilArgument, LiteralTrue
@@ -31,7 +31,7 @@ from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, 
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
-from .variable import Variable
+from .variable import Variable, AnnotatedPyccelSymbol
 
 errors = Errors()
 pyccel_stage = PyccelStage()

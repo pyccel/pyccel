@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex)
-from .internals import PyccelArrayShapeElement, Slice, get_final_precision
+from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -25,6 +25,7 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'AnnotatedPyccelSymbol',
     'Constant',
     'DottedName',
     'DottedVariable',
@@ -370,8 +371,11 @@ class Variable(TypedAstNode):
 
     @property
     def is_const(self):
-        """ Indicates if the Variable is constant
-        within its context
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
         """
         return self._is_const
 
@@ -840,9 +844,28 @@ class Constant(Variable):
 
 
 class IndexedElement(TypedAstNode):
-
     """
-    Represents a mathematical object with indices.
+    Represents an indexed object in the code.
+
+    Represents an object which is a subset of a base object. The
+    indexed object is retrieved by passing indices to the base
+    object using the `[]` syntax.
+
+    In the semantic stage, the base object is an array, tuple or
+    list. This function then determines the new rank and shape of
+    the data block.
+
+    In the syntactic stage, this object is more versatile, it
+    stores anything which is indexed using `[]` syntax. This can
+    additionally include classes, maps, etc.
+
+    Parameters
+    ----------
+    base : Variable | PyccelSymbol | DottedName
+        The object being indexed.
+
+    *indices : tuple of TypedAstNode
+        The values used to index the base.
 
     Examples
     --------
@@ -850,7 +873,7 @@ class IndexedElement(TypedAstNode):
     >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
     >>> i = Variable('i', dtype='int')
     >>> j = Variable('j', dtype='int')
-    >>> IndexedElement(A, i, j)
+    >>> IndexedElement(A, (i, j))
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
     True
@@ -858,20 +881,15 @@ class IndexedElement(TypedAstNode):
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
     _attribute_nodes = ('_label', '_indices')
 
-    def __init__(
-        self,
-        base,
-        *args,
-        **kw_args
-        ):
+    def __init__(self, base, *indices):
 
-        if not args:
+        if not indices:
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
 
         if pyccel_stage == 'syntactic':
-            self._indices = args
+            self._indices = indices
             super().__init__()
             return
 
@@ -882,48 +900,40 @@ class IndexedElement(TypedAstNode):
         rank  = base.rank
 
         # Add empty slices to fully index the object
-        if len(args) < rank:
-            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+        if len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
 
-        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in args):
+        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
             errors.report("Index is not of valid type",
-                    symbol = args, severity = 'fatal')
+                    symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
+        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
         super().__init__()
 
         # Calculate new shape
+        new_shape = []
+        from .mathext import MathCeil
+        for a,s in zip(indices, shape):
+            if isinstance(a, Slice):
+                start = a.start
+                stop  = a.stop if a.stop is not None else s
+                step  = a.step
+                if isinstance(start, PyccelUnarySub):
+                    start = PyccelAdd(s, start, simplify=True)
+                if isinstance(stop, PyccelUnarySub):
+                    stop = PyccelAdd(s, stop, simplify=True)
 
-        if shape is not None:
-            new_shape = []
-            from .mathext import MathCeil
-            for a,s in zip(args, shape):
-                if isinstance(a, Slice):
-                    start = a.start
-                    stop  = a.stop if a.stop is not None else s
-                    step  = a.step
-                    if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
-                    if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                if step is not None:
+                    if isinstance(step, PyccelUnarySub):
+                        start = s if a.start is None else start
+                        _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                        step = PyccelUnarySub(step)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
-                    if step is not None:
-                        if isinstance(step, PyccelUnarySub):
-                            start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                            step = PyccelUnarySub(step)
-
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
-                    new_shape.append(_shape)
-            self._rank  = len(new_shape)
-            self._shape = None if self._rank == 0 else tuple(new_shape)
-        else:
-            new_rank = rank
-            for i in range(rank):
-                if not isinstance(args[i], Slice):
-                    new_rank -= 1
-            self._rank = new_rank
+                    _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                new_shape.append(_shape)
+        self._rank  = len(new_shape)
+        self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
 
@@ -970,6 +980,16 @@ class IndexedElement(TypedAstNode):
                 j += 1
             new_indexes.append(i)
         return IndexedElement(base, *new_indexes)
+
+    @property
+    def is_const(self):
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
+        """
+        return self.base.is_const
 
 class DottedVariable(Variable):
 
@@ -1020,3 +1040,58 @@ class DottedVariable(Variable):
         dtype = repr(self.dtype)
         classname = type(self).__name__
         return f'{classname}({lhs}.{name}, dtype={dtype}'
+
+class AnnotatedPyccelSymbol(PyccelAstNode):
+    """
+    Class representing a symbol in the code which has an annotation.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
+
+    Parameters
+    ----------
+    name : str
+        Name of the symbol.
+
+    annotation : SyntacticTypeAnnotation
+        The annotation describing the type that the object will have.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
+    """
+    __slots__ = ('_name', '_annotation')
+    _attribute_nodes = ()
+
+    def __init__(self, name, annotation, is_temp = False):
+        if isinstance(name, (PyccelSymbol, DottedName)):
+            self._name = name
+        elif isinstance(name, str):
+            self._name = PyccelSymbol(name, is_temp)
+        else:
+            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
+        self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        """
+        Get the PyccelSymbol describing the name.
+
+        Get the PyccelSymbol describing the name of the symbol in the code.
+        """
+        return self._name
+
+    @property
+    def annotation(self):
+        """
+        Get the annotation.
+
+        Get the annotation left on the symbol. This should be a type annotation.
+        """
+        return self._annotation
+
+    def __str__(self):
+        return f'{self.name} : {self.annotation}'

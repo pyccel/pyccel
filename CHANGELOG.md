@@ -1,18 +1,14 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## \[Unreleased\]
-
-### Changed
-
--   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
--   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
--   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
+## \[1.10.0\] - 2023-10-23
 
 ### Added
 
 -   #633 & #1518 : Allow non-trivial types to be specified with mypy-compatible annotations.
 -   #1336 : Use template as a partial type.
+-   #1509 : Add type annotations for variables.
+-   #1528 : Add support for variable declarations in classes.
 
 ### Fixed
 
@@ -22,6 +18,10 @@ All notable changes to this project will be documented in this file.
 -   #1557 : Fix save multiple class instances to the same variable.
 
 ### Changed
+
+-   \[INTERNALS\] #1520 : `ScopedNode` -> `ScopedAstNode`.
+-   \[INTERNALS\] #1520 : `PyccelAstNode` -> `TypedAstNode`.
+-   \[INTERNALS\] #1520 : `Basic` -> `PyccelAstNode`.
 
 ### Deprecated
 

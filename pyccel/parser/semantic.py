@@ -75,7 +75,6 @@ from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
 from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
-from pyccel.ast.internals import AnnotatedPyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -117,7 +116,7 @@ from pyccel.ast.utilities import recognised_source
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
-from pyccel.ast.variable import IndexedElement
+from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
 from pyccel.errors.errors import Errors
@@ -127,7 +126,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNDEFINED_VARIABLE, IMPORTING_EXISTING_IDENTIFIED, INDEXED_TUPLE, LIST_OF_TUPLES,
         INVALID_INDICES, INCOMPATIBLE_ARGUMENT, INCOMPATIBLE_ORDERING,
         UNRECOGNISED_FUNCTION_CALL, STACK_ARRAY_SHAPE_UNPURE_FUNC, STACK_ARRAY_UNKNOWN_SHAPE,
-        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP,
+        ARRAY_DEFINITION_IN_LOOP, STACK_ARRAY_DEFINITION_IN_LOOP, MISSING_TYPE_ANNOTATIONS,
         INCOMPATIBLE_TYPES_IN_ASSIGNMENT, ARRAY_ALREADY_IN_USE, ASSIGN_ARRAYS_ONE_ANOTHER,
         INVALID_POINTER_REASSIGN, INCOMPATIBLE_REDEFINITION, ARRAY_IS_ARG,
         INCOMPATIBLE_REDEFINITION_STACK_ARRAY, ARRAY_REALLOCATION, RECURSIVE_RESULTS_REQUIRED,
@@ -1326,6 +1325,7 @@ class SemanticParser(BasicParser):
             The right hand side of the expression : lhs=rhs.
             If is_augassign is False, this value is not used.
         """
+
         precision = d_var.get('precision', 0)
         internal_precision = default_precision[dtype] if precision == -1 else precision
 
@@ -2148,18 +2148,37 @@ class SemanticParser(BasicParser):
             errors.report("Variable has been declared multiple times",
                     symbol=expr, severity='error')
 
+        if expr.annotation is None:
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    symbol=expr, severity='fatal')
+
         # Get the semantic type annotation (should be UnionTypeAnnotation)
         types = self._visit(expr.annotation)
 
         if len(types.type_list) == 0:
-            errors.report(f'Missing type annotation for argument {expr}',
-                    severity='fatal', symbol=expr)
+            errors.report(MISSING_TYPE_ANNOTATIONS,
+                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    symbol=expr, severity='fatal')
 
+        python_name = expr.name
         # Get the collisionless name from the scope
-        name = self.scope.get_expected_name(expr.name)
+        if isinstance(python_name, DottedName):
+            prefix_parts = python_name.name[:-1]
+            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+            prefix = self._visit(syntactic_prefix)
+            class_def = prefix.cls_base
+            attribute_name = python_name.name[-1]
+
+            name = class_def.scope.get_expected_name(attribute_name)
+            var_class = DottedVariable
+            kwargs = {'lhs': prefix}
+        else:
+            name = self.scope.get_expected_name(python_name)
+            var_class = Variable
+            kwargs = {}
 
         # Use the local decorators to define the memory and index handling
-        allows_negative_indexes = False
         array_memory_handling = 'heap'
         decorators = self.scope.decorators
         if decorators:
@@ -2168,7 +2187,7 @@ class SemanticParser(BasicParser):
                     array_memory_handling = 'stack'
             if 'allow_negative_index' in decorators:
                 if expr.name in decorators['allow_negative_index']:
-                    allows_negative_indexes = True
+                    kwargs['allows_negative_indexes'] = True
 
         # For each possible data type create the necessary variables
         possible_args = []
@@ -2182,11 +2201,11 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
-                v = Variable(dtype, name, precision = prec,
+                v = var_class(dtype, name, precision = prec,
                         shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
-                        allows_negative_indexes = allows_negative_indexes)
+                        **kwargs)
                 possible_args.append(v)
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO + '\nUnrecoginsed type annotation',
@@ -2624,14 +2643,24 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                 bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                 severity='error')
+            cls_def = self.scope.find(method.cls_name, 'classes')
             d_var = {'datatype': self.get_class_construct(method.cls_name),
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
                     'is_target' : False,
-                    'cls_base' : self.scope.find(method.cls_name, 'classes')}
+                    'cls_base' : cls_def}
             new_expression = []
-            cls_variable = self._assign_lhs_variable(expr.get_user_nodes(Assign)[0].lhs, d_var, expr, new_expression, False)
+
+            lhs = expr.get_user_nodes(Assign)[0].lhs
+            if isinstance(lhs, AnnotatedPyccelSymbol):
+                annotation = self._visit(lhs.annotation)
+                if len(annotation.type_list) != 1 or annotation.type_list[0].cls_base != cls_def:
+                    errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
+                            symbol=annotation, severity='error')
+                lhs = lhs.name
+
+            cls_variable = self._assign_lhs_variable(lhs, d_var, expr, new_expression, False)
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             # TODO check compatibility
@@ -2867,6 +2896,24 @@ class SemanticParser(BasicParser):
                     d['memory_handling'] = 'alias'
 
         lhs = expr.lhs
+        if isinstance(lhs, AnnotatedPyccelSymbol):
+            semantic_lhs = self._visit(lhs)
+            if len(semantic_lhs) != 1:
+                errors.report("Cannot declare variable with multiple types",
+                        symbol=expr, severity='error')
+            semantic_lhs_var = semantic_lhs[0]
+            if isinstance(semantic_lhs_var, DottedVariable):
+                cls_def = semantic_lhs_var.lhs.cls_base
+                insert_scope = cls_def.scope
+                cls_def.add_new_attribute(semantic_lhs_var)
+            else:
+                insert_scope = self.scope
+            try:
+                insert_scope.insert_variable(semantic_lhs_var)
+            except RuntimeError as e:
+                errors.report(e, symbol=expr, severity='error')
+            lhs = lhs.name
+
         if isinstance(lhs, (PyccelSymbol, DottedName)):
             if isinstance(d_var, list):
                 if len(d_var) == 1:
@@ -2973,6 +3020,19 @@ class SemanticParser(BasicParser):
 
         # Examine each assign and determine assign type (Assign, AliasAssign, etc)
         for l, r in zip(lhs,rhs):
+            if isinstance(l, PythonTuple):
+                for li in l:
+                    if li.is_const:
+                        # If constant (can't use annotations on tuple assignment)
+                        errors.report("Cannot modify 'const' variable",
+                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            symbol=li, severity='error')
+            else:
+                if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
+                    # If constant and not the initialising declaration of a constant variable
+                    errors.report("Cannot modify 'const' variable",
+                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        symbol=l, severity='error')
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
             else:
@@ -3575,14 +3635,7 @@ class SemanticParser(BasicParser):
 
                 # ... computing inout arguments
                 for a in arguments:
-                    if a.name in chain(results_names, ['self']) or a.var in all_assigned:
-                        v = a.var
-                        if isinstance(v, Variable) and v.is_const:
-                            msg = f"Cannot modify 'const' argument ({v})"
-                            errors.report(msg, bounding_box=(self._current_fst_node.lineno,
-                                self._current_fst_node.col_offset),
-                                severity='fatal')
-                    else:
+                    if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
                         a.make_const()
                 # ...
 
@@ -3711,7 +3764,18 @@ class SemanticParser(BasicParser):
         scope = self.create_new_class_scope(name, used_symbols=expr.scope.local_used_symbols,
                     original_symbols = expr.scope.python_names.copy())
 
-        cls = ClassDef(name, [], [], superclasses=parent, scope=scope)
+        attribute_annotations = [self._visit(a) for a in expr.attributes]
+        attributes = []
+        for a in attribute_annotations:
+            if len(a) != 1:
+                errors.report(f"Couldn't determine type of {a}",
+                        severity='error', symbol=a)
+            else:
+                v = a[0]
+                scope.insert_variable(v)
+                attributes.append(v)
+
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
@@ -3720,7 +3784,7 @@ class SemanticParser(BasicParser):
         for (i, method) in enumerate(methods):
             m_name = method.name
             if m_name == '__init__':
-                self._visit_FunctionDef(method)
+                self._visit(method)
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
 
@@ -3739,7 +3803,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit_FunctionDef(i)
+            self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))

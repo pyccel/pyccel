@@ -13,9 +13,7 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
-from .internals import AnnotatedPyccelSymbol
-
-from .variable import DottedName
+from .variable import DottedName, AnnotatedPyccelSymbol
 
 __all__ = (
         'FunctionTypeAnnotation',
@@ -253,6 +251,9 @@ class UnionTypeAnnotation(PyccelAstNode):
 
     def __iter__(self):
         return self._type_annotations.__iter__()
+
+    def __str__(self):
+        return '|'.join(str(t) for t in self._type_annotations)
 
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
