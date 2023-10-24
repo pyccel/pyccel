@@ -101,9 +101,14 @@ class MacroShape(Macro):
 #==============================================================================
 class MacroType(Macro):
     """
-    A macro representing a type.
+    A macro representing the type of a variable.
 
-    A macro representing a type. TO BE DEPRECATED.
+    A macro representing the type of a variable. TO BE DEPRECATED.
+
+    Parameters
+    ----------
+    argument : PyccelSymbol | Variable
+        The variable whose datatype we are accessing.
     """
     __slots__ = ()
     _name      = 'dtype'
@@ -123,6 +128,11 @@ class MacroCount(Macro):
 
     A macro representing the total number of elements in a variable.
     TO BE DEPRECATED.
+
+    Parameters
+    ----------
+    argument : PyccelSymbol | Variable
+        The variable whose size we are accessing.
     """
     __slots__ = ()
     _name      = 'count'
