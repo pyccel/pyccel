@@ -252,7 +252,7 @@ def insert_index(expr, pos, index_var):
 
     Returns
     -------
-    expr : PyccelAstNode
+    PyccelAstNode
         Either a modified version of expr or expr itself.
 
     Examples
