@@ -19,6 +19,8 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
                              PythonType, PythonConjugate)
 
+from .class_defs     import NumpyArrayClass
+
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
@@ -2086,6 +2088,36 @@ class NumpySize(PyccelInternalFunction):
             return a.shape[axis.python_value]
 
         return PyccelArrayShapeElement(a, axis)
+
+#==============================================================================
+#                        Update class definitions
+#==============================================================================
+NumpyArrayClass.add_new_method(PyccelFunctionDef('shape', func_class = NumpyShape,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('size', func_class = NumpySize,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('T', func_class = NumpyTranspose,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('transpose', func_class = NumpyTranspose,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('sum', func_class = NumpySum,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('min', func_class = NumpyAmin,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('max', func_class = NumpyAmax,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('imag', func_class = NumpyImag,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('real', func_class = NumpyReal,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('conj', func_class = NumpyConjugate,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('dtype', func_class = NumpyResultType,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}))
+NumpyArrayClass.add_new_method(PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}))
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following

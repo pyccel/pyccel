@@ -15,6 +15,7 @@ from pyccel.errors.errors import PyccelError
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
+from .class_defs import IntegerClass, FloatClass, ComplexClass
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, str_dtype,
                         NativeGeneric)
@@ -959,6 +960,30 @@ class PythonType(PyccelAstNode):
             return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
         else:
             return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
+
+#==============================================================================
+#                        Update class definitions
+#==============================================================================
+ComplexClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
+ComplexClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
+ComplexClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}))
+
+FloatClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
+FloatClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
+FloatClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}))
+
+IntegerClass.add_new_method(PyccelFunctionDef('imag', func_class = PythonImag,
+                decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}))
+IntegerClass.add_new_method(PyccelFunctionDef('real', func_class = PythonReal,
+                decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}))
+IntegerClass.add_new_method(PyccelFunctionDef('conjugate', func_class = PythonConjugate,
+                decorators={'numpy_wrapper': 'numpy_wrapper'}))
 
 #==============================================================================
 python_builtin_datatypes_dict = {
