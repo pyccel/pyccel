@@ -361,6 +361,12 @@ class SemanticParser(BasicParser):
         -------
         Variable
             Returns the variable if found or None.
+
+        See Also
+        --------
+        get_variable
+            A similar function which raises an error if the Variable is not found
+            instead of returning None.
         """
 
         if isinstance(name, DottedName):
@@ -377,7 +383,32 @@ class SemanticParser(BasicParser):
         return self.scope.find(name, 'variables')
 
     def get_variable(self, name):
-        """ Like 'check_for_variable', but raise Pyccel error if Variable is not found.
+        """
+        Get a Variable object with the given name from the current scope.
+
+        Search for a Variable object with the given name in the current scope,
+        defined by the local and global Python scopes. Raise an error if not found.
+
+        Parameters
+        ----------
+        name : str
+            The object describing the variable.
+
+        Returns
+        -------
+        Variable
+            Returns the variable found in the scope.
+
+        Raises
+        ------
+        PyccelSemanticError
+            Error raised if variable is not found.
+
+        See Also
+        --------
+        check_for_variable
+            A similar function which returns None if the Variable is not found
+            instead of raising an error.
         """
         var = self.check_for_variable(name)
         if var is None:
@@ -417,8 +448,26 @@ class SemanticParser(BasicParser):
         return variables
 
     def get_class_construct(self, name):
-        """Returns the class datatype for name if it exists.
-        Raises an error otherwise
+        """
+        Return the class datatype associated with name.
+
+        Return the class datatype for name if it exists.
+        Raise an error otherwise.
+
+        Parameters
+        ----------
+        name : str
+            The name of the class.
+
+        Returns
+        -------
+        DataType
+            The datatype for the class.
+
+        Raises
+        ------
+        PyccelSemanticError
+            Raised if the datatype cannot be found.
         """
         result = self.scope.find(name, 'cls_constructs')
 
@@ -670,10 +719,28 @@ class SemanticParser(BasicParser):
                 severity='fatal')
 
     def _extract_indexed_from_var(self, var, indices, expr):
-        """ Use indices to extract appropriate element from
-        object 'var'
+        """
+        Use indices to extract appropriate element from object 'var'.
+
+        Use indices to extract appropriate element from object 'var'.
         This contains most of the contents of _visit_IndexedElement
-        but is a separate function in order to be recursive
+        but is a separate function in order to be recursive.
+
+        Parameters
+        ----------
+        var : Variable
+            The variable being indexed.
+
+        indices : iterable
+            The indexes used to access the variable.
+
+        expr : PyccelAstNode
+            The node being parsed. This is useful for raising errors.
+
+        Returns
+        -------
+        TypedAstNode
+            The visited object.
         """
 
         # case of Pyccel ast Variable
@@ -769,8 +836,26 @@ class SemanticParser(BasicParser):
         return var[indices]
 
     def _create_PyccelOperator(self, expr, visited_args):
-        """ Called by _visit_PyccelOperator and other classes
-        inheriting from PyccelOperator
+        """
+        Create a PyccelOperator.
+
+        Create a PyccelOperator by passing the visited arguments
+        to the class.
+        Called by _visit_PyccelOperator and other classes
+        inheriting from PyccelOperator.
+
+        Parameters
+        ----------
+        expr : PyccelOperator
+            The expression being visited.
+
+        visited_args : tuple of TypedAstNode
+            The arguments passed to the operator.
+
+        Returns
+        -------
+        PyccelOperator
+            The new operator.
         """
         try:
             expr_new = type(expr)(*visited_args)
@@ -782,8 +867,24 @@ class SemanticParser(BasicParser):
         return expr_new
 
     def _create_Duplicate(self, val, length):
-        """ Called by _visit_PyccelMul when a Duplicate is
-        identified
+        """
+        Create a node which duplicates a tuple.
+
+        Create a node which duplicates a tuple.
+        Called by _visit_PyccelMul when a Duplicate is identified.
+
+        Parameters
+        ----------
+        val : TupleVariable | PythonTuple
+            The tuple object.
+
+        length : LiteralInteger | TypedAstNode
+            The number of times the tuple is duplicated.
+
+        Returns
+        -------
+        Duplicate | PythonTuple
+            The duplicated tuple
         """
         # Arguments have been visited in PyccelMul
 

@@ -49,11 +49,27 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 
 def get_filename_from_import(module,input_folder=''):
-    """Returns a valid filename with absolute path, that corresponds to the
+    """
+    Get a valid filename for the import.
+
+    Get a valid filename with absolute path, that corresponds to the
     definition of module.
     The priority order is:
         - header files (extension == pyh)
-        - python files (extension == py)
+        - python files (extension == py).
+
+    Parameters
+    ----------
+    module : AsName | str
+        The module being imported.
+
+    input_folder : str
+        The folders in which the module might be found.
+
+    Returns
+    -------
+    str
+        The location of the imported file.
     """
 
     if (isinstance(module, AsName)):
@@ -242,6 +258,11 @@ class BasicParser(object):
 
     @property
     def current_fst_node(self):
+        """
+        The ast object currently being visited.
+
+        The ast object currently being visited.
+        """
         return self._current_ast_node
 
     @property
@@ -375,6 +396,11 @@ class BasicParser(object):
 
         **kwargs : dict
             A dictionary containing any additional arguments of the new scope.
+
+        Returns
+        -------
+        Scope
+            The scope for the class.
         """
         child = self.scope.new_child_scope(name, **kwargs)
         self._scope = child

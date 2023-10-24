@@ -17,6 +17,19 @@ from pyccel.parser.semantic  import SemanticParser
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
 class Parser(object):
+    """
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
+
+    A wrapper class which handles dependencies between the syntactic and semantic parsers.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being translated.
+
+    **kwargs : dict
+        Any keyword arguments for BasicParser.
+    """
 
     def __init__(self, filename, **kwargs):
 
@@ -197,9 +210,9 @@ class Parser(object):
         verbose : bool, default=False
             Set the verbosity.
 
-        Results
+        Returns
         -------
-        d_parsers : dict
+        dict
             The updated dictionary of parsed sons.
         """
 
@@ -230,9 +243,17 @@ class Parser(object):
 
         return d_parsers
 
-    def _annotate_sons(self, **settings):
+    def _annotate_sons(self, verbose = False):
+        """
+        Annotate any dependencies of the file currently being parsed.
 
-        verbose = settings.pop('verbose', False)
+        Annotate any dependencies of the file currently being parsed.
+
+        Parameters
+        ----------
+        verbose : bool, default=False
+            Indicates if the treatment should be run in verbose mode.
+        """
 
         # we first treat sons that have no imports
 
@@ -240,7 +261,7 @@ class Parser(object):
             if not p.sons:
                 if verbose:
                     print ('>>> treating :: ', p.filename)
-                p.annotate(**settings)
+                p.annotate()
 
         # finally we treat the remaining sons recursively
 
@@ -248,7 +269,7 @@ class Parser(object):
             if p.sons:
                 if verbose:
                     print ('>>> treating :: ', p.filename)
-                p.annotate(**settings)
+                p.annotate()
 
 #==============================================================================
 
