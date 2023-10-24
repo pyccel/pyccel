@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 
 -   \[INTERNALS\] Move insertion of supported class methods to the files where they are defined.
+-   \[INTERNALS\] Create `complex_functions` module to help reduce circular dependencies.
 
 ### Deprecated
 
