@@ -25,9 +25,16 @@ class MyClass:
         self.param1 = param1
         self.param2 = param2
         print("Object created!")
+        print(param1, param2)
 
 if __name__ == "__main__":
-    obj = MyClass(1, np.ones(1))
+    obj = MyClass(1, np.ones(4))
+```
+
+### PYTHON _OUTPUT_
+```Shell
+Object created!
+1 [1. 1. 1. 1.]
 ```
 
 ### - Header File Equivalent
@@ -87,6 +94,30 @@ int main()
 }
 ```
 
+### C/VALGRIND _OUTPUT_
+
+```Shell
+Object created!
+1 [1.000000000000]
+
+==151606== Memcheck, a memory error detector
+==151606== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==151606== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==151606== Command: ./MyClass
+==151606==
+Object created!
+1 [1.000000000000]
+==151606==
+==151606== HEAP SUMMARY:
+==151606==     in use at exit: 0 bytes in 0 blocks
+==151606==   total heap usage: 6 allocs, 6 frees, 1,064 bytes allocated
+==151606==
+==151606== All heap blocks were freed -- no leaks are possible
+==151606==
+==151606== For lists of detected and suppressed errors, rerun with: -s
+==151606== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0
+```
+
 ## Class Methods
 
 -   Pyccel now supports Class Methods and Interfaces.
@@ -117,7 +148,7 @@ if __name__ == '__main__':
     obj.Method1(obj.Method2())
     print(obj.param.param1)
 ```
-### - PYTHON _OUTPUT_ :
+### - PYTHON _OUTPUT_
 
 ```Shell
 MyClass1 Object created!
@@ -219,7 +250,7 @@ int main()
 }
 ```
 
-### - C _OUTPUT_ :
+### - C _OUTPUT_
 
 ```Shell
 MyClass1 Object created!
