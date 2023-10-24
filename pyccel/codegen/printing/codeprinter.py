@@ -40,6 +40,11 @@ class CodePrinter:
         ----------
         expr : PyccelAstNode
             The expression to be printed.
+
+        Returns
+        -------
+        str
+            The code which should be printed.
         """
 
         # Do the actual printing

@@ -492,7 +492,7 @@ class NumpyNewArray(PyccelInternalFunction):
     @staticmethod
     def _process_order(rank, order):
         """
-        Process the order to ensure that it has the expected format.
+        Treat the order to ensure that it has the expected format.
 
         Process the order to ensure that it has the expected format.
         In other words, ensure that it is None if the rank is less than
