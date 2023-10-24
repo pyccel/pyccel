@@ -119,7 +119,7 @@ class Scope(object):
 
         Returns
         -------
-        child : Scope
+        Scope
             New child scope, which has the current object as parent.
         """
         ps = kwargs.pop('parent_scope', self)
@@ -606,17 +606,24 @@ class Scope(object):
 
     def get_temporary_variable(self, dtype_or_var, name = None, **kwargs):
         """
-        Get a temporary variable
+        Get a temporary variable.
+
+        Get a temporary variable.
 
         Parameters
         ----------
         dtype_or_var : str, DataType, Variable
             In the case of a string of DataType: The type of the Variable to be created
-            In the case of a Variable: a Variable which will be cloned to set all the Variable properties
-        name : str
-            The requested name for the new variable
-        kwargs : dict
-            See Variable keyword arguments
+            In the case of a Variable: a Variable which will be cloned to set all the Variable properties.
+        name : str, optional
+            The requested name for the new variable.
+        **kwargs : dict
+            See Variable keyword arguments.
+
+        Returns
+        -------
+        Variable
+            The temporary variable.
         """
         assert isinstance(name, (str, type(None)))
         name = self.get_new_name(name)
@@ -628,8 +635,21 @@ class Scope(object):
         return var
 
     def get_expected_name(self, start_name):
-        """ Get a name with no collisions, ideally the provided name.
-        The provided name should already exist in the symbols
+        """
+        Get a name with no collisions.
+
+        Get a name with no collisions, ideally the provided name.
+        The provided name should already exist in the symbols.
+
+        Parameters
+        ----------
+        start_name : str
+            The name which was used in the Python code.
+
+        Returns
+        -------
+        PyccelSymbol
+            The name which will be used in the generated code.
         """
         if start_name == '_':
             return self.get_new_name()
