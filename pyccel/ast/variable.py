@@ -15,7 +15,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex)
+                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -667,7 +667,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
-    __slots__ = ()
+    __slots__ = ('_class_type',)
 
     @property
     def is_ndarray(self):
@@ -693,6 +693,10 @@ class HomogeneousTupleVariable(TupleVariable):
     """
     __slots__ = ()
     is_homogeneous = True
+
+    def __init__(self, dtype, *args, **kwargs):
+        self._class_type = NativeHomogeneousTuple(dtype)
+        super().__init__(dtype, *args, **kwargs)
 
     def shape_can_change(self, i):
         """
@@ -729,8 +733,10 @@ class InhomogeneousTupleVariable(TupleVariable):
     _attribute_nodes = ('_vars',)
     is_homogeneous = False
 
-    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
+    def __init__(self, arg_vars, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
+        dtype = NativeInhomogeneousTuple(*[a.dtype for a in arg_vars])
+        self._class_type = dtype
         super().__init__(dtype, name, *args, **kwargs)
 
     def get_vars(self):

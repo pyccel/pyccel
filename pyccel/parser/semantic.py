@@ -1071,7 +1071,7 @@ class SemanticParser(BasicParser):
             if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
                 lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
-                lhs = InhomogeneousTupleVariable(elem_vars, dtype, name, **d_lhs, is_temp=is_temp)
+                lhs = InhomogeneousTupleVariable(elem_vars, name, **d_lhs, is_temp=is_temp)
 
         else:
             new_type = HomogeneousTupleVariable \

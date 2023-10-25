@@ -17,6 +17,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, NativeGeneric)
+from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -28,29 +29,29 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'python_builtin_datatype'
     'Lambda',
     'PythonAbs',
-    'PythonComplexProperty',
-    'PythonReal',
-    'PythonImag',
-    'PythonConjugate',
     'PythonBool',
     'PythonComplex',
+    'PythonComplexProperty',
+    'PythonConjugate',
     'PythonEnumerate',
     'PythonFloat',
+    'PythonImag',
     'PythonInt',
-    'PythonTuple',
     'PythonLen',
     'PythonList',
     'PythonMap',
-    'PythonPrint',
-    'PythonRange',
-    'PythonSum',
-    'PythonType',
-    'PythonZip',
     'PythonMax',
     'PythonMin',
-    'python_builtin_datatype'
+    'PythonPrint',
+    'PythonRange',
+    'PythonReal',
+    'PythonSum',
+    'PythonTuple',
+    'PythonType',
+    'PythonZip',
 )
 
 #==============================================================================
@@ -423,7 +424,7 @@ class PythonTuple(TypedAstNode):
         The arguments passed to the tuple function.
     """
     __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
-            '_dtype','_precision','_rank','_shape','_order')
+            '_dtype','_precision','_rank','_shape','_order', '_class_type')
     _iterable        = True
     _attribute_nodes = ('_args',)
 
@@ -481,11 +482,14 @@ class PythonTuple(TypedAstNode):
                 self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
                 self._rank  = len(self._shape)
 
+            self._class_type = NativeHomogeneousTuple(self._dtype)
+
         else:
             max_rank = max(a.rank for a in args)
-            self._rank      = max_rank + 1
-            self._dtype     = NativeGeneric()
-            self._precision = 0
+            self._rank       = max_rank + 1
+            self._dtype      = NativeInhomogeneousTuple(*[a.dtype for a in args])
+            self._precision  = 0
+            self._class_type = self._dtype
             if self._rank == 1:
                 self._shape     = (LiteralInteger(len(args)), )
             elif any(a.rank != max_rank for a in args):
