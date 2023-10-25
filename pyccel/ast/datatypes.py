@@ -38,9 +38,6 @@ __all__ = (
 # --------- FUNCTIONS -----------
 #
     'datatype',
-    'is_iterable_datatype',
-    'is_pyccel_datatype',
-    'is_with_construct_datatype',
     'str_dtype',
 #
 # --------- VARIABLES -----------
@@ -314,27 +311,6 @@ def DataTypeFactory(name, argnames=["_name"],
 
     dtype_and_precision_registry[name] = (newclass(), 0)
     return newclass
-
-def is_pyccel_datatype(expr):
-    return isinstance(expr, CustomDataType)
-
-def is_iterable_datatype(dtype):
-    """Returns True if dtype is an iterable class."""
-    if is_pyccel_datatype(dtype):
-        return dtype.is_iterable
-    elif isinstance(dtype, NativeRange):
-        return True
-    else:
-        return False
-
-
-# TODO improve
-def is_with_construct_datatype(dtype):
-    """Returns True if dtype is an with_construct class."""
-    if is_pyccel_datatype(dtype):
-        return dtype.is_with_construct
-    else:
-        return False
 
 def datatype(arg):
     """
