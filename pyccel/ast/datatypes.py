@@ -11,7 +11,7 @@ Classes and methods that handle supported datatypes in C/Fortran.
 
 import numpy
 
-from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -92,7 +92,7 @@ iso_c_binding_shortcut_mapping = {
 
 #==============================================================================
 
-class DataType(metaclass=Singleton):
+class DataType(metaclass=ArgumentSingleton):
     """
     Base class representing native datatypes.
 
@@ -132,38 +132,38 @@ class DataType(metaclass=Singleton):
         """
         return (self.__class__, ())
 
-class NativeBool(DataType):
+class NativeBool(DataType, metaclass=Singleton):
     """Class representing boolean datatype"""
     __slots__ = ()
     _name = 'Bool'
 
-class NativeInteger(DataType):
+class NativeInteger(DataType, metaclass=Singleton):
     """Class representing integer datatype"""
     __slots__ = ()
     _name = 'Int'
 
-class NativeFloat(DataType):
+class NativeFloat(DataType, metaclass=Singleton):
     """Class representing float datatype"""
     __slots__ = ()
     _name = 'Float'
 
-class NativeComplex(DataType):
+class NativeComplex(DataType, metaclass=Singleton):
     """Class representing complex datatype"""
     __slots__ = ()
     _name = 'Complex'
 
 NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
 
-class NativeString(DataType):
+class NativeString(DataType, metaclass=Singleton):
     """Class representing string datatype"""
     __slots__ = ()
     _name = 'String'
 
-class NativeVoid(DataType):
+class NativeVoid(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Void'
 
-class NativeNil(DataType):
+class NativeNil(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Nil'
 
@@ -172,15 +172,38 @@ class NativeTuple(DataType):
     __slots__ = ()
     _name = 'Tuple'
 
+class NativeHomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
+    __slots__ = ('_dtype',)
+
+    def __init__(self, datatype):
+        self._dtype = datatype
+        super().__init__()
+
+    @property
+    def name(self):
+        return f'tuple[{self._dtype.name}, ...]'
+
+class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
+    __slots__ = ('_dtypes',)
+
+    def __init__(self, *dtypes):
+        self._dtypes = dtypes
+        super().__init__()
+
+    @property
+    def name(self):
+        datatypes = ', '.join(d.name for d in self._dtypes)
+        return f'tuple[{datatypes}]'
+
 class NativeRange(DataType):
     __slots__ = ()
     _name = 'Range'
 
-class NativeSymbol(DataType):
+class NativeSymbol(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Symbol'
 
-class CustomDataType(DataType):
+class CustomDataType(DataType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
 
