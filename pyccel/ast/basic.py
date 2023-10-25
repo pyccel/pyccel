@@ -517,6 +517,17 @@ class TypedAstNode(PyccelAstNode):
         """
         return self._order # pylint: disable=no-member
 
+    @property
+    def class_type(self):
+        """
+        The type of the object.
+
+        The Python type of the object. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+        """
+        return self._class_type
+
     @classmethod
     def static_rank(cls):
         """
