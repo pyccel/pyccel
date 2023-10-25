@@ -1,6 +1,20 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Deprecated
+
+-  \[INTERNALS\] #1584 : Remove unused functions : `inline`, `subs`, `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
+-  \[INTERNALS\] #1584 : Remove unused class `ForIterator`.
+-  \[INTERNALS\] #1584 : Remove unused method `get_attribute`.
+
 ## \[1.10.0\] - 2023-10-23
 
 ### Added
