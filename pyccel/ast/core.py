@@ -886,23 +886,22 @@ class While(ScopedAstNode):
 
 
 class With(ScopedAstNode):
+    """
+    Represents a 'with' statement in the code.
 
-    """Represents a 'with' statement in the code.
-
+    Represents a 'with' statement in the code.
     Expressions are of the form:
         "with statement:
             body..."
 
+    !! This code is untested.
+
     Parameters
     ----------
     test : TypedAstNode
-        with definition statement given as an expression
+        With definition statement given as an expression.
     body : list of Pyccel objects
-        list of statements representing the body of the With statement.
-
-    Examples
-    --------
-
+        List of statements representing the body of the With statement.
     """
     __slots__ = ('_test','_body')
     _attribute_nodes = ('_test','_body')
@@ -935,6 +934,17 @@ class With(ScopedAstNode):
 
     @property
     def block(self):
+        """
+        Get the code block for the with block.
+
+        Get the code block created by calling the enter method followed by
+        the code in the with block and finally the exit method.
+
+        Returns
+        -------
+        Block
+            The code block.
+        """
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
