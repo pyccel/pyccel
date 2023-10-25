@@ -12,9 +12,10 @@ from textx.metamodel import metamodel_from_file
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
-from pyccel.ast.headers   import MetaVariable , UnionType, InterfaceHeader
+from pyccel.ast.headers   import MetaVariable, InterfaceHeader
 from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
+from pyccel.ast.datatypes import UnionType
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
