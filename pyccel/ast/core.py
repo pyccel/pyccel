@@ -3488,36 +3488,6 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
-    def get_attribute(self, O, attr):
-        """Returns the attribute attr of the class O of instance self."""
-
-        if not isinstance(attr, str):
-            raise TypeError('Expecting attribute to be a string')
-
-        if isinstance(O, Variable):
-            cls_name = O.name
-        else:
-            cls_name = str(O)
-
-        attributes = {}
-        for i in self.attributes:
-            attributes[i.name] = i
-
-        if not attr in attributes:
-            raise ValueError('{0} is not an attribute of {1}'.format(attr,
-                             str(self)))
-
-        var = attributes[attr]
-        name = DottedName(cls_name, var.name)
-        return Variable(
-            var.dtype,
-            name,
-            rank=var.rank,
-            memory_handling=var.memory_handling,
-            shape=var.shape,
-            cls_base=var.cls_base,
-            )
-
     def get_method(self, name):
         """
         Get the method `name` of the current class.
