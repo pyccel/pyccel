@@ -95,7 +95,6 @@ __all__ = (
     'With',
     'create_variable',
     'create_incremented_string',
-    'subs'
 )
 
 #==============================================================================
@@ -111,59 +110,6 @@ __all__ = (
 def apply(func, args, kwargs):return func(*args, **kwargs)
 
 #==============================================================================
-def subs(expr, new_elements):
-    """
-    Substitutes old for new in an expression.
-
-    Parameters
-    ----------
-    new_elements : list of tuples like [(x,2)(y,3)]
-    """
-
-    if len(list(new_elements)) == 0:
-        return expr
-    if isinstance(expr, (list, tuple)):
-        return [subs(i, new_elements) for i in expr]
-
-    elif isinstance(expr, While):
-        test = subs(expr.test, new_elements)
-        body = subs(expr.body, new_elements)
-        return While(test, body)
-
-    elif isinstance(expr, For):
-        target = subs(expr.target, new_elements)
-        it = subs(expr.iterable, new_elements)
-        target = expr.target
-        it = expr.iterable
-        body = subs(expr.body, new_elements)
-        return For(target, it, body)
-
-    elif isinstance(expr, If):
-        args = []
-        for block in expr.args:
-            test = block[0]
-            stmts = block[1]
-            t = subs(test, new_elements)
-            s = subs(stmts, new_elements)
-            args.append((t, s))
-        return If(*args)
-
-    elif isinstance(expr, Return):
-
-        for i in new_elements:
-            expr = expr.subs(i[0],i[1])
-        return expr
-
-    elif isinstance(expr, Assign):
-        new_expr = expr.subs(new_elements)
-        new_expr.set_fst(expr.fst)
-        return new_expr
-    elif isinstance(expr, TypedAstNode):
-        return expr.subs(new_elements)
-
-    else:
-        return expr
-
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
     a PyccelSymbol with a name of the form:
