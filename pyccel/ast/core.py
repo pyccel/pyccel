@@ -65,7 +65,6 @@ __all__ = (
     'ErrorExit',
     'Exit',
     'For',
-    'ForIterator',
     'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
@@ -1717,61 +1716,6 @@ class DoConcurrent(For):
     __slots__ = ()
     pass
 
-
-class ForIterator(For):
-
-    """Class that describes iterable classes defined by the user."""
-    __slots__ = ()
-
-    def __init__(
-        self,
-        target,
-        iterable,
-        body,
-        ):
-
-        if isinstance(iterable, Variable):
-            iterable = PythonRange(PythonLen(iterable))
-        super().__init__(target, iterable, body)
-
-    # TODO uncomment later when we intriduce iterators
-    # @property
-    # def target(self):
-    #    ts = super(ForIterator, self).target
-
-    #    if not(len(ts) == self.depth):
-    #        raise ValueError('wrong number of targets')
-
-    #    return ts
-
-    @property
-    def depth(self):
-        it = self.iterable
-        if isinstance(it, Variable):
-            if isinstance(it.dtype, NativeRange):
-                return 1
-
-            cls_base = it.cls_base
-            if not cls_base:
-                raise TypeError('cls_base undefined')
-
-            methods = cls_base.methods_as_dict
-            it_method = methods['__iter__']
-
-            it_vars = []
-            for stmt in it_method.body:
-                if isinstance(stmt, Assign):
-                    it_vars.append(stmt.lhs)
-
-            n = len(set(str(var.name) for var in it_vars))
-            return n
-        else:
-
-            return 1
-
-    @property
-    def ranges(self):
-        return get_iterable_ranges(self.iterable)
 
 class FunctionCallArgument(PyccelAstNode):
     """

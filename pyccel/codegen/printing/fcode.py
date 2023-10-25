@@ -2331,49 +2331,6 @@ class FCodePrinter(CodePrinter):
         return 'worker({})'.format(args)
     # .....................................................
 
-    def _print_ForIterator(self, expr):
-        return self._print_For(expr)
-
-        prolog = ''
-        epilog = ''
-
-        # ...
-        def _do_range(target, iterable, prolog, epilog):
-            tar        = self._print(target)
-            range_code = self._print(iterable)
-
-            prolog += 'do {0} = {1}\n'.format(tar, range_code)
-            epilog = 'end do\n' + epilog
-
-            return prolog, epilog
-        # ...
-
-        # ...
-        if not isinstance(expr.iterable, (Variable, ConstructorCall)):
-            raise TypeError('iterable must be Variable or ConstructorCall.')
-        # ...
-
-        # ...
-        targets = expr.target
-        if isinstance(expr.iterable, Variable):
-            iters = expr.ranges
-        elif isinstance(expr.iterable, ConstructorCall):
-            iters = get_iterable_ranges(expr.iterable)
-        # ...
-
-        # ...
-        for i,a in zip(targets, iters):
-            prolog, epilog = _do_range(i, a, \
-                                       prolog, epilog)
-
-        body = ''.join(self._print(i) for i in expr.body)
-        # ...
-
-        return ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-
-
     #def _print_Block(self, expr):
     #    body    = '\n'.join(self._print(i) for i in expr.body)
     #    prelude = '\n'.join(self._print(i) for i in expr.declarations)
