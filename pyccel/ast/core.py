@@ -95,7 +95,6 @@ __all__ = (
     'With',
     'create_variable',
     'create_incremented_string',
-    'inline',
     'subs'
 )
 
@@ -164,12 +163,6 @@ def subs(expr, new_elements):
 
     else:
         return expr
-
-def inline(func, args):
-    local_vars = func.local_vars
-    body = func.body
-    body = subs(body, zip(func.arguments, args))
-    return Block(str(func.name), local_vars, body)
 
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
@@ -1006,8 +999,8 @@ class With(ScopedAstNode):
                 start = i
             elif str(i.name) == '__exit__':
                 end   = i
-        start = inline(start,[])
-        end   = inline(end  ,[])
+        start = FunctionCall(start,[])
+        end   = FunctionCall(end  ,[])
 
         # TODO check if enter is empty or not first
 
