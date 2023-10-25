@@ -900,8 +900,10 @@ class With(ScopedAstNode):
     ----------
     test : TypedAstNode
         With definition statement given as an expression.
-    body : list of Pyccel objects
+    body : list of PyccelAstNodes
         List of statements representing the body of the With statement.
+    scope : Scope
+        The scope of the block.
     """
     __slots__ = ('_test','_body')
     _attribute_nodes = ('_test','_body')
