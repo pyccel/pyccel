@@ -28,39 +28,61 @@ Pyccel strives to provide robust support for object-oriented programming concept
 
 ```python
 import numpy as np
+from pyccel.decorators import inline
+
 class MyClass:
     def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
         self.param2 = param2
-        print("Object created!")
-        print(param1, param2)
+        print("MyClass Object created!")
 
-if __name__ == "__main__":
-    obj = MyClass(1, np.ones(4))
+    @inline
+    def get_param(self : 'MyClass'):
+        print(self.param1, self.param2)
+
+class MyClass1:
+    def __init__(self : 'MyClass1'):
+        print("MyClass1 Object created!")
+
+    def Method1(self : 'MyClass1', param1 : 'MyClass'):
+        self.param = param1
+
+    def Method2(self : 'MyClass1'):
+        return MyClass(2, np.ones(4))
+
+if __name__ == '__main__':
+    obj = MyClass1()
+    obj.Method1(obj.Method2())
+    obj.param.get_param()
 ```
 
 ### PYTHON _OUTPUT_
 ```Shell
-Object created!
-1 [1. 1. 1. 1.]
+MyClass1 Object created!
+MyClass Object created!
+2 [1. 1. 1. 1.]
 ```
 
 ### - Header File Equivalent
 
 ```C
-#ifndef SBOOF_H
-#define SBOOF_H
-
 struct MyClass {
     int64_t param1;
     t_ndarray param2;
     bool is_freed;
 };
+struct MyClass1 {
+    bool is_freed;
+    struct MyClass param;
+};
 
 void MyClass__init__(struct MyClass* self, int64_t param1, t_ndarray param2);
+void MyClass__get_param(struct MyClass* self);
 void MyClass__del__(struct MyClass* self);
-
-#endif // sboof_H
+void MyClass1__init__(struct MyClass1* self);
+void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1);
+struct MyClass MyClass1__Method2(struct MyClass1* self);
+void MyClass1__del__(struct MyClass1* self);
 ```
 ### - C File Equivalent
 
@@ -71,124 +93,6 @@ void MyClass__init__(struct MyClass* self, int64_t param1, t_ndarray param2)
     self->is_freed = 0;
     self->param1 = param1;
     alias_assign(&self->param2, param2);
-    printf("%s\n", "Object created!");
-}
-/*........................................*/
-/*........................................*/
-void MyClass__del__(struct MyClass* self)
-{
-    if (!self->is_freed)
-    {
-        // pass
-        free_pointer(&self->param2);
-        self->is_freed = 1;
-    }
-}
-/*........................................*/
-```
-
-### - C Program File Equivalent
-```C
-int main()
-{
-    t_ndarray Dummy_0000 = {.shape = NULL};
-    struct MyClass obj;
-    Dummy_0000 = array_create(1, (int64_t[]){INT64_C(1)}, nd_double, false, order_c);
-    array_fill((double)1.0, Dummy_0000);
-    MyClass__init__(&obj, INT64_C(1), Dummy_0000);
-    free_array(&Dummy_0000);
-    MyClass__del__(&obj);
-    return 0;
-}
-```
-
-### C/Valgrind _OUTPUT_
-
-```Shell
-Object created!
-1 [1.000000000000]
-
-==151606== Memcheck, a memory error detector
-==151606== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==151606== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==151606== Command: ./MyClass
-==151606==
-Object created!
-1 [1.000000000000]
-==151606==
-==151606== HEAP SUMMARY:
-==151606==     in use at exit: 0 bytes in 0 blocks
-==151606==   total heap usage: 6 allocs, 6 frees, 1,064 bytes allocated
-==151606==
-==151606== All heap blocks were freed -- no leaks are possible
-==151606==
-==151606== For lists of detected and suppressed errors, rerun with: -s
-==151606== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0
-```
-
-### - Python Example
-
-```Python
-class MyClass:
-    def __init__(self : 'MyClass', param1 : 'int'):
-        self.param1 = param1
-        print("MyClass Object created!")
-
-class MyClass1:
-    def __init__(self : 'MyClass1'):
-        print("MyClass1 Object created!")
-
-    def Method1(self : 'MyClass1', param1 : 'MyClass'):
-        self.param = param1
-
-    def Method2(self : 'MyClass1'):
-        return MyClass(1)
-
-if __name__ == '__main__':
-    obj = MyClass1()
-    obj.Method1(obj.Method2())
-    print(obj.param.param1)
-```
-### - PYTHON _OUTPUT_
-
-```Shell
-MyClass1 Object created!
-MyClass Object created!
-1
-```
-
-### - C Header File Equivalent
-
-```C
-#ifndef SBOOF_H
-#define SBOOF_H
-
-struct MyClass {
-    int64_t param1;
-    bool is_freed;
-};
-struct MyClass1 {
-    bool is_freed;
-    struct MyClass param;
-};
-
-void MyClass__init__(struct MyClass* self, int64_t param1);
-void MyClass__del__(struct MyClass* self);
-void MyClass1__init__(struct MyClass1* self);
-void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1);
-struct MyClass MyClass1__Method2(struct MyClass1* self);
-void MyClass1__del__(struct MyClass1* self);
-
-#endif // sboof_H
-```
-### - C File Equivalent
-
-```C
-/*........................................*/
-void MyClass__init__(struct MyClass* self, int64_t param1)
-{
-    self->is_freed = 0;
-    self->param1 = param1;
     printf("%s\n", "MyClass Object created!");
 }
 /*........................................*/
@@ -198,6 +102,7 @@ void MyClass__del__(struct MyClass* self)
     if (!self->is_freed)
     {
         // pass
+        free_pointer(&self->param2);
         self->is_freed = 1;
     }
 }
@@ -218,8 +123,12 @@ void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1)
 /*........................................*/
 struct MyClass MyClass1__Method2(struct MyClass1* self)
 {
+    t_ndarray Dummy_0000 = {.shape = NULL};
     struct MyClass Out_0001;
-    MyClass__init__(&Out_0001, INT64_C(1));
+    Dummy_0000 = array_create(1, (int64_t[]){INT64_C(4)}, nd_double, false, order_c);
+    array_fill((double)1.0, Dummy_0000);
+    MyClass__init__(&Out_0001, INT64_C(2), Dummy_0000);
+    free_array(&Dummy_0000);
     return Out_0001;
 }
 /*........................................*/
@@ -242,21 +151,44 @@ int main()
 {
     struct MyClass1 obj;
     struct MyClass Dummy_0000;
+    int64_t i;
     MyClass1__init__(&obj);
     Dummy_0000 = MyClass1__Method2(&obj);
     MyClass1__Method1(&obj, &Dummy_0000);
-    printf("%"PRId64"\n", obj.param.param1);
+    printf("%"PRId64" ", obj.param.param1);
+    printf("%s", "[");
+    for (i = INT64_C(0); i < obj.param.param2.shape[INT64_C(0)] - INT64_C(1); i += INT64_C(1))
+    {
+        printf("%.12lf ", GET_ELEMENT(obj.param.param2, nd_double, (int64_t)i));
+    }
+    printf("%.12lf]\n", GET_ELEMENT(obj.param.param2, nd_double, (int64_t)obj.param.param2.shape[INT64_C(0)] - INT64_C(1)));
     MyClass1__del__(&obj);
     return 0;
 }
 ```
 
-### - C _OUTPUT_
+### C/Valgrind _OUTPUT_
 
 ```Shell
 MyClass1 Object created!
 MyClass Object created!
-1
+2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
+
+==49575== Memcheck, a memory error detector
+==49575== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==49575== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==49575== Command: ./MyClass
+==49575==
+2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
+==49575==
+==49575== HEAP SUMMARY:
+==49575==     in use at exit: 0 bytes in 0 blocks
+==49575==   total heap usage: 6 allocs, 6 frees, 1,088 bytes allocated
+==49575==
+==49575== All heap blocks were freed -- no leaks are possible
+==49575==
+==49575== For lists of detected and suppressed errors, rerun with: -s
+==49575== ERROR SUMMARY: 4 errors from 2 contexts (suppressed: 0 from 0)
 ```
 
 ## Limitations
