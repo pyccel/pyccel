@@ -4,7 +4,7 @@ Pyccel strives to provide robust support for object-oriented programming concept
 
 ## Constructor Method
 
--   The Constructor Method, `__init__`, is used to initialize the object's attributes.
+-   The Constructor Method, `__init__`, is used to initialise the object's attributes.
 -   It must be named `__init__`, or the Pyccel compiler will generate an error.
 -   The first parameter of the `Constructor Method` should always be named `self`.
 -   Pyccel doesn't support Interface Constructor.
@@ -121,7 +121,7 @@ Object created!
 ## Class Methods
 
 -   Pyccel now supports Class Methods and Interfaces.
--   In Pyccel, class attributes can be initialized within any method of the class.
+-   In Pyccel, class attributes can be initialised within any method of the class.
 -   Pyccel enables classes to be passed as arguments to methods and functions and returned with modified data.
 -   The first parameter of the Class Method should always be named `self`.
 
