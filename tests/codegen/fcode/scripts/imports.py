@@ -10,5 +10,6 @@ from decorators_types import decr
 yi = decr(xi)
 
 from classes_2 import Point
+from numpy import ones
 
-p = Point(0.0)
+p = Point(ones(4))
