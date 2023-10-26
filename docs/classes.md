@@ -2,6 +2,8 @@
 
 Pyccel strives to provide robust support for object-oriented programming concepts commonly used by developers. In Pyccel, classes are a fundamental building block for creating structured and reusable code. This documentation outlines key features and considerations when working with classes in Pyccel.
 
+:warning: Pyccel's class support is currently limited to translations only. The implementation of the wrapper which will make the class accessible from Python is in progress.
+
 ## Constructor Method
 
 -   The Constructor Method, `__init__`, is used to initialise the object's attributes.
