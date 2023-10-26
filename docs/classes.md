@@ -18,6 +18,12 @@ Pyccel strives to provide robust support for object-oriented programming concept
     -   Attributes are released during the destructor's execution.
     -   The class destructor is called automatically once the class goes out of scope.
 
+## Class Methods
+
+-   Pyccel now supports Class Methods and Interfaces.
+-   In Pyccel, class attributes can be initialised within any method of the class.
+-   Pyccel enables classes to be passed as arguments to methods and functions and returned with modified data.
+
 ### - Python Example
 
 ```python
@@ -119,12 +125,6 @@ Object created!
 ==151606== For lists of detected and suppressed errors, rerun with: -s
 ==151606== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0
 ```
-
-## Class Methods
-
--   Pyccel now supports Class Methods and Interfaces.
--   In Pyccel, class attributes can be initialised within any method of the class.
--   Pyccel enables classes to be passed as arguments to methods and functions and returned with modified data.
 
 ### - Python Example
 
