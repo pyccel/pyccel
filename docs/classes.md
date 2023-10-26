@@ -261,4 +261,4 @@ MyClass Object created!
 
 ## Limitations
 
-It's important to note that Pyccel does not support class wrappers, inheritance, properties, magic methods or class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
+It's important to note that Pyccel does not support class inheritance, properties, magic methods or class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
