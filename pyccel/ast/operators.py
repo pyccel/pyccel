@@ -149,7 +149,7 @@ class PyccelOperator(TypedAstNode):
         super().__init__()
 
     def _set_dtype(self):
-        self._dtype, self._precision = self._calculate_dtype(*self._args)  # pylint: disable=no-member
+        self._dtype, self._precision, self._class_type = self._calculate_dtype(*self._args)  # pylint: disable=no-member
 
     def _set_shape_rank(self):
         self._shape, self._rank = self._calculate_shape_rank(*self._args)  # pylint: disable=no-member
@@ -233,7 +233,7 @@ class PyccelUnaryOperator(PyccelOperator):
     arg: TypedAstNode
         The argument passed to the operator
     """
-    __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype', '_precision','_shape','_rank','_order','_class_type')
 
     @staticmethod
     def _calculate_dtype(*args):
@@ -243,7 +243,8 @@ class PyccelUnaryOperator(PyccelOperator):
         a = args[0]
         dtype = a.dtype
         precision = a.precision
-        return dtype, precision
+        class_type = a.class_type
+        return dtype, precision, class_type
 
     @staticmethod
     def _calculate_shape_rank(*args):
@@ -326,7 +327,8 @@ class PyccelNot(PyccelUnaryOperator):
         """
         dtype = NativeBool()
         precision = -1
-        return dtype, precision
+        class_type = NativeBool()
+        return dtype, precision, class_type
 
     @staticmethod
     def _calculate_shape_rank(*args):
@@ -394,15 +396,25 @@ class PyccelBinaryOperator(PyccelOperator):
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
+        class_types = [a.class_type for a in args]
+        possible_class_types = set([c for c in class_types if c not in NativeNumeric])
+
+        if len(possible_class_types) == 1:
+            class_type = possible_class_types.pop()
+        elif len(possible_class_types) == 0:
+            class_type = None
+        else:
+            raise TypeError('cannot determine the type of {}'.format(args))
+
         if strs:
             assert len(integers + floats + complexes) == 0
-            return cls._handle_str_type(strs)
+            return cls._handle_str_type(strs), class_type
         elif complexes:
-            return cls._handle_complex_type(args)
+            return cls._handle_complex_type(args), class_type
         elif floats:
-            return cls._handle_float_type(args)
+            return cls._handle_float_type(args), class_type
         elif integers:
-            return cls._handle_integer_type(args)
+            return cls._handle_integer_type(args), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
 
@@ -607,14 +619,14 @@ class PyccelMul(PyccelArithmeticOperator):
             if (arg2 == 1):
                 return arg1
             if (arg1 == 0 or arg2 == 0):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(0, dtype, precision)
             if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
                 return PyccelUnarySub(arg2)
             if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
                 return PyccelUnarySub(arg1)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(arg1.python_value * arg2.python_value,
                                           dtype, precision)
         return super().__new__(cls)
@@ -647,7 +659,7 @@ class PyccelMinus(PyccelArithmeticOperator):
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
             elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(arg1.python_value - arg2.python_value,
                                           dtype, precision)
         if isinstance(arg1, LiteralFloat) and \
@@ -764,7 +776,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     def _calculate_dtype(*args):
         dtype = NativeBool()
         precision = -1
-        return dtype, precision
+        return dtype, precision, dtype
 
 #==============================================================================
 
@@ -1119,6 +1131,16 @@ class IfTernaryOperator(PyccelOperator):
             dtype = value_true.dtype
 
         precision = max_precision([value_true, value_false])
+
+        class_types = [a.class_type for a in (value_true, value_false)]
+        possible_class_types = set([c for c in class_types if c not in NativeNumeric])
+
+        if len(possible_class_types) == 1:
+            class_type = possible_class_types.pop()
+        elif len(possible_class_types) == 0:
+            class_type = None
+        else:
+            raise TypeError('Cannot determine the type of the result of the conditional.')
         return dtype, precision
 
     @staticmethod

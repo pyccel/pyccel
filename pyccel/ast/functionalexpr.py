@@ -72,11 +72,12 @@ class FunctionalFor(TypedAstNode):
         super().__init__()
 
         if pyccel_stage != 'syntactic':
-            self._dtype     = lhs.dtype
-            self._precision = lhs.precision
-            self._rank      = lhs.rank
-            self._shape     = lhs.shape
-            self._order     = lhs.order
+            self._dtype      = lhs.dtype
+            self._precision  = lhs.precision
+            self._rank       = lhs.rank
+            self._shape      = lhs.shape
+            self._order      = lhs.order
+            self._class_type = lhs.class_type
 
     @property
     def loops(self):

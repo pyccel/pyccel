@@ -112,7 +112,7 @@ class Variable(TypedAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -120,6 +120,7 @@ class Variable(TypedAstNode):
         dtype,
         name,
         *,
+        class_type = None,
         rank=0,
         memory_handling='stack',
         is_const=False,
@@ -211,11 +212,17 @@ class Variable(TypedAstNode):
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
+        if rank > 0 and class_type is None:
+            raise TypeError("Multi-dimensional object requires a container type")
+        elif class_type is None:
+            class_type = dtype
+
         self._alloc_shape = shape
         self._dtype = dtype
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        self._class_type = class_type
         if self._rank < 2:
             self._order = None
 
@@ -695,8 +702,7 @@ class HomogeneousTupleVariable(TupleVariable):
     is_homogeneous = True
 
     def __init__(self, dtype, *args, **kwargs):
-        self._class_type = NativeHomogeneousTuple(dtype)
-        super().__init__(dtype, *args, **kwargs)
+        super().__init__(dtype, *args, **kwargs, class_type = NativeHomogeneousTuple(dtype))
 
     def shape_can_change(self, i):
         """
@@ -736,8 +742,7 @@ class InhomogeneousTupleVariable(TupleVariable):
     def __init__(self, arg_vars, name, *args, **kwargs):
         self._vars = tuple(arg_vars)
         dtype = NativeInhomogeneousTuple(*[a.dtype for a in arg_vars])
-        self._class_type = dtype
-        super().__init__(dtype, name, *args, **kwargs)
+        super().__init__(dtype, name, *args, **kwargs, class_type = dtype)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -943,6 +948,11 @@ class IndexedElement(TypedAstNode):
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
+
+        if self.rank == 0:
+            self._class_type = self.dtype
+        else:
+            self._class_type = base.class_type
 
     @property
     def base(self):

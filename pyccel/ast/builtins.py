@@ -188,6 +188,7 @@ class PythonBool(TypedAstNode):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeBool()
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -221,6 +222,7 @@ class PythonComplex(TypedAstNode):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeComplex()
     _real_cast = PythonReal
     _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
@@ -361,6 +363,7 @@ class PythonFloat(TypedAstNode):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeFloat()
     _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
@@ -393,6 +396,7 @@ class PythonInt(TypedAstNode):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
     _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):

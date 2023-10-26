@@ -20,18 +20,19 @@ class ObjectAddress(TypedAstNode):
     ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
     """
 
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order')
+    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
-        self._obj       = obj
-        self._rank      = obj.rank
-        self._shape     = obj.shape
-        self._precision = obj.precision
-        self._dtype     = obj.dtype
-        self._order     = obj.order
+        self._obj        = obj
+        self._rank       = obj.rank
+        self._shape      = obj.shape
+        self._precision  = obj.precision
+        self._dtype      = obj.dtype
+        self._order      = obj.order
+        self._class_type = obj.class_type
         super().__init__()
 
     @property

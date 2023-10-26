@@ -195,6 +195,9 @@ class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
         datatypes = ', '.join(d.name for d in self._dtypes)
         return f'tuple[{datatypes}]'
 
+    def __getitem__(self, i):
+        return self._dtypes[i]
+
 class NativeRange(DataType):
     __slots__ = ()
     _name = 'Range'

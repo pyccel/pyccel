@@ -218,6 +218,7 @@ class PyBuildValueNode(TypedAstNode):
     _rank = 0
     _precision = 0
     _shape = ()
+    _class_type = PyccelPyObject
     _order = None
 
     def __init__(self, result_args = ()):
@@ -259,6 +260,7 @@ class PyModule_AddObject(TypedAstNode):
     _precision = 4
     _rank = 0
     _shape = None
+    _class_type = NativeInteger()
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, LiteralString):

@@ -547,45 +547,34 @@ class SemanticParser(BasicParser):
 
         errors = Errors()
 
-        d_var = {}
-        # TODO improve => put settings as attribut of Parser
-
-        if expr in (PythonInt, PythonFloat, PythonComplex, PythonBool, NumpyBool, NumpyInt, NumpyInt8, NumpyInt16,
-                      NumpyInt32, NumpyInt64, NumpyComplex, NumpyComplex64,
-                      NumpyComplex128, NumpyFloat, NumpyFloat64, NumpyFloat32):
-
+        if isinstance(expr, type):
             d_var['datatype'   ] = '*'
             d_var['rank'       ] = 0
             d_var['precision'  ] = 0
             return d_var
 
-        elif isinstance(expr, Variable):
-            d_var['datatype'       ] = expr.dtype
+        d_var = {
+                'datatype' : expr.dtype,
+                'precision': expr.precision,
+                'shape'    : expr.shape,
+                'rank'     : expr.rank,
+                'order'    : expr.order,
+            }
+        # TODO improve => put settings as attribut of Parser
+
+        if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
-            d_var['shape'          ] = expr.shape
-            d_var['rank'           ] = expr.rank
+            d_var['class_type'     ] = expr.class_type
             d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype.name, 'classes')
             d_var['is_target'      ] = expr.is_target
-            d_var['order'          ] = expr.order
-            d_var['precision'      ] = expr.precision
             return d_var
 
         elif isinstance(expr, PythonTuple):
-            d_var['datatype'       ] = expr.dtype
-            d_var['precision'      ] = expr.precision
-            d_var['memory_handling'] = 'heap'
-            d_var['shape'          ] = expr.shape
-            d_var['rank'           ] = expr.rank
-            d_var['order'          ] = expr.order
             d_var['cls_base'       ] = TupleClass
+            d_var['memory_handling'] = 'heap'
             return d_var
 
         elif isinstance(expr, Concatenate):
-            d_var['datatype'      ] = expr.dtype
-            d_var['precision'     ] = expr.precision
-            d_var['shape'         ] = expr.shape
-            d_var['rank'          ] = expr.rank
-            d_var['order'         ] = expr.order
             d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
                 d_var['memory_handling'] = 'heap'
@@ -594,14 +583,6 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Duplicate):
-            d = self._infer_type(expr.val)
-
-            # TODO must check that it is consistent with pyccel's rules
-            # TODO improve
-            d_var['datatype'      ] = d['datatype']
-            d_var['rank'          ] = expr.rank
-            d_var['shape'         ] = expr.shape
-            d_var['order'         ] = expr.order
             d_var['cls_base'      ] = TupleClass
             if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
                 d_var['memory_handling'] = 'stack'
@@ -610,47 +591,23 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
-            d_var['datatype'   ] = expr.dtype
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = NumpyArrayClass
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             return d_var
 
         elif isinstance(expr, NumpyTranspose):
 
             var = expr.internal_var
 
-            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
-            d_var['datatype'      ] = var.dtype
-            d_var['shape'         ] = tuple(reversed(var.shape))
-            d_var['rank'          ] = var.rank
             d_var['cls_base'      ] = var.cls_base
             d_var['is_target'     ] = var.is_target
-            d_var['order'         ] = 'C' if var.order=='F' else 'F'
-            d_var['precision'     ] = var.precision
+            d_var['memory_handling'] = 'alias' if isinstance(var, Variable) else 'heap'
             return d_var
 
         elif isinstance(expr, TypedAstNode):
 
-            d_var['datatype'   ] = expr.dtype
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['shape'      ] = expr.shape
-            d_var['rank'       ] = expr.rank
-            d_var['order'      ] = expr.order
-            d_var['precision'  ] = expr.precision
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
-            return d_var
-
-        elif isinstance(expr, PythonRange):
-
-            d_var['datatype'   ] = NativeRange()
-            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['shape'      ] = None
-            d_var['rank'       ] = 0
-            d_var['cls_base'   ] = expr  # TODO: shall we keep it?
             return d_var
 
         elif isinstance(expr, Lambda):
