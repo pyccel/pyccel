@@ -31,9 +31,9 @@ import numpy as np
 from pyccel.decorators import inline
 
 class MyClass:
-    def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
+    def __init__(self : 'MyClass', param1 : 'int', param2 : 'int'):
         self.param1 = param1
-        self.param2 = param2
+        self.param2 = np.ones(param2)
         print("MyClass Object created!")
 
     @inline
@@ -48,7 +48,7 @@ class MyClass1:
         self.param = param1
 
     def Method2(self : 'MyClass1'):
-        return MyClass(2, np.ones(4))
+        return MyClass(2, 4)
 
 if __name__ == '__main__':
     obj = MyClass1()
@@ -76,7 +76,7 @@ struct MyClass1 {
     struct MyClass param;
 };
 
-void MyClass__init__(struct MyClass* self, int64_t param1, t_ndarray param2);
+void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2);
 void MyClass__get_param(struct MyClass* self);
 void MyClass__del__(struct MyClass* self);
 void MyClass1__init__(struct MyClass1* self);
@@ -88,11 +88,12 @@ void MyClass1__del__(struct MyClass1* self);
 
 ```C
 /*........................................*/
-void MyClass__init__(struct MyClass* self, int64_t param1, t_ndarray param2)
+void MyClass__init__(struct MyClass* self, int64_t param1, int64_t param2)
 {
     self->is_freed = 0;
     self->param1 = param1;
-    alias_assign(&self->param2, param2);
+    self->param2 = array_create(1, (int64_t[]){param2}, nd_double, false, order_c);
+    array_fill((double)1.0, self->param2);
     printf("%s\n", "MyClass Object created!");
 }
 /*........................................*/
@@ -102,7 +103,7 @@ void MyClass__del__(struct MyClass* self)
     if (!self->is_freed)
     {
         // pass
-        free_pointer(&self->param2);
+        free_array(&self->param2);
         self->is_freed = 1;
     }
 }
@@ -123,12 +124,8 @@ void MyClass1__Method1(struct MyClass1* self, struct MyClass* param1)
 /*........................................*/
 struct MyClass MyClass1__Method2(struct MyClass1* self)
 {
-    t_ndarray Dummy_0000 = {.shape = NULL};
     struct MyClass Out_0001;
-    Dummy_0000 = array_create(1, (int64_t[]){INT64_C(4)}, nd_double, false, order_c);
-    array_fill((double)1.0, Dummy_0000);
-    MyClass__init__(&Out_0001, INT64_C(2), Dummy_0000);
-    free_array(&Dummy_0000);
+    MyClass__init__(&Out_0001, INT64_C(2), INT64_C(4));
     return Out_0001;
 }
 /*........................................*/
@@ -174,21 +171,23 @@ MyClass1 Object created!
 MyClass Object created!
 2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
 
-==49575== Memcheck, a memory error detector
-==49575== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==49575== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==49575== Command: ./MyClass
-==49575==
+==158858== Memcheck, a memory error detector
+==158858== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==158858== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==158858== Command: ./MyClass
+==158858==
+MyClass1 Object created!
+MyClass Object created!
 2 [1.000000000000 1.000000000000 1.000000000000 1.000000000000]
-==49575==
-==49575== HEAP SUMMARY:
-==49575==     in use at exit: 0 bytes in 0 blocks
-==49575==   total heap usage: 6 allocs, 6 frees, 1,088 bytes allocated
-==49575==
-==49575== All heap blocks were freed -- no leaks are possible
-==49575==
-==49575== For lists of detected and suppressed errors, rerun with: -s
-==49575== ERROR SUMMARY: 4 errors from 2 contexts (suppressed: 0 from 0)
+==158858==
+==158858== HEAP SUMMARY:
+==158858==     in use at exit: 0 bytes in 0 blocks
+==158858==   total heap usage: 4 allocs, 4 frees, 1,072 bytes allocated
+==158858==
+==158858== All heap blocks were freed -- no leaks are possible
+==158858==
+==158858== For lists of detected and suppressed errors, rerun with: -s
+==158858== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
 ```
 
 ## Limitations
