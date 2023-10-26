@@ -101,6 +101,3 @@ unallocated
 mypy
 destructor
 destructor's
-VALGRIND
-initialize
-initialized

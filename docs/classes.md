@@ -94,7 +94,7 @@ int main()
 }
 ```
 
-### C/VALGRIND _OUTPUT_
+### C/Valgrind _OUTPUT_
 
 ```Shell
 Object created!
