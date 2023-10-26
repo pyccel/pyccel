@@ -610,13 +610,6 @@ class SemanticParser(BasicParser):
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
             return d_var
 
-        elif isinstance(expr, Lambda):
-
-            d_var['datatype'   ] = NativeSymbol()
-            d_var['memory_handling'] = 'stack' # because rank is 0 and no shape defined
-            d_var['rank'       ] = 0
-            return d_var
-
         else:
             type_name = type(expr).__name__
             msg = f'Type of Object : {type_name} cannot be infered'
