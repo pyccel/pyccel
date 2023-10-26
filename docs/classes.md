@@ -12,8 +12,9 @@ Pyccel strives to provide robust support for object-oriented programming concept
 ## Destructor Method
 
 -   The Destructor Method, `__del__`, is used to perform cleanup actions when an object is destroyed.
--   Pyccel automatically adds attributes that need to be freed to the garbage collector. These attributes are subsequently released during the destructor's execution. This mechanism helps manage memory efficiently, ensuring that resources are appropriately deallocated.
--   One notable feature of Pyccel is its automatic management of destructor calls, even when constructors are invoked in different scopes. This ensures that resources are properly cleaned up when class instances are no longer in use.
+-   Pyccel automatically takes care of garbage collection for classes.
+    - Attributes are released during the destructor's execution.
+    - The class destructor is called automatically once the class goes out of scope.
 -   The first parameter of the `Destructor Method` should always be named `self`.
 
 ### - Python Example
