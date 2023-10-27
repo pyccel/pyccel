@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1587 : Fix unnecessarily long epyccel file names.
+
 ### Changed
 
 ### Deprecated
