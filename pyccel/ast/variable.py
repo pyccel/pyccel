@@ -217,7 +217,7 @@ class Variable(TypedAstNode):
         elif class_type is None:
             class_type = dtype
 
-        if class_type is not dtype:
+        if class_type is not dtype and cls_base is None:
             raise TypeError(f"Missing class definition for type {dtype}")
 
         self._alloc_shape = shape
