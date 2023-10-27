@@ -2154,7 +2154,8 @@ class SemanticParser(BasicParser):
                 prec  = t.precision
                 rank  = t.rank
                 class_type = t.cls_type
-                v = var_class(dtype, name, precision = prec,
+                cls_base = get_cls_base(dtype, prec, class_type) or self.scope.find(class_type.name, 'classes')
+                v = var_class(dtype, name, precision = prec, cls_base = cls_base,
                         shape = None, rank = rank, order = t.order, class_type = t.cls_type,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
@@ -2298,7 +2299,10 @@ class SemanticParser(BasicParser):
                     severity='fatal')
 
         d_var = self._infer_type(first)
-        cls_base = get_cls_base(d_var['datatype'], d_var['precision'], d_var['class_type'])
+        dtype = d_var['datatype']
+        cls_base = get_cls_base(dtype, d_var['precision'], d_var['class_type'])
+        if cls_base is None:
+            cls_base = self.scope.find(dtype.name, 'classes')
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
