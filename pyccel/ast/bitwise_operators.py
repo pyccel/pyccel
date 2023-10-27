@@ -87,16 +87,17 @@ class PyccelBitOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
+        try:
+            dtype = arg1.dtype + arg2.dtype
+            class_type = sum([a.class_type for a in args], start=NativeGeneric())
+        except NotImplementedError:
+            raise TypeError('cannot determine the type of {}'.format(args))
 
-        class_type = sum([a.class_type for a in args], start=NativeGeneric())
-
-        if strs or complexes or floats:
+        if dtype in (NativeString(), NativeComplex(), NativeFloat()):
             raise TypeError('unsupported operand type(s): {}'.format(args))
-        elif integers:
+        elif (dtype in (NativeInteger(), NativeBool())):
+            if class_type is NativeBool():
+                class_type = NativeInteger()
             return *self._handle_integer_type(integers), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))

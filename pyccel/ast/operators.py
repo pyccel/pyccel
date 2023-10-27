@@ -381,7 +381,7 @@ class PyccelBinaryOperator(PyccelOperator):
         super().__init__(arg1, arg2)
 
     @classmethod
-    def _calculate_dtype(cls, *args):
+    def _calculate_dtype(cls, arg1, arg2):
         """ Sets the dtype and precision
 
         If one argument is a string then all arguments must be strings
@@ -391,21 +391,21 @@ class PyccelBinaryOperator(PyccelOperator):
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
-        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
+        try:
+            dtype = arg1.dtype + arg2.dtype
+            class_type = sum([a.class_type for a in args], start=NativeGeneric())
+        except NotImplementedError:
+            raise TypeError('cannot determine the type of {}'.format(args))
 
-        class_type = sum([a.class_type for a in args], start=NativeGeneric())
-
-        if strs:
-            assert len(integers + floats + complexes) == 0
+        if dtype is NativeString():
             return *cls._handle_str_type(strs), class_type
-        elif complexes:
+        elif dtype is NativeComplex():
             return *cls._handle_complex_type(args), class_type
-        elif floats:
+        elif dtype is NativeFloat():
             return *cls._handle_float_type(args), class_type
-        elif integers:
+        elif dtype in (NativeInteger(), NativeBool()):
+            if class_type is NativeBool():
+                class_type = NativeInteger()
             return *cls._handle_integer_type(args), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
