@@ -207,6 +207,8 @@ def get_cls_base(dtype, precision, container_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
+    if isinstance(dtype, CustomDataType) and container_type is dtype:
+        return None
     if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
     elif dtype in NativeNumeric:
