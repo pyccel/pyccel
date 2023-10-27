@@ -3823,7 +3823,7 @@ class SemanticParser(BasicParser):
         for method in cls.methods:
             if method.name == '__del__':
                 self._current_function = method.name
-                attribute = [attr for attr in cls.attributes if not attr.on_stack or isinstance(attr.dtype, CustomDataType)]
+                attribute = [attr for attr in cls.attributes if not (attr.on_stack or isinstance(attr.dtype, CustomDataType))]
                 if attribute:
                     # Create a new list that store local attributes
                     self._allocs.append([])
