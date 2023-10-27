@@ -24,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   #1336 : Use template as a partial type.
 -   #1509 : Add type annotations for variables.
 -   #1528 : Add support for variable declarations in classes.
+-   #1491 : Add documentation for classes.
 
 ### Fixed
 
