@@ -766,7 +766,7 @@ class CCodePrinter(CodePrinter):
                     funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    if func.is_inline:
+                    if not func.is_inline:
                         func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
                         funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
