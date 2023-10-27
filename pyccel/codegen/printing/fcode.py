@@ -316,6 +316,9 @@ class FCodePrinter(CodePrinter):
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
         args = []
+        if isinstance(expr, DottedFunctionCall):
+            if self.scope.find(expr.funcdef.cls_name, 'classes'):
+                args.append(expr.args[0])
         for a in provided_args:
             if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
@@ -2003,16 +2006,17 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        ls = [self._print(i.name) for i in expr.methods]
+        ls = [self._print(i.name) for i in expr.methods if not i.is_inline]
         for i in ls:
             j = _default_methods.get(i,i)
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
         methods = ''.join('procedure :: {0} => {1}\n'.format(i, j) for i, j in zip(aliases, names))
         for i in expr.interfaces:
-            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions)
-            methods += 'generic, public :: {0} => {1}\n'.format(self._print(i.name), names)
-            methods += 'procedure :: {0}\n'.format(names)
+            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions if not j.is_inline)
+            if names:
+                methods += 'generic, public :: {0} => {1}\n'.format(self._print(i.name), names)
+                methods += 'procedure :: {0}\n'.format(names)
 
 
 

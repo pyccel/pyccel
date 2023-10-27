@@ -1,5 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 
+from pyccel.decorators import inline
+
 class Point(object):
     def __init__(self : 'Point', x : float, y : float):
         self.x = x
@@ -11,6 +13,10 @@ class Point(object):
     def translate(self : 'Point', a : float, b : float):
         self.x = self.x + a
         self.y = self.y + b
+
+    @inline
+    def get_attributes(self : 'Point', a : 'int | float'):
+        print(self.x, self.y, a)
 
 if __name__ == '__main__':
     i = (0.0, 0.0)
@@ -28,6 +34,8 @@ if __name__ == '__main__':
     p.translate(1.0, 2.0)
 
     print(p.x, p.y)
+    p.get_attributes(1)
+    p.get_attributes(1.1)
     print(a)
 
     del p
