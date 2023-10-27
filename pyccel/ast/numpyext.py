@@ -118,6 +118,7 @@ __all__ = (
 
 class NumpyNDArrayType(DataType):
     __slots__ = ('_dtype', '_rank', '_order')
+    name = 'numpy.ndarray'
     def __new__(cls, dtype, rank, order):
         if rank == 0:
             return dtype
