@@ -1809,11 +1809,13 @@ class SemanticParser(BasicParser):
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
                                 shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
                                 is_const = t.is_const, is_optional = False,
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype, t.rank, t.order),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
                                 shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype, t.rank, t.order),
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
