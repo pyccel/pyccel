@@ -88,6 +88,7 @@ class MathFunctionFloat(MathFunctionBase):
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
+    _class_type = NativeFloat()
 
 
 class MathFunctionInt(MathFunctionBase):
@@ -95,6 +96,7 @@ class MathFunctionInt(MathFunctionBase):
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
+    _class_type = NativeInteger()
 
 
 class MathFunctionBool(MathFunctionBase):
@@ -102,6 +104,7 @@ class MathFunctionBool(MathFunctionBase):
     name = 'bool'
     _dtype = NativeBool()
     _precision = -1
+    _class_type = NativeBool()
 
 #==============================================================================
 # Functions that return one value

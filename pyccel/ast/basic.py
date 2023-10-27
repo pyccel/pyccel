@@ -586,6 +586,20 @@ class TypedAstNode(PyccelAstNode):
         """
         return cls._order # pylint: disable=no-member
 
+    @classmethod
+    def static_class_type(cls):
+        """
+        The type of the object.
+
+        The Python type of the object. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+
+        This function is static and will return an AttributeError if the
+        class does not have a predetermined order.
+        """
+        return cls._class_type
+
     def copy_attributes(self, x):
         """
         Copy the attributes describing a TypedAstNode into this node.

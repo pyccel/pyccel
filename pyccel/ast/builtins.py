@@ -71,6 +71,7 @@ class PythonComplexProperty(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeFloat()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -156,6 +157,7 @@ class PythonConjugate(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeComplex()
     name = 'conjugate'
 
     def __new__(cls, arg):
@@ -577,6 +579,7 @@ class PythonLen(PyccelInternalFunction):
     _rank      = 0
     _shape     = None
     _order     = None
+    _class_type = NativeInteger()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -764,7 +767,7 @@ class PythonAbs(PyccelInternalFunction):
 
     arg : Variable
     """
-    __slots__ = ('_dtype','_precision','_rank','_shape','_order')
+    __slots__ = ('_dtype','_precision','_rank','_shape','_order','_class_type')
     name = 'abs'
     def __init__(self, x):
         self._shape     = x.shape
@@ -772,6 +775,7 @@ class PythonAbs(PyccelInternalFunction):
         self._dtype     = NativeInteger() if x.dtype is NativeInteger() else NativeFloat()
         self._precision = -1
         self._order     = x.order
+        self._class_type = x.class_type
         super().__init__(x)
 
     @property
@@ -784,7 +788,7 @@ class PythonSum(PyccelInternalFunction):
 
     arg : list , tuple , PythonTuple, List, Variable
     """
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_dtype','_precision','_class_type')
     name   = 'sum'
     _rank  = 0
     _shape = None
@@ -795,6 +799,7 @@ class PythonSum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         self._dtype = arg.dtype
         self._precision = -1
+        self._class_type = arg.dtype
         super().__init__(arg)
 
     @property
@@ -807,7 +812,7 @@ class PythonMax(PyccelInternalFunction):
 
     arg : list , tuple , PythonTuple, List
     """
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_dtype','_precision','_class_type')
     name   = 'max'
     _rank  = 0
     _shape = None
@@ -827,6 +832,7 @@ class PythonMax(PyccelInternalFunction):
                              "types ({}). Please cast arguments to the desired dtype".format(types))
         self._dtype     = x.dtype
         self._precision = x.precision
+        self._class_type = x.class_type
         super().__init__(x)
 
 
@@ -836,7 +842,7 @@ class PythonMin(PyccelInternalFunction):
 
     arg : list , tuple , PythonTuple, List, Variable
     """
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_dtype','_precision','_class_type')
     name   = 'min'
     _rank  = 0
     _shape = None
@@ -855,6 +861,7 @@ class PythonMin(PyccelInternalFunction):
                               "types ({}). Please cast arguments to the desired dtype".format(types))
         self._dtype     = x.dtype
         self._precision = x.precision
+        self._class_type = x.class_type
         super().__init__(x)
 
 #==============================================================================

@@ -8,6 +8,7 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
+from functools import cache
 
 import numpy
 
@@ -137,22 +138,57 @@ class NativeBool(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Bool'
 
+    @cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            return other
+        else:
+            return NotImplemented
+
 class NativeInteger(DataType, metaclass=Singleton):
     """Class representing integer datatype"""
     __slots__ = ()
     _name = 'Int'
+
+    @cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            if other is NativeBool():
+                return self
+            else:
+                return other
+        else:
+            return NotImplemented
 
 class NativeFloat(DataType, metaclass=Singleton):
     """Class representing float datatype"""
     __slots__ = ()
     _name = 'Float'
 
+    @cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            if other is NativeComplex():
+                return other
+            else:
+                return self
+        else:
+            return NotImplemented
+
 class NativeComplex(DataType, metaclass=Singleton):
     """Class representing complex datatype"""
     __slots__ = ()
     _name = 'Complex'
 
+    @cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            return self
+        else:
+            return NotImplemented
+
 NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
+NativeNumericTypes = (NativeBool, NativeInteger, NativeFloat, NativeComplex)
 
 class NativeString(DataType, metaclass=Singleton):
     """Class representing string datatype"""
@@ -218,6 +254,10 @@ class CustomDataType(DataType, metaclass=Singleton):
 class NativeGeneric(DataType):
     __slots__ = ()
     _name = 'Generic'
+
+    @cache
+    def __add__(self, other):
+        return other
 
 # ...
 

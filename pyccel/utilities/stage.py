@@ -49,3 +49,6 @@ class PyccelStage(metaclass = Singleton):
         indicating the current stage.
         """
         return self._stage
+
+    def __str__(self):
+        return self._stage

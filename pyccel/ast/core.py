@@ -16,7 +16,8 @@ from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
-                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple)
+                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
+                        NativeGeneric)
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
 from .literals  import Nil, LiteralFalse

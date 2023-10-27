@@ -10,7 +10,7 @@ They also have specific rules to determine the dtype, precision, rank, shape
 """
 from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
-                           NativeComplex, NativeString)
+                           NativeComplex, NativeString, NativeGeneric)
 from .internals    import max_precision
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
@@ -51,7 +51,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
         precision = a.precision
-        return dtype, precision
+        return dtype, precision, dtype
 
     def __repr__(self):
         return '~{}'.format(repr(self.args[0]))
@@ -72,7 +72,7 @@ class PyccelBitOperator(PyccelOperator):
     _shape = None
     _rank  = 0
     _order = None
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_dtype','_precision','_class_type')
 
     def _set_order(self):
         pass
@@ -92,10 +92,12 @@ class PyccelBitOperator(PyccelOperator):
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
+        class_type = sum([a.class_type for a in args], start=NativeGeneric())
+
         if strs or complexes or floats:
             raise TypeError('unsupported operand type(s): {}'.format(args))
         elif integers:
-            return self._handle_integer_type(integers)
+            return *self._handle_integer_type(integers), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
 

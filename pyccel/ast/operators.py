@@ -17,7 +17,7 @@ from .basic                 import TypedAstNode
 
 from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString,
-                                    NativeNumeric)
+                                    NativeNumeric, NativeGeneric)
 
 from .internals             import max_precision
 
@@ -375,7 +375,7 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2: TypedAstNode
         The second argument passed to the operator
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
 
     def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
@@ -396,25 +396,17 @@ class PyccelBinaryOperator(PyccelOperator):
         complexes = [a for a in args if a.dtype is NativeComplex()]
         strs      = [a for a in args if a.dtype is NativeString()]
 
-        class_types = [a.class_type for a in args]
-        possible_class_types = set([c for c in class_types if c not in NativeNumeric])
-
-        if len(possible_class_types) == 1:
-            class_type = possible_class_types.pop()
-        elif len(possible_class_types) == 0:
-            class_type = None
-        else:
-            raise TypeError('cannot determine the type of {}'.format(args))
+        class_type = sum([a.class_type for a in args], start=NativeGeneric())
 
         if strs:
             assert len(integers + floats + complexes) == 0
-            return cls._handle_str_type(strs), class_type
+            return *cls._handle_str_type(strs), class_type
         elif complexes:
-            return cls._handle_complex_type(args), class_type
+            return *cls._handle_complex_type(args), class_type
         elif floats:
-            return cls._handle_float_type(args), class_type
+            return *cls._handle_float_type(args), class_type
         elif integers:
-            return cls._handle_integer_type(args), class_type
+            return *cls._handle_integer_type(args), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
 
@@ -561,7 +553,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            dtype, precision = cls._calculate_dtype(arg1, arg2)
+            dtype, precision, class_type = cls._calculate_dtype(arg1, arg2)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 return convert_to_literal(arg1.python_value + arg2.python_value,
                                           dtype, precision)
@@ -630,6 +622,9 @@ class PyccelMul(PyccelArithmeticOperator):
                 return convert_to_literal(arg1.python_value * arg2.python_value,
                                           dtype, precision)
         return super().__new__(cls)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
     def __repr__(self):
         return '{} * {}'.format(self.args[0], self.args[1])
@@ -925,11 +920,12 @@ class PyccelBooleanOperator(PyccelOperator):
     arg2: TypedAstNode
         The second argument passed to the operator
     """
-    dtype = NativeBool()
-    precision = -1
-    rank = 0
-    shape = None
-    order = None
+    _dtype = NativeBool()
+    _precision = -1
+    _rank = 0
+    _shape = None
+    _order = None
+    _class_type = NativeBool()
 
     __slots__ = ()
 
@@ -1100,7 +1096,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
@@ -1132,16 +1128,8 @@ class IfTernaryOperator(PyccelOperator):
 
         precision = max_precision([value_true, value_false])
 
-        class_types = [a.class_type for a in (value_true, value_false)]
-        possible_class_types = set([c for c in class_types if c not in NativeNumeric])
-
-        if len(possible_class_types) == 1:
-            class_type = possible_class_types.pop()
-        elif len(possible_class_types) == 0:
-            class_type = None
-        else:
-            raise TypeError('Cannot determine the type of the result of the conditional.')
-        return dtype, precision
+        class_type = value_true.class_type + value_false.class_type
+        return dtype, precision, class_type
 
     @staticmethod
     def _calculate_shape_rank(cond, value_true, value_false):

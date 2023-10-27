@@ -702,7 +702,7 @@ class HomogeneousTupleVariable(TupleVariable):
     is_homogeneous = True
 
     def __init__(self, dtype, *args, **kwargs):
-        super().__init__(dtype, *args, **kwargs, class_type = NativeHomogeneousTuple(dtype))
+        super().__init__(dtype, *args, **kwargs)
 
     def shape_can_change(self, i):
         """
@@ -739,10 +739,9 @@ class InhomogeneousTupleVariable(TupleVariable):
     _attribute_nodes = ('_vars',)
     is_homogeneous = False
 
-    def __init__(self, arg_vars, name, *args, **kwargs):
+    def __init__(self, arg_vars, name, *args, class_type, **kwargs):
         self._vars = tuple(arg_vars)
-        dtype = NativeInhomogeneousTuple(*[a.dtype for a in arg_vars])
-        super().__init__(dtype, name, *args, **kwargs, class_type = dtype)
+        super().__init__(class_type, name, *args, **kwargs, class_type = class_type)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -890,7 +889,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(self, base, *indices):

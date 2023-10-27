@@ -8,11 +8,12 @@ This module contains all types which define a python class which is automaticall
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric)
+                        NativeComplex, NativeString, NativeNumeric,
+                        NativeTuple)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray)
+                        NumpyArray, NumpyNDArrayType)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -179,7 +180,7 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, precision, rank):
+def get_cls_base(dtype, precision, container_type):
     """
     Determine the base class of an object.
 
@@ -206,14 +207,18 @@ def get_cls_base(dtype, precision, rank):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if precision in (-1, 0, None) and rank == 0:
+    if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
     elif dtype in NativeNumeric:
         return NumpyArrayClass
+    elif isinstance(container_type, NumpyNDArrayType):
+        return NumpyArrayClass
+    elif isinstance(container_type, NativeTuple):
+        return TupleClass
     else:
-        type_name = f"{dtype}({precision})"
-        if rank:
-            dims = ','.join(':' for _ in range(rank))
-            type_name += f"[{dims}]"
+        if container_type:
+            type_name = str(container_type)
+        else:
+            type_name = f"{dtype}({precision})"
         raise NotImplementedError(f"No class definition found for type {type_name}")
 

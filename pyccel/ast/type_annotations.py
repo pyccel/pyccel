@@ -51,13 +51,13 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
+    __slots__ = ('_datatype', '_cls_type', '_precision', '_rank',
                  '_order', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, datatype : 'DataType', cls_base : 'ClassDef', precision : int = -1,
+    def __init__(self, datatype : 'DataType', cls_type : 'DataType', precision : int = -1,
             rank : int = 0, order : str = None, is_const : bool = False):
         self._datatype = datatype
-        self._cls_base = cls_base
+        self._cls_type = cls_type
         self._precision = precision
         self._rank = rank
         self._order = order
@@ -76,14 +76,10 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._datatype
 
     @property
-    def cls_base(self):
+    def cls_type(self):
         """
-        Get the class description of the object.
-
-        Get the class def object which describes how the user can interact with the
-        future variable.
         """
-        return self._cls_base
+        return self._cls_type
 
     @property
     def precision(self):
@@ -126,13 +122,13 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._is_const
 
     def __hash__(self):
-        return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
+        return hash((self.datatype, self.cls_type, self.precision, self.rank, self.order))
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
             return self.datatype == other.datatype and \
-                   self.cls_base == other.cls_base and \
+                   self.cls_type == other.cls_type and \
                    self.precision == other.precision and \
                    self.rank == other.rank and \
                    self.order == other.order

@@ -92,7 +92,7 @@ from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
 from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpyext import DtypePrecisionToCastFunction
+from pyccel.ast.numpyext import DtypePrecisionToCastFunction, NumpyNDArrayType
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -559,6 +559,7 @@ class SemanticParser(BasicParser):
                 'shape'    : expr.shape,
                 'rank'     : expr.rank,
                 'order'    : expr.order,
+                'class_type' : expr.class_type,
             }
         # TODO improve => put settings as attribut of Parser
 
@@ -583,6 +584,7 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, Duplicate):
+            d = self._infer_type(expr.val)
             d_var['cls_base'      ] = TupleClass
             if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
                 d_var['memory_handling'] = 'stack'
@@ -607,7 +609,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, TypedAstNode):
 
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.rank)
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
             return d_var
 
         else:
@@ -1606,6 +1608,7 @@ class SemanticParser(BasicParser):
         """
         dtype = expr.static_dtype()
         prec = expr.static_precision()
+        class_type = expr.static_class_type()
         if input_rank != 0:
             rank = input_rank
             order = input_order
@@ -1618,8 +1621,7 @@ class SemanticParser(BasicParser):
                 order = None
         if rank > 1 and order is None:
             order = 'C'
-        cls_base = get_cls_base(dtype, prec, rank)
-        return VariableTypeAnnotation(dtype, cls_base, prec, rank, order)
+        return VariableTypeAnnotation(dtype, class_type, prec, rank, order)
 
     #====================================================
     #                 _visit functions
@@ -1803,13 +1805,13 @@ class SemanticParser(BasicParser):
                         for v in headers:
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, cls_base = t.cls_base,
+                                shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
@@ -2149,8 +2151,9 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
+                class_type = t.cls_type
                 v = var_class(dtype, name, precision = prec,
-                        shape = None, rank = rank, order = t.order, cls_base = t.cls_base,
+                        shape = None, rank = rank, order = t.order, class_type = t.cls_type,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
                         **kwargs)
@@ -2186,7 +2189,7 @@ class SemanticParser(BasicParser):
                     types.append(dtype_from_scope)
                 else:
                     types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
-                        dtype_from_scope.cls_base, dtype_from_scope.precision,
+                        dtype_from_scope.cls_type, dtype_from_scope.precision,
                         rank, order, dtype_from_scope.is_const))
             elif isinstance(dtype_from_scope, ClassDef):
                 dtype = self.get_class_construct(dtype_name)
@@ -2206,22 +2209,19 @@ class SemanticParser(BasicParser):
                     errors.report(f'Could not identify type : {dtype_name}',
                             severity='fatal', symbol=expr)
 
-                try:
-                    cls_base = get_cls_base(dtype, prec, rank)
-                except KeyError:
-                    cls_base = self.scope.find(dtype_name, 'classes')
+                # NumPy objects cannot have default precision
+                if prec == -1 and rank > 0:
+                    prec = default_precision[dtype]
 
                 if order is not None and rank < 2:
                     errors.report(f"Ordering is not applicable to objects with rank {rank}",
                             symbol=expr.fst, severity='warning')
                     order = None
 
-                # NumPy objects cannot have default precision
-                if prec == -1 and cls_base is NumpyArrayClass:
-                    prec = default_precision[dtype]
+                cls_type = dtype if rank == 0 else NumpyNDArrayType(dtype, rank, order)
 
                 # Save the potential type
-                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order, is_const))
+                types.append(VariableTypeAnnotation(dtype, cls_type, prec, rank, order, is_const))
 
         # Collect all possible types into a UnionTypeAnnotation
         return UnionTypeAnnotation(*types)
@@ -2297,12 +2297,7 @@ class SemanticParser(BasicParser):
                     severity='fatal')
 
         d_var = self._infer_type(first)
-        if d_var.get('cls_base', None) is None:
-            errors.report(f'Attribute {rhs_name} not found',
-                bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
-                severity='fatal')
-
-        cls_base = d_var['cls_base']
+        cls_base = get_cls_base(d_var['datatype'], d_var['precision'], d_var['class_type'])
 
         # look for a class method
         if isinstance(rhs, FunctionCall):

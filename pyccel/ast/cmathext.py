@@ -60,6 +60,7 @@ class CmathFunctionBool(MathFunctionBase):
     __slots__ = ()
     _dtype = NativeBool()
     _precision = -1
+    _class_type = NativeBool()
 
 class CmathFunctionComplex(MathFunctionBase):
     """
@@ -79,6 +80,7 @@ class CmathFunctionComplex(MathFunctionBase):
     _shape = None
     _rank  = 0
     _order = None
+    _class_type = NativeComplex()
 
     def __init__(self, z : 'TypedAstNode'):
         super().__init__(z)
@@ -433,6 +435,7 @@ class CmathPolar(PyccelInternalFunction):
     _shape = (LiteralInteger(2),)
     _rank  = 1
     _order = None
+    _class_type = NativeFloat()
 
     def __init__(self, z):
         super().__init__(z)
@@ -457,6 +460,7 @@ class CmathRect(PyccelInternalFunction):
     _shape = None
     _rank  = 0
     _order = None
+    _class_type = NativeComplex()
     def __init__(self, r, phi):
         super().__init__(r, phi)
 
