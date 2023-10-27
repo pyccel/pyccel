@@ -6,7 +6,7 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
-from functools import cache
+from functools import lru_cache
 
 import numpy
 
@@ -147,7 +147,7 @@ class NumpyNDArrayType(DataType):
     def order(self):
         return self._order
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if other in NativeNumeric:
             return NumpyNDArrayType(self.dtype + other, self.rank, self.order)
@@ -158,7 +158,7 @@ class NumpyNDArrayType(DataType):
         else:
             raise NotImplementedError(f"Can't combine {self} and {other}")
 
-    @cache
+    @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
 

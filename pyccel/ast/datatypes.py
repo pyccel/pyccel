@@ -8,7 +8,7 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
-from functools import cache
+from functools import lru_cache
 
 import numpy
 
@@ -138,7 +138,7 @@ class NativeBool(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Bool'
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if other in NativeNumeric:
             return other
@@ -150,7 +150,7 @@ class NativeInteger(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Int'
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if other in NativeNumeric:
             if other is NativeBool():
@@ -165,7 +165,7 @@ class NativeFloat(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Float'
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if other in NativeNumeric:
             if other is NativeComplex():
@@ -180,7 +180,7 @@ class NativeComplex(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Complex'
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         if other in NativeNumeric:
             return self
@@ -255,7 +255,7 @@ class NativeGeneric(DataType):
     __slots__ = ()
     _name = 'Generic'
 
-    @cache
+    @lru_cache
     def __add__(self, other):
         return other
 
