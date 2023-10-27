@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   ##1576 : Add test functions which pass and return classes.
+
 ### Fixed
+
+-   ##1576 : Fix Destructor Call for C and Fortran.
 
 ### Changed
 
