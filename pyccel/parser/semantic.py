@@ -1608,7 +1608,6 @@ class SemanticParser(BasicParser):
         """
         dtype = expr.static_dtype()
         prec = expr.static_precision()
-        class_type = expr.static_class_type()
         if input_rank != 0:
             rank = input_rank
             order = input_order
@@ -1621,6 +1620,9 @@ class SemanticParser(BasicParser):
                 order = None
         if rank > 1 and order is None:
             order = 'C'
+
+        class_type = dtype if rank == 0 else expr.static_class_type()
+
         return VariableTypeAnnotation(dtype, class_type, prec, rank, order)
 
     #====================================================
@@ -2196,8 +2198,7 @@ class SemanticParser(BasicParser):
                 prec = 0
                 rank = 0
                 order = None
-                cls_base = dtype_from_scope
-                types.append(VariableTypeAnnotation(dtype, cls_base, prec, rank, order))
+                types.append(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
             elif dtype_from_scope is not None:
                 errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
                         severity='fatal', symbol=expr)
