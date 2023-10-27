@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.core` : `inline`, `subs`, `get_iterable_ranges`.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
--   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `get_attribute`.
+-   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
 
 ## \[1.10.0\] - 2023-10-23
 
