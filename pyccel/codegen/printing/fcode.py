@@ -306,7 +306,7 @@ class FCodePrinter(CodePrinter):
                 .add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
+    def _handle_inline_func_call(self, expr, assign_lhs = None):
         """
         Print a function call to an inline function.
 
@@ -318,9 +318,6 @@ class FCodePrinter(CodePrinter):
         ----------
         expr : FunctionCall
             The function call which should be printed inline.
-
-        provided_args : List
-            A list of FunctionCallArguments.
 
         assign_lhs : List
             A list of lhs provided.
@@ -338,10 +335,7 @@ class FCodePrinter(CodePrinter):
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
         args = []
-        if isinstance(expr, DottedFunctionCall):
-            if self.scope.find(expr.funcdef.cls_name, 'classes'):
-                args.append(expr.args[0])
-        for a in provided_args:
+        for a in expr.args:
             if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
                 args.append(code)
@@ -2981,9 +2975,9 @@ class FCodePrinter(CodePrinter):
 
         if func.is_inline:
             if len(func_results)>1:
-                code = self._handle_inline_func_call(expr, args, assign_lhs = results)
+                code = self._handle_inline_func_call(expr, assign_lhs = results)
             else:
-                code = self._handle_inline_func_call(expr, args)
+                code = self._handle_inline_func_call(expr)
         else:
             args_strs = ['{}'.format(self._print(a)) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
