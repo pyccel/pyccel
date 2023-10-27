@@ -307,8 +307,30 @@ class FCodePrinter(CodePrinter):
         return constant_name
 
     def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
-        """ Print a function call to an inline function
         """
+        Print a function call to an inline function.
+
+        Use the arguments passed to an inline function to print
+        its body with the passed arguments in place of the function
+        arguments.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The function call which should be printed inline.
+
+        provided_args : List
+            A list of FunctionCallArguments.
+
+        assign_lhs : List
+            A list of lhs provided.
+
+        Returns
+        -------
+        str
+            The code for the inline function.
+        """
+
         scope = self.scope
         func = expr.funcdef
 
