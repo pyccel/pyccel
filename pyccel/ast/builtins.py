@@ -426,17 +426,8 @@ class PythonTuple(TypedAstNode):
             '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
-
-    def __new__(cls, *args):
-        if len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple)):
-            return args[0]
-        else:
-            return super().__new__(cls)
     
     def __init__(self, *args):
-        if len(args) == 1 and isinstance(args[0], PythonTuple):
-            # If __init__ called on the argument by Python
-            return
         self._args = args
         super().__init__()
         arg0 = args[0] if len(args) > 0 else None
@@ -566,6 +557,20 @@ class PythonTuple(TypedAstNode):
         index this Variable can be negative
         """
         return False
+
+class PythonTupleFunction(TypedAstNode):
+    """
+    Class representing a call to the `tuple` function.
+    """
+    def __new__(cls, arg):
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
+            return PythonTuple(*list(arg.__iter__()))
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
@@ -1018,5 +1023,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
-    'tuple'    : PythonTuple,
+    'tuple'    : PythonTupleFunction,
 }
