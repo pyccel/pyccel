@@ -2605,7 +2605,7 @@ class SemanticParser(BasicParser):
             lhs = expr.get_user_nodes(Assign)[0].lhs
             if isinstance(lhs, AnnotatedPyccelSymbol):
                 annotation = self._visit(lhs.annotation)
-                if len(annotation.type_list) != 1 or annotation.type_list[0].cls_base != cls_def:
+                if len(annotation.type_list) != 1 or annotation.type_list[0].cls_type.name != method.cls_name:
                     errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
                             symbol=annotation, severity='error')
                 lhs = lhs.name
