@@ -471,8 +471,6 @@ class PythonTuple(TypedAstNode):
             if strs:
                 self._dtype = NativeString()
                 self._precision = 0
-                self._rank  = 0
-                self._shape = None
             else:
                 if complexes:
                     self._dtype     = NativeComplex()
@@ -490,10 +488,10 @@ class PythonTuple(TypedAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                inner_shape = [() if a.rank == 0 else a.shape for a in args]
-                self._rank = max(a.rank for a in args) + 1
-                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-                self._rank  = len(self._shape)
+            inner_shape = [() if a.rank == 0 else a.shape for a in args]
+            self._rank = max(a.rank for a in args) + 1
+            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._rank  = len(self._shape)
 
         else:
             max_rank = max(a.rank for a in args)
