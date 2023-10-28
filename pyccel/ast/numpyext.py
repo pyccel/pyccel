@@ -586,11 +586,11 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg, (PythonTuple, PythonList, HomogeneousTupleVariable)) and arg.is_homogeneous
+        is_homogeneous_tuple = isinstance(arg, (PythonTuple, HomogeneousTupleVariable)) and arg.is_homogeneous
         is_array = isinstance(arg, Variable) and arg.is_ndarray
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not (is_homogeneous_tuple or is_array):
+        if not (is_homogeneous_tuple or is_array or isinstance(arg, PythonList)):
             raise TypeError('we only accept homogeneous arguments')
 
         if not isinstance(order, (LiteralString, str)):

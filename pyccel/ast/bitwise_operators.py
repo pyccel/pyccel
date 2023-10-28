@@ -88,7 +88,7 @@ class PyccelBitOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         try:
-            dtype = arg1.dtype + arg2.dtype
+            dtype = sum([a.dtype for a in args], start=NativeGeneric())
             class_type = sum([a.class_type for a in args], start=NativeGeneric())
         except NotImplementedError:
             raise TypeError('cannot determine the type of {}'.format(args))
@@ -98,7 +98,7 @@ class PyccelBitOperator(PyccelOperator):
         elif (dtype in (NativeInteger(), NativeBool())):
             if class_type is NativeBool():
                 class_type = NativeInteger()
-            return *self._handle_integer_type(integers), class_type
+            return *self._handle_integer_type(args), class_type
         else:
             raise TypeError('cannot determine the type of {}'.format(args))
 

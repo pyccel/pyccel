@@ -2061,7 +2061,7 @@ class FunctionCall(TypedAstNode):
         else:
             dtypes = [r.var.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple(dtypes[0])
+                dtype = NativeHomogeneousTuple()
             else:
                 dtype = NativeInhomogeneousTuple(*dtypes)
             self._dtype      = dtype

@@ -19,7 +19,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from .datatypes import NativeHomogeneousList
-from .internals import PyccelInternalFunction, max_precision, Slice
+from .internals import PyccelInternalFunction, max_precision, Slice, get_final_precision
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -449,10 +449,11 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
         arg0 = args[0]
+        precision = get_final_precision(arg0)
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
-                             arg0.precision == a.precision and \
+                             precision == get_final_precision(a) and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
         self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
@@ -591,13 +592,13 @@ class PythonList(TypedAstNode):
             self._order = None
             return
         arg0 = args[0]
+        precision = get_final_precision(arg0)
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
-                             arg0.precision == a.precision and \
+                             precision == get_final_precision(a) and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
-        self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         if is_homogeneous:
             self._dtype = arg0.dtype
             self._precision = arg0.precision
@@ -867,7 +868,7 @@ class PythonMax(PyccelInternalFunction):
             x = PythonTuple(*x)
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
-        if not x.is_homogeneous:
+        if isinstance(x, PythonTuple) and not x.is_homogeneous:
             types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
             raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
                              "types ({}). Please cast arguments to the desired dtype".format(types))
@@ -896,7 +897,7 @@ class PythonMin(PyccelInternalFunction):
             x = PythonTuple(*x)
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError('Unknown type of  %s.' % type(x))
-        if not x.is_homogeneous:
+        if isinstance(x, PythonTuple) and not x.is_homogeneous:
             types = ', '.join('{}({})'.format(xi.dtype,xi.precision) for xi in x)
             raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
                               "types ({}). Please cast arguments to the desired dtype".format(types))

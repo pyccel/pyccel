@@ -1875,9 +1875,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonList(self, expr):
         ls = [self._visit(i) for i in expr]
-        expr = PythonList(*ls)
-
-        if not expr.is_homogeneous:
+        try:
+            expr = PythonList(*ls)
+        except TypeError:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
