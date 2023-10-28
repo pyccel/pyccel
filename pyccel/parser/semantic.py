@@ -2363,9 +2363,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Duplicate)):
+        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Duplicate, PythonList)):
             is_homogeneous = all((isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous) \
-                                or isinstance(a, (Concatenate, Duplicate)) for a in args)
+                                or isinstance(a, (PythonList, Concatenate, Duplicate)) for a in args)
             if is_homogeneous:
                 return Concatenate(*args)
             else:
