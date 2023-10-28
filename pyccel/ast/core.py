@@ -20,7 +20,7 @@ from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple
                         NativeGeneric)
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
-from .literals  import Nil, LiteralFalse
+from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
 
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
@@ -2054,7 +2054,7 @@ class FunctionCall(TypedAstNode):
         elif n_results == 0:
             self._dtype      = NativeGeneric()
             self._rank       = 1
-            self._shape      = (0,)
+            self._shape      = (LiteralInteger(0),)
             self._precision  = None
             self._order      = None
             self._class_type = NativeTuple()
@@ -2066,7 +2066,7 @@ class FunctionCall(TypedAstNode):
                 dtype = NativeInhomogeneousTuple(*dtypes)
             self._dtype      = dtype
             self._rank       = 1
-            self._shape      = (n_results,)
+            self._shape      = (LiteralInteger(n_results),)
             self._precision  = None
             self._order      = None
             self._class_type = dtype
