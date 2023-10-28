@@ -571,11 +571,72 @@ class PythonLen(PyccelInternalFunction):
         return 'len({})'.format(str(self.arg))
 
 #==============================================================================
-class PythonList(PythonTuple):
+class PythonList(TypedAstNode):
     """ Represents a call to Python's native list() function.
     """
-    __slots__ = ()
+    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
+    _attribute_nodes = ('_args',)
     _class_type = NativeHomogeneousList()
+
+    def __init__(self, *args):
+        self._args = args
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        elif len(args) == 0:
+            self._dtype = NativeGeneric()
+            self._precision = 0
+            self._rank  = 0
+            self._shape = None
+            self._order = None
+            return
+        arg0 = args[0]
+        is_homogeneous = arg0.dtype is not NativeGeneric() and \
+                         all(a.dtype is not NativeGeneric() and \
+                             arg0.dtype == a.dtype and \
+                             arg0.precision == a.precision and \
+                             arg0.rank  == a.rank  and \
+                             arg0.order == a.order for a in args[1:])
+        self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
+        if is_homogeneous:
+            self._dtype = arg0.dtype
+            self._precision = arg0.precision
+            integers  = [a for a in args if a.dtype is NativeInteger()]
+
+            inner_shape = [() if a.rank == 0 else a.shape for a in args]
+            self._rank = max(a.rank for a in args) + 1
+            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._rank  = len(self._shape)
+
+        else:
+            raise TypeError("Can't create an inhomogeneous list")
+
+        self._order = None if self._rank < 2 else 'C'
+
+    def __iter__(self):
+        return self._args.__iter__()
+
+    def __len__(self):
+        return len(self._args)
+
+    def __str__(self):
+        return '({})'.format(', '.join(str(a) for a in self))
+
+    def __repr__(self):
+        return 'PythonList({})'.format(', '.join(str(a) for a in self))
+
+    @property
+    def args(self):
+        """ Arguments of the list
+        """
+        return self._args
+
+    @property
+    def allows_negative_indexes(self):
+        """ Indicates whether variables used to
+        index this Variable can be negative
+        """
+        return False
 
 #==============================================================================
 class PythonMap(PyccelAstNode):
