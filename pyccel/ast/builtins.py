@@ -426,7 +426,7 @@ class PythonTuple(TypedAstNode):
             '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
-
+    
     def __init__(self, *args):
         self._args = args
         super().__init__()
@@ -1000,4 +1000,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'tuple'    : PythonTuple,
 }

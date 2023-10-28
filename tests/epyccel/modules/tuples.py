@@ -59,6 +59,14 @@ __all__ = [
         'tuple_negative_slice',
         'inhomogeneous_tuple_negative_slice',
         'tuple_index',
+        'tuple_homogeneous_int',
+        'tuple_homogeneous_bool',
+        'tuple_homogeneous_float',
+        'tuple_homogeneous_string',
+        'tuple_homogeneous_math',
+        'tuple_inhomogeneous_1',
+        'tuple_inhomogeneous_2',
+        'tuple_inhomogeneous_3',
         ]
 
 def homogenous_tuple_int():
@@ -387,3 +395,35 @@ def inhomogeneous_tuple_negative_slice():
 def tuple_index():
     a = (1,2,3,False)[2]
     return a
+
+def tuple_homogeneous_int():
+    a = tuple((1, 2, 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_homogeneous_bool():
+    a = tuple((False, True))
+    return a[0], a[1], len(a)
+
+def tuple_homogeneous_float():
+    a = tuple((1.5, 4.3, 5.2, 7.2, 9.999))
+    return a[0], a[1], a[2], a[3], a[4], len(a)
+
+def tuple_homogeneous_string():
+    a = tuple(('hello', 'tuple', 'world', '!!'))
+    return a[0], a[1], a[2], a[3], len(a)
+
+def tuple_homogeneous_math():
+    a = tuple((4 + 5, 3 * 9, 2 ** 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_1():
+    a = tuple((0, False, 3 + 1j))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_2():
+    a = tuple((0, False, 3))
+    return a[0], a[1], a[2], len(a)
+
+def tuple_inhomogeneous_3():
+    a = tuple((0, 1.0, 3))
+    return a[0], a[1], a[2], len(a)
