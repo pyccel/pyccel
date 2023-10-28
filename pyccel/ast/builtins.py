@@ -40,6 +40,7 @@ __all__ = (
     'PythonFloat',
     'PythonInt',
     'PythonTuple',
+    'PythonTupleFunction',
     'PythonLen',
     'PythonList',
     'PythonMap',
@@ -571,6 +572,9 @@ class PythonTupleFunction(TypedAstNode):
     arg : TypedAstNode
         The argument passed to the function call.
     """
+    __slots__ = ()
+    _attribute_nodes = ()
+
     def __new__(cls, arg):
         if isinstance(arg, PythonTuple):
             return arg
