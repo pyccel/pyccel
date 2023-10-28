@@ -1547,7 +1547,7 @@ class Iterable(PyccelAstNode):
 
     def get_range(self):
         """
-        Returns the range required for this iterable.
+        Get the range required for this iterable.
 
         Returns the range which is necessary in a low-level language to iterate over
         the wrapped iterable.
