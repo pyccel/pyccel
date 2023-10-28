@@ -23,7 +23,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement
+from .variable  import IndexedElement, TupleVariable, Variable
 
 pyccel_stage = PyccelStage()
 
@@ -428,15 +428,18 @@ class PythonTuple(TypedAstNode):
     _attribute_nodes = ('_args',)
 
     def __new__(cls, *args):
-        from .variable import TupleVariable
         if len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple)):
             return args[0]
         else:
             return super().__new__(cls)
     
     def __init__(self, *args):
+        if len(args) == 1 and isinstance(args[0], PythonTuple):
+            # If __init__ called on the argument by Python
+            return
         self._args = args
         super().__init__()
+        arg0 = args[0] if len(args) > 0 else None
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
@@ -447,12 +450,11 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
-        elif len(args) == 1 and isinstance(a, (PythonList, PythonTuple, Variable)):
-            if isinstance(a, Variable) and not all(isinstance(s, LiteralInteger) for s in a.shape):
+        elif len(args) == 1 and isinstance(arg0, (PythonList, PythonTuple, Variable)):
+            if isinstance(arg0, Variable) and not all(isinstance(s, LiteralInteger) for s in arg0.shape):
                  raise TypeError("Can't unpack a variable on unknown size into a tuple")
             else:
-                 args = [IndexedElement(a, i) for i in range(a.shape[0])]
-        arg0 = args[0]
+                 args = [IndexedElement(arg0, i) for i in range(arg0.shape[0])]
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
