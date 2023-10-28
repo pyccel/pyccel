@@ -91,7 +91,7 @@ class PyccelBitOperator(PyccelOperator):
             dtype = sum((a.dtype for a in args), start=NativeGeneric())
             class_type = sum((a.class_type for a in args), start=NativeGeneric())
         except NotImplementedError:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
         if dtype in (NativeString(), NativeComplex(), NativeFloat()):
             raise TypeError('unsupported operand type(s): {}'.format(args))
@@ -100,7 +100,7 @@ class PyccelBitOperator(PyccelOperator):
                 class_type = NativeInteger()
             return *self._handle_integer_type(args), class_type
         else:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'Cannot determine the type of {args}')
 
     def _set_shape_rank(self):
         pass

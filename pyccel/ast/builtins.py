@@ -19,7 +19,7 @@ from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from .datatypes import NativeHomogeneousList
-from .internals import PyccelInternalFunction, max_precision, Slice, get_final_precision
+from .internals import PyccelInternalFunction, Slice, get_final_precision
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -30,7 +30,7 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'python_builtin_datatype'
+    'python_builtin_datatype',
     'Lambda',
     'PythonAbs',
     'PythonBool',
@@ -624,7 +624,8 @@ class PythonList(TypedAstNode):
         return '({})'.format(', '.join(str(a) for a in self))
 
     def __repr__(self):
-        return 'PythonList({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'PythonList({args})'
 
     @property
     def args(self):
