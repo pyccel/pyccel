@@ -119,43 +119,16 @@ __all__ = (
 class NumpyNDArrayType(DataType):
     __slots__ = ('_dtype', '_rank', '_order')
     name = 'numpy.ndarray'
-    def __new__(cls, dtype, rank, order):
-        if rank == 0:
-            return dtype
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, dtype, rank, order):
-        self._dtype = dtype
-        self._rank = rank
-        self._order = order
-        assert rank>0
 
     def __repr__(self):
         rank_str = ':'*self._rank
         order_str = f"(order='{self._order}')" if self._order else ''
         return f"{self._dtype}[{rank_str}]{order_str}"
 
-    @property
-    def dtype(self):
-        return self._dtype
-
-    @property
-    def rank(self):
-        return self._rank
-
-    @property
-    def order(self):
-        return self._order
-
     @lru_cache
     def __add__(self, other):
-        if other in NativeNumeric:
-            return NumpyNDArrayType(self.dtype + other, self.rank, self.order)
-        elif isinstance(other, NumpyNDArrayType):
-            order = 'C' if self.order == 'C' or other.order == 'C' else \
-                    ('F' if self.order == 'F' or other.order == 'F' else None)
-            return NumpyNDArrayType(self.dtype + other.dtype, max(self.rank, other.rank), self.order)
+        if isinstance(other, (*NativeNumericTypes, NumpyNDArrayType)):
+            return self
         else:
             raise NotImplementedError(f"Can't combine {self} and {other}")
 
@@ -529,7 +502,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
     def __init__(self, *args, init_dtype = None):
         self._init_dtype = init_dtype
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
         super().__init__(*args)
 
@@ -839,7 +812,7 @@ class NumpyMatmul(PyccelInternalFunction):
         else:
             self._order = None if self._rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType(self._dtype, self._rank, self._order)
+        self._class_type = NumpyNDArrayType()
 
     @property
     def a(self):
@@ -1064,7 +1037,7 @@ class NumpyWhere(PyccelInternalFunction):
         self._rank  = len(shape)
         self._order = None if self._rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
         super().__init__(condition, x, y)
 
     @property
@@ -1111,7 +1084,7 @@ class NumpyRand(PyccelInternalFunction):
         self._rank  = len(args)
         self._shape = None if self._rank == 0 else args
         self._order = None if self._rank < 2 else 'C'
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
@@ -1138,7 +1111,7 @@ class NumpyRandint(PyccelInternalFunction):
         self._rank    = 0 if size is None else len(self.shape)
         self._order   = None if self._rank < 2 else 'C'
         self._rand    = NumpyRand() if size is None else NumpyRand(*size)
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
         self._low     = low
         self._high    = high
         super().__init__()
@@ -1508,7 +1481,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = None
             self._order = None
             self._rank  = 0
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
     @property
     def arg(self):
@@ -1564,7 +1537,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1614,7 +1587,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_dtype_precision(x1, x2)
         self._set_shape_rank(x1, x2)
         self._set_order(x1, x2)
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
     def _set_shape_rank(self, x1, x2):
         self._shape = broadcast(x1.shape, x2.shape)
@@ -1938,7 +1911,7 @@ class NumpyConjugate(PythonConjugate):
         self._order = arg.order
         self._rank  = self.internal_var.rank
         self._shape = process_shape(self._rank == 0, self.internal_var.shape)
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
     @property
     def is_elemental(self):
@@ -2083,7 +2056,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
                 self._shape = None
                 self._order = None
 
-        self._class_type = NumpyNDArrayType(self.dtype, self.rank, self.order)
+        self._class_type = NumpyNDArrayType()
 
         self._arr = a
         self._axis = axis
