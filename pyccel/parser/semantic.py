@@ -3138,6 +3138,7 @@ class SemanticParser(BasicParser):
                 if dvar['rank'] == 1:
                     dvar['rank']  = 0
                     dvar['shape'] = None
+                    dvar['class_type'] = dtype
                 if dvar['rank'] > 1:
                     dvar['rank'] -= 1
                     dvar['shape'] = (dvar['shape'])[1:]
