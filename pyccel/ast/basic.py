@@ -526,7 +526,7 @@ class TypedAstNode(PyccelAstNode):
         the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
         this is the type of the container.
         """
-        return self._class_type
+        return self._class_type # pylint: disable=no-member
 
     @classmethod
     def static_rank(cls):
@@ -598,7 +598,7 @@ class TypedAstNode(PyccelAstNode):
         This function is static and will return an AttributeError if the
         class does not have a predetermined order.
         """
-        return cls._class_type
+        return cls._class_type # pylint: disable=no-member
 
     def copy_attributes(self, x):
         """
