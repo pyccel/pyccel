@@ -431,7 +431,6 @@ class PythonTuple(TypedAstNode):
     def __init__(self, *args):
         self._args = args
         super().__init__()
-        arg0 = args[0] if len(args) > 0 else None
         if pyccel_stage == 'syntactic':
             return
         elif len(args) == 0:
@@ -442,6 +441,7 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
+        arg0 = args[0]
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
