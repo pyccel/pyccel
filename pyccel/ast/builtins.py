@@ -452,7 +452,7 @@ class PythonTuple(TypedAstNode):
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
-                             arg0.precision == a.precisiom and \
+                             arg0.precision == a.precision and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
         self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
