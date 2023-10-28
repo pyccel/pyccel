@@ -737,12 +737,12 @@ class SemanticParser(BasicParser):
         """
         # Arguments have been visited in PyccelMul
 
-        if not isinstance(val, (TupleVariable, PythonTuple)):
+        if not isinstance(val, (TupleVariable, PythonTuple, PythonList)):
             errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                 severity='fatal')
 
-        if val.is_homogeneous:
+        if getattr(val, 'is_homogeneous', True):
             return Duplicate(val, length)
         else:
             if isinstance(length, LiteralInteger):
@@ -2978,7 +2978,7 @@ class SemanticParser(BasicParser):
                             bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
                             symbol=li, severity='error')
             else:
-                if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
+                if getattr(l, 'is_const', False) and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
                     # If constant and not the initialising declaration of a constant variable
                     errors.report("Cannot modify 'const' variable",
                         bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
