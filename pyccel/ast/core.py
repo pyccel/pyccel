@@ -1552,7 +1552,12 @@ class Iterable(PyccelAstNode):
             return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
-                    getattr(self._iterable, 'length', PythonLen(self._iterable)))
+                    getattr(self._iterable, 'length', None))
+
+            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
+            if length is None:
+                length = PythonLen(self._iterable)
+
             if callable(length):
                 length = length()
             return PythonRange(length)
