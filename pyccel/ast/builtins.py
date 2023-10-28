@@ -584,6 +584,12 @@ class PythonLen(PyccelInternalFunction):
     _shape     = None
     _order     = None
 
+    def __new__(cls, arg):
+        if not getattr(arg, 'is_homogeneous', False):
+            return arg.shape[0]
+        else:
+            return super().__new__(cls)
+
     def __init__(self, arg):
         super().__init__(arg)
 
