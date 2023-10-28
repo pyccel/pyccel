@@ -561,6 +561,15 @@ class PythonTuple(TypedAstNode):
 class PythonTupleFunction(TypedAstNode):
     """
     Class representing a call to the `tuple` function.
+
+    Class representing a call to the `tuple` function. This is
+    different to the `(,)` syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
     """
     def __new__(cls, arg):
         if isinstance(arg, PythonTuple):
