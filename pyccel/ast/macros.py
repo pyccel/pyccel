@@ -54,6 +54,7 @@ class MacroShape(Macro):
     _dtype     = NativeInteger()
     _precision = -1
     _order     = None
+    _class_type = NativeInteger()
 
     def __init__(self, argument, index=None):
         if index is not None:
@@ -89,6 +90,7 @@ class MacroType(Macro):
     _rank      = 0
     _shape     = None
     _order     = None
+    _class_type = NativeGeneric()
 
     def __str__(self):
         return 'MacroType({})'.format(str(self.argument))
@@ -103,6 +105,7 @@ class MacroCount(Macro):
     _rank      = 0
     _shape     = None
     _order     = None
+    _class_type = NativeInteger()
 
     def __str__(self):
         return 'MacroCount({})'.format(str(self.argument))
