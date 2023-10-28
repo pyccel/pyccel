@@ -195,6 +195,13 @@ class NativeString(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'String'
 
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeString):
+            return self
+        else:
+            return NotImplemented
+
 class NativeVoid(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'Void'
@@ -208,11 +215,15 @@ class NativeTuple(DataType):
     __slots__ = ()
     _name = 'Tuple'
 
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeTuple):
+            return self
+        else:
+            return NotImplemented
+
 class NativeHomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
     __slots__ = ()
-
-    def __init__(self):
-        super().__init__()
 
 class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
     __slots__ = ('_dtypes',)
@@ -236,6 +247,12 @@ class NativeHomogeneousList(DataType):
     def __init__(self):
         super().__init__()
 
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeHomogeneousList):
+            return self
+        else:
+            return NotImplemented
 
 class NativeRange(DataType):
     __slots__ = ()
