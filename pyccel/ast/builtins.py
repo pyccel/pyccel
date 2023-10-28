@@ -587,11 +587,19 @@ class PythonTupleFunction(TypedAstNode):
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
-
     """
-    Represents a 'len' expression in the code.
-    """
+    Represents a `len` expression in the code.
 
+    Represents a call to the function `len` which calculates the length
+    (aka the first element of the shape) of an object. This can usually
+    be calculated in the generated code, but in an inhomogeneous object
+    the integer value of the shape must be returned.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument whose length is being examined.
+    """
     __slots__ = ()
     name      = 'len'
     _dtype     = NativeInteger()
