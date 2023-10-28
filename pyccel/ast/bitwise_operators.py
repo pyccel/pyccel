@@ -88,8 +88,8 @@ class PyccelBitOperator(PyccelOperator):
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
         """
         try:
-            dtype = sum([a.dtype for a in args], start=NativeGeneric())
-            class_type = sum([a.class_type for a in args], start=NativeGeneric())
+            dtype = sum((a.dtype for a in args), start=NativeGeneric())
+            class_type = sum((a.class_type for a in args), start=NativeGeneric())
         except NotImplementedError:
             raise TypeError('cannot determine the type of {}'.format(args))
 
