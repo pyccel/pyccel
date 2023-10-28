@@ -393,22 +393,22 @@ class PyccelBinaryOperator(PyccelOperator):
         """
         try:
             dtype = arg1.dtype + arg2.dtype
-            class_type = sum([a.class_type for a in args], start=NativeGeneric())
+            class_type = arg1.class_type + arg2.class_type
         except NotImplementedError:
             raise TypeError('cannot determine the type of {}'.format(args))
 
         if dtype is NativeString():
-            return *cls._handle_str_type(strs), class_type
+            return *cls._handle_str_type((arg1, arg2)), class_type
         elif dtype is NativeComplex():
-            return *cls._handle_complex_type(args), class_type
+            return *cls._handle_complex_type((arg1, arg2)), class_type
         elif dtype is NativeFloat():
-            return *cls._handle_float_type(args), class_type
+            return *cls._handle_float_type((arg1, arg2)), class_type
         elif dtype in (NativeInteger(), NativeBool()):
             if class_type is NativeBool():
                 class_type = NativeInteger()
-            return *cls._handle_integer_type(args), class_type
+            return *cls._handle_integer_type((arg1, arg2)), class_type
         else:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})')
 
     @staticmethod
     def _handle_str_type(strs):
