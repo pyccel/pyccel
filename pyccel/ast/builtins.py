@@ -426,6 +426,13 @@ class PythonTuple(TypedAstNode):
             '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
+
+    def __new__(cls, *args):
+        from .variable import TupleVariable
+        if len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple)):
+            return args[0]
+        else:
+            return super().__new__(cls)
     
     def __init__(self, *args):
         self._args = args
@@ -440,6 +447,11 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
+        elif len(args) == 1 and isinstance(a, (PythonList, PythonTuple, Variable)):
+            if isinstance(a, Variable) and not all(isinstance(s, LiteralInteger) for s in a.shape):
+                 raise TypeError("Can't unpack a variable on unknown size into a tuple")
+            else:
+                 args = [IndexedElement(a, i) for i in range(a.shape[0])]
         arg0 = args[0]
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
