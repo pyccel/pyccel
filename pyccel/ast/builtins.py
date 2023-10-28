@@ -18,6 +18,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeString, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
+from .datatypes import NativeHomogeneousList
 from .internals import PyccelInternalFunction, max_precision, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -451,44 +452,22 @@ class PythonTuple(TypedAstNode):
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
+                             arg0.precision == a.precisiom and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
         self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
+            self._dtype = arg0.dtype
+            self._precision = arg0.precision
             integers  = [a for a in args if a.dtype is NativeInteger()]
-            floats    = [a for a in args if a.dtype is NativeFloat()]
-            complexes = [a for a in args if a.dtype is NativeComplex()]
-            bools     = [a for a in args if a.dtype is NativeBool()]
-            strs      = [a for a in args if a.dtype is NativeString()]
-            if strs:
-                self._dtype = NativeString()
-                self._precision = 0
-                self._rank  = 0
-                self._shape = None
-            else:
-                if complexes:
-                    self._dtype     = NativeComplex()
-                    self._precision = max_precision(complexes)
-                elif floats:
-                    self._dtype     = NativeFloat()
-                    self._precision = max_precision(floats)
-                elif integers:
-                    self._dtype     = NativeInteger()
-                    self._precision = max_precision(integers)
-                elif bools:
-                    self._dtype     = NativeBool()
-                    self._precision  = max_precision(bools)
-                else:
-                    raise TypeError('cannot determine the type of {}'.format(self))
 
+            inner_shape = [() if a.rank == 0 else a.shape for a in args]
+            self._rank = max(a.rank for a in args) + 1
+            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._rank  = len(self._shape)
 
-                inner_shape = [() if a.rank == 0 else a.shape for a in args]
-                self._rank = max(a.rank for a in args) + 1
-                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-                self._rank  = len(self._shape)
-
-            self._class_type = NativeHomogeneousTuple(self._dtype)
+            self._class_type = NativeHomogeneousTuple()
 
         else:
             max_rank = max(a.rank for a in args)
@@ -596,6 +575,7 @@ class PythonList(PythonTuple):
     """ Represents a call to Python's native list() function.
     """
     __slots__ = ()
+    _class_type = NativeHomogeneousList()
 
 #==============================================================================
 class PythonMap(PyccelAstNode):
