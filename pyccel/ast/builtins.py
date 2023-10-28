@@ -442,11 +442,6 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
-        elif len(args) == 1 and isinstance(arg0, (PythonList, PythonTuple, Variable)):
-            if isinstance(arg0, Variable) and not all(isinstance(s, LiteralInteger) for s in arg0.shape):
-                raise TypeError("Can't unpack a variable on unknown size into a tuple")
-            else:
-                args = [IndexedElement(arg0, i) for i in range(arg0.shape[0])]
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
