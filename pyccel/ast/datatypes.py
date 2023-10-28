@@ -209,15 +209,10 @@ class NativeTuple(DataType):
     _name = 'Tuple'
 
 class NativeHomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
-    __slots__ = ('_dtype',)
+    __slots__ = ()
 
-    def __init__(self, datatype):
-        self._dtype = datatype
+    def __init__(self):
         super().__init__()
-
-    @property
-    def name(self):
-        return f'tuple[{self._dtype.name}, ...]'
 
 class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
     __slots__ = ('_dtypes',)
@@ -233,6 +228,14 @@ class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
 
     def __getitem__(self, i):
         return self._dtypes[i]
+
+class NativeHomogeneousList(DataType):
+	__slots__ = ()
+	_name = 'List'
+
+    def __init__(self):
+		super().__init__()
+
 
 class NativeRange(DataType):
     __slots__ = ()
