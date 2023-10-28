@@ -230,11 +230,11 @@ class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
         return self._dtypes[i]
 
 class NativeHomogeneousList(DataType):
-	__slots__ = ()
-	_name = 'List'
+    __slots__ = ()
+    _name = 'List'
 
     def __init__(self):
-		super().__init__()
+        super().__init__()
 
 
 class NativeRange(DataType):
