@@ -23,7 +23,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, TupleVariable, Variable
+from .variable  import IndexedElement, Variable, InhomogeneousTupleVariable
 
 pyccel_stage = PyccelStage()
 
@@ -426,7 +426,7 @@ class PythonTuple(TypedAstNode):
             '_dtype','_precision','_rank','_shape','_order')
     _iterable        = True
     _attribute_nodes = ('_args',)
-    
+
     def __init__(self, *args):
         self._args = args
         super().__init__()
@@ -443,9 +443,9 @@ class PythonTuple(TypedAstNode):
             return
         elif len(args) == 1 and isinstance(arg0, (PythonList, PythonTuple, Variable)):
             if isinstance(arg0, Variable) and not all(isinstance(s, LiteralInteger) for s in arg0.shape):
-                 raise TypeError("Can't unpack a variable on unknown size into a tuple")
+                raise TypeError("Can't unpack a variable on unknown size into a tuple")
             else:
-                 args = [IndexedElement(arg0, i) for i in range(arg0.shape[0])]
+                args = [IndexedElement(arg0, i) for i in range(arg0.shape[0])]
         is_homogeneous = arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
