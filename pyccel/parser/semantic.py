@@ -1809,13 +1809,13 @@ class SemanticParser(BasicParser):
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
                                 shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
                                 is_const = t.is_const, is_optional = False,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype, t.rank, t.order),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
                                 shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype, t.rank, t.order),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
@@ -2222,7 +2222,7 @@ class SemanticParser(BasicParser):
                             symbol=expr.fst, severity='warning')
                     order = None
 
-                cls_type = dtype if rank == 0 else NumpyNDArrayType(dtype, rank, order)
+                cls_type = dtype if rank == 0 else NumpyNDArrayType()
 
                 # Save the potential type
                 types.append(VariableTypeAnnotation(dtype, cls_type, prec, rank, order, is_const))

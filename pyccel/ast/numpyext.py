@@ -23,7 +23,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
-                             default_precision, NativeInteger, DataType,
+                             default_precision, NativeInteger, DataType, NativeNumericTypes,
                              NativeFloat, NativeComplex, NativeBool, NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, get_final_precision
@@ -117,13 +117,8 @@ __all__ = (
 )
 
 class NumpyNDArrayType(DataType):
-    __slots__ = ('_dtype', '_rank', '_order')
+    __slots__ = ()
     name = 'numpy.ndarray'
-
-    def __repr__(self):
-        rank_str = ':'*self._rank
-        order_str = f"(order='{self._order}')" if self._order else ''
-        return f"{self._dtype}[{rank_str}]{order_str}"
 
     @lru_cache
     def __add__(self, other):
