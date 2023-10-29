@@ -24,7 +24,7 @@ from sympy import ceiling
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.builtins import PythonInt, PythonBool, PythonFloat, PythonComplex
+from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
-from pyccel.ast.datatypes import NativeRange, str_dtype
+from pyccel.ast.datatypes import str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool,
@@ -87,9 +87,6 @@ from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, Ma
 from pyccel.ast.numpyext import NumpyMatmul
 from pyccel.ast.numpyext import NumpyBool
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
-from pyccel.ast.numpyext import NumpyInt, NumpyInt8, NumpyInt16, NumpyInt32, NumpyInt64
-from pyccel.ast.numpyext import NumpyFloat, NumpyFloat32, NumpyFloat64
-from pyccel.ast.numpyext import NumpyComplex, NumpyComplex64, NumpyComplex128
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction, NumpyNDArrayType
@@ -548,9 +545,9 @@ class SemanticParser(BasicParser):
         errors = Errors()
 
         if isinstance(expr, type):
-            d_var['datatype'   ] = '*'
-            d_var['rank'       ] = 0
-            d_var['precision'  ] = 0
+            d_var = {'datatype'  : '*',
+                     'rank'      : 0,
+                     'precision' : 0}
             return d_var
 
         d_var = {
