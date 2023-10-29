@@ -78,6 +78,11 @@ class VariableTypeAnnotation(PyccelAstNode):
     @property
     def cls_type(self):
         """
+        Get the Python type of the object.
+
+        The Python type of the object. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
         """
         return self._cls_type
 
