@@ -17,7 +17,7 @@ from .basic                 import TypedAstNode
 
 from .datatypes             import (NativeBool, NativeInteger, NativeFloat,
                                     NativeComplex, NativeString,
-                                    NativeNumeric, NativeGeneric)
+                                    NativeNumeric)
 
 from .internals             import max_precision
 
@@ -395,7 +395,7 @@ class PyccelBinaryOperator(PyccelOperator):
             dtype = arg1.dtype + arg2.dtype
             class_type = arg1.class_type + arg2.class_type
         except NotImplementedError:
-            raise TypeError('cannot determine the type of {}'.format(args))
+            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
 
         if dtype is NativeString():
             return *cls._handle_str_type((arg1, arg2)), class_type
@@ -553,7 +553,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            dtype, precision, class_type = cls._calculate_dtype(arg1, arg2)
+            dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 return convert_to_literal(arg1.python_value + arg2.python_value,
                                           dtype, precision)

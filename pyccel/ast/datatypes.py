@@ -247,9 +247,6 @@ class NativeHomogeneousList(DataType):
     __slots__ = ()
     _name = 'List'
 
-    def __init__(self):
-        super().__init__()
-
     @lru_cache
     def __add__(self, other):
         if isinstance(other, NativeHomogeneousList):

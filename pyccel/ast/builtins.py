@@ -461,7 +461,6 @@ class PythonTuple(TypedAstNode):
         if is_homogeneous:
             self._dtype = arg0.dtype
             self._precision = arg0.precision
-            integers  = [a for a in args if a.dtype is NativeInteger()]
 
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._rank = max(a.rank for a in args) + 1
@@ -602,7 +601,6 @@ class PythonList(TypedAstNode):
         if is_homogeneous:
             self._dtype = arg0.dtype
             self._precision = arg0.precision
-            integers  = [a for a in args if a.dtype is NativeInteger()]
 
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._rank = max(a.rank for a in args) + 1
