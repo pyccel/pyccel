@@ -110,12 +110,10 @@ def allow_untested_debug_code(untested):
     for f,line_nums in untested.items():
         with open(f, encoding="utf-8") as filename:
             f_lines = filename.readlines()
-        print(f_lines)
-        print(line_nums)
         for l in line_nums:
             line = f_lines[l-1]
             n = len(line)-len(line.lstrip())
-            i = l
+            i = l-1
             func_found = ''
             while i >= 0 and not func_found:
                 line = f_lines[i]
