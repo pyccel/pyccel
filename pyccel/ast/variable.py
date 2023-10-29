@@ -677,7 +677,7 @@ class TupleVariable(Variable):
     >>> n
     n
     """
-    __slots__ = ('_class_type',)
+    __slots__ = ()
 
     @property
     def is_ndarray(self):
