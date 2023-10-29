@@ -64,9 +64,9 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 from pyccel.ast.datatypes import str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
-from pyccel.ast.datatypes import (NativeInteger, NativeBool,
-                                  NativeFloat, NativeString,
-                                  NativeGeneric, NativeComplex,
+from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
+                                  NativeFloat, NativeString, NativeInhomogeneousTuple,
+                                  NativeGeneric, NativeComplex, NativeTuple,
                                   NativeVoid)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -2360,12 +2360,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, Concatenate, Duplicate, PythonList)):
-            is_homogeneous = all((isinstance(a, (TupleVariable, PythonTuple)) and a.is_homogeneous) \
-                                or isinstance(a, (PythonList, Concatenate, Duplicate)) for a in args)
-            if is_homogeneous:
-                return Concatenate(*args)
-            else:
+        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
+            is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
+            if is_inhomogeneous:
                 def get_vars(a):
                     if isinstance(a, InhomogeneousTupleVariable):
                         return a.get_vars()
@@ -2382,6 +2379,8 @@ class SemanticParser(BasicParser):
                         raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
+            else:
+                return Concatenate(*args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
