@@ -67,6 +67,8 @@ __all__ = [
         'tuple_inhomogeneous_1',
         'tuple_inhomogeneous_2',
         'tuple_inhomogeneous_3',
+        'test_tuple_homogeneous',
+        'test_tuple_inhomogeneous',
         ]
 
 def homogenous_tuple_int():
