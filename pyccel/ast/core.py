@@ -6,9 +6,6 @@
 #------------------------------------------------------------------------------------------#
 from itertools import chain
 
-from sympy.logic.boolalg      import And as sp_And
-
-
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
@@ -16,18 +13,18 @@ from pyccel.utilities.stage   import PyccelStage
 from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
+
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
-from .datatypes import (datatype, NativeSymbol,
-                        NativeBool, NativeRange,
-                        NativeTuple, str_dtype)
+
+from .datatypes import datatype, NativeSymbol, NativeBool, NativeTuple, str_dtype
 
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
 from .literals  import Nil, LiteralFalse
 from .literals  import NilArgument, LiteralTrue
 
-from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
+from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
@@ -109,6 +106,7 @@ __all__ = (
 #==============================================================================
 def apply(func, args, kwargs):return func(*args, **kwargs)
 
+#==============================================================================
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
     a PyccelSymbol with a name of the form:
@@ -873,23 +871,24 @@ class While(ScopedAstNode):
 
 
 class With(ScopedAstNode):
+    """
+    Represents a 'with' statement in the code.
 
-    """Represents a 'with' statement in the code.
-
+    Represents a 'with' statement in the code.
     Expressions are of the form:
         "with statement:
             body..."
 
+    !! This code is untested.
+
     Parameters
     ----------
     test : TypedAstNode
-        with definition statement given as an expression
-    body : list of Pyccel objects
-        list of statements representing the body of the With statement.
-
-    Examples
-    --------
-
+        With definition statement given as an expression.
+    body : list of PyccelAstNodes
+        List of statements representing the body of the With statement.
+    scope : Scope
+        The scope of the block.
     """
     __slots__ = ('_test','_body')
     _attribute_nodes = ('_test','_body')
@@ -922,14 +921,25 @@ class With(ScopedAstNode):
 
     @property
     def block(self):
+        """
+        Get the code block for the with block.
+
+        Get the code block created by calling the enter method followed by
+        the code in the with block and finally the exit method.
+
+        Returns
+        -------
+        Block
+            The code block.
+        """
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
                 start = i
             elif str(i.name) == '__exit__':
                 end   = i
-        start = inline(start,[])
-        end   = inline(end  ,[])
+        start = FunctionCall(start,[])
+        end   = FunctionCall(end  ,[])
 
         # TODO check if enter is empty or not first
 
@@ -1653,61 +1663,6 @@ class DoConcurrent(For):
     __slots__ = ()
     pass
 
-
-class ForIterator(For):
-
-    """Class that describes iterable classes defined by the user."""
-    __slots__ = ()
-
-    def __init__(
-        self,
-        target,
-        iterable,
-        body,
-        ):
-
-        if isinstance(iterable, Variable):
-            iterable = PythonRange(PythonLen(iterable))
-        super().__init__(target, iterable, body)
-
-    # TODO uncomment later when we intriduce iterators
-    # @property
-    # def target(self):
-    #    ts = super(ForIterator, self).target
-
-    #    if not(len(ts) == self.depth):
-    #        raise ValueError('wrong number of targets')
-
-    #    return ts
-
-    @property
-    def depth(self):
-        it = self.iterable
-        if isinstance(it, Variable):
-            if isinstance(it.dtype, NativeRange):
-                return 1
-
-            cls_base = it.cls_base
-            if not cls_base:
-                raise TypeError('cls_base undefined')
-
-            methods = cls_base.methods_as_dict
-            it_method = methods['__iter__']
-
-            it_vars = []
-            for stmt in it_method.body:
-                if isinstance(stmt, Assign):
-                    it_vars.append(stmt.lhs)
-
-            n = len(set(str(var.name) for var in it_vars))
-            return n
-        else:
-
-            return 1
-
-    @property
-    def ranges(self):
-        return get_iterable_ranges(self.iterable)
 
 class FunctionCallArgument(PyccelAstNode):
     """
@@ -3447,53 +3402,6 @@ class ClassDef(ScopedAstNode):
             raise TypeError("Argument 'interface' must be of type Interface")
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
-
-    def get_attribute(self, O, attr):
-        """
-        Get the attribute `attr` of the instance `O` of class `self`.
-
-        Get the attribute `attr` from this class definition (stored in `self`)
-        and use it to return the attribute of the instance `O`.
-
-        Parameters
-        ----------
-        O : Variable
-            The instance of this class whose attribute we are interested in.
-
-        attr : str
-            The name of the attribute we are looking for.
-
-        Returns
-        -------
-        Variable
-            The variable which contains the attribute.
-        """
-
-        if not isinstance(attr, str):
-            raise TypeError('Expecting attribute to be a string')
-
-        if isinstance(O, Variable):
-            cls_name = O.name
-        else:
-            cls_name = str(O)
-
-        attributes = {}
-        for i in self.attributes:
-            attributes[i.name] = i
-
-        if not attr in attributes:
-            raise ValueError(f'{attr} is not an attribute of {self}')
-
-        var = attributes[attr]
-        name = DottedName(cls_name, var.name)
-        return Variable(
-            var.dtype,
-            name,
-            rank=var.rank,
-            memory_handling=var.memory_handling,
-            shape=var.shape,
-            cls_base=var.cls_base,
-            )
 
     def get_method(self, name):
         """

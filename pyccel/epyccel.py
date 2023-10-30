@@ -81,7 +81,7 @@ def get_unique_name(prefix, path):
         tag = random_string(12)
         module_name = module_import_prefix + tag
 
-    module_name = module_name.split('.')[-1] + '_' + tag
+    module_name = module_name.split('.')[-1]
 
     # Create new directories if not existing
     os.makedirs(path, exist_ok=True)
