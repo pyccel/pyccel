@@ -113,7 +113,7 @@ def allow_untested_debug_code(untested):
         for l in line_nums:
             line = f_lines[l-1]
             n = len(line)-len(line.lstrip())
-            i = l
+            i = l-1
             func_found = ''
             while i >= 0 and not func_found:
                 line = f_lines[i]
