@@ -884,7 +884,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         Duplicate | PythonTuple
-            The duplicated tuple
+            The duplicated tuple.
         """
         # Arguments have been visited in PyccelMul
 
