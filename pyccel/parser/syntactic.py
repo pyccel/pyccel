@@ -170,7 +170,7 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         pyccel_stage.set_stage('syntactic')
-        ast       = self._visit(self.fst)
+        ast       = self._visit(self.ast)
         self._ast = ast
 
         self._syntax_done = True
@@ -284,9 +284,9 @@ class SyntaxParser(BasicParser):
                         severity='fatal')
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
             if isinstance(stmt, PyccelAstNode):
-                annot.set_fst(stmt.fst)
+                annot.ast = stmt.ast
             else:
-                annot.set_fst(stmt)
+                annot.ast = stmt
             return annot
         elif annotation is Nil():
             return None
@@ -478,7 +478,7 @@ class SyntaxParser(BasicParser):
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation)
-                new_arg.set_fst(a)
+                new_arg.ast = a
                 arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
@@ -486,7 +486,7 @@ class SyntaxParser(BasicParser):
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation,
                                             value = self._visit(d))
-                new_arg.set_fst(a)
+                new_arg.ast = a
                 arguments.append(new_arg)
 
         if stmt.kwonlyargs:
@@ -496,7 +496,7 @@ class SyntaxParser(BasicParser):
                 arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
                             value=val, kwonly=True)
-                arg.set_fst(a)
+                arg.ast = a
 
                 arguments.append(arg)
 
@@ -983,7 +983,7 @@ class SyntaxParser(BasicParser):
                 result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].set_fst(stmt)
+            results[-1].ast = stmt
 
         self.exit_function_scope()
 
@@ -1072,11 +1072,11 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += [FunctionCallArgument(self._visit(a), fst=a) for a in stmt.args]
+            args += [FunctionCallArgument(self._visit(a), ast=a) for a in stmt.args]
         if stmt.keywords:
             kwargs = self._visit(stmt.keywords)
             for k, a in zip(kwargs, stmt.keywords):
-                k.set_fst(a)
+                k.ast = a
 
             args += kwargs
 

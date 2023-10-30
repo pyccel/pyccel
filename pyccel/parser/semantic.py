@@ -2251,7 +2251,7 @@ class SemanticParser(BasicParser):
 
         if expr.annotation is None:
             errors.report(MISSING_TYPE_ANNOTATIONS,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                     symbol=expr, severity='fatal')
 
         # Get the semantic type annotation (should be UnionTypeAnnotation)
@@ -2259,7 +2259,7 @@ class SemanticParser(BasicParser):
 
         if len(types.type_list) == 0:
             errors.report(MISSING_TYPE_ANNOTATIONS,
-                    bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                     symbol=expr, severity='fatal')
 
         python_name = expr.name
@@ -2366,7 +2366,7 @@ class SemanticParser(BasicParser):
 
                 if order is not None and rank < 2:
                     errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                            symbol=expr.fst, severity='warning')
+                            symbol=expr.ast, severity='warning')
                     order = None
 
                 # NumPy objects cannot have default precision
@@ -3126,13 +3126,13 @@ class SemanticParser(BasicParser):
                     if li.is_const:
                         # If constant (can't use annotations on tuple assignment)
                         errors.report("Cannot modify 'const' variable",
-                            bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                            bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                             symbol=li, severity='error')
             else:
                 if l.is_const and (not isinstance(expr.lhs, AnnotatedPyccelSymbol) or len(l.get_all_user_nodes()) > 0):
                     # If constant and not the initialising declaration of a constant variable
                     errors.report("Cannot modify 'const' variable",
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                         symbol=l, severity='error')
             if isinstance(expr, AugAssign):
                 new_expr = AugAssign(l, expr.op, r)
@@ -3744,7 +3744,7 @@ class SemanticParser(BasicParser):
                 for r in results:
                     if r.var.is_alias:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                        symbol=r,bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                        symbol=r,bounding_box=(self._current_ast_node.lineno, self._current_ast_node.col_offset),
                         severity='error')
 
                 func_kwargs = {
