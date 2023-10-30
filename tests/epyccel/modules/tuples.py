@@ -427,3 +427,13 @@ def tuple_inhomogeneous_2():
 def tuple_inhomogeneous_3():
     a = tuple((0, 1.0, 3))
     return a[0], a[1], a[2], len(a)
+
+def test_tuple_homogeneous():
+    b = (10, 20, 30, 40)
+    a = tuple(b)
+    return a[0], a[1], a[2], a[3], len(a)
+
+def test_tuple_inhomogeneous():
+    b = ('hello', 42, True, 3.14)
+    a = tuple(b)
+    return a[0], a[1], a[2], a[3], len(a)
