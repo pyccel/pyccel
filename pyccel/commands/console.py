@@ -21,31 +21,28 @@ class MyParser(argparse.ArgumentParser):
 
     Parameters
     ----------
-    fromfile_prefix_chars : See argparse
-        See argparse.
-
-    prefix_chars : See argparse
+    prog : See argparse
         See argparse.
 
     usage : See argparse
         See argparse.
 
+    description : See argparse
+        See argparse.
+
     epilog : See argparse
-        See argparse.
-
-    add_help : See argparse
-        See argparse.
-
-    formatter_class : See argparse
         See argparse.
 
     parents : See argparse
         See argparse.
 
-    prog : See argparse
+    formatter_class : See argparse
         See argparse.
 
-    allow_abbrev : See argparse
+    prefix_chars : See argparse
+        See argparse.
+
+    fromfile_prefix_chars : See argparse
         See argparse.
 
     argument_default : See argparse
@@ -54,7 +51,10 @@ class MyParser(argparse.ArgumentParser):
     conflict_handler : See argparse
         See argparse.
 
-    description : See argparse
+    add_help : See argparse
+        See argparse.
+
+    allow_abbrev : See argparse
         See argparse.
     """
     def error(self, message):
