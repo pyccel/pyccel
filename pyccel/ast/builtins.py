@@ -217,8 +217,17 @@ class PythonBool(PyccelInternalFunction):
         else:
             return super().__new__(cls)
 
+    @property
+    def arg(self):
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
+
     def __str__(self):
-        return f'Bool({self.args[0]})'
+        return f'Bool({self.arg})'
 
 #==============================================================================
 class PythonComplex(TypedAstNode):
@@ -417,8 +426,17 @@ class PythonFloat(PyccelInternalFunction):
     def __init__(self, arg):
         super().__init__(arg)
 
+    @property
+    def arg(self):
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
+
     def __str__(self):
-        return f'float({self.args[0]})'
+        return f'float({self.arg})'
 
 #==============================================================================
 class PythonInt(PyccelInternalFunction):
@@ -450,6 +468,15 @@ class PythonInt(PyccelInternalFunction):
 
     def __init__(self, arg):
         super().__init__(arg)
+
+    @property
+    def arg(self):
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
 
 #==============================================================================
 class PythonTuple(TypedAstNode):
@@ -626,8 +653,17 @@ class PythonLen(PyccelInternalFunction):
     def __init__(self, arg):
         super().__init__(arg)
 
+    @property
+    def arg(self):
+        """
+        Get the argument which was passed to the function.
+
+        Get the argument which was passed to the function.
+        """
+        return self._args[0]
+
     def __str__(self):
-        return f'len({self.args[0]})'
+        return f'len({self.arg})'
 
 #==============================================================================
 class PythonList(PythonTuple):
