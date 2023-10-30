@@ -155,6 +155,16 @@ class NumpyFloat(PythonFloat):
         self._order = arg.order
         super().__init__(arg)
 
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
     """
@@ -181,6 +191,16 @@ class NumpyBool(PythonBool):
         self._order = arg.order
         super().__init__(arg)
 
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
@@ -193,6 +213,16 @@ class NumpyInt(PythonInt):
         self._rank  = arg.rank
         self._order = arg.order
         super().__init__(arg)
+
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
@@ -302,6 +332,16 @@ class NumpyComplex(PythonComplex):
         self._rank  = arg0.rank
         self._order = arg0.order
         super().__init__(arg0)
+
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
