@@ -170,7 +170,7 @@ class SyntaxParser(BasicParser):
         errors.set_parser_stage('syntax')
 
         pyccel_stage.set_stage('syntactic')
-        ast       = self._visit(self._ast)
+        ast       = self._visit(self.fst)
         self._ast = ast
 
         self._syntax_done = True

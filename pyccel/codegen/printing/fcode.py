@@ -2004,8 +2004,8 @@ class FCodePrinter(CodePrinter):
             code = '\n'.join((code, decs))
         if len(methods) > 0:
             code = '\n'.join((code,'contains',methods))
-        decs = ('{code}\n'
-                'end type {name}\n')
+        decs = (f'{code}\n'
+                f'end type {name}\n')
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing

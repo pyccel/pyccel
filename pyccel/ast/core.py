@@ -808,9 +808,7 @@ class AugAssign(Assign):
         a = a + b
         """
         return Assign(self.lhs,
-                self._accepted_operators[self._op](self.lhs, self.rhs),
-                status = self.status,
-                like   = self.like)
+                self._accepted_operators[self._op](self.lhs, self.rhs))
 
 
 class While(ScopedAstNode):
