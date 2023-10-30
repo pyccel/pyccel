@@ -64,7 +64,7 @@ __all__ = (
 def broadcast(shape_1, shape_2):
     """ This function broadcast two shapes using numpy broadcasting rules """
 
-    from pyccel.ast.sympy_helper import pyccel_to_sympy
+    from pyccel.ast.sympy_helper import pyccel_to_sympy #pylint:disable=cyclic-import
     if shape_1 is None and shape_2 is None:
         return None
     elif shape_1 is None:
