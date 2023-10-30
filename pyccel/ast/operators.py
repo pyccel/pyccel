@@ -1088,10 +1088,8 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     __slots__ = ()
     _precedence = 5
@@ -1117,10 +1115,8 @@ class PyccelOr(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     __slots__ = ()
     _precedence = 4
@@ -1142,10 +1138,8 @@ class PyccelIs(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
 
     Examples
     --------
@@ -1198,10 +1192,8 @@ class PyccelIsNot(PyccelIs):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
 
     Examples
     --------
