@@ -1028,7 +1028,7 @@ class PyccelGe(PyccelComparisonOperator):
 
 #==============================================================================
 
-class PyccelBooleanOperator(PyccelBinaryOperator):
+class PyccelBooleanOperator(PyccelOperator):
     """
     Superclass representing a boolean operator with two arguments.
 
@@ -1037,10 +1037,8 @@ class PyccelBooleanOperator(PyccelBinaryOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     dtype = NativeBool()
     precision = -1
