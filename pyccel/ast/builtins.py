@@ -201,14 +201,13 @@ class PythonBool(PyccelInternalFunction):
     arg : PyccelAstNode
         The argument passed to the function.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'bool'
     _dtype = NativeBool()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
@@ -400,14 +399,13 @@ class PythonFloat(PyccelInternalFunction):
     arg : PyccelAstNode
         The argument passed to the function.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _attribute_nodes = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
@@ -436,14 +434,13 @@ class PythonInt(PyccelInternalFunction):
         The argument passed to the function.
     """
 
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _attribute_nodes  = ('_arg',)
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
