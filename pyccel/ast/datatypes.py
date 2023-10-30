@@ -289,6 +289,12 @@ class NativeHomogeneousList(DataType):
             return NotImplemented
 
 class NativeSymbol(DataType, metaclass=Singleton):
+    """
+    Class representing a symbol datatype.
+
+    Class representing a symbol datatype. This **may** be useful for
+    the sympy decorator and other symbolic manipulations.
+    """
     __slots__ = ()
     _name = 'Symbol'
 
