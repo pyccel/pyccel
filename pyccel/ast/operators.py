@@ -62,7 +62,24 @@ __all__ = (
 
 #==============================================================================
 def broadcast(shape_1, shape_2):
-    """ This function broadcast two shapes using numpy broadcasting rules """
+    """
+    Broadcast two shapes using NumPy broadcasting rules.
+
+    Calculate the shape of the result of an operator from the shape of the arguments
+    of the operator. The new shape is calculated using NumPy broadcasting rules.
+
+    Parameters
+    ----------
+    shape_1 : tuple of TypedAstNode
+        The shape of the first argument.
+    shape_2 : tuple of TypedAstNode
+        The shape of the second argument.
+
+    Returns
+    -------
+    tuple of TypedAstNode
+        The shape of the result of the operator.
+    """
 
     from pyccel.ast.sympy_helper import pyccel_to_sympy #pylint:disable=cyclic-import
     if shape_1 is None and shape_2 is None:
