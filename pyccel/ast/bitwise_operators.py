@@ -147,8 +147,8 @@ class PyccelBitOperator(PyccelOperator):
         the case where the result is an integer, ie. when the arguments are all
         booleans or integers.
 
-        Results
-        -------
+        Parameters
+        ----------
         args : tuple of TypedAstNode
             The arguments passed to the operator.
 
@@ -239,6 +239,26 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     """
     __slots__ = ()
     def _handle_integer_type(self, args):
+        """
+        Set dtype and precision when the result is an integer.
+
+        Calculate the dtype and precision of the result from the arguments in
+        the case where the result is an integer, ie. when the arguments are all
+        booleans or integers.
+
+        Parameters
+        ----------
+        args : tuple of TypedAstNode
+            The arguments passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The datatype of the result of the operator.
+
+        precision : int
+            The precision of the result of the operator.
+        """
         if all(a.dtype is NativeInteger() for a in args):
             dtype = NativeInteger()
         elif all(a.dtype is NativeBool() for a in args):
