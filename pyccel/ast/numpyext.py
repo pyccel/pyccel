@@ -117,6 +117,11 @@ __all__ = (
 )
 
 class NumpyNDArrayType(DataType):
+    """
+    Class representing the NumPy ND array type.
+
+    Class representing the NumPy ND array type.
+    """
     __slots__ = ()
     name = 'numpy.ndarray'
 

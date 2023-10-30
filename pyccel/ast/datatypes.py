@@ -30,8 +30,6 @@ __all__ = (
     'NativeInteger',
     'NativeHomogeneousList',
     'NativeHomogeneousTuple',
-    'NativeNil',
-    'NativeRange',
     'NativeString',
     'NativeSymbol',
     'NativeTuple',
@@ -206,12 +204,15 @@ class NativeString(DataType, metaclass=Singleton):
             return NotImplemented
 
 class NativeVoid(DataType, metaclass=Singleton):
+    """
+    Class representing a void datatype.
+
+    Class representing a void datatype. This class is especially useful
+    in the C-Python wrapper when a `void*` type is needed to collect
+    pointers from Fortran.
+    """
     __slots__ = ()
     _name = 'Void'
-
-class NativeNil(DataType, metaclass=Singleton):
-    __slots__ = ()
-    _name = 'Nil'
 
 class NativeTuple(DataType):
     """Base class representing native datatypes"""
@@ -225,10 +226,27 @@ class NativeTuple(DataType):
         else:
             return NotImplemented
 
-class NativeHomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
+class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
+    """
+    Class representing the homogeneous tuple type.
+
+    Class representing the type of a homogeneous tuple.
+    """
     __slots__ = ()
 
-class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
+class NativeInhomogeneousTuple(NativeTuple):
+    """
+    Class representing the inhomogeneous tuple type.
+
+    Class representing the type of an inhomogeneous tuple. This is a
+    basic datatype as it cannot be indexed. It is therefore parametrised
+    by the datatypes that it contains.
+
+    Parameters
+    ----------
+    *dtypes : tuple of DataTypes
+        The datatypes stored in the inhomogeneous tuple.
+    """
     __slots__ = ('_dtypes',)
 
     def __init__(self, *dtypes):
@@ -237,6 +255,17 @@ class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
 
     @property
     def name(self):
+        """
+        The name of the datatype.
+
+        Get the name of the datatype. This name is parametrised by the
+        datatypes in the elements of the tuple.
+
+        Returns
+        -------
+        str
+            The name of the datatype.
+        """
         datatypes = ', '.join(d.name for d in self._dtypes)
         return f'tuple[{datatypes}]'
 
@@ -244,6 +273,11 @@ class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
         return self._dtypes[i]
 
 class NativeHomogeneousList(DataType):
+    """
+    Class representing the homogeneous list type.
+
+    Class representing the type of a homogeneous list.
+    """
     __slots__ = ()
     _name = 'List'
 
@@ -253,10 +287,6 @@ class NativeHomogeneousList(DataType):
             return self
         else:
             return NotImplemented
-
-class NativeRange(DataType):
-    __slots__ = ()
-    _name = 'Range'
 
 class NativeSymbol(DataType, metaclass=Singleton):
     __slots__ = ()
@@ -272,6 +302,13 @@ class CustomDataType(DataType, metaclass=Singleton):
     __slots__ = ()
 
 class NativeGeneric(DataType):
+    """
+    Class representing a generic datatype.
+
+    Class representing a generic datatype. This datatype is
+    useful for describing the type of an empty container (list/tuple/etc)
+    or an argument which can accept any type (e.g. MPI arguments).
+    """
     __slots__ = ()
     _name = 'Generic'
 
@@ -288,7 +325,6 @@ Int            = NativeInteger()
 Float          = NativeFloat()
 Cmplx          = NativeComplex()
 Void           = NativeVoid()
-Nil            = NativeNil()
 String         = NativeString()
 _Symbol        = NativeSymbol()
 Generic        = NativeGeneric()

@@ -37,7 +37,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeRange, NativeNumeric
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -1336,9 +1336,6 @@ class FCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         # ... ignored declarations
         if isinstance(expr.dtype, NativeSymbol):
-            return ''
-
-        if isinstance(expr.dtype, NativeRange):
             return ''
 
         # meta-variables
