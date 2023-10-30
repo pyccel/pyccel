@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
+-   \[INTERNALS\] Remove unused `Declare.dtype`.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 
 ## \[1.10.0\] - 2023-10-23
 
@@ -82,10 +84,6 @@ All notable changes to this project will be documented in this file.
 -   Remove support for specifying header annotations in a separate file.
 -   \[INTERNALS\] Remove `dtype_registry` in favour of `dtype_and_precision_registry`.
 -   \[INTERNALS\] Prefer `DataType` keys over string keys which describe data types.
--   \[INTERNALS\] Remove unused `Declare.dtype`.
--   \[INTERNALS\] Remove unused functions `subs`, `inline`, `get_iterable_ranges` from `pyccel.ast.core`.
--   \[INTERNALS\] Remove unused class `pyccel.ast.core.ForIterator`.
--   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
 
 ## \[1.9.1\] - 2023-08-31
 
