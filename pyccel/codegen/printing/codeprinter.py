@@ -48,7 +48,10 @@ class CodePrinter:
         """
 
         # Do the actual printing
-        return self._print(expr)
+        lines = self._print(expr).splitlines(True)
+
+        # Format the output (indenting, wrapping, etc)
+        return ''.join(self._format_code(lines))
 
     @property
     def scope(self):
