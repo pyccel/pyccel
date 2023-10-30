@@ -235,6 +235,9 @@ class PyccelUnaryOperator(PyccelOperator):
     """
     __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
 
+    def __init__(self, arg):
+        super().__init__(arg)
+
     @staticmethod
     def _calculate_dtype(*args):
         """ Sets the dtype and precision
