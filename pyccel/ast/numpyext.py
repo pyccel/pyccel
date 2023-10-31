@@ -2106,7 +2106,7 @@ class NumpyIsNan(NumpyUfuncBase):
     numpy.isnan :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
     """
-    __slots__ = ('_arg')
+    __slots__ = ('_arg',)
     name = 'isnan'
     _dtype = NativeBool()
     _precision = -1
@@ -2136,7 +2136,7 @@ class NumpyIsInf(NumpyUfuncBase):
     numpy.isinf :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
     """
-    __slots__ = ('_arg')
+    __slots__ = ('_arg',)
     name = 'isinf'
     _dtype = NativeBool()
     _precision = -1
@@ -2166,7 +2166,7 @@ class NumpyIsFinite(NumpyUfuncBase):
     numpy.isfinite :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
     """
-    __slots__ = ('_arg')
+    __slots__ = ('_arg',)
     name = 'isfinite'
     _dtype = NativeBool()
     _precision = -1
