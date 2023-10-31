@@ -1803,7 +1803,7 @@ class SemanticParser(BasicParser):
         current_ast = self.current_ast_node
 
         if getattr(expr,'ast', None) is not None:
-            self.current_ast_node = expr.ast
+            self._current_ast_node = expr.ast
 
         classes = type(expr).__mro__
         for cls in classes:
