@@ -104,9 +104,14 @@ class PyccelAstNode:
         return c is None or isinstance(c, cls._ignored_types)
 
     def invalidate_node(self):
-        """ Indicate that this node is temporary.
+        """
+        Indicate that this node is no longer used.
+
+        Indicate that this node is temporary and is no longer used.
         This will allow it to remove itself from its attributes' users.
-        If an attribute subsequently has no users, invalidate_node is called recursively
+        If an attribute subsequently has no users, invalidate_node is called recursively.
+        This prevents the tree from becoming filled with temporary objects and prevents
+        obsolete objects being retrieved when searching for attribute nodes.
         """
         for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             c = getattr(self, c_name)
@@ -149,20 +154,23 @@ class PyccelAstNode:
             return results
 
     def get_attribute_nodes(self, search_type, excluded_nodes = ()):
-        """ Returns all objects of the requested type
-        in the current object
+        """
+        Get all objects of the requested type in the current object.
+
+        Returns all objects of the requested type which are stored in the
+        current object.
 
         Parameters
         ----------
         search_type : ClassType or tuple of ClassTypes
-                      The types which we are looking for
+                      The types which we are looking for.
         excluded_nodes : tuple of types
-                      Types for which get_attribute_nodes should not be called
+                      Types for which get_attribute_nodes should not be called.
 
-        Results
+        Returns
         -------
-        list : List containing all objects of the
-               requested type which exist in self
+        list
+            List containing all objects of the requested type which exist in self.
         """
         if self._recursion_in_progress:
             return []
@@ -250,19 +258,21 @@ class PyccelAstNode:
     def substitute(self, original, replacement, excluded_nodes = (), invalidate = True):
         """
         Substitute object 'original' for object 'replacement' in the code.
-        Any types in excluded_nodes will not be visited
+
+        Substitute object 'original' for object 'replacement' in the code.
+        Any types in excluded_nodes will not be visited.
 
         Parameters
-        ==========
-        original    : object or tuple of objects
-                      The original object to be replaced
+        ----------
+        original : object or tuple of objects
+                      The original object to be replaced.
         replacement : object or tuple of objects
-                      The object which will be inserted instead
+                      The object which will be inserted instead.
         excluded_nodes : tuple of types
-                      Types for which substitute should not be called
+                      Types for which substitute should not be called.
         invalidate : bool
                     Indicates whether the removed object should
-                    be invalidated
+                    be invalidated.
         """
         if self._recursion_in_progress:
             return
