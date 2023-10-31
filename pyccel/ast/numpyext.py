@@ -350,8 +350,11 @@ class NumpyComplex(PythonComplex):
 
     Parameters
     ----------
-    arg : TypedAstNode
-        The argument passed to the function.
+    arg0 : TypedAstNode
+        The first argument passed to the function. Either the array/scalar being cast
+        or the real part of the complex.
+    arg1 : TypedAstNode, optional
+        The second argument passed to the function. The imaginary part of the complex.
     """
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
