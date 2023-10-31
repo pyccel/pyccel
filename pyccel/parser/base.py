@@ -268,6 +268,15 @@ class BasicParser(object):
 
     @property
     def current_ast_node(self):
+        """
+        The AST for the current node.
+
+        The AST object describing the current node. This object is never set to None
+        when entering a node. Therefore if a node has no AST object (e.g. a Variable)
+        the `current_ast_node` will contain the AST of the enclosing object. It is
+        set in the `_visit` method of `SemanticParser`. This object is useful for
+        reporting errors on objects whose context is unknown (e.g. Variables).
+        """
         return self._current_ast_node
 
     @property
