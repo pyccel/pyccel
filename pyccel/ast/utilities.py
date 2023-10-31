@@ -10,7 +10,6 @@ from itertools import chain
 from collections import namedtuple
 
 import pyccel.decorators as pyccel_decorators
-from pyccel.symbolic import lambdify
 from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
@@ -68,9 +67,6 @@ def builtin_function(expr, args=None):
             errors.report(e,
                     symbol=expr,
                     severity='fatal')
-
-    if name == 'lambdify':
-        return lambdify(expr, args)
 
     return None
 
