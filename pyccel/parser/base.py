@@ -151,7 +151,7 @@ class BasicParser(object):
 
         # current position for errors
 
-        self._current_fst_node = None
+        self._current_ast_node = None
 
         # flag for blocking errors. if True, an error with this flag will cause
         # Pyccel to stop
@@ -164,7 +164,7 @@ class BasicParser(object):
     def __setstate__(self, state):
         copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
                 '_metavars', '_scope', '_current_class', '_current_function',
-                '_syntax_done', '_semantic_done', '_current_fst_node')
+                '_syntax_done', '_semantic_done', '_current_ast_node')
 
         self.__dict__.update({s : state[s] for s in copy_slots})
 
@@ -241,8 +241,8 @@ class BasicParser(object):
             return False
 
     @property
-    def current_fst_node(self):
-        return self._current_fst_node
+    def current_ast_node(self):
+        return self._current_ast_node
 
     @property
     def blocking(self):
