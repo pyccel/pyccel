@@ -38,14 +38,14 @@ class PyccelAstNode:
     the AST tree as well as an indication of the stage in which the object is
     valid (syntactic/semantic/etc).
     """
-    __slots__ = ('_user_nodes', '_fst', '_recursion_in_progress' ,'_pyccel_staging')
+    __slots__ = ('_user_nodes', '_ast', '_recursion_in_progress' ,'_pyccel_staging')
     _ignored_types = (Immutable, type)
     _attribute_nodes = None
 
     def __init__(self):
         self._pyccel_staging = pyccel_stage.current_stage
         self._user_nodes = []
-        self._fst = []
+        self._ast = []
         self._recursion_in_progress = False
         for c_name in self._my_attribute_nodes:
             c = getattr(self, c_name)
@@ -70,7 +70,7 @@ class PyccelAstNode:
                 setattr(self, c_name, c)
 
             elif not isinstance(c, PyccelAstNode):
-                raise TypeError("PyccelAstNode child must be a PyccelAstNode or a tuple not {}".format(type(c)))
+                raise TypeError(f"PyccelAstNode child must be a Basic or a tuple not {type(c)}")
 
 
             if isinstance(c, tuple):
@@ -307,25 +307,8 @@ class PyccelAstNode:
         """
         return not self._my_attribute_nodes
 
-    def set_fst(self, fst):
-        """Sets the python.ast fst."""
-        if not isinstance(fst, ast.AST):
-            raise TypeError("Fst must be an AST object, not {}".format(type(fst)))
-
-        if self.fst:
-            if hasattr(fst, 'lineno'):
-                if self.fst.lineno != fst.lineno or self.fst.col_offset != fst.col_offset:
-                    self._fst.append(fst)
-        else:
-            if not hasattr(fst, 'lineno'):
-                # Handle module object
-                fst.lineno     = 1
-                fst.col_offset = 1
-
-            self._fst.append(fst)
-
     @property
-    def fst(self):
+    def ast(self):
         """
         Get the AST object which Python parsed in the original code.
 
@@ -339,10 +322,27 @@ class PyccelAstNode:
         ast.AST
             The AST object which was parsed.
         """
-        if len(self._fst) == 1:
-            return self._fst[0]
+        if len(self._ast) == 1:
+            return self._ast[0]
         else:
             return None
+
+    @ast.setter
+    def ast(self, ast_node):
+        if not isinstance(ast_node, ast.AST):
+            raise TypeError(f"ast_node must be an AST object, not {type(ast_node)}")
+
+        if self.ast:
+            if hasattr(ast_node, 'lineno'):
+                if self.ast.lineno != ast_node.lineno or self.ast.col_offset != ast_node.col_offset:
+                    self._ast.append(ast_node)
+        else:
+            if not hasattr(ast_node, 'lineno'):
+                # Handle module object
+                ast_node.lineno     = 1
+                ast_node.col_offset = 1
+
+            self._ast.append(ast_node)
 
 
     def toggle_recursion(self):

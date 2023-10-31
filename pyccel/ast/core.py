@@ -313,7 +313,7 @@ class Assign(PyccelAstNode):
     like : Variable, optional
         Contains the name of the variable from which the lhs will be cloned.
 
-    fst : ast.Ast
+    ast : ast.Ast
         The ast object parsed by Python's ast module.
 
     Examples
@@ -342,7 +342,7 @@ class Assign(PyccelAstNode):
         status=None,
         like=None,
         *,
-        fst = None
+        ast = None
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
@@ -353,8 +353,8 @@ class Assign(PyccelAstNode):
         self._status = status
         self._like = like
         super().__init__()
-        if fst is not None:
-            self.set_fst(fst)
+        if ast is not None:
+            self.ast = ast
 
     def __str__(self):
         return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
@@ -638,11 +638,12 @@ class CodeBlock(PyccelAstNode):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    def set_fst(self, fst):
-        super().set_fst(fst)
+    @PyccelAstNode.ast.setter
+￼   def ast(self, ast_node):
+￼        PyccelAstNode.ast.fset(self, ast_node)
         for l in self.body:
-            if not l.fst:
-                l.set_fst(fst)
+            if not l.ast:
+                l.ast = ast_node
 
 class AliasAssign(PyccelAstNode):
 
@@ -794,7 +795,7 @@ class AugAssign(Assign):
         status=None,
         like=None,
         *,
-        fst = None
+        ast = None
         ):
 
         if op not in self._accepted_operators.keys():
@@ -802,7 +803,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, fst=fst)
+        super().__init__(lhs, rhs, status, like, ast=ast)
 
     def __repr__(self):
         return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
@@ -1677,17 +1678,17 @@ class FunctionCallArgument(PyccelAstNode):
     keyword : str, optional
         If the argument is passed by keyword then this
         is that keyword.
-    fst : ast.Ast
+    ast : ast.Ast
         The ast object parsed by Python's ast module.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
-    def __init__(self, value, keyword = None, *, fst = None):
+    def __init__(self, value, keyword = None, *, ast = None):
         self._value = value
         self._keyword = keyword
         super().__init__()
-        if fst:
-            self.set_fst(fst)
+        if ast:
+            self.ast = ast
 
     @property
     def value(self):

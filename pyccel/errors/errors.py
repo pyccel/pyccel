@@ -306,23 +306,23 @@ class Errors(metaclass = Singleton):
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        fst = None
+        ast_node = None
 
         if symbol is not None:
             if isinstance(symbol, ast.AST):
-                fst = symbol
+                ast_node = symbol
                 if sys.version_info < (3, 9):
-                    symbol = ast.dump(fst)
+                    symbol = ast.dump(ast_node)
                 else:
-                    symbol = ast.unparse(fst) # pylint: disable=no-member
+                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
             elif isinstance(symbol, PyccelAstNode):
-                fst = symbol.fst
+                ast_node = symbol.ast
 
-        if fst:
+        if ast_node:
             if line is None:
-                line   = getattr(fst, 'lineno', None)
+                line   = getattr(ast_node, 'lineno', None)
             if column is None:
-                column = getattr(fst, 'col_offset', None)
+                column = getattr(ast_node, 'col_offset', None)
 
         if self.mode == 'developer':
             if traceback:

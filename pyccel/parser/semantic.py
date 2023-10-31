@@ -695,7 +695,7 @@ class SemanticParser(BasicParser):
             else:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, var)
-                assign.set_fst(expr.fst)
+                assign.ast = expr.ast
                 self._additional_exprs[-1].append(self._visit(assign))
                 var = self._visit(tmp_var)
 
@@ -960,7 +960,7 @@ class SemanticParser(BasicParser):
             if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
-                assign.set_fst(expr.fst)
+                assign.ast = expr.ast
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
@@ -1518,7 +1518,7 @@ class SemanticParser(BasicParser):
             # Use _visit_Assign to create the requested iterator with the correct type
             # The result of this operation is not stored, it is just used to declare
             # iterator with the correct dtype to allow correct dtype deductions later
-            self._visit(Assign(iterator, iterator_rhs, fst=expr.fst))
+            self._visit(Assign(iterator, iterator_rhs, ast=expr.ast))
 
             loop_elem = loop.body.body[0]
 
@@ -1530,7 +1530,7 @@ class SemanticParser(BasicParser):
                     gen = gens.pop()
                     assert isinstance(gen.lhs, PyccelSymbol) and gen.lhs.is_temp
                     gen_lhs = self.scope.get_new_name() if gen.lhs.is_temp else gen.lhs
-                    assign = self._visit(Assign(gen_lhs, gen, fst=gen.fst))
+                    assign = self._visit(Assign(gen_lhs, gen, ast=gen.ast))
                     new_expr.append(assign)
                     loop.substitute(gen, assign.lhs)
                     loop_elem = loop.body.body[0]
@@ -1583,7 +1583,7 @@ class SemanticParser(BasicParser):
 
         # Initialise result with correct initial value
         stmt = Assign(lhs, val)
-        stmt.set_fst(expr.fst)
+        stmt.ast = expr.ast
         loops.insert(0, stmt)
 
         indices = [self._visit(i) for i in expr.indices]
@@ -1594,7 +1594,7 @@ class SemanticParser(BasicParser):
             expr_new = FunctionalMin(loops, lhs=lhs, indices = indices)
         elif isinstance(expr, FunctionalMax):
             expr_new = FunctionalMax(loops, lhs=lhs, indices = indices)
-        expr_new.set_fst(expr.fst)
+        expr_new.ast = expr.ast
         return expr_new
 
     def _find_superclasses(self, expr):
@@ -1702,8 +1702,8 @@ class SemanticParser(BasicParser):
         #      - blocking errors
         current_fst = self._current_fst_node
 
-        if hasattr(expr,'fst') and expr.fst is not None:
-            self._current_fst_node = expr.fst
+        if hasattr(expr,'ast') and expr.ast is not None:
+            self._current_fst_node = expr.ast
 
         classes = type(expr).__mro__
         for cls in classes:
@@ -1711,7 +1711,7 @@ class SemanticParser(BasicParser):
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr)
                 if isinstance(obj, PyccelAstNode) and self._current_fst_node:
-                    obj.set_fst(self._current_fst_node)
+                    obj.ast = self._current_fst_node
                 self._current_fst_node = current_fst
                 return obj
 
@@ -1932,7 +1932,7 @@ class SemanticParser(BasicParser):
         a = FunctionCallArgument(value, expr.keyword)
         if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
             tmp_var = self.scope.get_new_name()
-            assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
+            assign = self._visit(Assign(tmp_var, expr.value, ast = expr.value.ast))
             self._additional_exprs[-1].append(assign)
             a = FunctionCallArgument(self._visit(tmp_var))
         return a
@@ -2263,7 +2263,7 @@ class SemanticParser(BasicParser):
 
                 if order is not None and rank < 2:
                     errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                            symbol=expr.fst, severity='warning')
+                            symbol=expr.ast, severity='warning')
                     order = None
 
                 # NumPy objects cannot have default precision
@@ -2698,8 +2698,8 @@ class SemanticParser(BasicParser):
     def _visit_Assign(self, expr):
         # TODO unset position at the end of this part
         new_expressions = []
-        fst = expr.fst
-        assert(fst)
+        ast = expr.ast
+        assert(ast)
 
         rhs = expr.rhs
         lhs = expr.lhs
@@ -2721,8 +2721,8 @@ class SemanticParser(BasicParser):
             if value_true.rank > 0 or value_true.dtype is NativeString():
                 # Temporarily deactivate type checks to construct syntactic assigns
                 pyccel_stage.set_stage('syntactic')
-                assign_true  = Assign(lhs, rhs.value_true, fst = fst)
-                assign_false = Assign(lhs, rhs.value_false, fst = fst)
+                assign_true  = Assign(lhs, rhs.value_true, ast = ast)
+                assign_false = Assign(lhs, rhs.value_false, ast = ast)
                 pyccel_stage.set_stage('semantic')
 
                 cond  = self._visit(rhs.cond)
@@ -2797,7 +2797,7 @@ class SemanticParser(BasicParser):
 
             rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
-                i.set_fst(fst)
+                i.ast = ast
             return rhs
 
         elif isinstance(rhs, CodeBlock):
@@ -2822,7 +2822,7 @@ class SemanticParser(BasicParser):
                 stmt = Assign(lhs, stmt)
             elif isinstance(expr, AugAssign):
                 stmt = AugAssign(lhs, expr.op, stmt)
-            stmt.set_fst(fst)
+            stmt.ast = ast
             stmts[-1] = stmt
             return CodeBlock(stmts)
 
@@ -3344,7 +3344,7 @@ class SemanticParser(BasicParser):
             else:
                 lhs = expr.lhs
 
-            creation = self._visit(Assign(lhs, expr, fst=expr.fst))
+            creation = self._visit(Assign(lhs, expr, ast=expr.ast))
             self._additional_exprs[-1].append(creation)
             return self.get_variable(lhs)
         else:
@@ -3416,8 +3416,8 @@ class SemanticParser(BasicParser):
             lhs = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
             # Temporarily deactivate type checks to construct syntactic assigns
             pyccel_stage.set_stage('syntactic')
-            assign_true  = Assign(lhs, expr.value_true, fst = expr.fst)
-            assign_false = Assign(lhs, expr.value_false, fst = expr.fst)
+            assign_true  = Assign(lhs, expr.value_true, ast = expr.ast)
+            assign_false = Assign(lhs, expr.value_false, ast = expr.ast)
             pyccel_stage.set_stage('semantic')
 
             cond  = self._visit(expr.cond)
@@ -3467,7 +3467,7 @@ class SemanticParser(BasicParser):
         for o,r in zip(return_objs, results):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
-                a = self._visit(Assign(v, r, fst=expr.fst))
+                a = self._visit(Assign(v, r, ast=expr.ast))
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
@@ -3715,7 +3715,7 @@ class SemanticParser(BasicParser):
             rhs = arg.value
             if getattr(rhs, 'rank', 0) and isinstance(rhs, PyccelInternalFunction):
                 tmp_var = self._assign_lhs_variable(self.scope.get_new_name(), self._infer_type(rhs) , rhs, self._additional_exprs[-1] , is_augassign=False)
-                self._additional_exprs[-1].append(Assign(tmp_var, rhs, fst=rhs.fst))
+                self._additional_exprs[-1].append(Assign(tmp_var, rhs, ast=rhs.ast))
                 args[i] = FunctionCallArgument(tmp_var)
         if len(args) == 0:
             return PythonPrint(args)
@@ -4159,7 +4159,7 @@ class SemanticParser(BasicParser):
         arg = func_call_args[0].value
         if not isinstance(arg, Variable):
             new_symbol = PyccelSymbol(self.scope.get_new_name())
-            creation = self._visit(Assign(new_symbol, arg, fst=func_call.fst))
+            creation = self._visit(Assign(new_symbol, arg, ast=func_call.ast))
             self._additional_exprs[-1].append(creation)
             arg = self._visit(new_symbol)
         return NumpyWhere(arg)
