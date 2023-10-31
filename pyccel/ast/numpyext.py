@@ -22,9 +22,8 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import (dtype_and_precision_registry as dtype_registry,
-                             default_precision, datatype, NativeInteger,
-                             NativeFloat, NativeComplex, NativeBool, str_dtype,
-                             NativeNumeric)
+                             default_precision, NativeInteger,
+                             NativeFloat, NativeComplex, NativeBool, NativeNumeric)
 
 from .internals      import PyccelInternalFunction, Slice, get_final_precision
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
