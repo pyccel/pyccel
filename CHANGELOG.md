@@ -11,8 +11,13 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
+-   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
+-   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
+
 ### Deprecated
 
+-   #1593 : Remove undocumented, broken `lambdify` method.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.core` : `inline`, `subs`, `get_iterable_ranges`.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
