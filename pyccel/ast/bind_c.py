@@ -551,7 +551,7 @@ class BindCClassDef(ClassDef):
 
     Parameters
     ----------
-    orginal_class : ClassDef
+    original_class : ClassDef
         The class being wrapped.
     """
     __slots__ = ('_original_class',)
