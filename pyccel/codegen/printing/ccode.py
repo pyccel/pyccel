@@ -89,7 +89,7 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInfinte':'isinf',
+    'NumpyIsInf':'isinf',
     'NumpyIsFinite':'isfinite',
     'NumpyIsNan':'isnan',
 }
@@ -1604,7 +1604,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isfinite({code_arg})"
 
@@ -1614,7 +1614,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isinf({code_arg})"
 
@@ -1624,7 +1624,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isnan({code_arg})"
 

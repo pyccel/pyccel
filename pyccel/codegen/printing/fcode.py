@@ -107,7 +107,7 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInfinte':'ieee_is_inf',
+    'NumpyIsInf':'ieee_is_inf',
     'NumpyIsFinite':'ieee_is_finite',
     'NumpyIsNan':'ieee_is_nan',
 }
@@ -2717,7 +2717,7 @@ class FCodePrinter(CodePrinter):
         """
         Convert a Python expression with a numpy isnan function call to Fortran function call
         """
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isnan({code_arg})"
 
@@ -2725,7 +2725,7 @@ class FCodePrinter(CodePrinter):
         """
         convert a python expression with a numpy isinf function call to Fortran function call
         """
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isinf({code_arg})"
     
@@ -2733,7 +2733,7 @@ class FCodePrinter(CodePrinter):
         """
         conver a pytho expression with a numpy isnan function call to Fortran function call
         """
-        arg = expr.args
+        arg = expr.args[0]
         code_arg = self._print(arg)
         return f"isfinite({code_arg})"
 

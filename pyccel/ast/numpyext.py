@@ -2090,7 +2090,7 @@ class NumpySize(PyccelInternalFunction):
 
         return PyccelArrayShapeElement(a, axis)
 
-class NumpyIsNan(PyccelInternalFunction):
+class NumpyIsNan(NumpyUfuncBase):
     """ 
     Represents a call to numpy.isnan() function.
 
@@ -2113,13 +2113,13 @@ class NumpyIsNan(PyccelInternalFunction):
     _precision = -1
 
     def __init__(self, arg):
-        super().__init__()
+        super().__init__(arg)
         self._arg = arg
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
 
-class NumpyIsInf(PyccelInternalFunction):
+class NumpyIsInf(NumpyUfuncBase):
     """ 
     Represents a call to numpy.isinf() function.
 
@@ -2143,13 +2143,13 @@ class NumpyIsInf(PyccelInternalFunction):
     _precision = -1
 
     def __init__(self, arg):
-        super().__init__()
+        super().__init__(arg)
         self._arg = arg
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
 
-class NumpyIsFinite(PyccelInternalFunction):
+class NumpyIsFinite(NumpyUfuncBase):
     """ 
     Represents a call to numpy.isfinite() function.
 
@@ -2173,7 +2173,7 @@ class NumpyIsFinite(PyccelInternalFunction):
     _precision = -1
 
     def __init__(self, arg):
-        super().__init__()
+        super().__init__(arg)
         self._arg = arg
         self._shape = arg.shape
         self._rank  = arg.rank
