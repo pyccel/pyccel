@@ -17,8 +17,25 @@ __all__ = ('PyccelAstNode', 'Immutable', 'TypedAstNode', 'ScopedAstNode')
 
 dict_keys   = type({}.keys())
 dict_values = type({}.values())
-iterable_types = (list, tuple, dict_keys, dict_values, set)
-iterable = lambda x : isinstance(x, iterable_types)
+def iterable(x):
+    """
+    Determine if type is iterable for a PyccelAstNode.
+
+    Determine if type is iterable for a PyccelAstNode. This looks for iterable
+    values but excludes arbitrary types which implement `__iter__` to avoid
+    iterating over unexpected types (e.g Variable).
+
+    Parameters
+    ----------
+    x : object
+        Any Python object to be examined.
+
+    Returns
+    -------
+    bool
+        True if object is iterable for a PyccelAstNode.
+    """
+    return isinstance(x, (list, tuple, dict_keys, dict_values, set))
 
 pyccel_stage = PyccelStage()
 
@@ -47,7 +64,7 @@ class PyccelAstNode:
         self._user_nodes = []
         self._ast = []
         self._recursion_in_progress = False
-        for c_name in self._my_attribute_nodes:
+        for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             c = getattr(self, c_name)
 
             from pyccel.ast.literals import convert_to_literal
@@ -91,7 +108,7 @@ class PyccelAstNode:
         This will allow it to remove itself from its attributes' users.
         If an attribute subsequently has no users, invalidate_node is called recursively
         """
-        for c_name in self._my_attribute_nodes:
+        for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             c = getattr(self, c_name)
 
             if self._ignore(c):
@@ -152,7 +169,7 @@ class PyccelAstNode:
         self._recursion_in_progress = True
 
         results = []
-        for n in self._my_attribute_nodes:
+        for n in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
@@ -272,7 +289,7 @@ class PyccelAstNode:
                 found_node.remove_user_node(self, invalidate)
             return rep
 
-        for n in self._my_attribute_nodes:
+        for n in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             v = getattr(self, n)
 
             if isinstance(v, excluded_nodes):
