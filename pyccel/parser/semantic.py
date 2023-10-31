@@ -3793,8 +3793,6 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonPrint(self, expr):
         args = [self._visit(i) for i in expr.expr]
-        for i, arg in enumerate(args):
-            rhs = arg.value
         if len(args) == 0:
             return PythonPrint(args)
 
