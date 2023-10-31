@@ -1490,7 +1490,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         pyccel.ast.functionalexpr.GeneratorComprehension
-                CodeBlock containing the semantic version of the GeneratorComprehension node
+                CodeBlock containing the semantic version of the GeneratorComprehension node.
         """
         result   = expr.expr
 

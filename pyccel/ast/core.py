@@ -750,32 +750,33 @@ class AugAssign(Assign):
     r"""
     Represents augmented variable assignment for code generation.
 
+    Represents augmented variable assignment for code generation.
+    Augmented variable assignment is an assignment which modifies the
+    variable using its initial value rather than simply replacing the
+    value; for example via an addition (`+=`).
+
     Parameters
     ----------
-    lhs : TypedAstNode
-        In the syntactic stage:
-           Object representing the lhs of the expression. These should be
-           singular objects, such as one would use in writing code. Notable types
-           include PyccelSymbol, and IndexedElement. Types that
-           subclass these types are also supported.
-        In the semantic stage:
-           Variable or IndexedElement
+    lhs : PyccelSymbol | TypedAstNode
+        Object representing the lhs of the expression.
+        In the syntactic stage this may be a PyccelSymbol, or an IndexedElement.
+        In later stages the object should inherit from TypedAstNode and be fully
+        typed.
 
     op : str
         Operator (+, -, /, \*, %).
 
     rhs : TypedAstNode
-        In the syntactic stage:
-          Object representing the rhs of the expression
-        In the semantic stage :
-          TypedAstNode with the same shape as the lhs
+        Object representing the rhs of the expression.
 
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
+    status : str, optional
+        See Assign.
 
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+    like : TypedAstNode, optional
+        See Assign.
+
+    ast : ast.AST
+        The AST node where the object appeared in the original code.
 
     Examples
     --------
