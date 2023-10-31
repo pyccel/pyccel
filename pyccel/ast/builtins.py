@@ -28,8 +28,6 @@ from .variable  import IndexedElement
 pyccel_stage = PyccelStage()
 
 __all__ = (
-    'builtin_functions_dict',
-    'python_builtin_datatype',
     'Lambda',
     'PythonAbs',
     'PythonBool',
@@ -52,6 +50,8 @@ __all__ = (
     'PythonTuple',
     'PythonType',
     'PythonZip',
+    'builtin_functions_dict',
+    'python_builtin_datatype',
 )
 
 #==============================================================================
