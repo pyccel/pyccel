@@ -145,7 +145,15 @@ def process_shape(is_scalar, shape):
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
-    """ Represents a call to numpy.float() function.
+    """
+    Represents a call to `numpy.float()` function.
+
+    Represents a call to the NumPy cast function `float`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_rank','_shape','_order')
     name = 'float'
@@ -181,7 +189,15 @@ class NumpyFloat64(NumpyFloat):
 
 #=======================================================================================
 class NumpyBool(PythonBool):
-    """ Represents a call to numpy.bool() function.
+    """
+    Represents a call to `numpy.bool()` function.
+
+    Represents a call to the NumPy cast function `bool`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order')
     name = 'bool'
@@ -204,7 +220,15 @@ class NumpyBool(PythonBool):
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
-    """ Represents a call to numpy.int() function.
+    """
+    Represents a call to `numpy.int()` function.
+
+    Represents a call to the NumPy cast function `int`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order')
     name = 'int'
@@ -319,7 +343,15 @@ class NumpyImag(PythonImag):
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
-    """ Represents a call to numpy.complex() function.
+    """
+    Represents a call to `numpy.complex()` function.
+
+    Represents a call to the NumPy cast function `complex`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
