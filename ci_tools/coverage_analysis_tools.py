@@ -240,8 +240,6 @@ def get_json_summary(untested, content_lines, existing_comments, diff):
         had already been commented on but are no longer present.
     """
     message = "This code isn't tested. Please can you take a look"
-    print(diff)
-    print(untested)
     new_comments = []
     old_comments = []
     fixed_comments = existing_comments.copy()
@@ -249,7 +247,6 @@ def get_json_summary(untested, content_lines, existing_comments, diff):
         line_indices = content_lines[f]
         n_code_lines = len(line_indices)
         n_untested = len(lines)
-        print(line_indices, n_code_lines, n_untested)
         i = 0
         while i < n_untested:
             start_line = lines[i]
