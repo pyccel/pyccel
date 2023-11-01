@@ -13,7 +13,6 @@ class Point(object):
     def translate(self : 'Point', a : 'T', b : 'T'):
         self.x = self.x + a
         self.y = self.y + b
-        print(type(a))
 
 if __name__ == '__main__':
     p = Point(0.0, 0.0)
