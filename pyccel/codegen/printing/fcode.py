@@ -2155,7 +2155,6 @@ class FCodePrinter(CodePrinter):
     #                   OpenACC statements
     # .....................................................
     def _print_ACC_Parallel(self, expr):
-        print("boo")
         clauses = ' '.join(self._print(i)  for i in expr.clauses)
         body    = ''.join(self._print(i) for i in expr.body)
 
