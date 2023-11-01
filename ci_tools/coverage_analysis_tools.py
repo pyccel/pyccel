@@ -199,7 +199,7 @@ def print_markdown_summary(untested, commit, output, repo):
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
 
-def get_json_summary(untested, content_lines, existing_comments):
+def get_json_summary(untested, content_lines, existing_comments, diff):
     """
     Print the results neatly in json in a provided file.
 
@@ -220,6 +220,12 @@ def get_json_summary(untested, content_lines, existing_comments):
     existing_comments : list of dict
         A list describing all comments previously left about the
         coverage results.
+    diff : dict
+        A dictionary whose keys are files which have been
+        changed in this branch and whose values are a dictionary.
+        The dictionary must contain a key 'addition' whose value
+        is a list containing the line numbers of lines which have
+        been changed/added.
 
     Returns
     -------
@@ -234,6 +240,8 @@ def get_json_summary(untested, content_lines, existing_comments):
         had already been commented on but are no longer present.
     """
     message = "This code isn't tested. Please can you take a look"
+    print(diff)
+    print(untested)
     new_comments = []
     old_comments = []
     fixed_comments = existing_comments.copy()
@@ -241,6 +249,7 @@ def get_json_summary(untested, content_lines, existing_comments):
         line_indices = content_lines[f]
         n_code_lines = len(line_indices)
         n_untested = len(lines)
+        print(line_indices, n_code_lines, n_untested)
         i = 0
         while i < n_untested:
             start_line = lines[i]
