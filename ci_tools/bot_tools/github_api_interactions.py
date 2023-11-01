@@ -28,6 +28,7 @@ def get_authorization():
     payload = {'iat': int(time.time()), 'exp': int(time.time()) + 60, 'iss': 364561}
 
     jw_token=jwt.JWT().encode(payload, signing_key, alg='RS256')
+    print(jw_token)
     print(type(jw_token))
 
     headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {jw_token}", "X-GitHub-Api-Version": "2022-11-28"}
