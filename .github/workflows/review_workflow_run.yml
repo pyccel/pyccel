@@ -1,0 +1,36 @@
+name: Review run
+
+on:
+  workflow_run:
+    workflows:
+      - Review Bot
+      - Spellcheck Action
+
+jobs:
+  Bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Install python dependencies
+        run: |
+          python -m pip install requests
+      - name: "Generate token"
+        id: token
+        uses: ./.github/actions/generate_bot_token
+        with:
+          bot_pem: "${{ secrets.BOT_PEM }}"
+      - name: test
+        run: |
+          echo ${{ github.event.workflow_run.event }}
+      - id: run_bot
+        run: |
+          python ci_tools/bot_review_react.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          pr_id: ${{ github.event.workflow_run.pull_requests.number }}
+          #decision: ${{ inputs.decision }}
+          #reviewer: ${{ inputs.reviewer }}
