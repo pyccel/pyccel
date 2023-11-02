@@ -28,13 +28,27 @@ omp_classes = omp.inner_classes_list()
 
 meta = metamodel_from_file(grammar, classes=omp_classes)
 
+def capture_raw_text(omp_statement):
+    from textx.model import get_model
+    the_model = get_model(omp_statement)
+    raw_str = the_model._tx_parser.parse_tree.value
+
+    tokens = raw_str.split('|')
+
+    processed_tokens = [token for token in tokens if token.strip()]
+
+    omp_statement.statement.raw = ''.join(processed_tokens).replace("#$", "#pragma")
+
+
 # object processors: are registered for particular classes (grammar rules)
 # and are called when the objects of the given class is instantiated.
 # The rules OMP_X_Y are used to insert the version of the syntax used
+
 meta.register_obj_processors({
     'OMP_4_5': lambda _: 4.5,
     'OMP_5_0': lambda _: 5.0,
     'OMP_5_1': lambda _: 5.1,
+    'OmpStatement': capture_raw_text
 })
 
 def parse(stmt, parser, errors):
@@ -55,7 +69,7 @@ def parse(stmt, parser, errors):
         The Pyccel AST node representing the OpenMP code.
     """
     try:
-        meta_model = meta.model_from_str(stmt)
+        meta_model = meta.model_from_str(stmt, debug=True)
         assert len(meta_model.statements) == 1
         return parser._visit(meta_model.statements[0].statement)
     except TextXError as e:
