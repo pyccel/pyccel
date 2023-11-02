@@ -537,7 +537,7 @@ class Bot:
             self.mark_as_draft()
             return False
 
-        states = self.run_tests(pr_test_keys, force_run = self.is_pr_fork())
+        states = self.run_tests(pr_test_keys)
 
         if 'failure' in states:
             self.draft_due_to_failure()
