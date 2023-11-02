@@ -1084,8 +1084,19 @@ class SemanticParser(BasicParser):
         return lhs
 
     def _ensure_target(self, rhs, d_lhs):
-        """ Function using data about the new lhs to determine
-        whether the lhs is an alias and the rhs is a target
+        """
+        Function using data about the new lhs.
+
+        Function using data about the new lhs to determine
+        whether the lhs is an alias and the rhs is a target.
+
+        Parameters
+        ----------
+        rhs : NumpyTranspose or Variable or IndexedElement
+            The value assigned to the lhs.
+
+        d_lhs : dict
+            Dictionary of properties for the new Variable.
         """
 
         if isinstance(rhs, NumpyTranspose) and rhs.internal_var.on_heap:
