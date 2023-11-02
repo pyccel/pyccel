@@ -70,7 +70,6 @@ if __name__ == '__main__':
         outcome = values[1] if len(values) >= 2 else None
         out_file = values[2] if len(values) >= 3 else None
 
-
         fails = {}
 
         if out_file is not None and os.path.exists(out_file):
