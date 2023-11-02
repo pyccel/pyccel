@@ -1898,26 +1898,6 @@ class SemanticParser(BasicParser, omp_semantic_parser):
         expr.update_pyccel_staging()
         return expr
 
-    #def _visit_AnnotatedComment(self, expr, **settings):
-    #    expr.clear_user_nodes()
-    #    return expr
-
-    def _visit_OmpAnnotatedComment(self, expr, **settings):
-        expr = expr.visit_semantic(self, errors)
-        expr.clear_syntactic_user_nodes()
-        return expr
-
-    def _visit_Omp_End_Clause(self, expr):
-        end_loop = any(c in expr.txt for c in ['for', 'distribute', 'taskloop', 'simd'])
-        if end_loop:
-            errors.report("For loops do not require an end clause. This clause is ignored",
-                    severity='warning', symbol=expr)
-            return EmptyNode()
-        else:
-            expr.clear_syntactic_user_nodes()
-            expr.update_pyccel_staging()
-            return expr
-
     def _visit_Literal(self, expr):
         expr.clear_syntactic_user_nodes()
         expr.update_pyccel_staging()
