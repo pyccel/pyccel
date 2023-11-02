@@ -511,6 +511,8 @@ class SemanticParser(BasicParser):
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                         continue
+                if isinstance(i.dtype, CustomDataType) and i.is_alias:
+                    continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
@@ -1090,7 +1092,7 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.internal_var.is_target = True
 
-        if isinstance(rhs, Variable) and rhs.is_ndarray:
+        if isinstance(rhs, Variable) and (rhs.is_ndarray or isinstance(rhs.dtype, CustomDataType)):
             d_lhs['memory_handling'] = 'alias'
             rhs.is_target = not rhs.is_alias
 
@@ -1261,7 +1263,7 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # Add memory deallocation for class constructor
-                if isinstance(lhs.dtype, CustomDataType):
+                if isinstance(lhs.dtype, CustomDataType) and not lhs.is_alias:
                     # Create Deallocate node
                     self._allocs[-1].append(lhs)
                 # ...
@@ -1474,9 +1476,7 @@ class SemanticParser(BasicParser):
                 new_expressions.append(Allocate(var,
                     shape=d_var['shape'], order=d_var['order'],
                     status=status))
-            elif isinstance(var.dtype, CustomDataType):
-                if var in self._allocs[-1]:
-                    self._allocs[-1].remove(var)
+            elif isinstance(var.dtype, CustomDataType) and not var.is_alias:
                 new_expressions.append(Deallocate(var))
 
         if var.precision == -1 and precision != var.precision:
@@ -1936,11 +1936,16 @@ class SemanticParser(BasicParser):
     def _visit_FunctionCallArgument(self, expr):
         value = self._visit(expr.value)
         a = FunctionCallArgument(value, expr.keyword)
-        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+        def generate_and_assign_temp_var():
             tmp_var = self.scope.get_new_name()
             assign = self._visit(Assign(tmp_var, expr.value, fst = expr.value.fst))
             self._additional_exprs[-1].append(assign)
-            a = FunctionCallArgument(self._visit(tmp_var))
+            return FunctionCallArgument(self._visit(tmp_var))
+        if isinstance(value, (PyccelArithmeticOperator, PyccelInternalFunction)) and value.rank:
+            a = generate_and_assign_temp_var()
+        elif isinstance(value, FunctionCall) and isinstance(value.dtype, CustomDataType):
+            if not value.funcdef.results[0].var.is_alias:
+                a = generate_and_assign_temp_var()
         return a
 
     def _visit_UnionTypeAnnotation(self, expr):
@@ -2671,6 +2676,7 @@ class SemanticParser(BasicParser):
                             expr, method.is_elemental)
 
             expr = ConstructorCall(method, args, cls_variable)
+            self._allocs[-1].append(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -3823,7 +3829,12 @@ class SemanticParser(BasicParser):
         for method in cls.methods:
             if method.name == '__del__':
                 self._current_function = method.name
-                attribute = [attr for attr in cls.attributes if not (attr.on_stack or isinstance(attr.dtype, CustomDataType))]
+                attribute = []
+                for attr in cls.attributes:
+                    if not attr.on_stack:
+                        attribute.append(attr)
+                    elif isinstance(attr.dtype, CustomDataType) and not attr.is_alias:
+                        attribute.append(attr)
                 if attribute:
                     # Create a new list that store local attributes
                     self._allocs.append([])
