@@ -240,7 +240,7 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule_AddObject(self, expr):
         name = self._print(expr.name)
         var  = self._print(expr.variable)
-        if not expr.variable.dtype is PyccelPyObject():
+        if expr.variable.dtype is not PyccelPyObject():
             var = f'(PyObject*) {var}'
         return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
