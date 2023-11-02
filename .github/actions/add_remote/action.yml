@@ -9,9 +9,11 @@ runs:
   steps:
     - name: "Get repo information"
       run: |
-        REPO_ENV=$(gh pr view ${{ github.event.number }} --json=headRepositoryOwner,headRepository)
-        echo "REPO_ENV=${REPO_ENV}" >> $GITHUB_ENV
-      shell: shell
+        REPO_INFO=$(gh pr view ${{ inputs.pr_id }} --json=headRepositoryOwner,headRepository)
+        echo "REPO_INFO=${REPO_INFO}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
     - name: "Get repo identifier"
       run: |
         import json
@@ -26,4 +28,5 @@ runs:
     - name: Add remote
       if: env.repo_name != 'pyccel/pyccel'
       run: |
-        git remote add -f --no-tags fork https://github.com/${env.repo_name}
+        git remote add -f --no-tags fork https://github.com/${repo_name}
+      shell: bash
