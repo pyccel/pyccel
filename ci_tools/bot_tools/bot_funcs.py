@@ -482,7 +482,7 @@ class Bot:
         self.mark_as_draft()
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_failing.txt'))
 
-    def draft_due_to_changes_requested(self, author, reviewer):
+    def draft_due_to_changes_requested(self, reviewer):
         """
         Mark the pull request as a draft following requested changes.
 
@@ -492,13 +492,11 @@ class Bot:
 
         Parameters
         ----------
-        author : str
-            The login id of the author of the pull request.
-
         reviewer : str
             The login id of the reviewer of the pull request.
         """
         self.mark_as_draft()
+        author = self._pr_details['user']['login']
         self._GAI.create_comment(self._pr_id, message_from_file('set_draft_changes.txt').format(author=author, reviewer=reviewer))
 
     def request_mark_as_ready(self):
