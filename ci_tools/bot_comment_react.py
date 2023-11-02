@@ -64,14 +64,14 @@ if __name__ == '__main__':
 
     elif command_words[0] == 'run':
         if bot.is_user_trusted(event['comment']['user']['login']):
-            bot.run_tests(get_unique_test_list(command_words[1:]), force_run = bot.is_pr_fork())
+            bot.run_tests(get_unique_test_list(command_words[1:]))
         else:
             bot.warn_untrusted()
 
     elif command_words[0] == 'try':
         if bot.is_user_trusted(event['comment']['user']['login']):
             print(command_words, get_unique_test_list(command_words[2:]), command_words[1])
-            bot.run_tests(get_unique_test_list(command_words[2:]), command_words[1], force_run = bot.is_pr_fork())
+            bot.run_tests(get_unique_test_list(command_words[2:]), command_words[1])
         else:
             bot.warn_untrusted()
 

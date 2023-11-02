@@ -1,0 +1,32 @@
+name: 'Add a remote and fetch if it is a fork'
+inputs:
+  pr_id:
+    description: "The number of the pull request"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Get repo information"
+      run: |
+        REPO_INFO=$(gh pr view ${{ inputs.pr_id }} --json=headRepositoryOwner,headRepository)
+        echo "REPO_INFO=${REPO_INFO}" >> $GITHUB_ENV
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: "Get repo identifier"
+      run: |
+        import json
+        import os
+        j=json.loads(os.environ['REPO_INFO'])
+        headRepo = j['headRepository']['name']
+        headOwner = j['headRepositoryOwner']['login']
+        repo_name = f'{headOwner}/{headRepo}'
+        with open(os.environ['GITHUB_ENV'], 'a') as f:
+            print(f"repo_name={repo_name}", file=f)
+      shell: python
+    - name: Add remote
+      if: env.repo_name != 'pyccel/pyccel'
+      run: |
+        git remote add -f --no-tags fork https://github.com/${repo_name}
+      shell: bash
