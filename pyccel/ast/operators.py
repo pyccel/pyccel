@@ -149,7 +149,7 @@ class PyccelOperator(TypedAstNode):
 
     Parameters
     ----------
-    *args : tuple
+    *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
     __slots__ = ('_args', )

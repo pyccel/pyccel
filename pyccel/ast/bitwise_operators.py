@@ -114,7 +114,7 @@ class PyccelBitOperator(PyccelOperator):
 
         Parameters
         ----------
-        *args : tuple
+        *args : tuple of TypedAstNode
             The arguments passed to the operator.
 
         Returns
