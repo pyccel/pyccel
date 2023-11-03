@@ -3773,7 +3773,7 @@ class SemanticParser(BasicParser):
         # TODO - improve the use and def of interfaces
         #      - wouldn't be better if it is done inside ClassDef?
 
-        name = expr.name
+        name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
         dtype = DataTypeFactory(name, '_name')
