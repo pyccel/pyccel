@@ -23,7 +23,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement
+from .variable  import IndexedElement, InhomogeneousTupleVariable
 
 pyccel_stage = PyccelStage()
 
@@ -40,6 +40,7 @@ __all__ = (
     'PythonFloat',
     'PythonInt',
     'PythonTuple',
+    'PythonTupleFunction',
     'PythonLen',
     'PythonList',
     'PythonMap',
@@ -457,8 +458,6 @@ class PythonTuple(TypedAstNode):
             if strs:
                 self._dtype = NativeString()
                 self._precision = 0
-                self._rank  = 0
-                self._shape = None
             else:
                 if complexes:
                     self._dtype     = NativeComplex()
@@ -476,10 +475,10 @@ class PythonTuple(TypedAstNode):
                     raise TypeError('cannot determine the type of {}'.format(self))
 
 
-                inner_shape = [() if a.rank == 0 else a.shape for a in args]
-                self._rank = max(a.rank for a in args) + 1
-                self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
-                self._rank  = len(self._shape)
+            inner_shape = [() if a.rank == 0 else a.shape for a in args]
+            self._rank = max(a.rank for a in args) + 1
+            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._rank  = len(self._shape)
 
         else:
             max_rank = max(a.rank for a in args)
@@ -555,13 +554,47 @@ class PythonTuple(TypedAstNode):
         """
         return False
 
+class PythonTupleFunction(TypedAstNode):
+    """
+    Class representing a call to the `tuple` function.
+
+    Class representing a call to the `tuple` function. This is
+    different to the `(,)` syntax as it only takes one argument
+    and unpacks any variables.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function call.
+    """
+    __slots__ = ()
+    _attribute_nodes = ()
+
+    def __new__(cls, arg):
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
+            return PythonTuple(*list(arg.__iter__()))
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
+
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
-
     """
-    Represents a 'len' expression in the code.
-    """
+    Represents a `len` expression in the code.
 
+    Represents a call to the function `len` which calculates the length
+    (aka the first element of the shape) of an object. This can usually
+    be calculated in the generated code, but in an inhomogeneous object
+    the integer value of the shape must be returned.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument whose length is being examined.
+    """
     __slots__ = ()
     name      = 'len'
     _dtype     = NativeInteger()
@@ -569,6 +602,12 @@ class PythonLen(PyccelInternalFunction):
     _rank      = 0
     _shape     = None
     _order     = None
+
+    def __new__(cls, arg):
+        if not getattr(arg, 'is_homogeneous', False):
+            return arg.shape[0]
+        else:
+            return super().__new__(cls)
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -1000,4 +1039,5 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
+    'tuple'    : PythonTupleFunction,
 }
