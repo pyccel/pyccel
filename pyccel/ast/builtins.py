@@ -70,7 +70,7 @@ class PythonComplexProperty(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The object which the property is called from.
     """
     __slots__ = ()
@@ -100,7 +100,7 @@ class PythonReal(PythonComplexProperty):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The object which the property is called from.
     """
     __slots__ = ()
@@ -199,7 +199,7 @@ class PythonBool(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the function.
     """
     __slots__ = ()
@@ -240,10 +240,10 @@ class PythonComplex(TypedAstNode):
 
     Parameters
     ----------
-    arg0 : PyccelAstNode
+    arg0 : TypedAstNode
         The first argument passed to the function (either a real or a complex).
 
-    arg1 : PyccelAstNode, default=0
+    arg1 : TypedAstNode, default=0
         The second argument passed to the function (the imaginary part).
     """
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
@@ -353,10 +353,10 @@ class PythonEnumerate(PyccelAstNode):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the function.
 
-    start : PyccelAstNode
+    start : TypedAstNode
         The start value of the enumeration index.
     """
     __slots__ = ('_element','_start')
@@ -406,7 +406,7 @@ class PythonFloat(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the function.
     """
     __slots__ = ()
@@ -449,7 +449,7 @@ class PythonInt(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the function.
     """
 
@@ -933,7 +933,7 @@ class PythonSum(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         The argument passed to the function.
     """
     __slots__ = ('_dtype','_precision')
