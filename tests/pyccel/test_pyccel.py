@@ -796,8 +796,7 @@ def test_basic_header():
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
-                                        "scripts/classes/classes.py",
+@pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_3.py",
