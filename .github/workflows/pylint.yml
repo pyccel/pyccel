@@ -55,7 +55,7 @@ jobs:
         id: pylint
         run: |
           echo $GITHUB_WORKFLOW_SHA
-          ast_files="bind_c.py bitwise_operators.py builtin_imports.py c_concepts.py class_defs.py cmathext.py itertoolsext.py omp.py operators.py scipyext.py sympy_helper.py sysext.py type_annotations.py"
+          ast_files="bind_c.py bitwise_operators.py builtin_imports.py builtins.py c_concepts.py class_defs.py cmathext.py itertoolsext.py omp.py operators.py scipyext.py sympy_helper.py sysext.py type_annotations.py"
           pylintable_files="pyccel/parser/semantic.py"
           for f in $ast_files; do pylintable_files="$pylintable_files pyccel/ast/$f"; done
           python -m pylint --rcfile=.pylintrc $pylintable_files | tee pylint_output.out || true
