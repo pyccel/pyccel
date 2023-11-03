@@ -803,7 +803,6 @@ def test_basic_header():
                                         "scripts/classes/classes_3.py",
                                         "scripts/classes/classes_4.py",
                                         "scripts/classes/classes_6.py",
-                                        "scripts/classes/classes_8.py",
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
@@ -815,6 +814,7 @@ def test_classes( test_file , language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_5.py",
                                         "scripts/classes/classes_7.py",
+                                        "scripts/classes/classes_8.py",
                                         ] )
 def test_classes_as_args_and_results( test_file , language):
     if language == "python":
