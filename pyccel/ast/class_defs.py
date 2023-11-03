@@ -17,7 +17,7 @@ from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
 
 __all__ = ('BooleanClass',
         'IntegerClass',
-        'RealClass',
+        'FloatClass',
         'ComplexClass',
         'StringClass',
         'NumpyArrayClass',
