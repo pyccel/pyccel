@@ -9,12 +9,13 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
-from pyccel.ast.core       import Import, Module
+from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode
-from pyccel.ast.cwrapper   import Py_None
+from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject
 from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.variable   import DottedVariable
 
 from pyccel.errors.errors  import Errors
 
@@ -340,22 +341,36 @@ class CWrapperCodePrinter(CCodePrinter):
         type_name = expr.type_name
         name = self.scope.get_python_name(expr.name)
         docstring = ''
-        class_code = ("typedef struct {\n"
+        attributes = ''.join(self._print(Declare(a.dtype, a)) for a in expr.attributes)
+        class_code = (f"struct {struct_name} {{\n"
                 "    PyObject_HEAD\n"
-                "    void* instance;\n"
-                f"}} {struct_name};\n")
+                + attributes +
+                "};\n")
 
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
                 f"    .tp_doc = PyDoc_STR(\"{docstring}\"),\n"
-                f"    .tp_basicsize = sizeof({struct_name}),\n"
+                f"    .tp_basicsize = sizeof(struct {struct_name}),\n"
                 "    .tp_itemsize = 0,\n"
                 "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
                 "    .tp_new = PyType_GenericNew,\n"
                 "};\n")
 
         return class_code + '\n' + type_code
+
+    def _print_Allocate(self, expr):
+        variable = expr.variable
+        if isinstance(variable.dtype, WrapperCustomDataType):
+            class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
+            class_scope = class_def.scope
+
+            type_name = class_def.type_name
+            var_code = self._print(ObjectAddress(variable))
+            decl_type = self.get_declare_type(variable)
+            return f'{var_code} = ({decl_type}){type_name}.tp_alloc(&{type_name}, 0);\n'
+        else:
+            return CCodePrinter._print_Allocate(self, expr)
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
