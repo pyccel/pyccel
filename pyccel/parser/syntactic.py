@@ -1006,6 +1006,7 @@ class SyntaxParser(BasicParser):
     def _visit_ClassDef(self, stmt):
 
         name = stmt.name
+        self.scope.insert_symbol(name)
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []

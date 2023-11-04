@@ -27,12 +27,12 @@ runs:
         echo "FLAGS=${FLAGS}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
-    - name: Pytest with options (1)
+    - name: Test C translation
       run: python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s1_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_1
-    - name: if SITE_DIR is set (2)
+    - name: Test folder update
       run: |
          if [ -n "${SITE_DIR}" ]; then
             echo "Touching"
@@ -43,26 +43,26 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_2
-    - name: pytest with options (3)
+    - name: Test multi-file C translations
       run: |
          python -m pytest -rXx ${FLAGS} -m "xdist_incompatible and not parallel and c ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s3_outfile.out
          pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_3
-    - name: pytest with options (4)
+    - name: Test Fortran translations
       run: python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s4_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_4
-    - name: pytest with options (5)
+    - name: Test multi-file Fortran translations
       run: |
         python -m pytest -rXx ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s5_outfile.out
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_5
-    - name: pytest ndarrays (6)
+    - name: Test ndarrays
       run: |
         python -m pytest ndarrays/ -rXx ${FLAGS} 2>&1 | tee s6_outfile.out
         pyccel-clean
