@@ -40,6 +40,90 @@ class ObjectAddress(TypedAstNode):
         """
         return self._obj
 
+
+class PointerCast(TypedAstNode):
+    """
+    A class which represents the casting of one pointer to another.
+
+    A class which represents the casting of one pointer to another in C code.
+    This is useful for storing addresses in a void pointer or for storing.
+    This class is not necessary but avoids warnings being raised in the
+    translated code.
+
+    Parameters
+    ----------
+    obj : Variable
+        The pointer being cast.
+    cast_type : TypedAstNode
+        A TypedAstNode describing the object resulting from the cast.
+    """
+    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order',
+            '_cast_type')
+    _attribute_nodes = ('_obj',)
+
+    def __init__(self, obj, cast_type):
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
+        assert getattr(obj, 'is_alias', False)
+        self._obj       = obj
+        self._rank      = cast_type.rank
+        self._shape     = cast_type.shape
+        self._precision = cast_type.precision
+        self._dtype     = cast_type.dtype
+        self._order     = cast_type.order
+        self._cast_type = cast_type
+        super().__init__()
+
+    @property
+    def obj(self):
+        """
+        The object whose address is of interest.
+
+        The object whose address is of interest.
+        """
+        return self._obj
+
+    @property
+    def cast_type(self):
+        """
+        Get the TypedAstNode which describes the object resulting from the cast.
+
+        Get the TypedAstNode which describes the object resulting from the cast.
+        """
+        return self._cast_type
+
+    @property
+    def name(self):
+        return self._obj.name
+
+    @property
+    def on_stack(self):
+        """
+        Indicates whether a variable is stored in stack memory.
+
+        Indicates whether a variable is stored in stack memory. As this
+        function casts pointer, this is never the case.
+        """
+        return False
+
+    @property
+    def is_ndarray(self):
+        """
+        Indicates whether the variable represents a ndarray.
+
+        Indicates whether the variable represents a ndarray.
+        """
+        return self._obj.is_ndarray
+
+    @property
+    def is_argument(self):
+        """
+        Indicates whether the variable is an argument.
+
+        Indicates whether the variable is an argument.
+        """
+        return self._obj.is_argument
+
 #------------------------------------------------------------------------------
 class CStringExpression(PyccelAstNode):
     """
