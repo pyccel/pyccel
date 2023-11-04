@@ -1447,7 +1447,7 @@ class FCodePrinter(CodePrinter):
         # Compute intent string
         if intent:
             if intent == 'in' and rank == 0 and not (is_static and is_optional) \
-                and not isinstance(var.dtype, CustomDataType):
+                and not isinstance(expr_dtype, CustomDataType):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
