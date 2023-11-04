@@ -16,7 +16,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.core import AsName, Module, AliasAssign
-from pyccel.ast.datatypes import NativeNumeric
+from pyccel.ast.datatypes import NativeNumeric, CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
@@ -367,7 +367,7 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         local_var = var.clone(scope.get_expected_name(name))
 
-        if local_var.rank:
+        if local_var.rank or isinstance(local_var.dtype, CustomDataType):
             # Allocatable is not returned so it must appear in local scope
             scope.insert_variable(local_var, name)
 
