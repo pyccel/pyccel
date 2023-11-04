@@ -28,16 +28,23 @@ omp_classes = omp.inner_classes_list()
 
 meta = metamodel_from_file(grammar, classes=omp_classes)
 
-def capture_raw_text(omp_statement):
-    from textx.model import get_model
-    the_model = get_model(omp_statement)
-    raw_str = the_model._tx_parser.parse_tree.value
+#def capture_raw_text(omp_statement):
+#    from textx.model import get_model
+#    the_model = get_model(omp_statement)
+#    #raw_str = the_model._tx_parser.parse_tree.value
+#
+#    #tokens = raw_str.split('|')
+#
+#    #processed_tokens = [token for token in tokens if token.strip()]
+#
+#    #omp_statement.statement.raw = ''.join(processed_tokens).replace("#$", "#pragma")
+#
+#    omp_statement.raw = None
 
-    tokens = raw_str.split('|')
-
-    processed_tokens = [token for token in tokens if token.strip()]
-
-    omp_statement.statement.raw = ''.join(processed_tokens).replace("#$", "#pragma")
+def capture_pos(omp_statement):
+    #from textx.model import get_model
+    #the_model = get_model(omp_statement)
+    omp_statement.pos = (omp_statement._tx_position, omp_statement._tx_position_end)
 
 
 # object processors: are registered for particular classes (grammar rules)
@@ -48,7 +55,10 @@ meta.register_obj_processors({
     'OMP_4_5': lambda _: 4.5,
     'OMP_5_0': lambda _: 5.0,
     'OMP_5_1': lambda _: 5.1,
-    'OmpStatement': capture_raw_text
+    'OmpList': capture_pos,
+    'OmpIntegerExpr': capture_pos,
+    'OmpConstantPositiveInteger': capture_pos,
+    'OmpScalarExpr': capture_pos,
 })
 
 def parse(stmt, parser, errors):
@@ -69,8 +79,9 @@ def parse(stmt, parser, errors):
         The Pyccel AST node representing the OpenMP code.
     """
     try:
-        meta_model = meta.model_from_str(stmt, debug=True)
+        meta_model = meta.model_from_str(stmt)
         assert len(meta_model.statements) == 1
+        meta_model.statements[0].raw = stmt
         return parser._visit(meta_model.statements[0].statement)
     except TextXError as e:
         errors.report(e.message, severity="fatal", symbol=stmt)

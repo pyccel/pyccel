@@ -3,16 +3,21 @@ Omp:
 ;
 
 OmpStatement:
-  '#$' 'omp' statement=OmpDirective raw=RAW_STATEMENT
-  | '#$' 'omp' statement=OmpEndDirective raw=RAW_STATEMENT
+  '#$' 'omp' statement=OmpDirective
+  | '#$' 'omp' statement=OmpEndDirective
 ;
 
 OmpEndDirective: 'end'      dname+=DirectivesNames clauses*=AllOmpClauses;
-OmpDirective:               dname+=DirectivesNames clauses*=AllOmpClauses;
+OmpDirective:
+    dname+=DirectivesNames clauses*=AllOmpClauses
+    | dname='atomic' (clauses=memory_order_clause ',')? clauses=atomic_clause (clauses=memory_order_clause ',')?
+    | dname='atomic' (clauses=memory_order_clause)?
+    | dname='flush' ('('clauses=OmpList')')?
+;
 
-DirectivesNames: 'parallel' | 'for' | 'sections' | 'single' | 'simd' | 'taskloop' | 'taskyeild' | 'task' | 'target'
-| 'teams' | 'distribute' | 'master' | 'critical' | 'barrier' | 'taskwait' | 'taskgroup' | 'flush' | 'ordered' | 'cancel'
-| 'threadprivate' | 'atomic';
+DirectivesNames: 'parallel' | 'for' | 'sections' | 'section' | 'single' | 'simd' | 'taskloop' | 'taskyeild' | 'task' | 'target'
+| 'teams' | 'distribute' | 'master' | 'critical' | 'barrier' | 'taskwait' | 'taskgroup' | 'ordered' | 'cancel'
+| 'threadprivate';
 
 
 ////////////////////////////////////////////////////
@@ -20,178 +25,183 @@ DirectivesNames: 'parallel' | 'for' | 'sections' | 'single' | 'simd' | 'taskloop
 ////////////////////////////////////////////////////
 
 AllOmpClauses:
-      OmpIfClause
-    | OmpNumThreadsClause
-    | OmpDefaultClause
-    | OmpPrivateClause
-    | OmpFirstPrivateClause
-    | OmpSharedClause
-    | OmpCopyinClause
-    | OmpReductionClause
-    | OmpProcBindClause
-    | OmpFirstPrivateClause
-    | OmpLastPrivateClause
-    | OmpLinearClause
-    | OmpScheduleClause
-    | OmpCollapseClause
-    | OmpOrderedClause
-    | OmpNoWaitClause
-    | OmpCopyPrivateClause
-    | OmpSafeLenClause
-    | OmpSimdLenClause
-    | OmpAlignedClause
-    | OmpFinalClause
-    | OmpUntiedClause
-    | OmpMergeableClause
-    | OmpDependClause
-    | OmpPriorityClause
-    | OmpGrainSizeClause
-    | OmpNumTasksClause
-    | OmpDeviceClause
-    | OmpMapClause
-    | OmpDefaultMapClause
-    | OmpIsDevicePtrClause
-    | OmpNumTeamsClause
-    | OmpThreadLimitClause
-    | OmpDistScheduleClause
+      if_clause
+    | num_threads_clause
+    | default_clause
+    | private_clause
+    | firstprivate_clause
+    | shared_clause
+    | copyin_clause
+    | reduction_clause
+    | proc_bind_clause
+    | lastprivate_clause
+    | linear_clause
+    | schedule_clause
+    | collapse_clause
+    | ordered_clause
+    | nowait_clause
+    | copyprivate_clause
+    | safelen_clause
+    | simdlen_clause
+    | aligned_clause
+    | final_clause
+    | untied_clause
+    | mergeable_clause
+    | depend_clause
+    | priority_clause
+    | grainsize_clause
+    | num_tasks_clause
+    | device_clause
+    | map_clause
+    | defaultmap_clause
+    | is_device_ptr_clause
+    | num_teams_clause
+    | thread_limit_clause
+    | dist_schedule_clause
+    | atomic_clause
+    | memory_order_clause
 ;
 
 ////////////////////////////////////////////////////
 //              Clauses definitions
 ////////////////////////////////////////////////////
-OmpIfClause: name='if' '('(
-                      VERSION=OMP_4_5 (directive_name_modifier=ID ':')? condition=OmpScalarExpr
-                )')';
+if_clause: name='if' '('(
+                   VERSION=OMP_4_5 (directive_name_modifier=ID ':')? condition=OmpScalarExpr
+             )')';
 
-OmpNumThreadsClause: name='num_threads' '('(
-                      VERSION=OMP_4_5 num_threads=OmpIntegerExpr
-                )')';
+num_threads_clause: name='num_threads' '('(
+                   VERSION=OMP_4_5 num_threads=OmpIntegerExpr
+             )')';
 
-OmpDefaultClause: name='default' '('(
-                      VERSION=OMP_4_5 attribute=DataSharingAttribute
-                )')';
+default_clause: name='default' '('(
+                   VERSION=OMP_4_5 attribute=DataSharingAttribute
+             )')';
 
-OmpPrivateClause: name='private' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+private_clause: name='private' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpFirstPrivateClause: name='firstprivate' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+firstprivate_clause: name='firstprivate' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpLastPrivateClause: name='lastprivate' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+lastprivate_clause: name='lastprivate' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
 
-OmpSharedClause: name='shared' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+shared_clause: name='shared' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpCopyinClause: name='copyin' '('( 
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+copyin_clause: name='copyin' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpReductionClause: name='reduction' '('(
-                        VERSION=OMP_4_5 operator=ReductionOperator ':' variables=OmpList
-                      | VERSION=OMP_5_0 (modifier=ReductionModifier ',')? operator=ReductionOperator ':' variables=OmpList
-                )')';
+reduction_clause: name='reduction' '('(
+                     VERSION=OMP_4_5 operator=ReductionOperator ':' variables=OmpList
+                   | VERSION=OMP_5_0 (modifier=ReductionModifier ',')? operator=ReductionOperator ':' variables=OmpList
+             )')';
 
-OmpProcBindClause: name='proc_bind' '('(
-                        VERSION=OMP_4_5                     affinity_policy=AffinityPolicy // supported for 4.5 and later
-                      | VERSION=OMP_4_5 DEPRECATED=OMP_5_1  affinity_policy='master' // deprecated in 5.1
-                      | VERSION=OMP_5_1                     affinity_policy='primary' // supported for 5.1 and later
-                )')';
+proc_bind_clause: name='proc_bind' '('(
+                     VERSION=OMP_4_5                     affinity_policy=AffinityPolicy // supported for 4.5 and later
+                   | VERSION=OMP_4_5 DEPRECATED=OMP_5_1  affinity_policy='master' // deprecated in 5.1
+                   | VERSION=OMP_5_1                     affinity_policy='primary' // supported for 5.1 and later
+             )')';
 
-OmpLinearClause: name='linear' '('(
-                        VERSION=OMP_4_5 linear_list=OmpList ':' linear_step=OmpIntegerExpr
-                )')';
+linear_clause: name='linear' '('(
+                     VERSION=OMP_4_5 linear_list=OmpList ':' linear_step=OmpIntegerExpr
+             )')';
 
-OmpScheduleClause: name='schedule' '('
-                        VERSION=OMP_4_5 (modifier*=ScheduleModifier[','] ':')? kind=ScheduleKind (',' chunk_size=OmpIntegerExpr)?
-                ')';
+schedule_clause: name='schedule' '('
+                     VERSION=OMP_4_5 (modifier*=ScheduleModifier[','] ':')? kind=ScheduleKind (',' chunk_size=OmpIntegerExpr)?
+             ')';
 
-OmpCollapseClause: name='collapse' '('(
-                        VERSION=OMP_4_5 n=OmpConstantPositiveInteger
-                )')';
+collapse_clause: name='collapse' '('(
+                     VERSION=OMP_4_5 n=OmpConstantPositiveInteger
+             )')';
 
-OmpOrderedClause: name='ordered' VERSION=OMP_4_5 ('('
-                        n=OmpConstantPositiveInteger
-                ')')?;
+ordered_clause: name='ordered' VERSION=OMP_4_5 ('('
+                     n=OmpConstantPositiveInteger
+             ')')?;
 
-OmpNoWaitClause: name='nowait' VERSION=OMP_4_5;
+nowait_clause: name='nowait' VERSION=OMP_4_5;
 
-OmpCopyPrivateClause: name='copyprivate' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+copyprivate_clause: name='copyprivate' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpSafeLenClause: name='safelen' '('(
-                      VERSION=OMP_4_5 len=OmpIntegerExpr
-                )')';
+safelen_clause: name='safelen' '('(
+                   VERSION=OMP_4_5 len=OmpIntegerExpr
+             )')';
 
-OmpSimdLenClause: name='simdlen' '('(
-                      VERSION=OMP_4_5 len=OmpIntegerExpr
-                )')';
+simdlen_clause: name='simdlen' '('(
+                   VERSION=OMP_4_5 len=OmpIntegerExpr
+             )')';
 
-OmpAlignedClause: name='aligned' '('(
-                        VERSION=OMP_4_5 var_list=OmpList ':' alignnment=OmpIntegerExpr
-                )')';
+aligned_clause: name='aligned' '('(
+                     VERSION=OMP_4_5 var_list=OmpList ':' alignnment=OmpIntegerExpr
+             )')';
 
-OmpFinalClause: name='final' '('(
-                      VERSION=OMP_4_5 value=OmpScalarExpr
-                )')';
+final_clause: name='final' '('(
+                   VERSION=OMP_4_5 value=OmpScalarExpr
+             )')';
 
-OmpUntiedClause: name='untied' VERSION=OMP_4_5;
+untied_clause: name='untied' VERSION=OMP_4_5;
 
-OmpMergeableClause: name='mergeable' VERSION=OMP_4_5;
+mergeable_clause: name='mergeable' VERSION=OMP_4_5;
 
-OmpDependClause: name='depend' '('(
-                        VERSION=OMP_4_5 dependence_type=DependenceType ':' variables=OmpList
-                )')';
+depend_clause: name='depend' '('(
+                     VERSION=OMP_4_5 dependence_type=DependenceType ':' variables=OmpList
+             )')';
 
-OmpPriorityClause: name='priority' '('(
-                      VERSION=OMP_4_5 value=OmpIntegerExpr
-                )')';
+priority_clause: name='priority' '('(
+                   VERSION=OMP_4_5 value=OmpIntegerExpr
+             )')';
 
-OmpGrainSizeClause: name='grainsize' '('(
-                      VERSION=OMP_4_5 grain_size=OmpIntegerExpr
-                )')';
+grainsize_clause: name='grainsize' '('(
+                   VERSION=OMP_4_5 grain_size=OmpIntegerExpr
+             )')';
 
-OmpNumTasksClause: name='num_tasks' '('(
-                      VERSION=OMP_4_5 num_tasks=OmpIntegerExpr
-                )')';
+num_tasks_clause: name='num_tasks' '('(
+                   VERSION=OMP_4_5 num_tasks=OmpIntegerExpr
+             )')';
 
-OmpDeviceClause: name='device' '('(
-                      VERSION=OMP_4_5 value=OmpIntegerExpr
-                )')';
+device_clause: name='device' '('(
+                   VERSION=OMP_4_5 value=OmpIntegerExpr
+             )')';
 
-OmpMapClause: name='map' '('(
-                      VERSION=OMP_4_5 ((map_type_modifier=MapTypeModifier (',')?)? map_type=MapType)? variables=OmpList
-                )')';
+map_clause: name='map' '('(
+                   VERSION=OMP_4_5 ((map_type_modifier=MapTypeModifier (',')?)? map_type=MapType)? variables=OmpList
+             )')';
 
-OmpIsDevicePtrClause: name='is_device_ptr' '('(
-                      VERSION=OMP_4_5 variables=OmpList
-                )')';
+is_device_ptr_clause: name='is_device_ptr' '('(
+                   VERSION=OMP_4_5 variables=OmpList
+             )')';
 
-OmpDefaultMapClause: name='defaultmap' '('(
-                      VERSION=OMP_4_5 'tofrom' ':' value=OmpScalarExpr
-                )')';
+defaultmap_clause: name='defaultmap' '('(
+                   VERSION=OMP_4_5 'tofrom' ':' value=OmpScalarExpr
+             )')';
 
-OmpNumTeamsClause: name='num_teams' '('(
-                      VERSION=OMP_4_5 'num_teams' ':' value=OmpIntegerExpr
-                )')';
+num_teams_clause: name='num_teams' '('(
+                   VERSION=OMP_4_5 'num_teams' ':' value=OmpIntegerExpr
+             )')';
 
-OmpThreadLimitClause: name='thread_limit' '('(
-                      VERSION=OMP_4_5 'num_teams' ':' thread_limit=OmpIntegerExpr
-                )')';
+thread_limit_clause: name='thread_limit' '('(
+                   VERSION=OMP_4_5 'num_teams' ':' thread_limit=OmpIntegerExpr
+             )')';
 
-OmpDistScheduleClause: name='dist_schedule' '('(
-                      VERSION=OMP_4_5 (kind='static')? chunk_size=OmpIntegerExpr
-                )')';
+dist_schedule_clause: name='dist_schedule' '('(
+                   VERSION=OMP_4_5 (kind='static')? chunk_size=OmpIntegerExpr
+             )')';
 
-OmpThreadsClause: VERSION=OMP_4_5 name='threads';
+threads_clause: VERSION=OMP_4_5 name='threads';
 
-OmpSimdClause: VERSION=OMP_4_5 name='simd';
+simd_clause: VERSION=OMP_4_5 name='simd';
+
+atomic_clause: VERSION=OMP_4_5 name='atomic_clause' value='read' | 'write' | 'update' | 'capture';
+
+memory_order_clause: VERSION=OMP_4_5 name='memory_order_clause' value='seq_cst';
 
 ////////////////////////////////////////////////////
 //              Clauses values
@@ -200,7 +210,7 @@ OmpSimdClause: VERSION=OMP_4_5 name='simd';
 OmpScalarExpr: value=InnerContent | ParenthesisContent;
 OmpIntegerExpr: value=InnerContent | ParenthesisContent;
 OmpConstantPositiveInteger: value=/[0-9]+/;
-OmpList: value+=ID[','];
+OmpList: throw_away+=ID[','];
 ParenthesizedExpression: (('(' ParenthesizedExpression ')') | /[^()]*/)*; // TODO: find a better way to do this as this will not escape the parenthesis inside of a string
 DataSharingAttribute: ('shared' | 'none' | 'private' | 'firstprivate');
 ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'max'); // TODO: those are only the implicitly declared ones for C and C++. Add the others for Fortran and support user-defined ones (see specs https://www.openmp.org/spec-html/5.0/openmpsu107.html#x140-581002)
@@ -223,4 +233,3 @@ QUOTE: '"' | "'";
 OMP_4_5: '';
 OMP_5_0: '';
 OMP_5_1: '';
-RAW_STATEMENT: '';
