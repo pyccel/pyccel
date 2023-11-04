@@ -1092,7 +1092,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        rhs : NumpyTranspose or Variable or IndexedElement
+        rhs : TypedAstNode
             The value assigned to the lhs.
 
         d_lhs : dict
