@@ -1444,7 +1444,7 @@ class Program(ScopedAstNode):
 #==============================================================================
 class Iterable(PyccelAstNode):
     """
-    A wrapper around iterable types.
+    Wrapper around iterable types helping to convert between those types and a range.
 
     Wrapper around iterable types helping to convert between those
     types and a range (necessary in low level languages, e.g. C and Fortran).
@@ -1543,7 +1543,16 @@ class Iterable(PyccelAstNode):
             return range_base
 
     def get_range(self):
-        """ Returns the range required for this iterable
+        """
+        Get the range required for this iterable.
+
+        Returns the range which is necessary in a low-level language to iterate over
+        the wrapped iterable.
+
+        Returns
+        -------
+        PythonRange
+            The range which should be used in the code.
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
@@ -1551,7 +1560,12 @@ class Iterable(PyccelAstNode):
             return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
-                    getattr(self._iterable, 'length', PythonLen(self._iterable)))
+                    getattr(self._iterable, 'length', None))
+
+            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
+            if length is None:
+                length = PythonLen(self._iterable)
+
             if callable(length):
                 length = length()
             return PythonRange(length)

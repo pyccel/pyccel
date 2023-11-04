@@ -62,9 +62,26 @@ __all__ = (
 
 #==============================================================================
 def broadcast(shape_1, shape_2):
-    """ This function broadcast two shapes using numpy broadcasting rules """
+    """
+    Broadcast two shapes using NumPy broadcasting rules.
 
-    from pyccel.ast.sympy_helper import pyccel_to_sympy
+    Calculate the shape of the result of an operator from the shape of the arguments
+    of the operator. The new shape is calculated using NumPy broadcasting rules.
+
+    Parameters
+    ----------
+    shape_1 : tuple of TypedAstNode
+        The shape of the first argument.
+    shape_2 : tuple of TypedAstNode
+        The shape of the second argument.
+
+    Returns
+    -------
+    tuple of TypedAstNode
+        The shape of the result of the operator.
+    """
+
+    from pyccel.ast.sympy_helper import pyccel_to_sympy #pylint:disable=cyclic-import
     if shape_1 is None and shape_2 is None:
         return None
     elif shape_1 is None:
@@ -132,7 +149,7 @@ class PyccelOperator(TypedAstNode):
 
     Parameters
     ----------
-    *args : tuple
+    *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
     __slots__ = ('_args', )
@@ -151,9 +168,23 @@ class PyccelOperator(TypedAstNode):
         super().__init__()
 
     def _set_dtype(self):
+        """
+        Set the dtype and precision of the result of the operator.
+
+        Set the dtype and precision of the result of the operator. This function
+        uses the static method `_calculate_dtype` to set these values. If the
+        values are class parameters in a sub-class, this method must be over-ridden.
+        """
         self._dtype, self._precision = self._calculate_dtype(*self._args)  # pylint: disable=no-member
 
     def _set_shape_rank(self):
+        """
+        Set the shape and rank of the result of the operator.
+
+        Set the shape and rank of the result of the operator. This function
+        uses the static method `_shape_rank` to set these values. If the
+        values are class parameters in a sub-class, this method must be over-ridden.
+        """
         self._shape, self._rank = self._calculate_shape_rank(*self._args)  # pylint: disable=no-member
 
     @property
@@ -190,7 +221,7 @@ class PyccelOperator(TypedAstNode):
 
         Parameters
         ----------
-        args : tuple
+        args : tuple of TypedAstNode
             The arguments passed to the operator.
 
         Returns
@@ -1014,7 +1045,7 @@ class PyccelGe(PyccelComparisonOperator):
 
 #==============================================================================
 
-class PyccelBooleanOperator(PyccelBinaryOperator):
+class PyccelBooleanOperator(PyccelOperator):
     """
     Superclass representing a boolean operator with two arguments.
 
@@ -1023,10 +1054,8 @@ class PyccelBooleanOperator(PyccelBinaryOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     dtype = NativeBool()
     precision = -1
@@ -1059,10 +1088,8 @@ class PyccelAnd(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     __slots__ = ()
     _precedence = 5
@@ -1088,10 +1115,8 @@ class PyccelOr(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
     """
     __slots__ = ()
     _precedence = 4
@@ -1113,10 +1138,8 @@ class PyccelIs(PyccelBooleanOperator):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
 
     Examples
     --------
@@ -1169,10 +1192,8 @@ class PyccelIsNot(PyccelIs):
 
     Parameters
     ----------
-    arg1 : TypedAstNode
-        The first argument passed to the operator.
-    arg2 : TypedAstNode
-        The second argument passed to the operator.
+    *args : tuple of TypedAstNode
+        The arguments passed to the operator.
 
     Examples
     --------

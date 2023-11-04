@@ -438,7 +438,8 @@ class FCodePrinter(CodePrinter):
         decs = ''
         # ...
         class_decs_and_methods = [self._print(i) for i in expr.classes]
-        decs += '\n'.join(c[0] for c in class_decs_and_methods)
+        if not isinstance(expr, BindCModule):
+            decs += '\n'.join(c[0] for c in class_decs_and_methods)
         # ...
 
         decs += ''.join(self._print(i) for i in expr.declarations)
@@ -462,8 +463,10 @@ class FCodePrinter(CodePrinter):
         if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
+        func_strings = []
         # Get class functions
-        func_strings = [c[1] for c in class_decs_and_methods]
+        if not isinstance(expr, BindCModule):
+            func_strings += [c[1] for c in class_decs_and_methods]
         if expr.funcs:
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
         if isinstance(expr, BindCModule):

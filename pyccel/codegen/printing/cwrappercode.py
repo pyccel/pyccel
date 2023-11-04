@@ -240,6 +240,8 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule_AddObject(self, expr):
         name = self._print(expr.name)
         var  = self._print(expr.variable)
+        if expr.variable.dtype is not PyccelPyObject():
+            var = f'(PyObject*) {var}'
         return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
     def _print_PyModule(self, expr):
@@ -271,6 +273,8 @@ class CWrapperCodePrinter(CCodePrinter):
         self._in_header = False
 
         function_defs = '\n'.join(self._print(f) for f in funcs)
+
+        class_defs = f"\n{sep}\n".join(self._print(c) for c in expr.classes)
 
         method_def_func = ''.join('\n'.join(('{',
                                             '"'+self.get_python_name(expr.scope, f.original_function)+'",',
@@ -323,9 +327,31 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
-                imports, decs, function_signatures, sep, sep, function_defs,
-                exec_func, sep, method_def, sep, slots_def, sep, module_def,
-                sep, init_func])
+                imports, decs, function_signatures, sep, class_defs, sep,
+                function_defs, exec_func, sep, method_def, sep, slots_def, sep,
+                module_def, sep, init_func])
+
+    def _print_PyClassDef(self, expr):
+        struct_name = expr.struct_name
+        type_name = expr.type_name
+        name = self.scope.get_python_name(expr.name)
+        docstring = ''
+        class_code = ("typedef struct {\n"
+                "    PyObject_HEAD\n"
+                "    void* instance;\n"
+                f"}} {struct_name};\n")
+
+        type_code = (f"static PyTypeObject {type_name} = {{\n"
+                "    PyVarObject_HEAD_INIT(NULL, 0)\n"
+                f"    .tp_name = \"{self._module_name}.{name}\",\n"
+                f"    .tp_doc = PyDoc_STR(\"{docstring}\"),\n"
+                f"    .tp_basicsize = sizeof({struct_name}),\n"
+                "    .tp_itemsize = 0,\n"
+                "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
+                "    .tp_new = PyType_GenericNew,\n"
+                "};\n")
+
+        return class_code + '\n' + type_code
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code

@@ -802,25 +802,40 @@ def test_basic_header():
                                         "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_3.py",
                                         "scripts/classes/classes_4.py",
-                                        "scripts/classes/classes_5.py",
                                         "scripts/classes/classes_6.py",
-                                        "scripts/classes/classes_7.py",
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran)
-    )
-)
-
 def test_classes( test_file , language):
+    pyccel_test(test_file, language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.parametrize( "test_file", ["scripts/classes/classes_5.py",
+                                        "scripts/classes/classes_7.py",
+                                        ] )
+def test_classes_as_args_and_results( test_file , language):
     if language == "python":
         pyccel_test(test_file, language=language)
     else:
         pyccel_test(test_file, compile_with_pyccel = False, language=language)
+
+#------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
+@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
+                                        ] )
+@pytest.mark.parametrize( 'language', (
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Issue #1595"),
+            pytest.mark.fortran])
+    )
+)
+
+def test_interfaces_in_classes( test_file , language):
+    pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
 @pytest.mark.parametrize( "test_file", ["scripts/lapack_subroutine.py",
