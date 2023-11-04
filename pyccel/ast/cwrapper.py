@@ -13,9 +13,9 @@ from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import PyccelAstNode, TypedAstNode
 
-from .datatypes import DataType, default_precision
+from .datatypes import DataType, default_precision, CustomDataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString
+from .datatypes import NativeBool, NativeString, NativeVoid
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
@@ -77,6 +77,16 @@ class PyccelPyClassType(DataType):
     """
     __slots__ = ()
     _name = 'pyclasstype'
+
+class WrapperCustomDataType(CustomDataType):
+    """
+    Datatype representing a subclass of `PyObject`.
+
+    Datatype representing a subclass of `PyObject`. This is the
+    datatype of a class which is compatible with Python.
+    """
+    __slots__ = ()
+    _name = 'pycustomclasstype'
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -235,7 +245,10 @@ class PyBuildValueNode(TypedAstNode):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
-            self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
+            if isinstance(i.dtype, WrapperCustomDataType):
+                self._flags += 'O'
+            else:
+                self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
         super().__init__()
 
     @property
@@ -521,12 +534,14 @@ class PyClassDef(ClassDef):
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
-    def __init__(self, original_class, struct_name, type_name):
+    def __init__(self, original_class, struct_name, type_name, scope):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
-        super().__init__(original_class.name)
+        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
+        scope.insert_variable(variables[0])
+        super().__init__(original_class.name, variables, scope=scope)
 
     @property
     def struct_name(self):
@@ -556,6 +571,10 @@ class PyClassDef(ClassDef):
         structure. This object is necessary to add the class to the module.
         """
         return self._type_object
+
+    @property
+    def original_class(self):
+        return self._original_class
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
