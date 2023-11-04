@@ -64,8 +64,12 @@ class PyccelInvert(PyccelUnaryOperator):
         precision : integer
             The precision of the result of the operation.
         """
-        self._args      = (PythonInt(a) if a.dtype is NativeBool() else a,)
-        precision = a.precision
+        dtype = NativeInteger()
+￼       if arg.dtype not in (NativeInteger(), NativeBool()):
+￼           raise TypeError(f'unsupported operand type(s): {arg}')
+￼
+￼       self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
+￼       precision = arg.precision
         return dtype, precision, dtype
 
     def __repr__(self):
@@ -127,7 +131,7 @@ class PyccelBitOperator(PyccelOperator):
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
         if dtype in (NativeString(), NativeComplex(), NativeFloat()):
-            raise TypeError('unsupported operand type(s): {}'.format(args))
+            raise TypeError(f'unsupported operand type(s): {args}')
         elif (dtype in (NativeInteger(), NativeBool())):
             if class_type is NativeBool():
                 class_type = NativeInteger()
