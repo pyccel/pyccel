@@ -94,6 +94,13 @@ class PointerCast(TypedAstNode):
 
     @property
     def name(self):
+        """
+        The name of the variable being cast.
+
+        The name of the variable being cast. This is occasionally useful
+        when the code verifies that no objects are temporaries (e.g named
+        '_').
+        """
         return self._obj.name
 
     @property

@@ -574,6 +574,12 @@ class PyClassDef(ClassDef):
 
     @property
     def original_class(self):
+        """
+        The class which is wrapped by this PyClassDef.
+
+        The original class which would be printed in pure C which is not
+        compatible with Python.
+        """
         return self._original_class
 
 #-------------------------------------------------------------------
