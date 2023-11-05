@@ -1,6 +1,6 @@
-Omp:
-  statements*=OmpStatement
-;
+//Omp:
+//  statements*=OmpStatement
+//;
 
 OmpStatement:
   '#$' 'omp' statement=OmpDirective

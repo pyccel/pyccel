@@ -80,9 +80,9 @@ def parse(stmt, parser, errors):
     """
     try:
         meta_model = meta.model_from_str(stmt)
-        assert len(meta_model.statements) == 1
-        meta_model.statements[0].raw = stmt
-        return parser._visit(meta_model.statements[0].statement)
+        #assert len(meta_model.statements) == 1
+        meta_model.raw = stmt
+        return parser._visit(meta_model.statement)
     except TextXError as e:
         errors.report(e.message, severity="fatal", symbol=stmt)
         return None

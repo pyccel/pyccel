@@ -283,7 +283,7 @@ class Openmp(metaclass=OmpMeta):
                 p = self
                 while hasattr(p, 'parent'):
                     p = p.parent
-                return p.statements[0].raw[self.pos[0]:self.pos[1]]
+                return p.raw[self.pos[0]:self.pos[1]]
         @property
         def version(self):
             """Returns the version of OpenMP syntax used."""
@@ -322,26 +322,26 @@ class Openmp(metaclass=OmpMeta):
         def end(self):
             return self._end
 
-    class OmpStatement(OmpAnnotatedComment):
-        __slots__ = ('_statement',)
-        _attribute_nodes = ()
-        _used_in_grammar = True
+    #class OmpStatement(OmpAnnotatedComment):
+    #    __slots__ = ('_statement',)
+    #    _attribute_nodes = ('_statement',)
+    #    _used_in_grammar = True
 
-        def __init__(self, **kwargs):
-            self._statement = kwargs.pop("statement")
-            super().__init__(**kwargs)
+    #    def __init__(self, **kwargs):
+    #        self._statement = kwargs.pop("statement")
+    #        super().__init__(**kwargs)
 
-        @property
-        def statement(self):
-            return self._statement
+    #    @property
+    #    def statement(self):
+    #        return self._statement
 
-        @property
-        def raw(self):
-            return self._raw
+    #    @property
+    #    def raw(self):
+    #        return self._raw
 
-        @raw.setter
-        def raw(self, value):
-            self._raw = value
+    #    @raw.setter
+    #    def raw(self, value):
+    #        self._raw = value
 
     class OmpDirective(OmpAnnotatedComment):
 
@@ -349,11 +349,13 @@ class Openmp(metaclass=OmpMeta):
 
         __slots__ = ("_name", "_dname", "_clauses", "_allowed_clauses", "_deprecated_clauses", "_require_end_directive")
         _used_in_grammar = True
+        _attribute_nodes = ("_clauses",)
 
         def __init__(self, **kwargs):
             self._dname = tuple(kwargs.pop("dname"))
             self._name = ' '.join(n for n in self._dname)
             self._clauses = kwargs.pop("clauses", [])
+            super().__init__(**kwargs)
             #self._raw = kwargs.pop("raw", "")
             if self._name not in Openmp.all_directives:
                 errors.report(
@@ -393,7 +395,6 @@ class Openmp(metaclass=OmpMeta):
                         symbol=self,
                         severity="warning",
                     )
-            super().__init__(**kwargs)
 
         @property
         def name(self):
@@ -431,7 +432,7 @@ class Openmp(metaclass=OmpMeta):
                 p = self
                 while hasattr(p, 'parent'):
                     p = p.parent
-                return p.statements[0].raw.replace("#$", "")
+                return p.raw.replace("#$", "")
 
     class OmpEndDirective(OmpDirective):
         """Represents an OpenMP End Construct."""
@@ -459,6 +460,7 @@ class Openmp(metaclass=OmpMeta):
             #self._raw = None
             self._omp_exprs = tuple(kwargs.pop(e) for e in list(kwargs.keys()) if isinstance(kwargs[e], Openmp.OmpExpr))
             super().__init__(**kwargs)
+
 
         @property
         def name(self):
