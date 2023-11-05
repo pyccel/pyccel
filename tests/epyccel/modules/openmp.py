@@ -24,7 +24,9 @@ def get_max_threads():
 @types('int')
 def f1(i):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
+    import numpy as np
     out = -1
+    idx = np.int32(0)
     #$ omp parallel private(idx)
     idx = omp_get_thread_num()
 
@@ -220,6 +222,7 @@ def test_omp_get_set_schedule():
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
     func_result = 0
+    i = 0
     #$ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))
     _, chunk_size = omp_get_schedule()
@@ -272,6 +275,7 @@ def test_omp_get_max_task_priority():
 
 @types('real[:,:], real[:,:], real[:,:]')
 def omp_matmul(A, x, out):
+    i, j, k = 0, 0, 0
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -309,6 +313,7 @@ def omp_nowait(x, y, z):
 @types('int[:]')
 def omp_arraysum(x):
     func_result = 0
+    i = 0
     #$ omp parallel private(i)
     #$ omp for reduction (+:func_result)
     for i in range(0, 5):
@@ -484,6 +489,7 @@ def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwed
     n3     = long_variable_3_oiweqxhnoijaqed34023423.shape[0]
     n4     = long_variable_4_oiweaxaijaqedqd34023423.shape[0]
     n5     = long_variable_5_oiwed423rnoic3242ewdx35.shape[0]
+    i1, i2, i3, i4, i5 = 0, 0, 0, 0, 0
 
     #$ omp parallel private(i1, i2, i3, i4, i5) shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
 
