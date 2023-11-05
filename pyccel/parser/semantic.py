@@ -511,8 +511,6 @@ class SemanticParser(BasicParser):
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                         continue
-                if isinstance(i.dtype, CustomDataType) and i.is_alias:
-                    continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
