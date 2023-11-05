@@ -79,9 +79,10 @@ def parse(stmt, parser, errors):
         The Pyccel AST node representing the OpenMP code.
     """
     try:
-        meta_model = meta.model_from_str(stmt)
+        meta_model = meta.model_from_str(stmt.s)
         #assert len(meta_model.statements) == 1
-        meta_model.raw = stmt
+        meta_model.raw = stmt.s
+        meta_model.statement.set_fst(stmt)
         return parser._visit(meta_model.statement)
     except TextXError as e:
         errors.report(e.message, severity="fatal", symbol=stmt)

@@ -235,7 +235,7 @@ class Openmp(metaclass=OmpMeta):
         def __init__(self, **kwargs):
             self._raw = kwargs.pop("raw", None)
             self._pos = (None, None)
-            self._parent = kwargs.pop("parent")
+            self._parent = kwargs.pop("parent", None)
             if self._current_omp_version is None:
                 raise NotImplementedError(
                     "OpenMP version not set (use OmpAnnotatedComment.set_current_version)"
@@ -258,7 +258,10 @@ class Openmp(metaclass=OmpMeta):
             """
             returns the parent of the omp object
             """
-            return self._parent
+            if self._parent:
+                return self._parent
+            else:
+                return self.get_user_nodes((Openmp.OmpClause, Openmp.OmpDirective))[0]
 
         @property
         def pos(self):
@@ -284,6 +287,7 @@ class Openmp(metaclass=OmpMeta):
                 while hasattr(p, 'parent'):
                     p = p.parent
                 return p.raw[self.pos[0]:self.pos[1]]
+
         @property
         def version(self):
             """Returns the version of OpenMP syntax used."""
@@ -595,7 +599,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             fst = fst.body[0].value
-            return Openmp.OmpScalarExpr(value=self._visit(fst), raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpScalarExpr(value=self._visit(fst), raw=expr.raw)
 
         def _visit_OmpIntegerExpr(self, expr):
             fst = extend_tree(expr.value)
@@ -610,7 +614,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             fst = fst.body[0].value
-            return Openmp.OmpIntegerExpr(value=self._visit(fst), raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpIntegerExpr(value=self._visit(fst), raw=expr.raw)
 
         def _visit_OmpConstantPositiveInteger(self, expr):
             fst = extend_tree(expr.value)
@@ -625,7 +629,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             fst = fst.body[0].value
-            return Openmp.OmpConstantPositiveInteger(value=self._visit(fst), raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpConstantPositiveInteger(value=self._visit(fst), raw=expr.raw)
 
         def _visit_OmpList(self, expr):
             fst = extend_tree(expr.value)
@@ -640,7 +644,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             fst = fst.body[0].value
-            return Openmp.OmpList(value=self._visit(fst), raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpList(value=self._visit(fst), raw=expr.raw)
 
         def _visit_OmpExpr(self, expr):
             fst = extend_tree(expr.value)
@@ -655,7 +659,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             fst = fst.body[0].value
-            return Openmp.OmpExpr(value=self._visit(fst), raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpExpr(value=self._visit(fst), raw=expr.raw)
 
     class SemanticParser(ABC):
 
@@ -766,7 +770,7 @@ class Openmp(metaclass=OmpMeta):
                     symbol=self,
                     severity="fatal",
                 )
-            return Openmp.OmpScalarExpr(value=value, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpScalarExpr(value=value, raw=expr.raw)
 
         def _visit_OmpIntegerExpr(self, expr):
             value = self._visit(expr.value)
@@ -776,11 +780,11 @@ class Openmp(metaclass=OmpMeta):
                     symbol=self,
                     severity="fatal",
                 )
-            return Openmp.OmpIntegerExpr(value=value, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpIntegerExpr(value=value, raw=expr.raw)
 
         def _visit_OmpConstantPositiveInteger(self, expr):
             value = self._visit(expr.value)
-            return Openmp.OmpConstantPositiveInteger(value=value, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpConstantPositiveInteger(value=value, raw=expr.raw)
 
         def _visit_OmpList(self, expr):
             items = tuple(self._visit(var) for var in expr.value)
@@ -791,11 +795,11 @@ class Openmp(metaclass=OmpMeta):
                         symbol=expr,
                         severity="fatal",
                     )
-            return Openmp.OmpList(value=items, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpList(value=items, raw=expr.raw)
 
         def _visit_OmpClause(self, expr):
             omp_exprs = tuple(self._visit(e) for e in expr.get_attribute_nodes(Openmp.OmpExpr))
-            return type(expr)(omp_exprs=omp_exprs, raw=expr.raw, parent=expr.parent)
+            return type(expr)(omp_exprs=omp_exprs, raw=expr.raw)
 
     class CCodePrinter:
 
