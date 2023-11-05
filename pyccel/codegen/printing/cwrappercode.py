@@ -15,7 +15,6 @@ from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject
 from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.variable   import DottedVariable
 
 from pyccel.errors.errors  import Errors
 
@@ -363,7 +362,6 @@ class CWrapperCodePrinter(CCodePrinter):
         variable = expr.variable
         if isinstance(variable.dtype, WrapperCustomDataType):
             class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
-            class_scope = class_def.scope
 
             type_name = class_def.type_name
             var_code = self._print(ObjectAddress(variable))

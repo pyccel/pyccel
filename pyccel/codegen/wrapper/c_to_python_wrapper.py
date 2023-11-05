@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCClassDef
+from pyccel.ast.bind_c        import BindCModule, BindCVariable
 from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -87,8 +87,8 @@ class CToPythonWrapper(Wrapper):
                                 memory_handling='alias',
                                 cls_base = self.scope.find(dtype.name, 'classes'),
                                 is_temp=is_temp)
-            except KeyError:
-                raise NotImplementedError("Can't return an object whose type was imported")
+            except KeyError as e:
+                raise NotImplementedError("Can't return an object whose type was imported") from e
         else:
             var = Variable(dtype=PyccelPyObject(),
                             name=self.scope.get_new_name(name),
