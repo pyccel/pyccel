@@ -1,7 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import pytest
-from pyccel.epyccel import epyccel
 import modules.expose_classes as mod
+from pyccel.epyccel import epyccel
 
 @pytest.fixture(scope="module")
 def modnew(language):
@@ -23,6 +23,7 @@ def test_class_return(modnew):
     a_new, i = modnew.get_A_int()
     a_new2, i2 = mod.get_A_int()
     assert isinstance(a_new, modnew.A)
+    assert isinstance(a_new2, modnew.A)
     assert i == i2
 
     b = modnew.get_B(3.0)
