@@ -71,6 +71,11 @@ class CToPythonWrapper(Wrapper):
         name : str
             The desired name.
 
+        dtype : DataType, optional
+            The datatype of the object which will be represented by this PyObject.
+            This is not necessary unless a variable sis required which will describe
+            a class.
+
         is_temp : bool, default=False
             Indicates if the Variable is temporary. A temporary variable may be ignored
             by the printer.

@@ -531,6 +531,9 @@ class PyClassDef(ClassDef):
     type_name : str
         The name of the instance of the Python-compatible class definition
         structure. This object is necessary to add the class to the module.
+
+    scope : Scope
+        The scope for the class contents.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
