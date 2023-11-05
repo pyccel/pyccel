@@ -217,7 +217,7 @@ ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'm
 AffinityPolicy: ('close' | 'spread');
 ReductionModifier: ('inscan' | 'task' | 'default');
 ScheduleModifier: 'monotonic' | 'nonmonotonic' | 'simd';
-ScheduleKind: 'static' | 'dynamic' | 'guided' | 'auto';
+ScheduleKind: 'static' | 'dynamic' | 'guided' | 'auto' | 'runtime';
 DependenceType: 'in' | 'out' | 'inout';
 MapType: 'to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete';
 MapTypeModifier: 'always';
