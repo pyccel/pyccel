@@ -494,22 +494,50 @@ class Allocate(PyccelAstNode):
 
     @property
     def variable(self):
+        """
+        The variable to be allocated.
+
+        The variable to be allocated.
+        """
         return self._variable
 
     @property
     def shape(self):
+        """
+        The shape that the variable should be allocated to.
+
+        The shape that the variable should be allocated to.
+        """
         return self._shape
 
     @property
     def order(self):
+        """
+        The order that the variable will be allocated with.
+
+        The order that the variable will be allocated with.
+        """
         return self._order
 
     @property
     def status(self):
+        """
+        The allocation status of the variable before this allocation.
+
+        The allocation status of the variable before this allocation.
+        One of {'allocated'|'unallocated'|'unknown'}.
+        """
         return self._status
 
     @property
     def like(self):
+        """
+        TypedAstNode describing the amount of memory needed for the allocation.
+
+        A TypedAstNode describing the amount of memory which must be allocated.
+        In C this provides the size which will be passed to malloc. In Fortran
+        this provides the source argument of the allocate function.
+        """
         return self._like
 
     def __str__(self):
