@@ -337,12 +337,15 @@ class PyccelAstNode:
     @property
     def ast(self):
         """
-        Get the AST object which Python parsed in the original code.
+        Get an `ast.AST` object describing the parsed code that this node represents.
 
         Get the AST (abstract syntax tree) object which Python parsed
         in the original code. This object describes the Python code being
         translated. It provides line numbers and columns which can be
         used to report the origin of any potential errors.
+        If this object appears in multiple places in the code (e.g. Variables) then
+        this property returns `None` so as not to accidentally print the wrong
+        location.
 
         Returns
         -------
