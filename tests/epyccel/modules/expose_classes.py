@@ -17,3 +17,12 @@ def get_A_int():
 
 def get_B(y : float):
     return B(y)
+
+def get_x_from_B(b_obj : 'B'):
+    return b_obj.x
+
+def get_an_x_from_B(b_obj : 'B' = None):
+    if b_obj is not None:
+        return -2.0
+    else:
+        return 5.0#b_obj.x
