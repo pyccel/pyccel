@@ -55,6 +55,7 @@ __all__ = (
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
+    'PyObject_TypeCheck',
 )
 
 #-------------------------------------------------------------------
@@ -541,6 +542,12 @@ class PyClassDef(ClassDef):
 
     **kwargs : dict
         See ClassDef.
+
+    See Also
+    --------
+    ClassDef
+        The class from which PyClassDef inherits. This is also the object being
+        wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
@@ -721,6 +728,10 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
 
+PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
+            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')), FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
+            results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
+            body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
