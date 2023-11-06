@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
+-   #1494 : Add support for functions returning class instances.
 
 ### Fixed
 
