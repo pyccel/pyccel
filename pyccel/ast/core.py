@@ -645,8 +645,7 @@ class CodeBlock(PyccelAstNode):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    @PyccelAstNode.ast.setter
-    def ast(self, ast_node):
+    def set_current_ast(self, ast_node):
         PyccelAstNode.ast.fset(self, ast_node)
         for l in self.body:
             if not l.ast:
