@@ -228,11 +228,12 @@ class Openmp(metaclass=OmpMeta):
 
         """Represents an OpenMP Annotated Comment in the code."""
 
-        __slots__ = ("_parent", "_raw", "_pos", "VERSION", "DEPRECATED")
+        __slots__ = ("_parent", "_raw", "_pos", "_line", "VERSION", "DEPRECATED")
         _attribute_nodes = ()
         _current_omp_version = None
 
         def __init__(self, **kwargs):
+            super().__init__()
             self._raw = kwargs.pop("raw", None)
             self._pos = (None, None)
             self._parent = kwargs.pop("parent", None)
@@ -250,7 +251,6 @@ class Openmp(metaclass=OmpMeta):
                 raise NotImplementedError(
                     f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
                 )
-            super().__init__()
 
 
         @property
@@ -273,6 +273,10 @@ class Openmp(metaclass=OmpMeta):
         @pos.setter
         def pos(self, value):
             self._pos = value
+
+        @property
+        def line(self):
+            return self.fst.lineno if self.fst else self.parent.line
 
         @property
         def raw(self):
@@ -574,7 +578,7 @@ class Openmp(metaclass=OmpMeta):
             cor_directive = None
             if len(self._pending_directives) == 0:
                 errors.report(
-                   f"`{end_directive.raw}` misplaced",
+                   f"`end {end_directive.name}` misplaced",
                    symbol=end_directive,
                    severity="fatal",
                    )
@@ -584,7 +588,7 @@ class Openmp(metaclass=OmpMeta):
                     cor_directive = self._find_coresponding_directive(end_directive)
                 else:
                     errors.report(
-                        f"`{end_directive.raw}` misplaced",
+                        f"`end {end_directive.name}` misplaced",
                         symbol=end_directive,
                         severity="fatal",
                     )
@@ -608,6 +612,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "Invalid expression",
                     symbol=expr,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -623,6 +629,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "Invalid expression",
                     symbol=expr,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -638,6 +646,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "Invalid expression",
                     symbol=expr,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -653,6 +663,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "Invalid expression",
                     symbol=expr,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -668,6 +680,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "Invalid expression",
                     symbol=expr,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -705,8 +719,8 @@ class Openmp(metaclass=OmpMeta):
             end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
             if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
                 errors.report(
-                    f"{expr} and {end_dir}, should be contained in the same block",
-                    symbol=expr,
+                    f"`end {end_dir.name}` directive misplaced",
+                    symbol=end_dir,
                     severity="fatal",
                 )
             container = expr.get_all_user_nodes()[-1]
@@ -732,14 +746,14 @@ class Openmp(metaclass=OmpMeta):
                 end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
                 if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
                     errors.report(
-                        f"end {expr.name} directive misplaced",
-                        symbol=expr,
+                        f"`end {end_dir.name}` directive misplaced",
+                        symbol=end_dir,
                         severity="fatal",
                     )
                 if not isinstance(container.body[container.body.index(expr) + 2], Openmp.OmpEndDirective):
                     errors.report(
-                        f"end {expr.name} directive misplaced",
-                        symbol=expr,
+                        f"`end {end_dir.name}` directive misplaced",
+                        symbol=end_dir,
                         severity="fatal",
                     )
                 reserved_nodes = container.body[container.body.index(expr) + 1:container.body.index(end_dir) + 1]
@@ -763,7 +777,7 @@ class Openmp(metaclass=OmpMeta):
         def _visit_OmpEndDirective(self, expr):
             if expr.coresponding_directive is None:
                 errors.report(
-                    f"OMP END does not match any OMP {expr.dname}",
+                    f"{expr.name} does not match any directive",
                     symbol=expr,
                     severity="fatal",
                 )
@@ -780,6 +794,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "expression needs to be a scalar expression",
                     symbol=self,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             return Openmp.OmpScalarExpr(value=value, raw=expr.raw)
@@ -790,6 +806,8 @@ class Openmp(metaclass=OmpMeta):
                 errors.report(
                     "expression must be an integer expression",
                     symbol=self,
+                    line=expr.line,
+                    column=expr.pos[0],
                     severity="fatal",
                 )
             return Openmp.OmpIntegerExpr(value=value, raw=expr.raw)
@@ -805,6 +823,8 @@ class Openmp(metaclass=OmpMeta):
                     errors.report(
                         "omp list must be a list of variables",
                         symbol=expr,
+                        line=expr.line,
+                        column=expr.pos[0],
                         severity="fatal",
                     )
             return Openmp.OmpList(value=items, raw=expr.raw)
