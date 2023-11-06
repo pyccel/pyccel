@@ -646,6 +646,19 @@ class CodeBlock(PyccelAstNode):
         return (apply, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
+        """
+        Set the `ast.AST` object which describes the parsed code that this node currently represents.
+        
+        Set the AST (abstract syntax tree) object which Python parsed in the original code and which
+        resulted in the creation (or use) of this PyccelAstNode. This object describes the Python code
+        being translated. It provides line numbers and columns which can be used to report the origin
+        of any potential errors.
+
+        Parameters
+        ----------
+        ast_node : ast.AST
+            The AST object which was parsed.
+        """
         PyccelAstNode.set_current_ast(self, ast_node)
         for l in self.body:
             if not l.ast:
