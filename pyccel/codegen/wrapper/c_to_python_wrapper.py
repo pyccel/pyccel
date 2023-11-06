@@ -15,7 +15,7 @@ from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionC
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -124,7 +124,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
-    def _unpack_python_args(self, args):
+    def _unpack_python_args(self, args, class_base = None):
         """
         Unpack the arguments received from Python into the expected Python variables.
 
@@ -165,20 +165,26 @@ class CToPythonWrapper(Wrapper):
             return NULL;
         }
         """
+        has_bound_arg = class_base is not None
+        bound_arg = args[0] if has_bound_arg else None
+        args = args[int(has_bound_arg):]
         # Create necessary variables
-        func_args = [self.get_new_PyObject(n) for n in ("self", "args", "kwargs")]
+        func_args = [self.get_new_PyObject("self", class_base)] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         arg_vars  = self._get_python_argument_variables(args)
         keyword_list_name = self.scope.get_new_name('kwlist')
+
+        if has_bound_arg:
+            self._python_object_map[bound_arg] = func_args[0]
 
         # Create the list of argument names
         arg_names = [getattr(a, 'original_function_argument_variable', a.var).name for a in args]
         keyword_list = PyArgKeywords(keyword_list_name, arg_names)
 
-        # Initialise optionals
-        body = [AliasAssign(py_arg, Py_None) for func_def_arg, py_arg in zip(args, arg_vars) if func_def_arg.has_default]
-
         # Parse arguments
         parse_node = PyArg_ParseTupleNode(*func_args[1:], args, arg_vars, keyword_list)
+
+        # Initialise optionals
+        body = [AliasAssign(py_arg, Py_None) for func_def_arg, py_arg in zip(args, arg_vars) if func_def_arg.has_default]
 
         body.append(keyword_list)
         body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
@@ -506,6 +512,9 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
+        # Add the variables to the expected symbols in the scope
+        for a in del_function.arguments:
+            func_scope.insert_symbol(a.var.name)
         func_arg = self.get_new_PyObject('self', cls_dtype)
 
         attribute = self.scope.find('instance', 'variables')
@@ -644,6 +653,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
         original_funcs = expr.functions
         example_func = original_funcs[0]
+        class_base = expr.get_user_nodes((ClassDef,))
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -651,7 +661,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create necessary arguments
         python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
-        func_args, body = self._unpack_python_args(python_args)
+        func_args, body = self._unpack_python_args(python_args, class_base)
 
         # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
@@ -717,6 +727,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        class_dtype = expr.arguments[0].var.dtype if expr.cls_name else None
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
@@ -757,7 +768,7 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in self._get_python_argument_variables(python_args)]
             body = []
         else:
-            func_args, body = self._unpack_python_args(python_args)
+            func_args, body = self._unpack_python_args(python_args, class_dtype)
             func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
@@ -835,7 +846,8 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
         for a in python_args:
-            self._python_object_map.pop(a)
+            if not a.bound_argument:
+                self._python_object_map.pop(a)
         for r in python_results:
             self._python_object_map.pop(r)
 
@@ -874,10 +886,11 @@ class CToPythonWrapper(Wrapper):
             The code which translates the `PyccelPyObject` to a C-compatible variable.
         """
 
-        collect_arg = self._python_object_map[expr]
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
+
+        collect_arg = self._python_object_map[expr]
 
         if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
@@ -898,19 +911,23 @@ class CToPythonWrapper(Wrapper):
                 body.append(Assign(arg_var, default_val))
 
         # Collect the function which casts from a Python object to a C object
-        dtype = arg_var.dtype
+        dtype = orig_var.dtype
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes')
             scope = python_cls_base.scope
             attribute = scope.find('instance', 'variables')
-            cast_type = Variable(dtype=self._python_object_map[dtype],
-                                name=self.scope.get_new_name(collect_arg.name),
-                                memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes'))
-            self.scope.insert_variable(cast_type)
+            if expr.bound_argument:
+                cast_type = collect_arg
+                cast = []
+            else:
+                cast_type = Variable(dtype=self._python_object_map[dtype],
+                                    name=self.scope.get_new_name(collect_arg.name),
+                                    memory_handling='alias',
+                                    cls_base = self.scope.find(dtype.name, 'classes'))
+                self.scope.insert_variable(cast_type)
+                cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
-            cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type)),
-                    AliasAssign(arg_var, PointerCast(c_res, orig_var))]
+            cast.append(AliasAssign(arg_var, PointerCast(c_res, orig_var)))
         elif arg_var.rank == 0:
             prec  = get_final_precision(arg_var)
             try :
