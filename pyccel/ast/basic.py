@@ -369,7 +369,7 @@ class PyccelAstNode:
 
         Parameters
         ----------
-        ast.AST
+        ast_node : ast.AST
             The AST object which was parsed.
         """
         if not isinstance(ast_node, ast.AST):
