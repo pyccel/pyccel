@@ -166,7 +166,15 @@ def process_shape(is_scalar, shape):
 
 #=======================================================================================
 class NumpyFloat(PythonFloat):
-    """ Represents a call to numpy.float() function.
+    """
+    Represents a call to `numpy.float()` function.
+
+    Represents a call to the NumPy cast function `float`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_rank','_shape','_order','_class_type')
     name = 'float'
@@ -176,6 +184,16 @@ class NumpyFloat(PythonFloat):
         self._order = arg.order
         self._class_type = arg.class_type
         super().__init__(arg)
+
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 class NumpyFloat32(NumpyFloat):
     """ Represents a call to numpy.float32() function.
@@ -193,7 +211,15 @@ class NumpyFloat64(NumpyFloat):
 
 #=======================================================================================
 class NumpyBool(PythonBool):
-    """ Represents a call to numpy.bool() function.
+    """
+    Represents a call to `numpy.bool()` function.
+
+    Represents a call to the NumPy cast function `bool`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order','_class_type')
     name = 'bool'
@@ -204,10 +230,28 @@ class NumpyBool(PythonBool):
         self._class_type = arg.class_type
         super().__init__(arg)
 
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
+
 #=======================================================================================
 # TODO [YG, 13.03.2020]: handle case where base != 10
 class NumpyInt(PythonInt):
-    """ Represents a call to numpy.int() function.
+    """
+    Represents a call to `numpy.int()` function.
+
+    Represents a call to the NumPy cast function `int`.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order','_class_type')
     name = 'int'
@@ -217,6 +261,16 @@ class NumpyInt(PythonInt):
         self._order = arg.order
         self._class_type = arg.class_type
         super().__init__(arg)
+
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 class NumpyInt8(NumpyInt):
     """ Represents a call to numpy.int8() function.
@@ -315,7 +369,18 @@ class NumpyImag(PythonImag):
 
 #=======================================================================================
 class NumpyComplex(PythonComplex):
-    """ Represents a call to numpy.complex() function.
+    """
+    Represents a call to `numpy.complex()` function.
+
+    Represents a call to the NumPy cast function `complex`.
+
+    Parameters
+    ----------
+    arg0 : TypedAstNode
+        The first argument passed to the function. Either the array/scalar being cast
+        or the real part of the complex.
+    arg1 : TypedAstNode, optional
+        The second argument passed to the function. The imaginary part of the complex.
     """
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
@@ -329,6 +394,16 @@ class NumpyComplex(PythonComplex):
         self._order = arg0.order
         self._class_type = arg0.class_type
         super().__init__(arg0)
+
+    @property
+    def is_elemental(self):
+        """
+        Indicates whether the function can be applied elementwise.
+        
+        Indicates whether the function should be
+        called elementwise for an array argument
+        """
+        return True
 
 class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
