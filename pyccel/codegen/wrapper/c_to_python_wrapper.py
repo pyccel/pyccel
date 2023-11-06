@@ -21,7 +21,7 @@ from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
-from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
+from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
@@ -120,7 +120,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        collect_args = [self.get_new_PyObject(a.var.name+'_obj', a.var.dtype) for a in args]
+        collect_args = [self.get_new_PyObject(a.var.name+'_obj') for a in args]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
@@ -237,8 +237,11 @@ class CToPythonWrapper(Wrapper):
         """
         rank = arg.rank
         error_code = ()
-        if rank == 0:
-            dtype = arg.dtype
+        dtype = arg.dtype
+        if isinstance(dtype, CustomDataType):
+            python_cls_base = self.scope.find(dtype.name, 'classes')
+            func_call = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
+        elif rank == 0:
             prec  = arg.precision
             try :
                 cast_function = check_type_registry[(dtype, prec)]
@@ -257,7 +260,7 @@ class CToPythonWrapper(Wrapper):
 
             func_call = FunctionCall(func, [py_obj])
         else:
-            dtype = str(arg.dtype)
+            dtype = str(dtype)
             prec  = get_final_precision(arg)
             try :
                 type_ref = numpy_dtype_registry[(dtype, prec)]
@@ -853,9 +856,9 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
 
-        if orig_var.is_ndarray:
+        if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
-            self._wrapping_arrays = True
+            self._wrapping_arrays = orig_var.is_ndarray
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
 
@@ -872,8 +875,20 @@ class CToPythonWrapper(Wrapper):
                 body.append(Assign(arg_var, default_val))
 
         # Collect the function which casts from a Python object to a C object
-        if arg_var.rank == 0:
-            dtype = arg_var.dtype
+        dtype = arg_var.dtype
+        if isinstance(dtype, CustomDataType):
+            python_cls_base = self.scope.find(dtype.name, 'classes')
+            scope = python_cls_base.scope
+            attribute = scope.find('instance', 'variables')
+            cast_type = Variable(dtype=self._python_object_map[dtype],
+                                name=self.scope.get_new_name(collect_arg.name),
+                                memory_handling='alias',
+                                cls_base = self.scope.find(dtype.name, 'classes'))
+            self.scope.insert_variable(cast_type)
+            c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
+            cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type)),
+                    AliasAssign(arg_var, PointerCast(c_res, orig_var))]
+        elif arg_var.rank == 0:
             prec  = get_final_precision(arg_var)
             try :
                 cast_function = py_to_c_registry[(dtype, prec)]
@@ -883,10 +898,10 @@ class CToPythonWrapper(Wrapper):
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
                                results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
+            cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
-            cast_func = pyarray_to_ndarray
+            cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
 
-        cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         if arg_var.is_optional:
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
             cast.insert(0, AliasAssign(arg_var, memory_var))
