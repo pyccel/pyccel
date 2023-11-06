@@ -349,8 +349,20 @@ class Openmp(metaclass=OmpMeta):
 
     class OmpDirective(OmpAnnotatedComment):
 
-        """Represents an OpenMP Construct in the code."""
+        """
+        Represents an every OpenMP Directive.
 
+        Parameters
+        ----------
+        dname : list
+                A list of directives names
+
+        name: str
+              The name of the directive
+
+        clauses: OmpClause
+                  Clauses passed to the directive
+        """
         __slots__ = ("_name", "_dname", "_clauses", "_allowed_clauses", "_deprecated_clauses", "_require_end_directive")
         _used_in_grammar = True
         _attribute_nodes = ("_clauses",)
@@ -562,7 +574,7 @@ class Openmp(metaclass=OmpMeta):
             cor_directive = None
             if len(self._pending_directives) == 0:
                 errors.report(
-                   f"`{end_directive}` misplaced",
+                   f"`{end_directive.raw}` misplaced",
                    symbol=end_directive,
                    severity="fatal",
                    )
@@ -572,7 +584,7 @@ class Openmp(metaclass=OmpMeta):
                     cor_directive = self._find_coresponding_directive(end_directive)
                 else:
                     errors.report(
-                        f"`{end_directive}` misplaced",
+                        f"`{end_directive.raw}` misplaced",
                         symbol=end_directive,
                         severity="fatal",
                     )
@@ -681,8 +693,8 @@ class Openmp(metaclass=OmpMeta):
             return statements
 
         def _visit_OmpDirective(self, expr):
-            if hasattr(self, f"_visit_{expr.dname}_directive"):
-                return getattr(self, f"_visit_omp_{expr.dname}")(expr)
+            if hasattr(self, f"_visit_{'_'.join(n for n in expr.dname)}_directive"):
+                return getattr(self, f"_visit_{'_'.join(n for n in expr.dname)}_directive")(expr)
             clauses = [self._visit(clause) for clause in expr.clauses]
             directive = Openmp.OmpDirective(dname=expr.dname, clauses=clauses, raw=expr.raw, parent=expr.parent)
             end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, Openmp.OmpEndDirective)]
@@ -711,7 +723,7 @@ class Openmp(metaclass=OmpMeta):
             container = expr.get_user_nodes(CodeBlock)[0]
             if not isinstance(container.body[container.body.index(expr) + 1], For):
                 errors.report(
-                    f"{expr} should be followed by a for loop",
+                    f"{expr.name} directive should be followed by a for loop",
                     symbol=expr,
                     severity="fatal",
                 )
@@ -720,13 +732,13 @@ class Openmp(metaclass=OmpMeta):
                 end_dir.substitute(end_dir.coresponding_directive, EmptyNode())
                 if end_dir.get_all_user_nodes() != expr.get_all_user_nodes():
                     errors.report(
-                        f"{expr} and {end_dir}, should be contained in the same block",
+                        f"end {expr.name} directive misplaced",
                         symbol=expr,
                         severity="fatal",
                     )
                 if not isinstance(container.body[container.body.index(expr) + 2], Openmp.OmpEndDirective):
                     errors.report(
-                        f"{end_dir} misplaced",
+                        f"end {expr.name} directive misplaced",
                         symbol=expr,
                         severity="fatal",
                     )
@@ -745,7 +757,7 @@ class Openmp(metaclass=OmpMeta):
         def _visit_simd_directive(self, expr):
             return self._visit_for_directive(expr)
 
-        def _visit_parallelfor_directive(self, expr):
+        def _visit_parallel_for_directive(self, expr):
             return self._visit_for_directive(expr)
 
         def _visit_OmpEndDirective(self, expr):
