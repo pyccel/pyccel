@@ -3851,7 +3851,7 @@ class SemanticParser(BasicParser):
 
         if not any(method.name == '__del__' for method in methods):
             scope.insert_symbol('__del__')
-            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
             scope = self.create_new_function_scope('__del__')
             del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
             self.exit_function_scope()

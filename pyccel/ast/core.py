@@ -1833,6 +1833,11 @@ class FunctionDefArgument(TypedAstNode):
     annotation : str
         The type annotation describing the argument.
 
+    bound_argument : bool
+        Indicates if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
@@ -1844,10 +1849,10 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1862,6 +1867,7 @@ class FunctionDefArgument(TypedAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
             name.declare_as_argument()
@@ -1939,6 +1945,14 @@ class FunctionDefArgument(TypedAstNode):
         modifying the inout flag.
         """
         self._inout = False
+
+    @property
+    def bound_argument(self):
+        return self._bound_argument
+
+    @bound_argument.setter
+    def bound_argument(self, bound):
+        self._bound_argument = bound
 
     def __str__(self):
         if self.has_default:
@@ -3501,6 +3515,7 @@ class ClassDef(ScopedAstNode):
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
         method.set_current_user_node(self)
+        method.arguments[0].bound_argument = True
         self._methods += (method,)
 
     def add_new_interface(self, interface):
