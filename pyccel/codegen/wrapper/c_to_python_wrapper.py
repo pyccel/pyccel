@@ -499,6 +499,29 @@ class CToPythonWrapper(Wrapper):
 
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
+
+    def _get_class_destructor(self, del_function, cls_dtype, cls_base):
+        original_func = getattr(del_function, 'original_function', del_function)
+        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        func_arg = self.get_new_PyObject('self', cls_dtype)
+
+        attribute = self.scope.find('instance', 'variables')
+        c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
+        body = [Deallocate(c_obj),
+                Deallocate(func_arg)]
+
+        self.exit_scope()
+
+        function = PyFunctionDef(func_name, [FunctionDefArgument(func_arg)], [], body, scope=func_scope,
+                original_function = original_func)
+
+        self.scope.functions[func_name] = function
+        self._python_object_map[del_function] = function
+
+        return function
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
@@ -1208,15 +1231,24 @@ class CToPythonWrapper(Wrapper):
 
         type_name = self.scope.get_new_name(f'Py{name}Type')
         docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, Scope(), docstring = docstring)
+        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name), docstring = docstring)
+
+        orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
 
         self._python_object_map[expr] = wrapped_class
-        self._python_object_map[expr.scope.parent_scope.cls_constructs[name]] = \
+        self._python_object_map[orig_cls_dtype] = \
                 DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
 
         self.scope.insert_class(wrapped_class, name)
+        orig_scope = expr.scope
+        self.scope = wrapped_class.scope
 
         for f in expr.methods:
-            wrapped_class.add_new_method(self._wrap(f))
+            if orig_scope.get_python_name(f.name) == '__del__':
+                wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, expr))
+            else:
+                wrapped_class.add_new_method(self._wrap(f))
+
+        self.exit_scope()
 
         return wrapped_class
