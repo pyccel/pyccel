@@ -1216,4 +1216,7 @@ class CToPythonWrapper(Wrapper):
 
         self.scope.insert_class(wrapped_class, name)
 
+        for f in expr.methods:
+            wrapped_class.add_new_method(self._wrap(f))
+
         return wrapped_class
