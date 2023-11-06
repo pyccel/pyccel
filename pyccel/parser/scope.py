@@ -730,3 +730,9 @@ class Scope(object):
         """ Get map of new names to original python names
         """
         return self._original_symbol
+
+    def rename_function(self, o, name):
+        newname = self.get_new_name(name)
+        python_name = self._original_symbol.pop(o.name)
+        o.rename(newname)
+        self._original_symbol[newname] = python_name
