@@ -3830,7 +3830,7 @@ class SemanticParser(BasicParser):
                     errors.report("Pyccel does not support interface constructor", symbol=method,
                         severity='fatal')
                 methods.pop(i)
-                init_func = self.scope.functions.pop(m_name)
+                init_func = self.scope.functions[m_name]
 
                 # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
@@ -3850,6 +3850,7 @@ class SemanticParser(BasicParser):
             self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
+            scope.insert_symbol('__del__')
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
             scope = self.create_new_function_scope('__del__')
             del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
