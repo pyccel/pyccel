@@ -244,7 +244,7 @@ class SyntaxParser(BasicParser):
             txt = line[1:].lstrip()
             expr = Comment(txt)
 
-        expr.ast = stmt
+        expr.set_current_ast(stmt)
         return expr
 
     def _treat_type_annotation(self, stmt, annotation):
@@ -284,9 +284,9 @@ class SyntaxParser(BasicParser):
                         severity='fatal')
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
             if isinstance(stmt, PyccelAstNode):
-                annot.ast = stmt.ast
+                annot.set_current_ast(stmt.ast)
             else:
-                annot.ast = stmt
+                annot.set_current_ast(stmt)
             return annot
         elif annotation is Nil():
             return None
@@ -332,7 +332,7 @@ class SyntaxParser(BasicParser):
             self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
             if isinstance(result, PyccelAstNode) and result.ast is None and isinstance(stmt, ast.AST):
-                result.ast = stmt
+                result.set_current_ast(stmt)
             self._context.pop()
             return result
 
@@ -478,7 +478,7 @@ class SyntaxParser(BasicParser):
                 annotation=self._treat_type_annotation(a, self._visit(a.annotation))
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation)
-                new_arg.ast = a
+                new_arg.set_current_ast(a)
                 arguments.append(new_arg)
 
             for a,d in zip(stmt.args[n_expl:], stmt.defaults):
@@ -486,7 +486,7 @@ class SyntaxParser(BasicParser):
                 new_arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                                             annotation=annotation,
                                             value = self._visit(d))
-                new_arg.ast = a
+                new_arg.set_current_ast(a)
                 arguments.append(new_arg)
 
         if stmt.kwonlyargs:
@@ -496,7 +496,7 @@ class SyntaxParser(BasicParser):
                 arg = FunctionDefArgument(AnnotatedPyccelSymbol(a.arg, annotation),
                             annotation=annotation,
                             value=val, kwonly=True)
-                arg.ast = a
+                arg.set_current_ast(a)
 
                 arguments.append(arg)
 
@@ -569,7 +569,7 @@ class SyntaxParser(BasicParser):
             else:
                 source = self._treat_import_source(imp, 0)
             import_line = Import(source)
-            import_line.ast = stmt
+            import_line.set_current_ast(stmt)
             self.insert_import(import_line)
             expr.append(import_line)
 
@@ -937,7 +937,7 @@ class SyntaxParser(BasicParser):
             # TODO maybe we should run pylint here
             stmt.decorators.pop()
             func = SympyFunction(name, arguments, [], [str(stmt)])
-            func.ast = stmt
+            func.set_current_ast(stmt)
             self.insert_function(func)
             return EmptyNode()
 
@@ -983,7 +983,7 @@ class SyntaxParser(BasicParser):
                 result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
 
             results.append(FunctionDefResult(result_name, annotation = result_annotation))
-            results[-1].ast = stmt
+            results[-1].set_current_ast(stmt)
 
         self.exit_function_scope()
 
@@ -1077,7 +1077,7 @@ class SyntaxParser(BasicParser):
         if stmt.keywords:
             kwargs = self._visit(stmt.keywords)
             for k, a in zip(kwargs, stmt.keywords):
-                k.ast = a
+                k.set_current_ast(a)
 
             args += kwargs
 
@@ -1161,11 +1161,11 @@ class SyntaxParser(BasicParser):
         target = IndexedElement(lhs, *args)
         target = Assign(target, result)
         assign1 = Assign(index, LiteralInteger(0))
-        assign1.ast = stmt
-        target.ast = stmt
+        assign1.set_current_ast(stmt)
+        target.set_current_ast(stmt)
         generators[-1].insert2body(target)
         assign2 = Assign(index, PyccelAdd(index, LiteralInteger(1)))
-        assign2.ast = stmt
+        assign2.set_current_ast(stmt)
         generators[-1].insert2body(assign2)
 
         indices = [generators[-1].target]
@@ -1204,7 +1204,7 @@ class SyntaxParser(BasicParser):
             body = FunctionCall(name, (lhs, body))
             body = Assign(lhs, body)
 
-        body.ast = parent
+        body.set_current_ast(parent)
         indices = []
         generators = list(generators)
         while len(generators) > 0:
@@ -1226,7 +1226,7 @@ class SyntaxParser(BasicParser):
                           bounding_box=(stmt.lineno, stmt.col_offset),
                           severity='error')
 
-        expr.ast = parent
+        expr.set_current_ast(parent)
 
         return expr
 

@@ -357,8 +357,21 @@ class PyccelAstNode:
         else:
             return None
 
-    @ast.setter
-    def ast(self, ast_node):
+    def set_current_ast(self, ast_node):
+        """
+        Set the `ast.AST` object which describes the parsed code that this node currently represents.
+
+        Set the AST (abstract syntax tree) object which Python parsed in the original code and which
+        resulted in the creation (or use) of this PyccelAstNode. This object describes the Python code
+        being translated. It provides line numbers and columns which can be used to report the origin
+        of any potential errors. If this function is called multiple times then accessing the AST
+        object will result in `None` so as not to accidentally print the wrong code location.
+
+        Parameters
+        ----------
+        ast.AST
+            The AST object which was parsed.
+        """
         if not isinstance(ast_node, ast.AST):
             raise TypeError(f"ast_node must be an AST object, not {type(ast_node)}")
 

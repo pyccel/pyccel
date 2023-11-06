@@ -764,7 +764,7 @@ class SemanticParser(BasicParser):
             else:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, var)
-                assign.ast = expr.ast
+                assign.set_current_ast(expr.ast)
                 self._additional_exprs[-1].append(self._visit(assign))
                 var = self._visit(tmp_var)
 
@@ -1060,7 +1060,7 @@ class SemanticParser(BasicParser):
             if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
-                assign.ast = expr.ast
+                assign.set_current_ast(expr.ast)
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
@@ -1683,7 +1683,7 @@ class SemanticParser(BasicParser):
 
         # Initialise result with correct initial value
         stmt = Assign(lhs, val)
-        stmt.ast = expr.ast
+        stmt.set_current_ast(expr.ast)
         loops.insert(0, stmt)
 
         indices = [self._visit(i) for i in expr.indices]
@@ -1694,7 +1694,7 @@ class SemanticParser(BasicParser):
             expr_new = FunctionalMin(loops, lhs=lhs, indices = indices)
         elif isinstance(expr, FunctionalMax):
             expr_new = FunctionalMax(loops, lhs=lhs, indices = indices)
-        expr_new.ast = expr.ast
+        expr_new.set_current_ast(expr.ast)
         return expr_new
 
     def _find_superclasses(self, expr):
@@ -1811,7 +1811,7 @@ class SemanticParser(BasicParser):
             if hasattr(self, annotation_method):
                 obj = getattr(self, annotation_method)(expr)
                 if isinstance(obj, PyccelAstNode) and self.current_ast_node:
-                    obj.ast = self.current_ast_node
+                    obj.set_current_ast(self.current_ast_node)
                 self._current_ast_node = current_ast
                 return obj
 
@@ -2884,7 +2884,7 @@ class SemanticParser(BasicParser):
 
             rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
-                i.ast = ast
+                i.set_current_ast(ast)
             return rhs
 
         elif isinstance(rhs, CodeBlock):
@@ -2909,7 +2909,7 @@ class SemanticParser(BasicParser):
                 stmt = Assign(lhs, stmt)
             elif isinstance(expr, AugAssign):
                 stmt = AugAssign(lhs, expr.op, stmt)
-            stmt.ast = ast
+            stmt.set_current_ast(ast)
             stmts[-1] = stmt
             return CodeBlock(stmts)
 

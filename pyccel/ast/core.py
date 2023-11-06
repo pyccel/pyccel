@@ -354,7 +354,7 @@ class Assign(PyccelAstNode):
         self._like = like
         super().__init__()
         if ast is not None:
-            self.ast = ast
+            self.set_current_ast(ast)
 
     def __str__(self):
         return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
@@ -650,7 +650,7 @@ class CodeBlock(PyccelAstNode):
         PyccelAstNode.ast.fset(self, ast_node)
         for l in self.body:
             if not l.ast:
-                l.ast = ast_node
+                l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
 
@@ -1712,7 +1712,7 @@ class FunctionCallArgument(PyccelAstNode):
         self._keyword = keyword
         super().__init__()
         if ast:
-            self.ast = ast
+            self.set_current_ast(ast)
 
     @property
     def value(self):
