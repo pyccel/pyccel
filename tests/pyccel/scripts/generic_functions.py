@@ -6,13 +6,13 @@ from pyccel.decorators import types
 #$ header function gen_2(float, int)
 #$ header function gen_2(int, float)
 #$ header function gen_4(T, T)
-#$ header function tmplt_head_1(int, float)
 #$ header template T(int|float)
 #$ header template R(int|float)
 #$ header template O(bool|complex)
 #$ header template S(int|float)
 
-def gen_1(a : 'float'):
+@types('float', results=['float'])
+def gen_1(a):
     return a * 10
 
 def gen_2(y, x):
@@ -63,7 +63,7 @@ def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
 def array_elem1(x):
     return x[0]
 
-@template('k', types=['int'])
+@template('k', types='int')
 @template('g', types=['int', 'float'])
 def multi_tmplt_2(y : 'k', z : 'g'):
     return y + z
@@ -133,8 +133,7 @@ def tst_multi_tmplt_1():
 def tst_tmplt_head_1():
     x = tmplt_head_1(5, 5)
     y = tmplt_head_1(5.5, 7.3)
-    z = tmplt_head_1(5, 5.56)
-    return x * y * z
+    return x * y
 
 def tst_local_overide_1():
     x = local_overide_1(5, 4)

@@ -23,7 +23,6 @@ from pyccel.ast.core import SymbolicAssign
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress
 from pyccel.ast.core import SympyFunction
 from pyccel.ast.core import Import, AsName
-from pyccel.ast.core import create_variable
 
 from pyccel.ast.utilities import recognised_source
 

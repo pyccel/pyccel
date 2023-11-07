@@ -14,28 +14,25 @@ from collections import OrderedDict
 
 import functools
 
-from pyccel.ast.basic import PyccelAstNode
+from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
 from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonFloat, PythonTuple
-from pyccel.ast.builtins import PythonComplex, PythonBool, PythonAbs
+from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonBool, PythonAbs
 from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
 
-from pyccel.ast.core import get_iterable_ranges
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
-from pyccel.ast.core import ErrorExit, FunctionAddress
-from pyccel.ast.core import Return, Module, If, IfSection, For
+from pyccel.ast.core import FunctionAddress
+from pyccel.ast.core import Return, Module, For
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import is_pyccel_datatype
-from pyccel.ast.datatypes import is_iterable_datatype, is_with_construct_datatype
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
@@ -44,7 +41,7 @@ from pyccel.ast.datatypes import NativeRange, NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
-from pyccel.ast.internals import PyccelInternalFunction, get_final_precision
+from pyccel.ast.internals import get_final_precision
 
 from pyccel.ast.itertoolsext import Product
 
@@ -445,7 +442,8 @@ class FCodePrinter(CodePrinter):
         decs = ''
         # ...
         class_decs_and_methods = [self._print(i) for i in expr.classes]
-        decs += '\n'.join(c[0] for c in class_decs_and_methods)
+        if not isinstance(expr, BindCModule):
+            decs += '\n'.join(c[0] for c in class_decs_and_methods)
         # ...
 
         decs += ''.join(self._print(i) for i in expr.declarations)
@@ -469,8 +467,10 @@ class FCodePrinter(CodePrinter):
         if expr.interfaces and not isinstance(expr, BindCModule):
             interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
 
+        func_strings = []
         # Get class functions
-        func_strings = [c[1] for c in class_decs_and_methods]
+        if not isinstance(expr, BindCModule):
+            func_strings += [c[1] for c in class_decs_and_methods]
         if expr.funcs:
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
         if isinstance(expr, BindCModule):
@@ -682,19 +682,29 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _formatted_args_to_print(self, fargs_format, fargs, fend, fsep, expr):
-        """ Produce a write statement from a list of formats, args and an end
-        statement
+        """
+        Produce a write statement from all necessary information.
+
+        Produce a write statement from a list of formats, arguments, an end
+        statement, and a separator.
 
         Parameters
         ----------
         fargs_format : iterable
-                       The format strings for the objects described by fargs
-        fargs        : iterable
-                       The args to be printed
-        fend         : PyccelAstNode
-                       The character describing the end of the line
-        expr         : PyccelAstNode
-                        The PythonPrint currently printed
+            The format strings for the objects described by fargs.
+        fargs : iterable
+            The arguments to be printed.
+        fend : TypedAstNode
+            The character describing the end of the line.
+        fsep : TypedAstNode
+            The character describing the separator between elements.
+        expr : TypedAstNode
+            The PythonPrint currently printed.
+
+        Returns
+        -------
+        str
+            The Fortran code describing the write statement.
         """
         if fargs_format == ['*']:
             # To print the result of a FunctionCall
@@ -714,7 +724,7 @@ class FCodePrinter(CodePrinter):
             args_list.append(fend_code)
 
         args_code       = ' , '.join(args_list)
-        args_formatting = ' '.join(fargs_format)
+        args_formatting = ', '.join(fargs_format)
         if expr.file == "stderr":
             self._constantImports.setdefault('ISO_FORTRAN_ENV', set())\
                 .add(("stderr", "error_unit"))
@@ -732,7 +742,7 @@ class FCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        var : PyccelAstNode
+        var : TypedAstNode
               The object to be printed
 
         Results
@@ -1450,7 +1460,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute rank string
         # TODO: improve
-        if ((rank == 1) and (isinstance(shape, (int, PyccelAstNode))) and (is_static or on_stack)):
+        if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
             rankstr = '({0}:{1})'.format(self._print(s), self._print(PyccelMinus(shape, LiteralInteger(1), simplify = True)))
 
         elif ((rank > 0) and (isinstance(shape, (PythonTuple, tuple))) and (is_static or on_stack)):
@@ -1672,6 +1682,11 @@ class FCodePrinter(CodePrinter):
         if isinstance(var, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in var)
 
+        if isinstance(var.dtype, CustomDataType):
+            Pyccel__del = expr.variable.cls_base.scope.find('__del__')
+            Pyccel_del_args = [FunctionCallArgument(arg) for arg in Pyccel__del.arguments]
+            return self._print(DottedFunctionCall(Pyccel__del, Pyccel_del_args, var))
+
         if var.is_alias:
             return ''
         else:
@@ -1705,7 +1720,7 @@ class FCodePrinter(CodePrinter):
         sp_chars = ['\a', '\b', '\f', '\r', '\t', '\v', "'", '\n']
         sub_str = ''
         formatted_str = []
-        for c in expr.arg:
+        for c in expr.python_value:
             if c in sp_chars:
                 if sub_str != '':
                     formatted_str.append("'{}'".format(sub_str))
@@ -1973,19 +1988,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_Del(self, expr):
-        # TODO: treate class case
-        code = ''
-        for var in expr.variables:
-            if isinstance(var, Variable):
-                dtype = var.dtype
-                if is_pyccel_datatype(dtype):
-                    code = 'call {0} % free()'.format(self._print(var))
-                else:
-                    code = 'deallocate({0}){1}'.format(self._print(var), code)
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
-                    severity='fatal')
-        return code + '\n'
+        return ''.join(self._print(var) for var in expr.variables)
 
     def _print_ClassDef(self, expr):
         # ... we don't print 'hidden' classes
@@ -2327,49 +2330,6 @@ class FCodePrinter(CodePrinter):
         args = ', '.join('{0}'.format(self._print(i)) for i in expr.variables)
         return 'worker({})'.format(args)
     # .....................................................
-
-    def _print_ForIterator(self, expr):
-        return self._print_For(expr)
-
-        prolog = ''
-        epilog = ''
-
-        # ...
-        def _do_range(target, iterable, prolog, epilog):
-            tar        = self._print(target)
-            range_code = self._print(iterable)
-
-            prolog += 'do {0} = {1}\n'.format(tar, range_code)
-            epilog = 'end do\n' + epilog
-
-            return prolog, epilog
-        # ...
-
-        # ...
-        if not isinstance(expr.iterable, (Variable, ConstructorCall)):
-            raise TypeError('iterable must be Variable or ConstructorCall.')
-        # ...
-
-        # ...
-        targets = expr.target
-        if isinstance(expr.iterable, Variable):
-            iters = expr.ranges
-        elif isinstance(expr.iterable, ConstructorCall):
-            iters = get_iterable_ranges(expr.iterable)
-        # ...
-
-        # ...
-        for i,a in zip(targets, iters):
-            prolog, epilog = _do_range(i, a, \
-                                       prolog, epilog)
-
-        body = ''.join(self._print(i) for i in expr.body)
-        # ...
-
-        return ('{prolog}'
-                '{body}'
-                '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
-
 
     #def _print_Block(self, expr):
     #    body    = '\n'.join(self._print(i) for i in expr.body)
@@ -3212,6 +3172,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_BindCArrayVariable(self, expr):
         return self._print(expr.wrapper_function)
+
+    def _print_BindCClassDef(self, expr):
+        return ''
 
 
 def fcode(expr, filename, assign_to=None, **settings):

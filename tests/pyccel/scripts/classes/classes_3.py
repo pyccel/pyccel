@@ -16,3 +16,6 @@ class Point2:
 if __name__ == '__main__':
     j = Point2(2.2)
     j.test_func()
+
+    j = Point2(6.5)
+    j.test_func()

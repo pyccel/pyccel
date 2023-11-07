@@ -35,7 +35,7 @@ m =  WRITE + 2*n**2*(READ + WRITE)
 from sympy import sympify, Symbol
 from sympy import Poly, LT
 
-from pyccel.ast.basic        import Basic
+from pyccel.ast.basic        import PyccelAstNode
 from pyccel.ast.builtins     import PythonTuple
 from pyccel.ast.core         import For, Assign, CodeBlock, FunctionDef
 from pyccel.ast.core         import Module, Program
@@ -93,7 +93,7 @@ def count_access(expr, visual=True):
         import numpy as np
         return WRITE*np.prod(expr.shape)
 
-    elif isinstance(expr, Basic):
+    elif isinstance(expr, PyccelAstNode):
 
         atoms = expr.get_attribute_nodes(PyccelSymbol, FunctionDef)
         return READ*len(atoms)
