@@ -65,11 +65,11 @@ class PyccelInvert(PyccelUnaryOperator):
             The precision of the result of the operation.
         """
         dtype = NativeInteger()
-￼       if arg.dtype not in (NativeInteger(), NativeBool()):
-￼           raise TypeError(f'unsupported operand type(s): {arg}')
-￼
-￼       self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
-￼       precision = arg.precision
+        if arg.dtype not in (NativeInteger(), NativeBool()):
+            raise TypeError(f'unsupported operand type(s): {arg}')
+
+        self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
+        precision = arg.precision
         return dtype, precision, dtype
 
     def __repr__(self):
