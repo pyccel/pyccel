@@ -113,7 +113,7 @@ def allow_untested_debug_code(untested):
         for l in line_nums:
             line = f_lines[l-1]
             n = len(line)-len(line.lstrip())
-            i = l
+            i = l-1
             func_found = ''
             while i >= 0 and not func_found:
                 line = f_lines[i]
@@ -199,7 +199,7 @@ def print_markdown_summary(untested, commit, output, repo):
     with open(output, "a", encoding="utf-8") as out_file:
         print(md_string, file=out_file)
 
-def get_json_summary(untested, content_lines, existing_comments):
+def get_json_summary(untested, content_lines, existing_comments, diff):
     """
     Print the results neatly in json in a provided file.
 
@@ -220,6 +220,12 @@ def get_json_summary(untested, content_lines, existing_comments):
     existing_comments : list of dict
         A list describing all comments previously left about the
         coverage results.
+    diff : dict
+        A dictionary whose keys are files which have been
+        changed in this branch and whose values are a dictionary.
+        The dictionary must contain a key 'addition' whose value
+        is a list containing the line numbers of lines which have
+        been changed/added.
 
     Returns
     -------
@@ -252,6 +258,14 @@ def get_json_summary(untested, content_lines, existing_comments):
                 end_line = line_indices[j]-1
             else:
                 end_line = line_indices[j]
+            last_valid_line = start_line
+            last_valid_line_idx = next(i for i in diff[f]['addition'] if i == last_valid_line)
+            for i in diff[f]['addition'][last_valid_line_idx:]:
+                if i-last_valid_line < 6:
+                    last_valid_line = i
+                else:
+                    break
+            end_line = min(end_line, last_valid_line)
             output = {'path':f, 'line':end_line, 'body':message}
             if start_line != end_line:
                 output['start_line'] = start_line

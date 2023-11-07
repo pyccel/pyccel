@@ -17,12 +17,12 @@ from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.core          import FunctionAddress, Declare
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
-from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
+from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
-from pyccel.ast.cwrapper      import Py_INCREF
+from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
@@ -446,6 +446,22 @@ class CToPythonWrapper(Wrapper):
         else:
             body = []
 
+        # Save classes to the module variable
+        for c in expr.classes:
+            wrapped_class = self._python_object_map[c]
+            type_object = wrapped_class.type_object
+            class_name = wrapped_class.name
+
+            ready_type = FunctionCall(PyType_Ready, (type_object,))
+            if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
+                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+            body.append(if_expr)
+            body.append(FunctionCall(Py_INCREF, (type_object,)))
+            add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
+            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+            body.append(if_expr)
+
         # Save module variables to the module variable
         for v in expr.variables:
             if v.is_private:
@@ -512,7 +528,7 @@ class CToPythonWrapper(Wrapper):
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, (), funcs, imports = imports,
+        return PyModule(original_mod.name, [], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = exec_func)
 
@@ -1112,3 +1128,27 @@ class CToPythonWrapper(Wrapper):
 
         return body
 
+    def _wrap_ClassDef(self, expr):
+        """
+        Get the code which exposes a class definition to Python.
+
+        Get the code which exposes a class definition to Python.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class definition being wrapped.
+
+        Returns
+        -------
+        PyClassDef
+            The wrapped class definition.
+        """
+        name = expr.name
+        struct_name = self.scope.get_new_name(f'Py{name}Object')
+        type_name = self.scope.get_new_name(f'Py{name}Type')
+        wrapped_class = PyClassDef(expr, struct_name, type_name)
+
+        self._python_object_map[expr] = wrapped_class
+
+        return wrapped_class
