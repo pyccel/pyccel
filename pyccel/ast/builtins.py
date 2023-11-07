@@ -490,11 +490,10 @@ class PythonInt(PyccelInternalFunction):
 #==============================================================================
 class PythonTuple(TypedAstNode):
     """
-    Class representing a call to Python's native tuple() function.
+    Class representing a call to Python's native (,) function which creates tuples.
 
-    Class representing a call to Python's native tuple() function
-    which either converts an object to a tuple or initialises a
-    literal tuple.
+    Class representing a call to Python's native (,) function
+    which initialises a literal tuple.
 
     Parameters
     ----------
@@ -691,7 +690,21 @@ class PythonLen(PyccelInternalFunction):
 
 #==============================================================================
 class PythonList(TypedAstNode):
-    """ Represents a call to Python's native list() function.
+    """
+    Class representing a call to Python's `[,]` function.
+
+    Class representing a call to Python's `[,]` function which generates
+    a literal Python list.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNodes
+        The arguments passed to the operator.
+
+    See Also
+    --------
+    FunctionalFor
+        The `[]` function when it describes a comprehension.
     """
     __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
     _attribute_nodes = ('_args',)
