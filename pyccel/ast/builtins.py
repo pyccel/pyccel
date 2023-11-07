@@ -738,7 +738,8 @@ class PythonList(TypedAstNode):
         return len(self._args)
 
     def __str__(self):
-        return '({})'.format(', '.join(str(a) for a in self))
+        args = ', '.join(str(a) for a in self)
+        return f'({args})'
 
     def __repr__(self):
         args = ', '.join(str(a) for a in self)
