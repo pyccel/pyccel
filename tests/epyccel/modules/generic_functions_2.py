@@ -152,8 +152,6 @@ def mix_float_array_1(x : 'T', a : 'float'):
 def mix_complex_array_1(x : 'T', a : 'float'):
     x[:] *= a
 
-#$ header function dup_header(float)
-#$ header function dup_header(float64)
 @template('T', ['float', 'float64'])
 def dup_header(a : 'T'):
     return a

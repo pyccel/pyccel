@@ -116,7 +116,7 @@ class MathAcos(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -131,7 +131,7 @@ class MathAcosh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -146,7 +146,7 @@ class MathAsin(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -161,7 +161,7 @@ class MathAsinh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -176,7 +176,7 @@ class MathAtan(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -191,9 +191,9 @@ class MathAtan2   (MathFunctionFloat):
 
     Parameters
     ----------
-    y : PyccelAstNode
+    y : TypedAstNode
         The first expression passed as argument to the function.
-    x : PyccelAstNode
+    x : TypedAstNode
         The second expression passed as argument to the function.
     """
     __slots__ = ()
@@ -208,7 +208,7 @@ class MathAtanh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -223,7 +223,7 @@ class MathCopysign(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -238,7 +238,7 @@ class MathCos(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -253,7 +253,7 @@ class MathCosh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -268,7 +268,7 @@ class MathErf(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -283,7 +283,7 @@ class MathErfc(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -298,7 +298,7 @@ class MathExp(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -319,7 +319,7 @@ class MathFabs(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -334,7 +334,7 @@ class MathFmod(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -349,7 +349,7 @@ class MathFsum(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -364,7 +364,7 @@ class MathGamma(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -379,7 +379,7 @@ class MathHypot(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -394,7 +394,7 @@ class MathLdexp(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -409,7 +409,7 @@ class MathLgamma(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -424,7 +424,7 @@ class MathLog(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -439,7 +439,7 @@ class MathLog10   (MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -454,7 +454,7 @@ class MathLog1p   (MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -469,7 +469,7 @@ class MathLog2    (MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -484,7 +484,7 @@ class MathPow(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -499,7 +499,7 @@ class MathSin(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -514,7 +514,7 @@ class MathSinh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -529,7 +529,7 @@ class MathSqrt(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -544,7 +544,7 @@ class MathTan(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -559,7 +559,7 @@ class MathTanh(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -574,7 +574,7 @@ class MathRemainder(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -588,7 +588,7 @@ class MathRadians(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -603,7 +603,7 @@ class MathDegrees(MathFunctionFloat):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -618,7 +618,7 @@ class MathFactorial(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -633,7 +633,7 @@ class MathGcd(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -648,7 +648,7 @@ class MathLcm(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -662,7 +662,7 @@ class MathCeil(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -677,7 +677,7 @@ class MathFloor(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -692,7 +692,7 @@ class MathTrunc(MathFunctionInt):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -707,7 +707,7 @@ class MathIsclose(MathFunctionBool):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -722,7 +722,7 @@ class MathIsfinite(MathFunctionBool):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -737,7 +737,7 @@ class MathIsinf(MathFunctionBool):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()
@@ -752,7 +752,7 @@ class MathIsnan(MathFunctionBool):
 
     Parameters
     ----------
-    x : PyccelAstNode
+    x : TypedAstNode
         The expression passed as argument to the function.
     """
     __slots__ = ()

@@ -11,14 +11,14 @@ between Python code and C code (using Python/C Api and cwrapper.c).
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 
 from .datatypes import DataType, default_precision
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionDef
+from .core      import FunctionDef, ClassDef
 from .core      import Module, Interface
 
 from .internals import get_final_precision
@@ -40,6 +40,7 @@ __all__ = (
     'PyInterface',
     'PyModule',
     'PyccelPyObject',
+    'PyccelPyClassType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -67,12 +68,22 @@ class PyccelPyObject(DataType):
     __slots__ = ()
     _name = 'pyobject'
 
+class PyccelPyClassType(DataType):
+    """
+    Datatype representing a subclass of `PyObject`.
+
+    Datatype representing a subclass of `PyObject`. This is the
+    datatype of a class which is compatible with Python.
+    """
+    __slots__ = ()
+    _name = 'pyclasstype'
+
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
 #-------------------------------------------------------------------
 
 #TODO: Is there an equivalent to static so this can be a static list of strings?
-class PyArgKeywords(Basic):
+class PyArgKeywords(PyccelAstNode):
     """
     Represents the list containing the names of all arguments to a function.
     This information allows the function to be called by keyword
@@ -106,7 +117,7 @@ class PyArgKeywords(Basic):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyArg_ParseTupleNode(Basic):
+class PyArg_ParseTupleNode(PyccelAstNode):
     """
     Represents a call to the function `PyArg_ParseTupleNode`.
 
@@ -198,7 +209,7 @@ class PyArg_ParseTupleNode(Basic):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyBuildValueNode(PyccelAstNode):
+class PyBuildValueNode(TypedAstNode):
     """
     Represents a call to the function PyBuildValueNode.
 
@@ -236,7 +247,7 @@ class PyBuildValueNode(PyccelAstNode):
         return self._result_args
 
 #-------------------------------------------------------------------
-class PyModule_AddObject(PyccelAstNode):
+class PyModule_AddObject(TypedAstNode):
     """
     Represents a call to the PyModule_AddObject function.
 
@@ -264,7 +275,7 @@ class PyModule_AddObject(PyccelAstNode):
         if not isinstance(name, LiteralString):
             raise TypeError("Name must be a string")
         if not isinstance(variable, Variable) or \
-                variable.dtype is not PyccelPyObject():
+                variable.dtype not in (PyccelPyObject(), PyccelPyClassType()):
             raise TypeError("Variable must be a PyObject Variable")
         self._mod_name = mod_name
         self._name = name
@@ -311,6 +322,9 @@ class PyModule(Module):
     declarations : iterable
         Any declarations of (external) variables which should be made in the module.
 
+    init_func : FunctionDef, optional
+        A definition of the initialisation function.
+
     **kwargs : dict
         See Module.
 
@@ -320,10 +334,12 @@ class PyModule(Module):
     """
     __slots__ = ('_external_funcs', '_declarations')
     _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
-    def __init__(self, *args, external_funcs = (), declarations = (), **kwargs):
+    def __init__(self, *args, external_funcs = (), declarations = (), init_func = None, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
         super().__init__(*args, **kwargs)
+        self._init_func = init_func
+        init_func.set_current_user_node(self)
 
     @property
     def external_funcs(self):
@@ -484,6 +500,64 @@ class PyInterface(Interface):
         return self._original_interface
 
 #-------------------------------------------------------------------
+class PyClassDef(ClassDef):
+    """
+    Class to hold a class definition which is accessible from Python.
+
+    Class to hold a class definition which is accessible from Python.
+
+    Parameters
+    ----------
+    original_class : ClassDef
+        The original class being wrapped.
+
+    struct_name : str
+        The name of the structure which will hold the Python-compatible
+        class definition.
+
+    type_name : str
+        The name of the instance of the Python-compatible class definition
+        structure. This object is necessary to add the class to the module.
+    """
+    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
+
+    def __init__(self, original_class, struct_name, type_name):
+        self._original_class = original_class
+        self._struct_name = struct_name
+        self._type_name = type_name
+        self._type_object = Variable(PyccelPyClassType(), type_name)
+        super().__init__(original_class.name)
+
+    @property
+    def struct_name(self):
+        """
+        The name of the structure which will hold the Python-compatible class definition.
+
+        The name of the structure which will hold the Python-compatible class definition.
+        """
+        return self._struct_name
+
+    @property
+    def type_name(self):
+        """
+        The name of the Python-compatible class definition instance.
+
+        The name of the instance of the Python-compatible class definition
+        structure. This object is necessary to add the class to the module.
+        """
+        return self._type_name
+
+    @property
+    def type_object(self):
+        """
+        The Python-compatible class definition instance.
+
+        The Variable describing the instance of the Python-compatible class definition
+        structure. This object is necessary to add the class to the module.
+        """
+        return self._type_object
+
+#-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
 
@@ -505,6 +579,11 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
+
+PyType_Ready = FunctionDef(name = 'PyType_Ready',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
+                        results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {

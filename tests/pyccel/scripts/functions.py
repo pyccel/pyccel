@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
 
-def incr_(x : int):
-    x = x + 2
+def incr_(x : np.int32):
+    x = x + np.int32(2)
     return x
 
 def helloworld():

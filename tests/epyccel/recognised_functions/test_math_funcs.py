@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from math import nan, inf, modf
+import os
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -539,6 +540,7 @@ def test_copysign_return_type_4(language): # copysign
         )
     )
 )
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Nan not correctly passed to intel function')
 def test_isfinite_call(language): # isfinite
     def isfinite_call(x : 'float'):
         from math import isfinite

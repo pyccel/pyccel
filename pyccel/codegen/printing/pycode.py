@@ -10,11 +10,10 @@ from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall, PyccelFunctionDef
-from pyccel.ast.datatypes  import datatype
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.numpyext   import NumpyShape, NumpySize, numpy_target_swap
+from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
 from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, HomogeneousTupleVariable, Variable
@@ -120,7 +119,7 @@ class PythonCodePrinter(CodePrinter):
 
         Returns
         -------
-        body      : PyccelAstNode
+        body      : TypedAstNode
                     The expression inside the for loops
         iterables : list of Iterables
                     The iterables over which the for loops iterate
@@ -194,7 +193,7 @@ class PythonCodePrinter(CodePrinter):
 
         Parameters
         ----------
-        expr : PyccelAstNode
+        expr : TypedAstNode
             The expression whose datatype is being determined.
 
         init_dtype : PythonType, PyccelFunctionDef, LiteralString, str
@@ -1092,7 +1091,7 @@ class PythonCodePrinter(CodePrinter):
         return f"{cls_variable} = {cls_name}({args})\n"
 
     def _print_Del(self, expr):
-        return ''.join(f'del {var}\n' for var in expr.variables)
+        return ''.join(f'del {var.variable}\n' for var in expr.variables)
 
     #------------------OmpAnnotatedComment Printer------------------
 
@@ -1111,6 +1110,25 @@ class PythonCodePrinter(CodePrinter):
         omp_expr = str(expr.txt)
         omp_expr = '#$omp {}\n'.format(omp_expr)
         return omp_expr
+
+    #------------------Annotation Printer------------------
+
+    def _print_UnionTypeAnnotation(self, expr):
+        types = [self._print(t)[1:-1] for t in expr.type_list]
+        return "'" + ' | '.join(types) + "'"
+
+    def _print_SyntacticTypeAnnotation(self, expr):
+        dtypes = expr.dtypes
+        ranks = [f"[{','.join(':'*r)}]" if r>0 else '' for r in expr.ranks]
+        order = [f"(order={o})" if o else '' for o in expr.orders]
+        annot = [f'{d}{r}{o}' for d,r,o in zip(dtypes, ranks, order)]
+        const = 'const ' if expr.is_const else ''
+        return "'" + const + ' | '.join(annot) + "'"
+
+    def _print_FunctionTypeAnnotation(self, expr):
+        args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
+        results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
+        return "'" + f"({results})({args})" + "'"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):

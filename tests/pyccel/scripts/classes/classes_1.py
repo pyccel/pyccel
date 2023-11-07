@@ -32,3 +32,7 @@ if __name__ == '__main__':
 
     p.translate(a)
     p.print_x()
+
+    p = Point(np.array([6.,6.,6.]))
+    p.translate(a)
+    p.print_x()

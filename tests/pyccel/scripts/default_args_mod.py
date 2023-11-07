@@ -36,3 +36,6 @@ def recursivity(x : 'float', y  : 'float' =  0.0, z  : 'bool' =  None):
 
 def print_var(n : int = 0):
     print(n)
+
+def f7(*, x  : 'float' =  1.5, y  : 'float' =  2.5):
+    return x+y

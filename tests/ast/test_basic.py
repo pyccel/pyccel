@@ -4,7 +4,7 @@ import os
 from pyccel.parser.parser   import Parser
 from pyccel.errors.errors   import Errors
 
-from pyccel.ast.basic       import Basic
+from pyccel.ast.basic       import PyccelAstNode
 from pyccel.ast.core        import Assign, Return, FunctionDef, AugAssign, FunctionDefArgument
 from pyccel.ast.literals    import LiteralInteger
 from pyccel.ast.operators   import PyccelOperator, PyccelAdd, PyccelMinus, PyccelMul
@@ -141,16 +141,16 @@ def test_substitute():
     atts = [v for v in atts  if v == interesting_var]
 
     a_var = atts[0]
-    old_parents = a_var.get_user_nodes(Basic)
-    assert len(a_var.get_user_nodes(Basic))>0
+    old_parents = a_var.get_user_nodes(PyccelAstNode)
+    assert len(a_var.get_user_nodes(PyccelAstNode))>0
 
     fst.substitute(a_var, new_var)
 
-    assert len(a_var.get_user_nodes(Basic))==0
+    assert len(a_var.get_user_nodes(PyccelAstNode))==0
 
     atts = set(fst.get_attribute_nodes(Variable))
     assert new_var in atts
-    assert set(new_var.get_user_nodes(Basic)) == set(old_parents)
+    assert set(new_var.get_user_nodes(PyccelAstNode)) == set(old_parents)
 
 def test_substitute_exclude():
     filename = os.path.join(path_dir, "math.py")
@@ -163,17 +163,17 @@ def test_substitute_exclude():
     atts = [v for v in atts  if v == interesting_var]
 
     a_var = atts[0]
-    old_parents = set(a_var.get_user_nodes(Basic))
-    assert len(a_var.get_user_nodes(Basic))>0
+    old_parents = set(a_var.get_user_nodes(PyccelAstNode))
+    assert len(a_var.get_user_nodes(PyccelAstNode))>0
 
     fst.substitute(a_var, new_var, excluded_nodes=(PyccelMinus))
 
-    assert len(a_var.get_user_nodes(Basic))==1
+    assert len(a_var.get_user_nodes(PyccelAstNode))==1
 
     atts = set(fst.get_attribute_nodes(Variable))
     assert new_var in atts
 
-    new_parents = set(new_var.get_user_nodes(Basic))
+    new_parents = set(new_var.get_user_nodes(PyccelAstNode))
     assert len(new_parents.difference(old_parents))==0
     assert len(old_parents.difference(new_parents))==1
 

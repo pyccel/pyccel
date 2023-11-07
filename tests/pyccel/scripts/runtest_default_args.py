@@ -3,7 +3,7 @@
 import numpy as np
 
 if __name__ == '__main__':
-    from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity, print_var
+    from default_args_mod import f1, f5, f3, is_nil_default_arg, recursivity, print_var, f7
 
     print(f1(2))
     print(f1())
@@ -34,3 +34,8 @@ if __name__ == '__main__':
 
     print_var()
     print_var(5)
+
+    print(f7(x=19.2,y=6.7))
+    print(f7(x=4.5))
+    print(f7(y = 8.2))
+    print(f7())

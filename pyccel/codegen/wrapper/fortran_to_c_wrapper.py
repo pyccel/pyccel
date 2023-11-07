@@ -11,7 +11,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
-from pyccel.ast.bind_c import BindCArrayVariable
+from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
@@ -127,7 +127,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        PyccelAstNode
+        TypedAstNode
             An object which can be passed to a function call of the function
             being wrapped.
         """
@@ -417,7 +417,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST object describing the code which must be printed in
             the wrapping module to expose the variable.
         """
@@ -455,3 +455,21 @@ class FortranToCWrapper(Wrapper):
                           original_function = expr)
             return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
                                 original_variable = expr)
+
+    def _wrap_ClassDef(self, expr):
+        """
+        Create all objects necessary to expose a class definition to C.
+
+        Create all objects necessary to expose a class definition to C.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class to be wrapped.
+
+        Returns
+        -------
+        BindCClassDef
+            The wrapped class.
+        """
+        return BindCClassDef(expr)

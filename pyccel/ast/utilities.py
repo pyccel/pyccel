@@ -5,7 +5,6 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-import inspect
 import sys
 from itertools import chain
 from collections import namedtuple
@@ -16,7 +15,7 @@ from pyccel.errors.errors import Errors, PyccelError
 
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
-                            Concatenate, Decorator, Module, PyccelFunctionDef)
+                            Concatenate, Module, PyccelFunctionDef)
 
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
@@ -232,7 +231,7 @@ def compatible_operation(*args, language_has_vectors = True):
 
     Parameters
     ==========
-    args      : list of PyccelAstNode
+    args      : list of TypedAstNode
                 The operator arguments
     language_has_vectors : bool
                 Indicates if the language has support for vector
@@ -635,7 +634,7 @@ def insert_fors(blocks, indices, scope, level = 0):
             The index of the index variable used in the outermost loop
     Results
     =======
-    block : list of PyccelAstNodes
+    block : list of TypedAstNodes
             The modified expression
     """
     if all(not isinstance(b, LoopCollection) for b in blocks.body):
