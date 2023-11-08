@@ -98,6 +98,14 @@ class DataType(metaclass=ArgumentSingleton):
     Base class representing native datatypes.
 
     The base class from which all data types must inherit.
+
+    Parameters
+    ----------
+    *args : tuple
+        Any arguments required by the class.
+
+    **kwargs : dict
+        Any keyword arguments required by the class.
     """
     __slots__ = ()
     _name = '__UNDEFINED__'
@@ -134,7 +142,11 @@ class DataType(metaclass=ArgumentSingleton):
         return (self.__class__, ())
 
 class NativeBool(DataType, metaclass=Singleton):
-    """Class representing boolean datatype"""
+    """
+    Class representing a boolean datatype.
+
+    Class representing a boolean datatype.
+    """
     __slots__ = ()
     _name = 'Bool'
 
@@ -146,7 +158,11 @@ class NativeBool(DataType, metaclass=Singleton):
             return NotImplemented
 
 class NativeInteger(DataType, metaclass=Singleton):
-    """Class representing integer datatype"""
+    """
+    Class representing an integer datatype.
+
+    Class representing an integer datatype.
+    """
     __slots__ = ()
     _name = 'Int'
 
@@ -161,7 +177,11 @@ class NativeInteger(DataType, metaclass=Singleton):
             return NotImplemented
 
 class NativeFloat(DataType, metaclass=Singleton):
-    """Class representing float datatype"""
+    """
+    Class representing a float datatype.
+
+    Class representing a float datatype.
+    """
     __slots__ = ()
     _name = 'Float'
 
@@ -176,7 +196,11 @@ class NativeFloat(DataType, metaclass=Singleton):
             return NotImplemented
 
 class NativeComplex(DataType, metaclass=Singleton):
-    """Class representing complex datatype"""
+    """
+    Class representing a complex datatype.
+
+    Class representing a complex datatype.
+    """
     __slots__ = ()
     _name = 'Complex'
 
@@ -191,7 +215,11 @@ NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
 NativeNumericTypes = (NativeBool, NativeInteger, NativeFloat, NativeComplex)
 
 class NativeString(DataType, metaclass=Singleton):
-    """Class representing string datatype"""
+    """
+    Class representing a string datatype.
+
+    Class representing a string datatype.
+    """
     __slots__ = ()
     _name = 'String'
 
@@ -214,7 +242,11 @@ class NativeVoid(DataType, metaclass=Singleton):
     _name = 'Void'
 
 class NativeTuple(DataType):
-    """Base class representing native datatypes"""
+    """
+    Base class representing tuple datatypes.
+
+    The class from which tuple datatypes must inherit.
+    """
     __slots__ = ()
     _name = 'Tuple'
 
@@ -229,7 +261,8 @@ class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
     """
     Class representing the homogeneous tuple type.
 
-    Class representing the type of a homogeneous tuple.
+    Class representing the type of a homogeneous tuple. This
+    is a container type and should be used as the class_type.
     """
     __slots__ = ()
 
@@ -238,17 +271,20 @@ class NativeInhomogeneousTuple(NativeTuple):
     Class representing the inhomogeneous tuple type.
 
     Class representing the type of an inhomogeneous tuple. This is a
-    basic datatype as it cannot be indexed. It is therefore parametrised
-    by the datatypes that it contains.
+    basic datatype as it cannot be arbitrarily indexed. It is
+    therefore parametrised by the datatypes that it contains.
 
     Parameters
     ----------
-    *dtypes : tuple of DataTypes
+    *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
+
+    **kwargs : empty dict
+        Keyword arguments as defined by the ArgumentSingleton class.
     """
     __slots__ = ('_dtypes',)
 
-    def __init__(self, *dtypes):
+    def __init__(self, *args):
         self._dtypes = dtypes
         super().__init__()
 
@@ -271,11 +307,12 @@ class NativeInhomogeneousTuple(NativeTuple):
     def __getitem__(self, i):
         return self._dtypes[i]
 
-class NativeHomogeneousList(DataType):
+class NativeHomogeneousList(DataType, metaclass = Singleton):
     """
     Class representing the homogeneous list type.
 
-    Class representing the type of a homogeneous list.
+    Class representing the type of a homogeneous list. This
+    is a container type and should be used as the class_type.
     """
     __slots__ = ()
     _name = 'List'
@@ -306,7 +343,7 @@ class CustomDataType(DataType, metaclass=Singleton):
     """
     __slots__ = ()
 
-class NativeGeneric(DataType):
+class NativeGeneric(DataType, metaclass = Singleton):
     """
     Class representing a generic datatype.
 
