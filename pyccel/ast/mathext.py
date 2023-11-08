@@ -76,14 +76,38 @@ __all__ = (
 # Base classes
 #==============================================================================
 class MathFunctionBase(PyccelInternalFunction):
-    """Abstract base class for the Math Functions"""
+    """
+    Abstract base class for the Math Functions.
+
+    A super-class from which all functions in the `math` library
+    should inherit.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     _shape = None
     _rank  = 0
     _order = None
 
+    def __init__(self, x):
+        super().__args__(x)
+
 
 class MathFunctionFloat(MathFunctionBase):
+    """
+    Super-class from which functions returning a float inherit.
+
+    A super-class from which functions in the `math` library which
+    return a float should inherit.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'float'
     _dtype = NativeFloat()
@@ -92,6 +116,17 @@ class MathFunctionFloat(MathFunctionBase):
 
 
 class MathFunctionInt(MathFunctionBase):
+    """
+    Super-class from which functions returning an integer inherit.
+
+    A super-class from which functions in the `math` library which
+    return an integer should inherit.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'int'
     _dtype = NativeInteger()
@@ -100,6 +135,17 @@ class MathFunctionInt(MathFunctionBase):
 
 
 class MathFunctionBool(MathFunctionBase):
+    """
+    Super-class from which functions returning a boolean inherit.
+
+    A super-class from which functions in the `math` library which
+    return a boolean should inherit.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'bool'
     _dtype = NativeBool()

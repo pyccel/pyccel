@@ -217,15 +217,21 @@ class AsName(PyccelAstNode):
 
 
 class Duplicate(TypedAstNode):
+    """
+    Class representing the duplicate operator in Python.
 
-    """ this is equivalent to the * operator for python tuples.
+    Class representing the duplicate operator in Python. This is equivalent
+    to the * operator for Python tuples, lists, strings, etc. In other words
+    it represents the * operator when it duplicates the first argument passed
+    to the operator, rather than acting as a numerical operator.
 
     Parameters
     ----------
-    value : TypedAstNode
-           an expression which represents the initilized value of the list
+    val : TypedAstNode
+        The object being duplicated.
 
-    shape : the shape of the array
+    length : TypedAstNode
+        The number of times the val should appear in the final object.
     """
     __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_val', '_length')
@@ -4266,8 +4272,12 @@ class StarredArguments(PyccelAstNode):
 
 class InProgram(TypedAstNode):
     """
-    Class representing the boolean:
-    __name__ == '__main__'
+    Class representing the 'in program' test.
+
+    Class representing the test indicating whether the code should
+    only be executed when the file is executed as a program. In
+    other words, a class representing the boolean:
+    `__name__ == '__main__'`
     """
     _dtype = NativeBool()
     _precision = -1

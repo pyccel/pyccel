@@ -62,6 +62,9 @@ class CmathFunctionBool(MathFunctionBase):
     _precision = -1
     _class_type = NativeBool()
 
+    def __init__(self, z : 'TypedAstNode'):
+        super().__init__(z)
+
 class CmathFunctionComplex(MathFunctionBase):
     """
     Super-class from which functions returning a complex number inherit.
