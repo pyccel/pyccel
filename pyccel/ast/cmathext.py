@@ -52,8 +52,8 @@ class CmathFunctionBool(MathFunctionBase):
     A super-class from which functions in the `cmath` library which
     return a boolean should inherit.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     z : TypedAstNode
         The expression passed as argument to the function.
     """
@@ -69,8 +69,8 @@ class CmathFunctionComplex(MathFunctionBase):
     A super-class from which functions in the `cmath` library which
     return a complex number should inherit.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     z : TypedAstNode
         The expression passed as argument to the function.
     """
