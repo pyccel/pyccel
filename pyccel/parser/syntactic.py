@@ -1134,6 +1134,10 @@ class SyntaxParser(BasicParser):
 
         self.exit_loop_scope()
 
+        if stmt.ifs:
+            errors.report("Cannot handle if statements in list comprehensions. List length cannot be calculated.\n" + PYCCEL_RESTRICTION_TODO,
+                    symbol=stmt, severity='error')
+
         expr = For(iterator, iterable, [], scope=scope)
         return expr
 
