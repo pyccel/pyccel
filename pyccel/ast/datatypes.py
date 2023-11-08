@@ -246,6 +246,14 @@ class NativeTuple(DataType):
     Base class representing tuple datatypes.
 
     The class from which tuple datatypes must inherit.
+
+    Parameters
+    ----------
+    *args : tuple
+        Any arguments required by the class.
+
+    **kwargs : dict
+        Any keyword arguments required by the class.
     """
     __slots__ = ()
     _name = 'Tuple'

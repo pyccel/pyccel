@@ -15,9 +15,25 @@ __all__ = ('CMacro',
            'ObjectAddress')
 
 class ObjectAddress(TypedAstNode):
-    """Represents the address of an object.
-    ObjectAddress(Variable('int','a'))                            is  &a
-    ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
+    """
+    Class representing the address of an object.
+
+    Class representing the address of an object. In most situations it will not be
+    necessary to use this object explicitly. E.g. if you assign a pointer to a
+    target then the pointer will be printed using `AliasAssign`. However for the
+    `_print_AliasAssign` function to print neatly, this class will be used.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose address should be printed.
+
+    Examples
+    --------
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    '&a'
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    'a'
     """
 
     __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')

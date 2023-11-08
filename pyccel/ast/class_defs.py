@@ -194,8 +194,9 @@ def get_cls_base(dtype, precision, container_type):
     precision : int
         The precision of the object.
 
-    rank : int
-        The rank of the object.
+    container_type : DataType
+        The Python type of the object. If this is different to the dtype then
+        the ojbect is a container.
 
     Returns
     -------

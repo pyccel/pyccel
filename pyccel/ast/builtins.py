@@ -606,7 +606,10 @@ class PythonTuple(TypedAstNode):
 
     @property
     def args(self):
-        """ Arguments of the tuple
+        """
+        Arguments of the tuple.
+
+        The arguments that were used to initialise the tuple.
         """
         return self._args
 
@@ -760,14 +763,19 @@ class PythonList(TypedAstNode):
 
     @property
     def args(self):
-        """ Arguments of the list
+        """
+        Arguments of the list.
+
+        The arguments that were used to initialise the list.
         """
         return self._args
 
     @property
     def allows_negative_indexes(self):
-        """ Indicates whether variables used to
-        index this Variable can be negative
+        """
+        Indicates whether variables used to index this Variable can be negative.
+
+        Indicates whether variables used to index this Variable can be negative.
         """
         return False
 
