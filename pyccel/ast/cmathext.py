@@ -62,7 +62,7 @@ class CmathFunctionBool(MathFunctionBase):
     _precision = -1
     _class_type = NativeBool()
 
-    def __init__(self, z : 'TypedAstNode'):
+    def __init__(self, z : 'TypedAstNode'): #pylint: disable=useless-parent-delegation
         super().__init__(z)
 
 class CmathFunctionComplex(MathFunctionBase):
@@ -85,7 +85,7 @@ class CmathFunctionComplex(MathFunctionBase):
     _order = None
     _class_type = NativeComplex()
 
-    def __init__(self, z : 'TypedAstNode'):
+    def __init__(self, z : 'TypedAstNode'): #pylint: disable=useless-parent-delegation
         super().__init__(z)
 
 #==============================================================================
