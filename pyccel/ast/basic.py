@@ -335,7 +335,7 @@ class PyccelAstNode:
         return not self._my_attribute_nodes
 
     @property
-    def ast(self):
+    def python_ast(self):
         """
         Get an `ast.AST` object describing the parsed code that this node represents.
 
@@ -375,9 +375,9 @@ class PyccelAstNode:
         if not isinstance(ast_node, ast.AST):
             raise TypeError(f"ast_node must be an AST object, not {type(ast_node)}")
 
-        if self.ast:
+        if self.python_ast:
             if hasattr(ast_node, 'lineno'):
-                if self.ast.lineno != ast_node.lineno or self.ast.col_offset != ast_node.col_offset:
+                if self.python_ast.lineno != ast_node.lineno or self.python_ast.col_offset != ast_node.col_offset:
                     self._ast.append(ast_node)
         else:
             if not hasattr(ast_node, 'lineno'):

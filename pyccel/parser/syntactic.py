@@ -284,7 +284,7 @@ class SyntaxParser(BasicParser):
                         severity='fatal')
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
             if isinstance(stmt, PyccelAstNode):
-                annot.set_current_ast(stmt.ast)
+                annot.set_current_ast(stmt.python_ast)
             else:
                 annot.set_current_ast(stmt)
             return annot
@@ -331,7 +331,7 @@ class SyntaxParser(BasicParser):
         if hasattr(self, syntax_method):
             self._context.append(stmt)
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, PyccelAstNode) and result.ast is None and isinstance(stmt, ast.AST):
+            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
                 result.set_current_ast(stmt)
             self._context.pop()
             return result
@@ -1073,7 +1073,7 @@ class SyntaxParser(BasicParser):
 
         args = []
         if stmt.args:
-            args += [FunctionCallArgument(self._visit(a), ast=a) for a in stmt.args]
+            args += [FunctionCallArgument(self._visit(a), python_ast=a) for a in stmt.args]
         if stmt.keywords:
             kwargs = self._visit(stmt.keywords)
             for k, a in zip(kwargs, stmt.keywords):
