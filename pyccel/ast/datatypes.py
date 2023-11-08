@@ -285,7 +285,7 @@ class NativeInhomogeneousTuple(NativeTuple):
     __slots__ = ('_dtypes',)
 
     def __init__(self, *args):
-        self._dtypes = dtypes
+        self._dtypes = args
         super().__init__()
 
     @property

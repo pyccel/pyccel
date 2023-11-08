@@ -93,7 +93,7 @@ class MathFunctionBase(PyccelInternalFunction):
     _order = None
 
     def __init__(self, x):
-        super().__args__(x)
+        super().__init__(x)
 
 
 class MathFunctionFloat(MathFunctionBase):
