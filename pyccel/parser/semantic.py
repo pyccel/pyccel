@@ -1910,7 +1910,7 @@ class SemanticParser(BasicParser):
             pyccelised_imports = [imp for imp_name, imp in self.scope.imports['imports'].items() \
                              if imp_name in self.d_parsers]
 
-            import_frees = [self.d_parsers[imp.source].semantic_parser.python_ast.free_func for imp in pyccelised_imports \
+            import_frees = [self.d_parsers[imp.source].semantic_parser.ast.free_func for imp in pyccelised_imports \
                                 if imp.source in self.d_parsers]
             import_frees = [f if f.name in imp.target else \
                              f.clone(next(i.target for i in imp.target \
