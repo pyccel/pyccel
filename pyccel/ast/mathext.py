@@ -471,13 +471,11 @@ class MathHypot(MathFunctionFloat):
 
     Parameters
     ----------
-    *coordinates : TypedAstNode
+    *args : TypedAstNode
         The arguments passed to the function.
     """
     __slots__ = ()
     name = 'hypot'
-    def __init__(self, *coordinates): #pylint: disable=useless-parent-delegation
-        super().__init__(*coordinates)
 
 
 class MathLdexp(MathFunctionFloat):
@@ -763,13 +761,11 @@ class MathGcd(MathFunctionInt):
 
     Parameters
     ----------
-    *integers : tuple of TypedAstNode
+    *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
     __slots__ = ()
     name = 'gcd'
-    def __init__(self, *integers): #pylint: disable=useless-parent-delegation
-        super().__init__(*integers)
 
 
 class MathLcm(MathFunctionInt):
@@ -780,13 +776,11 @@ class MathLcm(MathFunctionInt):
 
     Parameters
     ----------
-    *integers : tuple of TypedAstNode
+    *args : tuple of TypedAstNode
         The arguments passed to the function.
     """
     __slots__ = ()
     name = 'lcm'
-    def __init__(self, *integers): #pylint: disable=useless-parent-delegation
-        super().__init__(*integers)
 
 class MathCeil(MathFunctionInt):
     """
