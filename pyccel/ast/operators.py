@@ -298,9 +298,9 @@ class PyccelUnaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_dtype(arg):
         """
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
 
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
         These are equivalent to the dtype, precision and class type
         of the only argument.
 
@@ -396,9 +396,9 @@ class PyccelNot(PyccelUnaryOperator):
     @staticmethod
     def _calculate_dtype(arg):
         """
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
 
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
         These are the dtype, precision and class type which represent a
         boolean.
 
@@ -903,9 +903,9 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     @staticmethod
     def _calculate_dtype(*args):
         """
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
 
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
         These are the dtype, precision and class type which represent a
         boolean.
 
@@ -1310,16 +1310,22 @@ class IfTernaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_dtype(cond, value_true, value_false):
         """
-        Calculates the dtype, precision and class type of the result.
+        Calculate the dtype, precision and class type of the result.
 
-        Calculates the dtype, precision and class type of the result. The dtype,
+        Calculate the dtype, precision and class type of the result. The dtype,
         precision and class type are calculated from the types of the values if
         true or false.
 
         Parameters
         ----------
-        arg : TypedAstNode
-            The argument passed to the operator.
+        cond : TypedAstNode
+            The first argument passed to the operator representing the condition.
+        value_true : TypedAstNode
+            The second argument passed to the operator representing the result if the
+            condition is true.
+        value_false : TypedAstNode
+            The third argument passed to the operator representing the result if the
+            condition is false.
         """
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
             dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)

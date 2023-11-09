@@ -2148,11 +2148,11 @@ class NumpyCountNonZero(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    a : TypedAstNode
         An array for which the non-zero elements should be counted.
     axis : int, optional
         The dimension along which the non-zero elements are counted.
-    keep_dims : NativeBool
+    keepdims : NativeBool
         Indicates if output arrays should have the same number of dimensions
         as arg.
     """
