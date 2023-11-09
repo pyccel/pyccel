@@ -779,6 +779,17 @@ class PythonList(TypedAstNode):
         """
         return False
 
+    @property
+    def is_homogeneous(self):
+        """
+        Indicates whether the list is homogeneous or inhomogeneous.
+
+        Indicates whether all elements of the list have the same dtype, precision,
+        rank, etc (homogenous) or if these values can vary (inhomogeneous). Lists
+        are always homogeneous.
+        """
+        return True
+
 #==============================================================================
 class PythonMap(PyccelAstNode):
     """ Represents the map stmt
