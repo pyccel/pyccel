@@ -690,7 +690,9 @@ class TupleVariable(Variable):
 
 class HomogeneousTupleVariable(TupleVariable):
     """
-    Represents a tuple variable in the code.
+    Represents a homogeneous tuple variable in the code.
+
+    Represents a homogeneous tuple variable in the code.
 
     Parameters
     ----------
