@@ -27,7 +27,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
 -   \[INTERNALS\] Remove unused `Declare.dtype` parameter.
 -   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
--   \[INTERNALS\] Removed support for untested, undocumented `lambidify` function.
 -   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.10.0\] - 2023-10-23
