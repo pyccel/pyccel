@@ -308,6 +308,15 @@ class PyccelUnaryOperator(PyccelOperator):
         ----------
         arg : TypedAstNode
             The argument passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         dtype = arg.dtype
         precision = arg.precision
@@ -406,6 +415,15 @@ class PyccelNot(PyccelUnaryOperator):
         ----------
         arg : TypedAstNode
             The argument passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         dtype = NativeBool()
         precision = -1
@@ -485,6 +503,15 @@ class PyccelBinaryOperator(PyccelOperator):
             The first argument passed to the operator.
         arg2 : TypedAstNode
             The second argument passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         try:
             dtype = arg1.dtype + arg2.dtype
@@ -913,6 +940,15 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         ----------
         *args : TypedAstNode
             The arguments passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         dtype = NativeBool()
         precision = -1
@@ -1326,6 +1362,15 @@ class IfTernaryOperator(PyccelOperator):
         value_false : TypedAstNode
             The third argument passed to the operator representing the result if the
             condition is false.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
             dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)

@@ -694,11 +694,6 @@ class HomogeneousTupleVariable(TupleVariable):
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Parameters
-    ----------
     dtype : DataType
         The data type of the elements of the tuple.
     *args : tuple
