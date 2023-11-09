@@ -476,7 +476,7 @@ class MathHypot(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'hypot'
-    def __init__(self, *coordinates):
+    def __init__(self, *coordinates): #pylint: disable=useless-parent-delegation
         super().__init__(*coordinates)
 
 
@@ -768,7 +768,7 @@ class MathGcd(MathFunctionInt):
     """
     __slots__ = ()
     name = 'gcd'
-    def __init__(self, *integers):
+    def __init__(self, *integers): #pylint: disable=useless-parent-delegation
         super().__init__(*integers)
 
 
@@ -785,7 +785,7 @@ class MathLcm(MathFunctionInt):
     """
     __slots__ = ()
     name = 'lcm'
-    def __init__(self, *integers):
+    def __init__(self, *integers): #pylint: disable=useless-parent-delegation
         super().__init__(*integers)
 
 class MathCeil(MathFunctionInt):
