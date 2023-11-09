@@ -313,7 +313,7 @@ class Assign(PyccelAstNode):
         In the semantic stage :
           TypedAstNode with the same shape as the lhs.
 
-    ast : ast.Ast
+    python_ast : ast.Ast
         The ast object parsed by Python's ast module.
 
     Examples
@@ -340,7 +340,7 @@ class Assign(PyccelAstNode):
         lhs,
         rhs,
         *,
-        ast = None
+        python_ast = None
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
@@ -349,8 +349,8 @@ class Assign(PyccelAstNode):
         self._lhs = lhs
         self._rhs = rhs
         super().__init__()
-        if ast is not None:
-            self.ast = ast
+        if python_ast is not None:
+            self.set_current_ast(python_ast)
 
     def __str__(self):
         return f'{self.lhs} := {self.rhs}'
@@ -626,12 +626,24 @@ class CodeBlock(PyccelAstNode):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    @PyccelAstNode.ast.setter
-    def ast(self, ast_node):
-        PyccelAstNode.ast.fset(self, ast_node)
+    def set_current_ast(self, ast_node):
+        """
+        Set the `ast.AST` object which describes the parsed code that this node currently represents.
+        
+        Set the AST (abstract syntax tree) object which Python parsed in the original code and which
+        resulted in the creation (or use) of this PyccelAstNode. This object describes the Python code
+        being translated. It provides line numbers and columns which can be used to report the origin
+        of any potential errors.
+
+        Parameters
+        ----------
+        ast_node : ast.AST
+            The AST object which was parsed.
+        """
+        PyccelAstNode.set_current_ast(self, ast_node)
         for l in self.body:
-            if not l.ast:
-                l.ast = ast_node
+            if not l.python_ast:
+                l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
     """
@@ -753,7 +765,7 @@ class AugAssign(Assign):
     rhs : TypedAstNode
         Object representing the rhs of the expression.
 
-    ast : ast.AST
+    python_ast : ast.AST
         The AST node where the object appeared in the original code.
 
     Examples
@@ -779,7 +791,7 @@ class AugAssign(Assign):
         op,
         rhs,
         *,
-        ast = None
+        python_ast = None
         ):
 
         if op not in self._accepted_operators.keys():
@@ -787,7 +799,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, ast=ast)
+        super().__init__(lhs, rhs, python_ast=python_ast)
 
     def __repr__(self):
         return f'{self.lhs} {self.op}= {self.rhs}'
@@ -1690,17 +1702,17 @@ class FunctionCallArgument(PyccelAstNode):
     keyword : str, optional
         If the argument is passed by keyword then this
         is that keyword.
-    ast : ast.Ast
+    python_ast : ast.Ast
         The ast object parsed by Python's ast module.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
-    def __init__(self, value, keyword = None, *, ast = None):
+    def __init__(self, value, keyword = None, *, python_ast = None):
         self._value = value
         self._keyword = keyword
         super().__init__()
-        if ast:
-            self.ast = ast
+        if python_ast:
+            self.set_current_ast(python_ast)
 
     @property
     def value(self):

@@ -316,7 +316,7 @@ class Errors(metaclass = Singleton):
                 else:
                     symbol = ast.unparse(ast_node) # pylint: disable=no-member
             elif isinstance(symbol, PyccelAstNode):
-                ast_node = symbol.ast
+                ast_node = symbol.python_ast
 
         if ast_node:
             if line is None:
