@@ -2024,6 +2024,9 @@ class FCodePrinter(CodePrinter):
 
         return decs, methods
 
+    def _print_BindCClassDef(self, expr):
+        return '', ''
+
     def _print_Break(self, expr):
         return 'exit\n'
 
