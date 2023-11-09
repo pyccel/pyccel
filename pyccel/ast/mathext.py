@@ -487,12 +487,14 @@ class MathLdexp(MathFunctionFloat):
     Parameters
     ----------
     x : TypedAstNode
-        The expression passed as argument to the function.
+        The first expression passed as argument to the function.
+    i : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'ldexp'
-    def __init__(self, x):
-        super().__init__(x)
+    def __init__(self, x, i):
+        super().__init__(x, i)
 
 
 class MathLgamma(MathFunctionFloat):
