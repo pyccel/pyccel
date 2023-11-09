@@ -303,11 +303,18 @@ class NumpyInt64(NumpyInt):
 
 #==============================================================================
 class NumpyReal(PythonReal):
-    """Represents a call to  numpy.real for code generation.
+    """
+    Represents a call to numpy.real for code generation.
 
+    Represents a call to the NumPy function real.
     > a = 1+2j
     > np.real(a)
     1.0
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_precision','_rank','_shape','_order','_class_type')
     name = 'real'
@@ -335,11 +342,18 @@ class NumpyReal(PythonReal):
 #==============================================================================
 
 class NumpyImag(PythonImag):
-    """Represents a call to  numpy.imag for code generation.
+    """
+    Represents a call to numpy.imag for code generation.
 
+    Represents a call to the NumPy function imag.
     > a = 1+2j
     > np.imag(a)
     2.0
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_precision','_rank','_shape','_order','_class_type')
     name = 'imag'
@@ -1164,10 +1178,21 @@ class NumpyRand(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
-
     """
-      Represents a call to  numpy.random.random or numpy.random.rand for code generation.
+    Class representing a call to NumPy's randint function.
 
+    Class representing a call to NumPy's randint function.
+
+    Parameters
+    ----------
+    low : TypedAstNode
+        The first argument passed to the function. The smallest possible value for
+        the generated number.
+    high : TypedAstNode, optional
+        The second argument passed to the function. The largest possible value for
+        the generated number.
+    size : TypedAstNode, optional
+        The size of the array that will be generated.
     """
     __slots__ = ('_rand','_low','_high','_shape','_rank','_order','_class_type')
     name = 'randint'
@@ -1536,7 +1561,19 @@ class NumpyZerosLike(PyccelInternalFunction):
 
 #==============================================================================
 class NumpyNorm(PyccelInternalFunction):
-    """ Represents call to numpy.norm"""
+    """
+    Represents call to `numpy.norm`.
+
+    Represents a call to the NumPy function norm.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The first argument passed to the function.
+    axis : TypedAstNode, optional
+        The second argument passed to the function, indicating the axis along
+        which the norm should be calculated.
+    """
     __slots__ = ('_shape','_rank','_order','_arg','_precision','_class_type')
     name = 'norm'
     _dtype = NativeFloat()
@@ -1584,7 +1621,17 @@ class NumpyNorm(PyccelInternalFunction):
 # https://numpy.org/doc/stable/reference/ufuncs.html#available-ufuncs
 #==============================================================================
 class NumpyUfuncBase(PyccelInternalFunction):
-    """Base class for Numpy's universal functions."""
+    """
+    Base class for Numpy's universal functions.
+
+    The class from which NumPy's universal functions inherit. All classes which
+    inherit from this class operate on their arguments elementally.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
     @property
     def is_elemental(self):
@@ -1972,11 +2019,18 @@ class NumpyTranspose(NumpyUfuncUnary):
         return False
 
 class NumpyConjugate(PythonConjugate):
-    """Represents a call to  numpy.conj for code generation.
+    """
+    Represents a call to  numpy.conj for code generation.
 
+    Represents a call to the NumPy function conj or conjugate.
     > a = 1+2j
     > np.conj(a)
     1-2j
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ('_precision','_rank','_shape','_order','_class_type')
     name = 'conj'
@@ -2087,18 +2141,20 @@ class NumpyNonZero(NumpyNewArray):
 
 class NumpyCountNonZero(PyccelInternalFunction):
     """
-    Class representing a call to the numpy size function which
-    returns the shape of an object in a given dimension
+    Class representing a call to the NumPy function `count_nonzero`.
+
+    Class representing a call to the NumPy function `count_nonzero` which
+    counts the number of non-zero elements in an array.
 
     Parameters
-    ==========
-    arg   : TypedAstNode
-            An array for which the non-zero elements should be counted
-    axis  : int
-            The dimension along which the non-zero elements are counted
+    ----------
+    arg : TypedAstNode
+        An array for which the non-zero elements should be counted.
+    axis : int, optional
+        The dimension along which the non-zero elements are counted.
     keep_dims : NativeBool
-            Indicates if output arrays should have the same number of dimensions
-            as arg
+        Indicates if output arrays should have the same number of dimensions
+        as arg.
     """
     __slots__ = ('_precision', '_rank', '_shape', '_order', '_class_type', '_arr',
                 '_axis', '_keep_dims')

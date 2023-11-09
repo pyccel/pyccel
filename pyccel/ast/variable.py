@@ -53,6 +53,11 @@ class Variable(TypedAstNode):
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+
     rank : int, default: 0
         The number of dimensions for an array.
 
@@ -684,13 +689,22 @@ class TupleVariable(Variable):
         return False
 
 class HomogeneousTupleVariable(TupleVariable):
-
-    """Represents a tuple variable in the code.
+    """
+    Represents a tuple variable in the code.
 
     Parameters
     ----------
     arg_vars: Iterable
         Multiple variables contained within the tuple
+
+    Parameters
+    ----------
+    dtype : DataType
+        The data type of the elements of the tuple.
+    *args : tuple
+        See Variable.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
@@ -721,13 +735,25 @@ class HomogeneousTupleVariable(TupleVariable):
         return (self[i] for i in range(self.shape[0]))
 
 class InhomogeneousTupleVariable(TupleVariable):
+    """
+    Represents an inhomogeneous tuple variable in the code.
 
-    """Represents a tuple variable in the code.
+    Represents an inhomogeneous tuple variable in the code.
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
+    arg_vars : tuple of Variable
+        The variables contained within the tuple.
+    name : str
+        The name of the variable.
+    *args : tuple
+        See Variable.
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
