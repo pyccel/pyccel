@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeString, NativeGeneric)
+                        NativeComplex, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from .datatypes import NativeHomogeneousList
 from .internals import PyccelInternalFunction, Slice, get_final_precision
