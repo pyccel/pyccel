@@ -1903,14 +1903,14 @@ class SemanticParser(BasicParser):
                         for v in headers:
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
+                                shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 is_const = t.is_const, is_optional = False,
                                 cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, class_type = t.cls_type,
+                                shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
@@ -2248,10 +2248,10 @@ class SemanticParser(BasicParser):
                 dtype = t.datatype
                 prec  = t.precision
                 rank  = t.rank
-                class_type = t.cls_type
+                class_type = t.class_type
                 cls_base = get_cls_base(dtype, prec, class_type) or self.scope.find(class_type.name, 'classes')
                 v = var_class(dtype, name, precision = prec, cls_base = cls_base,
-                        shape = None, rank = rank, order = t.order, class_type = t.cls_type,
+                        shape = None, rank = rank, order = t.order, class_type = t.class_type,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
                         **kwargs)
@@ -2287,7 +2287,7 @@ class SemanticParser(BasicParser):
                     types.append(dtype_from_scope)
                 else:
                     types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
-                        dtype_from_scope.cls_type, dtype_from_scope.precision,
+                        dtype_from_scope.class_type, dtype_from_scope.precision,
                         rank, order, dtype_from_scope.is_const))
             elif isinstance(dtype_from_scope, ClassDef):
                 dtype = self.get_class_construct(dtype_name)
@@ -2695,7 +2695,7 @@ class SemanticParser(BasicParser):
             lhs = expr.get_user_nodes(Assign)[0].lhs
             if isinstance(lhs, AnnotatedPyccelSymbol):
                 annotation = self._visit(lhs.annotation)
-                if len(annotation.type_list) != 1 or annotation.type_list[0].cls_type.name != method.cls_name:
+                if len(annotation.type_list) != 1 or annotation.type_list[0].class_type.name != method.cls_name:
                     errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
                             symbol=annotation, severity='error')
                 lhs = lhs.name
