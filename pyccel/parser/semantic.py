@@ -3882,8 +3882,7 @@ class SemanticParser(BasicParser):
             if m_name == '__init__':
                 self._visit(method)
                 if cls.interfaces:
-                    errors.report("Pyccel does not support interface constructor", symbol=m_name,
-                        bounding_box=(self._current_fst_node.lineno, self._current_fst_node.col_offset),
+                    errors.report("Pyccel does not support interface constructor", symbol=method,
                         severity='fatal')
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
