@@ -613,13 +613,6 @@ class PythonTuple(TypedAstNode):
         """
         return self._args
 
-    @property
-    def allows_negative_indexes(self):
-        """ Indicates whether variables used to
-        index this Variable can be negative
-        """
-        return False
-
 class PythonTupleFunction(TypedAstNode):
     """
     Class representing a call to the `tuple` function.
@@ -750,9 +743,6 @@ class PythonList(TypedAstNode):
     def __iter__(self):
         return self._args.__iter__()
 
-    def __len__(self):
-        return len(self._args)
-
     def __str__(self):
         args = ', '.join(str(a) for a in self)
         return f'({args})'
@@ -769,15 +759,6 @@ class PythonList(TypedAstNode):
         The arguments that were used to initialise the list.
         """
         return self._args
-
-    @property
-    def allows_negative_indexes(self):
-        """
-        Indicates whether variables used to index this Variable can be negative.
-
-        Indicates whether variables used to index this Variable can be negative.
-        """
-        return False
 
     @property
     def is_homogeneous(self):
