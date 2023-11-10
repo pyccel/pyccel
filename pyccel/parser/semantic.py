@@ -588,18 +588,6 @@ class SemanticParser(BasicParser):
         dict
             Dictionary containing all the type information which was inferred.
         """
-        # TODO - add settings to Errors
-        #      - line and column
-        #      - blocking errors
-
-        errors = Errors()
-
-        if isinstance(expr, type):
-            d_var = {'datatype'  : '*',
-                     'rank'      : 0,
-                     'precision' : 0}
-            return d_var
-
         d_var = {
                 'datatype' : expr.dtype,
                 'precision': expr.precision,
@@ -608,7 +596,6 @@ class SemanticParser(BasicParser):
                 'order'    : expr.order,
                 'class_type' : expr.class_type,
             }
-        # TODO improve => put settings as attribut of Parser
 
         if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
