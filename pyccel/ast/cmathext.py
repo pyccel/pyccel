@@ -12,7 +12,7 @@ from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
-from pyccel.ast.operators import PyccelOr
+from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable  import Constant
 
 from .mathext import math_constants, MathFunctionBase
@@ -54,16 +54,13 @@ class CmathFunctionBool(MathFunctionBase):
 
     Parameters
     ----------
-    z : TypedAstNode
-        The expression passed as argument to the function.
+    *args : TypedAstNode
+        The arguments passed to the function.
     """
     __slots__ = ()
     _dtype = NativeBool()
     _precision = -1
     _class_type = NativeBool()
-
-    def __init__(self, z : 'TypedAstNode'):
-        super().__init__(z)
 
 class CmathFunctionComplex(MathFunctionBase):
     """
@@ -330,11 +327,19 @@ class CmathIsclose (CmathFunctionBool):
 
     Parameters
     ----------
-    z : TypedAstNode
-        The expression passed as argument to the function.
+    a : TypedAstNode
+        The first argument passed to the function.
+    b : TypedAstNode
+        The second argument passed to the function.
+    rel_tol : TypedAstNode
+        The relattive tolerance.
+    abs_tol : TypedAstNode
+        The absolute tolerance.
     """
     __slots__ = ()
     name = 'isclose'
+    def __init__(self, a, b, *, rel_tol=1e-09, abs_tol=0.0):
+        super().__init__(a, b, rel_tol, abs_tol)
 
 #==============================================================================
 
@@ -355,7 +360,7 @@ class CmathIsfinite(CmathFunctionBool):
         if z.dtype is not NativeComplex():
             return MathIsfinite(z)
         else:
-            return PyccelOr(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
+            return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
 
 #==============================================================================
 
