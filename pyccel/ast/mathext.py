@@ -254,8 +254,8 @@ class MathAtan2   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atan2'
-    def __init__(self, x, y):
-        super().__init__(x, y)
+    def __init__(self, y, x):
+        super().__init__(y, x)
 
 class MathAtanh(MathFunctionFloat):
     """
