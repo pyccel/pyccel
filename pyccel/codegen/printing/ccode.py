@@ -1486,7 +1486,7 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        if variable.is_ndarray:
+        if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
                 shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
