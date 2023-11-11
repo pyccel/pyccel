@@ -761,12 +761,14 @@ class CCodePrinter(CodePrinter):
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
-                method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
-                funcs += f"{self.function_signature(method)};\n"
+                if not method.is_inline:
+                    method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
+                    funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
-                    funcs += f"{self.function_signature(func)};\n"
+                    if not func.is_inline:
+                        func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
+                        funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
@@ -1505,11 +1507,11 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
-        if expr.variable.is_alias:
-            return f'free_pointer({variable_address});\n'
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
+        if expr.variable.is_alias:
+            return f'free_pointer({variable_address});\n'
         return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):

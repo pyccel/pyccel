@@ -306,9 +306,28 @@ class FCodePrinter(CodePrinter):
                 .add(constant_name)
         return constant_name
 
-    def _handle_inline_func_call(self, expr, provided_args, assign_lhs = None):
-        """ Print a function call to an inline function
+    def _handle_inline_func_call(self, expr, assign_lhs = None):
         """
+        Print a function call to an inline function.
+
+        Use the arguments passed to an inline function to print
+        its body with the passed arguments in place of the function
+        arguments.
+
+        Parameters
+        ----------
+        expr : FunctionCall
+            The function call which should be printed inline.
+
+        assign_lhs : List
+            A list of lhs provided.
+
+        Returns
+        -------
+        str
+            The code for the inline function.
+        """
+
         scope = self.scope
         func = expr.funcdef
 
@@ -316,7 +335,7 @@ class FCodePrinter(CodePrinter):
         # As the function definition is modified directly this function
         # cannot be called recursively with the same FunctionDef
         args = []
-        for a in provided_args:
+        for a in expr.args:
             if a.is_user_of(func):
                 code = PrecomputedCode(self._print(a))
                 args.append(code)
@@ -1424,7 +1443,8 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and not (is_static and is_optional):
+            if intent == 'in' and rank == 0 and not (is_static and is_optional) \
+                and not isinstance(expr_dtype, CustomDataType):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
@@ -2002,16 +2022,17 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        ls = [self._print(i.name) for i in expr.methods]
+        ls = [self._print(i.name) for i in expr.methods if not i.is_inline]
         for i in ls:
             j = _default_methods.get(i,i)
             aliases.append(j)
             names.append('{0}_{1}'.format(name, self._print(j)))
         methods = ''.join('procedure :: {0} => {1}\n'.format(i, j) for i, j in zip(aliases, names))
         for i in expr.interfaces:
-            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions)
-            methods += 'generic, public :: {0} => {1}\n'.format(self._print(i.name), names)
-            methods += 'procedure :: {0}\n'.format(names)
+            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions if not j.is_inline)
+            if names:
+                methods += 'generic, public :: {0} => {1}\n'.format(self._print(i.name), names)
+                methods += 'procedure :: {0}\n'.format(names)
 
 
 
@@ -2954,9 +2975,9 @@ class FCodePrinter(CodePrinter):
 
         if func.is_inline:
             if len(func_results)>1:
-                code = self._handle_inline_func_call(expr, args, assign_lhs = results)
+                code = self._handle_inline_func_call(expr, assign_lhs = results)
             else:
-                code = self._handle_inline_func_call(expr, args)
+                code = self._handle_inline_func_call(expr)
         else:
             args_strs = ['{}'.format(self._print(a)) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
