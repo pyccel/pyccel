@@ -93,36 +93,6 @@ class PointerCast(TypedAstNode):
         return self._cast_type
 
     @property
-    def name(self):
-        """
-        The name of the variable being cast.
-
-        The name of the variable being cast. This is occasionally useful
-        when the code verifies that no objects are temporaries (e.g named
-        '_').
-        """
-        return self._obj.name
-
-    @property
-    def on_stack(self):
-        """
-        Indicates whether a variable is stored in stack memory.
-
-        Indicates whether a variable is stored in stack memory. As this
-        function casts pointer, this is never the case.
-        """
-        return False
-
-    @property
-    def is_ndarray(self):
-        """
-        Indicates whether the variable represents a ndarray.
-
-        Indicates whether the variable represents a ndarray.
-        """
-        return self._obj.is_ndarray
-
-    @property
     def is_argument(self):
         """
         Indicates whether the variable is an argument.
