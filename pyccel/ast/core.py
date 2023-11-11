@@ -17,7 +17,7 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
 from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
                         NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
-                        NativeGeneric)
+                        NativeVoid)
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
