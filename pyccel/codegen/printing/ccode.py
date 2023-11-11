@@ -1509,7 +1509,7 @@ class CCodePrinter(CodePrinter):
                 declaration_type = self.get_declare_type(expr.like)
                 return f'{var_code} = malloc(sizeof({declaration_type}));\n'
             else:
-                return f'{var_code} = malloc(3);\n'
+                raise NotImplementedError(f"Allocate not implemented for {variable}")
         else:
             raise NotImplementedError(f"Allocate not implemented for {variable}")
 
