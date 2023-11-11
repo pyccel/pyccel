@@ -196,7 +196,7 @@ def get_cls_base(dtype, precision, container_type):
 
     container_type : DataType
         The Python type of the object. If this is different to the dtype then
-        the ojbect is a container.
+        the object is a container.
 
     Returns
     -------
