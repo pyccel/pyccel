@@ -2095,12 +2095,12 @@ class FunctionCall(TypedAstNode):
             self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._dtype      = NativeGeneric()
-            self._rank       = 1
-            self._shape      = (LiteralInteger(0),)
+            self._dtype      = NativeVoid()
+            self._rank       = 0
+            self._shape      = None
             self._precision  = None
             self._order      = None
-            self._class_type = NativeTuple()
+            self._class_type = NativeVoid()
         else:
             dtypes = [r.var.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
