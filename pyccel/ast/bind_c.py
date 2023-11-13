@@ -553,12 +553,15 @@ class BindCClassDef(ClassDef):
     ----------
     original_class : ClassDef
         The class being wrapped.
-    """
-    __slots__ = ('_original_class',)
 
-    def __init__(self, original_class):
+    **kwargs : dict
+        See ClassDef.
+    """
+    __slots__ = ('_original_class')
+
+    def __init__(self, original_class, **kwargs):
         self._original_class = original_class
-        super().__init__(original_class.name)
+        super().__init__(original_class.name, **kwargs)
 
 # =======================================================================================
 #                                   Utility functions
