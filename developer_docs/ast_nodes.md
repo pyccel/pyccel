@@ -4,7 +4,7 @@ While translating from Python to the target language, Pyccel needs to store all 
 
 All objects in the Abstract Syntax Tree inherit from the class `pyccel.ast.basic.PyccelAstNode`. This class serves 2 roles. Firstly it provides a super class from which all our AST nodes can inherit which makes them easy to identify. Secondly it provides functionalities common to all AST nodes. For example it provides the `ast` property which allows the original code parsed by Python's `ast` module to be stored in the class. This object is important in order to report neat errors for code that cannot be handled by Pyccel. It also contains functions involving the relations between the nodes. These are explained in the section [Constructing a tree](#Constructing-a-tree).
 
-The inheritance tree for a Python AST node is often more complicated than directly inheriting from PyccelAstNode. In particular there are two classes which you will see in the inheritance throughout the code. These classes are `TypedAstNode` and `PyccelInternalFunction`. These classes are explained in more detail below.
+The inheritance tree for a Python AST node is often more complicated than directly inheriting from `PyccelAstNode`. In particular there are two classes which you will see in the inheritance throughout the code. These classes are `TypedAstNode` and `PyccelInternalFunction`. These classes are explained in more detail below.
 
 ## Typed AST Node
 
@@ -28,7 +28,7 @@ When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticPa
 
 The class type is the type reported by Python when you call the built-in function `type`. The object stored in this attribute should inherit from `pyccel.ast.datatypes.DataType`.
 
-### Dtype
+### Datatype
 
 Some types in Python are containers which contain elements of other types. This is the case for NumPy arrays, tuples, lists, etc. In this case, the class type does not provide enough information to write the declaration in the low-level target language. Additionally a data type is required. The data type is the type of an element of the container, as for the class type, the object stored in this attribute should inherit from `pyccel.ast.datatypes.DataType`. If the class type is not a container then the class type and the data type will be the same.
 
