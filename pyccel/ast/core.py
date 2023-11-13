@@ -3184,7 +3184,7 @@ class ClassDef(ScopedAstNode):
     interfaces : iterable
         The interface methods.
 
-    doc_string : LiteralString, optional
+    doc_string : CommentBlock, optional
         The doc string of the class.
 
     scope : Scope
