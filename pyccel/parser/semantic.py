@@ -3871,7 +3871,10 @@ class SemanticParser(BasicParser):
                 scope.insert_variable(v)
                 attributes.append(v)
 
-        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope)
+        doc_string = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
+
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
+                doc_string = doc_string)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
