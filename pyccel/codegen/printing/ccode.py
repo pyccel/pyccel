@@ -758,6 +758,8 @@ class CCodePrinter(CodePrinter):
         classes = ""
         funcs = ""
         for classDef in expr.module.classes:
+            if classDef.doc_string is not None:
+                classes += self._print(classDef.doc_string)
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
