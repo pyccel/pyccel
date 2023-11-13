@@ -472,4 +472,4 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
-        return BindCClassDef(expr)
+        return BindCClassDef(expr, doc_string = expr.doc_string)

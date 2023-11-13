@@ -1147,7 +1147,8 @@ class CToPythonWrapper(Wrapper):
         name = expr.name
         struct_name = self.scope.get_new_name(f'Py{name}Object')
         type_name = self.scope.get_new_name(f'Py{name}Type')
-        wrapped_class = PyClassDef(expr, struct_name, type_name)
+        doc_string = expr.doc_string
+        wrapped_class = PyClassDef(expr, struct_name, type_name, doc_string = doc_string)
 
         self._python_object_map[expr] = wrapped_class
 
