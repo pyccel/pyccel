@@ -434,7 +434,7 @@ class CCodePrinter(CodePrinter):
         while i < num_elements:
             current_element = flattened_list[i]
             # Copy an array element
-            if isinstance(current_element, Variable) and current_element.rank >= 1:
+            if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
                 elem_name = self._print(current_element)
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
@@ -447,6 +447,9 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['string'])
                 remaining_elements = flattened_list[i:]
                 lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                if lenSubset == 0:
+                    errors.report(f"Can't copy {rhs} into {lhs}", symbol=expr,
+                            severity='fatal')
                 subset = remaining_elements[:lenSubset]
 
                 # Declare list of consecutive elements
