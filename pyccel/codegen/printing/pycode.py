@@ -1077,11 +1077,12 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ClassDef(self, expr):
         classDefName = 'class {}({}):'.format(expr.name,', '.join(self._print(arg) for arg in  expr.superclasses))
+        doc_string = self._indent_codestring(self._print(expr.doc_string))
         methods = ''.join(self._print(method) for method in expr.methods)
         methods = self._indent_codestring(methods)
         interfaces = ''.join(self._print(method) for method in expr.interfaces)
         interfaces = self._indent_codestring(interfaces)
-        classDef = '\n'.join([classDefName, methods, interfaces]) + '\n'
+        classDef = '\n'.join([classDefName, doc_string, methods, interfaces]) + '\n'
         return classDef
 
     def _print_ConstructorCall(self, expr):
