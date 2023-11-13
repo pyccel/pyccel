@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
+-   #1597 : Handle class docstrings.
 
 ### Fixed
 
