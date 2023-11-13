@@ -9,12 +9,12 @@ The inheritance tree for a Python AST node is often more complicated than direct
 ## Typed AST Node
 
 The class `TypedAstNode` is a super class. This class should never be used directly but provides functionalities which are common to certain AST objects. These AST nodes are those which describe objects which take up space in memory in a running program. For example a Variable requires space in memory, as does the result of a function call or an arithmetic operation, however a loop or a module does not require runtime memory to store the concept. Objects which require memory must therefore contain all information necessary to declare them in the generated code. A `TypedAstNode` therefore exposes the following properties:
--  `dtype`
--  `precision`
--  `rank`
--  `shape`
--  `order`
--  `class_type`
+-   `dtype`
+-   `precision`
+-   `rank`
+-   `shape`
+-   `order`
+-   `class_type`
 
 The contents of these types are explained in more detail below.
 
