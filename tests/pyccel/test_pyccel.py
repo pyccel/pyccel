@@ -1066,7 +1066,7 @@ def test_json_relative_path():
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
             pyccel_commands='--export-compile-info test.json')
     shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
-    compile_pyccel('scripts/hope_benchmarks', "../runtest_funcs.py", '--compiler test.json')
+    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler test.json')
 
 #------------------------------------------------------------------------------
 def test_reserved_file_name():
