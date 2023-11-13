@@ -2045,16 +2045,10 @@ class FCodePrinter(CodePrinter):
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
-        code = ('{0} :: {1}').format(sig, name)
-        if len(decs) > 0:
-            code = ('{0}\n'
-                    '{1}').format(code, decs)
-        if len(methods) > 0:
-            code = ('{0}\n'
-                    'contains\n'
-                    '{1}').format(code, methods)
-        decs = ('{0}\n'
-                'end type {1}\n').format(code, name)
+        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        code = f'{sig} :: {name}\n{decs}\n'
+        code = code + 'contains\n' + methods
+        decs = ''.join([doc_string, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
@@ -2062,12 +2056,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
-        methods = ''
-        for i in cls_methods:
-            methods = ('{methods}\n'
-                     '{sep}\n'
-                     '{f}\n'
-                     '{sep}\n').format(methods=methods, sep=sep, f=self._print(i))
+        methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
 
