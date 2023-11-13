@@ -557,7 +557,7 @@ class BindCClassDef(ClassDef):
     **kwargs : dict
         See ClassDef.
     """
-    __slots__ = ('_original_class')
+    __slots__ = ('_original_class',)
 
     def __init__(self, original_class, **kwargs):
         self._original_class = original_class
