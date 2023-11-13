@@ -3184,6 +3184,9 @@ class ClassDef(ScopedAstNode):
     interfaces : iterable
         The interface methods.
 
+    doc_string : LiteralString, optional
+        The doc string of the class.
+
     scope : Scope
         The scope for the class contents.
 
@@ -3205,8 +3208,8 @@ class ClassDef(ScopedAstNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclasses','_interfaces')
-    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces')
+                 '_imports','_superclasses','_interfaces', '_doc_string')
+    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_doc_string')
 
     def __init__(
         self,
@@ -3217,6 +3220,7 @@ class ClassDef(ScopedAstNode):
         imports=(),
         superclasses=(),
         interfaces=(),
+        doc_string = None,
         scope = None
         ):
 
@@ -3301,6 +3305,7 @@ class ClassDef(ScopedAstNode):
         self._imports = imports
         self._superclasses  = superclasses
         self._interfaces = interfaces
+        self._doc_string = doc_string
 
         super().__init__(scope = scope)
 
@@ -3343,6 +3348,15 @@ class ClassDef(ScopedAstNode):
     @property
     def interfaces(self):
         return self._interfaces
+
+    @property
+    def doc_string(self):
+        """
+        The docstring of the class.
+
+        The docstring of the class.
+        """
+        return self._doc_string
 
     @property
     def methods_as_dict(self):
