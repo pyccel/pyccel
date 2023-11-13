@@ -45,7 +45,7 @@ def test_multiline_line_docstring(language):
 
     python_doc, pyccel_doc = pad_docstrings(f.__doc__, g.__doc__)
 
-    assert(python_doc == pyccel_doc)
+    assert python_doc == pyccel_doc
 
 
 def test_class_docstring(language):
@@ -59,4 +59,4 @@ def test_class_docstring(language):
     B = epyccel(A, language=language)
 
     python_doc, pyccel_doc = pad_docstrings(A.__doc__, B.__doc__)
-    assert A.__doc__ == B.__doc__
+    assert python_doc == pyccel_doc
