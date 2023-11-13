@@ -53,7 +53,7 @@ def test_class_docstring(language):
         """
         Empty class
         """
-        def __init__(self):
+        def __init__(self : 'A'):
             pass
 
     B = epyccel(A, language=language)
