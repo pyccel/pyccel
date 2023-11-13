@@ -14,6 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1576 : Correct destructor invocation for proper cleanup.
 -   #1576 : Remove inline class method definition.
 -   Ensure an error is raised when if conditions are used in comprehension statements.
+-   Fixed infite loop when passing slices while copying arrays.
 
 ### Changed
 
