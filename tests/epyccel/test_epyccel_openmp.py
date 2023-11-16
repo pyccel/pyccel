@@ -524,3 +524,9 @@ def test_nowait_schedule(language):
         assert m == i*n/nthreads
     for i,m in enumerate(max_vals):
         assert m == (i+1)*n/nthreads-1
+
+@pytest.mark.external
+def test_potential_internal_race_condition(language):
+    f1 = epyccel(openmp.potential_internal_data_race_condition, fflags = '-Wall', accelerators=['openmp'], language=language)
+    f2 = openmp.potential_internal_data_race_condition
+    assert (f1() == f2()).all()

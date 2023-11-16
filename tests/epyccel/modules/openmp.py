@@ -515,3 +515,19 @@ def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwed
 
     #$ omp end parallel
     return func_result
+
+def potential_internal_data_race_condition():
+    #most of runs will succed even if there is a race condition, a synchronization point should be inside the generated
+    #loops to increase the chance of capture.
+    import numpy as np
+    x = np.array([1,2,3,4])
+    y = np.array([1,2,3,4])
+    #$ omp parallel num_threads(4)
+    #$ omp single nowait
+    z  = x + y
+    #$ omp end single
+    #$ omp single nowait 
+    t  = x + y
+    #$ omp end single
+    #$ omp end parallel
+    return z + t
