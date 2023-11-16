@@ -19,198 +19,8 @@ __all__ = ("Openmp",)
 
 errors = Errors()
 
-class OmpMeta(type):
-    def __init__(cls, name, bases, clsdict):
-        super().__init__(name, bases, clsdict)
-        cls.clauses_cls_factory()
-
-class Openmp(metaclass=OmpMeta):
+class Openmp():
     """Class that groups all the OpenMP classes for constructs and clauses."""
-
-    all_clauses = [
-            'if',
-            'num_threads',
-            'default',
-            'private',
-            'firstprivate',
-            'shared',
-            'copyin',
-            'reduction',
-            'proc_bind',
-            'lastprivate',
-            'linear',
-            'schedule',
-            'collapse',
-            'ordered',
-            'nowait',
-            'copyprivate',
-            'safelen',
-            'simdlen',
-            'aligned',
-            'final',
-            'untied',
-            'mergeable',
-            'depend',
-            'priority',
-            'grainsize',
-            'num_tasks',
-            'device',
-            'map',
-            'defaultmap',
-            'is_device_ptr',
-            'num_teams',
-            'thread_limit',
-            'dist_schedule',
-            'atomic',
-            'memory_order',
-    ]
-    all_directives = {
-        'parallel': {
-            'allowed_clauses': {"if", "num_threads", "default", "private", "firstprivate", "shared", "copyin",
-                                "reduction", "proc_bind"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-        'for': {
-            'allowed_clauses': {"private", "firstprivate", "lastprivate", "linear", "reduction", "schedule", "collapse",
-                                "ordered", "nowait"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'sections': {
-            'allowed_clauses': {"private", "firstprivate", "lastprivate", "linear", "reduction", "nowait"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-        'section': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'single': {
-            'allowed_clauses': {"private", "firstprivate", "copyprivate", "nowait"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-        'simd': {
-            'allowed_clauses': {"safelen", "simdlen", "linear", "aligned", "private", "lastprivate", "reduction",
-                                "collapse"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'task': {
-            'allowed_clauses': {"if", "final", "untied", "default", "mergeable", "private", "shared", "depend",
-                                "priority"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-        'taskloop': {
-            'allowed_clauses': {"if", "shared", "private", "firstprivate", "lastprivate", "default", "grainsize",
-                                "num_tasks", "collapse", "final", "priority", "untied", "mergeable", "nogroup"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'taskyield': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-
-        'target': {
-            'allowed_clauses': {"if", "device", "private", "firstprivate", "map", "is_device_ptr", "defaultmap",
-                                "nowait", "depend"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'teams': {
-            'allowed_clauses': {"num_teams", "thread_limit", "default", "private", "firstprivate", "shared",
-                                "reduction"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'distribute': {
-            'allowed_clauses': {"private", "firstprivate", "lastprivate", "collapse", "dist_schedule"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-
-        'master':{
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'critical': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'barrier': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-
-        'taskwait': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-
-        'taskgroup': {
-            'allowed_clauses': set(),
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'flush': {
-            'allowed_clauses': {'OmpList'},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'ordered': {
-            'allowed_clauses': {"threads_clause", "simd_clause"},
-            'deprecated_clauses': set(),
-            'require_end_directive': True,
-        },
-
-        'cancel': {
-            'allowed_clauses': {"if_clause"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'atomic': {
-            'allowed_clauses': {"atomic", "memory_order"},
-            'deprecated_clauses': set(),
-            'require_end_directive': False,
-        },
-        'parallel for': {
-            'disallowed_clauses':   {'nowait_clause'},
-            'require_end_directive': False,
-        },
-        'parallel sections': {
-            'disallowed_clauses': {'nowait_clause'},
-        },
-        'for simd': {
-            'disallowed_clauses': set(),
-            'require_end_directive': False,
-        },
-        'parallel for simd': {
-            'disallowed_clauses': {'nowait_clause'},
-            'require_end_directive': False,
-        },
-    }
-    @classmethod
-    def clauses_cls_factory(cls):
-
-        for clause_name in cls.all_clauses:
-            cls_name = f"{clause_name}_clause"
-            if not hasattr(cls, cls_name):
-                clause = type(cls_name, (cls.OmpClause,), {"_name": clause_name,"_used_in_grammar": True})
-                setattr(cls, cls_name, clause)
 
     @classmethod
     def inner_classes_list(cls):
@@ -228,14 +38,19 @@ class Openmp(metaclass=OmpMeta):
 
         """Represents an OpenMP Annotated Comment in the code."""
 
-        __slots__ = ("_parent", "_raw", "_pos", "_line", "VERSION", "DEPRECATED")
+        __slots__ = ("_parent", "_raw", "_position", "_line", "VERSION", "DEPRECATED")
         _attribute_nodes = ()
         _current_omp_version = None
 
         def __init__(self, **kwargs):
             super().__init__()
             self._raw = kwargs.pop("raw", None)
-            self._pos = (None, None)
+            self._position = kwargs.pop('position', None)
+            if self._position is None and hasattr(self, '_tx_position') and hasattr(self, '_tx_position_end'):
+                self._position = (self._tx_position, self._tx_position_end)
+            if not self._raw and not self._position:
+                tmp = 0
+            assert self._raw or self._position
             self._parent = kwargs.pop("parent", None)
             if self._current_omp_version is None:
                 raise NotImplementedError(
@@ -252,27 +67,20 @@ class Openmp(metaclass=OmpMeta):
                     f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
                 )
 
-
         @property
         def parent(self):
             """
             returns the parent of the omp object
             """
-            if self._parent:
-                return self._parent
-            else:
-                return self.get_user_nodes((Openmp.OmpClause, Openmp.OmpDirective))[0]
+            omp_user_nodes = self.get_user_nodes((Openmp.OmpClause, Openmp.OmpDirective), excluded_nodes=(Openmp.OmpEndDirective))
+            return omp_user_nodes[0] if len(omp_user_nodes) else self._parent
 
         @property
-        def pos(self):
+        def position(self):
             """
             retruns the position_start and position_end of an omp object's syntax inside the pragma.
             """
-            return self._pos
-
-        @pos.setter
-        def pos(self, value):
-            self._pos = value
+            return self._position
 
         @property
         def line(self):
@@ -285,12 +93,11 @@ class Openmp(metaclass=OmpMeta):
             """
             if self._raw:
                 return self._raw
-            else:
-
+            elif self._position:
                 p = self
                 while hasattr(p, 'parent'):
                     p = p.parent
-                return p.raw[self.pos[0]:self.pos[1]]
+                return p.raw[self.position[0]:self.position[1]]
 
         @property
         def version(self):
@@ -330,27 +137,6 @@ class Openmp(metaclass=OmpMeta):
         def end(self):
             return self._end
 
-    #class OmpStatement(OmpAnnotatedComment):
-    #    __slots__ = ('_statement',)
-    #    _attribute_nodes = ('_statement',)
-    #    _used_in_grammar = True
-
-    #    def __init__(self, **kwargs):
-    #        self._statement = kwargs.pop("statement")
-    #        super().__init__(**kwargs)
-
-    #    @property
-    #    def statement(self):
-    #        return self._statement
-
-    #    @property
-    #    def raw(self):
-    #        return self._raw
-
-    #    @raw.setter
-    #    def raw(self, value):
-    #        self._raw = value
-
     class OmpDirective(OmpAnnotatedComment):
 
         """
@@ -358,7 +144,7 @@ class Openmp(metaclass=OmpMeta):
 
         Parameters
         ----------
-        dname : list
+        name : list
                 A list of directives names
 
         name: str
@@ -367,73 +153,31 @@ class Openmp(metaclass=OmpMeta):
         clauses: OmpClause
                   Clauses passed to the directive
         """
-        __slots__ = ("_name", "_dname", "_clauses", "_allowed_clauses", "_deprecated_clauses", "_require_end_directive")
+        __slots__ = ("_name", "_clauses", "_require_end_directive", "_tx_clauses")
         _used_in_grammar = True
         _attribute_nodes = ("_clauses",)
 
         def __init__(self, **kwargs):
-            self._dname = tuple(kwargs.pop("dname"))
-            self._name = ' '.join(n for n in self._dname)
-            self._clauses = kwargs.pop("clauses", [])
+            self._name = kwargs.pop("name")
+            self._require_end_directive = kwargs.pop("require_end_directive", False)
+            self._tx_clauses = kwargs.pop("_tx_clauses", [])
+            self._tx_clauses = [c for c in self._tx_clauses if c]
+            self._clauses = kwargs.pop("clauses", self._tx_clauses)
+            if any(not isinstance(c, Openmp.OmpClause) for c in self._clauses):
+                self._clauses = [Openmp.OmpClause(position=(c._tx_position, c._tx_position_end),
+                                                  omp_exprs=c.omp_exprs if hasattr(c, 'omp_exprs') else [],
+                                                  name=c.name,
+                                                  parent=c.parent)
+                                 for c in self._clauses]
             super().__init__(**kwargs)
-            #self._raw = kwargs.pop("raw", "")
-            if self._name not in Openmp.all_directives:
-                errors.report(
-                    f"Invalid Directive `{self._name}`",
-                    symbol=self,
-                    severity="fatal",
-                )
-            if len(self._dname) == 1:
-                self._allowed_clauses = Openmp.all_directives[self._name]['allowed_clauses']
-                self._deprecated_clauses = Openmp.all_directives[self._name]['deprecated_clauses']
-                self._require_end_directive = Openmp.all_directives[self._name]['require_end_directive']
-            else:
-                self._allowed_clauses = tuple(set.union(*(Openmp.all_directives[d]['allowed_clauses']
-                                                for d in self._dname)) - Openmp.all_directives[self._name]['disallowed_clauses'],)
-
-                self._deprecated_clauses = set.union(*(Openmp.all_directives[d]['deprecated_clauses'] for d in self._dname))
-
-                self._require_end_directive = Openmp.all_directives[self._name]['require_end_directive']
-
-            for clause in self._clauses:
-                if not isinstance(clause, Openmp.OmpClause):
-                    if not isinstance(clause, tuple(self._allowed_clauses)):
-                        errors.report(
-                            f"`{self}` doesn't accept {type(clause)} clause",
-                            symbol=self,
-                            severity="fatal"
-                        )
-                elif clause.name not in self._allowed_clauses:
-                    errors.report(
-                        f"`{self}` doesn't accept {clause.name} clause",
-                        symbol=self,
-                        severity="fatal",
-                    )
-                elif clause.name in self._deprecated_clauses:
-                    errors.report(
-                        f"`{self}`'  {clause.name} clause is deprecated",
-                        symbol=self,
-                        severity="warning",
-                    )
 
         @property
         def name(self):
             return self._name
-        @property
-        def dname(self):
-            return self._dname
 
         @property
         def clauses(self):
             return self._clauses
-
-        @property
-        def allowed_clauses(self):
-            return self._allowed_clauses
-
-        @property
-        def deprecated_clauses(self):
-            return self._deprecated_clauses
 
         @property
         def require_end_directive(self):
@@ -448,7 +192,6 @@ class Openmp(metaclass=OmpMeta):
             if self._raw:
                 return self._raw
             else:
-
                 p = self
                 while hasattr(p, 'parent'):
                     p = p.parent
@@ -472,36 +215,25 @@ class Openmp(metaclass=OmpMeta):
 
     class OmpClause(OmpAnnotatedComment):
         """Represents an OpenMP Clause in the code."""
-
-        __slots__ = ("_omp_exprs",)
+        __slots__ = ("_omp_exprs", "_name")
         _attribute_nodes = ("_omp_exprs",)
-        _name = None
+
         def __init__(self, **kwargs):
-            #self._raw = None
-            self._omp_exprs = tuple(kwargs.pop(e) for e in list(kwargs.keys()) if isinstance(kwargs[e], Openmp.OmpExpr))
+            self._omp_exprs = kwargs.pop('omp_exprs', [])
+            if not type(self._omp_exprs) is tuple:
+                self._omp_exprs = tuple(self._omp_exprs) if type(self._omp_exprs) is list else (self._omp_exprs,)
+            self._name = kwargs.pop('name', None)
             super().__init__(**kwargs)
-
-
-        @property
-        def name(self):
-            """Returns the name of the clause."""
-            if self._name:
-                return self._name
-            else:
-                return self.__class__.__name__
 
         @property
         def omp_exprs(self):
             """Returns the omp expressions of the clause."""
             return self._omp_exprs
 
-#        @property
-#        def raw(self):
-#            return self._raw
-#
-#        @raw.setter
-#        def raw(self, value):
-#            self._raw = value
+        @property
+        def name(self):
+            """Returns the name of the clause"""
+            return self._name
 
     class OmpExpr(OmpClause):
 
@@ -511,7 +243,6 @@ class Openmp(metaclass=OmpMeta):
         def __init__(self, **kwargs):
             self._value = kwargs.pop("value", None)
             super().__init__(**kwargs)
-            tmp = 0
 
         @property
         def value(self):
@@ -543,20 +274,9 @@ class Openmp(metaclass=OmpMeta):
 
         def __init__(self):
             self._pending_directives = []
-            for clause in Openmp.all_clauses:
-                method_name = f"_visit_{clause}_clause"
-                if not hasattr(self, method_name):
-                    setattr(self, method_name, self._visit_clause_factory())
         @property
         def pending_directives(self):
             return self._pending_directives
-
-        def _visit_clause_factory(self):
-            def _visit(expr):
-                for att in expr.get_attribute_nodes(Openmp.OmpExpr):
-                    expr.substitute(att, self._visit(att))
-                return expr
-            return _visit
 
         @abstractmethod
         def _visit(self, stmt):
@@ -564,10 +284,14 @@ class Openmp(metaclass=OmpMeta):
 
         def _visit_OmpDirective(self, expr):
             clauses = [self._visit(clause) for clause in expr.clauses]
-            #expr.substitute(expr.clauses, clauses)
-            directive = Openmp.OmpDirective(dname=expr.dname, clauses=clauses, raw=expr.raw, parent=expr.parent)
+            directive = Openmp.OmpDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent, require_end_directive=expr.require_end_directive)
             self._pending_directives.append(directive)
             return directive
+
+        def _visit_OmpClause(self, expr):
+            omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
+            return Openmp.OmpClause(name=expr.name, position=expr.position, omp_exprs=omp_exprs)
+
         def _visit_Omp(self, expr):
             statements = tuple(
                 self._visit(stmt) for stmt in expr.statements
@@ -582,7 +306,7 @@ class Openmp(metaclass=OmpMeta):
                    symbol=end_directive,
                    severity="fatal",
                    )
-            if end_directive.dname != self._pending_directives[-1].dname:
+            if end_directive.name != self._pending_directives[-1].name:
                 if not self._pending_directives[-1].require_end_directive:
                     self._pending_directives.pop()
                     cor_directive = self._find_coresponding_directive(end_directive)
@@ -600,7 +324,7 @@ class Openmp(metaclass=OmpMeta):
         def _visit_OmpEndDirective(self, expr):
             cor_directive = self._find_coresponding_directive(expr)
             clauses = [self._visit(clause) for clause in expr._clauses]
-            return Openmp.OmpEndDirective(dname=expr.dname, clauses=clauses, coresponding_directive=cor_directive, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpEndDirective(name=expr.name, clauses=clauses, coresponding_directive=cor_directive, raw=expr.raw, parent=expr.parent)
 
         def _visit_OmpScalarExpr(self, expr):
             fst = extend_tree(expr.value)
@@ -613,7 +337,7 @@ class Openmp(metaclass=OmpMeta):
                     "Invalid expression",
                     symbol=expr,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -630,7 +354,7 @@ class Openmp(metaclass=OmpMeta):
                     "Invalid expression",
                     symbol=expr,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -647,7 +371,7 @@ class Openmp(metaclass=OmpMeta):
                     "Invalid expression",
                     symbol=expr,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -664,7 +388,7 @@ class Openmp(metaclass=OmpMeta):
                     "Invalid expression",
                     symbol=expr,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -681,7 +405,7 @@ class Openmp(metaclass=OmpMeta):
                     "Invalid expression",
                     symbol=expr,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             fst = fst.body[0].value
@@ -707,10 +431,10 @@ class Openmp(metaclass=OmpMeta):
             return statements
 
         def _visit_OmpDirective(self, expr):
-            if hasattr(self, f"_visit_{'_'.join(n for n in expr.dname)}_directive"):
-                return getattr(self, f"_visit_{'_'.join(n for n in expr.dname)}_directive")(expr)
+            if hasattr(self, f"_visit_{'_'.join(n for n in expr.name)}_directive"):
+                return getattr(self, f"_visit_{'_'.join(n for n in expr.name)}_directive")(expr)
             clauses = [self._visit(clause) for clause in expr.clauses]
-            directive = Openmp.OmpDirective(dname=expr.dname, clauses=clauses, raw=expr.raw, parent=expr.parent)
+            directive = Openmp.OmpDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent, require_end_directive=expr.require_end_directive)
             end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, Openmp.OmpEndDirective)]
             if len(end_directives) == 0:
                return directive
@@ -732,7 +456,7 @@ class Openmp(metaclass=OmpMeta):
 
         def _visit_for_directive(self, expr):
             clauses = [self._visit(clause) for clause in expr._clauses]
-            directive = Openmp.OmpDirective(dname=expr.dname, clauses=clauses, raw=expr.raw, parent=expr.parent)
+            directive = Openmp.OmpDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent, require_end_directive=expr.require_end_directive)
             end_directives = [dirve for dirve in expr.get_all_user_nodes() if isinstance(dirve, Openmp.OmpEndDirective)]
             container = expr.get_user_nodes(CodeBlock)[0]
             if not isinstance(container.body[container.body.index(expr) + 1], For):
@@ -782,7 +506,7 @@ class Openmp(metaclass=OmpMeta):
                     severity="fatal",
                 )
             clauses = [self._visit(clause) for clause in expr.clauses]
-            return Openmp.OmpEndDirective(dname=expr.dname, clauses=clauses, raw=expr.raw, parent=expr.parent)
+            return Openmp.OmpEndDirective(name=expr.name, clauses=clauses, raw=expr.raw, parent=expr.parent)
 
         def _visit_OmpScalarExpr(self, expr):
             value = self._visit(expr.value)
@@ -795,7 +519,7 @@ class Openmp(metaclass=OmpMeta):
                     "expression needs to be a scalar expression",
                     symbol=self,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             return Openmp.OmpScalarExpr(value=value, raw=expr.raw)
@@ -807,7 +531,7 @@ class Openmp(metaclass=OmpMeta):
                     "expression must be an integer expression",
                     symbol=self,
                     line=expr.line,
-                    column=expr.pos[0],
+                    column=expr.position[0],
                     severity="fatal",
                 )
             return Openmp.OmpIntegerExpr(value=value, raw=expr.raw)
@@ -824,14 +548,15 @@ class Openmp(metaclass=OmpMeta):
                         "omp list must be a list of variables",
                         symbol=expr,
                         line=expr.line,
-                        column=expr.pos[0],
+                        column=expr.position[0],
                         severity="fatal",
                     )
             return Openmp.OmpList(value=items, raw=expr.raw)
 
         def _visit_OmpClause(self, expr):
-            omp_exprs = tuple(self._visit(e) for e in expr.get_attribute_nodes(Openmp.OmpExpr))
-            return type(expr)(omp_exprs=omp_exprs, raw=expr.raw)
+            #omp_exprs = tuple(self._visit(e) for e in expr.get_attribute_nodes(Openmp.OmpExpr))
+            omp_exprs = tuple(self._visit(e) for e in expr.omp_exprs)
+            return type(expr)(name=expr.name, omp_exprs=omp_exprs, raw=expr.raw)
 
     class CCodePrinter:
 
