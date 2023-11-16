@@ -20,7 +20,7 @@ OmpDirective:
     | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses
     | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses require_end_directive=TRUE
     | name=/for\s+simd/ _tx_clauses*=ForSimdClauses
-    | name='parallel' _tx_clauses*=ParallelClauses require_end_directive=TRUE
+    | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses require_end_directive=TRUE
     | name='for' _tx_clauses*=ForClauses
     | name='sections' _tx_clauses*=SectionsClauses require_end_directive=TRUE
     | name='section'

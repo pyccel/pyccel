@@ -30,7 +30,7 @@ class Openmp():
         results = []
         for attrname in dir(cls):
             obj = getattr(cls, attrname)
-            if isclass(obj) and getattr(obj, '_used_in_grammar', False) is True:
+            if isclass(obj) and getattr(obj, '_used_in_grammar', False):
                 results.append(obj)
         return results
 
@@ -84,7 +84,12 @@ class Openmp():
 
         @property
         def line(self):
-            return self.fst.lineno if self.fst else self.parent.line
+            if self.fst:
+                return self.fst.lineno
+            elif isinstance(self.parent, Basic):
+                return self.parent.line
+            else:
+                return None
 
         @property
         def raw(self):
@@ -153,7 +158,7 @@ class Openmp():
         clauses: OmpClause
                   Clauses passed to the directive
         """
-        __slots__ = ("_name", "_clauses", "_require_end_directive", "_tx_clauses")
+        __slots__ = ("_name", "_clauses", "_require_end_directive", "_tx_clauses", "_invalid_clauses")
         _used_in_grammar = True
         _attribute_nodes = ("_clauses",)
 
@@ -163,6 +168,7 @@ class Openmp():
             self._tx_clauses = kwargs.pop("_tx_clauses", [])
             self._tx_clauses = [c for c in self._tx_clauses if c]
             self._clauses = kwargs.pop("clauses", self._tx_clauses)
+            self._invalid_clauses = kwargs.pop("_invalid_clauses", [])
             if any(not isinstance(c, Openmp.OmpClause) for c in self._clauses):
                 self._clauses = [Openmp.OmpClause(position=(c._tx_position, c._tx_position_end),
                                                   omp_exprs=c.omp_exprs if hasattr(c, 'omp_exprs') else [],
@@ -170,6 +176,13 @@ class Openmp():
                                                   parent=c.parent)
                                  for c in self._clauses]
             super().__init__(**kwargs)
+            if len(self._invalid_clauses):
+                errors.report(
+                   f"invalid clause `{self._invalid_clauses[0].name}` for `{self._name}` directive",
+                    symbol=self,
+                    column=self._invalid_clauses[0]._tx_position,
+                    severity="fatal",
+                   )
 
         @property
         def name(self):
