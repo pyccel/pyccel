@@ -586,6 +586,9 @@ class Variable(TypedAstNode):
 
     def __getitem__(self, *args):
 
+        if self.rank < len(args):
+            raise IndexError('Rank mismatch.')
+
         if len(args) == 1:
             arg0 = args[0]
             if isinstance(arg0, (tuple, list)):
@@ -594,9 +597,6 @@ class Variable(TypedAstNode):
                 self_len = self.shape[0]
                 if isinstance(self_len, LiteralInteger) and arg0 >= int(self_len):
                     raise StopIteration
-
-        if self.rank < len(args):
-            raise IndexError('Rank mismatch.')
 
         return IndexedElement(self, *args)
 
