@@ -656,11 +656,12 @@ class TypedAstNode(PyccelAstNode):
         x : TypedAstNode
             The node from which the attributes should be copied.
         """
-        self._shape     = x.shape
-        self._rank      = x.rank
-        self._dtype     = x.dtype
-        self._precision = x.precision
-        self._order     = x.order
+        self._shape      = x.shape
+        self._rank       = x.rank
+        self._dtype      = x.dtype
+        self._precision  = x.precision
+        self._order      = x.order
+        self._class_type = x.class_type
 
 
 #------------------------------------------------------------------------------
