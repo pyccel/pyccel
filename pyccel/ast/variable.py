@@ -586,17 +586,19 @@ class Variable(TypedAstNode):
 
     def __getitem__(self, *args):
 
-        if len(args) == 1 and isinstance(args[0], (tuple, list)):
-            args = args[0]
+        if len(args) == 1:
+            arg0 = args[0]
+            if isinstance(arg0, (tuple, list)):
+                args = arg0
+            elif isinstance(arg0, int):
+                self_len = self.shape[0]
+                if isinstance(self_len, LiteralInteger) and arg0 >= int(self_len):
+                    raise StopIteration
 
         if self.rank < len(args):
             raise IndexError('Rank mismatch.')
 
         return IndexedElement(self, *args)
-
-    def __iter__(self):
-        assert isinstance(self.shape[0], LiteralInteger)
-        return (self[i] for i in range(self.shape[0]))
 
     def invalidate_node(self):
         # Don't invalidate Variables
