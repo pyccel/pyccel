@@ -3025,7 +3025,8 @@ class SemanticParser(BasicParser):
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
                 if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)):
+                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)) \
+                        and not isinstance(r, FunctionCall):
                     new_lhs.extend(l)
                     new_rhs.extend(r)
                     # Repeat step to handle tuples of tuples of etc.
