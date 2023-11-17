@@ -23,7 +23,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
-from .datatypes      import (dtype_and_precision_registry as dtype_registry,
+from .datatypes      import (dtype_and_precision_registry as dtype_registry, NativeHomogeneousTuple,
                              default_precision, NativeInteger, DataType, NativeNumericTypes,
                              NativeFloat, NativeComplex, NativeBool, NativeNumeric)
 
@@ -35,7 +35,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .variable       import Variable, Constant, HomogeneousTupleVariable
+from .variable       import Variable, Constant
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -650,7 +650,7 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg, (PythonTuple, HomogeneousTupleVariable)) and arg.is_homogeneous
+        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
         is_array = isinstance(arg, Variable) and arg.is_ndarray
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
@@ -1245,7 +1245,7 @@ class NumpyFull(NumpyNewArray):
     shape : TypedAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
 
     fill_value : TypedAstNode
         Fill value.
@@ -1405,7 +1405,7 @@ class NumpyFullLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
 
     See Also
     --------
@@ -1449,7 +1449,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
 
     See Also
     --------
@@ -1495,7 +1495,7 @@ class NumpyOnesLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
 
     See Also
     --------
@@ -1540,7 +1540,7 @@ class NumpyZerosLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `PythonTuple` or a `HomogeneousTupleVariable`.
+        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
 
     See Also
     --------

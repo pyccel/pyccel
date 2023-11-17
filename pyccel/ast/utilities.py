@@ -19,6 +19,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
+from .datatypes     import NativeHomogeneousTuple
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
@@ -29,8 +30,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable,
-                            HomogeneousTupleVariable )
+from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
 
 from .c_concepts import ObjectAddress
 
@@ -677,13 +677,14 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
     if not language_has_vectors:
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
-                    if isinstance(a.lhs, HomogeneousTupleVariable) \
-                    and isinstance(a.rhs, (HomogeneousTupleVariable, Duplicate, Concatenate))]
+                    if isinstance(a.lhs, Variable) \
+                    and isinstance(a.lhs.class_type, NativeHomogeneousTuple) \
+                    and isinstance(a.rhs.class_type, NativeHomogeneousTuple)]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
-                    ), a) if a.lhs.on_stack
-                    else (a) if a.lhs.on_heap
+                    ), a) if getattr(a.lhs, 'on_stack', False)
+                    else (a) if getattr(a.lhs, 'on_heap', False)
                     else (Allocate(a.lhs,
                             shape=a.lhs.shape,
                             order = a.lhs.order,

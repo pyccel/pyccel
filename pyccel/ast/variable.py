@@ -29,7 +29,6 @@ __all__ = (
     'Constant',
     'DottedName',
     'DottedVariable',
-    'HomogeneousTupleVariable',
     'IndexedElement',
     'InhomogeneousTupleVariable',
     'TupleVariable',
@@ -595,6 +594,10 @@ class Variable(TypedAstNode):
 
         return IndexedElement(self, *args)
 
+    def __iter__(self):
+        assert isinstance(self.shape[0], LiteralInteger)
+        return (self[i] for i in range(self.shape[0]))
+
     def invalidate_node(self):
         # Don't invalidate Variables
         pass
@@ -664,74 +667,7 @@ class DottedName(PyccelAstNode):
     def __hash__(self):
         return hash(str(self))
 
-class TupleVariable(Variable):
-
-    """Represents a tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
-    """
-    __slots__ = ()
-
-    @property
-    def is_ndarray(self):
-        return False
-
-class HomogeneousTupleVariable(TupleVariable):
-    """
-    Represents a homogeneous tuple variable in the code.
-
-    Represents a homogeneous tuple variable in the code.
-
-    Parameters
-    ----------
-    dtype : DataType
-        The data type of the elements of the tuple.
-    *args : tuple
-        See Variable.
-    **kwargs : dict
-        See Variable.
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
-    """
-    __slots__ = ()
-    is_homogeneous = True
-
-    def __init__(self, dtype, *args, **kwargs):
-        super().__init__(dtype, *args, **kwargs)
-
-    def shape_can_change(self, i):
-        """
-        Indicates if the shape can change in the i-th dimension
-        """
-        return self.is_alias and i == (self.rank-1)
-
-    def __len__(self):
-        return self.shape[0]
-
-    def __iter__(self):
-        assert isinstance(self.shape[0], LiteralInteger)
-        return (self[i] for i in range(self.shape[0]))
-
-class InhomogeneousTupleVariable(TupleVariable):
+class InhomogeneousTupleVariable(Variable):
     """
     Represents an inhomogeneous tuple variable in the code.
 
@@ -838,6 +774,10 @@ class InhomogeneousTupleVariable(TupleVariable):
         for var in self._vars:
             if var.rank > 0:
                 var.is_target = is_target
+
+    @property
+    def is_ndarray(self):
+        return False
 
 class Constant(Variable):
 
