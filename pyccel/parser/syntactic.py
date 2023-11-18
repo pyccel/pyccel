@@ -463,6 +463,7 @@ class SyntaxParser(BasicParser):
             return Assign(annotated_lhs, rhs)
 
     def _visit_arguments(self, stmt):
+        is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
@@ -488,6 +489,15 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
+
+        if is_class_method:
+            expected_self_arg = arguments[0]
+            if expected_self_arg.annotation is None:
+                class_name = self._context[-3].name
+                annotation = self._treat_type_annotation(class_name, PyccelSymbol(class_name))
+                arguments[0] = FunctionDefArgument(AnnotatedPyccelSymbol(expected_self_arg.name, annotation),
+                                            annotation=annotation,
+                                            value = expected_self_arg.value)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
