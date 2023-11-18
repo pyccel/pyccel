@@ -87,10 +87,12 @@ def test_f5(language):
     assert mod.func(0) == modnew.func(0)
 
 #------------------------------------------------------------------------------
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'intel',
+        reason='Intel compiler bug (fixed in 24.0)')
 def test_f6(language):
     import modules.Module_4 as mod
 
-    modnew = epyccel(mod, language = language)
+    modnew = epyccel(mod, language = language, verbose=True)
 
     # ...
     assert mod.call_optional_1() == modnew.call_optional_1()
