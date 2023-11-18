@@ -2092,7 +2092,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         """
         return self._dim
 
-class NumpyNonZero(NumpyNewArray):
+class NumpyNonZero(PyccelInternalFunction):
     """
     Class representing a call to the function `numpy.nonzero`.
 
@@ -2117,6 +2117,8 @@ class NumpyNonZero(NumpyNewArray):
     _precision = 8
     _rank  = 2
     _order = 'C'
+    _class_type = NativeHomogeneousTuple()
+
     def __init__(self, a):
         if (a.rank > 1):
             raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
