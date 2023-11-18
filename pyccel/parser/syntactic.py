@@ -490,7 +490,8 @@ class SyntaxParser(BasicParser):
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
 
-        if is_class_method:
+        headers = self.scope.find(self._context[-2].name, 'headers')
+        if is_class_method and not headers:
             expected_self_arg = arguments[0]
             if expected_self_arg.annotation is None:
                 class_name = self._context[-3].name
