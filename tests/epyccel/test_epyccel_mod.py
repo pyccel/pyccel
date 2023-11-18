@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 from numpy.random import randint, uniform
 from numpy import allclose
@@ -9,6 +10,9 @@ from pyccel.epyccel import epyccel
 # numpy.isclose(a, b, rtol, atol). Windows has larger round-off errors.
 if sys.platform == 'win32':
     RTOL = 1e-13
+    ATOL = 1e-14
+elif os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'INTEL':
+    RTOL = 1e-11
     ATOL = 1e-14
 else:
     RTOL = 2e-14
