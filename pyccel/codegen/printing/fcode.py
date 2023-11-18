@@ -2640,15 +2640,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
+        if isinstance(expr.status, LiteralInteger):
+            arg = str(expr.status)
         if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            arg = expr.status
-            if arg.precision != 4:
-                arg = NumpyInt32(arg)
-            arg = self._print(arg)
+            # Ensure no type specifier is added for NativeInteger
+            arg = self._print(expr.status)
+            # Remove any type specifier from the argument
+            arg = arg.split('_')[0]
         return f'{code}stop {arg}\n'
 
     def _print_NumpyUfuncBase(self, expr):
