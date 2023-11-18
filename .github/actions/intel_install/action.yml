@@ -13,7 +13,7 @@ runs:
       with:
         path: |
           /opt/intel/oneapi/
-        key: ${{ runner.os }}-intel-2023
+        key: ${{ runner.os }}-intel-2023.2.2
         restore-keys: |
           ${{ runner.os }}-intel-
     - name: Install Intel OneAPI
