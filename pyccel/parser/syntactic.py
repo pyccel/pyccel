@@ -491,7 +491,7 @@ class SyntaxParser(BasicParser):
                 arguments.append(new_arg)
 
         headers = self.scope.find(self._context[-2].name, 'headers') \
-                if isinstance(self._context[-2], FunctionDef) else None
+                if isinstance(self._context[-2], ast.FunctionDef) else None
 
         if is_class_method and not headers:
             expected_self_arg = arguments[0]
