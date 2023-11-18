@@ -229,6 +229,10 @@ def get_value(string, regex, conversion):
     return value, string
 
 def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=None):
+    print("compare_pyth_fort_output_by_type")
+    print(p_output)
+    print(f_output)
+    print(dtype)
 
     if dtype is str:
         p_output_split = re.split('\n', p_output)

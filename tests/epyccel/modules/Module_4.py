@@ -9,4 +9,5 @@ def call_optional_1():
     return basic_optional()
 
 def call_optional_2(b  : 'int' =  None):
+    print(b is None)
     return basic_optional(b)
