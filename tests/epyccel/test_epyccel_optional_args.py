@@ -97,6 +97,7 @@ def test_f6(language):
     assert mod.call_optional_2(None) == modnew.call_optional_2(None)
     assert mod.call_optional_2(0) == modnew.call_optional_2(0)
     assert mod.call_optional_2() == modnew.call_optional_2()
+    assert mod.optional_func_call() == modnew.optional_func_call()
 #------------------------------------------------------------------------------
 def test_f7(Module_5):
     mod, modnew = Module_5
