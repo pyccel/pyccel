@@ -28,7 +28,10 @@ runs:
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
     - name: Test Fortran translations
-      run: python -m pytest -n auto -rXx ${FLAGS} -vs -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s4_outfile.out
+      run: |
+        python -m pytest -sv epyccel/test_epyccel_optional_args.py
+        python -m pytest -sv pyccel
+        python -m pytest -rXx ${FLAGS} -vs -m "not (parallel or xdist_incompatible) and not (c or python) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s4_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_4
