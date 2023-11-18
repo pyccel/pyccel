@@ -1,6 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
 def basic_optional(a  : 'int' =  None):
+    print("basic_optional : ", a is None)
     if a is  None :
         return 2
     return a
