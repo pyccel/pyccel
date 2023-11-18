@@ -2909,6 +2909,9 @@ class SemanticParser(BasicParser):
                 i.set_current_ast(python_ast)
             return rhs
 
+        elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+            return rhs
+
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
             results = func.results
