@@ -2642,16 +2642,12 @@ class FCodePrinter(CodePrinter):
         code = ""
         if isinstance(expr.status, LiteralInteger):
             arg = str(expr.status)
-        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
+        elif expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            # Ensure no type specifier is added for NativeInteger
-            arg = self._print(expr.status)
-            # Remove any type specifier from the argument
-            arg = arg.split('_')[0]
-        return f'{code}stop {arg}\n'
+            arg = str(expr.status)
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
