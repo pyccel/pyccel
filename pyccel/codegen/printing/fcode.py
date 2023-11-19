@@ -2648,6 +2648,7 @@ class FCodePrinter(CodePrinter):
             arg = "1"
         else:
             arg = str(expr.status)
+        return f'{code}stop {arg}\n'
 
     def _print_NumpyUfuncBase(self, expr):
         type_name = type(expr).__name__
