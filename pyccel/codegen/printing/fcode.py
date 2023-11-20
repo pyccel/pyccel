@@ -2692,6 +2692,7 @@ class FCodePrinter(CodePrinter):
             return f'numpy_sign({arg_code})'
         else:
             cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            # The absolute value of the result (0 if the argument is 0, 1 otherwise)
             abs_result = self._print(cast_func(PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
 
