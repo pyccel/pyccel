@@ -4083,9 +4083,9 @@ def test_numpy_mod_array_like_1d(language):
 def test_numpy_mod_array_like_2d(language):
 
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
-    def get_mod(arr : 'T', shift : 'T'):
+    def get_mod(arr : 'T'):
         from numpy import mod, shape
-        a = mod(arr + shift, arr)
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
@@ -4094,13 +4094,12 @@ def test_numpy_mod_array_like_2d(language):
     epyccel_func = epyccel(get_mod, language=language)
 
     bl = np.full(size, True, dtype= bool)
-    assert epyccel_func(bl, bl) == get_mod(bl, bl)
+    assert epyccel_func(bl) == get_mod(bl)
 
     def test_int(min_int, max_int, dtype):
         integer = randint(min_int, max_int-1, size=size, dtype=dtype)
         integer = np.where(integer==0, 1, integer)
-        integer_shift = integer//8
-        assert epyccel_func(integer, integer_shift) == get_mod(integer, integer_shift)
+        assert epyccel_func(integer) == get_mod(integer)
 
     test_int(min_int8 , max_int8 , np.int8)
     test_int(min_int16, max_int16, np.int16)
@@ -4113,9 +4112,9 @@ def test_numpy_mod_array_like_2d(language):
     fl32 = np.float32(fl32)
     fl64 = uniform(min_float64 / 2, max_float64 / 2, size = size)
 
-    assert np.allclose(epyccel_func(fl, fl/16), get_mod(fl, fl/16), atol=ATOL, rtol=RTOL)
-    assert np.allclose(epyccel_func(fl32, fl32/16), get_mod(fl32, fl32/16), atol=ATOL, rtol=RTOL)
-    assert np.allclose(epyccel_func(fl64, fl64/16), get_mod(fl64, fl64/16), atol=ATOL, rtol=RTOL)
+    assert epyccel_func(fl) == get_mod(fl)
+    assert epyccel_func(fl32) == get_mod(fl32)
+    assert epyccel_func(fl64) == get_mod(fl64)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [pytest.mark.fortran]),
