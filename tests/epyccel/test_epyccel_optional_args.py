@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+
 import pytest
 import numpy as np
 
@@ -153,7 +154,6 @@ def test_optional_args_1d(language):
 #------------------------------------------------------------------------------
 def test_optional_2d_F(language):
     def f13(x : 'int32[:,:](order=F)', y  : 'int32[:,:](order=F)' =  None):
-        print(y is None)
         if y is None:
             x[:] *= 2
         else :
