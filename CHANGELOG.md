@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   Ensure an error is raised when if conditions are used in comprehension statements.
 -   #1553 : Fix `np.sign` when using the `ifort` compiler.
 -   #1582 : Allow homogeneous tuples in classes.
+-   #1619 : Give priority to imported functions over builtin functions.
 
 ### Changed
 

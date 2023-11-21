@@ -2674,7 +2674,7 @@ class SemanticParser(BasicParser):
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
         F = pyccel_builtin_function(expr, args)
 
-        if F is not None:
+        if func is None and F is not None:
             return F
 
         elif self.scope.find(name, 'cls_constructs'):
