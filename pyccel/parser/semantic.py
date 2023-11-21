@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
                                   NativeFloat, NativeString, NativeInhomogeneousTuple,
                                   NativeGeneric, NativeComplex, NativeTuple,
-                                  NativeVoid)
+                                  NativeVoid, NativeHomogeneousTuple)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -111,7 +111,7 @@ from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import TupleVariable, HomogeneousTupleVariable, InhomogeneousTupleVariable
+from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
@@ -809,8 +809,9 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        val : TupleVariable | PythonTuple
-            The tuple object.
+        val : PyccelAstNode
+            The tuple object. This object should have a class type which inherits from
+            NativeTuple.
 
         length : LiteralInteger | TypedAstNode
             The number of times the tuple is duplicated.
@@ -822,7 +823,7 @@ class SemanticParser(BasicParser):
         """
         # Arguments have been visited in PyccelMul
 
-        if not isinstance(val, (TupleVariable, PythonTuple, PythonList)):
+        if not isinstance(val.class_type, (NativeTuple, NativeHomogeneousList)):
             errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
@@ -837,7 +838,7 @@ class SemanticParser(BasicParser):
                     symbol=Duplicate(val, length),
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
-            if isinstance(val, TupleVariable):
+            if isinstance(val, InhomogeneousTupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
                 return PythonTuple(*(val.args*length))
@@ -1106,15 +1107,12 @@ class SemanticParser(BasicParser):
                 d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
             if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
-                lhs = HomogeneousTupleVariable(dtype, name, **d_lhs, is_temp=is_temp)
+                lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
                 lhs = InhomogeneousTupleVariable(elem_vars, name, **d_lhs, is_temp=is_temp)
 
         else:
-            new_type = HomogeneousTupleVariable \
-                    if isinstance(rhs, (HomogeneousTupleVariable, Concatenate, Duplicate)) \
-                    else Variable
-            lhs = new_type(dtype, name, **d_lhs, is_temp=is_temp)
+            lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
 
         return lhs
 
@@ -1270,7 +1268,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs, HomogeneousTupleVariable)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, NativeHomogeneousTuple)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -2161,20 +2159,23 @@ class SemanticParser(BasicParser):
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
-        if (len(args) == 1 and isinstance(args[0], (TupleVariable, PythonTuple))):
+        if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), NativeTuple)):
             args = args[0]
 
-        elif any(isinstance(a, (TupleVariable, PythonTuple)) for a in args):
+        elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
             n_exprs = None
             for a in args:
-                if hasattr(a, '__len__'):
+                if a.shape and isinstance(a.shape[0], LiteralInteger):
+                    a_len = a.shape[0]
                     if n_exprs:
-                        assert n_exprs == len(a)
+                        assert n_exprs == a_len
                     else:
-                        n_exprs = len(a)
-            new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
-                             for i in range(n_exprs)]
-            return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+                        n_exprs = a_len
+
+            if n_exprs is not None:
+                new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
+                                 for i in range(n_exprs)]
+                return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
 
         return self._extract_indexed_from_var(var, args, expr)
 
@@ -2469,9 +2470,9 @@ class SemanticParser(BasicParser):
                         return a.get_vars()
                     elif isinstance(a, PythonTuple):
                         return a.args
-                    elif isinstance(a, HomogeneousTupleVariable):
-                        n_vars = len(a)
-                        if not isinstance(len(a), (LiteralInteger, int)):
+                    elif isinstance(a.class_type, NativeHomogeneousTuple):
+                        n_vars = a.shape[0]
+                        if not isinstance(a.shape[0], (LiteralInteger, int)):
                             errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
                                     symbol=expr, severity='fatal')
                         return [a[i] for i in range(n_vars)]
@@ -2488,9 +2489,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0], (TupleVariable, PythonTuple, PythonList)):
+        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
             expr_new = self._create_Duplicate(args[0], args[1])
-        elif isinstance(args[1], (TupleVariable, PythonTuple, PythonList)):
+        elif isinstance(args[1].class_type, (NativeTuple, NativeHomogeneousList)):
             expr_new = self._create_Duplicate(args[1], args[0])
         else:
             expr_new = self._create_PyccelOperator(expr, args)
@@ -2956,7 +2957,7 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs, HomogeneousTupleVariable):
+            elif isinstance(rhs.class_type, NativeHomogeneousTuple):
                 new_lhs = []
                 d_var = self._infer_type(rhs[0])
                 new_rhs = []
@@ -3024,7 +3025,8 @@ class SemanticParser(BasicParser):
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
                 if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r,(PythonTuple, TupleVariable, list)):
+                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)) \
+                        and not isinstance(r, FunctionCall):
                     new_lhs.extend(l)
                     new_rhs.extend(r)
                     # Repeat step to handle tuples of tuples of etc.
@@ -3804,7 +3806,7 @@ class SemanticParser(BasicParser):
                 # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
                 deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
-                deallocater = DottedVariable(*deallocater_rhs, lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                deallocater = DottedVariable(lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
                 cls.add_new_attribute(deallocater)
                 deallocater_assign = Assign(deallocater, LiteralFalse())
                 cls.methods[i].body.insert2body(deallocater_assign, back=False)

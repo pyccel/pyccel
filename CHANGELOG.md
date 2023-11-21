@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1576 : Remove inline class method definition.
 -   Ensure an error is raised when if conditions are used in comprehension statements.
 -   #1553 : Fix `np.sign` when using the `ifort` compiler.
+-   #1582 : Allow homogeneous tuples in classes.
 
 ### Changed
 
@@ -23,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
 -   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
+-   \[INTERNALS\] #1582 : Remove the `HomogeneousTupleVariable` type.
 
 ### Deprecated
 
