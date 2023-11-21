@@ -332,7 +332,7 @@ class CmathIsclose (CmathFunctionBool):
     b : TypedAstNode
         The second argument passed to the function.
     rel_tol : TypedAstNode
-        The relattive tolerance.
+        The relative tolerance.
     abs_tol : TypedAstNode
         The absolute tolerance.
     """
