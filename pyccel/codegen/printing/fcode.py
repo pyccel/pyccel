@@ -2681,9 +2681,17 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
-        func = PyccelFunctionDef('numpy_sign', NumpySign)
-        self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
-        return f'numpy_sign({self._print(expr.args[0])})'
+        arg = expr.args[0]
+        arg_code = self._print(arg)
+        if isinstance(expr.dtype, NativeComplex):
+            func = PyccelFunctionDef('numpy_sign', NumpySign)
+            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+            return f'numpy_sign({arg_code})'
+        else:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            # The absolute value of the result (0 if the argument is 0, 1 otherwise)
+            abs_result = self._print(cast_func(PythonBool(arg)))
+            return f'sign({abs_result}, {arg_code})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
