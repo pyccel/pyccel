@@ -75,20 +75,21 @@ class PointerCast(TypedAstNode):
         A TypedAstNode describing the object resulting from the cast.
     """
     __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order',
-            '_cast_type')
+            '_class_type', '_cast_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj, cast_type):
         if not isinstance(obj, TypedAstNode):
             raise TypeError("object must be an instance of TypedAstNode")
         assert getattr(obj, 'is_alias', False)
-        self._obj       = obj
-        self._rank      = cast_type.rank
-        self._shape     = cast_type.shape
-        self._precision = cast_type.precision
-        self._dtype     = cast_type.dtype
-        self._order     = cast_type.order
-        self._cast_type = cast_type
+        self._obj        = obj
+        self._rank       = cast_type.rank
+        self._shape      = cast_type.shape
+        self._precision  = cast_type.precision
+        self._dtype      = cast_type.dtype
+        self._class_type = cast_type.class_type
+        self._order      = cast_type.order
+        self._cast_type  = cast_type
         super().__init__()
 
     @property
