@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
+-   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
 
 ### Deprecated
 
