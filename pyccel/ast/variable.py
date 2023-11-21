@@ -15,7 +15,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex)
+                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -52,6 +52,11 @@ class Variable(TypedAstNode):
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
+
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
 
     rank : int, default: 0
         The number of dimensions for an array.
@@ -112,7 +117,7 @@ class Variable(TypedAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -120,6 +125,7 @@ class Variable(TypedAstNode):
         dtype,
         name,
         *,
+        class_type = None,
         rank=0,
         memory_handling='stack',
         is_const=False,
@@ -211,11 +217,20 @@ class Variable(TypedAstNode):
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
+        if rank > 0 and class_type is None:
+            raise TypeError("Multi-dimensional object requires a container type")
+        elif class_type is None:
+            class_type = dtype
+
+        if class_type is not dtype and cls_base is None:
+            raise TypeError(f"Missing class definition for type {dtype}")
+
         self._alloc_shape = shape
         self._dtype = dtype
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        self._class_type = class_type
         if self._rank < 2:
             self._order = None
 
@@ -674,13 +689,19 @@ class TupleVariable(Variable):
         return False
 
 class HomogeneousTupleVariable(TupleVariable):
+    """
+    Represents a homogeneous tuple variable in the code.
 
-    """Represents a tuple variable in the code.
+    Represents a homogeneous tuple variable in the code.
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
+    dtype : DataType
+        The data type of the elements of the tuple.
+    *args : tuple
+        See Variable.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
@@ -693,6 +714,9 @@ class HomogeneousTupleVariable(TupleVariable):
     """
     __slots__ = ()
     is_homogeneous = True
+
+    def __init__(self, dtype, *args, **kwargs):
+        super().__init__(dtype, *args, **kwargs)
 
     def shape_can_change(self, i):
         """
@@ -708,13 +732,25 @@ class HomogeneousTupleVariable(TupleVariable):
         return (self[i] for i in range(self.shape[0]))
 
 class InhomogeneousTupleVariable(TupleVariable):
+    """
+    Represents an inhomogeneous tuple variable in the code.
 
-    """Represents a tuple variable in the code.
+    Represents an inhomogeneous tuple variable in the code.
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
+    arg_vars : tuple of Variable
+        The variables contained within the tuple.
+    name : str
+        The name of the variable.
+    *args : tuple
+        See Variable.
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
@@ -729,9 +765,9 @@ class InhomogeneousTupleVariable(TupleVariable):
     _attribute_nodes = ('_vars',)
     is_homogeneous = False
 
-    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
+    def __init__(self, arg_vars, name, *args, class_type, **kwargs):
         self._vars = tuple(arg_vars)
-        super().__init__(dtype, name, *args, **kwargs)
+        super().__init__(class_type, name, *args, **kwargs, class_type = class_type)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -879,7 +915,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(self, base, *indices):
@@ -937,6 +973,11 @@ class IndexedElement(TypedAstNode):
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
+
+        if self.rank == 0:
+            self._class_type = self.dtype
+        else:
+            self._class_type = base.class_type
 
     @property
     def base(self):
