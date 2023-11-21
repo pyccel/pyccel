@@ -97,6 +97,7 @@ __all__ = (
     'NumpyInt64',
     'NumpyLinspace',
     'NumpyMatmul',
+    'NumpyNDArrayType',
     'NumpyNewArray',
     'NumpyMod',
     'NumpyNonZero',
