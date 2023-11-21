@@ -16,7 +16,7 @@ from pyccel.ast.builtins  import PythonList, PythonTuple
 from pyccel.ast.core      import Declare, For, CodeBlock
 from pyccel.ast.core      import FuncAddressDeclare, FunctionCall, FunctionCallArgument
 from pyccel.ast.core      import Allocate, Deallocate
-from pyccel.ast.core      import FunctionAddress, FunctionDefArgument
+from pyccel.ast.core      import FunctionAddress
 from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
@@ -27,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
-from pyccel.ast.datatypes import CustomDataType, NativeString
+from pyccel.ast.datatypes import CustomDataType, NativeString, NativeHomogeneousTuple
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyArange
+from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
@@ -46,7 +46,7 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
+from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
 
@@ -761,12 +761,14 @@ class CCodePrinter(CodePrinter):
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
-                method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
-                funcs += f"{self.function_signature(method)};\n"
+                if not method.is_inline:
+                    method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
+                    funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
-                    func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
-                    funcs += f"{self.function_signature(func)};\n"
+                    if not func.is_inline:
+                        func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
+                        funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
 
@@ -1207,7 +1209,7 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
+            if expr.is_ndarray or isinstance(expr.class_type, NativeHomogeneousTuple):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1348,7 +1350,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self.find_in_ndarray_type_registry(expr.dtype, expr.precision)
         base_name = self._print(base)
-        if getattr(base, 'is_ndarray', False) or isinstance(base, HomogeneousTupleVariable):
+        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, NativeHomogeneousTuple):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1505,11 +1507,11 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
             return ''.join(self._print(Deallocate(v)) for v in expr.variable)
         variable_address = self._print(ObjectAddress(expr.variable))
-        if expr.variable.is_alias:
-            return f'free_pointer({variable_address});\n'
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
+        if expr.variable.is_alias:
+            return f'free_pointer({variable_address});\n'
         return f'free_array({variable_address});\n'
 
     def _print_Slice(self, expr):

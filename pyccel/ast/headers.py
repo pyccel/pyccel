@@ -4,14 +4,11 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-from pyccel.utilities.strings import create_incremented_string
 from ..errors.errors    import Errors
-from ..errors.messages  import TEMPLATE_IN_UNIONTYPE
 from .basic             import PyccelAstNode, iterable
 from .core              import Assign, FunctionCallArgument
-from .core              import FunctionDef, FunctionCall, FunctionAddress
-from .core              import FunctionDefArgument, FunctionDefResult
-from .datatypes         import datatype, DataTypeFactory, UnionType, default_precision
+from .core              import FunctionCall
+from .datatypes         import UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
 from .type_annotations  import SyntacticTypeAnnotation

@@ -10,7 +10,7 @@ file.
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
 from pyccel.ast.variable import Variable
@@ -538,6 +538,27 @@ class BindCArrayVariable(Variable):
         the shape.
         """
         return self._wrapper_function
+
+# =======================================================================================
+
+class BindCClassDef(ClassDef):
+    """
+    Represents a class which is compatible with C.
+
+    Represents a class which is compatible with C. This means that it stores
+    C-compatible versions of class methods and getters and setters for class
+    variables.
+
+    Parameters
+    ----------
+    original_class : ClassDef
+        The class being wrapped.
+    """
+    __slots__ = ('_original_class',)
+
+    def __init__(self, original_class):
+        self._original_class = original_class
+        super().__init__(original_class.name)
 
 # =======================================================================================
 #                                   Utility functions

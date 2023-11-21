@@ -13,9 +13,7 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
-from .internals import AnnotatedPyccelSymbol
-
-from .variable import DottedName, IndexedElement
+from .variable import DottedName, IndexedElement, AnnotatedPyccelSymbol
 
 __all__ = (
         'FunctionTypeAnnotation',
@@ -38,8 +36,10 @@ class VariableTypeAnnotation(PyccelAstNode):
     datatype : DataType
         The requested internal data type.
 
-    cls_base : ClassDef
-        The description of the class describing the variable.
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
 
     precision : int
         The precision of the internal datatype.
@@ -53,13 +53,13 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_datatype', '_cls_base', '_precision', '_rank',
+    __slots__ = ('_datatype', '_class_type', '_precision', '_rank',
                  '_order', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, datatype : 'DataType', cls_base : 'ClassDef', precision : int = -1,
+    def __init__(self, datatype : 'DataType', class_type : 'DataType', precision : int = -1,
             rank : int = 0, order : str = None, is_const : bool = False):
         self._datatype = datatype
-        self._cls_base = cls_base
+        self._class_type = class_type
         self._precision = precision
         self._rank = rank
         self._order = order
@@ -78,14 +78,15 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._datatype
 
     @property
-    def cls_base(self):
+    def class_type(self):
         """
-        Get the class description of the object.
+        Get the Python type of the object.
 
-        Get the class def object which describes how the user can interact with the
-        future variable.
+        The Python type of the object. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
         """
-        return self._cls_base
+        return self._class_type
 
     @cls_base.setter
     def cls_base(self, cls_base):
@@ -132,13 +133,13 @@ class VariableTypeAnnotation(PyccelAstNode):
         return self._is_const
 
     def __hash__(self):
-        return hash((self.datatype, self.cls_base, self.precision, self.rank, self.order))
+        return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
             return self.datatype == other.datatype and \
-                   self.cls_base == other.cls_base and \
+                   self.class_type == other.class_type and \
                    self.precision == other.precision and \
                    self.rank == other.rank and \
                    self.order == other.order
@@ -257,6 +258,9 @@ class UnionTypeAnnotation(PyccelAstNode):
 
     def __iter__(self):
         return self._type_annotations.__iter__()
+
+    def __str__(self):
+        return '|'.join(str(t) for t in self._type_annotations)
 
 class SyntacticTypeAnnotation(PyccelAstNode):
     """

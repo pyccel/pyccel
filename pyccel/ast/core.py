@@ -6,9 +6,6 @@
 #------------------------------------------------------------------------------------------#
 from itertools import chain
 
-from sympy.logic.boolalg      import And as sp_And
-
-
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import RECURSIVE_RESULTS_REQUIRED
 
@@ -18,20 +15,19 @@ from pyccel.utilities.strings import create_incremented_string
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
-from .datatypes import (datatype, DataType, NativeSymbol,
-                        NativeBool, NativeRange,
-                        NativeTuple, str_dtype)
-from .internals import Slice, PyccelSymbol, PyccelInternalFunction, get_final_precision
-from .internals import AnnotatedPyccelSymbol
+from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
+                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
+                        NativeVoid)
+from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
-from .literals  import LiteralInteger, Nil, LiteralFalse
+from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
 
-from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod, Relational
+from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
 from .variable import DottedName, IndexedElement
-from .variable import Variable
+from .variable import Variable, AnnotatedPyccelSymbol
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -66,7 +62,6 @@ __all__ = (
     'ErrorExit',
     'Exit',
     'For',
-    'ForIterator',
     'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
@@ -97,9 +92,6 @@ __all__ = (
     'With',
     'create_variable',
     'create_incremented_string',
-    'get_iterable_ranges',
-    'inline',
-    'subs'
 )
 
 #==============================================================================
@@ -115,65 +107,6 @@ __all__ = (
 def apply(func, args, kwargs):return func(*args, **kwargs)
 
 #==============================================================================
-def subs(expr, new_elements):
-    """
-    Substitutes old for new in an expression.
-
-    Parameters
-    ----------
-    new_elements : list of tuples like [(x,2)(y,3)]
-    """
-
-    if len(list(new_elements)) == 0:
-        return expr
-    if isinstance(expr, (list, tuple)):
-        return [subs(i, new_elements) for i in expr]
-
-    elif isinstance(expr, While):
-        test = subs(expr.test, new_elements)
-        body = subs(expr.body, new_elements)
-        return While(test, body)
-
-    elif isinstance(expr, For):
-        target = subs(expr.target, new_elements)
-        it = subs(expr.iterable, new_elements)
-        target = expr.target
-        it = expr.iterable
-        body = subs(expr.body, new_elements)
-        return For(target, it, body)
-
-    elif isinstance(expr, If):
-        args = []
-        for block in expr.args:
-            test = block[0]
-            stmts = block[1]
-            t = subs(test, new_elements)
-            s = subs(stmts, new_elements)
-            args.append((t, s))
-        return If(*args)
-
-    elif isinstance(expr, Return):
-
-        for i in new_elements:
-            expr = expr.subs(i[0],i[1])
-        return expr
-
-    elif isinstance(expr, Assign):
-        new_expr = expr.subs(new_elements)
-        new_expr.set_fst(expr.fst)
-        return new_expr
-    elif isinstance(expr, TypedAstNode):
-        return expr.subs(new_elements)
-
-    else:
-        return expr
-
-def inline(func, args):
-    local_vars = func.local_vars
-    body = func.body
-    body = subs(body, zip(func.arguments, args))
-    return Block(str(func.name), local_vars, body)
-
 def create_variable(forbidden_names, prefix = None, counter = 1):
     """This function takes a prefix and a counter and uses them to construct
     a PyccelSymbol with a name of the form:
@@ -284,25 +217,32 @@ class AsName(PyccelAstNode):
 
 
 class Duplicate(TypedAstNode):
+    """
+    Class representing the duplicate operator in Python.
 
-    """ this is equivalent to the * operator for python tuples.
+    Class representing the duplicate operator in Python. This is equivalent
+    to the * operator for Python tuples, lists, strings, etc. In other words
+    it represents the * operator when it duplicates the first argument passed
+    to the operator, rather than acting as a numerical operator.
 
     Parameters
     ----------
-    value : TypedAstNode
-           an expression which represents the initilized value of the list
+    val : TypedAstNode
+        The object being duplicated.
 
-    shape : the shape of the array
+    length : TypedAstNode
+        The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order')
+    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._dtype     = val.dtype
-        self._precision = val.precision
-        self._rank      = val.rank
-        self._shape     = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
-        self._order     = val.order
+        self._dtype      = val.dtype
+        self._precision  = val.precision
+        self._rank       = val.rank
+        self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
+        self._order      = val.order
+        self._class_type = val.class_type
 
         self._val       = val
         self._length    = length
@@ -323,24 +263,29 @@ class Duplicate(TypedAstNode):
         return '{} * {}'.format(repr(self.val), repr(self.length))
 
 class Concatenate(TypedAstNode):
+    """
+    A class representing the + operator for Python tuples.
 
-    """ this is equivalent to the + operator for python tuples
+    A class representing the + operator for Python tuples.
 
     Parameters
     ----------
-    args : TypedAstNodes
-           The tuples
+    arg1 : TypedAstNodes
+           The first tuple.
+    arg2 : TypedAstNodes
+           The second tuple.
     """
-    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
+    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
-        self._dtype     = arg1.dtype
-        self._precision = arg1.precision
-        self._rank      = arg1.rank
-        shape_addition  = arg2.shape[0]
-        self._shape     = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
-        self._order     = arg1.order
+        self._dtype      = arg1.dtype
+        self._precision  = arg1.precision
+        self._rank       = arg1.rank
+        shape_addition   = arg2.shape[0]
+        self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
+        self._order      = arg1.order
+        self._class_type = arg1.class_type
 
         self._args = (arg1, arg2)
         super().__init__()
@@ -381,7 +326,7 @@ class Assign(PyccelAstNode):
     like : Variable, optional
         Contains the name of the variable from which the lhs will be cloned.
 
-    fst : ast.Ast
+    python_ast : ast.Ast
         The ast object parsed by Python's ast module.
 
     Examples
@@ -410,7 +355,7 @@ class Assign(PyccelAstNode):
         status=None,
         like=None,
         *,
-        fst = None
+        python_ast = None
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
@@ -421,8 +366,8 @@ class Assign(PyccelAstNode):
         self._status = status
         self._like = like
         super().__init__()
-        if fst is not None:
-            self.set_fst(fst)
+        if python_ast is not None:
+            self.set_current_ast(python_ast)
 
     def __str__(self):
         return '{0} := {1}'.format(str(self.lhs), str(self.rhs))
@@ -630,14 +575,21 @@ class Deallocate(PyccelAstNode):
 
 #------------------------------------------------------------------------------
 class CodeBlock(PyccelAstNode):
+    """
+    Represents a block of statements.
 
-    """Represents a list of stmt for code generation.
-       we use it when a single statement in python
-       produce multiple statement in the targeted language
+    Represents a list of statements for code generation. Each statement
+    represents a line of code.
 
-       Parameters
-       ==========
-       body : iterable
+    Parameters
+    ----------
+    body : iterable
+        The lines of code to be grouped together.
+
+    unravelled : bool, default=False
+        Indicates whether the loops in the code have already been unravelled.
+        This is useful for printing in languages which don't support vector
+        expressions.
     """
     __slots__ = ('_body','_unravelled')
     _attribute_nodes = ('_body',)
@@ -706,11 +658,24 @@ class CodeBlock(PyccelAstNode):
         kwargs = dict(body = self.body)
         return (apply, (self.__class__, (), kwargs))
 
-    def set_fst(self, fst):
-        super().set_fst(fst)
+    def set_current_ast(self, ast_node):
+        """
+        Set the `ast.AST` object which describes the parsed code that this node currently represents.
+        
+        Set the AST (abstract syntax tree) object which Python parsed in the original code and which
+        resulted in the creation (or use) of this PyccelAstNode. This object describes the Python code
+        being translated. It provides line numbers and columns which can be used to report the origin
+        of any potential errors.
+
+        Parameters
+        ----------
+        ast_node : ast.AST
+            The AST object which was parsed.
+        """
+        PyccelAstNode.set_current_ast(self, ast_node)
         for l in self.body:
-            if not l.fst:
-                l.set_fst(fst)
+            if not l.python_ast:
+                l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
 
@@ -810,32 +775,33 @@ class AugAssign(Assign):
     r"""
     Represents augmented variable assignment for code generation.
 
+    Represents augmented variable assignment for code generation.
+    Augmented variable assignment is an assignment which modifies the
+    variable using its initial value rather than simply replacing the
+    value; for example via an addition (`+=`).
+
     Parameters
     ----------
-    lhs : TypedAstNode
-        In the syntactic stage:
-           Object representing the lhs of the expression. These should be
-           singular objects, such as one would use in writing code. Notable types
-           include PyccelSymbol, and IndexedElement. Types that
-           subclass these types are also supported.
-        In the semantic stage:
-           Variable or IndexedElement
+    lhs : PyccelSymbol | TypedAstNode
+        Object representing the lhs of the expression.
+        In the syntactic stage this may be a PyccelSymbol, or an IndexedElement.
+        In later stages the object should inherit from TypedAstNode and be fully
+        typed.
 
     op : str
         Operator (+, -, /, \*, %).
 
     rhs : TypedAstNode
-        In the syntactic stage:
-          Object representing the rhs of the expression
-        In the semantic stage :
-          TypedAstNode with the same shape as the lhs
+        Object representing the rhs of the expression.
 
-    status: None, str
-        if lhs is not allocatable, then status is None.
-        otherwise, status is {'allocated', 'unallocated'}
+    status : str, optional
+        See Assign.
 
-    like: None, Variable
-        contains the name of the variable from which the lhs will be cloned.
+    like : TypedAstNode, optional
+        See Assign.
+
+    python_ast : ast.AST
+        The AST node where the object appeared in the original code.
 
     Examples
     --------
@@ -862,7 +828,7 @@ class AugAssign(Assign):
         status=None,
         like=None,
         *,
-        fst = None
+        python_ast = None
         ):
 
         if op not in self._accepted_operators.keys():
@@ -870,7 +836,7 @@ class AugAssign(Assign):
 
         self._op = op
 
-        super().__init__(lhs, rhs, status, like, fst=fst)
+        super().__init__(lhs, rhs, status, like, python_ast=python_ast)
 
     def __repr__(self):
         return '{0} {1}= {2}'.format(str(self.lhs), self.op, str(self.rhs))
@@ -954,23 +920,24 @@ class While(ScopedAstNode):
 
 
 class With(ScopedAstNode):
+    """
+    Represents a 'with' statement in the code.
 
-    """Represents a 'with' statement in the code.
-
+    Represents a 'with' statement in the code.
     Expressions are of the form:
         "with statement:
             body..."
 
+    !! This code is untested.
+
     Parameters
     ----------
     test : TypedAstNode
-        with definition statement given as an expression
-    body : list of Pyccel objects
-        list of statements representing the body of the With statement.
-
-    Examples
-    --------
-
+        With definition statement given as an expression.
+    body : list of PyccelAstNodes
+        List of statements representing the body of the With statement.
+    scope : Scope
+        The scope of the block.
     """
     __slots__ = ('_test','_body')
     _attribute_nodes = ('_test','_body')
@@ -1003,14 +970,25 @@ class With(ScopedAstNode):
 
     @property
     def block(self):
+        """
+        Get the code block for the with block.
+
+        Get the code block created by calling the enter method followed by
+        the code in the with block and finally the exit method.
+
+        Returns
+        -------
+        Block
+            The code block.
+        """
         methods = self.test.cls_base.methods
         for i in methods:
             if str(i.name) == '__enter__':
                 start = i
             elif str(i.name) == '__exit__':
                 end   = i
-        start = inline(start,[])
-        end   = inline(end  ,[])
+        start = FunctionCall(start,[])
+        end   = FunctionCall(end  ,[])
 
         # TODO check if enter is empty or not first
 
@@ -1503,10 +1481,12 @@ class Program(ScopedAstNode):
 #==============================================================================
 class Iterable(PyccelAstNode):
     """
-    Wrapper around iterable types helping to convert between those
-    types and a range (necessary in low level languages, e.g. C and Fortran)
+    Wrapper around iterable types helping to convert between those types and a range.
 
-    Paramaters
+    Wrapper around iterable types helping to convert between those
+    types and a range (necessary in low level languages, e.g. C and Fortran).
+
+    Parameters
     ----------
     iterable : acceptable_iterator_type
                The iterator being wrapped
@@ -1600,7 +1580,16 @@ class Iterable(PyccelAstNode):
             return range_base
 
     def get_range(self):
-        """ Returns the range required for this iterable
+        """
+        Get the range required for this iterable.
+
+        Returns the range which is necessary in a low-level language to iterate over
+        the wrapped iterable.
+
+        Returns
+        -------
+        PythonRange
+            The range which should be used in the code.
         """
         if isinstance(self._iterable, PythonRange):
             return self._iterable
@@ -1608,7 +1597,12 @@ class Iterable(PyccelAstNode):
             return self._iterable.to_range()
         else:
             length = getattr(self._iterable, '__len__',
-                    getattr(self._iterable, 'length', PythonLen(self._iterable)))
+                    getattr(self._iterable, 'length', None))
+
+            # Only create PythonLen if length is None to avoid unnecessary TypeErrors
+            if length is None:
+                length = PythonLen(self._iterable)
+
             if callable(length):
                 length = length()
             return PythonRange(length)
@@ -1719,61 +1713,6 @@ class DoConcurrent(For):
     pass
 
 
-class ForIterator(For):
-
-    """Class that describes iterable classes defined by the user."""
-    __slots__ = ()
-
-    def __init__(
-        self,
-        target,
-        iterable,
-        body,
-        ):
-
-        if isinstance(iterable, Variable):
-            iterable = PythonRange(PythonLen(iterable))
-        super().__init__(target, iterable, body)
-
-    # TODO uncomment later when we intriduce iterators
-    # @property
-    # def target(self):
-    #    ts = super(ForIterator, self).target
-
-    #    if not(len(ts) == self.depth):
-    #        raise ValueError('wrong number of targets')
-
-    #    return ts
-
-    @property
-    def depth(self):
-        it = self.iterable
-        if isinstance(it, Variable):
-            if isinstance(it.dtype, NativeRange):
-                return 1
-
-            cls_base = it.cls_base
-            if not cls_base:
-                raise TypeError('cls_base undefined')
-
-            methods = cls_base.methods_as_dict
-            it_method = methods['__iter__']
-
-            it_vars = []
-            for stmt in it_method.body:
-                if isinstance(stmt, Assign):
-                    it_vars.append(stmt.lhs)
-
-            n = len(set(str(var.name) for var in it_vars))
-            return n
-        else:
-
-            return 1
-
-    @property
-    def ranges(self):
-        return get_iterable_ranges(self.iterable)
-
 class FunctionCallArgument(PyccelAstNode):
     """
     An argument passed in a function call.
@@ -1788,17 +1727,17 @@ class FunctionCallArgument(PyccelAstNode):
     keyword : str, optional
         If the argument is passed by keyword then this
         is that keyword.
-    fst : ast.Ast
+    python_ast : ast.Ast
         The ast object parsed by Python's ast module.
     """
     __slots__ = ('_value', '_keyword')
     _attribute_nodes = ('_value',)
-    def __init__(self, value, keyword = None, *, fst = None):
+    def __init__(self, value, keyword = None, *, python_ast = None):
         self._value = value
         self._keyword = keyword
         super().__init__()
-        if fst:
-            self.set_fst(fst)
+        if python_ast:
+            self.set_current_ast(python_ast)
 
     @property
     def value(self):
@@ -2075,7 +2014,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_dtype','_precision','_shape','_rank','_order')
+                 '_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2144,14 +2083,37 @@ class FunctionCall(TypedAstNode):
             if len(func.results)>0 and not isinstance(func.results[0], TypedAstNode):
                 errors.report(RECURSIVE_RESULTS_REQUIRED, symbol=func, severity="fatal")
 
-        self._funcdef       = func
-        self._arguments     = args
-        self._dtype         = func.results[0].var.dtype     if len(func.results) == 1 else NativeTuple()
-        self._rank          = func.results[0].var.rank      if len(func.results) == 1 else None
-        self._shape         = func.results[0].var.shape     if len(func.results) == 1 else None
-        self._precision     = func.results[0].var.precision if len(func.results) == 1 else None
-        self._order         = func.results[0].var.order     if len(func.results) == 1 else None
-        self._func_name     = func.name
+        self._funcdef    = func
+        self._arguments  = args
+        self._func_name  = func.name
+        n_results = len(func.results)
+        if n_results == 1:
+            self._dtype      = func.results[0].var.dtype
+            self._rank       = func.results[0].var.rank
+            self._shape      = func.results[0].var.shape
+            self._precision  = func.results[0].var.precision
+            self._order      = func.results[0].var.order
+            self._class_type = func.results[0].var.class_type
+        elif n_results == 0:
+            self._dtype      = NativeVoid()
+            self._rank       = 0
+            self._shape      = None
+            self._precision  = None
+            self._order      = None
+            self._class_type = NativeVoid()
+        else:
+            dtypes = [r.var.dtype for r in func.results]
+            if all(d is dtypes[0] for d in dtypes):
+                dtype = NativeHomogeneousTuple()
+            else:
+                dtype = NativeInhomogeneousTuple(*dtypes)
+            self._dtype      = dtype
+            self._rank       = 1
+            self._shape      = (LiteralInteger(n_results),)
+            self._precision  = None
+            self._order      = None
+            self._class_type = dtype
+
         super().__init__()
 
     @property
@@ -3489,36 +3451,6 @@ class ClassDef(ScopedAstNode):
         interface.set_current_user_node(self)
         self._interfaces += (interface,)
 
-    def get_attribute(self, O, attr):
-        """Returns the attribute attr of the class O of instance self."""
-
-        if not isinstance(attr, str):
-            raise TypeError('Expecting attribute to be a string')
-
-        if isinstance(O, Variable):
-            cls_name = O.name
-        else:
-            cls_name = str(O)
-
-        attributes = {}
-        for i in self.attributes:
-            attributes[i.name] = i
-
-        if not attr in attributes:
-            raise ValueError('{0} is not an attribute of {1}'.format(attr,
-                             str(self)))
-
-        var = attributes[attr]
-        name = DottedName(cls_name, var.name)
-        return Variable(
-            var.dtype,
-            name,
-            rank=var.rank,
-            memory_handling=var.memory_handling,
-            shape=var.shape,
-            cls_base=var.cls_base,
-            )
-
     def get_method(self, name):
         """
         Get the method `name` of the current class.
@@ -4361,14 +4293,19 @@ class StarredArguments(PyccelAstNode):
 
 class InProgram(TypedAstNode):
     """
-    Class representing the boolean:
-    __name__ == '__main__'
+    Class representing the 'in program' test.
+
+    Class representing the test indicating whether the code should
+    only be executed when the file is executed as a program. In
+    other words, a class representing the boolean:
+    `__name__ == '__main__'`
     """
     _dtype = NativeBool()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeBool()
     _attribute_nodes = ()
     __slots__ = ()
 
@@ -4395,221 +4332,6 @@ class Decorator(PyccelAstNode):
         """ Return the name of the decorator
         """
         return self._name
-
-# ... TODO: improve and make it recursive
-
-def get_iterable_ranges(it, var_name=None):
-    """Returns ranges of an iterable object."""
-
-    if isinstance(it, Variable):
-        if it.cls_base is None:
-            raise TypeError('iterable must be an iterable Variable object'
-                            )
-
-        # ...
-
-        def _construct_arg_Range(name):
-            if not isinstance(name, DottedName):
-                raise TypeError('Expecting a DottedName, given  {0}'.format(type(name)))
-
-            if not var_name:
-                return DottedName(it.name.name[0], name.name[1])
-            else:
-                return DottedName(var_name, name.name[1])
-
-        # ...
-
-        cls_base = it.cls_base
-
-        if isinstance(cls_base, PythonRange):
-            if not isinstance(it.name, DottedName):
-                raise TypeError('Expecting a DottedName, given  {0}'.format(type(it.name)))
-
-            args = []
-            for i in [cls_base.start, cls_base.stop, cls_base.step]:
-                if isinstance(i, Variable):
-                    arg_name = _construct_arg_Range(i.name)
-                    arg = i.clone(arg_name)
-                elif isinstance(i, IndexedElement):
-                    arg_name = _construct_arg_Range(i.base.name)
-                    base = i.base.clone(arg_name)
-                    indices = i.indices
-                    arg = base[indices]
-                else:
-                    raise TypeError('Wrong type, given {0}'.format(type(i)))
-                args += [arg]
-
-            return [PythonRange(*args)]
-
-    elif isinstance(it, ConstructorCall):
-        cls_base = it.this.cls_base
-
-        # arguments[0] is 'self'
-
-        args = []
-        kwargs = {}
-        for a in it.arguments[1:]:
-            if isinstance(a, dict):
-
-                # we add '_' tp be conform with the private variables convention
-
-                kwargs['{0}'.format(a['key'])] = a['value']
-            else:
-                args.append(a)
-
-        # TODO improve
-
-        params = args
-
-#        for k,v in kwargs:
-#            params.append(k)
-
-    methods = cls_base.methods_as_dict
-    init_method = methods['__init__']
-
-    args = init_method.arguments[1:]
-    args = [str(i) for i in args]
-
-    # ...
-
-    it_method = methods['__iter__']
-    targets = []
-    starts = []
-    for stmt in it_method.body:
-        if isinstance(stmt, Assign):
-            targets.append(stmt.lhs)
-            starts.append(stmt.lhs)
-
-    names = []
-    for i in starts:
-        if isinstance(i, IndexedElement):
-            names.append(str(i.base))
-        else:
-            names.append(str(i))
-    names = list(set(names))
-
-    inits = {}
-    for stmt in init_method.body:
-        if isinstance(stmt, Assign):
-            if str(stmt.lhs) in names:
-                expr = stmt.rhs
-                for (a_old, a_new) in zip(args, params):
-                    dtype = datatype(stmt.rhs.dtype)
-                    v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedElement, str, Variable)):
-                        v_new = Variable(dtype, a_new)
-                    else:
-                        v_new = a_new
-                    expr = subs(expr, v_old, v_new)
-                    inits[str(stmt.lhs)] = expr
-
-    _starts = []
-    for i in starts:
-        if isinstance(i, IndexedElement):
-            _starts.append(i.base)
-        else:
-            _starts.append(i)
-    starts = [inits[str(i)] for i in _starts]
-
-    # ...
-
-    def _find_stopping_criterium(stmts):
-        for stmt in stmts:
-            if isinstance(stmt, If):
-                if not len(stmt.args) == 2:
-                    raise ValueError('Wrong __next__ pattern')
-
-                (ct, et) = stmt.args[0]
-                (cf, ef) = stmt.args[1]
-
-                for i in et:
-                    if isinstance(i, Raise):
-                        return cf
-
-                for i in ef:
-                    if isinstance(i, Raise):
-                        return ct
-
-                raise TypeError('Wrong type for __next__ pattern')
-
-        return None
-
-    # ...
-
-    # ...
-
-    def doit(expr, targets):
-        if isinstance(expr, Relational):
-            if str(expr.lhs) in targets and expr.rel_op in ['<', '<=']:
-                return expr.rhs
-            elif str(expr.rhs) in targets and expr.rel_op in ['>', '>='
-                    ]:
-                return expr.lhs
-            else:
-                return None
-        elif isinstance(expr, sp_And):
-            return [doit(a, targets) for a in expr.args]
-        else:
-            raise TypeError('Expecting And logical expression.')
-
-    # ...
-
-    # ...
-
-    next_method = methods['__next__']
-    ends = []
-    cond = _find_stopping_criterium(next_method.body)
-
-    # TODO treate case of cond with 'and' operation
-    # TODO we should avoid using str
-    #      must change target from DottedName to Variable
-
-    targets = [str(i) for i in targets]
-    ends = doit(cond, targets)
-
-    # TODO not use str
-
-    if not isinstance(ends, (list, tuple)):
-        ends = [ends]
-
-    names = []
-    for i in ends:
-        if isinstance(i, IndexedElement):
-            names.append(str(i.base))
-        else:
-            names.append(str(i))
-    names = list(set(names))
-
-    inits = {}
-    for stmt in init_method.body:
-        if isinstance(stmt, Assign):
-            if str(stmt.lhs) in names:
-                expr = stmt.rhs
-                for (a_old, a_new) in zip(args, params):
-                    dtype = datatype(stmt.rhs.dtype)
-                    v_old = Variable(dtype, a_old)
-                    if isinstance(a_new, (IndexedElement, str, Variable)):
-                        v_new = Variable(dtype, a_new)
-                    else:
-                        v_new = a_new
-                    expr = subs(expr, v_old, v_new)
-                    inits[str(stmt.lhs)] = expr
-
-    _ends = []
-    for i in ends:
-        if isinstance(i, IndexedElement):
-            _ends.append(i.base)
-        else:
-            _ends.append(i)
-    ends = [inits[str(i)] for i in _ends]
-
-
-    if not len(ends) == len(starts):
-        raise ValueError('wrong number of starts/ends')
-
-    # ...
-
-    return [PythonRange(s, e, 1) for (s, e) in zip(starts, ends)]
 
 #==============================================================================
 
