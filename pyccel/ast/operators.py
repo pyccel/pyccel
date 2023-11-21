@@ -175,7 +175,7 @@ class PyccelOperator(TypedAstNode):
         uses the static method `_calculate_dtype` to set these values. If the
         values are class parameters in a sub-class, this method must be over-ridden.
         """
-        self._dtype, self._precision = self._calculate_dtype(*self._args)  # pylint: disable=no-member
+        self._dtype, self._precision, self._class_type = self._calculate_dtype(*self._args)  # pylint: disable=no-member
 
     def _set_shape_rank(self):
         """
@@ -290,20 +290,38 @@ class PyccelUnaryOperator(PyccelOperator):
     arg : TypedAstNode
         The argument passed to the operator.
     """
-    __slots__ = ('_dtype', '_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype', '_precision','_shape','_rank','_order','_class_type')
 
     def __init__(self, arg):
         super().__init__(arg)
 
     @staticmethod
-    def _calculate_dtype(*args):
-        """ Sets the dtype and precision
-        They are chosen to match the argument
+    def _calculate_dtype(arg):
         """
-        a = args[0]
-        dtype = a.dtype
-        precision = a.precision
-        return dtype, precision
+        Calculate the dtype, precision and class type of the result.
+
+        Calculate the dtype, precision and class type of the result.
+        These are equivalent to the dtype, precision and class type
+        of the only argument.
+
+        Parameters
+        ----------
+        arg : TypedAstNode
+            The argument passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
+        """
+        dtype = arg.dtype
+        precision = arg.precision
+        class_type = arg.class_type
+        return dtype, precision, class_type
 
     @staticmethod
     def _calculate_shape_rank(*args):
@@ -385,14 +403,31 @@ class PyccelNot(PyccelUnaryOperator):
     _precedence = 6
 
     @staticmethod
-    def _calculate_dtype(*args):
-        """ Sets the dtype and precision
-        They are chosen to match the argument unless the class has
-        a _dtype or _precision member
+    def _calculate_dtype(arg):
+        """
+        Calculate the dtype, precision and class type of the result.
+
+        Calculate the dtype, precision and class type of the result.
+        These are the dtype, precision and class type which represent a
+        boolean.
+
+        Parameters
+        ----------
+        arg : TypedAstNode
+            The argument passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         dtype = NativeBool()
         precision = -1
-        return dtype, precision
+        return dtype, precision, dtype
 
     @staticmethod
     def _calculate_shape_rank(*args):
@@ -445,13 +480,13 @@ class PyccelBinaryOperator(PyccelOperator):
     arg2 : TypedAstNode
         The second argument passed to the operator.
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
 
     @classmethod
-    def _calculate_dtype(cls, *args):
+    def _calculate_dtype(cls, arg1, arg2):
         """
         Sets the dtype and precision.
 
@@ -464,25 +499,38 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Parameters
         ----------
-        *args : tuple of TypedAstNodes
-            The arguments of the operators.
-        """
-        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
-        if strs:
-            assert len(integers + floats + complexes) == 0
-            return cls._handle_str_type(strs)
-        elif complexes:
-            return cls._handle_complex_type(args)
-        elif floats:
-            return cls._handle_float_type(args)
-        elif integers:
-            return cls._handle_integer_type(args)
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
+        """
+        try:
+            dtype = arg1.dtype + arg2.dtype
+            class_type = arg1.class_type + arg2.class_type
+        except NotImplementedError:
+            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
+
+        if dtype is NativeString():
+            return *cls._handle_str_type((arg1, arg2)), class_type
+        elif dtype is NativeComplex():
+            return *cls._handle_complex_type((arg1, arg2)), class_type
+        elif dtype is NativeFloat():
+            return *cls._handle_float_type((arg1, arg2)), class_type
+        elif dtype in (NativeInteger(), NativeBool()):
+            if class_type is NativeBool():
+                class_type = NativeInteger()
+            return *cls._handle_integer_type((arg1, arg2)), class_type
         else:
-            raise TypeError(f'cannot determine the type of {args}')
+            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})')
 
     @staticmethod
     def _handle_str_type(strs):
@@ -634,7 +682,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         if simplify:
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelMinus(arg1, arg2.args[0], simplify = True)
-            dtype, precision = cls._calculate_dtype(arg1, arg2)
+            dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 return convert_to_literal(arg1.python_value + arg2.python_value,
                                           dtype, precision)
@@ -700,14 +748,14 @@ class PyccelMul(PyccelArithmeticOperator):
             if (arg2 == 1):
                 return arg1
             if (arg1 == 0 or arg2 == 0):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(0, dtype, precision)
             if (isinstance(arg1, PyccelUnarySub) and arg1.args[0] == 1):
                 return PyccelUnarySub(arg2)
             if (isinstance(arg2, PyccelUnarySub) and arg2.args[0] == 1):
                 return PyccelUnarySub(arg1)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(arg1.python_value * arg2.python_value,
                                           dtype, precision)
         return super().__new__(cls)
@@ -748,7 +796,7 @@ class PyccelMinus(PyccelArithmeticOperator):
             if isinstance(arg2, PyccelUnarySub):
                 return PyccelAdd(arg1, arg2.args[0], simplify = True)
             elif isinstance(arg1, Literal) and isinstance(arg2, Literal):
-                dtype, precision = cls._calculate_dtype(arg1, arg2)
+                dtype, precision, _ = cls._calculate_dtype(arg1, arg2)
                 return convert_to_literal(arg1.python_value - arg2.python_value,
                                           dtype, precision)
         if isinstance(arg1, LiteralFloat) and \
@@ -881,9 +929,30 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     _precedence = 7
     @staticmethod
     def _calculate_dtype(*args):
+        """
+        Calculate the dtype, precision and class type of the result.
+
+        Calculate the dtype, precision and class type of the result.
+        These are the dtype, precision and class type which represent a
+        boolean.
+
+        Parameters
+        ----------
+        *args : TypedAstNode
+            The arguments passed to the operator.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
+        """
         dtype = NativeBool()
         precision = -1
-        return dtype, precision
+        return dtype, precision, dtype
 
 #==============================================================================
 
@@ -1057,11 +1126,12 @@ class PyccelBooleanOperator(PyccelOperator):
     *args : tuple of TypedAstNode
         The arguments passed to the operator.
     """
-    dtype = NativeBool()
-    precision = -1
-    rank = 0
-    shape = None
-    order = None
+    _dtype = NativeBool()
+    _precision = -1
+    _rank = 0
+    _shape = None
+    _order = None
+    _class_type = NativeBool()
 
     __slots__ = ()
 
@@ -1253,7 +1323,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
@@ -1276,7 +1346,31 @@ class IfTernaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_dtype(cond, value_true, value_false):
         """
-        Sets the dtype and precision for IfTernaryOperator
+        Calculate the dtype, precision and class type of the result.
+
+        Calculate the dtype, precision and class type of the result. The dtype,
+        precision and class type are calculated from the types of the values if
+        true or false.
+
+        Parameters
+        ----------
+        cond : TypedAstNode
+            The first argument passed to the operator representing the condition.
+        value_true : TypedAstNode
+            The second argument passed to the operator representing the result if the
+            condition is true.
+        value_false : TypedAstNode
+            The third argument passed to the operator representing the result if the
+            condition is false.
+
+        Returns
+        -------
+        dtype : DataType
+            The underlying datatype of the object.
+        precision : int
+            The precision of the datatype of the object.
+        class_type : DataType
+            The Python type of the object.
         """
         if value_true.dtype in NativeNumeric and value_false.dtype in NativeNumeric:
             dtype = max([value_true.dtype, value_false.dtype], key = NativeNumeric.index)
@@ -1284,7 +1378,9 @@ class IfTernaryOperator(PyccelOperator):
             dtype = value_true.dtype
 
         precision = max_precision([value_true, value_false])
-        return dtype, precision
+
+        class_type = value_true.class_type + value_false.class_type
+        return dtype, precision, class_type
 
     @staticmethod
     def _calculate_shape_rank(cond, value_true, value_false):
