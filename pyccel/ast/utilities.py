@@ -654,12 +654,18 @@ def insert_fors(blocks, indices, scope, level = 0):
 #==============================================================================
 def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     """
-    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
+
+    Simplify expressions in a CodeBlock by unravelling tuple assignments into multiple lines.
+    These changes are carried out in-place.
 
     Parameters
-    ==========
-    block      : CodeBlock
-                The expression to be modified
+    ----------
+    block : CodeBlock
+        The expression to be modified.
+
+    language_has_vectors : bool, default=False
+        Indicates whether the target language has built-in support for vector operations.
 
     Examples
     --------
