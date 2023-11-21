@@ -2845,31 +2845,8 @@ class SemanticParser(BasicParser):
                 i.set_current_ast(python_ast)
             return rhs
 
-        elif isinstance(rhs, CodeBlock):
-            if len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
-                return rhs
-
-            # case of complex stmt
-            # that needs to be splitted
-            # into a list of stmts
-            stmts = rhs.body
-            stmt  = stmts[-1]
-            lhs   = expr.lhs
-            if isinstance(lhs, PyccelSymbol):
-                name = lhs
-                if self.check_for_variable(name) is None:
-                    d_var = self._infer_type(stmt)
-                    dtype = d_var.pop('datatype')
-                    lhs = Variable(dtype, name , **d_var, is_temp = lhs.is_temp)
-                    self.scope.insert_variable(lhs)
-
-            if isinstance(expr, Assign):
-                stmt = Assign(lhs, stmt)
-            elif isinstance(expr, AugAssign):
-                stmt = AugAssign(lhs, expr.op, stmt)
-            stmt.set_current_ast(python_ast)
-            stmts[-1] = stmt
-            return CodeBlock(stmts)
+        elif isinstance(rhs, CodeBlock) and len(rhs.body)>1 and isinstance(rhs.body[1], FunctionalFor):
+            return rhs
 
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
