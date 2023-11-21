@@ -779,6 +779,11 @@ class InhomogeneousTupleVariable(Variable):
 
     @property
     def is_ndarray(self):
+        """
+        Helper function to determine whether the variable is a NumPy array.
+
+        Helper function to determine whether the variable is a NumPy array.
+        """
         return False
 
 class Constant(Variable):
