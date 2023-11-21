@@ -10,7 +10,7 @@ They also have specific rules to determine the dtype, precision, rank, shape
 """
 from .builtins     import PythonInt
 from .datatypes    import (NativeBool, NativeInteger, NativeFloat,
-                           NativeComplex, NativeString)
+                           NativeComplex, NativeString, NativeGeneric)
 from .internals    import max_precision
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
@@ -70,7 +70,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         self._args      = (PythonInt(arg) if arg.dtype is NativeBool() else arg,)
         precision = arg.precision
-        return dtype, precision
+        return dtype, precision, dtype
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
@@ -93,7 +93,7 @@ class PyccelBitOperator(PyccelOperator):
     _shape = None
     _rank  = 0
     _order = None
-    __slots__ = ('_dtype','_precision')
+    __slots__ = ('_dtype','_precision','_class_type')
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -124,17 +124,20 @@ class PyccelBitOperator(PyccelOperator):
         precision : integer
             The precision of the result of the operation.
         """
-        integers  = [a for a in args if a.dtype in (NativeInteger(),NativeBool())]
-        floats    = [a for a in args if a.dtype is NativeFloat()]
-        complexes = [a for a in args if a.dtype is NativeComplex()]
-        strs      = [a for a in args if a.dtype is NativeString()]
+        try:
+            dtype = sum((a.dtype for a in args), start=NativeGeneric())
+            class_type = sum((a.class_type for a in args), start=NativeGeneric())
+        except NotImplementedError:
+            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
-        if strs or complexes or floats:
+        if dtype in (NativeString(), NativeComplex(), NativeFloat()):
             raise TypeError(f'unsupported operand type(s): {args}')
-        elif integers:
-            return self._handle_integer_type(integers)
+        elif (dtype in (NativeInteger(), NativeBool())):
+            if class_type is NativeBool():
+                class_type = NativeInteger()
+            return *self._handle_integer_type(args), class_type
         else:
-            raise TypeError(f'cannot determine the type of {args}')
+            raise TypeError(f'Cannot determine the type of {args}')
 
     def _set_shape_rank(self):
         pass

@@ -76,7 +76,17 @@ __all__ = (
 # Base classes
 #==============================================================================
 class MathFunctionBase(PyccelInternalFunction):
-    """Abstract base class for the Math Functions"""
+    """
+    Abstract base class for the Math Functions.
+
+    A super-class from which all functions in the `math` library
+    should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     _shape = None
     _rank  = 0
@@ -84,24 +94,60 @@ class MathFunctionBase(PyccelInternalFunction):
 
 
 class MathFunctionFloat(MathFunctionBase):
+    """
+    Super-class from which functions returning a float inherit.
+
+    A super-class from which functions in the `math` library which
+    return a float should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'float'
     _dtype = NativeFloat()
     _precision = -1
+    _class_type = NativeFloat()
 
 
 class MathFunctionInt(MathFunctionBase):
+    """
+    Super-class from which functions returning an integer inherit.
+
+    A super-class from which functions in the `math` library which
+    return an integer should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'int'
     _dtype = NativeInteger()
     _precision = -1
+    _class_type = NativeInteger()
 
 
 class MathFunctionBool(MathFunctionBase):
+    """
+    Super-class from which functions returning a boolean inherit.
+
+    A super-class from which functions in the `math` library which
+    return a boolean should inherit.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
+    """
     __slots__ = ()
     name = 'bool'
     _dtype = NativeBool()
     _precision = -1
+    _class_type = NativeBool()
 
 #==============================================================================
 # Functions that return one value
@@ -121,6 +167,8 @@ class MathAcos(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'acos'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathAcosh(MathFunctionFloat):
@@ -136,6 +184,8 @@ class MathAcosh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'acosh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathAsin(MathFunctionFloat):
@@ -151,6 +201,8 @@ class MathAsin(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'asin'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathAsinh(MathFunctionFloat):
@@ -166,6 +218,8 @@ class MathAsinh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'asinh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathAtan(MathFunctionFloat):
@@ -181,6 +235,8 @@ class MathAtan(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atan'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathAtan2   (MathFunctionFloat):
@@ -198,7 +254,8 @@ class MathAtan2   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atan2'
-
+    def __init__(self, y, x):
+        super().__init__(y, x)
 
 class MathAtanh(MathFunctionFloat):
     """
@@ -213,6 +270,8 @@ class MathAtanh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'atanh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathCopysign(MathFunctionFloat):
@@ -224,10 +283,14 @@ class MathCopysign(MathFunctionFloat):
     Parameters
     ----------
     x : TypedAstNode
-        The expression passed as argument to the function.
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'copysign'
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
 
 class MathCos(MathFunctionFloat):
@@ -243,6 +306,8 @@ class MathCos(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'cos'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathCosh(MathFunctionFloat):
@@ -258,6 +323,8 @@ class MathCosh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'cosh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathErf(MathFunctionFloat):
@@ -273,6 +340,8 @@ class MathErf(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'erf'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathErfc(MathFunctionFloat):
@@ -288,6 +357,8 @@ class MathErfc(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'erfc'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathExp(MathFunctionFloat):
@@ -303,12 +374,25 @@ class MathExp(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'exp'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathExpm1   (MathFunctionFloat):
-    """Represent a call to the expm1 function in the Math library"""
+    """
+    Class representing a call to the `math.expm1` function.
+
+    A class which represents a call to the `expm1` function from the `math` library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The expression passed as argument to the function.
+    """
     __slots__ = ()
     name = 'expm1'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathFabs(MathFunctionFloat):
@@ -324,6 +408,8 @@ class MathFabs(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fabs'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathFmod(MathFunctionFloat):
@@ -339,6 +425,8 @@ class MathFmod(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fmod'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathFsum(MathFunctionFloat):
@@ -354,6 +442,8 @@ class MathFsum(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'fsum'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathGamma(MathFunctionFloat):
@@ -369,6 +459,8 @@ class MathGamma(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'gamma'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathHypot(MathFunctionFloat):
@@ -379,8 +471,8 @@ class MathHypot(MathFunctionFloat):
 
     Parameters
     ----------
-    x : TypedAstNode
-        The expression passed as argument to the function.
+    *args : TypedAstNode
+        The arguments passed to the function.
     """
     __slots__ = ()
     name = 'hypot'
@@ -395,10 +487,14 @@ class MathLdexp(MathFunctionFloat):
     Parameters
     ----------
     x : TypedAstNode
-        The expression passed as argument to the function.
+        The first expression passed as argument to the function.
+    i : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'ldexp'
+    def __init__(self, x, i):
+        super().__init__(x, i)
 
 
 class MathLgamma(MathFunctionFloat):
@@ -414,6 +510,8 @@ class MathLgamma(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'lgamma'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathLog(MathFunctionFloat):
@@ -429,6 +527,8 @@ class MathLog(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'log'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathLog10   (MathFunctionFloat):
@@ -444,6 +544,8 @@ class MathLog10   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'log10'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathLog1p   (MathFunctionFloat):
@@ -459,6 +561,8 @@ class MathLog1p   (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'log1p'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathLog2    (MathFunctionFloat):
@@ -474,6 +578,8 @@ class MathLog2    (MathFunctionFloat):
     """
     __slots__ = ()
     name = 'log2'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathPow(MathFunctionFloat):
@@ -485,10 +591,14 @@ class MathPow(MathFunctionFloat):
     Parameters
     ----------
     x : TypedAstNode
-        The expression passed as argument to the function.
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'pow'
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
 
 class MathSin(MathFunctionFloat):
@@ -504,6 +614,8 @@ class MathSin(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sin'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathSinh(MathFunctionFloat):
@@ -519,6 +631,8 @@ class MathSinh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sinh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathSqrt(MathFunctionFloat):
@@ -534,6 +648,8 @@ class MathSqrt(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'sqrt'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathTan(MathFunctionFloat):
@@ -549,6 +665,8 @@ class MathTan(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'tan'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathTanh(MathFunctionFloat):
@@ -564,6 +682,8 @@ class MathTanh(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'tanh'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathRemainder(MathFunctionFloat):
@@ -575,10 +695,14 @@ class MathRemainder(MathFunctionFloat):
     Parameters
     ----------
     x : TypedAstNode
-        The expression passed as argument to the function.
+        The first expression passed as argument to the function.
+    y : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'remainder'
+    def __init__(self, x, y):
+        super().__init__(x, y)
 
 class MathRadians(MathFunctionFloat):
     """
@@ -593,6 +717,8 @@ class MathRadians(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'radians'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathDegrees(MathFunctionFloat):
@@ -608,6 +734,8 @@ class MathDegrees(MathFunctionFloat):
     """
     __slots__ = ()
     name = 'degrees'
+    def __init__(self, x):
+        super().__init__(x)
 
 # Integer result
 class MathFactorial(MathFunctionInt):
@@ -623,6 +751,8 @@ class MathFactorial(MathFunctionInt):
     """
     __slots__ = ()
     name = 'factorial'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathGcd(MathFunctionInt):
@@ -633,8 +763,8 @@ class MathGcd(MathFunctionInt):
 
     Parameters
     ----------
-    x : TypedAstNode
-        The expression passed as argument to the function.
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
     """
     __slots__ = ()
     name = 'gcd'
@@ -648,8 +778,8 @@ class MathLcm(MathFunctionInt):
 
     Parameters
     ----------
-    x : TypedAstNode
-        The expression passed as argument to the function.
+    *args : tuple of TypedAstNode
+        The arguments passed to the function.
     """
     __slots__ = ()
     name = 'lcm'
@@ -667,6 +797,8 @@ class MathCeil(MathFunctionInt):
     """
     __slots__ = ()
     name = 'ceil'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathFloor(MathFunctionInt):
@@ -682,6 +814,8 @@ class MathFloor(MathFunctionInt):
     """
     __slots__ = ()
     name = 'floor'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathTrunc(MathFunctionInt):
@@ -697,6 +831,8 @@ class MathTrunc(MathFunctionInt):
     """
     __slots__ = ()
     name = 'trunc'
+    def __init__(self, x):
+        super().__init__(x)
 
 # Boolean result
 class MathIsclose(MathFunctionBool):
@@ -707,11 +843,15 @@ class MathIsclose(MathFunctionBool):
 
     Parameters
     ----------
-    x : TypedAstNode
-        The expression passed as argument to the function.
+    a : TypedAstNode
+        The first expression passed as argument to the function.
+    b : TypedAstNode
+        The second expression passed as argument to the function.
     """
     __slots__ = ()
     name = 'isclose'
+    def __init__(self, a, b):
+        super().__init__(a, b)
 
 
 class MathIsfinite(MathFunctionBool):
@@ -727,6 +867,8 @@ class MathIsfinite(MathFunctionBool):
     """
     __slots__ = ()
     name = 'isfinite'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathIsinf(MathFunctionBool):
@@ -742,6 +884,8 @@ class MathIsinf(MathFunctionBool):
     """
     __slots__ = ()
     name = 'isinf'
+    def __init__(self, x):
+        super().__init__(x)
 
 
 class MathIsnan(MathFunctionBool):
@@ -757,6 +901,8 @@ class MathIsnan(MathFunctionBool):
     """
     __slots__ = ()
     name = 'isnan'
+    def __init__(self, x):
+        super().__init__(x)
 
 #==============================================================================
 # Functions that return two values

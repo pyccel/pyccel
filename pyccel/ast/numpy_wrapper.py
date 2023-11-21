@@ -123,7 +123,7 @@ array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
                            arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional=True))],
-                           results   = [FunctionDefResult(Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1))])
+                           results   = [FunctionDefResult(Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1, class_type = NativeVoid()))])
 
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
