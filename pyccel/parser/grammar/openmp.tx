@@ -1,10 +1,10 @@
 //Omp:
-//  statements*=OmpStatement
+//  statements*=OmpStatement raw=''
 //;
 
 OmpStatement:
-  '#$' 'omp' statement=OmpDirective
-  | '#$' 'omp' statement=OmpEndDirective
+  '#$' 'omp' statement=OmpDirective raw=''
+  | '#$' 'omp' statement=OmpEndDirective raw=''
 ;
 
 OmpEndDirective: 'end'      name=DirectivesNames _tx_clauses*=AllOmpClauses;
@@ -81,6 +81,7 @@ ParallelClauses:
     | copyin_clause
     | reduction_clause
     | proc_bind_clause
+    | allocate_clause
 ;
 
 ForClauses:
@@ -171,6 +172,7 @@ TeamsClauses:
     | firstprivate_clause
     | shared_clause
     | reduction_clause
+    | allocate_clause
 ;
 
 DistributeClauses:
@@ -233,8 +235,10 @@ AllOmpClauses:
 ////////////////////////////////////////////////////
 //              Clauses definitions
 ////////////////////////////////////////////////////
+
 if_clause: name='if' '('(
-                   VERSION=OMP_4_5 (directive_name_modifier='parallel' ':')? omp_expr=OmpScalarExpr
+                    VERSION=OMP_5_0 directive_name_modifier='parallel' ':' omp_expr=OmpScalarExpr allowed_parents=PARALLEL_PARENT
+                    | VERSION=OMP_4_5  omp_expr=OmpScalarExpr
              )')';
 
 num_threads_clause: name='num_threads' '('(
@@ -255,7 +259,8 @@ firstprivate_clause: name='firstprivate' '('(
              )')';
 
 lastprivate_clause: name='lastprivate' '('(
-                   VERSION=OMP_4_5 omp_exprs=OmpList
+                       VERSION=OMP_5_0 (modifier=lastprivate_modifier)? omp_exprs=OmpList
+                       | VERSION=OMP_4_5 omp_exprs=OmpList
              )')';
 
 
@@ -268,8 +273,9 @@ copyin_clause: name='copyin' '('(
              )')';
 
 reduction_clause: name='reduction' '('(
-                     VERSION=OMP_4_5 operator=ReductionOperator ':' omp_exprs=OmpList
-                   | VERSION=OMP_5_0 (modifier=ReductionModifier ',')? operator=ReductionOperator ':' omp_exprs=OmpList
+                   VERSION=OMP_5_0 modifier='default' ',' operator=ReductionOperator ':' omp_exprs=OmpList allowed_parents=TEAMS_PARENT allowed_parents=PARALLEL_PARENT
+                   | VERSION=OMP_5_0 modifier=ReductionModifier ',' operator=ReductionOperator ':' omp_exprs=OmpList allowed_parents=PARALLEL_PARENT
+                   | VERSION=OMP_4_5 operator=ReductionOperator ':' omp_exprs=OmpList
              )')';
 
 proc_bind_clause: name='proc_bind' '('(
@@ -389,6 +395,7 @@ DataSharingAttribute: ('shared' | 'none' | 'private' | 'firstprivate');
 ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'max'); // TODO: those are only the implicitly declared ones for C and C++. Add the others for Fortran and support user-defined ones (see specs https://www.openmp.org/spec-html/5.0/openmpsu107.html#x140-581002)
 AffinityPolicy: ('close' | 'spread');
 ReductionModifier: ('inscan' | 'task' | 'default');
+lastprivate_modifier: 'conditional';
 ScheduleModifier: 'monotonic' | 'nonmonotonic' | 'simd';
 ScheduleKind: 'static' | 'dynamic' | 'guided' | 'auto' | 'runtime';
 DependenceType: 'in' | 'out' | 'inout';
@@ -407,4 +414,5 @@ OMP_4_5: '';
 OMP_5_0: '';
 OMP_5_1: '';
 TRUE: '';
-POS: start='' end='';
+PARALLEL_PARENT: '';
+TEAMS_PARENT: '';

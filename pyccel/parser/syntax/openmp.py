@@ -12,7 +12,7 @@ from textx.metamodel import metamodel_from_file
 from textx.exceptions import TextXError
 from pyccel.ast.omp import OmpAnnotatedComment
 from .omp_versions import openmp_versions
-
+from textx import metamodel_for_language
 
 this_folder = dirname(__file__)
 # Get meta-model from language description
@@ -23,7 +23,7 @@ omp = openmp_versions["4.5"]
 omp_syntax_parser = omp.SyntaxParser
 omp_semantic_parser = omp.SemanticParser
 omp_ccodeprinter = omp.CCodePrinter
-omp.OmpAnnotatedComment.set_current_version(4.5)
+omp.OmpAnnotatedComment.set_current_version(5.0)
 omp_classes = omp.inner_classes_list()
 
 meta = metamodel_from_file(grammar, classes=omp_classes)
@@ -32,12 +32,20 @@ meta = metamodel_from_file(grammar, classes=omp_classes)
 # and are called when the objects of the given class is instantiated.
 # The rules OMP_X_Y are used to insert the version of the syntax used
 
-meta.register_obj_processors({
+textx_mm = metamodel_for_language('textx')
+grammar_model = textx_mm.grammar_model_from_file(grammar)
+
+obj_processors = {r.name: (lambda r: lambda _: r.name.replace('_PARENT', '').lower())(r)
+                  for r in grammar_model.rules if r.name.endswith('_PARENT')}
+
+obj_processors.update({
     'OMP_4_5': lambda _: 4.5,
     'OMP_5_0': lambda _: 5.0,
     'OMP_5_1': lambda _: 5.1,
     'TRUE': lambda _: True,
 })
+
+meta.register_obj_processors(obj_processors)
 
 def parse(stmt, parser, errors):
     """Parse OpenMP code and return a Pyccel AST node.
@@ -57,6 +65,8 @@ def parse(stmt, parser, errors):
         The Pyccel AST node representing the OpenMP code.
     """
     try:
+
+
         meta_model = meta.model_from_str(stmt.s, debug=True)
         #assert len(meta_model.statements) == 1
         meta_model.raw = stmt.s

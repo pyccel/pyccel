@@ -56,8 +56,12 @@ class Openmp():
                 raise NotImplementedError(
                     "OpenMP version not set (use OmpAnnotatedComment.set_current_version)"
                 )
-            self.VERSION = float(kwargs.pop("VERSION", "0") or "0")
+            #self.VERSION = float(kwargs.pop("VERSION", "0") or "0")
             self.DEPRECATED = float(kwargs.pop("DEPRECATED", "inf") or "inf")
+            self.VERSION = float(kwargs.pop("VERSION", 0.0) or 0.0)
+            if isinstance(self.VERSION, list):
+                self.VERSION = max(self.VERSION)
+
             if self.version > self._current_omp_version:
                 raise NotImplementedError(
                     f"Syntax not supported in OpenMP version {self._current_omp_version}"
@@ -163,6 +167,7 @@ class Openmp():
         _attribute_nodes = ("_clauses",)
 
         def __init__(self, **kwargs):
+            self._raw = None
             self._name = kwargs.pop("name")
             self._require_end_directive = kwargs.pop("require_end_directive", False)
             self._tx_clauses = kwargs.pop("_tx_clauses", [])
@@ -173,7 +178,10 @@ class Openmp():
                 self._clauses = [Openmp.OmpClause(position=(c._tx_position, c._tx_position_end),
                                                   omp_exprs=c.omp_exprs if hasattr(c, 'omp_exprs') else [],
                                                   name=c.name,
-                                                  parent=c.parent)
+                                                  parent=c.parent,
+                                                  allowed_parents=getattr(c, 'allowed_parents', None),
+                                                  VERSION=getattr(c, 'VERSION', 0.0),
+                                                  DEPRECATED=getattr(c, 'DEPRECATED', float('inf')))
                                  for c in self._clauses]
             super().__init__(**kwargs)
             if len(self._invalid_clauses):
@@ -233,10 +241,21 @@ class Openmp():
 
         def __init__(self, **kwargs):
             self._omp_exprs = kwargs.pop('omp_exprs', [])
-            if not type(self._omp_exprs) is tuple:
-                self._omp_exprs = tuple(self._omp_exprs) if type(self._omp_exprs) is list else (self._omp_exprs,)
+            if not isinstance(self._omp_exprs, tuple):
+                self._omp_exprs = tuple(self._omp_exprs) if isinstance(self._omp_exprs, list) else (self._omp_exprs,)
             self._name = kwargs.pop('name', None)
             super().__init__(**kwargs)
+            allowed_parents = kwargs.pop('allowed_parents', None)
+            if allowed_parents:
+                if isinstance(allowed_parents, str):
+                    allowed_parents = (allowed_parents,)
+                if self.parent.name not in allowed_parents:
+                    errors.report(
+                        f"invalid syntax `{self.name}` clause for `{self.parent.name}` directive",
+                        symbol=self,
+                        severity="fatal",
+                    )
+
 
         @property
         def omp_exprs(self):
