@@ -42,6 +42,7 @@ __all__ = (
     'PyModule',
     'PyccelPyObject',
     'PyccelPyClassType',
+    'WrapperCustomDataType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',

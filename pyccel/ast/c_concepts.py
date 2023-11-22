@@ -12,7 +12,8 @@ from .literals  import LiteralString
 
 __all__ = ('CMacro',
            'CStringExpression',
-           'ObjectAddress')
+           'ObjectAddress',
+           'PointerCast')
 
 class ObjectAddress(TypedAstNode):
     """
