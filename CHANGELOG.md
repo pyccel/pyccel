@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 
 ### Fixed
 
@@ -18,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #1553 : Fix `np.sign` when using the `ifort` compiler.
 -   #1582 : Allow homogeneous tuples in classes.
 -   #1619 : Give priority to imported functions over builtin functions.
+-   #1614 : Allow relative paths for custom compilation file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 
 ### Changed
