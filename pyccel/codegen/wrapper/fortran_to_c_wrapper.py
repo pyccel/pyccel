@@ -250,7 +250,7 @@ class FortranToCWrapper(Wrapper):
         self.exit_scope()
 
         func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
-                doc_string = expr.doc_string)
+                docstring = expr.docstring)
 
         self.scope.functions[name] = func
 
@@ -472,4 +472,4 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
-        return BindCClassDef(expr)
+        return BindCClassDef(expr, docstring = expr.docstring)

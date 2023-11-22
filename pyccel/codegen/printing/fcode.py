@@ -1443,7 +1443,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and not (is_static and is_optional) \
+            if intent == 'in' and rank == 0 and not is_optional \
                 and not isinstance(expr_dtype, CustomDataType):
                 intentstr = ', value'
                 if is_const:
@@ -1954,7 +1954,7 @@ class FCodePrinter(CodePrinter):
         functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1975,7 +1975,7 @@ class FCodePrinter(CodePrinter):
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
-        parts = [doc_string,
+        parts = [docstring,
                 f"{sig_parts['sig']}({sig_parts['arg_code']}){bind_c} {sig_parts['func_end']}\n",
                 imports,
                 'implicit none\n',
@@ -2044,16 +2044,10 @@ class FCodePrinter(CodePrinter):
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
-        code = ('{0} :: {1}').format(sig, name)
-        if len(decs) > 0:
-            code = ('{0}\n'
-                    '{1}').format(code, decs)
-        if len(methods) > 0:
-            code = ('{0}\n'
-                    'contains\n'
-                    '{1}').format(code, methods)
-        decs = ('{0}\n'
-                'end type {1}\n').format(code, name)
+        docstring = self._print(expr.docstring) if expr.docstring else ''
+        code = f'{sig} :: {name}\n{decs}\n'
+        code = code + 'contains\n' + methods
+        decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
@@ -2061,12 +2055,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
-        methods = ''
-        for i in cls_methods:
-            methods = ('{methods}\n'
-                     '{sep}\n'
-                     '{f}\n'
-                     '{sep}\n').format(methods=methods, sep=sep, f=self._print(i))
+        methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
 

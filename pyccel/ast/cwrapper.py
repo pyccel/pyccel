@@ -38,6 +38,7 @@ __all__ = (
 #
     'PyFunctionDef',
     'PyInterface',
+    'PyClassDef',
     'PyModule',
     'PyccelPyObject',
     'PyccelPyClassType',
@@ -536,17 +537,20 @@ class PyClassDef(ClassDef):
 
     scope : Scope
         The scope for the class contents.
+
+    **kwargs : dict
+        See ClassDef.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
-    def __init__(self, original_class, struct_name, type_name, scope):
+    def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
         scope.insert_variable(variables[0])
-        super().__init__(original_class.name, variables, scope=scope)
+        super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
     def struct_name(self):
