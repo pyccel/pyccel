@@ -1315,6 +1315,7 @@ class CCodePrinter(CodePrinter):
             def get_arg_declaration(var):
                 """ Get the code which declares the argument variable.
                 """
+                declarations = self._print(Declare(var.dtype, var))
                 code = "const " * var.is_const
                 code += self.get_declare_type(var)
                 if print_arg_names:
@@ -1322,7 +1323,7 @@ class CCodePrinter(CodePrinter):
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
-                                else get_arg_declaration(var) for var in arg_vars]
+                    else get_arg_declaration(var) for var in arg_vars]
             arg_code = ', '.join(arg_code_list)
 
         if self._additional_args :

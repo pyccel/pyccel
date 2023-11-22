@@ -610,7 +610,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PythonTuple):
             d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'heap'
+            d_var['memory_handling'] = 'stack'
             return d_var
 
         elif isinstance(expr, Concatenate):
@@ -752,12 +752,14 @@ class SemanticParser(BasicParser):
                         return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
+                indexed = var[arg]
+                if isinstance(var.dtype, NativeInhomogeneousTuple):
+                    indexed = self.scope.find(indexed, 'symbolic_alias')
 
                 if len(indices)==1:
-                    return var[arg]
+                    return indexed
 
-                var = var[arg]
-                return self._extract_indexed_from_var(var, indices[1:], expr)
+                return self._extract_indexed_from_var(indexed, indices[1:], expr)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -3025,7 +3027,8 @@ class SemanticParser(BasicParser):
                 if isinstance(l.class_type, NativeInhomogeneousTuple) \
                         and isinstance(r.class_type, (NativeTuple, NativeHomogeneousList)) \
                         and not isinstance(r, FunctionCall):
-                    new_lhs.extend(l)
+                    l_vars = [self.scope.find(v, 'symbolic_alias') for v in l]
+                    new_lhs.extend(l_vars)
                     new_rhs.extend(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
