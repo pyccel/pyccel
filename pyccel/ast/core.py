@@ -3015,6 +3015,11 @@ class Interface(PyccelAstNode):
 
     @property
     def docstring(self):
+        """
+        The docstring of the function.
+
+        The docstring of the interface function.
+        """
         return self._functions[0].docstring
 
     def point(self, args, use_final_precision = False):
