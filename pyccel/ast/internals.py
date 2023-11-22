@@ -90,6 +90,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -137,6 +138,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
 
     def __init__(self, arg, index):
         if not isinstance(arg, TypedAstNode):
