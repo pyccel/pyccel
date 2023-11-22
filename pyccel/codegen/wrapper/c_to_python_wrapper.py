@@ -362,12 +362,12 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        doc_string = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" +
+        docstring = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" +
                         "which indicates which function should be called.")
 
         # Build the function
         func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
-                            body, doc_string=doc_string, scope=func_scope)
+                            body, docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
@@ -791,7 +791,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map.pop(r)
 
         function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
-                doc_string = expr.doc_string, original_function = original_func)
+                docstring = expr.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
         self._python_object_map[expr] = function
@@ -1150,8 +1150,8 @@ class CToPythonWrapper(Wrapper):
         name = expr.name
         struct_name = self.scope.get_new_name(f'Py{name}Object')
         type_name = self.scope.get_new_name(f'Py{name}Type')
-        doc_string = expr.doc_string
-        wrapped_class = PyClassDef(expr, struct_name, type_name, doc_string = doc_string)
+        docstring = expr.docstring
+        wrapped_class = PyClassDef(expr, struct_name, type_name, docstring = docstring)
 
         self._python_object_map[expr] = wrapped_class
 

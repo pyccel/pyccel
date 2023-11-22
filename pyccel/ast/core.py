@@ -2360,7 +2360,7 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
-    doc_string : str
+    docstring : str
         The doc string of the function.
 
     scope : parser.scope.Scope
@@ -2404,7 +2404,7 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_doc_string', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2428,7 +2428,7 @@ class FunctionDef(ScopedAstNode):
         is_external=False,
         functions=(),
         interfaces=(),
-        doc_string=None,
+        docstring=None,
         scope=None):
 
         if isinstance(name, str):
@@ -2528,7 +2528,7 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
-        self._doc_string      = doc_string
+        self._docstring      = docstring
         super().__init__(scope)
 
     @property
@@ -2683,9 +2683,9 @@ class FunctionDef(ScopedAstNode):
         return self._interfaces
 
     @property
-    def doc_string(self):
+    def docstring(self):
         """ The docstring of the function """
-        return self._doc_string
+        return self._docstring
 
     def set_recursive(self):
         """ Mark the function as a recursive function """
@@ -2759,7 +2759,7 @@ class FunctionDef(ScopedAstNode):
         'functions':self._functions,
         'is_external':self._is_external,
         'interfaces':self._interfaces,
-        'doc_string':self._doc_string,
+        'docstring':self._docstring,
         'scope':self._scope}
         return args, kwargs
 
@@ -3014,8 +3014,8 @@ class Interface(PyccelAstNode):
         return self._is_argument
 
     @property
-    def doc_string(self):
-        return self._functions[0].doc_string
+    def docstring(self):
+        return self._functions[0].docstring
 
     def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
@@ -3220,7 +3220,7 @@ class ClassDef(ScopedAstNode):
     interfaces : iterable
         The interface methods.
 
-    doc_string : CommentBlock, optional
+    docstring : CommentBlock, optional
         The doc string of the class.
 
     scope : Scope
@@ -3244,8 +3244,8 @@ class ClassDef(ScopedAstNode):
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
     __slots__ = ('_name','_attributes','_methods','_options',
-                 '_imports','_superclasses','_interfaces', '_doc_string')
-    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_doc_string')
+                 '_imports','_superclasses','_interfaces', '_docstring')
+    _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
     def __init__(
         self,
@@ -3256,7 +3256,7 @@ class ClassDef(ScopedAstNode):
         imports=(),
         superclasses=(),
         interfaces=(),
-        doc_string = None,
+        docstring = None,
         scope = None
         ):
 
@@ -3341,7 +3341,7 @@ class ClassDef(ScopedAstNode):
         self._imports = imports
         self._superclasses  = superclasses
         self._interfaces = interfaces
-        self._doc_string = doc_string
+        self._docstring = docstring
 
         super().__init__(scope = scope)
 
@@ -3386,13 +3386,13 @@ class ClassDef(ScopedAstNode):
         return self._interfaces
 
     @property
-    def doc_string(self):
+    def docstring(self):
         """
         The docstring of the class.
 
         The docstring of the class.
         """
-        return self._doc_string
+        return self._docstring
 
     @property
     def methods_as_dict(self):

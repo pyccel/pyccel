@@ -1952,7 +1952,7 @@ class FCodePrinter(CodePrinter):
         functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1973,7 +1973,7 @@ class FCodePrinter(CodePrinter):
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
-        parts = [doc_string,
+        parts = [docstring,
                 f"{sig_parts['sig']}({sig_parts['arg_code']}){bind_c} {sig_parts['func_end']}\n",
                 imports,
                 'implicit none\n',
@@ -2042,10 +2042,10 @@ class FCodePrinter(CodePrinter):
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
         code = f'{sig} :: {name}\n{decs}\n'
         code = code + 'contains\n' + methods
-        decs = ''.join([doc_string, code, f'end type {name}\n'])
+        decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing

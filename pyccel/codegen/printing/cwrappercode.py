@@ -280,12 +280,12 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '"{name}",\n'
                                      '(PyCFunction){wrapper_name},\n'
                                      'METH_VARARGS | METH_KEYWORDS,\n'
-                                     '{doc_string}\n'
+                                     '{docstring}\n'
                                      '}},\n').format(
                                             name = self.get_python_name(expr.scope, f.original_function),
                                             wrapper_name = f.name,
-                                            doc_string = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                        if f.doc_string else '""')
+                                            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                                        if f.docstring else '""')
                                      for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
 
         slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
@@ -339,8 +339,8 @@ class CWrapperCodePrinter(CCodePrinter):
         struct_name = expr.struct_name
         type_name = expr.type_name
         name = self.scope.get_python_name(expr.name)
-        doc_string = self._print(LiteralString('\n'.join(expr.doc_string.comments))) \
-                    if expr.doc_string else '""'
+        docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
+                    if expr.docstring else '""'
         class_code = ("typedef struct {\n"
                 "    PyObject_HEAD\n"
                 "    void* instance;\n"
@@ -349,7 +349,7 @@ class CWrapperCodePrinter(CCodePrinter):
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
-                f"    .tp_doc = PyDoc_STR({doc_string}),\n"
+                f"    .tp_doc = PyDoc_STR({docstring}),\n"
                 f"    .tp_basicsize = sizeof({struct_name}),\n"
                 "    .tp_itemsize = 0,\n"
                 "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"

@@ -760,7 +760,7 @@ class SyntaxParser(BasicParser):
         is_private   = False
         is_inline    = False
         imports      = []
-        doc_string   = None
+        docstring   = None
 
         decorators = {}
 
@@ -959,8 +959,8 @@ class SyntaxParser(BasicParser):
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
-            doc_string = body[0]
-            doc_string.header = ''
+            docstring = body[0]
+            docstring.header = ''
             body = body[1:]
 
         body = CodeBlock(body)
@@ -1011,7 +1011,7 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               doc_string=doc_string,
+               docstring=docstring,
                scope=scope)
 
         return func
@@ -1023,7 +1023,7 @@ class SyntaxParser(BasicParser):
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
-        doc_string = None
+        docstring = None
         for i in stmt.body:
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
@@ -1033,7 +1033,7 @@ class SyntaxParser(BasicParser):
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
             elif isinstance(visited_i, CommentBlock):
-                doc_string = visited_i
+                docstring = visited_i
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
@@ -1043,7 +1043,7 @@ class SyntaxParser(BasicParser):
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
                         methods=methods, superclasses=parent, scope=scope,
-                        doc_string = doc_string)
+                        docstring = docstring)
 
         return expr
 
