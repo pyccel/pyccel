@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
+-   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 
 ### Fixed
 
@@ -14,13 +15,18 @@ All notable changes to this project will be documented in this file.
 -   #1576 : Correct destructor invocation for proper cleanup.
 -   #1576 : Remove inline class method definition.
 -   Ensure an error is raised when if conditions are used in comprehension statements.
--   Allow relative paths for custom compilation file.
+-   #1553 : Fix `np.sign` when using the `ifort` compiler.
+-   #1582 : Allow homogeneous tuples in classes.
+-   #1619 : Give priority to imported functions over builtin functions.
+-   #1614 : Allow relative paths for custom compilation file.
 
 ### Changed
 
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
+-   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
+-   \[INTERNALS\] #1582 : Remove the `HomogeneousTupleVariable` type.
 
 ### Deprecated
 
