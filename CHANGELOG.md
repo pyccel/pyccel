@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   #1619 : Give priority to imported functions over builtin functions.
 -   #1614 : Allow relative paths for custom compilation file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
+-   #1628 : Fixed segmentation fault when writing to optional scalars.
 
 ### Changed
 
