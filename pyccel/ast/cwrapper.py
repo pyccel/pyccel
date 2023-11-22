@@ -38,6 +38,7 @@ __all__ = (
 #
     'PyFunctionDef',
     'PyInterface',
+    'PyClassDef',
     'PyModule',
     'PyccelPyObject',
     'PyccelPyClassType',

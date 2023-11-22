@@ -17,6 +17,7 @@ from pyccel.ast.variable import Variable
 
 __all__ = (
     'BindCArrayVariable',
+    'BindCClassDef',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
