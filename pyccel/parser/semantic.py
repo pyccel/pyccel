@@ -2165,7 +2165,7 @@ class SemanticParser(BasicParser):
         elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
             n_exprs = None
             for a in args:
-                if a.shape and isinstance(a.shape[0], LiteralInteger):
+                if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
                     a_len = a.shape[0]
                     if n_exprs:
                         assert n_exprs == a_len
