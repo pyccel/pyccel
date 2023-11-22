@@ -178,8 +178,6 @@ if __name__ == '__main__':
         md_file.write("# " + messages['title'] + '\n\n')
         md_file.write(messages['summary'])
 
-    print(error_collection)
-
     failure = (bool(error_collection['missing_all']) or # bool(error_collection['non_alphabetical_all']) or
               bool(error_collection['missing_slots']) or bool(error_collection['missing_attribute_nodes']) or
               bool(error_collection['overridden_slots']) or bool(error_collection['missing_from_all']))
