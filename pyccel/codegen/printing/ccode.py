@@ -27,7 +27,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
-from pyccel.ast.datatypes import CustomDataType, NativeString
+from pyccel.ast.datatypes import CustomDataType, NativeString, NativeHomogeneousTuple
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -46,7 +46,7 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable, HomogeneousTupleVariable
+from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
 
@@ -434,7 +434,7 @@ class CCodePrinter(CodePrinter):
         while i < num_elements:
             current_element = flattened_list[i]
             # Copy an array element
-            if isinstance(current_element, Variable) and current_element.rank >= 1:
+            if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
                 elem_name = self._print(current_element)
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
@@ -447,6 +447,9 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['string'])
                 remaining_elements = flattened_list[i:]
                 lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                if lenSubset == 0:
+                    errors.report(f"Can't copy {rhs} into {lhs}", symbol=expr,
+                            severity='fatal')
                 subset = remaining_elements[:lenSubset]
 
                 # Declare list of consecutive elements
@@ -1211,7 +1214,7 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if expr.is_ndarray or isinstance(expr, HomogeneousTupleVariable):
+            if expr.is_ndarray or isinstance(expr.class_type, NativeHomogeneousTuple):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1352,7 +1355,7 @@ class CCodePrinter(CodePrinter):
         #set dtype to the C struct types
         dtype = self.find_in_ndarray_type_registry(expr.dtype, expr.precision)
         base_name = self._print(base)
-        if getattr(base, 'is_ndarray', False) or isinstance(base, HomogeneousTupleVariable):
+        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, NativeHomogeneousTuple):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):

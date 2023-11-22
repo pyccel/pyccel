@@ -102,3 +102,5 @@ mypy
 destructor
 destructor's
 Valgrind
+variadic
+subclasses
