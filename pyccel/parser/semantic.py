@@ -3532,7 +3532,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         is_inline       = expr.is_inline
-        doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
+        docstring      = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
@@ -3701,7 +3701,7 @@ class SemanticParser(BasicParser):
                         'is_recursive':is_recursive,
                         'functions': sub_funcs,
                         'interfaces': func_interfaces,
-                        'doc_string': doc_string,
+                        'docstring': docstring,
                         'scope': scope
                         }
                 if is_inline:
@@ -3813,7 +3813,10 @@ class SemanticParser(BasicParser):
                 scope.insert_variable(v)
                 attributes.append(v)
 
-        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope)
+        docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
+
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
+                docstring = docstring)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)

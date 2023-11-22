@@ -756,6 +756,8 @@ class CCodePrinter(CodePrinter):
         classes = ""
         funcs = ""
         for classDef in expr.module.classes:
+            if classDef.docstring is not None:
+                classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
@@ -1795,10 +1797,10 @@ class CCodePrinter(CodePrinter):
             self._additional_args.pop()
         for i in expr.imports:
             self.add_import(i)
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
 
         parts = [sep,
-                 doc_string,
+                 docstring,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
                  decs,
                  body,

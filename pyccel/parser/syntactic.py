@@ -760,7 +760,7 @@ class SyntaxParser(BasicParser):
         is_private   = False
         is_inline    = False
         imports      = []
-        doc_string   = None
+        docstring   = None
 
         decorators = {}
 
@@ -959,8 +959,8 @@ class SyntaxParser(BasicParser):
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
-            doc_string = body[0]
-            doc_string.header = ''
+            docstring = body[0]
+            docstring.header = ''
             body = body[1:]
 
         body = CodeBlock(body)
@@ -1011,7 +1011,7 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               doc_string=doc_string,
+               docstring=docstring,
                scope=scope)
 
         return func
@@ -1023,6 +1023,7 @@ class SyntaxParser(BasicParser):
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
+        docstring = None
         for i in stmt.body:
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
@@ -1031,6 +1032,8 @@ class SyntaxParser(BasicParser):
                 return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
+            elif isinstance(visited_i, CommentBlock):
+                docstring = visited_i
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
@@ -1039,7 +1042,8 @@ class SyntaxParser(BasicParser):
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclasses=parent, scope=scope)
+                        methods=methods, superclasses=parent, scope=scope,
+                        docstring = docstring)
 
         return expr
 
