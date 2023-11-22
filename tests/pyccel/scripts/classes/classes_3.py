@@ -2,26 +2,26 @@
 # coding: utf-8
 
 class Point:
-    def __init__(self : 'Point', x : float, y : float):
+    def __init__(self, x : float, y : float):
         self.x = x
         self.X = y
 
-    def set_coordinates(self : 'Point', x : float, y : float):
+    def set_coordinates(self, x : float, y : float):
         self.x = x
         self.X = y
 
-    def get_coordinates(self : 'Point'):
+    def get_coordinates(self):
         return self.x, self.X
 
 class Point1:
-    def __init__(self : 'Point1', x : float):
+    def __init__(self, x : float):
         self.x = x
 
 class Point2:
-    def __init__(self : 'Point2', y : float):
+    def __init__(self, y : float):
         self.y = y
 
-    def test_func(self : 'Point2'):
+    def test_func(self):
         p = Point1(self.y)
         print(p.x)
 

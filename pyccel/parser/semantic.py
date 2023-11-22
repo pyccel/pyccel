@@ -227,6 +227,9 @@ class SemanticParser(BasicParser):
         # used to store code split into multiple lines to be reinserted in the CodeBlock
         self._additional_exprs = []
 
+        # used to store variables if optional parameters are changed
+        self._optional_params = {}
+
         #
         self._code = parser._code
         # ...
@@ -2145,7 +2148,8 @@ class SemanticParser(BasicParser):
 
     def _visit_Variable(self, expr):
         name = self.scope.get_python_name(expr.name)
-        return self.get_variable(name)
+        var = self.get_variable(name)
+        return self._optional_params.get(var, var)
 
     def _visit_str(self, expr):
         return repr(expr)
@@ -2168,7 +2172,7 @@ class SemanticParser(BasicParser):
         elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
             n_exprs = None
             for a in args:
-                if a.shape and isinstance(a.shape[0], LiteralInteger):
+                if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
                     a_len = a.shape[0]
                     if n_exprs:
                         assert n_exprs == a_len
@@ -2201,7 +2205,7 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
-        return var
+        return self._optional_params.get(var, var)
 
     def _visit_AnnotatedPyccelSymbol(self, expr):
         # Check if the variable already exists
@@ -2668,7 +2672,7 @@ class SemanticParser(BasicParser):
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
         F = pyccel_builtin_function(expr, args)
 
-        if F is not None:
+        if func is None and F is not None:
             return F
 
         elif self.scope.find(name, 'cls_constructs'):
@@ -3025,6 +3029,20 @@ class SemanticParser(BasicParser):
                     new_rhs.extend(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
+                elif isinstance(l, Variable) and l.is_optional:
+                    if l in self._optional_params:
+                        # Collect temporary variable which provides
+                        # allocated memory space for this optional variable
+                        new_lhs.append(self._optional_params[l])
+                    else:
+                        # Create temporary variable to provide allocated
+                        # memory space before assigning to the pointer value
+                        # (may be NULL)
+                        tmp_var = self.scope.get_temporary_variable(l,
+                                name = l.name+'_loc', is_optional = False)
+                        self._optional_params[l] = tmp_var
+                        new_lhs.append(tmp_var)
+                    new_rhs.append(r)
                 else:
                     new_lhs.append(l)
                     new_rhs.append(r)
@@ -3508,7 +3526,7 @@ class SemanticParser(BasicParser):
         is_elemental    = expr.is_elemental
         is_private      = expr.is_private
         is_inline       = expr.is_inline
-        doc_string      = self._visit(expr.doc_string) if expr.doc_string else expr.doc_string
+        docstring      = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
@@ -3658,6 +3676,14 @@ class SemanticParser(BasicParser):
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
 
+                optional_inits = []
+                for a in arguments:
+                    var = self._optional_params.pop(a.var, None)
+                    if var:
+                        optional_inits.append(If(IfSection(PyccelIsNot(a.var, Nil()),
+                                                           [Assign(var, a.var)])))
+                body.insert2body(*optional_inits, back=False)
+
                 func_kwargs = {
                         'global_vars':global_vars,
                         'cls_name':cls_name,
@@ -3669,7 +3695,7 @@ class SemanticParser(BasicParser):
                         'is_recursive':is_recursive,
                         'functions': sub_funcs,
                         'interfaces': func_interfaces,
-                        'doc_string': doc_string,
+                        'docstring': docstring,
                         'scope': scope
                         }
                 if is_inline:
@@ -3781,7 +3807,10 @@ class SemanticParser(BasicParser):
                 scope.insert_variable(v)
                 attributes.append(v)
 
-        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope)
+        docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
+
+        cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
+                docstring = docstring)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
