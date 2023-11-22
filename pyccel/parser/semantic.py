@@ -228,6 +228,9 @@ class SemanticParser(BasicParser):
         # used to store code split into multiple lines to be reinserted in the CodeBlock
         self._additional_exprs = []
 
+        # used to store variables if optional parameters are changed
+        self._optional_params = {}
+
         #
         self._code = parser._code
         # ...
@@ -2142,7 +2145,8 @@ class SemanticParser(BasicParser):
 
     def _visit_Variable(self, expr):
         name = self.scope.get_python_name(expr.name)
-        return self.get_variable(name)
+        var = self.get_variable(name)
+        return self._optional_params.get(var, var)
 
     def _visit_str(self, expr):
         return repr(expr)
@@ -2198,7 +2202,7 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_VARIABLE, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
-        return var
+        return self._optional_params.get(var, var)
 
     def _visit_AnnotatedPyccelSymbol(self, expr):
         # Check if the variable already exists
@@ -3031,6 +3035,20 @@ class SemanticParser(BasicParser):
                     new_rhs.extend(r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
+                elif isinstance(l, Variable) and l.is_optional:
+                    if l in self._optional_params:
+                        # Collect temporary variable which provides
+                        # allocated memory space for this optional variable
+                        new_lhs.append(self._optional_params[l])
+                    else:
+                        # Create temporary variable to provide allocated
+                        # memory space before assigning to the pointer value
+                        # (may be NULL)
+                        tmp_var = self.scope.get_temporary_variable(l,
+                                name = l.name+'_loc', is_optional = False)
+                        self._optional_params[l] = tmp_var
+                        new_lhs.append(tmp_var)
+                    new_rhs.append(r)
                 else:
                     new_lhs.append(l)
                     new_rhs.append(r)
@@ -3663,6 +3681,14 @@ class SemanticParser(BasicParser):
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+
+                optional_inits = []
+                for a in arguments:
+                    var = self._optional_params.pop(a.var, None)
+                    if var:
+                        optional_inits.append(If(IfSection(PyccelIsNot(a.var, Nil()),
+                                                           [Assign(var, a.var)])))
+                body.insert2body(*optional_inits, back=False)
 
                 func_kwargs = {
                         'global_vars':global_vars,

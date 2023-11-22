@@ -302,11 +302,6 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-        # Dictionary linking optional variables to their
-        # temporary counterparts which provide allocated
-        # memory
-        # Key is optional variable
-        self._optional_partners = {}
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -1777,9 +1772,6 @@ class CCodePrinter(CodePrinter):
 
         self.set_scope(expr.scope)
 
-        # Reinitialise optional partners
-        self._optional_partners = {}
-
         arguments = [a.var for a in expr.arguments]
         results = [r.var for r in expr.results]
         if len(expr.results) > 1:
@@ -2003,20 +1995,6 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(lhs, Variable) and lhs.is_optional:
-            if lhs in self._optional_partners:
-                # Collect temporary variable which provides
-                # allocated memory space for this optional variable
-                tmp_var = self._optional_partners[lhs]
-            else:
-                # Create temporary variable to provide allocated
-                # memory space before assigning to the pointer value
-                # (may be NULL)
-                tmp_var = self.scope.get_temporary_variable(lhs,
-                        is_optional = False)
-                self._optional_partners[lhs] = tmp_var
-            # Point optional variable at an allocated memory space
-            prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))

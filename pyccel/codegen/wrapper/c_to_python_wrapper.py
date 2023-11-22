@@ -863,21 +863,24 @@ class CToPythonWrapper(Wrapper):
         else:
             cast_func = pyarray_to_ndarray
 
-        cast = Assign(arg_var, FunctionCall(cast_func, [collect_arg]))
+        cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
+        if arg_var.is_optional:
+            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
+            cast.insert(0, AliasAssign(arg_var, memory_var))
 
         # Create any necessary type checks and errors
         if expr.has_default:
             check_func, err = self._get_check_function(collect_arg, arg_var, False)
-            body.append(If( IfSection(check_func, [cast]),
+            body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([Nil()])])
                         ))
         elif not in_interface:
             check_func, err = self._get_check_function(collect_arg, arg_var, True)
-            body.append(If( IfSection(check_func, [cast]),
+            body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([Nil()])])
                         ))
         else:
-            body.append(cast)
+            body.extend(cast)
 
         return body
 
