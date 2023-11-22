@@ -25,6 +25,8 @@ from .internals import get_final_precision
 
 from .literals  import LiteralString
 
+from .numpyext  import NumpyNDArrayType
+
 from .variable  import Variable
 
 from .c_concepts import ObjectAddress
@@ -637,8 +639,11 @@ def C_to_Python(c_object):
         The function which casts the C object to Python.
     """
     if c_object.rank != 0:
-        cast_function = 'ndarray_to_pyarray'
-        memory_handling = 'stack'
+        if c_object.class_type is NumpyNDArrayType:
+            cast_function = 'ndarray_to_pyarray'
+            memory_handling = 'stack'
+        else:
+            errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.class_type,severity='fatal')
     else:
         try :
             cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]

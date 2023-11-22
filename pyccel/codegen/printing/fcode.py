@@ -38,7 +38,7 @@ from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeC
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import NativeNumeric
-from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import CustomDataType, NativeInhomogeneousTuple
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 from pyccel.ast.internals import get_final_precision
@@ -67,7 +67,7 @@ from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOp
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import expand_to_loops
 
-from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
+from pyccel.ast.variable import Variable, IndexedElement, DottedName
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -650,24 +650,7 @@ class FCodePrinter(CodePrinter):
                 continue
             else:
                 f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple, str)):
-                if args_format:
-                    code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
-                    args_format = []
-                    args = []
-                if i + 1 == len(orig_args):
-                    end_of_tuple = empty_end
-                else:
-                    end_of_tuple = FunctionCallArgument(sep, 'end')
-                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
-                if len(f) == 1:
-                    args.append(FunctionCallArgument(LiteralString(',')))
-                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
-                args = []
-            elif isinstance(f, PythonType):
-                args_format.append('A')
-                args.append(self._print(f.print_string))
-            elif f.rank > 0 and not isinstance(f, FunctionCall):
+            if f.rank > 0 and not isinstance(f, FunctionCall):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -693,6 +676,23 @@ class FCodePrinter(CodePrinter):
                                                 file=expr.file)],
                                  unravelled=True)
                 code += self._print(body)
+            elif isinstance(f.class_type, NativeInhomogeneousTuple):
+                if args_format:
+                    code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
+                    args_format = []
+                    args = []
+                if i + 1 == len(orig_args):
+                    end_of_tuple = empty_end
+                else:
+                    end_of_tuple = FunctionCallArgument(sep, 'end')
+                args = [FunctionCallArgument(print_arg) for tuple_elem in f for print_arg in (tuple_elem, tuple_sep)][:-1]
+                if len(f) == 1:
+                    args.append(FunctionCallArgument(LiteralString(',')))
+                code += self._print(PythonPrint([tuple_start, *args, tuple_end, empty_sep, end_of_tuple], file=expr.file))
+                args = []
+            elif isinstance(f, PythonType):
+                args_format.append('A')
+                args.append(self._print(f.print_string))
             else:
                 arg_format, arg = self._get_print_format_and_arg(f)
                 args_format.append(arg_format)
@@ -1360,18 +1360,19 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
+        var = expr.variable
         # meta-variables
-        if (isinstance(expr.variable, Variable) and
-            expr.variable.name.startswith('__')):
+        if (isinstance(var, Variable) and
+            var.name.startswith('__')):
             return ''
         # ...
 
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        if isinstance(var.class_type, NativeInhomogeneousTuple):
+            decl_vars = [self.scope.find(v, 'symbolic_alias') for v in var]
+            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in decl_vars)
 
         # ... TODO improve
         # Group the variables by intent
-        var = expr.variable
         expr_dtype = expr.dtype
         rank            = var.rank
         shape           = var.alloc_shape
@@ -1515,7 +1516,7 @@ class FCodePrinter(CodePrinter):
         lhs = expr.lhs
         rhs = expr.rhs
 
-        if isinstance(lhs, InhomogeneousTupleVariable):
+        if isinstance(lhs.class_type, NativeInhomogeneousTuple):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
 
         # TODO improve
@@ -1696,8 +1697,9 @@ class FCodePrinter(CodePrinter):
 #-----------------------------------------------------------------------------
     def _print_Deallocate(self, expr):
         var = expr.variable
-        if isinstance(var, InhomogeneousTupleVariable):
-            return ''.join(self._print(Deallocate(v)) for v in var)
+        if isinstance(var.class_type, NativeInhomogeneousTuple):
+            decl_vars = [self.scope.find(v, 'symbolic_alias') for v in var]
+            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in decl_vars)
 
         if isinstance(var.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
@@ -2816,6 +2818,10 @@ class FCodePrinter(CodePrinter):
         return "({}, {})".format(real_str, imag_str)
 
     def _print_IndexedElement(self, expr):
+        tuple_var = self.scope.find(expr, 'symbolic_alias')
+        if tuple_var:
+            return self._print(tuple_var)
+
         base = expr.base
         base_code = self._print(base)
 

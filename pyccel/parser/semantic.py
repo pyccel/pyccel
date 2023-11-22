@@ -111,7 +111,6 @@ from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
@@ -719,7 +718,7 @@ class SemanticParser(BasicParser):
 
         indices = tuple(indices)
 
-        if isinstance(var, InhomogeneousTupleVariable):
+        if isinstance(var.class_type, NativeInhomogeneousTuple):
 
             arg = indices[0]
 
@@ -730,20 +729,24 @@ class SemanticParser(BasicParser):
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
 
-                idx = slice(arg.start, arg.stop)
-                selected_vars = var.get_var(idx)
-                if len(selected_vars)==1:
+                start = int(arg.start)
+                stop  = int(arg.stop)
+                n_idx = stop - start
+                idx = slice(start, stop)
+                if n_idx == 1:
+                    var = IndexedElement(var, start)
                     if len(indices) == 1:
-                        return selected_vars[0]
+                        return var
                     else:
-                        var = selected_vars[0]
                         return self._extract_indexed_from_var(var, indices[1:], expr)
-                elif len(selected_vars)<1:
+                elif n_idx < 1:
                     return None
-                elif len(indices)==1:
-                    return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
+                    selected_vars = [IndexedElement(var, i) for i in idx]
+                    if len(indices)==1:
+                        return PythonTuple(*selected_vars)
+                    else:
+                        return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -838,10 +841,7 @@ class SemanticParser(BasicParser):
                     symbol=Duplicate(val, length),
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
-            if isinstance(val, InhomogeneousTupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
-            else:
-                return PythonTuple(*(val.args*length))
+                return PythonTuple(*(list(val)*length))
 
     def _handle_function_args(self, arguments):
         """
@@ -1075,7 +1075,7 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
+        if isinstance(rhs.class_type, NativeTuple) or \
                 ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
@@ -1084,6 +1084,7 @@ class SemanticParser(BasicParser):
             elem_vars = []
             is_homogeneous = True
             elem_d_lhs_ref = None
+            is_alias = False
             for i,r in enumerate(iterable):
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infer_type( r )
@@ -1100,16 +1101,18 @@ class SemanticParser(BasicParser):
 
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
+                is_alias = is_alias or var.is_alias
 
-            if any(v.is_alias for v in elem_vars):
+            if is_alias:
                 d_lhs['memory_handling'] = 'alias'
             else:
                 d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
-            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
-                lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
-            else:
-                lhs = InhomogeneousTupleVariable(elem_vars, name, **d_lhs, is_temp=is_temp)
+            lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
+
+            if not is_homogeneous:
+                for i, v in enumerate(elem_vars):
+                    self.scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
 
         else:
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
@@ -1282,13 +1285,13 @@ class SemanticParser(BasicParser):
                         status='unallocated'
 
                     # Create Allocate node
-                    if isinstance(lhs, InhomogeneousTupleVariable):
-                        args = [v for v in lhs.get_vars() if v.rank>0]
+                    if isinstance(lhs.class_type, NativeInhomogeneousTuple):
+                        args = [self.scope.find(v, 'symbolic_alias') for v in lhs if v.rank>0]
                         new_args = []
                         while len(args) > 0:
                             for a in args:
-                                if isinstance(a, InhomogeneousTupleVariable):
-                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                if isinstance(a.class_type, NativeInhomogeneousTuple):
+                                    new_args = [self.scope.find(v, 'symbolic_alias') for v in a if v.rank>0]
                                 else:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, order=a.order, status=status))
@@ -2466,19 +2469,10 @@ class SemanticParser(BasicParser):
             is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
             if is_inhomogeneous:
                 def get_vars(a):
-                    if isinstance(a, InhomogeneousTupleVariable):
-                        return a.get_vars()
-                    elif isinstance(a, PythonTuple):
-                        return a.args
-                    elif isinstance(a.class_type, NativeHomogeneousTuple):
-                        n_vars = a.shape[0]
-                        if not isinstance(a.shape[0], (LiteralInteger, int)):
-                            errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
-                                    symbol=expr, severity='fatal')
+                    if isinstance(a.shape[0], (LiteralInteger, int)):
                         return [a[i] for i in range(n_vars)]
                     else:
-                        a_type = type(a)
-                        raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
+                        raise NotImplementedError(f"Can't add inhomogeneous objects of unknown size")
                 tuple_args = [ai for a in args for ai in get_vars(a)]
                 expr_new = PythonTuple(*tuple_args)
             else:
@@ -2946,7 +2940,7 @@ class SemanticParser(BasicParser):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
-            if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
+            if isinstance(rhs.class_type, NativeInhomogeneousTuple):
                 if isinstance(rhs, FunctionCall):
                     r_iter = [r.var for r in rhs.funcdef.results]
                 else:
@@ -3024,8 +3018,8 @@ class SemanticParser(BasicParser):
             new_rhs = []
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
-                if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)) \
+                if isinstance(l.class_type, NativeInhomogeneousTuple) \
+                        and isinstance(r.class_type, (NativeTuple, NativeHomogeneousList)) \
                         and not isinstance(r, FunctionCall):
                     new_lhs.extend(l)
                     new_rhs.extend(r)
