@@ -2684,7 +2684,11 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def docstring(self):
-        """ The docstring of the function """
+        """
+        The docstring of the function.
+
+        The docstring of the function.
+        """
         return self._docstring
 
     def set_recursive(self):
@@ -2959,18 +2963,22 @@ class PyccelFunctionDef(FunctionDef):
         return self._argument_description
 
 class Interface(PyccelAstNode):
+    """
+    Class representing an interface function.
 
-    """Represents an Interface.
+    A class representing an interface function. An interface function represents
+    a Python function which accepts multiple types. In low-level languages this
+    is a collection of functions.
 
     Parameters
     ----------
     name : str
-        The name of the interface.
+        The name of the interface function.
 
     functions : iterable
-        The functions of the interface.
+        The internal functions that can be accessed via the interface.
 
-    is_argument: bool
+    is_argument : bool
         True if the interface is used for a function argument.
 
     Examples
