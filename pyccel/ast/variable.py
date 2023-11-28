@@ -13,9 +13,7 @@ from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .datatypes import (datatype, DataType,
-                        NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
+from .datatypes import datatype, DataType, NativeNumeric
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -210,7 +208,7 @@ class Variable(TypedAstNode):
             assert order in ('C', 'F')
 
         if not precision:
-            if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
+            if dtype in NativeNumeric:
                 precision = -1
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
@@ -463,8 +461,7 @@ class Variable(TypedAstNode):
 
         if self.rank == 0:
             return False
-        return isinstance(self.dtype, (NativeInteger, NativeBool,
-                          NativeFloat, NativeComplex))
+        return self.dtype in NativeNumeric
 
     def __str__(self):
         return str(self.name)
