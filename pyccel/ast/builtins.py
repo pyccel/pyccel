@@ -608,7 +608,7 @@ class PythonTuple(TypedAstNode):
         """
         return self._args
 
-class PythonTupleFunction(TypedAstNode):
+class PythonTupleFunction(PyccelInternalFunction):
     """
     Class representing a call to the `tuple` function.
 
@@ -622,15 +622,9 @@ class PythonTupleFunction(TypedAstNode):
         The argument passed to the function call.
     """
     __slots__ = ()
-    _attribute_nodes = ()
 
-    def __new__(cls, arg):
-        if isinstance(arg, PythonTuple):
-            return arg
-        elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
-        else:
-            raise TypeError(f"Can't unpack {arg} into a tuple")
+    def __init__(self, arg):
+        super().__init__(arg)
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
@@ -1243,5 +1237,4 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
-    'tuple'    : PythonTupleFunction,
 }

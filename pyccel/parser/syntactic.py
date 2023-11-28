@@ -52,7 +52,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
-from pyccel.ast.builtins import PythonPrint, Lambda
+from pyccel.ast.builtins import PythonPrint, Lambda, PythonTupleFunction
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -1109,6 +1109,8 @@ class SyntaxParser(BasicParser):
         if isinstance(func, PyccelSymbol):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
+            if func == "tuple":
+                func = PythonTupleFunction(*args)
             else:
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):

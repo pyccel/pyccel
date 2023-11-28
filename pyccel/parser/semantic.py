@@ -4211,3 +4211,13 @@ class SemanticParser(BasicParser):
             var = var[0]
             self.insert_variable_to_scope(var)
         return FunctionDefResult(var, annotation = expr.annotation)
+
+    def _visit_PythonTupleFunction(self, expr):
+        func_arg, = self._handle_function_args(expr.args)
+        arg = func_arg.value
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[self.get_tuple_element(a) for a in arg])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
