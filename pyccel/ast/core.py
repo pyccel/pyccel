@@ -240,7 +240,7 @@ class Duplicate(TypedAstNode):
         self._dtype      = val.dtype
         self._precision  = val.precision
         self._rank       = val.rank
-        self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
+        self._shape      = (PyccelMul(val.shape[0], length, simplify=True),)
         self._order      = val.order
         self._class_type = val.class_type
 
@@ -255,6 +255,12 @@ class Duplicate(TypedAstNode):
     @property
     def length(self):
         return self._length
+
+    def __getitem__(self, idx):
+        if idx < self.shape[0].python_value:
+            return self._val[idx % self._val.shape[0].python_value]
+        else:
+            raise IndexError
 
     def __str__(self):
         return '{} * {}'.format(str(self.val), str(self.length))
