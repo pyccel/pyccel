@@ -1368,8 +1368,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if isinstance(var.class_type, NativeInhomogeneousTuple):
-            decl_vars = [self.scope.find(v, 'symbolic_alias') for v in var]
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in decl_vars)
+            return ''
 
         # ... TODO improve
         # Group the variables by intent
