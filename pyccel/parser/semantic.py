@@ -640,26 +640,12 @@ class SemanticParser(BasicParser):
             d_var['is_target'      ] = expr.is_target
             return d_var
 
-        elif isinstance(expr, PythonTuple):
-            d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'stack'
-            return d_var
-
         elif isinstance(expr, Concatenate):
             d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
                 d_var['memory_handling'] = 'heap'
             else:
                 d_var['memory_handling'] = 'stack'
-            return d_var
-
-        elif isinstance(expr, Duplicate):
-            d = self._infer_type(expr.val)
-            d_var['cls_base'      ] = TupleClass
-            if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
-                d_var['memory_handling'] = 'stack'
-            else:
-                d_var['memory_handling'] = 'heap'
             return d_var
 
         elif isinstance(expr, NumpyNewArray):
@@ -1119,37 +1105,26 @@ class SemanticParser(BasicParser):
             else:
                 iterable = rhs
             elem_vars = []
-            is_homogeneous = True
             elem_d_lhs_ref = None
-            is_alias = False
-            for i,r in enumerate(iterable):
+            for i, tuple_elem in enumerate(iterable):
+                r = self.get_tuple_element(tuple_elem)
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infer_type( r )
 
                 if not arr_in_multirets:
                     self._ensure_target( r, elem_d_lhs )
-                if elem_d_lhs_ref is None:
-                    elem_d_lhs_ref = elem_d_lhs.copy()
-                    is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
-                elif elem_d_lhs != elem_d_lhs_ref:
-                    is_homogeneous = False
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
-                is_alias = is_alias or var.is_alias
 
-            if is_alias:
-                d_lhs['memory_handling'] = 'alias'
-            else:
-                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+            d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'stack'
 
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
 
-            if not is_homogeneous:
-                for i, v in enumerate(elem_vars):
-                    self.scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
+            for i, v in enumerate(elem_vars):
+                self.scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
 
         else:
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
@@ -2199,6 +2174,10 @@ class SemanticParser(BasicParser):
         return Slice(start, stop, step)
 
     def _visit_IndexedElement(self, expr):
+        inhomogeneous_element = self.scope.find(expr, 'symbolic_alias')
+        if inhomogeneous_element is not None:
+            return inhomogeneous_element
+
         var = self._visit(expr.base)
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
@@ -3032,17 +3011,14 @@ class SemanticParser(BasicParser):
                     if isinstance(r.class_type, NativeInhomogeneousTuple) and isinstance(r, Variable):
                         new_rhs.extend(self.get_tuple_element(v) for v in r)
                     else:
-                        new_rhs.extend([r[i] for i in range(len(unpacked_l))])
+                        new_rhs.extend([self.get_tuple_element(r[i]) for i in range(len(unpacked_l))])
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l.class_type, NativeInhomogeneousTuple) \
                         and isinstance(r.class_type, (NativeTuple, NativeHomogeneousList)) \
                         and not isinstance(r, FunctionCall):
                     new_lhs.extend(self.get_tuple_element(v) for v in l)
-                    if isinstance(r.class_type, NativeInhomogeneousTuple) and isinstance(r, Variable):
-                        new_rhs.extend(self.get_tuple_element(v) for v in r)
-                    else:
-                        new_rhs.extend(r)
+                    new_rhs.extend(self.get_tuple_element(v) for v in r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and l.is_optional:
@@ -3512,6 +3488,7 @@ class SemanticParser(BasicParser):
 
         return_objs = self.scope.find(f_name, 'functions').results
         assigns     = []
+
         for o,r in zip(return_objs, results):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
