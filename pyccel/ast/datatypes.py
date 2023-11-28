@@ -315,6 +315,10 @@ class NativeInhomogeneousTuple(NativeTuple):
     def __getitem__(self, i):
         return self._dtypes[i]
 
+    def __repr__(self):
+        datatypes = ', '.join(repr(d) for d in self._dtypes)
+        return str(self.__class__.__name__)+f'({datatypes})'
+
 class NativeHomogeneousList(DataType, metaclass = Singleton):
     """
     Class representing the homogeneous list type.
