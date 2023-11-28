@@ -241,6 +241,8 @@ class Duplicate(TypedAstNode):
         self._precision  = val.precision
         self._rank       = val.rank
         self._shape      = (PyccelMul(val.shape[0], length, simplify=True),)
+        if not isinstance(val.dtype, NativeInhomogeneousTuple):
+            self._shape += tuple(val.shape[1:])
         self._order      = val.order
         self._class_type = val.class_type
 
