@@ -1109,7 +1109,7 @@ class SyntaxParser(BasicParser):
         if isinstance(func, PyccelSymbol):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
-            if func == "tuple":
+            elif func == "tuple":
                 func = PythonTupleFunction(*args)
             else:
                 func = FunctionCall(func, args)
