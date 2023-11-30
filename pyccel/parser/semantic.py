@@ -487,7 +487,13 @@ class SemanticParser(BasicParser):
             The element of the tuple obtained via the `__getitem__` function.
         """
         if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.dtype, NativeInhomogeneousTuple):
-            result = self.scope.find(tuple_elem, 'symbolic_alias')
+            if isinstance(tuple_elem.base, DottedVariable):
+                base = tuple_elem.base.clone(tuple_elem.base.name, Variable)
+                tuple_elem_search = IndexedElement(base, *tuple_elem.indices)
+            else:
+                tuple_elem_search = tuple_elem
+
+            result = self.scope.find(tuple_elem_search, 'symbolic_alias')
 
             if result is None:
                 msg = f'Internal error. Tuple element {tuple_elem} could not be found.'
@@ -1050,7 +1056,7 @@ class SemanticParser(BasicParser):
                             expr, func.is_elemental)
             return new_expr
 
-    def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
+    def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False, insertion_scope = None):
         """
         Create a new variable.
 
@@ -1089,8 +1095,10 @@ class SemanticParser(BasicParser):
             is_temp = name.is_temp
         else:
             is_temp = False
+        if insertion_scope is None:
+            insertion_scope = self.scope
 
-        if isinstance(rhs.class_type, NativeInhomogeneousTuple):
+        if isinstance(d_lhs['class_type'], NativeInhomogeneousTuple):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
@@ -1115,7 +1123,7 @@ class SemanticParser(BasicParser):
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
 
             for i, v in enumerate(elem_vars):
-                self.scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
+                insertion_scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
 
         else:
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
@@ -1222,7 +1230,7 @@ class SemanticParser(BasicParser):
                         attribute_name = lhs.name[-1]
                         new_name = class_def.scope.get_expected_name(attribute_name)
                         # Create the attribute
-                        member = self._create_variable(new_name, dtype, rhs, d_lhs)
+                        member = self._create_variable(new_name, dtype, rhs, d_lhs, insertion_scope=class_def.scope)
 
                         # Insert the attribute to the class scope
                         # Passing the original name ensures that the attribute can be found under this name
@@ -2697,12 +2705,15 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
             cls_def = self.scope.find(method.cls_name, 'classes')
-            d_var = {'datatype': self.get_class_construct(method.cls_name),
-                    'memory_handling':'stack',
-                    'shape' : None,
-                    'rank' : 0,
-                    'is_target' : False,
-                    'cls_base' : cls_def}
+            cls_dtype = self.get_class_construct(method.cls_name)
+            d_var = {'datatype': cls_dtype,
+                     'precision' : 0,
+                     'memory_handling':'stack',
+                     'shape' : None,
+                     'rank' : 0,
+                     'is_target' : False,
+                     'cls_base' : cls_def,
+                     'class_type' : cls_dtype}
             new_expression = []
 
             lhs = expr.get_user_nodes(Assign)[0].lhs
