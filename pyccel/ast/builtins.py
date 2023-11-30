@@ -521,12 +521,12 @@ class PythonTuple(TypedAstNode):
             return
         arg0 = args[0]
         precision = get_final_precision(arg0)
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
+        is_homogeneous = all(not isinstance(a.dtype, (NativeGeneric, NativeInhomogeneousTuple)) and \
                              arg0.dtype == a.dtype and \
                              precision == get_final_precision(a) and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
+                             (a.rank == 0 or isinstance(a.class_type, NativeHomogeneousTuple)) and \
+                             arg0.order == a.order and \
+                             not getattr(a, 'is_alias', False) for a in args)
         self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
@@ -614,7 +614,8 @@ class PythonTupleFunction(PyccelInternalFunction):
 
     Class representing a call to the `tuple` function. This is
     different to the `(,)` syntax as it only takes one argument
-    and unpacks any variables.
+    and unpacks any variables. This class is only used in the
+    syntactic stage.
 
     Parameters
     ----------
