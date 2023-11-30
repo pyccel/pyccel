@@ -274,7 +274,11 @@ class Concatenate(TypedAstNode):
     """
     A class representing the + operator for Python tuples.
 
-    A class representing the + operator for Python tuples.
+    A class representing the + operator for homogeneous Python tuples.
+    This operator should only be used when concatenating two homogeneous
+    tuples which, when concatenated, can be saved into a homogeneous
+    tuple. If this is not the case then an inhomogeneous tuple should
+    be crated using `PythonTuple`.
 
     Parameters
     ----------
@@ -290,8 +294,7 @@ class Concatenate(TypedAstNode):
         self._dtype      = arg1.dtype
         self._precision  = arg1.precision
         self._rank       = arg1.rank
-        shape_addition   = arg2.shape[0]
-        self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
+        self._shape      = (PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True),) + arg1.shape[1:]
         self._order      = arg1.order
         self._class_type = arg1.class_type
 
@@ -301,6 +304,18 @@ class Concatenate(TypedAstNode):
     @property
     def args(self):
         return self._args
+
+    def __getitem__(self, idx):
+        if idx < self.shape[0].python_value:
+            for a in self._args:
+                s = a.shape[0].python_value
+                if idx < s:
+                    return a[idx]
+                else:
+                    idx -= s
+            return RuntimeError
+        else:
+            raise IndexError
 
 
 class Assign(PyccelAstNode):
