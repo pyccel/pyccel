@@ -486,7 +486,7 @@ class SemanticParser(BasicParser):
         tuple_elem : PyccelAstNode
             The element of the tuple obtained via the `__getitem__` function.
         """
-        if isinstance(tuple_elem, IndexedElement):
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.dtype, NativeInhomogeneousTuple):
             result = self.scope.find(tuple_elem, 'symbolic_alias')
 
             if result is None:
@@ -640,14 +640,6 @@ class SemanticParser(BasicParser):
             d_var['is_target'      ] = expr.is_target
             return d_var
 
-        elif isinstance(expr, Concatenate):
-            d_var['cls_base'      ] = TupleClass
-            if any(getattr(a, 'on_heap', False) for a in expr.args):
-                d_var['memory_handling'] = 'heap'
-            else:
-                d_var['memory_handling'] = 'stack'
-            return d_var
-
         elif isinstance(expr, NumpyNewArray):
             d_var['cls_base'   ] = NumpyArrayClass
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -664,7 +656,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, TypedAstNode):
 
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 and not isinstance(expr.dtype, NativeTuple) else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
             return d_var
 
@@ -1284,65 +1276,7 @@ class SemanticParser(BasicParser):
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                                             and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, NativeHomogeneousTuple)) or arr_in_multirets
-                if lhs.on_heap and not array_declared_in_function:
-                    if self.scope.is_loop:
-                        # Array defined in a loop may need reallocation at every cycle
-                        errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                            severity='warning',
-                            bounding_box=(self.current_ast_node.lineno,
-                                self.current_ast_node.col_offset))
-                        status='unknown'
-                    else:
-                        # Array defined outside of a loop will be allocated only once
-                        status='unallocated'
-
-                    # Create Allocate node
-                    if isinstance(lhs.class_type, NativeInhomogeneousTuple):
-                        args = [self.get_tuple_element(v) for v in lhs if v.rank>0]
-                        new_args = []
-                        while len(args) > 0:
-                            for a in args:
-                                if isinstance(a.class_type, NativeInhomogeneousTuple):
-                                    new_args = [self.get_tuple_element(v) for v in a if v.rank>0]
-                                else:
-                                    new_expressions.append(Allocate(a,
-                                        shape=a.alloc_shape, order=a.order, status=status))
-                                    # Add memory deallocation for array variables
-                                    self._allocs[-1].append(a)
-                            args = new_args
-                    else:
-                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
-                # ...
-
-                # ...
-                # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.on_stack:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
-                # ...
-
-                # Add memory deallocation for class constructor
-                if isinstance(lhs.dtype, CustomDataType) and not lhs.is_alias:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
-                # ...
-
-                # We cannot allow the definition of a stack array in a loop
-                if lhs.is_stack_array and self.scope.is_loop:
-                    errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                        severity='error',
-                        bounding_box=(self.current_ast_node.lineno,
-                            self.current_ast_node.col_offset))
-
-                # Not yet supported for arrays: x=y+z, x=b[:]
-                # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
-
-                if not know_lhs_shape:
-                    msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
-                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                        severity='fatal')
+                self._build_first_allocation_node(lhs, array_declared_in_function, new_expressions)
 
             # Variable already exists
             else:
@@ -1363,6 +1297,57 @@ class SemanticParser(BasicParser):
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
 
         return lhs
+
+    def _build_first_allocation_node(self, lhs, array_declared_in_function, new_expressions):
+        if lhs.on_heap and not array_declared_in_function:
+            if self.scope.is_loop:
+                # Array defined in a loop may need reallocation at every cycle
+                errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                    severity='warning',
+                    bounding_box=(self.current_ast_node.lineno,
+                        self.current_ast_node.col_offset))
+                status='unknown'
+            else:
+                # Array defined outside of a loop will be allocated only once
+                status='unallocated'
+
+            new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+        # ...
+
+        # Create Allocate node
+        elif isinstance(lhs.class_type, NativeInhomogeneousTuple):
+            for l in lhs:
+                self._build_first_allocation_node(self.get_tuple_element(l), array_declared_in_function, new_expressions)
+
+        # ...
+        # Ensure memory deallocation will be created
+        if lhs.is_alias:
+            # Deallocate array pointers (to deallocate shape/stride information)
+            if isinstance(lhs.class_type, NumpyNDArrayType):
+                self._allocs[-1].append(lhs)
+        else:
+            # Deallocate heap memory and call destructors for classes
+            if lhs.on_heap or isinstance(lhs.dtype, CustomDataType):
+                # Create Deallocate node
+                self._allocs[-1].append(lhs)
+        # ...
+
+        # We cannot allow the definition of a stack array in a loop
+        if lhs.is_stack_array and self.scope.is_loop:
+            errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                severity='error',
+                bounding_box=(self.current_ast_node.lineno,
+                    self.current_ast_node.col_offset))
+
+        # Not yet supported for arrays: x=y+z, x=b[:]
+        # Because we cannot infer shape of right-hand side yet
+        know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
+
+        if not know_lhs_shape:
+            msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
+            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                severity='fatal')
 
     def _ensure_inferred_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
         """
@@ -2485,18 +2470,23 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
-            is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
-            if is_inhomogeneous:
-                def get_vars(a):
-                    if isinstance(a.shape[0], (LiteralInteger, int)):
-                        return [a[i] for i in range(n_vars)]
-                    else:
-                        raise NotImplementedError(f"Can't add inhomogeneous objects of unknown size")
-                tuple_args = [ai for a in args for ai in get_vars(a)]
-                expr_new = PythonTuple(*tuple_args)
-            else:
+        arg0 = args[0]
+        if isinstance(arg0.class_type, (NativeTuple, NativeHomogeneousList)):
+            arg1 = args[1]
+            is_homogeneous = not isinstance(arg0.class_type, NativeInhomogeneousTuple) and \
+                                arg0.dtype is arg1.dtype and \
+                                arg0.precision == arg1.precision and \
+                                arg0.rank  == arg1.rank  and \
+                                arg0.order == arg1.order
+            if is_homogeneous:
                 return Concatenate(*args)
+            else:
+                if not (isinstance(arg0.shape[0], (LiteralInteger, int)) and isinstance(arg1.shape[0], (LiteralInteger, int))):
+                    errors.report(f"Can't create an inhomogeneous object from objects of unknown size",
+                            severity='fatal', symbol=expr)
+
+                tuple_args = [ai for ai in arg0] + [ai for ai in arg1]
+                expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
