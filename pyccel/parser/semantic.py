@@ -1090,8 +1090,7 @@ class SemanticParser(BasicParser):
         else:
             is_temp = False
 
-        if isinstance(rhs.class_type, NativeInhomogeneousTuple) or \
-                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
+        if isinstance(rhs.class_type, NativeInhomogeneousTuple):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
@@ -1152,7 +1151,7 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
         
