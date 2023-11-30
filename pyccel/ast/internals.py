@@ -283,6 +283,13 @@ class Slice(PyccelAstNode):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
+    def __hash__(self):
+        return hash((self.start, self.stop, self.step, self.slice_type))
+
+    def __eq__(self, other):
+        return isinstance(other, Slice) and other.start == self.start and \
+                other.stop == self.stop and other.step == self.step and \
+                other.slice_type == self.slice_type
 
 class PyccelSymbol(str, Immutable):
     """
