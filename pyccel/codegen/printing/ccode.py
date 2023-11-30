@@ -1248,8 +1248,7 @@ class CCodePrinter(CodePrinter):
     def _print_Declare(self, expr):
         variable = expr.variable
         if isinstance(variable.class_type, NativeInhomogeneousTuple):
-            decl_vars = [self.scope.find(v, 'symbolic_alias') for v in variable]
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in decl_vars)
+            return ''
 
         declaration_type = self.get_declare_type(variable)
         variable_code = self._print(variable.name)
