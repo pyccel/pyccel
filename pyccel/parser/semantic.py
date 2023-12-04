@@ -1349,7 +1349,7 @@ class SemanticParser(BasicParser):
         if variable.on_heap and not variable_allocated_in_function:
             if self.scope.is_loop:
                 # Array defined in a loop may need reallocation at every cycle
-                errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
+                errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=variable.name,
                     severity='warning',
                     bounding_box=(self.current_ast_node.lineno,
                         self.current_ast_node.col_offset))
@@ -1381,7 +1381,7 @@ class SemanticParser(BasicParser):
 
         # We cannot allow the definition of a stack array in a loop
         if variable.is_stack_array and self.scope.is_loop:
-            errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
+            errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=variable.name,
                 severity='error',
                 bounding_box=(self.current_ast_node.lineno,
                     self.current_ast_node.col_offset))
