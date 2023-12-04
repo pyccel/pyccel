@@ -1117,7 +1117,7 @@ class SemanticParser(BasicParser):
         if insertion_scope is None:
             insertion_scope = self.scope
 
-        if isinstance(d_lhs['class_type'], NativeInhomogeneousTuple):
+        if isinstance(dtype, NativeInhomogeneousTuple):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
