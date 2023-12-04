@@ -2124,7 +2124,7 @@ class NumpyNonZero(PyccelInternalFunction):
             raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
         self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
         self._arr = a
-        self._shape = self._elements.shape
+        self._shape = (LiteralInteger(a.rank), *self._elements.shape)
         super().__init__()
 
     @property
