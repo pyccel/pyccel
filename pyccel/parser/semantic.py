@@ -559,6 +559,25 @@ class SemanticParser(BasicParser):
         return headers
 
     def insert_variable_to_scope(self, var, name = None, scope = None):
+        """
+        Insert a variable into the scope.
+
+        Insert a variable into the scope. For most variables this simply
+        involves calling Scope.insert_variable, however for non-homogeneous
+        tuple variables the variables which will represent the elements in
+        the code must also be inserted into the scope.
+
+        Parameters
+        ----------
+        var : Variable
+            The variable to be inserted.
+        name : str, optional
+            The name which will be used to search for the variable within
+            the scope.
+        scope : Scope, optional
+            The scope where the variable should be inserted. By default
+            the current scope is used.
+        """
         if scope is None:
             scope = self.scope
 
@@ -1305,8 +1324,29 @@ class SemanticParser(BasicParser):
 
         return lhs
 
-    def _build_first_allocation_node(self, lhs, array_declared_in_function, new_expressions):
-        if lhs.on_heap and not array_declared_in_function:
+    def _build_first_allocation_node(self, variable, variable_allocated_in_function, new_expressions):
+        """
+        Ensure correct handling of memory allocation for a variable.
+
+        Create an Allocate node which allocates memory for the variable. This function should be called
+        the first time that memory is allocated. When memory is reallocated the steps are slightly
+        different. In this case the allocation creation is handled by _ensure_inferred_type_matches_existing.
+        Whenever memory is allocated an equivalent Deallocate node should also be created. This function
+        adds the variable to self._allocs and therefore ensures that this is the case.
+
+        Parameters
+        ----------
+        variable : Variable
+            The variable being allocated.
+
+        variable_allocated_in_function : bool
+            Indicate whether the variable was created inside a function. If this is the case then the
+            deallocation needs taking care of but there is no Allocate node needed.
+
+        new_expressions : list of PyccelAstNode
+            A list of nodes to which any nodes created in this function (e.g. Allocate) must be appended.
+        """
+        if variable.on_heap and not variable_allocated_in_function:
             if self.scope.is_loop:
                 # Array defined in a loop may need reallocation at every cycle
                 errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
@@ -1318,29 +1358,29 @@ class SemanticParser(BasicParser):
                 # Array defined outside of a loop will be allocated only once
                 status='unallocated'
 
-            new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
+            new_expressions.append(Allocate(variable, shape=variable.alloc_shape, order=variable.order, status=status))
         # ...
 
         # Create Allocate node
-        elif isinstance(lhs.class_type, NativeInhomogeneousTuple):
-            for l in lhs:
-                self._build_first_allocation_node(self.get_tuple_element(l), array_declared_in_function, new_expressions)
+        elif isinstance(variable.class_type, NativeInhomogeneousTuple):
+            for l in variable:
+                self._build_first_allocation_node(self.get_tuple_element(l), variable_allocated_in_function, new_expressions)
 
         # ...
         # Ensure memory deallocation will be created
-        if lhs.is_alias:
+        if variable.is_alias:
             # Deallocate array pointers (to deallocate shape/stride information)
-            if isinstance(lhs.class_type, NumpyNDArrayType):
-                self._allocs[-1].append(lhs)
+            if isinstance(variable.class_type, NumpyNDArrayType):
+                self._allocs[-1].append(variable)
         else:
             # Deallocate heap memory and call destructors for classes
-            if lhs.on_heap or isinstance(lhs.dtype, CustomDataType):
+            if variable.on_heap or isinstance(variable.dtype, CustomDataType):
                 # Create Deallocate node
-                self._allocs[-1].append(lhs)
+                self._allocs[-1].append(variable)
         # ...
 
         # We cannot allow the definition of a stack array in a loop
-        if lhs.is_stack_array and self.scope.is_loop:
+        if variable.is_stack_array and self.scope.is_loop:
             errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
                 severity='error',
                 bounding_box=(self.current_ast_node.lineno,
@@ -1348,10 +1388,10 @@ class SemanticParser(BasicParser):
 
         # Not yet supported for arrays: x=y+z, x=b[:]
         # Because we cannot infer shape of right-hand side yet
-        know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
+        know_lhs_shape = (variable.rank == 0) or all(sh is not None for sh in variable.alloc_shape)
 
         if not know_lhs_shape:
-            msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
+            msg = f"Cannot infer shape of variable {variable}"
             errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
