@@ -1,7 +1,7 @@
 # pylint: disable=missing-class-docstring,  missing-function-docstring, missing-module-docstring
 
 class Point(object):
-    def __init__(self : 'Point', x : float, y : float):
+    def __init__(self, x : float, y : float):
         self.x = x
         self.y = y
 

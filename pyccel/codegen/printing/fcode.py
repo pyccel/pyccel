@@ -37,7 +37,7 @@ from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeRange, NativeNumeric
+from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -667,7 +667,7 @@ class FCodePrinter(CodePrinter):
             elif isinstance(f, PythonType):
                 args_format.append('A')
                 args.append(self._print(f.print_string))
-            elif isinstance(f.rank, int) and f.rank > 0:
+            elif f.rank > 0 and not isinstance(f, FunctionCall):
                 if args_format:
                     code += self._formatted_args_to_print(args_format, args, sep, separator, expr)
                     args_format = []
@@ -1360,9 +1360,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, NativeSymbol):
             return ''
 
-        if isinstance(expr.dtype, NativeRange):
-            return ''
-
         # meta-variables
         if (isinstance(expr.variable, Variable) and
             expr.variable.name.startswith('__')):
@@ -1446,7 +1443,7 @@ class FCodePrinter(CodePrinter):
 
         # Compute intent string
         if intent:
-            if intent == 'in' and rank == 0 and not (is_static and is_optional) \
+            if intent == 'in' and rank == 0 and not is_optional \
                 and not isinstance(expr_dtype, CustomDataType):
                 intentstr = ', value'
                 if is_const:
@@ -1955,7 +1952,7 @@ class FCodePrinter(CodePrinter):
         functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
 
         for i in expr.local_vars:
             dec = Declare(i.dtype, i)
@@ -1976,7 +1973,7 @@ class FCodePrinter(CodePrinter):
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
-        parts = [doc_string,
+        parts = [docstring,
                 f"{sig_parts['sig']}({sig_parts['arg_code']}){bind_c} {sig_parts['func_end']}\n",
                 imports,
                 'implicit none\n',
@@ -2045,16 +2042,10 @@ class FCodePrinter(CodePrinter):
         if not(base is None):
             sig = '{0}, extends({1})'.format(sig, base)
 
-        code = ('{0} :: {1}').format(sig, name)
-        if len(decs) > 0:
-            code = ('{0}\n'
-                    '{1}').format(code, decs)
-        if len(methods) > 0:
-            code = ('{0}\n'
-                    'contains\n'
-                    '{1}').format(code, methods)
-        decs = ('{0}\n'
-                'end type {1}\n').format(code, name)
+        docstring = self._print(expr.docstring) if expr.docstring else ''
+        code = f'{sig} :: {name}\n{decs}\n'
+        code = code + 'contains\n' + methods
+        decs = ''.join([docstring, code, f'end type {name}\n'])
 
         sep = self._print(SeparatorComment(40))
         # we rename all methods because of the aliasing
@@ -2062,12 +2053,7 @@ class FCodePrinter(CodePrinter):
         for i in expr.interfaces:
             cls_methods +=  [j.clone('{0}'.format(j.name)) for j in i.functions]
 
-        methods = ''
-        for i in cls_methods:
-            methods = ('{methods}\n'
-                     '{sep}\n'
-                     '{f}\n'
-                     '{sep}\n').format(methods=methods, sep=sep, f=self._print(i))
+        methods = ''.join('\n'.join(['', sep, self._print(i), sep, '']) for i in cls_methods)
 
         self.set_current_class(None)
 
@@ -2683,9 +2669,17 @@ class FCodePrinter(CodePrinter):
             numpy_sign is an interface which calls the proper function depending on the data type of x
 
         """
-        func = PyccelFunctionDef('numpy_sign', NumpySign)
-        self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
-        return f'numpy_sign({self._print(expr.args[0])})'
+        arg = expr.args[0]
+        arg_code = self._print(arg)
+        if isinstance(expr.dtype, NativeComplex):
+            func = PyccelFunctionDef('numpy_sign', NumpySign)
+            self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
+            return f'numpy_sign({arg_code})'
+        else:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            # The absolute value of the result (0 if the argument is 0, 1 otherwise)
+            abs_result = self._print(cast_func(PythonBool(arg)))
+            return f'sign({abs_result}, {arg_code})'
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var

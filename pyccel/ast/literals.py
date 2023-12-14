@@ -98,8 +98,9 @@ class LiteralTrue(LiteralNumeric):
     precision : int
         The precision of the data type.
     """
-    __slots__ = ()
-    _dtype     = NativeBool()
+    __slots__   = ()
+    _dtype      = NativeBool()
+    _class_type = NativeBool()
 
     def __init__(self, precision = -1):
         super().__init__(precision)
@@ -125,8 +126,9 @@ class LiteralFalse(LiteralNumeric):
     precision : int
         The precision of the data type.
     """
-    __slots__ = ()
-    _dtype     = NativeBool()
+    __slots__   = ()
+    _dtype      = NativeBool()
+    _class_type = NativeBool()
 
     def __init__(self, precision = -1):
         super().__init__(precision)
@@ -155,8 +157,9 @@ class LiteralInteger(LiteralNumeric):
     precision : int
         The precision of the integer.
     """
-    __slots__ = ('_value',)
-    _dtype     = NativeInteger()
+    __slots__   = ('_value',)
+    _dtype      = NativeInteger()
+    _class_type = NativeInteger()
 
     def __init__(self, value, precision = -1):
         super().__init__(precision)
@@ -192,8 +195,9 @@ class LiteralFloat(LiteralNumeric):
     precision : int
         The precision of the float.
     """
-    __slots__ = ('_value',)
-    _dtype     = NativeFloat()
+    __slots__   = ('_value',)
+    _dtype      = NativeFloat()
+    _class_type = NativeFloat()
 
     def __init__(self, value, *, precision = -1):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -232,8 +236,9 @@ class LiteralComplex(LiteralNumeric):
     precision : int
         The precision of the complex number.
     """
-    __slots__ = ('_real_part','_imag_part')
-    _dtype     = NativeComplex()
+    __slots__   = ('_real_part','_imag_part')
+    _dtype      = NativeComplex()
+    _class_type = NativeComplex()
 
     def __new__(cls, real, imag, precision = -1):
         if cls is LiteralImaginaryUnit:
@@ -322,8 +327,9 @@ class LiteralString(Literal):
         The Python literal.
     """
     __slots__ = ('_string',)
-    _dtype     = NativeString()
-    _precision = 0
+    _dtype      = NativeString()
+    _class_type = NativeString()
+    _precision  = 0
 
     def __init__(self, arg):
         super().__init__()
@@ -361,8 +367,9 @@ class Nil(Literal, metaclass=Singleton):
     """
     __slots__ = ()
     _attribute_nodes = ()
-    _dtype = NativeGeneric
+    _dtype = NativeGeneric()
     _precision = 0
+    _class_type = NativeGeneric()
 
     def __str__(self):
         return 'None'
