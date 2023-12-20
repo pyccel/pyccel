@@ -13,7 +13,7 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
-from .variable import DottedName, AnnotatedPyccelSymbol
+from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
         'FunctionTypeAnnotation',
@@ -286,7 +286,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
     __slots__ = ('_dtypes', '_ranks', '_orders', '_is_const')
     _attribute_nodes = ()
     def __init__(self, dtypes, ranks, orders, is_const = None):
-        if any(not isinstance(d, (str, DottedName)) for d in dtypes):
+        if any(not isinstance(d, (str, DottedName, IndexedElement)) for d in dtypes):
             raise ValueError("Syntactic datatypes should be strings")
         if any(not isinstance(r, int) for r in ranks):
             raise ValueError("Ranks should have integer values")
