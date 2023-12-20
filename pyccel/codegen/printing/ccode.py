@@ -302,11 +302,6 @@ class CCodePrinter(CodePrinter):
         self._temporary_args = []
         self._current_module = None
         self._in_header = False
-        # Dictionary linking optional variables to their
-        # temporary counterparts which provide allocated
-        # memory
-        # Key is optional variable
-        self._optional_partners = {}
 
     def get_additional_imports(self):
         """return the additional imports collected in printing stage"""
@@ -434,7 +429,7 @@ class CCodePrinter(CodePrinter):
         while i < num_elements:
             current_element = flattened_list[i]
             # Copy an array element
-            if isinstance(current_element, Variable) and current_element.rank >= 1:
+            if isinstance(current_element, (Variable, IndexedElement)) and current_element.rank >= 1:
                 elem_name = self._print(current_element)
                 target = self._print(ObjectAddress(copy_to))
                 operations += f"array_copy_data({target}, {elem_name}, {offset_str});\n"
@@ -447,6 +442,9 @@ class CCodePrinter(CodePrinter):
                 self.add_import(c_imports['string'])
                 remaining_elements = flattened_list[i:]
                 lenSubset = next((i for i,v in enumerate(remaining_elements) if v.rank != 0), len(remaining_elements))
+                if lenSubset == 0:
+                    errors.report(f"Can't copy {rhs} into {lhs}", symbol=expr,
+                            severity='fatal')
                 subset = remaining_elements[:lenSubset]
 
                 # Declare list of consecutive elements
@@ -758,6 +756,8 @@ class CCodePrinter(CodePrinter):
         classes = ""
         funcs = ""
         for classDef in expr.module.classes:
+            if classDef.docstring is not None:
+                classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
             for method in classDef.methods:
@@ -1774,9 +1774,6 @@ class CCodePrinter(CodePrinter):
 
         self.set_scope(expr.scope)
 
-        # Reinitialise optional partners
-        self._optional_partners = {}
-
         arguments = [a.var for a in expr.arguments]
         results = [r.var for r in expr.results]
         if len(expr.results) > 1:
@@ -1800,10 +1797,10 @@ class CCodePrinter(CodePrinter):
             self._additional_args.pop()
         for i in expr.imports:
             self.add_import(i)
-        doc_string = self._print(expr.doc_string) if expr.doc_string else ''
+        docstring = self._print(expr.docstring) if expr.docstring else ''
 
         parts = [sep,
-                 doc_string,
+                 docstring,
                 '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
                  decs,
                  body,
@@ -2000,20 +1997,6 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(lhs, Variable) and lhs.is_optional:
-            if lhs in self._optional_partners:
-                # Collect temporary variable which provides
-                # allocated memory space for this optional variable
-                tmp_var = self._optional_partners[lhs]
-            else:
-                # Create temporary variable to provide allocated
-                # memory space before assigning to the pointer value
-                # (may be NULL)
-                tmp_var = self.scope.get_temporary_variable(lhs,
-                        is_optional = False)
-                self._optional_partners[lhs] = tmp_var
-            # Point optional variable at an allocated memory space
-            prefix_code = self._print(AliasAssign(lhs, tmp_var))
         if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))

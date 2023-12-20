@@ -31,23 +31,23 @@ import numpy as np
 from pyccel.decorators import inline
 
 class MyClass:
-    def __init__(self : 'MyClass', param1 : 'int', param2 : 'int'):
+    def __init__(self, param1 : 'int', param2 : 'int'):
         self.param1 = param1
         self.param2 = np.ones(param2)
         print("MyClass Object created!")
 
     @inline
-    def get_param(self : 'MyClass'):
+    def get_param(self):
         print(self.param1, self.param2)
 
 class MyClass1:
-    def __init__(self : 'MyClass1'):
+    def __init__(self):
         print("MyClass1 Object created!")
 
-    def Method1(self : 'MyClass1', param1 : 'MyClass'):
+    def Method1(self, param1 : MyClass):
         self.param = param1
 
-    def Method2(self : 'MyClass1'):
+    def Method2(self):
         return MyClass(2, 4)
 
 if __name__ == '__main__':
@@ -192,4 +192,4 @@ MyClass Object created!
 
 ## Limitations
 
-It's important to note that Pyccel does not support class inheritance, properties, magic methods or class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
+It's important to note that Pyccel does not support class inheritance, properties, magic methods or static class variables. For our first implementation, the focus of Pyccel is primarily on core class functionality and memory management.
