@@ -977,9 +977,6 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        if result_annotation and not isinstance(result_annotation, tuple):
-            result_annotation = [result_annotation]
-
         for i,r in enumerate(zip(*returns)):
             r0 = r[0]
 
@@ -993,10 +990,15 @@ class SyntaxParser(BasicParser):
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
+                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
 
-            results.append(FunctionDefResult(result_name, annotation = result_annotation))
+            results.append(result_name)
             results[-1].set_current_ast(stmt)
+
+        if len(results) == 1:
+            results = [FunctionDefResult(results[0], annotation = getattr(results[0], 'annotation', None))]
+        elif len(results) > 1:
+            results = [FunctionDefResult(PythonTuple(*results))]
 
         self.exit_function_scope()
 
