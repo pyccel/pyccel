@@ -1729,18 +1729,23 @@ class SemanticParser(BasicParser):
     def _get_indexed_type(self, base, args, expr):
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
-            var_annot = self._PyccelAstNode_to_TypeAnnotation(base, rank)
+            return self._PyccelAstNode_to_TypeAnnotation(base, rank)
         elif not any(isinstance(a, Slice) for a in args):
             rank = 1
             if len(args) == 2 and args[1] is LiteralEllipsis():
                 internal_datatypes = args[0]
+                type_annotations = []
                 for u in internal_datatypes.type_list:
-                    u.cls_base = tuple_class_def
+                    rank = u.rank+1
+                    order = None if rank == 1 else 'C'
+                    type_annotations.append(VariableTypeAnnotation(u.datatype, NativeHomogeneousTuple(),
+                        u.precision, rank, order, u.is_const))
+                return UnionTypeAnnotation(*type_annotations)
             else:
-                errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
+                raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
         else:
-            errors.report("Unrecognised type slice",
+            raise errors.report("Unrecognised type slice",
                     severity='fatal', symbol=expr)
 
     #====================================================
@@ -2329,6 +2334,8 @@ class SemanticParser(BasicParser):
                 rank = 0
                 order = None
                 types.append(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
+            elif isinstance(dtype_from_scope, UnionTypeAnnotation):
+                types.extend(dtype_from_scope)
             elif dtype_from_scope is not None:
                 errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
                         severity='fatal', symbol=expr)
