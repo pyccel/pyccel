@@ -582,3 +582,35 @@ NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
+
+#define NUMPY_AMAX_(NAME, TYPE, CTYPE) \
+    TYPE numpy_amax_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            output = (current_value > output) ? current_value : output; \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
+
+NUMPY_AMAX_(bool, int64_t, bool)
+NUMPY_AMAX_(int8, int64_t, int8)
+NUMPY_AMAX_(int16, int64_t, int16)
+NUMPY_AMAX_(int32, int64_t, int32)
+NUMPY_AMAX_(int64, int64_t, int64)
+NUMPY_AMAX_(float32, float, float)
+NUMPY_AMAX_(float64, double, double)
+NUMPY_AMAX_(complex64, float complex, cfloat)
+NUMPY_AMAX_(complex128, double complex, cdouble)
+
