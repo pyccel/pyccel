@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   #1575 : Add support for homogeneous tuple type annotations on variables.
 
 ### Fixed
 
