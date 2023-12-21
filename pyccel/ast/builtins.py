@@ -1060,7 +1060,7 @@ class PythonMax(PyccelInternalFunction):
                              f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
-        self._class_type = x.class_type
+        self._class_type = x.dtype
         super().__init__(x)
 
 
@@ -1095,7 +1095,7 @@ class PythonMin(PyccelInternalFunction):
                               f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
-        self._class_type = x.class_type
+        self._class_type = x.dtype
         super().__init__(x)
 
 #==============================================================================
