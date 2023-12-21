@@ -1415,7 +1415,8 @@ class SemanticParser(BasicParser):
             new_expressions.append(Deallocate(var))
 
         elif str(dtype) != str(var.dtype) or \
-                internal_precision != get_final_precision(var):
+                internal_precision != get_final_precision(var) or \
+                d_var['class_type'] != var.class_type:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_dtype = str(tmp_result.dtype)
@@ -1434,11 +1435,14 @@ class SemanticParser(BasicParser):
                 try:
                     d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
                 except KeyError:
-                    d2 = str(var.dtype)
+                    d2 = str(dtype)
+
+                c1 = d1 if var.class_type == var.dtype else f"{var.class_type}[{d1}]"
+                c2 = d2 if d_var['class_type'] == dtype else f"{d_var['class_type']}[{d2}]"
 
                 name = var.name
                 rhs_str = str(rhs)
-                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(c1, c2),
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
