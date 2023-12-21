@@ -142,6 +142,15 @@ def test_homogeneous_tuple_2_annotation(language):
     assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
     assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="No list workaround implemented in C"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_homogeneous_list_annotation(language):
     def homogeneous_list_annotation():
         a : list[int, ...]
