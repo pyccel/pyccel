@@ -1727,6 +1727,29 @@ class SemanticParser(BasicParser):
         return VariableTypeAnnotation(dtype, class_type, prec, rank, order)
 
     def _get_indexed_type(self, base, args, expr):
+        """
+        Extract a type annotation from an IndexedElement.
+
+        Extract a type annotation from an IndexedElement. This may be a type indexed with
+        slices (indicating a NumPy array), or a class type such as tuple/list/etc which is
+        indexed with the datatype.
+
+        Parameters
+        ----------
+        base : type deriving from PyccelAstNode
+            The object being indexed.
+
+        args : tuple of PyccelAstNode
+            The indices being used to access the base.
+
+        expr : PyccelAstNode
+            The annotation, used for error printing.
+
+        Returns
+        -------
+        UnionTypeAnnotation
+            The type annotation described by this object.
+        """
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
             return self._PyccelAstNode_to_TypeAnnotation(base, rank)
@@ -1735,10 +1758,17 @@ class SemanticParser(BasicParser):
             if len(args) == 2 and args[1] is LiteralEllipsis():
                 internal_datatypes = args[0]
                 type_annotations = []
+                if base is PythonTuple:
+                    class_type = NativeHomogeneousTuple()
+                elif base is PythonList:
+                    class_type = NativeHomogeneousList()
+                else:
+                    raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
+                            severity='fatal', symbol=expr)
                 for u in internal_datatypes.type_list:
                     rank = u.rank+1
                     order = None if rank == 1 else 'C'
-                    type_annotations.append(VariableTypeAnnotation(u.datatype, NativeHomogeneousTuple(),
+                    type_annotations.append(VariableTypeAnnotation(u.datatype, class_type,
                         u.precision, rank, order, u.is_const))
                 return UnionTypeAnnotation(*type_annotations)
             else:
