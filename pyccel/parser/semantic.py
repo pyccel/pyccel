@@ -3404,6 +3404,7 @@ class SemanticParser(BasicParser):
         else:
             d_var['order'] = None
         d_var['shape'] = shape
+        d_var['class_type'] = NativeHomogeneousList()
 
         # ...
         # TODO [YG, 30.10.2020]:
