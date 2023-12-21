@@ -119,3 +119,14 @@ def test_stack_array_annotation_2(language):
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
+
+def test_homogeneous_tuple_annotation(language):
+    def homogeneous_tuple_annotation():
+        a : tuple[int, ...]
+        a = (1,2,3)
+        return a[0], a[1], a[2]
+
+    epyc_homogeneous_tuple_annotation = epyccel(homogeneous_tuple_annotation, language=language)
+
+    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
