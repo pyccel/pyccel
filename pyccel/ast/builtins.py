@@ -500,7 +500,7 @@ class PythonTuple(TypedAstNode):
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
     """
-    __slots__ = ('_args','_inconsistent_shape','_is_homogeneous',
+    __slots__ = ('_args','_is_homogeneous',
             '_dtype','_precision','_rank','_shape','_order', '_class_type')
     _iterable        = True
     _attribute_nodes = ('_args',)
@@ -520,13 +520,14 @@ class PythonTuple(TypedAstNode):
             return
         arg0 = args[0]
         precision = get_final_precision(arg0)
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
+        inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
+        is_homogeneous = not inconsistent_shape and \
+                         arg0.dtype is not NativeGeneric() and \
                          all(a.dtype is not NativeGeneric() and \
                              arg0.dtype == a.dtype and \
                              precision == get_final_precision(a) and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
-        self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
             self._dtype = arg0.dtype
