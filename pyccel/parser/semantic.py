@@ -1783,6 +1783,22 @@ class SemanticParser(BasicParser):
                     severity='fatal', symbol=expr)
 
     def build_tuple(self, args):
+        """
+        Create a PythonTuple object.
+
+        Create a PythonTuple object from the arguments passed to the function.
+        This includes calculating the homogeneity.
+
+        Parameters
+        ----------
+        args : iterable of PyccelAstNode
+            The arguments passed to the PythonTuple.
+
+        Returns
+        -------
+        PythonTuple
+            The tuple that is created.
+        """
         symbols = {}
         used_names = set()
 
@@ -1798,7 +1814,8 @@ class SemanticParser(BasicParser):
                          len(class_types) == 1 and len(ranks) == 1 and \
                          len(orders) == 1 and len(possible_shapes) == 1 and \
                          NativeGeneric() not in dtypes
-        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 for a in args)
+        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
+                            not isinstance(a.dtype, NativeHomogeneousTuple) for a in args)
         return PythonTuple(*args, is_homogeneous = is_homogeneous,
                             contains_pointers = contains_pointers)
 
