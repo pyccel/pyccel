@@ -64,15 +64,12 @@ class OmpAnnotatedComment(Basic):
     @property
     def line(self):
         """
-        returns the line of an omp object.
+        returns the line of an omp object (OmpDirective has fst).
         """
-        #TODO : get the fst from the root parent, and set fst
-        if self.fst:
-            return self.fst.lineno
-        elif isinstance(self.parent, Basic):
-            return self.parent.line
-        else:
-            return None
+        p = self
+        while not isinstance(p, OmpDirective):
+            p = p.parent
+        return p.fst.lineno
 
     @property
     def raw(self):
@@ -168,9 +165,6 @@ class OmpDirective(OmpAnnotatedComment):
         self._require_end_directive = kwargs.pop("require_end_directive", False)
         self._clauses = kwargs.pop("clauses", [])
         super().__init__(**kwargs)
-        fst = kwargs.pop('fst', None)
-        if fst:
-            self.set_fst(fst)
 
     @property
     def name(self):

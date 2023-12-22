@@ -4,15 +4,13 @@ from .openmp_4_5 import CCodePrinter as PCCodePrinter
 from .openmp_4_5 import FCodePrinter as PFCodePrinter
 from .openmp_4_5 import PythonCodePrinter as PPythonCodePrinter
 from .ast import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpList
-
+from os.path import join, dirname
+from textx.metamodel import metamodel_from_file
+from textx import metamodel_for_language
 
 class SyntaxParser(PSyntaxParser):
     """Openmp 5.0 syntax parser"""
     def __init__(self):
-        from os.path import join, dirname
-        from textx.metamodel import metamodel_from_file
-        from textx import metamodel_for_language
-
         this_folder = dirname(__file__)
         # Get metamodel from language description
         grammar = join(this_folder, "grammar/openmp.tx")

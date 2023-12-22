@@ -83,7 +83,9 @@ class SyntaxParser:
         try:
             model = self._omp_metamodel.model_from_str(expr.s)
             model.raw = expr.s
-            return self._visit(OmpDirective.from_tx_directive(model.statement, fst=expr))
+            directive = OmpDirective.from_tx_directive(model.statement)
+            directive.set_fst(expr)
+            return self._visit(directive)
 
         except TextXError as e:
             errors.report(e.message, severity="fatal", symbol=expr)
