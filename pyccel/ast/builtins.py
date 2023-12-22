@@ -25,7 +25,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, InhomogeneousTupleVariable
+from .variable  import IndexedElement, InhomogeneousTupleVariable, Variable
 
 pyccel_stage = PyccelStage()
 
@@ -505,7 +505,7 @@ class PythonTuple(TypedAstNode):
     _iterable        = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args):
+    def __init__(self, *args, is_homogeneous = False, contains_pointers = False):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -518,18 +518,9 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
-        arg0 = args[0]
-        precision = get_final_precision(arg0)
-        inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
-        is_homogeneous = not inconsistent_shape and \
-                         arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
-                             arg0.dtype == a.dtype and \
-                             precision == get_final_precision(a) and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
         self._is_homogeneous = is_homogeneous
-        if is_homogeneous:
+        if is_homogeneous and not contains_pointers:
+            arg0 = args[0]
             self._dtype = arg0.dtype
             self._precision = arg0.precision
             inner_shape = [() if a.rank == 0 else a.shape for a in args]

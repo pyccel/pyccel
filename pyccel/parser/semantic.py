@@ -744,9 +744,9 @@ class SemanticParser(BasicParser):
                 elif len(selected_vars)<1:
                     return None
                 elif len(indices)==1:
-                    return PythonTuple(*selected_vars)
+                    return self.build_tuple(selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
+                    return self.build_tuple([self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
 
@@ -842,9 +842,9 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
             if isinstance(val, InhomogeneousTupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
+                return self.build_tuple(val.get_vars()*length)
             else:
-                return PythonTuple(*(val.args*length))
+                return self.build_tuple(val.args*length)
 
     def _handle_function_args(self, arguments):
         """
@@ -1782,6 +1782,27 @@ class SemanticParser(BasicParser):
             raise errors.report("Unrecognised type slice",
                     severity='fatal', symbol=expr)
 
+    def build_tuple(self, args):
+        symbols = {}
+        used_names = set()
+
+        dtypes = set(a.dtype for a in args)
+        precisions = set(get_final_precision(a) for a in args)
+        class_types = set(a.class_type for a in args)
+        ranks = set(a.rank for a in args)
+        orders = set(a.order for a in args)
+        shapes = [a.shape for a in args]
+        possible_shapes = set(tuple(pyccel_to_sympy(si, symbols, used_names) for si in s) \
+                                if s is not None else None for s in shapes)
+        is_homogeneous = len(dtypes) == 1 and len(precisions) == 1 and \
+                         len(class_types) == 1 and len(ranks) == 1 and \
+                         len(orders) == 1 and len(possible_shapes) == 1 and \
+                         NativeGeneric() not in dtypes
+        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 for a in args)
+        return PythonTuple(*args, is_homogeneous = is_homogeneous,
+                            contains_pointers = contains_pointers)
+
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -2028,7 +2049,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PythonTuple(self, expr):
         ls = [self._visit(i) for i in expr]
-        return PythonTuple(*ls)
+        return self.build_tuple(ls)
 
     def _visit_PythonList(self, expr):
         ls = [self._visit(i) for i in expr]
@@ -2238,7 +2259,7 @@ class SemanticParser(BasicParser):
             if n_exprs is not None:
                 new_expr_args = [[a[i] if hasattr(a, '__getitem__') else a for a in args]
                                  for i in range(n_exprs)]
-                return NumpyArray(PythonTuple(*[var[a] for a in new_expr_args]))
+                return NumpyArray(self.build_tuple([var[a] for a in new_expr_args]))
 
         return self._extract_indexed_from_var(var, args, expr)
 
@@ -2545,7 +2566,7 @@ class SemanticParser(BasicParser):
                         a_type = type(a)
                         raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
                 tuple_args = [ai for a in args for ai in get_vars(a)]
-                expr_new = PythonTuple(*tuple_args)
+                expr_new = self.build_tuple(tuple_args)
             else:
                 return Concatenate(*args)
         else:
@@ -2664,7 +2685,7 @@ class SemanticParser(BasicParser):
         t = MathAtan2(y_var, x_var)
         self.insert_import('math', AsName(MathSqrt, 'sqrt'))
         self.insert_import('math', AsName(MathAtan2, 'atan2'))
-        return PythonTuple(r,t)
+        return self.build_tuple([r,t])
 
     def _visit_CmathRect(self, expr):
         arg_r, arg_phi = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
@@ -2921,7 +2942,7 @@ class SemanticParser(BasicParser):
                 if len(results)==1:
                     d_var = self._infer_type(results[0].var)
                 else:
-                    d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
+                    d_var = self._infer_type(self.build_tuple([r.var for r in results]))
             elif expr.lhs.is_temp:
                 return rhs
             else:
@@ -3020,7 +3041,7 @@ class SemanticParser(BasicParser):
                 for i,(l,r) in enumerate(zip(lhs,r_iter)):
                     d = self._infer_type(r)
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ) )
-                lhs = PythonTuple(*new_lhs)
+                lhs = self.build_tuple(new_lhs)
 
             elif isinstance(rhs.class_type, NativeHomogeneousTuple):
                 new_lhs = []
@@ -3030,9 +3051,9 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
                         rhs[i], new_expressions, isinstance(expr, AugAssign)) )
                     new_rhs.append(rhs[i])
-                rhs = PythonTuple(*new_rhs)
+                rhs = self.build_tuple(new_rhs)
                 d_var = [d_var]
-                lhs = PythonTuple(*new_lhs)
+                lhs = self.build_tuple(new_lhs)
 
             elif isinstance(d_var, list) and len(d_var)== n:
                 new_lhs = []
@@ -3042,7 +3063,7 @@ class SemanticParser(BasicParser):
                 else:
                     for i,l in enumerate(lhs):
                         new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
-                lhs = PythonTuple(*new_lhs)
+                lhs = self.build_tuple(new_lhs)
 
             elif d_var['shape'][0]==n:
                 new_lhs = []
@@ -3052,7 +3073,7 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, self._infer_type(r), r, new_expressions, isinstance(expr, AugAssign)) )
                     new_rhs.append(r)
 
-                lhs = PythonTuple(*new_lhs)
+                lhs = self.build_tuple(new_lhs)
                 rhs = new_rhs
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
