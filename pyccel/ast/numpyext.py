@@ -23,7 +23,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
-from .datatypes      import (dtype_and_precision_registry as dtype_registry, NativeHomogeneousTuple,
+from .datatypes      import (dtype_and_precision_registry as dtype_registry, NativeHomogeneousTuple, NativeInhomogeneousTuple,
                              default_precision, NativeInteger, DataType, NativeNumericTypes,
                              NativeFloat, NativeComplex, NativeBool, NativeNumeric)
 
@@ -35,7 +35,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .variable       import Variable, Constant
+from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -647,11 +647,14 @@ class NumpyArray(NumpyNewArray):
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
-        is_array = isinstance(arg, Variable) and arg.is_ndarray
+        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
+        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple) or \
+                getattr(arg, 'is_homogeneous', False)
+        is_array = (isinstance(arg, Variable) and arg.is_ndarray) or \
+                   (isinstance(arg, IndexedElement) and arg.base.is_ndarray)
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or is_array or isinstance(arg, PythonList)):
@@ -670,14 +673,25 @@ class NumpyArray(NumpyNewArray):
 
         init_dtype = dtype
 
-        # Verify dtype and get precision
-        if dtype is None:
-            dtype = arg.dtype
-            prec = get_final_precision(arg)
-        else:
-            dtype, prec = process_dtype(dtype)
+        if isinstance(arg.dtype, NativeInhomogeneousTuple):
+            # If pseudo-inhomogeneous due to pointers, extract underlying dtype
+            if dtype is None:
+                dtype = arg[0].dtype
+                prec = get_final_precision(arg[0])
+            else:
+                dtype, prec = process_dtype(dtype)
 
-        shape = process_shape(False, arg.shape)
+            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
+        else:
+            # Verify dtype and get precision
+            if dtype is None:
+                dtype = arg.dtype
+                prec = get_final_precision(arg)
+            else:
+                dtype, prec = process_dtype(dtype)
+
+            shape = process_shape(False, arg.shape)
+
         rank  = len(shape)
 
         if ndmin and ndmin>rank:
