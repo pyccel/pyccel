@@ -13,6 +13,7 @@ from pyccel.codegen.printing.pycode import PythonCodePrinter
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
+from pyccel.utilities.extensions import Extensions
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
 _header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
@@ -23,6 +24,7 @@ printer_registry    = {
                       }
 
 pyccel_stage = PyccelStage()
+extensions = Extensions()
 
 class Codegen(object):
 
@@ -145,7 +147,7 @@ class Codegen(object):
         self._language = language
 
         # instantiate codePrinter
-        code_printer = printer_registry[language]
+        code_printer = extensions.extend_printer(printer_registry[language])
         errors = Errors()
         errors.set_parser_stage('codegen')
         # set the code printer

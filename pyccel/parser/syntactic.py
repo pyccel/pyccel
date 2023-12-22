@@ -69,14 +69,12 @@ from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse
-from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
 from pyccel.errors.errors import Errors
 
-from pyccel.parser.syntax.openmp import omp_syntax_parser
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -104,7 +102,7 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 #==============================================================================
 
-class SyntaxParser(BasicParser, omp_syntax_parser):
+class SyntaxParser(BasicParser):
     """
     Class which handles the syntactic stage as described in the developer docs.
 
@@ -125,7 +123,6 @@ class SyntaxParser(BasicParser, omp_syntax_parser):
 
     def __init__(self, inputs, **kwargs):
         BasicParser.__init__(self, **kwargs)
-        omp_syntax_parser.__init__(self)
 
         # check if inputs is a file
         code = inputs
@@ -174,13 +171,6 @@ class SyntaxParser(BasicParser, omp_syntax_parser):
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
 
-        if any(pd.require_end_directive for pd in self.pending_directives):
-            errors.report(
-                "directives need closing",
-                symbol=self._pending_directives,
-                severity="fatal",
-            )
-
 
         self._ast = ast
 
@@ -194,9 +184,7 @@ class SyntaxParser(BasicParser, omp_syntax_parser):
     def _treat_comment_line(self, line, stmt):
         if line.startswith('#$'):
             env = line[2:].lstrip()
-            if env.startswith('omp'):
-                expr = omp_parse(stmt=stmt, parser=self, errors=errors)
-            elif env.startswith('acc'):
+            if env.startswith('acc'):
                 expr = acc_parse(stmts=line)
             elif env.startswith('header'):
                 expr = hdr_parse(stmts=line)

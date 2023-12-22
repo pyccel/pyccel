@@ -239,6 +239,8 @@ def test_nowait_schedule(n : int):
     a = np.zeros(n)
     imin_res = np.empty(4)
     imax_res = np.empty(4)
+    rank, nb_tasks = np.int32(0), np.int32(0)
+    i_min, i_max = 0, 0
 
     #$omp parallel private(rank,nb_tasks,i_min,i_max)
     rank = omp_get_thread_num()
@@ -377,6 +379,8 @@ def omp_tasks(x):
     def fib(n):
         if n < 2:
             return n
+        i = 0
+        j = 0
         #$ omp task shared(i) firstprivate(n)
         i = fib(n-1)
         #$ omp end task
@@ -409,7 +413,7 @@ def omp_simd(n):
 def omp_flush():
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
     flag = 0
-    #$ omp parallel num_threads(2)
+    #$ omp parallel num_threads(3)
     if omp_get_thread_num() == 0:
         #$ omp atomic update
         flag = flag + 1
@@ -418,8 +422,16 @@ def omp_flush():
         while flag < 1:
             pass
             #$ omp flush(flag)
-        #$ omp atomic update
+        #$ omp atomic seq_cst
         flag = flag + 1
+    elif omp_get_thread_num() == 2:
+        #$ omp flush(flag)
+        while flag < 1:
+            pass
+            #$ omp flush(flag)
+        #$ omp atomic seq_cst, update
+        flag = flag + 1
+
     #$ omp end parallel
     return flag
 
@@ -524,10 +536,29 @@ def potential_internal_data_race_condition():
     y = np.array([1,2,3,4])
     #$ omp parallel num_threads(4)
     #$ omp single nowait
-    z  = x + y
+    z = x + y
     #$ omp end single
     #$ omp single nowait 
-    t  = x + y
-    #$ omp end single
+    t = x + y
+    #$omp end single
     #$ omp end parallel
     return z + t
+
+
+def parallel_if(n : int):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+    a = np.zeros(n)
+    id, nthrds =  np.int32(0), np.int32(0)
+    start, end = 0, 0
+
+    #$ omp parallel if(parallel:n > 10) private(id, nthrds, start, end) num_threads(4)
+    id = omp_get_thread_num()
+    nthrds = omp_get_num_threads()
+
+    start = int(id * n / nthrds)
+    end = int((id + 1) * n / nthrds)
+    for i in range(start, end):
+        a[i] = 2 * i
+    #$ omp end parallel
+    return a

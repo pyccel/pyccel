@@ -26,6 +26,8 @@ from pyccel.utilities.stage        import PyccelStage
 from pyccel.ast.utilities          import python_builtin_libs
 from pyccel.parser.scope           import Scope
 
+from pyccel.utilities.extensions import Extensions
+
 from .compiling.basic     import CompileObj
 from .compiling.compilers import Compiler, get_condaless_search_path
 
@@ -58,7 +60,8 @@ def execute_pyccel(fname, *,
                    accelerators  = (),
                    output_name   = None,
                    compiler_export_file = None,
-                   conda_warnings = 'basic'):
+                   conda_warnings = 'basic',
+                   omp_version = 4.5):
     """
     Run Pyccel on the provided code.
 
@@ -110,6 +113,9 @@ def execute_pyccel(fname, *,
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
+    extensions = Extensions()
+    extensions.set_options(accelerators=accelerators, omp_version=omp_version, language=language)
+
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:

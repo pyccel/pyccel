@@ -8,7 +8,6 @@
 import sys
 import os
 import argparse
-
 __all__ = ['MyParser', 'pyccel']
 
 #==============================================================================
@@ -83,6 +82,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     group.add_argument('--language', choices=('fortran', 'c', 'python'), help='Generated language')
 
     group.add_argument('--compiler', help='Compiler family or json file containing a compiler description {GNU,intel,PGI}')
+
+    group.add_argument('--omp-version', choices=(4.5, 5.0), type=float, default=4.5, help='openmp version to use')
 
     group.add_argument('--flags', type=str, \
                        help='Compiler flags.')
@@ -258,7 +259,6 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     if args.language == 'python' and args.output == '':
         print("Cannot output python file to same folder as this would overwrite the original file. Please specify --output")
         sys.exit(1)
-
     try:
         # TODO: prune options
         execute_pyccel(filename,
@@ -278,7 +278,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        accelerators  = accelerators,
                        folder        = args.output,
                        compiler_export_file = compiler_export_file,
-                       conda_warnings = args.conda_warnings)
+                       conda_warnings = args.conda_warnings,
+                       omp_version = args.omp_version)
     except PyccelError:
         sys.exit(1)
     finally:

@@ -464,7 +464,7 @@ def test_omp_long_line(language):
 @pytest.mark.external
 def test_omp_flush(language):
     f1 = epyccel(openmp.omp_flush, fflags = '-Wall', accelerators=['openmp'], language=language)
-    assert 2 == f1()
+    assert 3 == f1()
 
 @pytest.mark.external
 def test_omp_barrier(language):
@@ -530,3 +530,18 @@ def test_potential_internal_race_condition(language):
     f1 = epyccel(openmp.potential_internal_data_race_condition, fflags = '-Wall', accelerators=['openmp'], language=language)
     f2 = openmp.potential_internal_data_race_condition
     assert (f1() == f2()).all()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="syntax not supported by current fortran compiler"),
+            pytest.mark.fortran]
+        )
+    )
+)
+@pytest.mark.external
+def test_parallel_if(language):
+    f1 = epyccel(openmp.parallel_if, fflags = '-Wall', accelerators=['openmp'], language=language, omp_version=5.0)
+    f2 = openmp.parallel_if
+    assert (f1(9) == f2(9)).all()
+    assert (f1(11) == f2(11)).all()

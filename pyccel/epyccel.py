@@ -113,7 +113,8 @@ def epyccel_seq(function_or_module, *,
                 conda_warnings= 'basic',
                 comm          = None,
                 root          = None,
-                bcast         = None):
+                bcast         = None,
+                omp_version   = 4.5):
     """
     Accelerate Python function or module using Pyccel in "embedded" mode.
 
@@ -235,7 +236,8 @@ def epyccel_seq(function_or_module, *,
                            debug         = debug,
                            accelerators  = accelerators,
                            output_name   = module_name,
-                           conda_warnings= conda_warnings)
+                           conda_warnings= conda_warnings,
+                           omp_version = omp_version)
         finally:
             # Change working directory back to starting point
             os.chdir(base_dirpath)
