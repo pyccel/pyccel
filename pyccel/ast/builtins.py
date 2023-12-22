@@ -621,16 +621,6 @@ class PythonTupleFunction(TypedAstNode):
     __slots__ = ()
     _attribute_nodes = ()
 
-    def __new__(cls, arg):
-        if isinstance(arg, PythonTuple):
-            return arg
-        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
-            return PythonTuple(*list(arg.__iter__()))
-        elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
-        else:
-            raise TypeError(f"Can't unpack {arg} into a tuple")
-
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
     """

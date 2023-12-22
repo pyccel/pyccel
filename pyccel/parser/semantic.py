@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate
+from pyccel.ast.builtins import PythonList, PythonConjugate, builtin_functions_dict
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -2763,6 +2763,13 @@ class SemanticParser(BasicParser):
             if hasattr(self, annotation_method):
                 return getattr(self, annotation_method)(expr)
 
+        if func is None:
+            builtin_func = builtin_functions_dict.get(name, None)
+            if builtin_func is not None:
+                annotation_method = '_visit_' + builtin_func.__name__
+                if hasattr(self, annotation_method):
+                    return getattr(self, annotation_method)(expr)
+
         args = self._handle_function_args(expr.args)
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
@@ -4324,3 +4331,16 @@ class SemanticParser(BasicParser):
             var = var[0]
             self.scope.insert_variable(var)
         return FunctionDefResult(var, annotation = expr.annotation)
+
+    def _visit_PythonTupleFunction(self, func_call):
+        func_call_args = self._handle_function_args(func_call.args)
+        arg = func_call_args[0].value
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
+            return self.build_tuple(list(arg.__iter__()))
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return self.build_tuple([arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
+
