@@ -1983,7 +1983,7 @@ class NumpyAmax(PyccelInternalFunction):
     
     @property
     def is_elemental(self):
-        return True
+        return False
 
 class NumpyTranspose(NumpyUfuncUnary):
     """Represents a call to the transpose function in the Numpy library"""
