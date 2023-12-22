@@ -1958,7 +1958,7 @@ class NumpyAmin(NumpyUfuncUnary):
     def is_elemental(self):
         return False
 
-class NumpyAmax(NumpyUfuncUnary):
+class NumpyAmax(PyccelInternalFunction):
     """Represent a call to the amax function in the Numpy library"""
     __slots__ = ('_dtype','_precision','_class_type')
     name = 'amax'
@@ -1980,6 +1980,10 @@ class NumpyAmax(NumpyUfuncUnary):
     @property
     def arg(self):
         return self._args[0]
+    
+    @property
+    def is_elemental(self):
+        return True
 
 class NumpyTranspose(NumpyUfuncUnary):
     """Represents a call to the transpose function in the Numpy library"""

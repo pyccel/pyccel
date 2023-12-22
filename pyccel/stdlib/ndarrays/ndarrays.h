@@ -166,4 +166,15 @@ double             numpy_sum_float64(t_ndarray arr);
 float complex      numpy_sum_complex64(t_ndarray arr);
 double complex     numpy_sum_complex128(t_ndarray arr);
 
+/*numpy max*/
+int64_t            numpy_amax_bool(t_ndarray arr);
+int64_t            numpy_amax_int8(t_ndarray arr);
+int64_t            numpy_amax_int16(t_ndarray arr);
+int64_t            numpy_amax_int32(t_ndarray arr);
+int64_t            numpy_amax_int64(t_ndarray arr);
+float              numpy_amax_float32(t_ndarray arr);
+double             numpy_amax_float64(t_ndarray arr);
+float complex      numpy_amax_complex64(t_ndarray arr);
+double complex     numpy_amax_complex128(t_ndarray arr);
+
 #endif
