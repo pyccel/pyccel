@@ -499,6 +499,14 @@ class PythonTuple(TypedAstNode):
     ----------
     *args : tuple of TypedAstNode
         The arguments passed to the tuple function.
+
+    is_homogeneous : bool
+        Indicates if the tuple contains homogeneous data (same dtype, precision, rank,
+        shape, order and class type).
+
+    contains_pointers : bool
+        Indicates if the tuple contains pointers to other data. If this is the
+        case then the dtype of the resulting object will be a NativeInhomogeneousTuple.
     """
     __slots__ = ('_args','_is_homogeneous',
             '_dtype','_precision','_rank','_shape','_order', '_class_type')
