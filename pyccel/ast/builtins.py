@@ -505,7 +505,7 @@ class PythonTuple(TypedAstNode):
     _iterable        = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args, is_homogeneous = False, contains_pointers = False):
+    def __init__(self, *args, is_homogeneous, contains_pointers):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
