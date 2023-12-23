@@ -658,7 +658,7 @@ class NumpyArray(NumpyNewArray):
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
         if not (is_homogeneous_tuple or is_array or isinstance(arg, PythonList)):
-            raise TypeError('we only accept homogeneous arguments')
+            errors.report("The argument passed to numpy.array must contain homogeneous data", symbol=arg, severity="fatal")
 
         if not isinstance(order, (LiteralString, str)):
             raise TypeError("The order must be specified explicitly with a string.")
