@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 -   #1628 : Fixed segmentation fault when writing to optional scalars.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
+-   #1182 : Fix tuples containing objects wiht different ranks.
 
 ### Changed
 
