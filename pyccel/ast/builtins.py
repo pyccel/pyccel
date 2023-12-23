@@ -25,7 +25,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, InhomogeneousTupleVariable
+from .variable  import IndexedElement
 
 pyccel_stage = PyccelStage()
 
