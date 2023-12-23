@@ -10,6 +10,7 @@
 # include <stdio.h>
 # include <stdbool.h>
 # include <inttypes.h>
+# include <complex.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -592,7 +593,7 @@ NUMPY_SUM_(complex128, double complex, cdouble)
         for (int32_t i = 0; i < arr.length; i++) \
         { \
             TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
-            output = (current_value > output) ? current_value : output; \
+            output = (creal(current_value) > creal(output)) ? current_value : output; \
             nd_indices[0]++; \
             for (int32_t j = 0; j < arr.nd - 1; j++) \
                 if (nd_indices[j] == arr.shape[j]) \
