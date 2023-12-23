@@ -568,7 +568,7 @@ class PythonTuple(TypedAstNode):
                 all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
             return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)],
                     is_homogeneous = self.is_homogeneous,
-                    contains_pointer = isinstance(self.dtype, NativeInhomogeneousTuple))
+                    contains_pointers = isinstance(self.dtype, NativeInhomogeneousTuple))
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:
