@@ -9,7 +9,7 @@ from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
-                        NativeTuple, CustomDataType)
+                        NativeTuple, CustomDataType, NativeHomogeneousList)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -210,7 +210,7 @@ def get_cls_base(dtype, precision, container_type):
     """
     if isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
-    if isinstance(container_type, NativeTuple):
+    if isinstance(container_type, (NativeTuple, NativeHomogeneousList)):
         return TupleClass
     elif precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]

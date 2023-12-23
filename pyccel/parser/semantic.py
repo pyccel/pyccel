@@ -3449,7 +3449,9 @@ class SemanticParser(BasicParser):
         else:
             d_var['order'] = None
         d_var['shape'] = shape
-        d_var['class_type'] = NativeHomogeneousList()
+        cls_type = NativeHomogeneousList()
+        d_var['class_type'] = cls_type
+        d_var['cls_base'] = get_cls_base(dtype, d_var['precision'], cls_type)
 
         # ...
         # TODO [YG, 30.10.2020]:
