@@ -24,7 +24,7 @@ from sympy import ceiling
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.builtins import PythonComplex
+from pyccel.ast.builtins import PythonComplex, PythonMin, PythonMax
 from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate, builtin_functions_dict
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
@@ -4344,3 +4344,20 @@ class SemanticParser(BasicParser):
         else:
             raise TypeError(f"Can't unpack {arg} into a tuple")
 
+    def _visit_PythonMin(self, func_call):
+        func_call_args = self._handle_function_args(func_call.args)
+        args = [a.value for a in func_call_args]
+        if len(args) == 1:
+            arg = args[0]
+        else:
+            arg = self.build_tuple(args)
+        return PythonMin(arg)
+
+    def _visit_PythonMax(self, func_call):
+        func_call_args = self._handle_function_args(func_call.args)
+        args = [a.value for a in func_call_args]
+        if len(args) == 1:
+            arg = args[0]
+        else:
+            arg = self.build_tuple(args)
+        return PythonMax(arg)

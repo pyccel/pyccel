@@ -505,7 +505,7 @@ class PythonTuple(TypedAstNode):
     _iterable        = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args, is_homogeneous, contains_pointers):
+    def __init__(self, *args, is_homogeneous = None, contains_pointers = False):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -518,6 +518,9 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
+        else:
+            assert is_homogeneous is not None
+
         self._is_homogeneous = is_homogeneous
         if is_homogeneous and not contains_pointers:
             arg0 = args[0]
@@ -563,14 +566,13 @@ class PythonTuple(TypedAstNode):
             return self._args[to_int(i)]
         elif isinstance(i, Slice) and \
                 all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
-            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)])
+            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)],
+                    is_homogeneous = self.is_homogeneous,
+                    contains_pointer = isinstance(self.dtype, NativeInhomogeneousTuple))
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:
             raise NotImplementedError(f"Can't index PythonTuple with type {type(i)}")
-
-    def __add__(self,other):
-        return PythonTuple(*(self._args + other._args))
 
     def __iter__(self):
         return self._args.__iter__()
@@ -1031,9 +1033,7 @@ class PythonMax(PyccelInternalFunction):
         if len(x)==1:
             x = x[0]
 
-        if isinstance(x, (list, tuple)):
-            x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        if not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
             types = ', '.join('{xi.dtype}({xi.precision})' for xi in x)
@@ -1066,9 +1066,7 @@ class PythonMin(PyccelInternalFunction):
         if len(x)==1:
             x = x[0]
 
-        if isinstance(x, (list, tuple)):
-            x = PythonTuple(*x)
-        elif not isinstance(x, (PythonTuple, PythonList)):
+        if not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
             types = ', '.join(f'{xi.dtype}({xi.precision})' for xi in x)

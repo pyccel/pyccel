@@ -956,7 +956,8 @@ class NumpyShape(PyccelInternalFunction):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
         else:
-            return PythonTuple(*arg.shape)
+            return PythonTuple(*arg.shape, is_homogeneous = True,
+                    contains_pointer = False)
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -2136,7 +2137,8 @@ class NumpyNonZero(PyccelInternalFunction):
     def __init__(self, a):
         if (a.rank > 1):
             raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
-        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
+        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)),
+                is_homogeneous = True, contains_pointer = False)
         self._arr = a
         self._shape = self._elements.shape
         super().__init__()
