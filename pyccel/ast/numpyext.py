@@ -1980,7 +1980,6 @@ class NumpyAmax(PyccelInternalFunction):
     @property
     def arg(self):
         return self._args[0]
-    
     @property
     def is_elemental(self):
         return False
