@@ -4342,7 +4342,7 @@ class SemanticParser(BasicParser):
         if isinstance(arg, PythonTuple):
             return arg
         elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
-            return self.build_tuple(list(arg.__iter__()))
+            return self.build_tuple(list(arg))
         elif isinstance(arg.shape[0], LiteralInteger):
             return self.build_tuple([arg[i] for i in range(arg.shape[0])])
         else:
