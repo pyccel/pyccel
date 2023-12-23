@@ -2804,12 +2804,14 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
             cls_def = self.scope.find(method.cls_name, 'classes')
-            d_var = {'datatype': self.get_class_construct(method.cls_name),
+            dtype = self.get_class_construct(method.cls_name)
+            d_var = {'datatype': dtype,
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
                     'is_target' : False,
-                    'cls_base' : cls_def}
+                    'cls_base' : cls_def,
+                    'class_type' : dtype}
             new_expression = []
 
             lhs = expr.get_user_nodes(Assign)[0].lhs
