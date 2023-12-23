@@ -1112,7 +1112,7 @@ class CToPythonWrapper(Wrapper):
         # Get the bind_c function which wraps a fortran array and returns c objects
         var_wrapper = expr.wrapper_function
         # Call bind_c function
-        call = Assign(PythonTuple(ObjectAddress(var), *shape), FunctionCall(var_wrapper, ()))
+        call = Assign(PythonTuple(ObjectAddress(var), *shape, is_homogeneous = False), FunctionCall(var_wrapper, ()))
 
         # Create ndarray to store array data
         nd_var = self.scope.get_temporary_variable(dtype_or_var = v,
