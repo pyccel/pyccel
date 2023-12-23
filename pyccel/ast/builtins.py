@@ -534,17 +534,11 @@ class PythonTuple(TypedAstNode):
             self._class_type = NativeHomogeneousTuple()
 
         else:
-            max_rank = max(a.rank for a in args)
-            self._rank       = max_rank + 1
+            self._rank       = 1
             self._dtype      = NativeInhomogeneousTuple(*[a.dtype for a in args])
             self._precision  = 0
             self._class_type = self._dtype
-            if self._rank == 1:
-                self._shape     = (LiteralInteger(len(args)), )
-            elif any(a.rank != max_rank for a in args):
-                self._shape     = (LiteralInteger(len(args)), ) + (None,)*(self._rank-1)
-            else:
-                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            self._shape     = (LiteralInteger(len(args)), )
 
         self._order = None if self._rank < 2 else 'C'
 
