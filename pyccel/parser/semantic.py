@@ -2998,6 +2998,8 @@ class SemanticParser(BasicParser):
                     d_var['rank'           ] = arg.rank
                     d_var['memory_handling'] = arg.memory_handling
                     d_var['order'          ] = arg.order
+                    d_var['class_type'     ] = arg.class_type
+                    d_var['cls_base'       ] = arg.cls_base
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs)
