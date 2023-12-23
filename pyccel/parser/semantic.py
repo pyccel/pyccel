@@ -1423,6 +1423,11 @@ class SemanticParser(BasicParser):
                 result_precision = get_final_precision(tmp_result)
                 raise_error = (str(var.dtype) != result_dtype or \
                         get_final_precision(var) != result_precision)
+            elif str(dtype) == str(var.dtype) and \
+                    internal_precision == get_final_precision(var) and \
+                    var.rank == 0:
+                # Don't complain about non-numpy and numpy scalars
+                raise_error = False
             else:
                 raise_error = True
 
