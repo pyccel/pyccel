@@ -837,10 +837,16 @@ class SemanticParser(BasicParser):
             if isinstance(length, LiteralInteger):
                 length = length.python_value
             else:
-                errors.report("Cannot create inhomogeneous tuple of unknown size",
-                    symbol=Duplicate(val, length),
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
+                symbol_map = {}
+                used_symbols = {}
+                sympy_length = pyccel_to_sympy(length, symbol_map, used_symbols)
+                if isinstance(sympy_length, sp_Integer):
+                    length = int(sympy_length)
+                else:
+                    errors.report("Cannot create inhomogeneous tuple of unknown size",
+                        symbol=Duplicate(val, length),
+                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                        severity='fatal')
             if isinstance(val, InhomogeneousTupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
