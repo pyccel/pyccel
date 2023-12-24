@@ -25,7 +25,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, Variable
+from .variable  import IndexedElement, Variable, InhomogeneousTupleVariable
 
 pyccel_stage = PyccelStage()
 
@@ -637,6 +637,16 @@ class PythonTupleFunction(TypedAstNode):
     __slots__ = ()
     _attribute_nodes = ()
 
+    def __new__(cls, arg):
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
+            return PythonTuple(*list(arg))
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")
+
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
     """
@@ -1047,8 +1057,11 @@ class PythonMax(PyccelInternalFunction):
         if len(x)==1:
             x = x[0]
 
-        if not isinstance(x, (PythonTuple, PythonList)):
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
+
         if not x.is_homogeneous:
             types = ', '.join('{xi.dtype}({xi.precision})' for xi in x)
             raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
@@ -1080,8 +1093,11 @@ class PythonMin(PyccelInternalFunction):
         if len(x)==1:
             x = x[0]
 
-        if not isinstance(x, (PythonTuple, PythonList)):
+        if isinstance(x, (list, tuple)):
+            x = PythonTuple(*x)
+        elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
+
         if not x.is_homogeneous:
             types = ', '.join(f'{xi.dtype}({xi.precision})' for xi in x)
             raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
