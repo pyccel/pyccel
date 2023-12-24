@@ -532,7 +532,9 @@ class PythonTuple(TypedAstNode):
         class_types = set(a.class_type for a in args)
         ranks = set(a.rank for a in args)
         orders = set(a.order for a in args)
-        shapes = set(tuple(si if not isinstance(si, PyccelArrayShapeElement) else None for si in a.shape) \
+        shapes = set(tuple(si if not (isinstance(si, PyccelArrayShapeElement) or \
+                           si.get_attribute_nodes(PyccelArrayShapeElement)) \
+                        else None for si in a.shape) \
                      if a.shape is not None else None for a in args)
         is_homogeneous = len(dtypes) == 1 and len(precisions) == 1 and \
                          len(class_types) == 1 and len(ranks) == 1 and \
