@@ -652,8 +652,9 @@ class NumpyArray(NumpyNewArray):
 
         is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        if isinstance(arg.class_type, NativeInhomogeneousTuple) and not isinstance(arg, PythonTuple):
-            arg = PythonTuple(*list(arg))
+        if isinstance(arg.class_type, NativeInhomogeneousTuple):
+            if not isinstance(arg, PythonTuple):
+                arg = PythonTuple(*list(arg))
             is_homogeneous_tuple = arg.is_homogeneous
 
         is_array = (isinstance(arg, Variable) and arg.is_ndarray) or \
