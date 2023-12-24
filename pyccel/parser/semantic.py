@@ -24,9 +24,9 @@ from sympy import ceiling
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
-from pyccel.ast.builtins import PythonComplex, PythonMin, PythonMax
+from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate, builtin_functions_dict
+from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
