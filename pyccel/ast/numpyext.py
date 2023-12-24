@@ -650,9 +650,12 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
+        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple) or \
-                getattr(arg, 'is_homogeneous', False)
+        if isinstance(arg.class_type, NativeInhomogeneousTuple) and not isinstance(arg, PythonTuple):
+            arg = PythonTuple(*list(arg))
+            is_homogeneous_tuple = arg.is_homogeneous
+
         is_array = (isinstance(arg, Variable) and arg.is_ndarray) or \
                    (isinstance(arg, IndexedElement) and arg.base.is_ndarray)
 
@@ -956,8 +959,7 @@ class NumpyShape(PyccelInternalFunction):
         if isinstance(arg.shape, PythonTuple):
             return arg.shape
         else:
-            return PythonTuple(*arg.shape, is_homogeneous = True,
-                    contains_pointers = False)
+            return PythonTuple(*arg.shape)
 
 #==============================================================================
 class NumpyLinspace(NumpyNewArray):
@@ -2137,8 +2139,7 @@ class NumpyNonZero(PyccelInternalFunction):
     def __init__(self, a):
         if (a.rank > 1):
             raise NotImplementedError("Non-Zero function is only implemented for 1D arrays")
-        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)),
-                is_homogeneous = True, contains_pointers = False)
+        self._elements = PythonTuple(*(NumpyNonZeroElement(a, i) for i in range(a.rank)))
         self._arr = a
         self._shape = self._elements.shape
         super().__init__()

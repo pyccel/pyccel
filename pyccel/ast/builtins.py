@@ -19,13 +19,13 @@ from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from .datatypes import NativeHomogeneousList
-from .internals import PyccelInternalFunction, Slice, get_final_precision
+from .internals import PyccelInternalFunction, Slice, get_final_precision, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement
+from .variable  import IndexedElement, Variable
 
 pyccel_stage = PyccelStage()
 
@@ -513,7 +513,7 @@ class PythonTuple(TypedAstNode):
     _iterable        = True
     _attribute_nodes = ('_args',)
 
-    def __init__(self, *args, is_homogeneous = None, contains_pointers = False):
+    def __init__(self, *args):
         self._args = args
         super().__init__()
         if pyccel_stage == 'syntactic':
@@ -526,8 +526,20 @@ class PythonTuple(TypedAstNode):
             self._order = None
             self._is_homogeneous = False
             return
-        else:
-            assert is_homogeneous is not None
+
+        dtypes = set(a.dtype for a in args)
+        precisions = set(get_final_precision(a) for a in args)
+        class_types = set(a.class_type for a in args)
+        ranks = set(a.rank for a in args)
+        orders = set(a.order for a in args)
+        shapes = set(tuple(si if not isinstance(si, PyccelArrayShapeElement) else None for si in a.shape) \
+                     if a.shape is not None else None for a in args)
+        is_homogeneous = len(dtypes) == 1 and len(precisions) == 1 and \
+                         len(class_types) == 1 and len(ranks) == 1 and \
+                         len(orders) == 1 and len(shapes) == 1 and \
+                         NativeGeneric() not in dtypes
+        contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
+                            not isinstance(a.dtype, NativeHomogeneousTuple) for a in args)
 
         self._is_homogeneous = is_homogeneous
         if is_homogeneous and not contains_pointers:
@@ -568,9 +580,7 @@ class PythonTuple(TypedAstNode):
             return self._args[to_int(i)]
         elif isinstance(i, Slice) and \
                 all(is_int(s) or s is None for s in (i.start, i.step, i.stop)):
-            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)],
-                    is_homogeneous = self.is_homogeneous,
-                    contains_pointers = isinstance(self.dtype, NativeInhomogeneousTuple))
+            return PythonTuple(*self._args[to_int(i.start):to_int(i.stop):to_int(i.step)])
         elif self.is_homogeneous:
             return IndexedElement(self, i)
         else:

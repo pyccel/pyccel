@@ -358,7 +358,7 @@ class Assign(PyccelAstNode):
         python_ast = None
         ):
         if isinstance(lhs, (tuple, list)):
-            lhs = PythonTuple(*lhs, is_homogeneous = False)
+            lhs = PythonTuple(*lhs)
         self._lhs = lhs
         self._rhs = rhs
         self._status = status
