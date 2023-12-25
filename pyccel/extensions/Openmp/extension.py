@@ -17,8 +17,9 @@ class Openmp(Extension):
         self._options = options
 
     def extend_syntax_parser(self, sp):
-        if 'openmp' not in self._options['accelerators']:
+        if 'openmp' not in self._options.get('accelerators', []):
             return sp
+
         omp_version = self._options.get('omp_version', self._default_version)
         mixin = openmp_5_0.SyntaxParser if omp_version == 5.0 else openmp_4_5.SyntaxParser
 
@@ -42,8 +43,8 @@ class Openmp(Extension):
         return Extended
 
     def extend_semantic_parser(self, sp):
-        if 'openmp' not in self._options['accelerators']:
-            return sp
+        if 'openmp' not in self._options.get('accelerators', []):
+                return sp
 
         omp_version = self._options.get('omp_version', self._default_version)
         mixin = openmp_5_0.SemanticParser if omp_version == 5.0 else openmp_4_5.SemanticParser
@@ -60,8 +61,9 @@ class Openmp(Extension):
         return Extended
 
     def extend_printer(self, printer):
-        if 'openmp' not in self._options['accelerators']:
+        if 'openmp' not in self._options.get('accelerators', []):
                 return printer
+
         #don't extend
         omp_version = self._options.get('omp_version', self._default_version)
         openmp = openmp_5_0 if omp_version == 5.0 else openmp_4_5
