@@ -8,10 +8,11 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
+from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -23,14 +24,15 @@ __all__ = (
     'DataType',
     'NativeBool',
     'NativeComplex',
-    'NativeGeneric',
-    'NativeInteger',
-    'NativeTuple',
-    'NativeNil',
-    'NativeRange',
     'NativeFloat',
+    'NativeGeneric',
+    'NativeInhomogeneousTuple',
+    'NativeInteger',
+    'NativeHomogeneousList',
+    'NativeHomogeneousTuple',
     'NativeString',
     'NativeSymbol',
+    'NativeTuple',
     'NativeVoid',
     'UnionType',
     'DataTypeFactory',
@@ -38,9 +40,6 @@ __all__ = (
 # --------- FUNCTIONS -----------
 #
     'datatype',
-    'is_iterable_datatype',
-    'is_pyccel_datatype',
-    'is_with_construct_datatype',
     'str_dtype',
 #
 # --------- VARIABLES -----------
@@ -49,7 +48,6 @@ __all__ = (
     'Cmplx',
     'Generic',
     'Int',
-    'Nil',
     'Float',
     'String',
     'Void',
@@ -57,7 +55,6 @@ __all__ = (
 #    '_Symbol',
     'default_precision',
     'dtype_and_precision_registry',
-    'dtype_registry'
 )
 
 #==============================================================================
@@ -77,7 +74,7 @@ iso_c_binding = {
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'},
     "logical" : {
-        4  : "C_BOOL"}
+        -1 : "C_BOOL"}
 }
 iso_c_binding_shortcut_mapping = {
     'C_INT8_T'              : 'i8',
@@ -91,41 +88,35 @@ iso_c_binding_shortcut_mapping = {
     'C_FLOAT_COMPLEX'       : 'c32',
     'C_DOUBLE_COMPLEX'      : 'c64',
     'C_LONG_DOUBLE_COMPLEX' : 'c128',
-    'C_BOOL'                : 'b4'
+    'C_BOOL'                : 'b1'
 }
-default_precision = {'float': 8,
-                    'int': numpy.dtype(int).alignment,
-                    'integer': numpy.dtype(int).alignment,
-                    'complex': 8,
-                    'bool':4}
-dtype_and_precision_registry = { 'float':('float', -1),
-                                 'double':('float', -1),
-                                 'real':('float', -1),
-                                 'pythonfloat':('float', -1), # built-in float
-                                 'float32':('float',4),
-                                 'float64':('float',8),
-                                 'pythoncomplex':('complex', -1),
-                                 'complex':('complex', -1),  # to create numpy array with dtype='complex'
-                                 'complex64':('complex',4),
-                                 'complex128':('complex',8),
-                                 'int8' :('int',1),
-                                 'int16':('int',2),
-                                 'int32':('int',4),
-                                 'int64':('int',8),
-                                 'int'  :('int', -1),
-                                 'pythonint'  :('int', -1),
-                                 'integer':('int',-1),
-                                 'bool' :('bool',-1),
-                                 'pythonbool' :('bool',-1)}
 
+#==============================================================================
 
-class DataType(metaclass=Singleton):
-    """Base class representing native datatypes"""
+class DataType(metaclass=ArgumentSingleton):
+    """
+    Base class representing native datatypes.
+
+    The base class from which all data types must inherit.
+
+    Parameters
+    ----------
+    *args : tuple
+        Any arguments required by the class.
+
+    **kwargs : dict
+        Any keyword arguments required by the class.
+    """
     __slots__ = ()
     _name = '__UNDEFINED__'
 
     @property
     def name(self):
+        """
+        Get the name of the datatype.
+
+        Get the name of the datatype.
+        """
         return self._name
 
     def __str__(self):
@@ -134,55 +125,224 @@ class DataType(metaclass=Singleton):
     def __repr__(self):
         return str(self.__class__.__name__)+'()'
 
-class NativeBool(DataType):
-    """Class representing boolean datatype"""
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
+
+class NativeBool(DataType, metaclass=Singleton):
+    """
+    Class representing a boolean datatype.
+
+    Class representing a boolean datatype.
+    """
     __slots__ = ()
     _name = 'Bool'
 
-class NativeInteger(DataType):
-    """Class representing integer datatype"""
+    @lru_cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            return other
+        else:
+            return NotImplemented
+
+class NativeInteger(DataType, metaclass=Singleton):
+    """
+    Class representing an integer datatype.
+
+    Class representing an integer datatype.
+    """
     __slots__ = ()
     _name = 'Int'
 
-class NativeFloat(DataType):
-    """Class representing float datatype"""
+    @lru_cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            if other is NativeBool():
+                return self
+            else:
+                return other
+        else:
+            return NotImplemented
+
+class NativeFloat(DataType, metaclass=Singleton):
+    """
+    Class representing a float datatype.
+
+    Class representing a float datatype.
+    """
     __slots__ = ()
     _name = 'Float'
 
-class NativeComplex(DataType):
-    """Class representing complex datatype"""
+    @lru_cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            if other is NativeComplex():
+                return other
+            else:
+                return self
+        else:
+            return NotImplemented
+
+class NativeComplex(DataType, metaclass=Singleton):
+    """
+    Class representing a complex datatype.
+
+    Class representing a complex datatype.
+    """
     __slots__ = ()
     _name = 'Complex'
 
-NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
+    @lru_cache
+    def __add__(self, other):
+        if other in NativeNumeric:
+            return self
+        else:
+            return NotImplemented
 
-class NativeString(DataType):
-    """Class representing string datatype"""
+NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
+NativeNumericTypes = (NativeBool, NativeInteger, NativeFloat, NativeComplex)
+
+class NativeString(DataType, metaclass=Singleton):
+    """
+    Class representing a string datatype.
+
+    Class representing a string datatype.
+    """
     __slots__ = ()
     _name = 'String'
 
-class NativeVoid(DataType):
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeString):
+            return self
+        else:
+            return NotImplemented
+
+class NativeVoid(DataType, metaclass=Singleton):
+    """
+    Class representing a void datatype.
+
+    Class representing a void datatype. This class is especially useful
+    in the C-Python wrapper when a `void*` type is needed to collect
+    pointers from Fortran.
+    """
     __slots__ = ()
     _name = 'Void'
 
-class NativeNil(DataType):
-    __slots__ = ()
-    _name = 'Nil'
-
 class NativeTuple(DataType):
-    """Base class representing native datatypes"""
+    """
+    Base class representing tuple datatypes.
+
+    The class from which tuple datatypes must inherit.
+
+    Parameters
+    ----------
+    *args : tuple
+        Any arguments required by the class.
+
+    **kwargs : dict
+        Any keyword arguments required by the class.
+    """
     __slots__ = ()
     _name = 'Tuple'
 
-class NativeRange(DataType):
-    __slots__ = ()
-    _name = 'Range'
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeTuple):
+            return self
+        else:
+            return NotImplemented
 
-class NativeSymbol(DataType):
+class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
+    """
+    Class representing the homogeneous tuple type.
+
+    Class representing the type of a homogeneous tuple. This
+    is a container type and should be used as the class_type.
+    """
+    __slots__ = ()
+
+class NativeInhomogeneousTuple(NativeTuple):
+    """
+    Class representing the inhomogeneous tuple type.
+
+    Class representing the type of an inhomogeneous tuple. This is a
+    basic datatype as it cannot be arbitrarily indexed. It is
+    therefore parametrised by the datatypes that it contains.
+
+    Parameters
+    ----------
+    *args : tuple of DataTypes
+        The datatypes stored in the inhomogeneous tuple.
+
+    **kwargs : empty dict
+        Keyword arguments as defined by the ArgumentSingleton class.
+    """
+    __slots__ = ('_dtypes',)
+
+    def __init__(self, *args):
+        self._dtypes = args
+        super().__init__()
+
+    @property
+    def name(self):
+        """
+        The name of the datatype.
+
+        Get the name of the datatype. This name is parametrised by the
+        datatypes in the elements of the tuple.
+
+        Returns
+        -------
+        str
+            The name of the datatype.
+        """
+        datatypes = ', '.join(d.name for d in self._dtypes)
+        return f'tuple[{datatypes}]'
+
+    def __getitem__(self, i):
+        return self._dtypes[i]
+
+class NativeHomogeneousList(DataType, metaclass = Singleton):
+    """
+    Class representing the homogeneous list type.
+
+    Class representing the type of a homogeneous list. This
+    is a container type and should be used as the class_type.
+    """
+    __slots__ = ()
+    _name = 'List'
+
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeHomogeneousList):
+            return self
+        else:
+            return NotImplemented
+
+class NativeSymbol(DataType, metaclass=Singleton):
+    """
+    Class representing a symbol datatype.
+
+    Class representing a symbol datatype. This **may** be useful for
+    the sympy decorator and other symbolic manipulations.
+    """
     __slots__ = ()
     _name = 'Symbol'
 
-class CustomDataType(DataType):
+class CustomDataType(DataType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
 
@@ -191,9 +351,20 @@ class CustomDataType(DataType):
     """
     __slots__ = ()
 
-class NativeGeneric(DataType):
+class NativeGeneric(DataType, metaclass = Singleton):
+    """
+    Class representing a generic datatype.
+
+    Class representing a generic datatype. This datatype is
+    useful for describing the type of an empty container (list/tuple/etc)
+    or an argument which can accept any type (e.g. MPI arguments).
+    """
     __slots__ = ()
     _name = 'Generic'
+
+    @lru_cache
+    def __add__(self, other):
+        return other
 
 # ...
 
@@ -204,22 +375,44 @@ Int            = NativeInteger()
 Float          = NativeFloat()
 Cmplx          = NativeComplex()
 Void           = NativeVoid()
-Nil            = NativeNil()
 String         = NativeString()
 _Symbol        = NativeSymbol()
 Generic        = NativeGeneric()
 
-dtype_registry = {'bool': Bool,
-                  'int': Int,
-                  'integer': Int,
-                  'float'   : Float,
-                  'complex': Cmplx,
-                  'void': Void,
-                  'nil': Nil,
-                  'symbol': _Symbol,
-                  '*': Generic,
-                  'str': String}
+dtype_and_precision_registry = { 'float' : (Float, -1),
+                                 'double' : (Float, -1),
+                                 'real' : (Float, -1),
+                                 'float32' : (Float,4),
+                                 'float64' : (Float,8),
+                                 'f4' : (Float,4),
+                                 'f8' : (Float,8),
+                                 'complex' : (Cmplx, -1),
+                                 'complex64' : (Cmplx,4),
+                                 'complex128' : (Cmplx,8),
+                                 'c8' : (Cmplx,4),
+                                 'c16' : (Cmplx,8),
+                                 'int8' :(Int,1),
+                                 'int16' : (Int,2),
+                                 'int32' : (Int,4),
+                                 'int64' : (Int,8),
+                                 'i1' :(Int,1),
+                                 'i2' : (Int,2),
+                                 'i4' : (Int,4),
+                                 'i8' : (Int,8),
+                                 'int'  :(Int, -1),
+                                 'integer' : (Int,-1),
+                                 'bool' :(Bool,-1),
+                                 'b1' :(Bool,-1),
+                                 'void' : (Void, 0),
+                                 'symbol' : (_Symbol, 0),
+                                 '*' : (Generic, 0),
+                                 'str' : (String, 0),
+                                 }
 
+default_precision = {Float : 8,
+                     Int : numpy.dtype(int).alignment,
+                     Cmplx : 8,
+                     Bool : -1}
 
 class UnionType:
     """ Class representing multiple different possible
@@ -286,51 +479,31 @@ def DataTypeFactory(name, argnames=["_name"],
                      "_name": name,
                      "prefix": prefix,
                      "alias": name})
+
+    dtype_and_precision_registry[name] = (newclass(), 0)
     return newclass
 
-def is_pyccel_datatype(expr):
-    return isinstance(expr, CustomDataType)
-
-def is_iterable_datatype(dtype):
-    """Returns True if dtype is an iterable class."""
-    if is_pyccel_datatype(dtype):
-        return dtype.is_iterable
-    elif isinstance(dtype, NativeRange):
-        return True
-    else:
-        return False
-
-
-# TODO improve
-def is_with_construct_datatype(dtype):
-    """Returns True if dtype is an with_construct class."""
-    if is_pyccel_datatype(dtype):
-        return dtype.is_with_construct
-    else:
-        return False
-
-# TODO check the use of Floats
 def datatype(arg):
-    """Returns the datatype singleton for the given dtype.
-
-    arg : str or pyccel expression
-        If a str ('bool', 'int', 'float','complex', or 'void'), return the
-        singleton for the corresponding dtype. If a pyccel expression, return
-        the datatype that best fits the expression. This is determined from the
-        assumption system. For more control, use the `DataType` class directly.
-
-    Returns:
-        DataType
-
     """
+    Get the datatype indicated by a string.
 
+    Return the datatype singleton for the dtype described
+    by the argument.
 
+    Parameters
+    ----------
+    arg : str
+        Return the singleton for the corresponding dtype.
+
+    Returns
+    -------
+    DataType
+        The data type described by the string.
+    """
     if isinstance(arg, str):
-        if arg.lower() not in dtype_registry:
+        if arg not in dtype_and_precision_registry:
             raise ValueError("Unrecognized datatype " + arg)
-        return dtype_registry[arg]
-    if isinstance(arg, DataType):
-        return dtype_registry[arg.name.lower()]
+        return dtype_and_precision_registry[arg][0]
     else:
         raise TypeError('Expecting a DataType')
 

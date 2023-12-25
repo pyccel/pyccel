@@ -1,11 +1,11 @@
 import re
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.errors.errors import Errors
 
 errors = Errors()
 
 
-class OmpAnnotatedComment(Basic):
+class OmpAnnotatedComment(PyccelAstNode):
     """Parent class for all openmp classes, including classes used in the grammar."""
 
     __slots__ = ("_parent", "_raw", "_position", "_line", "_version", "_deprecated", "_omp_version")
@@ -64,12 +64,12 @@ class OmpAnnotatedComment(Basic):
     @property
     def line(self):
         """
-        returns the line of an omp object (OmpDirective has fst).
+        returns the line of an omp object from the root parent OmpDirective.
         """
         p = self
         while not isinstance(p, OmpDirective):
             p = p.parent
-        return p.fst.lineno
+        return p.python_ast.lineno
 
     @property
     def raw(self):
@@ -110,7 +110,7 @@ class OmpAnnotatedComment(Basic):
             'omp_version': self.omp_version,
         }
 
-class OmpConstruct(Basic):
+class OmpConstruct(PyccelAstNode):
     __slots__ = ("_start", "_end", "_body")
     _attribute_nodes = ("_start", "_end", "_body")
 

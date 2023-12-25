@@ -7,31 +7,48 @@
 Module representing object address.
 """
 
-from .basic import PyccelAstNode, Basic
+from .basic import TypedAstNode, PyccelAstNode
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
            'CStringExpression',
            'ObjectAddress')
 
-class ObjectAddress(PyccelAstNode):
-    """Represents the address of an object.
-    ObjectAddress(Variable('int','a'))                            is  &a
-    ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
+class ObjectAddress(TypedAstNode):
+    """
+    Class representing the address of an object.
+
+    Class representing the address of an object. In most situations it will not be
+    necessary to use this object explicitly. E.g. if you assign a pointer to a
+    target then the pointer will be printed using `AliasAssign`. However for the
+    `_print_AliasAssign` function to print neatly, this class will be used.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose address should be printed.
+
+    Examples
+    --------
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    '&a'
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order')
+    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
-        if not isinstance(obj, PyccelAstNode):
-            raise TypeError("object must be an instance of PyccelAstNode")
-        self._obj       = obj
-        self._rank      = obj.rank
-        self._shape     = obj.shape
-        self._precision = obj.precision
-        self._dtype     = obj.dtype
-        self._order     = obj.order
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
+        self._obj        = obj
+        self._rank       = obj.rank
+        self._shape      = obj.shape
+        self._precision  = obj.precision
+        self._dtype      = obj.dtype
+        self._order      = obj.order
+        self._class_type = obj.class_type
         super().__init__()
 
     @property
@@ -41,7 +58,7 @@ class ObjectAddress(PyccelAstNode):
         return self._obj
 
 #------------------------------------------------------------------------------
-class CStringExpression(Basic):
+class CStringExpression(PyccelAstNode):
     """
     Internal class used to hold a C string that has LiteralStrings and C macros.
 
@@ -182,7 +199,7 @@ class CStringExpression(Basic):
         return self._expression
 
 #------------------------------------------------------------------------------
-class CMacro(Basic):
+class CMacro(PyccelAstNode):
     """Represents a c macro"""
     __slots__ = ('_macro',)
     _attribute_nodes  = ()

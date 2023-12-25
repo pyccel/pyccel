@@ -173,9 +173,6 @@ def execute_pyccel(fname, *,
     if not (syntax_only or semantic_only):
         os.makedirs(pyccel_dirpath, exist_ok=True)
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
@@ -184,7 +181,7 @@ def execute_pyccel(fname, *,
 
     # Choose Fortran compiler
     if compiler is None:
-        compiler = 'GNU'
+        compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
 
     fflags = [] if fflags is None else fflags.split()
     wrapper_flags = [] if wrapper_flags is None else wrapper_flags.split()
@@ -201,6 +198,9 @@ def execute_pyccel(fname, *,
             return
 
     Scope.name_clash_checker = name_clash_checkers[language]
+
+    # Change working directory to 'folder'
+    os.chdir(folder)
 
     # Parse Python file
     try:

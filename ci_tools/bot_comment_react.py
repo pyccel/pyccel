@@ -2,7 +2,7 @@
 """
 import json
 import os
-from bot_tools.bot_funcs import Bot, pr_test_keys
+from bot_tools.bot_funcs import Bot, pr_test_keys, trust_givers
 
 def get_unique_test_list(keys):
     """
@@ -29,7 +29,13 @@ def get_unique_test_list(keys):
     tests.discard('pr_tests')
     if 'coverage' in tests:
         tests.add('linux')
-    return tests
+        # Ensure coverage is last in case dependencies are ready
+        tests.discard('coverage')
+        result = list(tests)
+        result.append('coverage')
+    else:
+        result = list(tests)
+    return result
 
 if __name__ == '__main__':
     # Parse event payload from $GITHUB_EVENT_PATH variable
@@ -53,6 +59,9 @@ if __name__ == '__main__':
     if command_words[:2] == ['show', 'tests']:
         bot.show_tests()
 
+    elif command_words[0] == 'checklist':
+        bot.fill_checklist(event['comment']['url'], event['comment']['user']['login'])
+
     elif command_words[0] == 'run':
         if bot.is_user_trusted(event['comment']['user']['login']):
             bot.run_tests(get_unique_test_list(command_words[1:]))
@@ -72,7 +81,7 @@ if __name__ == '__main__':
         else:
             bot.warn_untrusted()
 
-    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in Bot.trust_givers:
+    elif command_words[:2] == ['trust', 'user'] and len(command_words)==3 and event['comment']['user']['login'] in trust_givers:
 
         bot.indicate_trust(command_words[2])
 

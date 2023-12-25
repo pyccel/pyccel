@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode, Immutable
+from .basic     import PyccelAstNode, TypedAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
@@ -19,8 +19,8 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
-    'PyccelArraySize',
     'PyccelArrayShapeElement',
+    'PyccelArraySize',
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
@@ -29,7 +29,7 @@ __all__ = (
 )
 
 
-class PyccelInternalFunction(PyccelAstNode):
+class PyccelInternalFunction(TypedAstNode):
     """
     Abstract class for function calls translated to Pyccel objects.
 
@@ -79,7 +79,7 @@ class PyccelArraySize(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown size.
     """
     __slots__ = ()
@@ -90,6 +90,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -123,7 +124,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : PyccelAstNode
+    arg : TypedAstNode
         An array of unknown shape.
 
     index : int
@@ -137,14 +138,15 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
 
     def __init__(self, arg, index):
-        if not isinstance(arg, PyccelAstNode):
+        if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type {type(arg)} of {arg}.')
 
         if isinstance(index, int):
             index = LiteralInteger(index)
-        elif not isinstance(index, PyccelAstNode):
+        elif not isinstance(index, TypedAstNode):
             raise TypeError(f'Unknown type {type(index)} of {index}.')
 
         super().__init__(arg, index)
@@ -179,7 +181,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
             return False
 
 
-class Slice(Basic):
+class Slice(PyccelAstNode):
     """
     Represents a slice in the code.
 
@@ -283,13 +285,22 @@ class Slice(Basic):
 
 
 class PyccelSymbol(str, Immutable):
-    """Symbolic placeholder for a Python variable, which has a name but no type yet.
+    """
+    Class representing a symbol in the code.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
     Parameters
     ----------
-    name : String
-        name of the symbol
+    name : str
+        Name of the symbol.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
 
     Examples
     --------
@@ -314,14 +325,13 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-
-class PrecomputedCode(Basic):
+class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
     before it is needed chronologically (e.g. for inline functions as arguments
     to the same function).
     This class should be avoided if at all possible as it may break code which
-    searches through attribute nodes, where possible use Basic's methods,
+    searches through attribute nodes, where possible use PyccelAstNode's methods,
     e.g. substitute
 
     Parameters
@@ -374,25 +384,27 @@ def symbols(names):
     return tuple(symbols)
 
 
-def max_precision(objs : list, dtype = None, allow_native = True):
+def max_precision(objs : list, allow_native : bool = True):
     """
-    Returns the largest precision of an object in the list
+    Return the largest precision amongst the objects in the list.
+
+    Return the largest precision amongst the objects in the list.
 
     Parameters
     ----------
     objs : list
-           A list of PyccelAstNodes
-    dtype : Dtype class
-            If this argument is provided then only the
-            precision of objects with this dtype are
-            considered
+       A list of TypedAstNodes.
+
+    allow_native : bool, default=True
+        Allow the final result to be a native precision (i.e. -1).
+
+    Returns
+    -------
+    int
+        The largest precision found.
     """
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
-    elif dtype:
-        def_prec = default_precision[str(dtype)]
-        return max(def_prec if o.precision == -1 \
-                else o.precision for o in objs if o.dtype is dtype)
     else:
         ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
         if ndarray_list:
@@ -402,10 +414,22 @@ def max_precision(objs : list, dtype = None, allow_native = True):
 
 def get_final_precision(obj):
     """
-    Get the the usable precision of an object. Ie. the precision that you
-    can use to print, eg 8 instead of -1 for a default precision float
+    Get the usable precision of an object.
+
+    Get the usable precision of an object. I.e. the precision that you
+    can use to print, e.g. 8 instead of -1 for a default precision float.
 
     If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned
+    precision is returned, otherwise the provided precision is returned.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose precision we want to investigate.
+
+    Returns
+    -------
+    int
+        The precision of the object to be used in the code.
     """
-    return default_precision[str(obj.dtype)] if obj.precision == -1 else obj.precision
+    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision

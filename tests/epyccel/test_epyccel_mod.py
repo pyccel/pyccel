@@ -1,9 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 from numpy.random import randint, uniform
 from numpy import allclose
 
-from pyccel.decorators import types
 from pyccel.epyccel import epyccel
 
 # Relative and absolute tolerances for array comparisons in the form
@@ -11,13 +11,15 @@ from pyccel.epyccel import epyccel
 if sys.platform == 'win32':
     RTOL = 1e-13
     ATOL = 1e-14
+elif os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU') == 'intel':
+    RTOL = 1e-11
+    ATOL = 1e-14
 else:
     RTOL = 2e-14
     ATOL = 1e-15
 
 def test_modulo_int_int(language):
-    @types(int, int)
-    def modulo_i_i(x, y):
+    def modulo_i_i(x : int, y : int):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_i, language=language)
@@ -31,8 +33,7 @@ def test_modulo_int_int(language):
     assert isinstance(f_output, type(modulo_i_i_output))
 
 def test_modulo_real_real(language):
-    @types('real', 'real')
-    def modulo_r_r(x, y):
+    def modulo_r_r(x : 'float', y : 'float'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_r, language=language)
@@ -45,8 +46,7 @@ def test_modulo_real_real(language):
     assert isinstance(f_output, type(modulo_r_r_output))
 
 def test_modulo_real_int(language):
-    @types('real', 'int')
-    def modulo_r_i(x, y):
+    def modulo_r_i(x : 'float', y : 'int'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_r_i, language=language)
@@ -60,8 +60,7 @@ def test_modulo_real_int(language):
     assert isinstance(f_output, type(modulo_r_i_output))
 
 def test_modulo_int_real(language):
-    @types('int', 'real')
-    def modulo_i_r(x, y):
+    def modulo_i_r(x : 'int', y : 'float'):
         return x % y, x % -y, -x % y, -x % -y, y % -y, -y % y
 
     f = epyccel(modulo_i_r, language=language)
@@ -74,8 +73,7 @@ def test_modulo_int_real(language):
     assert isinstance(f_output, type(modulo_i_r_output))
 
 def test_modulo_multiple(language):
-    @types('int', 'real', 'int')
-    def modulo_multiple(x, y, z):
+    def modulo_multiple(x : 'int', y : 'float', z : 'int'):
         return x % y % z, -x % y % z, -x % -y % z, -x % -y % -z, \
                x % -y % z, x % -y % -z, x % y % -z, -x % y % -z, \
                    -y % y % y, y % -y % y, y % y % -y

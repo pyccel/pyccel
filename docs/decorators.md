@@ -220,8 +220,7 @@ from pyccel.decorators import elemental
 import numpy as np
 
 @elemental
-@types(float)
-def square(x):
+def square(x : float):
     s = x*x
     return s
 
@@ -328,8 +327,7 @@ Here is a simple usage example:
 from pyccel.decorators import pure
 
 @pure
-@types(float)
-def square(x):
+def square(x : float):
     s = x*x
     return s
 ```

@@ -13,9 +13,6 @@ def test_function():
 def test_function_static():
     print (parse(stmts='#$ header function static f(float [:], int [:]) results(int)'))
 
-def test_class():
-    print (parse(stmts='#$ header class Square(public)'))
-
 def test_method():
     print (parse(stmts='#$ header method translate(Point, double, double)'))
 
@@ -35,7 +32,6 @@ if __name__ == '__main__':
     test_variable()
     test_function()
     test_function_static()
-    test_class()
     test_method()
     test_metavar()
     test_macro()

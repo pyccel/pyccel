@@ -1,8 +1,8 @@
 # coding: utf-8
-# ------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------#
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
-# ------------------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------------------#
 """
 OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.
 We represent some types with the OmpAnnotatedComment type.
@@ -10,268 +10,234 @@ These types are detailed on our documentation:
 https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md
 """
 
-from .basic import Basic
+from .basic import PyccelAstNode
 
-__all__ = (
-    "OmpAnnotatedComment",
-    # General
-    "OmpConstruct",
-    "OmpClause",
-    "Omp",
-    "OmpStatement",
-    # Constructs
-    "OmpParallelConstruct",
-    "OmpEndConstruct",
-    # Clauses
-    "OmpIfClause",
-    "OmpNumThreadsClause",
-    "OmpDefaultClause",
-    "OmpPrivateClause",
-    "OmpFirstPrivateClause",
-    "OmpSharedClause",
-    "OmpCopyinClause",
-    "OmpReductionClause",
-    "OmpProcBindClause",
-)
+__all__ = ('OmpAnnotatedComment',
+           'OMP_For_Loop',
+           'OMP_Simd_Construct',
+           'OMP_TaskLoop_Construct',
+           'OMP_Distribute_Construct',
+           'OMP_Parallel_Construct',
+           'OMP_Task_Construct',
+           'OMP_Single_Construct',
+           'OMP_Critical_Construct',
+           'OMP_Master_Construct',
+           'OMP_Masked_Construct',
+           'OMP_Cancel_Construct',
+           'OMP_Target_Construct',
+           'OMP_Teams_Construct',
+           'OMP_Sections_Construct',
+           'OMP_Section_Construct',
+           'Omp_End_Clause')
 
+class OmpAnnotatedComment(PyccelAstNode):
 
-class OmpAnnotatedComment(Basic):
+    """Represents an OpenMP Annotated Comment in the code.
 
-    """Represents an OpenMP Annotated Comment in the code."""
+    Parameters
+    ----------
 
-    __slots__ = ("VERSION", "DEPRECATED")
+    txt: str
+        statement to print
+
+    combined: List (Optional)
+        constructs to be combined with the current construct
+
+    Examples
+    --------
+    >>> from pyccel.ast.omp import OmpAnnotatedComment
+    >>> OmpAnnotatedComment('parallel')
+    OmpAnnotatedComment(parallel)
+    """
+    __slots__ = ('_txt', '_combined', '_has_nowait')
     _attribute_nodes = ()
-    _current_omp_version = None
+    _is_multiline = False
 
-    def __init__(self, **kwargs):
-        if self._current_omp_version is None:
-            raise NotImplementedError(
-                "OpenMP version not set (use OmpAnnotatedComment.set_current_version)"
-            )
-        self.VERSION = float(kwargs.pop("VERSION", "0") or "0")
-        self.DEPRECATED = float(kwargs.pop("DEPRECATED", "inf") or "inf")
-        if self.version > self._current_omp_version:
-            raise NotImplementedError(
-                f"Syntax not supported in OpenMP version {self._current_omp_version}"
-            )
-        if self.deprecated <= self._current_omp_version:
-            raise NotImplementedError(
-                f"Syntax deprecated in OpenMP version {self.DEPRECATED}"
-            )
+    def __init__(self, txt, has_nowait=False, combined=None):
+        self._txt = txt
+        self._combined = combined
+        self._has_nowait = has_nowait
         super().__init__()
 
     @property
-    def version(self):
-        """Returns the version of OpenMP syntax used."""
-        return self.VERSION
+    def is_multiline(self):
+        """Used to check if the construct needs brackets."""
+        return self._is_multiline
 
     @property
-    def deprecated(self):
-        """Returns the deprecated version of OpenMP syntax used."""
-        return self.DEPRECATED
+    def has_nowait(self):
+        """Used to check if the construct has a nowait clause."""
+        return self._has_nowait
 
-    @classmethod
-    def set_current_version(cls, version):
-        """Sets the version of OpenMP syntax to support."""
-        cls._current_omp_version = version
-
-
-class OmpConstruct(OmpAnnotatedComment):
-
-    """Represents an OpenMP Construct in the code."""
-
-    __slots__ = ("_name", "_clauses", "_clause_count", "_parent", "_has_closing")
-
-    _allowed_clauses = ()
-    _deprecated_clauses = ()
-
-    def __init__(self, **kwargs):
-        self._name = kwargs.pop("name")
-        self._clauses = kwargs.pop("clauses", [])
-        self._parent = kwargs.pop("parent", None)
-        self._has_closing = kwargs.pop("has_closing", False)
-
-        # Count the occurrences of each clause
-        # This is used to check for duplicate clauses if not allowed
-        self._clause_count = {}
-        for clause in self.clauses:
-            if clause.name not in self._clause_count:
-                self._clause_count[clause.name] = 0
-            self._clause_count[clause.name] += 1
-
-        super().__init__(**kwargs)
-
-    def visit_syntatic_clauses(self, parser, errors):
-        """Visit the clause in the syntatic phase."""
-        for clause in self._clauses:
-            if clause.name not in self._allowed_clauses:
-                errors.report(
-                    f"OMP PARALLEL CONSTRUCT: clause '{clause}' is not allowed",
-                    symbol=clause,
-                    severity="fatal",
-                )
-            if clause.name in self._deprecated_clauses:
-                errors.report(
-                    f"OMP PARALLEL CONSTRUCT: clause '{clause}' is deprecated",
-                    symbol=clause,
-                    severity="fatal",
-                )
-        return [clause.visit_syntatic(parser, errors) for clause in self._clauses]
-
-    def visit_semantic_clauses(self, parser, errors):
-        """Visit the clause in the semantic phase."""
-        return [clause.visit_semantic(parser, errors) for clause in self._clauses]
-
-    def cprint(self, printer, errors):
-        """Print the clause in the code."""
-        clauses = " ".join(clause.cprint(printer, errors) for clause in self.clauses)
-        return f"#pragma omp {self.name} {clauses}"
+    @has_nowait.setter
+    def has_nowait(self, value):
+        """Used to set the _has_nowait var."""
+        self._has_nowait = value
 
     @property
     def name(self):
-        """Returns the name of the OpenMP construct."""
-        return self._name
+        """Name of the construct."""
+        return ''
 
     @property
-    def clauses(self):
-        """Returns the clauses of the OpenMP construct."""
-        return self._clauses
+    def txt(self):
+        """Used to store clauses."""
+        return self._txt
 
     @property
-    def clauses_count(self):
-        """Returns a dictionary containing the number of occurrences of each clause."""
-        return self._clause_count
+    def combined(self):
+        """Used to store the combined construct of a directive."""
+        return self._combined
+
+    def __getnewargs__(self):
+        """Used for Pickling self."""
+        args = (self.txt, self.combined)
+        return args
 
     def __str__(self):
-        return f'#$ omp {self.name} {" ".join(str(clause) for clause in self.clauses)}'
+        instructions = [self.name, self.combined, self.txt]
+        return '#$ omp '+' '.join(i for i in instructions if i)
 
-    def __repr__(self):
-        return f'#$ omp {self.name} {" ".join(repr(clause) for clause in self.clauses)}'
-
-
-class OmpClause(OmpAnnotatedComment):
-    """Represents an OpenMP Clause in the code."""
-
-    __slots__ = ("_name", "_parent")
-
-    def __init__(self, **kwargs):
-        self._name = kwargs.pop("name")
-        self._parent = kwargs.pop("parent")
-        super().__init__(**kwargs)
+class OMP_For_Loop(OmpAnnotatedComment):
+    """ Represents an OpenMP Loop construct. """
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
     @property
     def name(self):
-        """Returns the name of the clause."""
-        return self._name
+        """Name of the construct."""
+        return 'for'
 
-    def __repr__(self):
-        return f"{self.name}"
-
-
-class Omp(OmpAnnotatedComment):
-    """Represents a holder for all OpenMP statements."""
-
-    __slots__ = ("_statements",)
-
-    def __init__(self, **kwargs):
-        self._statements = kwargs.pop("statements", [])
-        super().__init__(**kwargs)
+class OMP_Simd_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Simd construct"""
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
     @property
-    def statements(self):
-        """Returns the statements of the OpenMP holder."""
-        return self._statements
+    def name(self):
+        """Name of the construct."""
+        return 'simd'
 
-    def __str__(self):
-        return "\n".join(str(stmt) for stmt in self.statements)
-
-    def __repr__(self):
-        return "\n".join(repr(stmt) for stmt in self.statements)
-
-
-class OmpStatement(OmpAnnotatedComment):
-    """Represents an OpenMP statement."""
-
-    __slots__ = ("_statement", "_parent")
-
-    def __init__(self, **kwargs):
-        self._statement = kwargs.pop("statement")
-        self._parent = kwargs.pop("parent", None)
-        super().__init__()
+class OMP_TaskLoop_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Taskloop construct"""
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
     @property
-    def statement(self):
-        """Returns the statement of the OpenMP statement."""
-        return self._statement
+    def name(self):
+        """Name of the construct."""
+        return 'taskloop'
 
-    def __str__(self):
-        return f"#$ omp {str(self.statement)}"
-
-    def __repr__(self):
-        return f"#$ omp {repr(self.statement)}"
-
-
-class OmpParallelConstruct(OmpConstruct):
-    """Represents an OpenMP Parallel Construct."""
-
+class OMP_Distribute_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Distribute construct"""
     __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'distribute'
 
-class OmpEndConstruct(OmpConstruct):
-    """Represents an OpenMP End Construct."""
-
+class OMP_Parallel_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Parallel construct. """
     __slots__ = ()
+    _is_multiline = True
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'parallel'
 
+class OMP_Task_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Task construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-class OmpIfClause(OmpClause):
-    """Represents an OpenMP If Clause."""
+class OMP_Single_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Single construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-    __slots__ = ('directive_name_modifier', 'expr')
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'single'
 
+class OMP_Critical_Construct(OmpAnnotatedComment):
+    """ Represents an OpenMP Critical construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-class OmpNumThreadsClause(OmpClause):
-    """Represents an OpenMP NumThreads Clause."""
+class OMP_Master_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Master construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-    __slots__ = ('num_threads',)
+class OMP_Masked_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Masked construct. """
+    __slots__ = ()
+    _is_multiline = True
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'masked'
 
+class OMP_Cancel_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Cancel construct. """
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-class OmpDefaultClause(OmpClause):
-    """Represents an OpenMP Default Clause."""
+class OMP_Target_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Target construct. """
+    __slots__ = ()
+    _is_multiline = True
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'target'
 
-    __slots__ = ('attribute',)
+class OMP_Teams_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Teams construct. """
+    __slots__ = ()
+    _is_multiline = True
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'teams'
 
+class OMP_Sections_Construct(OmpAnnotatedComment):
+    """ Represents OpenMP Sections construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-class OmpPrivateClause(OmpClause):
-    """Represents an OpenMP Private Clause."""
+    @property
+    def name(self):
+        """Name of the construct."""
+        return 'sections'
 
-    __slots__ = ('variables',)
+class OMP_Section_Construct(OmpAnnotatedComment):
+    """ Represent OpenMP Section construct. """
+    __slots__ = ()
+    _is_multiline = True
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)
 
-
-class OmpFirstPrivateClause(OmpClause):
-    """Represents an OpenMP FirstPrivate Clause."""
-
-    __slots__ = ('variables',)
-
-
-class OmpSharedClause(OmpClause):
-    """Represents an OpenMP Shared Clause."""
-
-    __slots__ = ('variables',)
-
-
-class OmpCopyinClause(OmpClause):
-    """Represents an OpenMP Copyin Clause."""
-
-    __slots__ = ('variables',)
-
-
-class OmpReductionClause(OmpClause):
-    """Represents an OpenMP Reduction Clause."""
-
-    __slots__ = ('modifier', 'operator', 'variables')
-
-
-class OmpProcBindClause(OmpClause):
-    """Represents an OpenMP ProcBind Clause."""
-
-    __slots__ = ('affinity_policy', )
+class Omp_End_Clause(OmpAnnotatedComment):
+    """ Represents the End of an OpenMP block. """
+    __slots__ = ()
+    def __init__(self, txt, has_nowait):
+        super().__init__(txt, has_nowait)

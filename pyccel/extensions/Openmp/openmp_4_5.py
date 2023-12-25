@@ -2,7 +2,7 @@
 """
 Module containing the grammar rules for the OpenMP 4.5 specification,
 """
-import ast as Ast
+import ast
 import re
 from os.path import join, dirname
 from textx.metamodel import metamodel_from_file
@@ -17,7 +17,7 @@ from pyccel.ast.core import EmptyNode
 from pyccel.errors.errors import Errors
 from pyccel.extensions.Openmp.ast import OmpDirective, OmpClause, OmpEndDirective, OmpConstruct, OmpExpr, OmpList
 from pyccel.extensions.Openmp.ast import OmpScalarExpr, OmpIntegerExpr, OmpConstantPositiveInteger, OmpAnnotatedComment
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 
 errors = Errors()
 
@@ -72,8 +72,8 @@ class SyntaxParser:
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
             result = getattr(self, syntax_method)(stmt)
-            if isinstance(result, Basic) and result.fst is None and isinstance(stmt, Ast.AST):
-                result.set_fst(stmt)
+            if isinstance(result, PyccelAstNode) and result.python_ast is None and isinstance(stmt, ast.AST):
+                result.set_current_ast(stmt)
             return result
         # Unknown object, we ignore syntactic, this is useful to isolate the omp parser for testing.
         return stmt
@@ -84,7 +84,7 @@ class SyntaxParser:
             model = self._omp_metamodel.model_from_str(expr.s)
             model.raw = expr.s
             directive = OmpDirective.from_tx_directive(model.statement)
-            directive.set_fst(expr)
+            directive.set_current_ast(expr)
             return self._visit(directive)
 
         except TextXError as e:
@@ -133,9 +133,9 @@ class SyntaxParser:
     def _visit_OmpScalarExpr(self, expr):
         fst = extend_tree(expr.value)
         if (
-                not isinstance(fst, Ast.Module)
+                not isinstance(fst, ast.Module)
                 or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
+                or not isinstance(fst.body[0], ast.Expr)
         ):
             errors.report(
                 "Invalid expression",
@@ -150,9 +150,9 @@ class SyntaxParser:
     def _visit_OmpIntegerExpr(self, expr):
         fst = extend_tree(expr.value)
         if (
-                not isinstance(fst, Ast.Module)
+                not isinstance(fst, ast.Module)
                 or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
+                or not isinstance(fst.body[0], ast.Expr)
         ):
             errors.report(
                 "Invalid expression",
@@ -167,9 +167,9 @@ class SyntaxParser:
     def _visit_OmpConstantPositiveInteger(self, expr):
         fst = extend_tree(expr.value)
         if (
-                not isinstance(fst, Ast.Module)
+                not isinstance(fst, ast.Module)
                 or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
+                or not isinstance(fst.body[0], ast.Expr)
         ):
             errors.report(
                 "Invalid expression",
@@ -184,9 +184,9 @@ class SyntaxParser:
     def _visit_OmpList(self, expr):
         fst = extend_tree(expr.value)
         if (
-                not isinstance(fst, Ast.Module)
+                not isinstance(fst, ast.Module)
                 or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
+                or not isinstance(fst.body[0], ast.Expr)
         ):
             errors.report(
                 "Invalid expression",
@@ -201,9 +201,9 @@ class SyntaxParser:
     def _visit_OmpExpr(self, expr):
         fst = extend_tree(expr.value)
         if (
-                not isinstance(fst, Ast.Module)
+                not isinstance(fst, ast.Module)
                 or len(fst.body) != 1
-                or not isinstance(fst.body[0], Ast.Expr)
+                or not isinstance(fst.body[0], ast.Expr)
         ):
             errors.report(
                 "Invalid expression",

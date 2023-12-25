@@ -21,7 +21,6 @@ def get_authorization():
     str
         A string describing the expiration of the JWT.
     """
-    print(len(os.environ["PEM"]))
     signing_key = jwt.jwk_from_pem(bytes(os.environ["PEM"], "utf-8"))
     # Issued at time
     # JWT expiration time (10 minutes maximum)
@@ -35,8 +34,14 @@ def get_authorization():
     # Create JWT
     reply = requests.post("https://api.github.com/app/installations/39885334/access_tokens", headers=headers)
 
-    token  = reply.json()["token"]
-    expiry = reply.json()["expires_at"]
+    print(reply.text)
+
+    json_reply = reply.json()
+
+    print(json_reply)
+
+    token  = json_reply["token"]
+    expiry = json_reply["expires_at"]
 
     with open(os.environ["GITHUB_ENV"], "r", encoding='utf-8') as f:
         output = f.read()
@@ -402,7 +407,15 @@ class GitHubAPIInteractions:
             A dictionary containing the comments.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/comments"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def create_comment(self, pr_id, comment, reply_to = None):
         """
@@ -441,6 +454,26 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/{issue_type}/{pr_id}/comments{suffix}"
         print(url)
         return self._post_request("POST", url, json={"body":comment})
+
+    def modify_comment(self, comment_url, new_body):
+        """
+        Modify an existing comment.
+
+        Modify an existing comment by replacing the body with the new text.
+
+        Parameters
+        ----------
+        comment_url : str
+            The url of the comment to be modified.
+        new_body : str
+            The new body of the comment.
+
+        Returns
+        -------
+        requests.Response
+            The response collected from the request.
+        """
+        return self._post_request("PATCH", comment_url, json={"body":new_body})
 
     def create_review(self, pr_id, commit, comment, status, comments = ()):
         """
@@ -506,7 +539,7 @@ class GitHubAPIInteractions:
         dict
             A dictionary describing the result.
         """
-        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/membersips/{user}'
+        url = f'https://api.github.com/orgs/{self._org}/teams/{team}/memberships/{user}'
         return self._post_request("GET", url).json()
 
     def get_prs(self, state='open'):
@@ -633,7 +666,15 @@ class GitHubAPIInteractions:
             A dictionary describing the reviews.
         """
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/reviews"
-        return self._post_request("GET", url).json()
+        results = []
+        page = 1
+        new_results = [None]
+        while len(new_results) != 0:
+            request = self._post_request("GET", url, params={'per_page': '100', 'page': str(page)})
+            new_results = request.json()
+            results.extend(new_results)
+            page += 1
+        return results
 
     def get_events(self, pr_id, page = 1):
         """
@@ -752,7 +793,7 @@ class GitHubAPIInteractions:
         url = f"https://api.github.com/repos/{self._org}/{self._repo}/pulls/{pr_id}/requested_reviewers"
         review_requests = {}
         if request_team:
-            review_requests['team_reviewers'] = 'pyccel/pyccel-dev'
+            review_requests['team_reviewers'] = ['pyccel-dev']
         if reviewers:
             review_requests['reviewers'] = list(reviewers)
 

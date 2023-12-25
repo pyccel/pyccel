@@ -8,14 +8,16 @@ This module contains all types which define a python class which is automaticall
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric)
+                        NativeComplex, NativeString, NativeNumeric,
+                        NativeTuple, CustomDataType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize)
+                        NumpyConjugate, NumpySize, NumpyResultType,
+                        NumpyArray, NumpyNDArrayType)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
-        'RealClass',
+        'FloatClass',
         'ComplexClass',
         'StringClass',
         'NumpyArrayClass',
@@ -158,7 +160,11 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
             PyccelFunctionDef('conj', func_class = NumpyConjugate,
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
             PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'})
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('dtype', func_class = NumpyResultType,
+                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )
 
@@ -174,7 +180,7 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, precision, rank):
+def get_cls_base(dtype, precision, container_type):
     """
     Determine the base class of an object.
 
@@ -188,8 +194,9 @@ def get_cls_base(dtype, precision, rank):
     precision : int
         The precision of the object.
 
-    rank : int
-        The rank of the object.
+    container_type : DataType
+        The Python type of the object. If this is different to the dtype then
+        the object is a container.
 
     Returns
     -------
@@ -201,14 +208,18 @@ def get_cls_base(dtype, precision, rank):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if precision in (-1, 0, None) and rank == 0:
+    if isinstance(dtype, CustomDataType) and container_type is dtype:
+        return None
+    if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif dtype in NativeNumeric:
+    elif dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType):
         return NumpyArrayClass
+    elif isinstance(container_type, NativeTuple):
+        return TupleClass
     else:
-        type_name = f"{dtype}({precision})"
-        if rank:
-            dims = ','.join(':' for _ in range(rank))
-            type_name += f"[{dims}]"
+        if container_type:
+            type_name = str(container_type)
+        else:
+            type_name = f"{dtype}({precision})"
         raise NotImplementedError(f"No class definition found for type {type_name}")
 
