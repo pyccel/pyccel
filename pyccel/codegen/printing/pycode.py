@@ -1095,18 +1095,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_Del(self, expr):
         return ''.join(f'del {var.variable}\n' for var in expr.variables)
 
-    #------------------OmpAnnotatedComment Printer------------------
-
-    def _print_OmpAnnotatedComment(self, expr):
-        return expr.pyprint(printer=self, errors=errors)
-
-    def _print_Omp_End_Clause(self, expr):
-        omp_expr = str(expr.txt)
-        omp_expr = '#$omp {}\n'.format(omp_expr)
-        return omp_expr
-
-    #------------------Annotation Printer------------------
-
     def _print_UnionTypeAnnotation(self, expr):
         types = [self._print(t)[1:-1] for t in expr.type_list]
         return "'" + ' | '.join(types) + "'"

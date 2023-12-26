@@ -2275,13 +2275,6 @@ class CCodePrinter(CodePrinter):
     def _print_EmptyNode(self, expr):
         return ''
 
-    #=================== OMP ==================
-
-    #def _print_OmpAnnotatedComment(self, expr):
-    #    return expr.cprint(printer=self, errors=errors)
-
-    #=====================================
-
     def _print_Program(self, expr):
         self.set_scope(expr.scope)
         body  = self._print(expr.body)

@@ -2136,24 +2136,6 @@ class FCodePrinter(CodePrinter):
                 '{epilog}').format(prolog=prolog, body=body, epilog=epilog)
 
     # .....................................................
-    #               Print OpenMP AnnotatedComment
-    # .....................................................
-
-    def _print_OmpAnnotatedComment(self, expr):
-        return expr.fprint(printer=self, errors=errors)
-
-    def _print_Omp_End_Clause(self, expr):
-        omp_expr = str(expr.txt)
-        if "section" in omp_expr and "sections" not in omp_expr:
-            return ''
-        omp_expr = omp_expr.replace("for", "do")
-        if expr.has_nowait:
-            omp_expr += ' nowait'
-        omp_expr = '!$omp {}\n'.format(omp_expr)
-        return omp_expr
-    # .....................................................
-
-    # .....................................................
     #                   OpenACC statements
     # .....................................................
     def _print_ACC_Parallel(self, expr):
