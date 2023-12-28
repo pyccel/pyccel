@@ -581,7 +581,7 @@ class PythonTuple(TypedAstNode):
         return PythonTuple(*(self._args + other._args))
 
     def __iter__(self):
-        return self._args.__iter__()
+        return iter(self._args)
 
     def __len__(self):
         return len(self._args)

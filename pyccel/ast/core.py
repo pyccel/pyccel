@@ -1990,11 +1990,15 @@ class FunctionDefResult(TypedAstNode):
         else:
             return 1
 
-    def __iter__(self):
+    def __getitem__(self, idx):
         if isinstance(self.var, PythonTuple):
-            return iter(self.var)
-        elif self.var != Nil():
-            yield self.var
+            return self.var[idx]
+        elif self.var != Nil() and idx == 0:
+                return self.var
+        else:
+            raise StopIteration
+
+
 
 class FunctionCall(TypedAstNode):
     """
