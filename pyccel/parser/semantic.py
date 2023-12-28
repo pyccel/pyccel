@@ -3607,8 +3607,8 @@ class SemanticParser(BasicParser):
                         self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
                 results = expr.results
-                if results and results[0].annotation:
-                    results = [self._visit(r) for r in expr.results]
+                if results.annotation:
+                    results = self._visit(expr.results)
 
                 # insert the FunctionDef into the scope
                 # to handle the case of a recursive function
