@@ -993,12 +993,15 @@ class SyntaxParser(BasicParser):
                 result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
 
             results.append(result_name)
-            results[-1].set_current_ast(stmt)
 
         if len(results) == 1:
-            results = [FunctionDefResult(results[0], annotation = getattr(results[0], 'annotation', None))]
+            results = FunctionDefResult(results[0], annotation = getattr(results[0], 'annotation', None))
+            results.set_current_ast(stmt)
         elif len(results) > 1:
-            results = [FunctionDefResult(PythonTuple(*results), annotation = getattr(results[0], 'annotation', None))]
+            results = FunctionDefResult(PythonTuple(*results), annotation = getattr(results[0], 'annotation', None))
+            results.set_current_ast(stmt)
+        else:
+            results = FunctionDefResult(Nil())
 
         self.exit_function_scope()
 

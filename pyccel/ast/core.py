@@ -1949,9 +1949,9 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, PythonTuple)):
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, PythonTuple, Nil)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
+        elif not isinstance(var, (Variable, PythonTuple, Nil)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
         else:
             self._is_argument = var.is_argument
@@ -1994,6 +1994,14 @@ class FunctionDefResult(TypedAstNode):
 
     def __str__(self):
         return str(self.var)
+
+    def __len__(self):
+        if is instance(self.var, PythonTuple):
+            return self.var.shape[0].python_value
+        elif self.var is Nil():
+            return 0
+        else:
+            return 1
 
 class FunctionCall(TypedAstNode):
     """
@@ -2464,11 +2472,8 @@ class FunctionDef(ScopedAstNode):
 #        body = tuple(i for i in body)
         # results
 
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
-        assert len(results)<2
+        if not isinstance(results, FunctionDefResult):
+            raise TypeError('results must be be FunctionDefResult')
 
         # if method
 
