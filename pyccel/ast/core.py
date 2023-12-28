@@ -1990,6 +1990,12 @@ class FunctionDefResult(TypedAstNode):
         else:
             return 1
 
+    def __iter__(self):
+        if isinstance(self.var, PythonTuple):
+            return iter(self.var)
+        elif self.var != Nil():
+            yield self.var
+
 class FunctionCall(TypedAstNode):
     """
     Represents a function call in the code.
