@@ -1081,7 +1081,7 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
                 ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
             if isinstance(rhs, FunctionCall):
-                iterable = [r.var for r in rhs.funcdef.results]
+                iterable = rhs.funcdef.results
             else:
                 iterable = rhs
             elem_vars = []
@@ -2858,9 +2858,9 @@ class SemanticParser(BasicParser):
             results = func.results
             if results:
                 if len(results)==1:
-                    d_var = self._infer_type(results[0].var)
+                    d_var = self._infer_type(results[0])
                 else:
-                    d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
+                    d_var = self._infer_type(PythonTuple(*list(results)))
             elif expr.lhs.is_temp:
                 return rhs
             else:

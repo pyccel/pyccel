@@ -2093,12 +2093,12 @@ class FunctionCall(TypedAstNode):
         self._func_name  = func.name
         n_results = len(func.results)
         if n_results == 1:
-            self._dtype      = func.results[0].var.dtype
-            self._rank       = func.results[0].var.rank
-            self._shape      = func.results[0].var.shape
-            self._precision  = func.results[0].var.precision
-            self._order      = func.results[0].var.order
-            self._class_type = func.results[0].var.class_type
+            self._dtype      = func.results[0].dtype
+            self._rank       = func.results[0].rank
+            self._shape      = func.results[0].shape
+            self._precision  = func.results[0].precision
+            self._order      = func.results[0].order
+            self._class_type = func.results[0].class_type
         elif n_results == 0:
             self._dtype      = NativeVoid()
             self._rank       = 0
@@ -2107,7 +2107,7 @@ class FunctionCall(TypedAstNode):
             self._order      = None
             self._class_type = NativeVoid()
         else:
-            dtypes = [r.var.dtype for r in func.results]
+            dtypes = [r.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
                 dtype = NativeHomogeneousTuple()
             else:
