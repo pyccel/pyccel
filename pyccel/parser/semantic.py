@@ -3509,7 +3509,7 @@ class SemanticParser(BasicParser):
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
 
-        results = self._visit(return_objs)
+        results = self._visit(return_objs.var)
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
