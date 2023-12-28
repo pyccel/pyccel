@@ -1941,7 +1941,7 @@ class FunctionDefResult(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_var','_is_argument','_annotation')
+    __slots__ = ('_var','_annotation')
     _attribute_nodes = ('_var',)
 
     def __init__(self, var, *, annotation=None):
@@ -1953,8 +1953,6 @@ class FunctionDefResult(TypedAstNode):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
         elif not isinstance(var, (Variable, PythonTuple, Nil)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
-        else:
-            self._is_argument = var.is_argument
 
         super().__init__()
 
@@ -1978,17 +1976,6 @@ class FunctionDefResult(TypedAstNode):
         """
         return self._annotation
 
-    @property
-    def is_argument(self):
-        """
-        Indicates if the result was declared as an argument.
-
-        Indicates if the result of the function was initially declared
-        as an argument of the same function. If this is the case then
-        the result may be printed simply as an inout argument.
-        """
-        return self._is_argument
-
     def __repr__(self):
         return 'FunctionDefResult({})'.format(repr(self.var))
 
@@ -1996,9 +1983,9 @@ class FunctionDefResult(TypedAstNode):
         return str(self.var)
 
     def __len__(self):
-        if is instance(self.var, PythonTuple):
-            return self.var.shape[0].python_value
-        elif self.var is Nil():
+        if isinstance(self.var, PythonTuple):
+            return len(self.var)
+        elif self.var == Nil():
             return 0
         else:
             return 1
@@ -2473,7 +2460,7 @@ class FunctionDef(ScopedAstNode):
         # results
 
         if not isinstance(results, FunctionDefResult):
-            raise TypeError('results must be be FunctionDefResult')
+            results = FunctionDefResult(results)
 
         # if method
 
@@ -2951,7 +2938,7 @@ class PyccelFunctionDef(FunctionDef):
                 issubclass(func_class, (PyccelInternalFunction, TypedAstNode))
         assert isinstance(argument_description, dict)
         arguments = ()
-        results = ()
+        results = FunctionDefResult(Nil())
         body = ()
         super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class

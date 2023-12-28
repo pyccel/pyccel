@@ -23,7 +23,7 @@ from .core      import Module, Interface
 
 from .internals import get_final_precision
 
-from .literals  import LiteralString
+from .literals  import LiteralString, Nil
 
 from .variable  import Variable
 
@@ -578,18 +578,18 @@ Py_None = Variable(PyccelPyObject(), 'Py_None', memory_handling='alias')
 Py_INCREF = FunctionDef(name = 'Py_INCREF',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [])
+                        results = Nil())
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [])
+                        results = Nil())
 
 PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
+                        results = FunctionDefResult(Variable(NativeInteger(), '_')))
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
@@ -653,7 +653,7 @@ def C_to_Python(c_object):
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
                        arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling))],
-                       results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
+                       results   = FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')))
 
     return cast_func
 
@@ -680,14 +680,14 @@ c_to_py_registry = {
 # https://docs.python.org/3/c-api/exceptions.html#c.PyErr_Occurred
 PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
                              arguments = [],
-                             results   = [FunctionDefResult(Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias'))],
+                             results   = FunctionDefResult(Variable(dtype = PyccelPyObject(), name = 'r', memory_handling = 'alias')),
                              body      = [])
 
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
                            FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
-              results   = [])
+              results   = Nil())
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
