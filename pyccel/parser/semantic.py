@@ -3502,15 +3502,14 @@ class SemanticParser(BasicParser):
 
         return_objs = self.scope.find(f_name, 'functions').results
         assigns     = []
-        for o,r in zip(return_objs, results):
-            v = o.var
+        for v,r in zip(return_objs, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, python_ast=expr.python_ast))
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
 
-        results = [self._visit(i.var) for i in return_objs]
+        results = self._visit(return_objs)
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
@@ -3627,7 +3626,7 @@ class SemanticParser(BasicParser):
                 # to the body of the function
                 body.insert2body(*self._garbage_collector(body))
 
-                results = [self._visit(a) for a in results]
+                results = self._visit(results)
 
                 # Determine local and global variables
                 global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -3655,7 +3654,7 @@ class SemanticParser(BasicParser):
                 namespace_imports = self.scope.imports
                 self.exit_function_scope()
 
-                results_names = [i.var.name for i in results]
+                results_names = [i.name for i in results]
 
                 # Find all nodes which can modify variables
                 assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
@@ -3677,7 +3676,7 @@ class SemanticParser(BasicParser):
 
                 # Raise an error if one of the return arguments is an alias.
                 for r in results:
-                    if r.var.is_alias:
+                    if r.is_alias:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
