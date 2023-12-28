@@ -3510,6 +3510,8 @@ class SemanticParser(BasicParser):
                     a.cls_variable.is_temp = False
 
         results = self._visit(return_objs.var)
+        if isinstance(results, Variable):
+            results = [results]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
