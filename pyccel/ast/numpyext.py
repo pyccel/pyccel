@@ -1960,20 +1960,14 @@ class NumpyAmin(NumpyUfuncUnary):
 
 class NumpyAmax(PyccelInternalFunction):
     """Represent a call to the amax function in the Numpy library"""
-    __slots__ = ('_dtype','_precision','_class_type')
+    __slots__ = ('_dtype', '_precision', '_class_type')
     name = 'amax'
-    _rank  = 0
+    _rank = 0
     _shape = None
     _order = None
-
     def __init__(self, arg):
-        if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        if isinstance(arg.dtype, NativeBool):
-            self._dtype = NativeInteger()
-        else:
-            self._dtype = arg.dtype
+        self._dtype = arg.dtype
         self._class_type = self._dtype
         self._precision = max(arg.precision, default_precision[self._dtype])
 

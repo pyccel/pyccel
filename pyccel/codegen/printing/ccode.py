@@ -1739,8 +1739,6 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        if not isinstance(expr.arg, (NumpyArray, Variable, IndexedElement)):
-            raise TypeError(f'Expecting a NumpyArray, given {type(expr.arg)}')
         dtype, prec, name = (expr.arg.dtype,
                              expr.arg.precision,
                              self._print(expr.arg))
