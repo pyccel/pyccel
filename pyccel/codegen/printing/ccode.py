@@ -1735,6 +1735,7 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, NativeBool):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
+    
     def _print_NumpyAmax(self, expr):
         '''
         Convert a call to numpy.max to the equivalent function in C.
@@ -1742,9 +1743,6 @@ class CCodePrinter(CodePrinter):
         dtype, prec, name = (expr.arg.dtype,
                              expr.arg.precision,
                              self._print(expr.arg))
-        if prec == -1:
-            prec = default_precision[dtype]
-
         if isinstance(dtype, NativeInteger):
             return f'numpy_amax_int{prec * 8}({name})'
         elif isinstance(dtype, NativeFloat):
@@ -1753,7 +1751,6 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amax_complex{prec * 16}({name})'
         elif isinstance(dtype, NativeBool):
             return f'numpy_amax_bool({name})'
-        raise NotImplementedError('Sum not implemented for argument')
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
