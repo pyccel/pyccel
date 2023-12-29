@@ -2256,10 +2256,7 @@ def test_min_property(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks=pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
@@ -2274,10 +2271,7 @@ def test_max_int(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks=pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
@@ -2292,10 +2286,7 @@ def test_max_real(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks=pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
@@ -2313,10 +2304,7 @@ def test_max_phrase(language):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
+        pytest.param("c", marks=pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
 )
