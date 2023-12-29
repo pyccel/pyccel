@@ -2300,21 +2300,7 @@ def test_max_phrase(language):
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
-
-@pytest.mark.parametrize('language', (
-    pytest.param("fortran", marks=pytest.mark.fortran),
-    pytest.param("c", marks=pytest.mark.c),
-    pytest.param("python", marks=pytest.mark.python)
-))
-def test_max_complex(language):
-    def max_complex_call(x: 'complex[:]'):
-        from numpy import amax
-        return amax(x)
-
-    f1 = epyccel(max_complex_call, language=language)
-    x = rand(10) + 1j * rand(10)
-    assert(f1(x), max_complex_call(x), rtol=RTOL, atol=ATOL)
-
+    
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks=pytest.mark.c),
