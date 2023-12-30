@@ -1746,8 +1746,6 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amax_int{prec * 8}({name})'
         elif isinstance(dtype, NativeFloat):
             return f'numpy_amax_float{prec * 8}({name})'
-        elif isinstance(dtype, NativeBool):
-            return f'numpy_amax_bool({name})'
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
