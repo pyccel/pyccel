@@ -1742,14 +1742,6 @@ class CCodePrinter(CodePrinter):
         dtype, prec, name = (expr.arg.dtype,
                              expr.arg.precision,
                              self._print(expr.arg))
-        if isinstance(dtype, NativeInteger):
-            return f'numpy_amax_int{prec * 8}({name})'
-        elif isinstance(dtype, NativeFloat):
-            return f'numpy_amax_float{prec * 8}({name})'
-        elif isinstance(dtype, NativeComplex):
-            return f'numpy_amax_complex{prec * 16}({name})'
-        elif isinstance(dtype, NativeBool):
-            return f'numpy_amax_bool({name})'
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
