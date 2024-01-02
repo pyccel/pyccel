@@ -2302,6 +2302,24 @@ def test_max_complex(language):
     x = randn(10) + 1j * randn(10)  # Generating an array of complex numbers
     assert np.allclose(f1(x), max_call(x))
 
+@pytest.mark.parametrize('language', (
+        pytest.param("fortran", marks=[
+            pytest.mark.skip(reason="amax for bool not implemented"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks=pytest.mark.c),
+        pytest.param("python", marks=pytest.mark.python)
+    )
+)
+def test_max_bool(language):
+    def max_call(x: 'bool[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == max_call(x)
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks=pytest.mark.c),
