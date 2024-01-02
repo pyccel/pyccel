@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import rand, randn, randint, uniform
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -2283,6 +2283,24 @@ def test_max_real(language):
     f1 = epyccel(max_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL))
+
+@pytest.mark.parametrize('language', (
+        pytest.param("fortran", marks=[
+            pytest.mark.skip(reason="amax for complex not implemented"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks=pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_max_complex(language):
+    def max_call(x: 'complex128[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = randn(10) + 1j * randn(10)  # Generating an array of complex numbers
+    assert np.allclose(f1(x), max_call(x))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
