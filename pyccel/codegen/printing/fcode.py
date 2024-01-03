@@ -18,7 +18,7 @@ from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
-from pyccel.ast.builtins import PythonInt, PythonReal, PythonType, PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
 from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
@@ -58,6 +58,7 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpyNDArrayType
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
@@ -1283,13 +1284,13 @@ class FCodePrinter(CodePrinter):
         # Assuming expr.arg is an array
         array_arg = expr.arg
         if array_arg.dtype is NativeBool():
-            arg_code = self._print(PythonInt(array_arg))
+            arg_code = self._print(NumpyInt32(array_arg))
         else:
             arg_code = self._print(array_arg)
 
         if array_arg.dtype is NativeComplex():
-            test_arg = PythonReal(array_arg)
-            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1)
+            test_arg = NumpyReal(array_arg)
+            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1, class_type = NumpyNDArrayType())
             prec = self.print_kind(idx_variable)
             idx_var_code = self._print(idx_variable)
             self._additional_code += f'{idx_variable} = maxloc({test_arg}, kind = {prec})\n'
