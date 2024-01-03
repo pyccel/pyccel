@@ -193,7 +193,7 @@ def test_numpy_isnan(language):
     expected_output = numpy_isnan_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.nan
@@ -201,7 +201,7 @@ def test_numpy_isnan(language):
     expected_output = numpy_isnan_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
 #------------------------------ isinf function ----------------------------#
@@ -260,7 +260,7 @@ def test_numpy_isinf(language):
     expected_output = numpy_isinf_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.inf
@@ -268,7 +268,7 @@ def test_numpy_isinf(language):
     expected_output = numpy_isinf_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
 #------------------------------ isfinite function ----------------------------#
@@ -327,7 +327,7 @@ def test_numpy_isfinite(language):
     expected_output = numpy_isfinite_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.inf
@@ -335,7 +335,7 @@ def test_numpy_isfinite(language):
     expected_output = numpy_isfinite_test(input_data)
     obtained = f(input_data)
 
-    assert obtained == expected_output
+    assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
 #------------------------------ absolute function ----------------------------#
