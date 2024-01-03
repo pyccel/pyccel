@@ -17,12 +17,12 @@ from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.core          import FunctionAddress, Declare
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
-from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None
+from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
-from pyccel.ast.cwrapper      import Py_INCREF
+from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
 from pyccel.ast.internals     import get_final_precision
@@ -362,12 +362,12 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        doc_string = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" +
+        docstring = CommentBlock("Assess the types. Raise an error for unexpected types and calculate an integer\n" +
                         "which indicates which function should be called.")
 
         # Build the function
         func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
-                            body, doc_string=doc_string, scope=func_scope)
+                            body, docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
 
@@ -446,6 +446,22 @@ class CToPythonWrapper(Wrapper):
         else:
             body = []
 
+        # Save classes to the module variable
+        for c in expr.classes:
+            wrapped_class = self._python_object_map[c]
+            type_object = wrapped_class.type_object
+            class_name = wrapped_class.name
+
+            ready_type = FunctionCall(PyType_Ready, (type_object,))
+            if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
+                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+            body.append(if_expr)
+            body.append(FunctionCall(Py_INCREF, (type_object,)))
+            add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
+            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+            body.append(if_expr)
+
         # Save module variables to the module variable
         for v in expr.variables:
             if v.is_private:
@@ -512,7 +528,7 @@ class CToPythonWrapper(Wrapper):
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, (), funcs, imports = imports,
+        return PyModule(original_mod.name, [], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
                         init_func = exec_func)
 
@@ -775,7 +791,7 @@ class CToPythonWrapper(Wrapper):
             self._python_object_map.pop(r)
 
         function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
-                doc_string = expr.doc_string, original_function = original_func)
+                docstring = expr.docstring, original_function = original_func)
 
         self.scope.functions[func_name] = function
         self._python_object_map[expr] = function
@@ -847,21 +863,24 @@ class CToPythonWrapper(Wrapper):
         else:
             cast_func = pyarray_to_ndarray
 
-        cast = Assign(arg_var, FunctionCall(cast_func, [collect_arg]))
+        cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
+        if arg_var.is_optional:
+            memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
+            cast.insert(0, AliasAssign(arg_var, memory_var))
 
         # Create any necessary type checks and errors
         if expr.has_default:
             check_func, err = self._get_check_function(collect_arg, arg_var, False)
-            body.append(If( IfSection(check_func, [cast]),
+            body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([Nil()])])
                         ))
         elif not in_interface:
             check_func, err = self._get_check_function(collect_arg, arg_var, True)
-            body.append(If( IfSection(check_func, [cast]),
+            body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([Nil()])])
                         ))
         else:
-            body.append(cast)
+            body.extend(cast)
 
         return body
 
@@ -1112,3 +1131,28 @@ class CToPythonWrapper(Wrapper):
 
         return body
 
+    def _wrap_ClassDef(self, expr):
+        """
+        Get the code which exposes a class definition to Python.
+
+        Get the code which exposes a class definition to Python.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class definition being wrapped.
+
+        Returns
+        -------
+        PyClassDef
+            The wrapped class definition.
+        """
+        name = expr.name
+        struct_name = self.scope.get_new_name(f'Py{name}Object')
+        type_name = self.scope.get_new_name(f'Py{name}Type')
+        docstring = expr.docstring
+        wrapped_class = PyClassDef(expr, struct_name, type_name, docstring = docstring)
+
+        self._python_object_map[expr] = wrapped_class
+
+        return wrapped_class
