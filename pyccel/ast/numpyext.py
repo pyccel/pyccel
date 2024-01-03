@@ -1973,6 +1973,12 @@ class NumpyAmax(PyccelInternalFunction):
 
     @property
     def arg(self):
+        """
+        Get the argument to the max function.
+
+        Get the argument to the max function. This may be a variable or
+        an expression.
+        """
         return self._args[0]
     @property
     def is_elemental(self):
