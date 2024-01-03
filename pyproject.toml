@@ -1,7 +1,6 @@
 [build-system]
 requires = [
     "hatchling",
-    "hatch-build-scripts",
     "filelock >= 3.4.0",
     "numpy >= 1.16",
     "sympy >= 1.2",
@@ -58,18 +57,7 @@ include = [
     "/pyccel",
 ]
 
-[[tool.hatch.build.hooks.build-scripts.scripts]]
-out_dir = "pyccel/stdlib/internal"
-commands = [
-    "python3 -c 'from pyccel.commands.pyccel_init import pyccel_init; pyccel_init()'",
-]
-artifacts = [
-    "blas.pyccel",
-    "dfftpack.pyccel",
-    "fitpack.pyccel",
-    "lapack.pyccel",
-    "mpi.pyccel",
-    "openacc.pyccel",
-    "openmp.pyccel"
-]
+[tool.hatch.build.hooks.custom]
+path = "install_scripts/hook.py"
+require-runtime-dependencies = true
 
