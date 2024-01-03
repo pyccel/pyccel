@@ -78,6 +78,7 @@ jobs:
           docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=compare/.docstr_coverage compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
           export PYTHONPATH=compare
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
+          unset PYTHONPATH
         shell: bash
       - name: Check doc format
         id: doc_format
@@ -91,6 +92,7 @@ jobs:
           git branch
           pwd
           ls
+          echo $PYTHONPATH
           touch report.txt
           while read line; do
             echo "python -m numpydoc --validate $line"
