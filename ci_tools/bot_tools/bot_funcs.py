@@ -432,8 +432,10 @@ class Bot:
         elif key in ('spelling'):
             has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') \
-                                                    and f != 'pyccel/version.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') \
+                                                    and f != 'pyccel/version.py') or f == 'pyproject.toml' \
+                                                    or f == 'MANIFEST.in' or f.startswith('install_scripts/') \
+                                                    for f in diff) #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
