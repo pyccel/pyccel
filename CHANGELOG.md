@@ -23,9 +23,12 @@ All notable changes to this project will be documented in this file.
 -   #1614 : Allow relative paths for custom compilation file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 -   #1628 : Fixed segmentation fault when writing to optional scalars.
+-   #1564 : Fixed installation problems on Python 3.12.
+-   #1259 : Fix bug causing problems with user editable installation.
 
 ### Changed
 
+-   #1638 : Migrate from setuptools to hatch.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
