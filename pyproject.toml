@@ -1,13 +1,5 @@
 [build-system]
-requires = [
-    "hatchling",
-    "filelock >= 3.4.0",
-    "numpy >= 1.16",
-    "sympy >= 1.2",
-    "termcolor >= 1.0.0",
-    "textx >= 2.2",
-    "wheel",
-]
+requires = ["hatchling",]
 build-backend = "hatchling.build"
 
 [project]
