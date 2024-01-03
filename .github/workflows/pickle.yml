@@ -77,11 +77,6 @@ jobs:
           python ci_tools/setup_check_run.py pickle
       - name: Install dependencies
         uses: ./.github/actions/linux_install
-      - name: Examine Pyccel
-        run: |
-          ls
-          ls pyccel/stdlib/internal
-        shell: bash
       - name: Install Pyccel
         id: pickle
         run: |
