@@ -1280,10 +1280,22 @@ class FCodePrinter(CodePrinter):
         return init_value
     
     def _print_NumpyAmax(self, expr):
-    # Assuming expr.args[0] is an array
-        array_arg = expr.args[0]
-        code = 'maxval({0})'.format(self._print(array_arg))
-        return self._get_statement(code)
+        # Assuming expr.arg is an array
+        array_arg = expr.arg
+        if array_arg.dtype is NativeBool():
+            arg_code = self._print(PythonInt(array_arg))
+        else:
+            arg_code = self._print(array_arg)
+
+        if arg.dtype is NativeComplex():
+            test_arg = PythonReal(arg)
+            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1)
+            prec = self.print_kind(idx_variable)
+            idx_var_code = self._print(idx_variable)
+            self._additional_code += f'{idx_variable} = maxloc({test_arg}, kind = {prec})\n'
+            return '{arg}({idx_var_code})'
+        else:
+            return f'maxval({arg_code})'
 
     def _print_PythonMin(self, expr):
         args = expr.args
