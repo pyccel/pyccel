@@ -178,7 +178,7 @@ def test_numpy_isnan(language):
     assert matching_types(obtained, expected_output)
 
     expected_output = numpy_isnan_expr_test(input_data, 3.0)
-    obtained = f_expr(input_data)
+    obtained = f_expr(input_data, 3.0)
 
     assert obtained == expected_output
     assert matching_types(obtained, expected_output)
@@ -241,7 +241,7 @@ def test_numpy_isinf(language):
     assert matching_types(obtained, expected_output)
 
     expected_output = numpy_isinf_expr_test(input_data, 3.0)
-    obtained = f_expr(input_data)
+    obtained = f_expr(input_data, 3.0)
 
     assert obtained == expected_output
     assert matching_types(obtained, expected_output)
@@ -304,7 +304,7 @@ def test_numpy_isfinite(language):
     assert matching_types(obtained, expected_output)
 
     expected_output = numpy_isfinite_expr_test(input_data, 3.0)
-    obtained = f_expr(input_data)
+    obtained = f_expr(input_data, 3.0)
 
     assert obtained == expected_output
     assert matching_types(obtained, expected_output)
