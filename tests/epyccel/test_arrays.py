@@ -302,6 +302,15 @@ def test_array_int_1d_initialization_1(language):
 
     assert f1() == f2()
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Lists not yet supported"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_array_int_1d_initialization_2(language):
 
     f1 = arrays.array_int_1d_initialization_2
@@ -3539,6 +3548,15 @@ def test_arrs_1d_int64_index(language):
     f1 = arrays.arrs_1d_int64_index
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+def test_arr_tuple_slice_index(language):
+    f1 = arrays.arr_tuple_slice_index
+    f2 = epyccel(f1, language = language)
+
+    r_python = f1(arrays.a_2d_c)
+    r_pyccel = f2(arrays.a_2d_c)
+
+    check_array_equal(r_python, r_pyccel)
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [

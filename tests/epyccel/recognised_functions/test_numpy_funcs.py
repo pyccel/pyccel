@@ -2135,15 +2135,6 @@ def test_randint_expr(language):
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_int(language):
     def sum_call(x : 'int[:]'):
         from numpy import sum as np_sum
@@ -2153,15 +2144,15 @@ def test_sum_int(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+def test_sum_override_builtin(language):
+    def sum_call(x : 'int[:]'):
+        from numpy import sum
+        return sum(x)
+
+    f1 = epyccel(sum_call, language = language)
+    x = randint(99,size=10)
+    assert(f1(x) == sum_call(x))
+
 def test_sum_real(language):
     def sum_call(x : 'float[:]'):
         from numpy import sum as np_sum
@@ -2171,15 +2162,6 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_phrase(language):
     def sum_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import sum as np_sum
@@ -2191,15 +2173,6 @@ def test_sum_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_property(language):
     def sum_call(x : 'int[:]'):
         return x.sum()
