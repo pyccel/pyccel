@@ -1959,7 +1959,16 @@ class NumpyAmin(NumpyUfuncUnary):
         return False
 
 class NumpyAmax(PyccelInternalFunction):
-    """Represent a call to the amax function in the Numpy library"""
+    """
+    Represents a call to  numpy.max for code generation.
+
+    Represents a custom class for handling maximum operations.
+
+    Parameters
+    ----------
+    arg : array_like
+        The input array for which the maximum argument is calculated.
+    """
     __slots__ = ('_dtype', '_precision', '_class_type')
     name = 'amax'
     _rank = 0
@@ -1977,22 +1986,6 @@ class NumpyAmax(PyccelInternalFunction):
         Get the argument to the max function.
 
         This method retrieves the argument used in the max function.
-
-        Returns
-        -------
-        scalar or ndarray
-            The argument used in the max function. This may be a variable or an expression.
-
-        See Also
-        --------
-        numpy.ndarray.argmax : Returns the indices of the maximum values along an axis.
-
-        Examples
-        --------
-        >>> instance = NumpyAmax()
-        >>> result = instance.arg()
-        >>> print(result)
-        # Output the argument used in the max function
         """
         return self._args[0]
 
