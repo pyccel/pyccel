@@ -139,8 +139,11 @@ def test_fabs_phrase_i_r(language):
 
 #------------------------------ isnan function ----------------------------#
 def test_numpy_isnan(language):
-    @template('T', ['float', 'float[:]'])
-    def numpy_isnan_test(x : 'T'):
+    def numpy_isnan_test(x : 'float'):
+        from numpy import isnan
+        return isnan(x)
+
+    def numpy_isnan_array_test(x : 'float[:]'):
         from numpy import isnan
         return isnan(x)
 
@@ -149,6 +152,7 @@ def test_numpy_isnan(language):
         return isnan(x+y)
 
     f = epyccel(numpy_isnan_test, language=language)
+    f_arr = epyccel(numpy_isnan_array_test, language=language)
     f_expr = epyccel(numpy_isnan_expr_test, language=language)
 
     input_data = np.nan
@@ -190,24 +194,27 @@ def test_numpy_isnan(language):
     assert matching_types(obtained, expected_output)
 
     input_data = np.random.uniform(-1e6, 1e6, size=5)
-    expected_output = numpy_isnan_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.nan
 
-    expected_output = numpy_isnan_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
 #------------------------------ isinf function ----------------------------#
 def test_numpy_isinf(language):
-    @template('T', ['float', 'float[:]'])
-    def numpy_isinf_test(x : 'T'):
+    def numpy_isinf_test(x : 'float'):
+        from numpy import isinf
+        return isinf(x)
+
+    def numpy_isinf_array_test(x : 'float[:]'):
         from numpy import isinf
         return isinf(x)
 
@@ -216,6 +223,7 @@ def test_numpy_isinf(language):
         return isinf(x+y)
 
     f = epyccel(numpy_isinf_test, language=language)
+    f_arr = epyccel(numpy_isinf_array_test, language=language)
     f_expr = epyccel(numpy_isinf_expr_test, language=language)
 
     input_data = np.inf
@@ -257,24 +265,27 @@ def test_numpy_isinf(language):
     assert matching_types(obtained, expected_output)
 
     input_data = np.random.uniform(-1e6, 1e6, size=5)
-    expected_output = numpy_isinf_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.inf
 
-    expected_output = numpy_isinf_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
 #------------------------------ isfinite function ----------------------------#
 def test_numpy_isfinite(language):
-    @template('T', ['float', 'float[:]'])
-    def numpy_isfinite_test(x : 'T'):
+    def numpy_isfinite_test(x : 'float'):
+        from numpy import isfinite
+        return isfinite(x)
+
+    def numpy_isfinite_test(x : 'float[:]'):
         from numpy import isfinite
         return isfinite(x)
 
@@ -283,6 +294,7 @@ def test_numpy_isfinite(language):
         return isfinite(x+y)
 
     f = epyccel(numpy_isfinite_test, language=language)
+    f_arr = epyccel(numpy_isfinite_array_test, language=language)
     f_expr = epyccel(numpy_isfinite_expr_test, language=language)
 
     input_data = np.inf
@@ -324,16 +336,16 @@ def test_numpy_isfinite(language):
     assert matching_types(obtained, expected_output)
 
     input_data = np.random.uniform(-1e6, 1e6, size=5)
-    expected_output = numpy_isfinite_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
 
     input_data[1] = np.inf
 
-    expected_output = numpy_isfinite_test(input_data)
-    obtained = f(input_data)
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
 
     assert np.array_equal(obtained, expected_output)
     assert matching_types(obtained, expected_output)
