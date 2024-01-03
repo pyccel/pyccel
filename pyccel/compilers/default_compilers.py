@@ -37,8 +37,8 @@ if sys.platform == "win32":
     gfort_info['mpi']['libdirs']  = (os.environ["MSMPI_LIB64"].rstrip('\\'),)
 
 #------------------------------------------------------------
-ifort_info = {'exec' : 'ifx',
-              'mpi_exec' : 'mpiifx',
+ifort_info = {'exec' : 'ifort',
+              'mpi_exec' : 'mpiifort',
               'language': 'fortran',
               'module_output_flag': '-module',
               'debug_flags': ("-check=bounds","-g","-O0"),
@@ -124,7 +124,7 @@ elif sys.platform == "win32":
 
 #------------------------------------------------------------
 icc_info = {'exec' : 'icx',
-            'mpi_exec' : 'mpiicx',
+            'mpi_exec' : 'mpicc',
             'language': 'c',
             'debug_flags': ("-g","-O0"),
             'release_flags': ("-O3","-funroll-loops",),
