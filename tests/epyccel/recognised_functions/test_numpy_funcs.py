@@ -285,7 +285,7 @@ def test_numpy_isfinite(language):
         from numpy import isfinite
         return isfinite(x)
 
-    def numpy_isfinite_test(x : 'float[:]'):
+    def numpy_isfinite_array_test(x : 'float[:]'):
         from numpy import isfinite
         return isfinite(x)
 
