@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
