@@ -1978,10 +1978,12 @@ class NumpyAmax(PyccelInternalFunction):
 
         This method retrieves the argument used in the max function.
 
-        Returns:
+        Returns
+        -------
             The argument used in the max function. This may be a variable or an expression.
 
-        Parameters:
+        Parameters
+        ----------
             self (NumpyAmax): The NumpyAmax instance.
         """
         return self._args[0]
