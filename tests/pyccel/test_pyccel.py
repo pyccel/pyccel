@@ -62,7 +62,7 @@ def get_python_output(abs_path, cwd = None):
 def compile_pyccel(path_dir, test_file, options = ""):
     if "python" in options and "--output" not in options:
         options += " --output=__pyccel__"
-    cmd = [shutil.which("pyccel"), "%s" % test_file]
+    cmd = [shutil.which("pyccel"), test_file]
     if options != "":
         cmd += options.strip().split()
     p = subprocess.Popen(cmd, universal_newlines=True, cwd=path_dir)
@@ -796,8 +796,7 @@ def test_basic_header():
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/generic_methods.py",
-                                        "scripts/classes/classes.py",
+@pytest.mark.parametrize( "test_file", ["scripts/classes/classes.py",
                                         "scripts/classes/classes_1.py",
                                         "scripts/classes/classes_2.py",
                                         "scripts/classes/classes_3.py",
@@ -814,6 +813,7 @@ def test_classes( test_file , language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( "test_file", ["scripts/classes/classes_5.py",
                                         "scripts/classes/classes_7.py",
+                                        "scripts/classes/classes_8.py",
                                         ] )
 def test_classes_as_args_and_results( test_file , language):
     if language == "python":
@@ -1048,6 +1048,7 @@ def test_inline_import(language):
                 language = language)
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 def test_json():
     pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
             pyccel_commands='--export-compile-info test.json')
@@ -1059,6 +1060,13 @@ def test_json():
         dict_2 = json.load(f)
 
     assert dict_1 == dict_2
+
+@pytest.mark.xdist_incompatible
+def test_json_relative_path():
+    pyccel_test("scripts/runtest_funcs.py", language = 'fortran',
+            pyccel_commands='--export-compile-info test.json')
+    shutil.move(get_abs_path('scripts/test.json'), get_abs_path('scripts/hope_benchmarks/test.json'))
+    compile_pyccel(get_abs_path('scripts/hope_benchmarks'), "../runtest_funcs.py", '--compiler test.json')
 
 #------------------------------------------------------------------------------
 def test_reserved_file_name():

@@ -38,6 +38,7 @@ __all__ = (
 #
     'PyFunctionDef',
     'PyInterface',
+    'PyClassDef',
     'PyModule',
     'PyccelPyObject',
     'PyccelPyClassType',
@@ -229,6 +230,7 @@ class PyBuildValueNode(TypedAstNode):
     _rank = 0
     _precision = 0
     _shape = ()
+    _class_type = PyccelPyObject
     _order = None
 
     def __init__(self, result_args = ()):
@@ -270,6 +272,7 @@ class PyModule_AddObject(TypedAstNode):
     _precision = 4
     _rank = 0
     _shape = None
+    _class_type = NativeInteger()
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, LiteralString):
@@ -518,15 +521,18 @@ class PyClassDef(ClassDef):
     type_name : str
         The name of the instance of the Python-compatible class definition
         structure. This object is necessary to add the class to the module.
+
+    **kwargs : dict
+        See ClassDef.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
-    def __init__(self, original_class, struct_name, type_name):
+    def __init__(self, original_class, struct_name, type_name, **kwargs):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
-        super().__init__(original_class.name)
+        super().__init__(original_class.name, **kwargs)
 
     @property
     def struct_name(self):
