@@ -211,6 +211,10 @@ def test_numpy_isinf(language):
         from numpy import isinf
         return isinf(x)
 
+    def numpy_isinf_expr_test(x : 'float', y : 'float'):
+        from numpy import isinf
+        return isinf(x+y)
+
     f = epyccel(numpy_isinf_test, language=language)
     f_expr = epyccel(numpy_isinf_expr_test, language=language)
 
@@ -273,6 +277,10 @@ def test_numpy_isfinite(language):
     def numpy_isfinite_test(x : 'T'):
         from numpy import isfinite
         return isfinite(x)
+
+    def numpy_isfinite_expr_test(x : 'float', y : 'float'):
+        from numpy import isfinite
+        return isfinite(x+y)
 
     f = epyccel(numpy_isfinite_test, language=language)
     f_expr = epyccel(numpy_isfinite_expr_test, language=language)
