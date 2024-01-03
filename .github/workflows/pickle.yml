@@ -80,7 +80,7 @@ jobs:
       - name: Examine Pyccel
         run: |
           ls
-          ls pyccel/stdlib/internals
+          ls pyccel/stdlib/internal
         shell: bash
       - name: Install Pyccel
         id: pickle
