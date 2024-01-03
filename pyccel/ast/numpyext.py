@@ -1980,13 +1980,22 @@ class NumpyAmax(PyccelInternalFunction):
 
         Returns
         -------
+        scalar or ndarray
             The argument used in the max function. This may be a variable or an expression.
 
-        Parameters
-        ----------
-            self : The NumpyAmax instance.
+        See Also
+        --------
+        numpy.ndarray.argmax : Returns the indices of the maximum values along an axis.
+
+        Examples
+        --------
+        >>> instance = NumpyAmax()
+        >>> result = instance.arg()
+        >>> print(result)
+        # Output the argument used in the max function
         """
         return self._args[0]
+
 
     @property
     def is_elemental(self):
