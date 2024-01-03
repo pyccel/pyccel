@@ -104,9 +104,9 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf':'ieee_is_inf',
+    'NumpyIsInf'  :'ieee_is_inf',
     'NumpyIsFinite':'ieee_is_finite',
-    'NumpyIsNan':'ieee_is_nan',
+    'NumpyIsNan'  :'ieee_is_nan',
 }
 
 math_function_to_fortran = {
@@ -2636,6 +2636,8 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             self._print_not_supported(expr)
+        if func_name.startswith('ieee_'):
+            self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
         args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
@@ -2666,30 +2668,6 @@ class FCodePrinter(CodePrinter):
         func = PyccelFunctionDef('numpy_sign', NumpySign)
         self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
         return f'numpy_sign({self._print(expr.args[0])})'
-    
-    def _print_NumpyIsNan(self, expr):
-        """
-        Convert a Python expression with a numpy isnan function call to Fortran function call
-        """
-        arg = expr.args[0]
-        code_arg = self._print(arg)
-        return f"isnan({code_arg})"
-
-    def _print_NumpyIsInf(self, expr):
-        """
-        convert a python expression with a numpy isinf function call to Fortran function call
-        """
-        arg = expr.args[0]
-        code_arg = self._print(arg)
-        return f"isinf({code_arg})"
-    
-    def _print_NumpyIsFinite(self,expr):
-        """
-        conver a pytho expression with a numpy isnan function call to Fortran function call
-        """
-        arg = expr.args[0]
-        code_arg = self._print(arg)
-        return f"isfinite({code_arg})"
 
     def _print_NumpyTranspose(self, expr):
         var = expr.internal_var
