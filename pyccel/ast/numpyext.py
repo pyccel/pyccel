@@ -2240,9 +2240,9 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
-    'isnan'     : PyccelFunctionDef('isnan'     ,NumpyIsNan),
-    'isinf'     : PyccelFunctionDef('isinf'     ,NumpyIsInf),
-    'isfinite'  : PyccelFunctionDef('isfinite'  ,NumpyIsFinite),
+    'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
+    'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),
+    'isfinite'  : PyccelFunctionDef('isfinite'  , NumpyIsFinite),
     'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
