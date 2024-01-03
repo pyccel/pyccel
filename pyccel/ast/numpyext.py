@@ -2288,6 +2288,10 @@ class NumpyIsNan(NumpyUfuncBase):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
+        if self._rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = NativeBool()
 
 class NumpyIsInf(NumpyUfuncBase):
     """ 
@@ -2318,6 +2322,10 @@ class NumpyIsInf(NumpyUfuncBase):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
+        if self._rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = NativeBool()
 
 class NumpyIsFinite(NumpyUfuncBase):
     """ 
@@ -2348,6 +2356,10 @@ class NumpyIsFinite(NumpyUfuncBase):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
+        if self._rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = NativeBool()
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
