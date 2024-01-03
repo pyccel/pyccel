@@ -28,7 +28,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   #1638 : Migrate from setuptools to hatch.
+-   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
