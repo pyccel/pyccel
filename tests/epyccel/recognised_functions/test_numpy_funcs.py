@@ -2280,6 +2280,10 @@ def test_max_complex(language):
     f1 = epyccel(max_call, language=language)
     x = randn(10) + 1j * randn(10)  # Generating an array of complex numbers
     assert np.allclose(f1(x), max_call(x))
+    x = randn(10) + 1j  # Generating an array of complex numbers
+    assert np.allclose(f1(x), max_call(x))
+    x = 10 + 1j * randn(10)  # Generating an array of complex numbers
+    assert np.allclose(f1(x), max_call(x))
 
 def test_max_bool(language):
     def max_call(x: 'bool[:]'):
