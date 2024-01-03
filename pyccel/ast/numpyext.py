@@ -1984,7 +1984,7 @@ class NumpyAmax(PyccelInternalFunction):
 
         Parameters
         ----------
-            self (NumpyAmax): The NumpyAmax instance.
+            self : The NumpyAmax instance.
         """
         return self._args[0]
 
