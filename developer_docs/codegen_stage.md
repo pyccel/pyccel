@@ -134,7 +134,7 @@ While in Fortran it becomes:
 
     allocate(c(0:size(a, 1_i64, i64) - 1_i64, 0:size(a, 2_i64, i64) - &
           1_i64))
-    do i = 0_i64, size(c, 2_i64, i64) - 1_i64, 1_i64
+    do i = 0_i64, size(c, 2_i64, i64) - 1_i64
       c(:, i) = a(:, i) + b
     end do
     return
