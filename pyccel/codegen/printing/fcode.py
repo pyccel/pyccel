@@ -18,7 +18,7 @@ from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
-from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonInt, PythonReal, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
 from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
@@ -1287,8 +1287,8 @@ class FCodePrinter(CodePrinter):
         else:
             arg_code = self._print(array_arg)
 
-        if arg.dtype is NativeComplex():
-            test_arg = PythonReal(arg)
+        if array_arg.dtype is NativeComplex():
+            test_arg = PythonReal(array_arg)
             idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1)
             prec = self.print_kind(idx_variable)
             idx_var_code = self._print(idx_variable)
