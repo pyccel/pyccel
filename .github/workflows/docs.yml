@@ -68,6 +68,7 @@ jobs:
         run: |
           cd compare
           pip3 install .[test]
+          pip3 install hatchling
           cd ..
         shell: bash
       - name: Check doc coverage
