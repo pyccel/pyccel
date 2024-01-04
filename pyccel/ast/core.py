@@ -2014,6 +2014,23 @@ class FunctionDefResult(TypedAstNode):
         else:
             return unpack(var)
 
+    def get_any_variables(self):
+        def unpack(var):
+            if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+                return [var]
+            else:
+                new_list = []
+                if not isinstance(var, PythonTuple):
+                    new_list.append(var)
+                for t in var:
+                    new_list.extend(unpack(t))
+                return new_list
+
+        var = self.var
+        if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            return [var]
+        else:
+            return unpack(var)
 
 class FunctionCall(TypedAstNode):
     """
@@ -2594,7 +2611,7 @@ class FunctionDef(ScopedAstNode):
         """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        result_vars = self.results.get_flat_variables() + [self.results.var]
+        result_vars = self.results.get_any_variables() + [self.results.var]
         return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property
