@@ -3511,7 +3511,10 @@ class SemanticParser(BasicParser):
 
         results = self._visit(return_objs.var)
         if isinstance(results, Variable):
-            results = [results]
+            if isinstance(results.dtype, NativeInhomogeneousTuple):
+                results = [r for r in results]
+            else:
+                results = [results]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.

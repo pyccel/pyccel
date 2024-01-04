@@ -1999,21 +1999,20 @@ class FunctionDefResult(TypedAstNode):
             raise StopIteration
 
     def get_flat_variables(self):
-        def unpack(tuple_object):
-            new_list = []
-            for t in tuple_object:
-                if isinstance(t, Variable):
-                    new_list.append(t)
-                else:
-                    new_list.extend(t)
-            if all(isinstance(t, Variable) for t in new_list):
-                return new_list
+        def unpack(var):
+            if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+                return [var]
             else:
-                return unpack(new_list)
-        if isinstance(self.var, Variable):
-            return [self.var]
+                new_list = []
+                for t in var:
+                    new_list.extend(unpack(t))
+                return new_list
+
+        var = self.var
+        if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            return [var]
         else:
-            return unpack(self.var)
+            return unpack(var)
 
 
 class FunctionCall(TypedAstNode):
@@ -2595,7 +2594,7 @@ class FunctionDef(ScopedAstNode):
         """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        result_vars = self.results.get_flat_variables()
+        result_vars = self.results.get_flat_variables() + [self.results.var]
         return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property

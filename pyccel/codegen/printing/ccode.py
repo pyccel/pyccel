@@ -1776,11 +1776,14 @@ class CCodePrinter(CodePrinter):
 
         arguments = [a.var for a in expr.arguments]
         results = expr.results.get_flat_variables()
-        if len(expr.results) > 1:
+        if len(results) > 1:
             self._additional_args.append(results)
 
+        semantic_scope_variables = self.scope.variables.values()
         body  = self._print(expr.body)
-        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+
+        local_vars = expr.local_vars
+        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in local_vars]
 
         if len(results) == 1 :
             res = results[0]
@@ -1789,7 +1792,7 @@ class CCodePrinter(CodePrinter):
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
         decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
-                if v not in chain(expr.local_vars, results, arguments)]
+                if v not in semantic_scope_variables]
         decs  = ''.join(self._print(i) for i in decs)
 
         sep = self._print(SeparatorComment(40))
