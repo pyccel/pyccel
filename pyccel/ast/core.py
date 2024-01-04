@@ -1998,6 +1998,22 @@ class FunctionDefResult(TypedAstNode):
         else:
             raise StopIteration
 
+    def get_flat_variables(self):
+        def unpack(tuple_object):
+            new_list = []
+            for t in tuple_object:
+                if isinstance(t, Variable):
+                    new_list.append(t)
+                else:
+                    new_list.extend(t)
+            if all(isinstance(t, Variable) for t in new_list):
+                return new_list
+            else:
+                return unpack(new_list)
+        if isinstance(self.var, Variable):
+            return [self.var]
+        else:
+            return unpack(self.var)
 
 
 class FunctionCall(TypedAstNode):
@@ -2579,7 +2595,7 @@ class FunctionDef(ScopedAstNode):
         """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        result_vars = [r.var for r in self.results]
+        result_vars = self.results.get_flat_variables()
         return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property

@@ -1293,7 +1293,7 @@ class CCodePrinter(CodePrinter):
             Signature of the function.
         """
         arg_vars = [a.var for a in expr.arguments]
-        result_vars = [r.var for r in expr.results if not r.is_argument]
+        result_vars = [r for r in expr.results.get_flat_variables() if not r.is_argument]
 
         n_results = len(result_vars)
 
@@ -1775,7 +1775,7 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
         arguments = [a.var for a in expr.arguments]
-        results = [r.var for r in expr.results]
+        results = expr.results.get_flat_variables()
         if len(expr.results) > 1:
             self._additional_args.append(results)
 
