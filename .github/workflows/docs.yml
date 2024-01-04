@@ -92,6 +92,8 @@ jobs:
           git branch
           pwd
           ls
+          python -c "import importlib; print(importlib.import_module('install_scripts'))"
+          python -c "import importlib; print(importlib.import_module('install_scripts.hook'))"
           echo $PYTHONPATH
           touch report.txt
           while read line; do
