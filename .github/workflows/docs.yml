@@ -79,7 +79,6 @@ jobs:
           docstr-coverage --skip-magic --skip-init --fail-under=0 --docstr-ignore-file=compare/.docstr_coverage compare/pyccel compare/ci_tools 2>&1 | tee compare_cov
           export PYTHONPATH=compare
           python compare/ci_tools/summarise_doccoverage.py compare_cov base_cov $GITHUB_STEP_SUMMARY
-          unset PYTHONPATH
         shell: bash
       - name: Check doc format
         id: doc_format
@@ -90,18 +89,13 @@ jobs:
           git checkout ${{ env.COMMIT }}
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/list_docs_tovalidate.py pull_diff.txt objects.txt
-          git branch
-          pwd
-          ls
-          python -c "import importlib; print(importlib.import_module('install_scripts'))"
-          python -c "import importlib; print(importlib.import_module('install_scripts.hook'))"
-          echo $PYTHONPATH
           touch report.txt
           while read line; do
             echo "python -m numpydoc --validate $line"
             python -m numpydoc --validate $line 2>&1 | tee -a report.txt || true 
           done < objects.txt
           cd ..
+          export PYTHONPATH=compare
           python compare/ci_tools/process_results.py compare/report.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
