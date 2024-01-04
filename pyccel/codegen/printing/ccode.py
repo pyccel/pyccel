@@ -2000,7 +2000,7 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, NativeTuple):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
