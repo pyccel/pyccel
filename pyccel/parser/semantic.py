@@ -1859,7 +1859,7 @@ class SemanticParser(BasicParser):
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
 
-            init_func = FunctionDef(init_func_name, [], [], [init_func_body],
+            init_func = FunctionDef(init_func_name, [], Nil(), [init_func_body],
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
 
@@ -1883,7 +1883,7 @@ class SemanticParser(BasicParser):
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(free_func_name)
-                free_func = FunctionDef(free_func_name, [], [], [free_func_body],
+                free_func = FunctionDef(free_func_name, [], Nil(), [free_func_body],
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
@@ -1924,7 +1924,7 @@ class SemanticParser(BasicParser):
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             args = [FunctionDefArgument(a) for a in args]
-                            results = [FunctionDefResult(r) for r in results]
+                            results = FunctionDefResult(results)
                             func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
 
                         if len(func_defs) == 1:
@@ -3853,7 +3853,7 @@ class SemanticParser(BasicParser):
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
+            del_method = FunctionDef('__del__', [argument], Nil(), [Pass()], cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)
