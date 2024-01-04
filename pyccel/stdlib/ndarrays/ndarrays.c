@@ -11,6 +11,7 @@
 # include <stdbool.h>
 # include <inttypes.h>
 # include <complex.h>
+# include <math.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -604,6 +605,30 @@ NUMPY_SUM_(complex128, double complex, cdouble)
         } \
         return output; \
     }
+#define NUMPY_AMAX_COMPLEX_(NAME, TYPE, CTYPE) \
+    TYPE numpy_amax_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            if (cabs(current_value) > cabs(output) || \
+                (cabs(current_value) == cabs(output) && cimag(current_value) > cimag(output))) \
+            { \
+                output = current_value; \
+            } \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
 
 NUMPY_AMAX_(bool, int64_t, bool)
 NUMPY_AMAX_(int8, int64_t, int8)
@@ -612,6 +637,6 @@ NUMPY_AMAX_(int32, int64_t, int32)
 NUMPY_AMAX_(int64, int64_t, int64)
 NUMPY_AMAX_(float32, float, float)
 NUMPY_AMAX_(float64, double, double)
-NUMPY_AMAX_(complex64, float complex, cfloat)
-NUMPY_AMAX_(complex128, double complex, cdouble)
+NUMPY_AMAX_COMPLEX_(complex64, float complex, cfloat)
+NUMPY_AMAX_COMPLEX_(complex128, double complex, cdouble)
 
