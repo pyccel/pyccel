@@ -21,6 +21,8 @@ from pyccel.ast.core      import Assign, Import, AugAssign, AliasAssign
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Module, AsName
 
+from pyccel.ast.class_defs import TupleClass
+
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, PyccelGt
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
@@ -28,6 +30,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 from pyccel.ast.datatypes import CustomDataType, NativeString, NativeHomogeneousTuple
+from pyccel.ast.datatypes import NativeInhomogeneousTuple
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -1841,7 +1844,7 @@ class CCodePrinter(CodePrinter):
         args = ', '.join(['{}'.format(self._print(a)) for a in args])
 
         call_code = f'{func.name}({args})'
-        if not func.results:
+        if not func.results.var:
             return f'{call_code};\n'
         else:
             return call_code
@@ -1997,20 +2000,22 @@ class CCodePrinter(CodePrinter):
         return f'{lhs_code} {op}= {rhs_code};\n'
 
     def _print_Assign(self, expr):
-        prefix_code = ''
+        suffix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.class_type, NativeTuple):
-            self._temporary_args = [ObjectAddress(a) for a in lhs]
-            return prefix_code+'{};\n'.format(self._print(rhs))
+        if isinstance(rhs, FunctionCall):
+            result = rhs.funcdef.results.var
+            if isinstance(result, PythonTuple) or isinstance(result.dtype, NativeInhomogeneousTuple):
+                self._temporary_args = [ObjectAddress(a) for a in lhs]
+                return self._print(rhs) + ';\n'
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer
-        if isinstance(rhs, (NumpyArray, PythonTuple)):
-            return prefix_code+self.copy_NumpyArray_Data(expr)
-        if isinstance(rhs, (NumpyFull)):
-            return prefix_code+self.arrayFill(expr)
-        lhs = self._print(expr.lhs)
-        rhs = self._print(expr.rhs)
-        return prefix_code+'{} = {};\n'.format(lhs, rhs)
+        elif isinstance(rhs, (NumpyArray, PythonTuple)):
+            return self.copy_NumpyArray_Data(expr)
+        elif isinstance(rhs, (NumpyFull)):
+            return self.arrayFill(expr)
+        lhs = self._print(lhs)
+        rhs = self._print(rhs)
+        return f'{lhs} = {rhs};\n' + suffix_code
 
     def _print_AliasAssign(self, expr):
         lhs_var = expr.lhs

@@ -191,7 +191,7 @@ class Variable(TypedAstNode):
 
             dtype = datatype(dtype)
         elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
+            raise TypeError(f'datatype must be an instance of DataType not {dtype}.')
 
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
@@ -260,10 +260,7 @@ class Variable(TypedAstNode):
 
         new_shape = []
         for i, s in enumerate(shape):
-            if self.shape_can_change(i):
-                # Shape of a pointer can change
-                new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
-            elif isinstance(s, LiteralInteger):
+            if isinstance(s, LiteralInteger):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
@@ -273,25 +270,6 @@ class Variable(TypedAstNode):
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
                                 'Variable, Slice, TypedAstNode, int, Function')
         return tuple(new_shape)
-
-    def shape_can_change(self, i):
-        """
-        Indicate if the shape can change in the i-th dimension.
-
-        Indicate whether the Variable's shape can change in the i-th dimension
-        at run time.
-
-        Parameters
-        ----------
-        i : int
-            The dimension over which the shape can change at runtime.
-
-        Returns
-        -------
-        bool
-            Whether or not the variable shape can change in the i-th dimension.
-        """
-        return self.is_alias
 
     def set_changeable_shape(self):
         """

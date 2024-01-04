@@ -1984,7 +1984,9 @@ class FunctionDefResult(TypedAstNode):
 
     def get_flat_variables(self):
         def unpack(var):
-            if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            if isinstance(var, Nil):
+                return []
+            elif isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
                 return [var]
             else:
                 new_list = []
@@ -2000,7 +2002,9 @@ class FunctionDefResult(TypedAstNode):
 
     def get_any_variables(self):
         def unpack(var):
-            if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            if isinstance(var, Nil):
+                return []
+            elif isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
                 return [var]
             else:
                 new_list = []

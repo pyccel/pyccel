@@ -179,7 +179,7 @@ class CToPythonWrapper(Wrapper):
 
         return func_args, body
 
-    def _get_python_result_variables(self, result):
+    def _get_python_result_variables(self, result, func_def_result = None):
         """
         Get a new set of `PyccelPyObject` `Variable`s representing each of the results.
 
@@ -197,7 +197,11 @@ class CToPythonWrapper(Wrapper):
         Variable
             The Variable which will hold the result in Python.
         """
-        if isinstance(result, PythonTuple) or isinstance(result.class_type, NativeInhomogeneousTuple):
+        if result is Nil():
+            collect_result = self.get_new_PyObject('result_obj')
+            self._python_object_map[func_def_result] = collect_result
+            return collect_result
+        elif isinstance(result, PythonTuple) or isinstance(result.class_type, NativeInhomogeneousTuple):
             tuple_collect_object = self.get_new_PyObject('tuple_obj')
             self._python_object_map[result] = tuple_collect_object
             for r in result:
@@ -736,7 +740,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get the results of the PyFunctionDef
         current_map_status = set(self._python_object_map.keys())
-        python_result_variable = self._get_python_result_variables(python_results.var)
+        python_result_variable = self._get_python_result_variables(python_results.var, python_results)
         python_result_keys = set(self._python_object_map.keys()).difference(current_map_status)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
@@ -966,13 +970,13 @@ class CToPythonWrapper(Wrapper):
         """
         orig_var = expr.var
 
+        if orig_var is Nil():
+            python_res = self._python_object_map[expr]
+            return [AliasAssign(python_res, Py_None),
+                    FunctionCall(Py_INCREF, [python_res])]
+
         # Get the object with datatype PyccelPyObject
         python_res = self._python_object_map[orig_var]
-
-        if expr.var is Nil():
-            body = [AliasAssign(python_res, Py_None()),
-                    FunctionCall(Py_INCREF, [res])]
-            return body
 
         # The type may be BindCFunctionDefResult
         FunctionDefResultType = type(expr)
