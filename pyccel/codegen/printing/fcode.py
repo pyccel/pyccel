@@ -1290,7 +1290,8 @@ class FCodePrinter(CodePrinter):
 
         if array_arg.dtype is NativeComplex():
             test_arg = NumpyReal(array_arg)
-            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1, class_type = NumpyNDArrayType())
+            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1, class_type = NumpyNDArrayType(),
+                      class_base = NumpyArrayClass)
             prec = self.print_kind(idx_variable)
             idx_var_code = self._print(idx_variable)
             self._additional_code += f'{idx_variable} = maxloc({test_arg}, kind = {prec})\n'
