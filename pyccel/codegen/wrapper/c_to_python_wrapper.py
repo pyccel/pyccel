@@ -253,7 +253,7 @@ class CToPythonWrapper(Wrapper):
             func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
+                               results   = FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec)))
 
             if raise_error:
                 message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
@@ -386,7 +386,7 @@ class CToPythonWrapper(Wrapper):
                         "which indicates which function should be called.")
 
         # Build the function
-        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], [FunctionDefResult(type_indicator)],
+        func = FunctionDef(name, [FunctionDefArgument(a) for a in args], FunctionDefResult(type_indicator),
                             body, docstring=docstring, scope=func_scope)
 
         return func, argument_type_flags
@@ -419,7 +419,7 @@ class CToPythonWrapper(Wrapper):
             The new function which raises the error.
         """
         func_args = [FunctionDefArgument(self.get_new_PyObject(n)) for n in ("self", "args", "kwargs")]
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+        func_results = FunctionDefResult(self.get_new_PyObject("result", is_temp=True))
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
                                         LiteralString(error_msg)]),
@@ -664,7 +664,7 @@ class CToPythonWrapper(Wrapper):
 
         interface_func = FunctionDef(func_name,
                                      [FunctionDefArgument(a) for a in func_args],
-                                     [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))],
+                                     FunctionDefResult(self.get_new_PyObject("result", is_temp=True)),
                                      body,
                                      scope=func_scope)
         for a in python_args:
@@ -867,7 +867,7 @@ class CToPythonWrapper(Wrapper):
             cast_func = FunctionDef(name = cast_function,
                                body      = [],
                                arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
+                               results   = FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec)))
         else:
             cast_func = pyarray_to_ndarray
 
