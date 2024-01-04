@@ -1982,22 +1982,6 @@ class FunctionDefResult(TypedAstNode):
     def __str__(self):
         return str(self.var)
 
-    def __len__(self):
-        if isinstance(self.var, PythonTuple):
-            return len(self.var)
-        elif self.var == Nil():
-            return 0
-        else:
-            return 1
-
-    def __getitem__(self, idx):
-        if isinstance(self.var, PythonTuple):
-            return self.var[idx]
-        elif self.var != Nil() and idx == 0:
-                return self.var
-        else:
-            raise StopIteration
-
     def get_flat_variables(self):
         def unpack(var):
             if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
@@ -2123,33 +2107,12 @@ class FunctionCall(TypedAstNode):
         self._funcdef    = func
         self._arguments  = args
         self._func_name  = func.name
-        n_results = len(func.results)
-        if n_results == 1:
-            self._dtype      = func.results[0].dtype
-            self._rank       = func.results[0].rank
-            self._shape      = func.results[0].shape
-            self._precision  = func.results[0].precision
-            self._order      = func.results[0].order
-            self._class_type = func.results[0].class_type
-        elif n_results == 0:
-            self._dtype      = NativeVoid()
-            self._rank       = 0
-            self._shape      = None
-            self._precision  = None
-            self._order      = None
-            self._class_type = NativeVoid()
-        else:
-            dtypes = [r.dtype for r in func.results]
-            if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple()
-            else:
-                dtype = NativeInhomogeneousTuple(*dtypes)
-            self._dtype      = dtype
-            self._rank       = 1
-            self._shape      = (LiteralInteger(n_results),)
-            self._precision  = None
-            self._order      = None
-            self._class_type = dtype
+        self._dtype      = func.results.var.dtype
+        self._rank       = func.results.var.rank
+        self._shape      = func.results.var.shape
+        self._precision  = func.results.var.precision
+        self._order      = func.results.var.order
+        self._class_type = func.results.var.class_type
 
         super().__init__()
 

@@ -25,8 +25,10 @@ from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready
 from pyccel.ast.c_concepts    import ObjectAddress
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger
+from pyccel.ast.datatypes     import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.numpyext      import NumpyNDArrayType
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
@@ -57,6 +59,13 @@ class CToPythonWrapper(Wrapper):
         # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
         super().__init__()
+
+    def insert_symbol_to_scope(self, v):
+        if isinstance(v, Variable):
+            self.scope.insert_symbol(v.name)
+        if isinstance(v, PythonTuple) or isinstance(v.dtype, NativeInhomogeneousTuple):
+            for vi in v:
+                self.insert_symbol_to_scope(vi)
 
     def get_new_PyObject(self, name, is_temp = False):
         """
@@ -188,7 +197,7 @@ class CToPythonWrapper(Wrapper):
         Variable
             The Variable which will hold the result in Python.
         """
-        if isinstance(result, PythonTuple):
+        if isinstance(result, PythonTuple) or isinstance(result.class_type, NativeInhomogeneousTuple):
             tuple_collect_object = self.get_new_PyObject('tuple_obj')
             self._python_object_map[result] = tuple_collect_object
             for r in result:
@@ -441,7 +450,7 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
 
         for v in expr.variables:
-            func_scope.insert_symbol(v.name)
+            self.insert_symbol_to_scope(v)
 
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
@@ -613,7 +622,7 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
-            func_scope.insert_symbol(a.var.name)
+            self.insert_symbol_to_scope(a.var)
 
         # Create necessary arguments
         python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
@@ -702,11 +711,10 @@ class CToPythonWrapper(Wrapper):
 
         # Add the variables to the expected symbols in the scope
         for a in expr.arguments:
-            func_scope.insert_symbol(a.var.name)
+            self.insert_symbol_to_scope(a.var)
         for a in getattr(expr, 'bind_c_arguments', ()):
-            func_scope.insert_symbol(a.original_function_argument_variable.name)
-        for r in expr.results:
-            func_scope.insert_symbol(r.name)
+            self.insert_symbol_to_scope(a.original_function_argument_variable)
+        self.insert_symbol_to_scope(expr.results.var)
 
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
@@ -727,7 +735,9 @@ class CToPythonWrapper(Wrapper):
             func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
+        current_map_status = set(self._python_object_map.keys())
         python_result_variable = self._get_python_result_variables(python_results.var)
+        python_result_keys = set(self._python_object_map.keys()).difference(current_map_status)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
         body += [l for a in python_args for l in self._wrap(a)]
@@ -748,7 +758,7 @@ class CToPythonWrapper(Wrapper):
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
-        c_results = [self.scope.find(self.scope.get_expected_name(r.name), category='variables') for r in original_c_results]
+        c_results = [self.scope.find(self.scope.get_expected_name(r.name), category='variables') for r in original_c_results.get_flat_variables()]
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
 
         # Call the C-compatible function
@@ -780,7 +790,7 @@ class CToPythonWrapper(Wrapper):
         self.exit_scope()
         for a in python_args:
             self._python_object_map.pop(a)
-        for r in python_results:
+        for r in python_result_keys:
             self._python_object_map.pop(r)
 
         func_results = FunctionDefResult(python_result_variable)
@@ -959,7 +969,7 @@ class CToPythonWrapper(Wrapper):
         # Get the object with datatype PyccelPyObject
         python_res = self._python_object_map[orig_var]
 
-        if len(expr) == 0:
+        if expr.var is Nil():
             body = [AliasAssign(python_res, Py_None()),
                     FunctionCall(Py_INCREF, [res])]
             return body
@@ -968,7 +978,7 @@ class CToPythonWrapper(Wrapper):
         FunctionDefResultType = type(expr)
 
         # Create a variable to store the C-compatible result.
-        if isinstance(orig_var, PythonTuple):
+        if isinstance(orig_var, PythonTuple) or isinstance(orig_var.class_type, NativeInhomogeneousTuple):
             results = [FunctionDefResultType(v) for v in expr.var]
             python_result_variables = [self._python_object_map[v] for v in expr.var]
             body = [l for v in results for l in self._wrap(v)]
@@ -976,7 +986,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(python_res, PyBuildValueNode([ObjectAddress(r) for r in python_result_variables])))
 
             return body
-        elif orig_var.is_ndarray:
+        elif isinstance(orig_var.class_type, (NativeHomogeneousTuple, NumpyNDArrayType)):
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True

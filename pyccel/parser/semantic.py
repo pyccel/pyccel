@@ -2999,12 +2999,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self._visit(lhs)
 
-        if not isinstance(lhs, (list, tuple)):
-            lhs = [lhs]
-            if isinstance(d_var,dict):
-                d_var = [d_var]
-
-        if len(lhs) == 1:
+        if isinstance(lhs, (list, tuple)) and len(lhs) == 1:
             lhs = lhs[0]
 
         if isinstance(lhs, Variable):
@@ -3500,16 +3495,17 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        return_objs = self.scope.find(f_name, 'functions').results
+        return_objs = self.scope.find(f_name, 'functions').results.var
+        return_iter = return_objs if isinstance(return_objs, PythonTuple) else [return_objs]
         assigns     = []
-        for v,r in zip(return_objs, results):
+        for v,r in zip(return_iter, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, python_ast=expr.python_ast))
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
 
-        results = self._visit(return_objs.var)
+        results = self._visit(return_objs)
         if isinstance(results, Variable):
             if isinstance(results.dtype, NativeInhomogeneousTuple):
                 results = [r for r in results]
@@ -3659,7 +3655,8 @@ class SemanticParser(BasicParser):
                 namespace_imports = self.scope.imports
                 self.exit_function_scope()
 
-                results_names = [i.name for i in results]
+                result_vars = results.get_flat_variables()
+                results_names = [i.name for i in result_vars]
 
                 # Find all nodes which can modify variables
                 assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
@@ -3680,7 +3677,7 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # Raise an error if one of the return arguments is an alias.
-                for r in results:
+                for r in result_vars:
                     if r.is_alias:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                             symbol=r, severity='error',
