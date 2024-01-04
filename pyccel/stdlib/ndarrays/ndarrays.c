@@ -614,8 +614,8 @@ NUMPY_SUM_(complex128, double complex, cdouble)
         for (int32_t i = 0; i < arr.length; i++) \
         { \
             TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
-            if (cabs(current_value) > cabs(output) || \
-                (cabs(current_value) == cabs(output) && cimag(current_value) > cimag(output))) \
+            if (creal(current_value) > creal(output) || \
+                (creal(current_value) == creal(output) && cimag(current_value) > cimag(output))) \
             { \
                 output = current_value; \
             } \
