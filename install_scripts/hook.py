@@ -13,23 +13,6 @@ class CustomBuildHook(BuildHookInterface):
     A class inheriting from BuildHookInterface which allows code to be run to create artifacts during the build stage
     of the package installation using hatch.
     See <https://hatch.pypa.io/latest/plugins/build-hook/reference> for more details.
-
-    Parameters
-    ----------
-    root : str
-        The root folder for the package being installed.
-    config : dict
-        See hatch documentation.
-    build_config : BuilderConfigBound
-        See hatch documentation.
-    metadata : ProjectMetadata
-        See hatch documentation.
-    directory : str
-        See hatch documentation.
-    target_name : str
-        The name of the target being built.
-    app : Application
-        See hatch documentation.
     """
 
     def initialize(self, version, build_data):
