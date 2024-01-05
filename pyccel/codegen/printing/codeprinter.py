@@ -22,36 +22,35 @@ errors = Errors()
 class CodePrinter:
     """
     The base class for code-printing subclasses.
+
+    The abstract class from which all code-printing subclasses
+    must inherit.
     """
     language = None
     def __init__(self):
         self._scope = None
 
-    def doprint(self, expr, assign_to=None):
+    def doprint(self, expr):
         """
         Print the expression as code.
 
-        expr : Expression
+        Print the expression as code.
+
+        Parameters
+        ----------
+        expr : PyccelAstNode
             The expression to be printed.
 
-        assign_to : PyccelSymbol, MatrixSymbol, or string (optional)
-            If provided, the printed code will set the expression to a
-            variable with name ``assign_to``.
+        Returns
+        -------
+        str
+            The code which should be printed.
         """
-
-        if isinstance(assign_to, str):
-            assign_to = PyccelSymbol(assign_to)
-        elif not isinstance(assign_to, (PyccelAstNode, type(None))):
-            raise TypeError("{0} cannot assign to object of type {1}".format(
-                    type(self).__name__, type(assign_to)))
-
-        if assign_to:
-            expr = Assign(assign_to, expr)
 
         # Do the actual printing
         lines = self._print(expr).splitlines(True)
 
-        # Format the output
+        # Format the output (indenting, wrapping, etc)
         return ''.join(self._format_code(lines))
 
     @property
@@ -89,16 +88,6 @@ class CodePrinter:
                 return obj
         return self._print_not_supported(expr)
 
-    def _get_statement(self, codestring):
-        """Formats a codestring with the proper line ending."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
-
-    def _get_comment(self, text):
-        """Formats a text string as a comment."""
-        raise NotImplementedError("This function must be implemented by "
-                                  "subclass of CodePrinter.")
-
     def _declare_number_const(self, name, value):
         """Declare a numeric constant at the top of a function"""
         raise NotImplementedError("This function must be implemented by "
@@ -122,7 +111,7 @@ class CodePrinter:
     def _print_not_supported(self, expr):
         """ Print an error message if the print function for the type
         is not implemented """
-        msg = '_print_{} is not yet implemented for language : {}\n'.format(type(expr).__name__, self.language)
+        msg = f'_print_{type(expr).__name__} is not yet implemented for language : {self.language}\n'
         errors.report(msg+PYCCEL_RESTRICTION_TODO, symbol = expr,
                 severity='fatal')
 

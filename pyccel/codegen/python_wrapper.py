@@ -7,7 +7,7 @@
 import os
 
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
-from pyccel.codegen.printing.fcode          import fcode
+from pyccel.codegen.printing.fcode          import FCodePrinter
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper   import FortranToCWrapper
 from pyccel.codegen.wrapper.c_to_python_wrapper    import CToPythonWrapper
@@ -103,8 +103,8 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    wrapper_filename_root = '{}_wrapper'.format(module_name)
-    wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_filename_root = f'{module_name}_wrapper'
+    wrapper_filename = f'{wrapper_filename_root}.c'
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
             flags        = wrapper_flags,
@@ -115,8 +115,8 @@ def create_shared_library(codegen,
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
-        bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
-        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
+        bind_c_code = FCodePrinter(bind_c_mod.name).doprint(bind_c_mod)
+        bind_c_filename = f'{bind_c_mod.name}.f90'
 
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)

@@ -188,19 +188,6 @@ def builtin_import(expr):
     return []
 
 #==============================================================================
-def get_function_from_ast(ast, func_name):
-    node = None
-    for stmt in ast:
-        if isinstance(stmt, FunctionDef) and str(stmt.name) == func_name:
-            node = stmt
-            break
-
-    if node is None:
-        print('> could not find {}'.format(func_name))
-
-    return node
-
-#==============================================================================
 def split_positional_keyword_arguments(*args):
     """ Create a list of positional arguments and a dictionary of keyword arguments
     """
@@ -249,22 +236,24 @@ def compatible_operation(*args, language_has_vectors = True):
 #==============================================================================
 def insert_index(expr, pos, index_var):
     """
-    Function to insert an index into an expression at a given position
+    Function to insert an index into an expression at a given position.
+
+    Function to insert an index into an expression at a given position.
 
     Parameters
-    ==========
-    expr        : Ast Node
-                The expression to be modified
-    pos         : int
-                The index at which the expression is modified
-                (If negative then there is no index to insert)
-    index_var   : Variable
-                The variable which will be used for indexing
+    ----------
+    expr : PyccelAstNode
+        The expression to be modified.
+    pos : int
+        The index at which the expression is modified
+        (If negative then there is no index to insert).
+    index_var : Variable
+        The variable which will be used for indexing.
 
     Returns
-    =======
-    expr        : Ast Node
-                Either a modified version of expr or expr itself
+    -------
+    PyccelAstNode
+        Either a modified version of expr or expr itself.
 
     Examples
     --------
@@ -343,7 +332,7 @@ def insert_index(expr, pos, index_var):
         return expr[index_var]
 
     else:
-        raise NotImplementedError("Expansion not implemented for type : {}".format(type(expr)))
+        raise NotImplementedError(f"Expansion not implemented for type : {type(expr)}")
 
 #==============================================================================
 

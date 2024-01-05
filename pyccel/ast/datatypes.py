@@ -464,15 +464,14 @@ def DataTypeFactory(name, argnames=["_name"],
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
             if key not in argnames:
-                raise TypeError("Argument %s not valid for %s"
-                    % (key, self.__class__.__name__))
+                raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
             setattr(self, key, value)
         BaseClass.__init__(self)
 
     if prefix is None:
         prefix = 'Pyccel'
     else:
-        prefix = 'Pyccel{0}'.format(prefix)
+        prefix = f'Pyccel{prefix}'
 
     newclass = type(prefix + name, (BaseClass,),
                     {"__init__": __init__,
@@ -549,4 +548,4 @@ def str_dtype(dtype):
     elif isinstance(dtype, CustomDataType):
         return dtype.name
     else:
-        raise TypeError('Unknown datatype {0}'.format(str(dtype)))
+        raise TypeError(f'Unknown datatype {dtype}')

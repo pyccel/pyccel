@@ -411,7 +411,7 @@ class SyntaxParser(BasicParser):
         elif isinstance(val, complex):
             return LiteralComplex(val.real, val.imag)
         else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
+            raise NotImplementedError(f'Num type {type(val)} not recognised')
 
     def _visit_Assign(self, stmt):
 
@@ -541,7 +541,7 @@ class SyntaxParser(BasicParser):
             return self._visit_Str(stmt)
 
         else:
-            raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
+            raise NotImplementedError(f'Constant type {type(stmt.value)} not recognised')
 
     def _visit_NameConstant(self, stmt):
         if stmt.value is None:
@@ -554,7 +554,7 @@ class SyntaxParser(BasicParser):
             return LiteralFalse()
 
         else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
+            raise NotImplementedError(f"Unknown NameConstant : {stmt.value}")
 
 
     def _visit_Name(self, stmt):
@@ -1115,7 +1115,7 @@ class SyntaxParser(BasicParser):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         else:
-            raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
+            raise NotImplementedError(f' Unknown function type {type(func)}')
 
         return func
 

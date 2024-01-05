@@ -26,8 +26,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
--   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
+-   \[INTERNALS\] Rename `PyccelAstNode.fst` parameter which stores an `ast` object to `PyccelAstNode.python_ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
 -   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
 -   \[INTERNALS\] #1582 : Remove the `HomogeneousTupleVariable` type.
@@ -39,6 +38,9 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
+-   \[INTERNALS\] Remove unused `Declare.dtype` parameter.
+-   \[INTERNALS\] Remove unused parameters `expr`, `status` and `like` from `pyccel.ast.core.Assign`.
+-   \[INTERNALS\] Remove unnecessary functions from `CodePrinter` : `_get_statement`, `_get_comment`.
 
 ## \[1.10.0\] - 2023-10-23
 

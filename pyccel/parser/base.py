@@ -49,11 +49,27 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 
 
 def get_filename_from_import(module,input_folder=''):
-    """Returns a valid filename with absolute path, that corresponds to the
+    """
+    Get a valid filename for the import.
+
+    Get a valid filename with absolute path, that corresponds to the
     definition of module.
     The priority order is:
         - header files (extension == pyh)
-        - python files (extension == py)
+        - python files (extension == py).
+
+    Parameters
+    ----------
+    module : AsName | str
+        The module being imported.
+
+    input_folder : str
+        The folders in which the module might be found.
+
+    Returns
+    -------
+    str
+        The location of the imported file.
     """
 
     if (isinstance(module, AsName)):
@@ -69,8 +85,8 @@ def get_filename_from_import(module,input_folder=''):
     while filename.startswith('/'):
         filename = folder_above + filename[1:]
 
-    filename_pyh = '{}.pyh'.format(filename)
-    filename_py  = '{}.py'.format(filename)
+    filename_pyh = f'{filename}.pyh'
+    filename_py  = f'{filename}.py'
     folders = input_folder.split(""".""")
     for i in range(len(folders)):
         poss_dirname      = os.path.join( *folders[:i+1] )
@@ -88,8 +104,8 @@ def get_filename_from_import(module,input_folder=''):
 
         source = """.""".join(i for i in module.split(""".""")[:-1])
         _module = module.split(""".""")[-1]
-        filename_pyh = '{}.pyh'.format(_module)
-        filename_py = '{}.py'.format(_module)
+        filename_pyh = f'{_module}.pyh'
+        filename_py  = f'{_module}.py'
 
     try:
         package = importlib.import_module(source)
@@ -392,6 +408,8 @@ class BasicParser(object):
 
     def create_new_class_scope(self, name, **kwargs):
         """
+        Create a new scope for a Python class.
+
         Create a new Scope object for a Python class with the given name,
         and attach any decorators' information to the scope. The new scope is
         a child of the current one, and can be accessed from the dictionary of
@@ -406,6 +424,13 @@ class BasicParser(object):
         name : str
             Function's name, used as a key to retrieve the new scope.
 
+        **kwargs : dict
+            A dictionary containing any additional arguments of the new scope.
+
+        Returns
+        -------
+        Scope
+            The scope for the class.
         """
         child = self.scope.new_child_scope(name, **kwargs)
         self._scope = child
@@ -421,11 +446,13 @@ class BasicParser(object):
         """
         Dump the current ast using Pickle.
 
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
+        Dump the current ast using Pickle.
+
+        Parameters
+        ----------
+        filename : str
+            Output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel).
         """
         if self._created_from_pickle:
             return
@@ -440,7 +467,7 @@ class BasicParser(object):
             if ext != '.pyh':
                 return
 
-            name     = '{}.pyccel'.format(name)
+            name     = f'{name}.pyccel'
             filename = os.path.join(path, name)
         # check extension
 
@@ -450,7 +477,7 @@ class BasicParser(object):
         import pickle
         import hashlib
 
-#        print('>>> home = ', os.environ['HOME'])
+        #print('>>> home = ', os.environ['HOME'])
         # ...
 
         # we are only exporting the AST.
@@ -468,13 +495,16 @@ class BasicParser(object):
             warnings.warn("Can't pickle files on a read-only system. Please run `sudo pyccel-init`")
 
     def load(self, filename=None):
-        """ Load the current ast using Pickle.
+        """
+        Load the current ast using Pickle.
 
-          Parameters
-          ----------
-          filename: str
-            output file name. if not given `name.pyccel` will be used and placed
-            in the Pyccel directory ($HOME/.pyccel)
+        Load the current ast using Pickle.
+
+        Parameters
+        ----------
+        filename : str
+            Output file name. if not given `name.pyccel` will be used and placed
+            in the Pyccel directory ($HOME/.pyccel).
         """
 
         # ...
@@ -490,7 +520,7 @@ class BasicParser(object):
             if ext != '.pyh':
                 return
 
-            name     = '{}.pyccel'.format(name)
+            name     = f'{name}.pyccel'
             filename = os.path.join(path, name)
 
         if not filename.split(""".""")[-1] == 'pyccel':

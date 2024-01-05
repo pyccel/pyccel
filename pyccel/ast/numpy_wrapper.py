@@ -49,17 +49,24 @@ __all__ = (
 
 def get_numpy_max_acceptable_version_file():
     """
+    Get the macro specifying the last acceptable numpy version.
+
     Get the macro specifying the last acceptable numpy version. If numpy is more
     recent than this then deprecation warnings are shown.
 
     The last acceptable numpy version is 1.19. If the current version is older
     than this then the last acceptable numpy version is the current version
+
+    Returns
+    -------
+    str
+        The macro code which specifies the last acceptable numpy version.
     """
     numpy_max_acceptable_version = [1, 19]
     numpy_current_version = [int(v) for v in np.version.version.split('.')[:2]]
     numpy_api_acceptable_version = min(numpy_max_acceptable_version, numpy_current_version)
-    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_{}_{}_API_VERSION\n'.format(
-        *numpy_api_acceptable_version)
+    numpy_api_macro = '# define NPY_NO_DEPRECATED_API NPY_' + \
+                      f'{numpy_api_acceptable_version[0]}_{numpy_api_acceptable_version[1]}_API_VERSION\n'
 
     return '#ifndef NPY_NO_DEPRECATED_API\n'+ \
             numpy_api_macro+\
@@ -219,7 +226,22 @@ numpy_type_check_registry = {
 
 # helpers
 def find_in_numpy_dtype_registry(var):
-    """ Find the numpy dtype key for a given variable
+    """
+    Find the NumPy dtype key for a given variable.
+
+    Find the key which identifies the datatype of the variable for
+    NumPy so that the wrapper can map the variable to the NumPy
+    object.
+
+    Parameters
+    ----------
+    var : Variable
+        The variable whose dtype we want to check.
+
+    Returns
+    -------
+    Variable
+        The variable which identifies the NumPy key.
     """
     dtype = str(var.dtype)
     prec  = get_final_precision(var)
@@ -227,7 +249,7 @@ def find_in_numpy_dtype_registry(var):
         return numpy_dtype_registry[(dtype, prec)]
     except KeyError:
         return errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol = "{}[kind = {}]".format(dtype, prec),
+                symbol = f"{dtype}[kind = {prec}]",
                 severity='fatal')
 
 def array_type_check(py_variable, c_variable, raise_error):

@@ -610,13 +610,39 @@ class NumpyNewArray(PyccelInternalFunction):
     #--------------------------------------------------------------------------
     @staticmethod
     def _process_order(rank, order):
+        """
+        Treat the order to ensure that it has the expected format.
+
+        Process the order to ensure that it has the expected format.
+        In other words, ensure that it is None if the rank is less than
+        2. If the rank is 2 or more then ensure that it is one of the
+        valid orderings (C or Fortran).
+
+        Parameters
+        ----------
+        rank : int
+            The rank of the array.
+
+        order : str
+            The order passed during the creation of the array.
+
+        Returns
+        -------
+        str
+            The order in the expected format.
+
+        Raises
+        ------
+        ValueError
+            Raised if the specified order is not recognised.
+        """
 
         if rank < 2:
             return None
 
         order = str(order).strip('\'"')
         if order not in ('C', 'F'):
-            raise ValueError('unrecognized order = {}'.format(order))
+            raise ValueError(f'unrecognized order = {order}')
         return order
 
 #==============================================================================
@@ -648,7 +674,7 @@ class NumpyArray(NumpyNewArray):
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
 
         is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
         is_array = isinstance(arg, Variable) and arg.is_ndarray
@@ -802,7 +828,7 @@ class NumpySum(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.')
         super().__init__(arg)
         if isinstance(arg.dtype, NativeBool):
             self._dtype = NativeInteger()
@@ -835,7 +861,7 @@ class NumpyProduct(PyccelInternalFunction):
 
     def __init__(self, arg):
         if not isinstance(arg, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(arg))
+            raise TypeError(f'Unknown type of {type(arg)}.' )
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
@@ -873,9 +899,9 @@ class NumpyMatmul(PyccelInternalFunction):
             return
 
         if not isinstance(a, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
         if not isinstance(b, TypedAstNode):
-            raise TypeError('Unknown type of  %s.' % type(a))
+            raise TypeError(f'Unknown type of {type(a)}.')
 
         args      = (a, b)
         type_info = NumpyResultType(*args)
