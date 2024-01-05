@@ -33,6 +33,8 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
+from pyccel.ast.class_defs import NumpyArrayClass
+
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
@@ -85,6 +87,7 @@ numpy_ufunc_to_fortran = {
     'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
     'NumpyAmin'  : 'minval',
+    'NumpyMax'  : 'maxval',
     'NumpyAmax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
@@ -1289,13 +1292,8 @@ class FCodePrinter(CodePrinter):
             arg_code = self._print(array_arg)
 
         if array_arg.dtype is NativeComplex():
-            test_arg = NumpyReal(array_arg)
-            idx_variable = self.scope.get_temporary_variable(NativeInteger(), rank = 1, class_type = NumpyNDArrayType(),
-                      class_base = NumpyArrayClass)
-            prec = self.print_kind(idx_variable)
-            idx_var_code = self._print(idx_variable)
-            self._additional_code += f'{idx_variable} = maxloc({test_arg}, kind = {prec})\n'
-            return '{arg}({idx_var_code})'
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'amax({array_arg})'
         else:
             return f'maxval({arg_code})'
 
