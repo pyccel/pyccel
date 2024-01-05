@@ -1788,7 +1788,7 @@ class CCodePrinter(CodePrinter):
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
         parts = [sep,
-                 doc_string,
+                 docstring,
                  self.function_signature(expr),
                 '\n{\n',
                  decs,

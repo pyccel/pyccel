@@ -14,11 +14,11 @@ from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 
-from .builtins  import PythonEnumerate, PythonLen, PythonMap, PythonTuple,
+from .builtins  import PythonEnumerate, PythonLen, PythonMap, PythonTuple
 from .builtins  import PythonRange, PythonZip, PythonBool, Lambda
 
-from .datatypes import (datatype, NativeSymbol, NativeHomogeneousTuple, NativeVoid,
-                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
+from .datatypes import datatype, NativeSymbol, NativeHomogeneousTuple, NativeVoid
+from .datatypes import NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple
 
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
