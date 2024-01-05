@@ -22,7 +22,7 @@ class Line(object):
         self.l._X = 11
         print(self.l._X)
 
-        l.print_x()
+        self.l.print_x()
 
 if __name__ == '__main__':
     x = np.array([0.,0.,0.])

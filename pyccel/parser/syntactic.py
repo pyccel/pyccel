@@ -463,6 +463,7 @@ class SyntaxParser(BasicParser):
             return Assign(annotated_lhs, rhs)
 
     def _visit_arguments(self, stmt):
+        is_class_method = len(self._context) > 2 and isinstance(self._context[-3], ast.ClassDef)
 
         if stmt.vararg or stmt.kwarg:
             errors.report(VARARGS, symbol = stmt,
@@ -488,6 +489,18 @@ class SyntaxParser(BasicParser):
                                             value = self._visit(d))
                 new_arg.set_current_ast(a)
                 arguments.append(new_arg)
+
+        headers = self.scope.find(self._context[-2].name, 'headers') \
+                if isinstance(self._context[-2], ast.FunctionDef) else None
+
+        if is_class_method and not headers:
+            expected_self_arg = arguments[0]
+            if expected_self_arg.annotation is None:
+                class_name = self._context[-3].name
+                annotation = self._treat_type_annotation(class_name, PyccelSymbol(class_name))
+                arguments[0] = FunctionDefArgument(AnnotatedPyccelSymbol(expected_self_arg.name, annotation),
+                                            annotation=annotation,
+                                            value = expected_self_arg.value)
 
         if stmt.kwonlyargs:
             for a,d in zip(stmt.kwonlyargs,stmt.kw_defaults):
@@ -747,7 +760,7 @@ class SyntaxParser(BasicParser):
         is_private   = False
         is_inline    = False
         imports      = []
-        doc_string   = None
+        docstring   = None
 
         decorators = {}
 
@@ -946,8 +959,8 @@ class SyntaxParser(BasicParser):
 
         # Collect docstring
         if len(body) > 0 and isinstance(body[0], CommentBlock):
-            doc_string = body[0]
-            doc_string.header = ''
+            docstring = body[0]
+            docstring.header = ''
             body = body[1:]
 
         body = CodeBlock(body)
@@ -998,7 +1011,7 @@ class SyntaxParser(BasicParser):
                is_private=is_private,
                imports=imports,
                decorators=decorators,
-               doc_string=doc_string,
+               docstring=docstring,
                scope=scope)
 
         return func
@@ -1010,6 +1023,7 @@ class SyntaxParser(BasicParser):
         scope = self.create_new_class_scope(name)
         methods = []
         attributes = []
+        docstring = None
         for i in stmt.body:
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
@@ -1018,6 +1032,8 @@ class SyntaxParser(BasicParser):
                 return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
+            elif isinstance(visited_i, CommentBlock):
+                docstring = visited_i
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
@@ -1026,7 +1042,8 @@ class SyntaxParser(BasicParser):
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,
-                        methods=methods, superclasses=parent, scope=scope)
+                        methods=methods, superclasses=parent, scope=scope,
+                        docstring = docstring)
 
         return expr
 

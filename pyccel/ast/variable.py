@@ -15,7 +15,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex)
+                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -29,7 +29,6 @@ __all__ = (
     'Constant',
     'DottedName',
     'DottedVariable',
-    'HomogeneousTupleVariable',
     'IndexedElement',
     'InhomogeneousTupleVariable',
     'TupleVariable',
@@ -52,6 +51,11 @@ class Variable(TypedAstNode):
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
+
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
 
     rank : int, default: 0
         The number of dimensions for an array.
@@ -112,7 +116,7 @@ class Variable(TypedAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -120,6 +124,7 @@ class Variable(TypedAstNode):
         dtype,
         name,
         *,
+        class_type = None,
         rank=0,
         memory_handling='stack',
         is_const=False,
@@ -211,11 +216,20 @@ class Variable(TypedAstNode):
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
+        if rank > 0 and class_type is None:
+            raise TypeError("Multi-dimensional object requires a container type")
+        elif class_type is None:
+            class_type = dtype
+
+        if class_type is not dtype and cls_base is None:
+            raise TypeError(f"Missing class definition for type {dtype}")
+
         self._alloc_shape = shape
         self._dtype = dtype
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        self._class_type = class_type
         if self._rank < 2:
             self._order = None
 
@@ -578,11 +592,17 @@ class Variable(TypedAstNode):
 
     def __getitem__(self, *args):
 
-        if len(args) == 1 and isinstance(args[0], (tuple, list)):
-            args = args[0]
-
         if self.rank < len(args):
             raise IndexError('Rank mismatch.')
+
+        if len(args) == 1:
+            arg0 = args[0]
+            if isinstance(arg0, (tuple, list)):
+                args = arg0
+            elif isinstance(arg0, int):
+                self_len = self.shape[0]
+                if isinstance(self_len, LiteralInteger) and arg0 >= int(self_len):
+                    raise StopIteration
 
         return IndexedElement(self, *args)
 
@@ -655,72 +675,26 @@ class DottedName(PyccelAstNode):
     def __hash__(self):
         return hash(str(self))
 
-class TupleVariable(Variable):
-
-    """Represents a tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
+class InhomogeneousTupleVariable(Variable):
     """
-    __slots__ = ()
+    Represents an inhomogeneous tuple variable in the code.
 
-    @property
-    def is_ndarray(self):
-        return False
-
-class HomogeneousTupleVariable(TupleVariable):
-
-    """Represents a tuple variable in the code.
+    Represents an inhomogeneous tuple variable in the code.
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
-    """
-    __slots__ = ()
-    is_homogeneous = True
-
-    def shape_can_change(self, i):
-        """
-        Indicates if the shape can change in the i-th dimension
-        """
-        return self.is_alias and i == (self.rank-1)
-
-    def __len__(self):
-        return self.shape[0]
-
-    def __iter__(self):
-        assert isinstance(self.shape[0], LiteralInteger)
-        return (self[i] for i in range(self.shape[0]))
-
-class InhomogeneousTupleVariable(TupleVariable):
-
-    """Represents a tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
+    arg_vars : tuple of Variable
+        The variables contained within the tuple.
+    name : str
+        The name of the variable.
+    *args : tuple
+        See Variable.
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
@@ -735,9 +709,9 @@ class InhomogeneousTupleVariable(TupleVariable):
     _attribute_nodes = ('_vars',)
     is_homogeneous = False
 
-    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
+    def __init__(self, arg_vars, name, *args, class_type, **kwargs):
         self._vars = tuple(arg_vars)
-        super().__init__(dtype, name, *args, **kwargs)
+        super().__init__(class_type, name, *args, **kwargs, class_type = class_type)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -808,6 +782,15 @@ class InhomogeneousTupleVariable(TupleVariable):
         for var in self._vars:
             if var.rank > 0:
                 var.is_target = is_target
+
+    @property
+    def is_ndarray(self):
+        """
+        Helper function to determine whether the variable is a NumPy array.
+
+        Helper function to determine whether the variable is a NumPy array.
+        """
+        return False
 
 class Constant(Variable):
     """
@@ -887,7 +870,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(self, base, *indices):
@@ -945,6 +928,11 @@ class IndexedElement(TypedAstNode):
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
+
+        if self.rank == 0:
+            self._class_type = self.dtype
+        else:
+            self._class_type = base.class_type
 
     @property
     def base(self):

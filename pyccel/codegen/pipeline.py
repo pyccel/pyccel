@@ -167,9 +167,6 @@ def execute_pyccel(fname, *,
     if not (syntax_only or semantic_only):
         os.makedirs(pyccel_dirpath, exist_ok=True)
 
-    # Change working directory to 'folder'
-    os.chdir(folder)
-
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
 
@@ -195,6 +192,9 @@ def execute_pyccel(fname, *,
             return
 
     Scope.name_clash_checker = name_clash_checkers[language]
+
+    # Change working directory to 'folder'
+    os.chdir(folder)
 
     # Parse Python file
     try:
