@@ -33,8 +33,6 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
 
-from pyccel.ast.class_defs import NumpyArrayClass
-
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
 from pyccel.ast.datatypes import iso_c_binding
@@ -60,7 +58,6 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
-from pyccel.ast.numpyext import NumpyNDArrayType
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
@@ -87,8 +84,6 @@ numpy_ufunc_to_fortran = {
     'NumpyFabs'  : 'abs',
     'NumpyMin'  : 'minval',
     'NumpyAmin'  : 'minval',
-    'NumpyMax'  : 'maxval',
-    'NumpyAmax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',

@@ -172,8 +172,8 @@ function amax_00(arr) result(result_0001)
     integer(C_INT64_T)                :: Dummy_0000
 
     result_0001 = arr(0_C_INT64_T)
-    do Dummy_0000 = 0_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T - 1_C_INT64_T, 1_C_INT64_T
-      a = arr(1_C_INT64_T + Dummy_0000)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
       if (Real(a, C_FLOAT) > Real(result_0001, C_FLOAT) .or. (Real(a, C_FLOAT) == &
             Real(result_0001, C_FLOAT) .and. aimag(a) > aimag(result_0001 &
             ))) then
@@ -194,8 +194,8 @@ function amax_00(arr) result(result_0001)
     integer(C_INT64_T)                :: Dummy_0000
 
     result_0001 = arr(0_C_INT64_T)
-    do Dummy_0000 = 0_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T - 1_C_INT64_T, 1_C_INT64_T
-      a = arr(1_C_INT64_T + Dummy_0000)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
       if (Real(a, C_DOUBLE) > Real(result_0001, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
             Real(result_0001, C_DOUBLE) .and. aimag(a) > aimag(result_0001 &
             ))) then

@@ -69,7 +69,6 @@ numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs' : 'fabs',
     'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -1739,9 +1738,9 @@ class CCodePrinter(CodePrinter):
         '''
         Convert a call to numpy.max to the equivalent function in C.
         '''
-        dtype, prec, name = (expr.arg.dtype,
-                             expr.arg.precision,
-                             self._print(expr.arg))
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
         if isinstance(dtype, NativeInteger):
             return f'numpy_amax_int{prec * 8}({name})'
         elif isinstance(dtype, NativeFloat):
