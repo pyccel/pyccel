@@ -281,7 +281,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                             f'(PyCFunction){f.name},',
                                             'METH_VARARGS | METH_KEYWORDS,',
                                             self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                       if f.doc_string else '""',
+                                                       if f.docstring else '""',
                                             '},')) for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
 
         slots_name = self.scope.get_new_name(f'{expr.name}_slots')
