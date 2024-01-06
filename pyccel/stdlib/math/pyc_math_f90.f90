@@ -26,6 +26,11 @@ interface pyc_lcm
     module procedure pyc_lcm_8
 end interface pyc_lcm
 
+interface amin
+    module procedure amin_00
+    module procedure amin_01
+end interface
+
 contains
 
 ! Implementation of math factorial function
@@ -155,5 +160,50 @@ pure function pyc_degrees(rad) result(deg)
     return
 
 end function pyc_degrees
+
+! Implementation of numpy amin function
+function amin_00(arr) result(result_0001)
+
+    implicit none
+
+    complex( C_FLOAT_COMPLEX)                :: result_0001
+    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
+    complex( C_FLOAT_COMPLEX)                :: a
+    integer(C_INT64_T)                :: Dummy_0000
+
+    result_0001 = arr(0_C_INT64_T)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
+      if (Real(a, C_FLOAT) < Real(result_0001, C_FLOAT) .or. (Real(a, C_FLOAT) == &
+            Real(result_0001, C_FLOAT) .and. aimag(a) < aimag(result_0001 &
+            ))) then
+        result_0001 = a
+      end if
+    end do
+    return
+
+  end function amin_00
+
+  function amin_01(arr) result(result_0001)
+
+    implicit none
+
+    complex(C_DOUBLE_COMPLEX)                :: result_0001
+    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
+    complex(C_DOUBLE_COMPLEX)                :: a
+    integer(C_INT64_T)                :: Dummy_0000
+
+    result_0001 = arr(0_C_INT64_T)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
+      if (Real(a, C_DOUBLE) < Real(result_0001, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
+            Real(result_0001, C_DOUBLE) .and. aimag(a) < aimag(result_0001 &
+            ))) then
+        result_0001 = a
+      end if
+    end do
+    return
+
+  end function amin_01
 
 end module pyc_math_f90

@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import rand, randn, randint, uniform
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -2181,15 +2181,6 @@ def test_sum_property(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin
@@ -2199,15 +2190,6 @@ def test_min_int(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_real(language):
     def min_call(x : 'float[:]'):
         from numpy import amin
@@ -2216,6 +2198,28 @@ def test_min_real(language):
     f1 = epyccel(min_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL))
+
+def test_min_complex(language):
+    def min_call(x: 'complex128[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), min_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), min_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), min_call(x))
+
+def test_min_bool(language):
+    def min_call(x: 'bool[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == min_call(x)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),

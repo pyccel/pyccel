@@ -10,6 +10,8 @@
 # include <stdio.h>
 # include <stdbool.h>
 # include <inttypes.h>
+# include <complex.h>
+# include <math.h>
 
 /*
  * Takes an array, and prints its elements the way they are laid out in memory (similar to ravel)
@@ -582,3 +584,38 @@ NUMPY_SUM_(float32, float, float)
 NUMPY_SUM_(float64, double, double)
 NUMPY_SUM_(complex64, float complex, cfloat)
 NUMPY_SUM_(complex128, double complex, cdouble)
+
+#define NUMPY_AMIN_(NAME, TYPE, CTYPE) \
+    TYPE numpy_amin_##NAME(t_ndarray arr) \
+    { \
+        int64_t nd_indices[arr.nd]; \
+        memset(nd_indices, 0, sizeof(int64_t) * arr.nd); \
+        TYPE output = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+        for (int32_t i = 0; i < arr.length; i++) \
+        { \
+            TYPE current_value = arr.nd_##CTYPE[get_index_from_array(arr, nd_indices)]; \
+            if (creal(current_value) < creal(output) || \
+                (creal(current_value) == creal(output) && cimag(current_value) < cimag(output))) \
+            { \
+                output = current_value; \
+            } \
+            nd_indices[0]++; \
+            for (int32_t j = 0; j < arr.nd - 1; j++) \
+                if (nd_indices[j] == arr.shape[j]) \
+                { \
+                    nd_indices[j] = 0; \
+                    nd_indices[j + 1]++; \
+                } \
+        } \
+        return output; \
+    }
+
+NUMPY_AMIN_(bool, int64_t, bool)
+NUMPY_AMIN_(int8, int64_t, int8)
+NUMPY_AMIN_(int16, int64_t, int16)
+NUMPY_AMIN_(int32, int64_t, int32)
+NUMPY_AMIN_(int64, int64_t, int64)
+NUMPY_AMIN_(float32, float, float)
+NUMPY_AMIN_(float64, double, double)
+NUMPY_AMIN_(complex64, float complex, cfloat)
+NUMPY_AMIN_(complex128, double complex, cdouble)
