@@ -1733,7 +1733,6 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, NativeBool):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
-    
     def _print_NumpyAmin(self, expr):
         '''
         Convert a call to numpy.min to the equivalent function in C.
