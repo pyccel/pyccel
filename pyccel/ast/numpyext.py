@@ -1945,7 +1945,9 @@ class NumpyMod(NumpyUfuncBinary):
 class NumpyAmin(PyccelInternalFunction):
     """
     Represents a call to  numpy.min for code generation.
+
     Represents a custom class for handling minimum operations.
+
     Parameters
     ----------
     arg : array_like
@@ -1966,6 +1968,7 @@ class NumpyAmin(PyccelInternalFunction):
     def arg(self):
         """
         Get the argument to the min function.
+        
         This method retrieves the argument used in the min function.
         """
         return self._args[0]
