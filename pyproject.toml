@@ -44,8 +44,6 @@ Homepage = "https://github.com/pyccel/pyccel"
 [tool.hatch.version]
 path = "pyccel/version.py"
 
-[tool.hatch.build.targets.sdist]
-
 [tool.hatch.build.targets.wheel]
 artifacts = [
   "*.pyccel",
