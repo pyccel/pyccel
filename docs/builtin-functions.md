@@ -47,7 +47,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | **`map`** | as a loop iterable |
 | **`max`** | Fortran-only |
 | `memoryview` | No |
-| **`min`** | Yes |
+| **`min`** | Fortran-only |
 | `next` | No |
 | `object` | No |
 | `oct` | No |
