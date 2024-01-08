@@ -120,7 +120,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        collect_args = [self.get_new_PyObject(a.var.name+'_obj', a.var.dtype) for a in args]
+        collect_args = [self.get_new_PyObject(getattr(a, 'original_function_argument_variable', a.var).name+'_obj', a.var.dtype) for a in args]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
@@ -752,12 +752,12 @@ class CToPythonWrapper(Wrapper):
         # Get the names of the arguments which should be used to call the C-compatible function
         func_call_arg_names = []
         for a in original_c_args:
+            orig_var = getattr(a, 'original_function_argument_variable', a.var)
             if isinstance(a, BindCFunctionDefArgument):
-                orig_var = a.original_function_argument_variable
                 if orig_var.is_optional and not orig_var.is_ndarray:
                     func_call_arg_names.append(orig_var.name)
                     continue
-            func_call_arg_names.append(a.var.name)
+            func_call_arg_names.append(orig_var.name)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
