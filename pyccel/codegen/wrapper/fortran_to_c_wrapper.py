@@ -16,7 +16,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.core import AsName, Module, AliasAssign
-from pyccel.ast.datatypes import NativeNumeric
+from pyccel.ast.datatypes import NativeNumeric, CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
@@ -315,7 +315,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
-        if var.is_ndarray or var.is_optional:
+        if var.is_ndarray or var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
             arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
@@ -367,7 +367,7 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         local_var = var.clone(scope.get_expected_name(name))
 
-        if local_var.rank:
+        if local_var.rank or isinstance(local_var.dtype, CustomDataType):
             # Allocatable is not returned so it must appear in local scope
             scope.insert_variable(local_var, name)
 
