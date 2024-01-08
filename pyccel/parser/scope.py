@@ -350,7 +350,7 @@ class Scope(object):
         else:
             raise RuntimeError("Variable not found in scope")
 
-    def insert_class(self, cls):
+    def insert_class(self, cls, name = None):
         """
         Add a class to the current scope.
 
@@ -361,11 +361,16 @@ class Scope(object):
         ----------
         cls : ClassDef
             The class to be inserted into the current scope.
+
+        name : str, optional
+            The name under which the classes should be indexed in the scope.
+            This defaults to the name of the class.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
 
-        name = cls.name
+        if name is None:
+            name = cls.name
 
         if self.is_loop:
             self.parent_scope.insert_class(cls)
