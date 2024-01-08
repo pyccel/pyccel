@@ -562,7 +562,7 @@ class BindCClassDef(ClassDef):
 
     def __init__(self, original_class, **kwargs):
         self._original_class = original_class
-        super().__init__(original_class.name, **kwargs)
+        super().__init__(original_class.name, scope = original_class.scope, **kwargs)
 
 # =======================================================================================
 #                                   Utility functions

@@ -10,6 +10,7 @@ All notable changes to this project will be documented in this file.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   #1494 : Add support for functions returning class instances.
 
 ### Fixed
 
@@ -23,6 +24,7 @@ All notable changes to this project will be documented in this file.
 -   #1614 : Allow relative paths for custom compilation file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 -   #1628 : Fixed segmentation fault when writing to optional scalars.
+-   #1554 : Fix exit statement in Fortran with Intel compiler.
 -   #1564 : Fixed installation problems on Python 3.12.
 -   #1259 : Fix bug causing problems with user editable installation.
 
