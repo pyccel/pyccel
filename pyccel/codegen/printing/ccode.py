@@ -1828,7 +1828,8 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            a = a.value if a else Nil()
+            a = a.value
+            a = a if a else Nil()
             f = f.var
             if self.is_c_pointer(f):
                 if isinstance(a, Variable):
