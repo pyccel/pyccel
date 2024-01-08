@@ -434,7 +434,7 @@ class Bot:
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
                                                     and f != 'pyccel/version.py') or f == 'pyproject.toml'
-                                                    or f == 'MANIFEST.in' or f.startswith('install_scripts/')
+                                                    or f.startswith('install_scripts/')
                                                     for f in diff)
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
