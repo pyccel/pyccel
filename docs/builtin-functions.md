@@ -45,7 +45,7 @@ Python contains a limited number of builtin functions defined [here](https://doc
 | *`list`* | implemented as a tuple |
 | `locals` | No |
 | **`map`** | as a loop iterable |
-| **`max`** | Yes |
+| **`max`** | Fortran-only |
 | `memoryview` | No |
 | **`min`** | Fortran-only |
 | `next` | No |
