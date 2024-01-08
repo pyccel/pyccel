@@ -64,7 +64,7 @@ class PointerCast(TypedAstNode):
     A class which represents the casting of one pointer to another.
 
     A class which represents the casting of one pointer to another in C code.
-    This is useful for storing addresses in a void pointer or for storing.
+    This is useful for storing addresses in a void pointer.
     Using this class is not strictly necessary to produce correct C code,
     but avoids compiler warnings about the implicit conversion of pointers.
 
