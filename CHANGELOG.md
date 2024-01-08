@@ -25,6 +25,7 @@ All notable changes to this project will be documented in this file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 -   #1628 : Fixed segmentation fault when writing to optional scalars.
 -   #1554 : Fix exit statement in Fortran with Intel compiler.
+-   #1651 : Fix name collision resolution to include parent scopes.
 
 ### Changed
 
