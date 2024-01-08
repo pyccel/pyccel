@@ -819,7 +819,7 @@ def test_classes( test_file , language):
         pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Issue #1156"),
+            pytest.mark.xfail(reason="Issue #1651"),
             pytest.mark.fortran])
     )
 )
