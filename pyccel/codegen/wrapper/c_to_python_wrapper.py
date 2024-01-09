@@ -753,13 +753,12 @@ class CToPythonWrapper(Wrapper):
         # Get the names of the arguments which should be used to call the C-compatible function
         func_call_arg_names = []
         for a in original_c_args:
-            orig_var = getattr(a, 'original_function_argument_variable', a.var)
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
                 if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
                     func_call_arg_names.append(orig_var.name)
                     continue
-            func_call_arg_names.append(orig_var.name)
+            func_call_arg_names.append(a.var.name)
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(n, category='variables') for n in func_call_arg_names]
@@ -870,10 +869,10 @@ class CToPythonWrapper(Wrapper):
         if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = orig_var.is_ndarray
+            self.scope.insert_variable(arg_var, orig_var.name)
         else:
             arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
-
-        self.scope.insert_variable(arg_var, orig_var.name)
+            self.scope.insert_variable(arg_var, expr.var.name)
 
         body = []
 
