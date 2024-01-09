@@ -964,6 +964,7 @@ def test_assert(language, test_file):
                                         "scripts/exits/positive_exit2.py",
                                         "scripts/exits/positive_exit3.py",
                                         "scripts/exits/zero_exit.py",
+                                        "scripts/exits/error_message_exit.py",
                                         ] )
 
 def test_exit(language, test_file):

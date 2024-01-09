@@ -23,6 +23,6 @@ def get_x_from_B(b_obj : 'B'):
 
 def get_an_x_from_B(b_obj : 'B' = None):
     if b_obj is not None:
-        return -2.0
+        return b_obj.x
     else:
-        return 5.0#b_obj.x
+        return 5.0

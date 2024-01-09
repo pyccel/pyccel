@@ -93,7 +93,7 @@ class CToPythonWrapper(Wrapper):
                                 cls_base = self.scope.find(dtype.name, 'classes'),
                                 is_temp=is_temp)
             except KeyError as e:
-                raise NotImplementedError("Can't return an object whose type was imported") from e
+                raise NotImplementedError("Can't return an object whose type was imported. See #1650") from e
         else:
             var = Variable(dtype=PyccelPyObject(),
                             name=self.scope.get_new_name(name),
@@ -120,7 +120,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        collect_args = [self.get_new_PyObject(a.var.name+'_obj') for a in args]
+        collect_args = [self.get_new_PyObject(a.var.name+'_obj', a.var.dtype) for a in args]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
