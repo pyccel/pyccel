@@ -3125,8 +3125,8 @@ class SemanticParser(BasicParser):
             if isinstance(iterable.iterable, PythonEnumerate):
                 syntactic_index = iterator[0]
             else:
-                iterator = self.scope.get_expected_name(iterator)
                 syntactic_index = iterator
+
             index = self.check_for_variable(syntactic_index)
             if index is None:
                 index = self._assign_lhs_variable(syntactic_index, iterator_d_var,
