@@ -121,7 +121,7 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        collect_args = [self.get_new_PyObject(getattr(a, 'original_function_argument_variable', a.var).name+'_obj', a.var.dtype) for a in args]
+        collect_args = [self.get_new_PyObject(getattr(a, 'original_function_argument_variable', a.var).name+'_obj') for a in args]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
