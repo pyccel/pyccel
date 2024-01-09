@@ -1012,7 +1012,7 @@ class CToPythonWrapper(Wrapper):
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
         else:
             c_res = orig_var.clone(name, is_argument = False)
-        self.scope.insert_variable(c_res, name)
+        self.scope.insert_variable(c_res, orig_var.name)
 
         # Cast from C to Python
         if not isinstance(orig_var.dtype, CustomDataType):
