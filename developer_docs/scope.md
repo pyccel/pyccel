@@ -21,7 +21,7 @@ The `Scope` object keeps track of all names used in the described scope. This me
     -   `get_new_name` : Get a new name with no collisions. A name can be requested and will be used if available
     -   `get_new_incremented_symbol` : Get a new name with no collisions following a pattern. This function keeps track of the index appended to the incremented string so it is most useful when creating multiple names with the same prefix
 
-3.  All newly created variables must be inserted into the scope using the `insert_variable` function. In order to be able to locate the variable later the second argument of the `insert_variable` function (the name of the variable in the python code) should be provided.
+3.  All newly created variables must be inserted into the scope using the `insert_variable` function. In order to be able to locate the variable later the second argument of the `insert_variable` function (the name of the variable in the Python code) should be provided.
 
 Temporary variables can also be created using the `get_temporary_variable` function. In this case it is not necessary to use the `insert_variable` function.
 
