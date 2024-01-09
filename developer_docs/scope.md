@@ -25,7 +25,7 @@ The `Scope` object keeps track of all names used in the described scope. This me
 
 Temporary variables can also be created using the `get_temporary_variable` function. In this case it is not necessary to use the `insert_variable` function.
 
-## Locating objects in the scope.
+## Locating objects in the scope
 
 The `find` function allows objects to be collected from the scope after they have been inserted. The function uses the `PyccelSymbol` (originating in the syntactic stage and therefore matching the Python name of the object) to locate the associated variable/class/etc (originating in the semantic stage and therefore matching the new name of the object). This difference in naming is why it is important to provide the Python name to the `insert_variable` function. The find function can be accelerated a little by only looking in the category of object that we are expecting (e.g. variables not classes).
 
