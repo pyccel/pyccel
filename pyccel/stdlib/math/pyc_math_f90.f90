@@ -26,6 +26,11 @@ interface pyc_lcm
     module procedure pyc_lcm_8
 end interface pyc_lcm
 
+interface amax
+    module procedure amax_00
+    module procedure amax_01
+end interface
+
 interface amin
     module procedure amin_00
     module procedure amin_01
@@ -161,6 +166,51 @@ pure function pyc_degrees(rad) result(deg)
 
 end function pyc_degrees
 
+! Implementation of numpy amax function
+function amax_00(arr) result(result_0001)
+
+    implicit none
+
+    complex( C_FLOAT_COMPLEX)                :: result_0001
+    complex( C_FLOAT_COMPLEX), intent(in)    :: arr(0:)
+    complex( C_FLOAT_COMPLEX)                :: a
+    integer(C_INT64_T)                :: Dummy_0000
+
+    result_0001 = arr(0_C_INT64_T)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
+      if (Real(a, C_FLOAT) > Real(result_0001, C_FLOAT) .or. (Real(a, C_FLOAT) == &
+            Real(result_0001, C_FLOAT) .and. aimag(a) > aimag(result_0001 &
+            ))) then
+        result_0001 = a
+      end if
+    end do
+    return
+
+  end function amax_00
+  
+  function amax_01(arr) result(result_0001)
+
+    implicit none
+
+    complex(C_DOUBLE_COMPLEX)                :: result_0001
+    complex(C_DOUBLE_COMPLEX), intent(in)    :: arr(0:)
+    complex(C_DOUBLE_COMPLEX)                :: a
+    integer(C_INT64_T)                :: Dummy_0000
+
+    result_0001 = arr(0_C_INT64_T)
+    do Dummy_0000 = 1_C_INT64_T, size(arr, kind=C_INT64_T) - 1_C_INT64_T
+      a = arr(Dummy_0000)
+      if (Real(a, C_DOUBLE) > Real(result_0001, C_DOUBLE) .or. (Real(a, C_DOUBLE) == &
+            Real(result_0001, C_DOUBLE) .and. aimag(a) > aimag(result_0001 &
+            ))) then
+        result_0001 = a
+      end if
+    end do
+    return
+
+  end function amax_01
+  
 ! Implementation of numpy amin function
 function amin_00(arr) result(result_0001)
 
