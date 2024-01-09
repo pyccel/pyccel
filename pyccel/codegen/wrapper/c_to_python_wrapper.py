@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable
+from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -751,14 +751,23 @@ class CToPythonWrapper(Wrapper):
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
-                if orig_var.is_optional and not orig_var.is_ndarray:
+                if not orig_var.is_ndarray:
                     func_call_arg_names.append(orig_var.name)
                     continue
             func_call_arg_names.append(a.var.name)
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
-        c_result_names = [self.scope.get_expected_name(r.var.name) for r in original_c_results]
+        func_call_args = [self.scope.find(n, category='variables') for n in func_call_arg_names]
+
+        # Get the names of the results collected from the C-compatible function
+        c_result_names = []
+        for r in original_c_results:
+            if isinstance(r, BindCFunctionDefResult):
+                orig_var = r.original_function_result_variable
+                if not orig_var.is_ndarray:
+                    c_result_names.append(orig_var.name)
+                    continue
+            c_result_names.append(r.var.name)
         c_results = [self.scope.find(n, category='variables') for n in c_result_names]
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
             if isinstance(r, DottedVariable):
@@ -782,7 +791,7 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            v = self.scope.find(orig_var.name, category='variables')
             if v.is_ndarray:
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -857,9 +866,9 @@ class CToPythonWrapper(Wrapper):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
         else:
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
 
-        self.scope.insert_variable(arg_var)
+        self.scope.insert_variable(arg_var, orig_var.name)
 
         body = []
 
@@ -947,7 +956,7 @@ class CToPythonWrapper(Wrapper):
                 self.scope.insert_variable(v,s.name)
 
             # Get the C-compatible variable created in self._wrap_FunctionDefArgument
-            c_arg = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            c_arg = self.scope.find(orig_var.name, category='variables')
 
             # Unpack the C-compatible variable
             body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
@@ -1069,7 +1078,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(c_res, expr.var.name)
         else:
             c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
-            self.scope.insert_variable(c_res)
+            self.scope.insert_variable(c_res, orig_var.name)
 
         if not isinstance(orig_var.dtype, CustomDataType):
             body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
