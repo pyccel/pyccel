@@ -1670,26 +1670,28 @@ class FCodePrinter(CodePrinter):
         var_code = self._print(expr.variable)
         size_code = ', '.join(self._print(i) for i in shape)
         shape_code = ', '.join('0:' + self._print(PyccelMinus(i, LiteralInteger(1), simplify = True)) for i in shape)
+        if shape:
+            shape_code = f'({shape_code})'
         code = ''
 
         if expr.status == 'unallocated':
-            code += 'allocate({0}({1}))\n'.format(var_code, shape_code)
+            code += f'allocate({var_code}{shape_code})\n'
 
         elif expr.status == 'unknown':
-            code += 'if (allocated({})) then\n'.format(var_code)
-            code += '  if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
-            code += '    deallocate({})\n'     .format(var_code)
-            code += '    allocate({0}({1}))\n'.format(var_code, shape_code)
-            code += '  end if\n'
-            code += 'else\n'
-            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
-            code += 'end if\n'
+            code += f'if (allocated({var_code})) then\n'
+            code += f'  if (any(size({var_code}) /= [{size_code}])) then\n'
+            code += f'    deallocate({var_code})\n'
+            code += f'    allocate({var_code}{shape_code})\n'
+            code +=  '  end if\n'
+            code +=  'else\n'
+            code += f'  allocate({var_code}{shape_code})\n'
+            code +=  'end if\n'
 
         elif expr.status == 'allocated':
-            code += 'if (any(size({}) /= [{}])) then\n'.format(var_code, size_code)
-            code += '  deallocate({})\n'     .format(var_code)
-            code += '  allocate({0}({1}))\n'.format(var_code, shape_code)
-            code += 'end if\n'
+            code += f'if (any(size({var_code}) /= [{size_code}])) then\n'
+            code += f'  deallocate({var_code})\n'
+            code += f'  allocate({var_code}{shape_code})\n'
+            code +=  'end if\n'
 
         return code
 
@@ -2630,15 +2632,17 @@ class FCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if expr.status.dtype is not NativeInteger() or expr.status.rank > 0:
-            print_arg = FunctionCallArgument(expr.status)
+        exit_code = expr.status
+        if isinstance(exit_code, LiteralInteger):
+            arg = exit_code.python_value
+        elif exit_code.dtype is not NativeInteger() or exit_code.rank > 0:
+            print_arg = FunctionCallArgument(exit_code)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            arg = expr.status
-            if arg.precision != 4:
-                arg = NumpyInt32(arg)
-            arg = self._print(arg)
+            if exit_code.precision != 4:
+                exit_code = NumpyInt32(exit_code)
+            arg = self._print(exit_code)
         return f'{code}stop {arg}\n'
 
     def _print_NumpyUfuncBase(self, expr):
