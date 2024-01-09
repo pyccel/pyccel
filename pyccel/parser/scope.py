@@ -222,7 +222,7 @@ class Scope(object):
         Parameters
         ----------
         name : str
-            The name of the object we are searching for.
+            The Python name of the object we are searching for.
         category : str, optional
             The type of object we are searching for.
             This must be one of the strings in Scope.categories.
