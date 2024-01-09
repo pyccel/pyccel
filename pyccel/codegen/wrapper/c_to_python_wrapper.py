@@ -91,7 +91,7 @@ class CToPythonWrapper(Wrapper):
                 var = Variable(dtype=self._python_object_map[dtype],
                                 name=self.scope.get_new_name(name),
                                 memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes'),
+                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
                                 is_temp=is_temp)
             except KeyError as e:
                 raise NotImplementedError("Can't return an object whose type was imported. See #1650") from e
@@ -240,7 +240,7 @@ class CToPythonWrapper(Wrapper):
         error_code = ()
         dtype = arg.dtype
         if isinstance(dtype, CustomDataType):
-            python_cls_base = self.scope.find(dtype.name, 'classes')
+            python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             func_call = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
         elif rank == 0:
             prec  = arg.precision
@@ -755,13 +755,13 @@ class CToPythonWrapper(Wrapper):
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
-                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
+                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric and not orig_var.is_optional:
                     func_call_arg_names.append(orig_var.name)
                     continue
             func_call_arg_names.append(a.var.name)
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n, category='variables') for n in func_call_arg_names]
+        func_call_args = [self.scope.find(n, category='variables', raise_if_missing = True) for n in func_call_arg_names]
 
         # Get the names of the results collected from the C-compatible function
         c_result_names = []
@@ -772,7 +772,7 @@ class CToPythonWrapper(Wrapper):
                     c_result_names.append(orig_var.name)
                     continue
             c_result_names.append(r.var.name)
-        c_results = [self.scope.find(n, category='variables') for n in c_result_names]
+        c_results = [self.scope.find(n, category='variables', raise_if_missing = True) for n in c_result_names]
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
             if isinstance(r, DottedVariable):
                 self.scope.remove_variable(r, name=n)
@@ -795,8 +795,8 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            v = self.scope.find(orig_var.name, category='variables')
-            if v.is_ndarray:
+            if orig_var.is_ndarray:
+                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
@@ -887,13 +887,13 @@ class CToPythonWrapper(Wrapper):
         # Collect the function which casts from a Python object to a C object
         dtype = arg_var.dtype
         if isinstance(dtype, CustomDataType):
-            python_cls_base = self.scope.find(dtype.name, 'classes')
+            python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             scope = python_cls_base.scope
-            attribute = scope.find('instance', 'variables')
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
             cast_type = Variable(dtype=self._python_object_map[dtype],
                                 name=self.scope.get_new_name(collect_arg.name),
                                 memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes'))
+                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
             self.scope.insert_variable(cast_type)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
             cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type)),
@@ -973,7 +973,7 @@ class CToPythonWrapper(Wrapper):
                 self.scope.insert_variable(v,s.name)
 
             # Get the C-compatible variable created in self._wrap_FunctionDefArgument
-            c_arg = self.scope.find(orig_var.name, category='variables')
+            c_arg = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
 
             # Unpack the C-compatible variable
             body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
@@ -1025,7 +1025,7 @@ class CToPythonWrapper(Wrapper):
             self._wrapping_arrays = True
         elif isinstance(orig_var.dtype, CustomDataType):
             scope = python_res.cls_base.scope
-            attribute = scope.find('instance', 'variables')
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
         else:
             c_res = orig_var.clone(name, is_argument = False)
@@ -1104,7 +1104,7 @@ class CToPythonWrapper(Wrapper):
             body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
         else:
             scope = python_res.cls_base.scope
-            attribute = scope.find('instance', 'variables')
+            attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
             body.append(AliasAssign(attrib_var, c_res))
 
