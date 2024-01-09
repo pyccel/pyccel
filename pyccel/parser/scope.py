@@ -211,13 +211,14 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find(self, name, category = None, local_only = False):
+    def find(self, name, category = None, local_only = False, raise_if_missing = False):
         """
         Find and return the specified object in the scope.
 
         Find a specified object in the scope and return it.
         The object is identified by a string contianing its name.
-        If the object cannot be found then None is returned.
+        If the object cannot be found then None is returned unless
+        an error is requested.
 
         Parameters
         ----------
@@ -231,6 +232,9 @@ class Scope(object):
             Indicates whether we should look for variables in the
             entire scope or whether we should limit ourselves to the
             local scope.
+        raise_if_missing : bool, default=False
+            Indicates whether an error should be raised if the object
+            cannot be found.
 
         Returns
         -------
@@ -246,7 +250,9 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope and (self.is_loop or not local_only):
-            return self.parent_scope.find(name, category, local_only)
+            return self.parent_scope.find(name, category, local_only, raise_if_missing)
+        elif raise_if_missing:
+            raise RuntimeError(f"Can't find expected object {name} in scope")
         else:
             return None
 
