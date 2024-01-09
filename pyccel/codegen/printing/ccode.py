@@ -37,7 +37,7 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
+from pyccel.ast.numpyext import NumpyFull, NumpyArray, NumpyMatmul
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
@@ -1746,6 +1746,11 @@ class CCodePrinter(CodePrinter):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
 
+    def _print_NumpyMatmul(self, expr, lhs):
+        if all(x.dtype == NativeFloat() for x in expr.args) and all(len(x.shape) == 2 for x in expr.args):
+            a, b = expr.args
+            return f'cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,{a.shape[0]}, {b.shape[1]}, {a.shape[1]}, 1.0f, {self._print(a)}.nd_float, {a.shape[1]}, {self._print(b)}.nd_float, {b.shape[1]}, 0.0f, {self._print(lhs)}.nd_float, {b.shape[1]});\n'
+
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
@@ -2015,6 +2020,8 @@ class CCodePrinter(CodePrinter):
             return prefix_code+self.copy_NumpyArray_Data(expr)
         if isinstance(rhs, (NumpyFull)):
             return prefix_code+self.arrayFill(expr)
+        if isinstance(rhs, (NumpyMatmul)):
+            return prefix_code+self._print_NumpyMatmul(rhs, lhs)
         lhs = self._print(expr.lhs)
         rhs = self._print(expr.rhs)
         return prefix_code+'{} = {};\n'.format(lhs, rhs)

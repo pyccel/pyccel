@@ -9,6 +9,7 @@
 # include <complex.h>
 # include <stdbool.h>
 # include <stdint.h>
+# include <cblas.h>
 
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
