@@ -750,18 +750,8 @@ class CToPythonWrapper(Wrapper):
         # This function creates variables so it must be called before extracting them from the scope.
         result_wrap = [l for r in python_results for l in self._wrap(r)]
 
-        # Get the names of the arguments which should be used to call the C-compatible function
-        func_call_arg_names = []
-        for a in original_c_args:
-            if isinstance(a, BindCFunctionDefArgument):
-                orig_var = a.original_function_argument_variable
-                if orig_var.is_ndarray:
-                    func_call_arg_names.append(orig_var.name)
-                    continue
-            func_call_arg_names.append(a.var.name)
-
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(n, category='variables', raise_if_missing = True) for n in func_call_arg_names]
+        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
 
         # Get the names of the results collected from the C-compatible function
         c_result_names = []
@@ -903,7 +893,7 @@ class CToPythonWrapper(Wrapper):
             cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type)),
                     AliasAssign(arg_var, PointerCast(c_res, arg_var))]
         elif arg_var.rank == 0:
-            prec  = get_final_precision(arg_var)
+            prec  = get_final_precision(orig_var)
             try :
                 cast_function = py_to_c_registry[(dtype, prec)]
             except KeyError:
