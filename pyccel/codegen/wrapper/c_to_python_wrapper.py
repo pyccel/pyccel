@@ -25,6 +25,7 @@ from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
+from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
@@ -751,7 +752,7 @@ class CToPythonWrapper(Wrapper):
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
-                if not orig_var.is_ndarray:
+                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
                     func_call_arg_names.append(orig_var.name)
                     continue
             func_call_arg_names.append(a.var.name)
@@ -764,7 +765,7 @@ class CToPythonWrapper(Wrapper):
         for r in original_c_results:
             if isinstance(r, BindCFunctionDefResult):
                 orig_var = r.original_function_result_variable
-                if not orig_var.is_ndarray:
+                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
                     c_result_names.append(orig_var.name)
                     continue
             c_result_names.append(r.var.name)
