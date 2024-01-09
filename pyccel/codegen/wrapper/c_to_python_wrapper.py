@@ -942,14 +942,15 @@ class CToPythonWrapper(Wrapper):
         orig_var = expr.original_function_argument_variable
 
         if orig_var.rank:
+            bound_var_name = expr.var.name
             # Create variable to hold raw data pointer
-            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
+            arg_var = expr.var.clone(self.scope.get_expected_name(bound_var_name), is_argument = False)
             # Create variables for the shapes and strides
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
 
             # Add variables to scope
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, bound_var_name)
             for v,s in zip(shape_vars, expr.shape):
                 self.scope.insert_variable(v,s.name)
             for v,s in zip(stride_vars, expr.strides):
@@ -1057,28 +1058,31 @@ class CToPythonWrapper(Wrapper):
 
         body = []
 
+        orig_var_name = orig_var.name
+        var_name = expr.var.name
+
         if orig_var.rank:
             # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
             # Result of calling the bind-c function
-            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
+            arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             # Save so we can find by iterating over func.results
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, var_name)
             for v,s in zip(shape_vars, expr.shape):
                 self.scope.insert_variable(v,s.name)
             # Save so we can find by iterating over func.bind_c_results
-            self.scope.insert_variable(c_res, orig_var.name)
+            self.scope.insert_variable(c_res, orig_var_name)
 
             body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
-            c_res = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
-            self.scope.insert_variable(c_res, expr.var.name)
+            c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
+            self.scope.insert_variable(c_res, var_name)
         else:
-            c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
-            self.scope.insert_variable(c_res, orig_var.name)
+            c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False)
+            self.scope.insert_variable(c_res, orig_var_name)
 
         if not isinstance(orig_var.dtype, CustomDataType):
             body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
