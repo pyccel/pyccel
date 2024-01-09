@@ -390,7 +390,7 @@ class FortranToCWrapper(Wrapper):
             # Define the additional steps necessary to define and fill ptr_var
             alloc = Allocate(ptr_var, shape=result.shape,
                              order=var.order, status='unallocated')
-            copy = Assign(ptr_var, var)
+            copy = Assign(ptr_var, local_var)
             c_loc = CLocFunc(ptr_var, bind_var)
             self._additional_exprs.extend([alloc, copy, c_loc])
 
