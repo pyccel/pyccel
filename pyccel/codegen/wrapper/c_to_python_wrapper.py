@@ -755,7 +755,7 @@ class CToPythonWrapper(Wrapper):
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
-                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric and not orig_var.is_optional:
+                if orig_var.is_ndarray:
                     func_call_arg_names.append(orig_var.name)
                     continue
             func_call_arg_names.append(a.var.name)
@@ -866,12 +866,16 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
 
-        if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
+        if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
-            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
+            kwargs = {'is_argument':False}
+            if isinstance(orig_var.dtype, CustomDataType):
+                kwargs['memory_handling']='alias'
+
+            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), **kwargs)
             self.scope.insert_variable(arg_var, expr.var.name)
 
         body = []
@@ -897,7 +901,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(cast_type)
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
             cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type)),
-                    AliasAssign(arg_var, PointerCast(c_res, orig_var))]
+                    AliasAssign(arg_var, PointerCast(c_res, arg_var))]
         elif arg_var.rank == 0:
             prec  = get_final_precision(arg_var)
             try :
