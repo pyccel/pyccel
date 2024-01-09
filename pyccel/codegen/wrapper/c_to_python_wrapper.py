@@ -864,6 +864,8 @@ class CToPythonWrapper(Wrapper):
             kwargs = {'is_argument':False}
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
+                if isinstance(expr, BindCFunctionDefArgument):
+                    kwargs['dtype'] = NativeVoid()
 
             arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), **kwargs)
             self.scope.insert_variable(arg_var, expr.var.name)
@@ -879,7 +881,7 @@ class CToPythonWrapper(Wrapper):
                 body.append(Assign(arg_var, default_val))
 
         # Collect the function which casts from a Python object to a C object
-        dtype = arg_var.dtype
+        dtype = orig_var.dtype
         if isinstance(dtype, CustomDataType):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             scope = python_cls_base.scope
@@ -906,18 +908,18 @@ class CToPythonWrapper(Wrapper):
         else:
             cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
 
-        if arg_var.is_optional:
+        if arg_var.is_optional and not isinstance(dtype, CustomDataType):
             memory_var = self.scope.get_temporary_variable(arg_var, name = arg_var.name + '_memory', is_optional = False)
             cast.insert(0, AliasAssign(arg_var, memory_var))
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, arg_var, False)
+            check_func, err = self._get_check_function(collect_arg, orig_var, False)
             body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([Nil()])])
                         ))
         elif not in_interface:
-            check_func, err = self._get_check_function(collect_arg, arg_var, True)
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
             body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([Nil()])])
                         ))
