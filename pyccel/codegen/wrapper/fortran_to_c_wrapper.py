@@ -132,7 +132,7 @@ class FortranToCWrapper(Wrapper):
             being wrapped.
         """
         original_arg = bind_c_arg.original_function_argument_variable
-        arg_var = self.scope.find(original_arg.name, category='variables')
+        arg_var = self.scope.find(self.scope.get_expected_name(original_arg.name), category='variables')
         if original_arg.is_ndarray:
             start = LiteralInteger(1) # C_F_Pointer leads to default Fortran lbound
             stop = None
