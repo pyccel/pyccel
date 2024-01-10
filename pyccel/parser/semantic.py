@@ -392,9 +392,18 @@ class SemanticParser(BasicParser):
 
         if isinstance(name, DottedName):
             prefix = self.get_class_prefix(name)
-            class_def = prefix.cls_base
+            try:
+                class_def = prefix.cls_base
+            except AttributeError:
+                class_def = get_cls_base(prefix.dtype, prefix.precision, prefix.class_type)
+
             attr_name = name.name[-1]
-            attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
+            class_scope = class_def.scope
+            if class_scope is None:
+                # Pyccel defined classes have no variables
+                return None
+
+            attribute = class_scope.find(attr_name, 'variables') if class_def else None
             if attribute:
                 return attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
             else:
