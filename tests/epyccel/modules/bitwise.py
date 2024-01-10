@@ -49,10 +49,10 @@ def bit_and_b_b(a : 'bool', b : 'bool'):
     return a & b
 
 def bit_and_i_i_i(a : 'int', b : 'int', c : 'int'):
-        return a & b & c
+    return a & b & c
 
 def bit_and_b_b_i(a : 'bool', b : 'bool', c : 'int'):
-        return a & b & c
+    return a & b & c
 
 def invert_b(a : 'bool'):
     return ~a
