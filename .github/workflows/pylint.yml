@@ -34,13 +34,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.base }}
-          path: base
-      - uses: actions/checkout@v3
-        with:
           path: compare
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+          fetch-depth: 0
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
@@ -59,12 +56,10 @@ jobs:
         run: |
           check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$")
           python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
-        working-directory: compare
         shell: bash
       - name: Pylint
         id: pylint
         run: |
-          cd compare
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
           python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
