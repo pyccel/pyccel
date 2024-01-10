@@ -30,6 +30,7 @@ All notable changes to this project will be documented in this file.
 -   #1564 : Fixed installation problems on Python 3.12.
 -   #1259 : Fix bug causing problems with user editable installation.
 -   #1651 : Fix name collision resolution to include parent scopes.
+-   #1156 : Raise an error for variable name collisions with non-variable objects.
 
 ### Changed
 
