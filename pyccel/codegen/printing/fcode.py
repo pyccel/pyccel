@@ -2089,9 +2089,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        step  = self._print(expr.step)
 
         test_step = expr.step
+        if isinstance(test_step, LiteralInteger) and test_step.python_value == 1:
+            step = ''
+        else:
+            step = ', '+self._print(expr.step)
+
         if isinstance(test_step, PyccelUnarySub):
             test_step = expr.step.args[0]
 
@@ -2107,7 +2111,7 @@ class FCodePrinter(CodePrinter):
                                      PyccelAdd(expr.stop, LiteralInteger(1), simplify = True))
 
         stop = self._print(stop)
-        return '{0}, {1}, {2}'.format(start, stop, step)
+        return f'{start}, {stop}{step}'
 
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)
