@@ -82,8 +82,6 @@ __all__ = ["FCodePrinter", "fcode"]
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
-    'NumpyMin'  : 'minval',
-    'NumpyAmin'  : 'minval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -1279,7 +1277,6 @@ class FCodePrinter(CodePrinter):
         return init_value
     
     def _print_NumpyAmax(self, expr):
-        # Assuming expr.arg is an array
         array_arg = expr.arg
         if array_arg.dtype is NativeBool():
             arg_code = self._print(NumpyInt32(array_arg))
@@ -1291,7 +1288,20 @@ class FCodePrinter(CodePrinter):
             return f'amax({array_arg})'
         else:
             return f'maxval({arg_code})'
+    
+    def _print_NumpyAmin(self, expr):
+        array_arg = expr.arg
+        if array_arg.dtype is NativeBool():
+            arg_code = self._print(NumpyInt32(array_arg))
+        else:
+            arg_code = self._print(array_arg)
 
+        if array_arg.dtype is NativeComplex():
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'amin({array_arg})'
+        else:
+            return f'minval({arg_code})'
+        
     def _print_PythonMin(self, expr):
         args = expr.args
         if len(args) == 1:

@@ -9,7 +9,7 @@ which creates an interface exposing C code to Python.
 """
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
-from pyccel.ast.bind_c        import BindCModule, BindCVariable
+from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -25,6 +25,7 @@ from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
+from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
@@ -751,14 +752,23 @@ class CToPythonWrapper(Wrapper):
         for a in original_c_args:
             if isinstance(a, BindCFunctionDefArgument):
                 orig_var = a.original_function_argument_variable
-                if orig_var.is_optional and not orig_var.is_ndarray:
+                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
                     func_call_arg_names.append(orig_var.name)
                     continue
             func_call_arg_names.append(a.var.name)
 
         # Get the arguments and results which should be used to call the c-compatible function
-        func_call_args = [self.scope.find(self.scope.get_expected_name(n), category='variables') for n in func_call_arg_names]
-        c_result_names = [self.scope.get_expected_name(r.var.name) for r in original_c_results]
+        func_call_args = [self.scope.find(n, category='variables') for n in func_call_arg_names]
+
+        # Get the names of the results collected from the C-compatible function
+        c_result_names = []
+        for r in original_c_results:
+            if isinstance(r, BindCFunctionDefResult):
+                orig_var = r.original_function_result_variable
+                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
+                    c_result_names.append(orig_var.name)
+                    continue
+            c_result_names.append(r.var.name)
         c_results = [self.scope.find(n, category='variables') for n in c_result_names]
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
             if isinstance(r, DottedVariable):
@@ -782,7 +792,7 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            v = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            v = self.scope.find(orig_var.name, category='variables')
             if v.is_ndarray:
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
@@ -857,9 +867,9 @@ class CToPythonWrapper(Wrapper):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
         else:
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
+            arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
 
-        self.scope.insert_variable(arg_var)
+        self.scope.insert_variable(arg_var, orig_var.name)
 
         body = []
 
@@ -933,21 +943,22 @@ class CToPythonWrapper(Wrapper):
         orig_var = expr.original_function_argument_variable
 
         if orig_var.rank:
+            bound_var_name = expr.var.name
             # Create variable to hold raw data pointer
-            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False)
+            arg_var = expr.var.clone(self.scope.get_expected_name(bound_var_name), is_argument = False)
             # Create variables for the shapes and strides
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             stride_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.strides]
 
             # Add variables to scope
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, bound_var_name)
             for v,s in zip(shape_vars, expr.shape):
                 self.scope.insert_variable(v,s.name)
             for v,s in zip(stride_vars, expr.strides):
                 self.scope.insert_variable(v,s.name)
 
             # Get the C-compatible variable created in self._wrap_FunctionDefArgument
-            c_arg = self.scope.find(self.scope.get_expected_name(orig_var.name), category='variables')
+            c_arg = self.scope.find(orig_var.name, category='variables')
 
             # Unpack the C-compatible variable
             body.append(AliasAssign(arg_var, FunctionCall(array_get_data, [c_arg])))
@@ -1003,7 +1014,7 @@ class CToPythonWrapper(Wrapper):
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
         else:
             c_res = orig_var.clone(name, is_argument = False)
-        self.scope.insert_variable(c_res, name)
+        self.scope.insert_variable(c_res, orig_var.name)
 
         # Cast from C to Python
         if not isinstance(orig_var.dtype, CustomDataType):
@@ -1048,28 +1059,31 @@ class CToPythonWrapper(Wrapper):
 
         body = []
 
+        orig_var_name = orig_var.name
+        var_name = expr.var.name
+
         if orig_var.rank:
             # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var.name), is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = True
             # Result of calling the bind-c function
-            arg_var = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
+            arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             shape_vars = [s.clone(self.scope.get_expected_name(s.name), is_argument = False) for s in expr.shape]
             # Save so we can find by iterating over func.results
-            self.scope.insert_variable(arg_var, expr.var.name)
+            self.scope.insert_variable(arg_var, var_name)
             for v,s in zip(shape_vars, expr.shape):
                 self.scope.insert_variable(v,s.name)
             # Save so we can find by iterating over func.bind_c_results
-            self.scope.insert_variable(c_res, orig_var.name)
+            self.scope.insert_variable(c_res, orig_var_name)
 
             body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
             body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
-            c_res = expr.var.clone(self.scope.get_expected_name(expr.var.name), is_argument = False, memory_handling='alias')
-            self.scope.insert_variable(c_res, expr.var.name)
+            c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
+            self.scope.insert_variable(c_res, var_name)
         else:
-            c_res = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False)
-            self.scope.insert_variable(c_res)
+            c_res = orig_var.clone(self.scope.get_expected_name(orig_var_name), is_argument = False)
+            self.scope.insert_variable(c_res, orig_var_name)
 
         if not isinstance(orig_var.dtype, CustomDataType):
             body.append(AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res])))
