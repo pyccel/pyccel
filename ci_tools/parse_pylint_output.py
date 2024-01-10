@@ -34,9 +34,7 @@ def get_pylint_results(filename):
     idx = 0
     line = pylint_output[idx]
     while not all(c=='-' for c in line):
-        if line.startswith('***'):
-            continue
-        else:
+        if not line.startswith('***'):
             file, line, start, code, message = line.split(':', 4)
             pylint_results_by_mod.get(file, []).append(PylintMessage(file, line, start, message.strip()))
         idx += 1
