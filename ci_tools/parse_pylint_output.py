@@ -99,6 +99,7 @@ if __name__ == '__main__':
         json.dump(json_data, json_file)
     with open(args.output, mode='a', encoding="utf-8") as md_file:
         md_file.write(output)
+    print(output)
 
     if annotations:
         sys.exit(1)
