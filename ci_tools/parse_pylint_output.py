@@ -7,15 +7,25 @@ import sys
 
 PylintMessage = namedtuple('PylintMessage', ['file','line', 'position', 'message'])
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Parse pylint output and format the output for neat bot results.')
-    parser.add_argument('pylint', type=str,
-                            help='The file containing the pylint output')
-    parser.add_argument('output', metavar='output', type=str,
-                            help='File where the markdown output will be printed')
-    args = parser.parse_args()
+def get_pylint_results(filename):
+    """
+    Extract pylint results from a file.
 
-    with open(args.pylint, 'r', encoding='utf-8') as p_file:
+    Parse a file containing pylint results and save the results
+    to a dictionary whose keys are modules and whose values are
+    PylintMessage objects.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file being parsed.
+
+    Returns
+    -------
+    dict
+        The dictionary containg the pylint results.
+    """
+    with open(filename, 'r', encoding='utf-8') as p_file:
         pylint_output = p_file.readlines()
 
     pylint_output = [l.strip() for l in pylint_output]
@@ -32,6 +42,31 @@ if __name__ == '__main__':
             pylint_results[key].append(PylintMessage(file, line, start, message.strip()))
         idx += 1
         line = pylint_output[idx]
+
+    return pylint_results
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Parse pylint output and format the output for neat bot results.')
+    parser.add_argument('base_pylint', type=str,
+                            help='The file containing the pylint output from the devel branch')
+    parser.add_argument('compare_pylint', type=str,
+                            help='The file containing the pylint output from the current branch')
+    parser.add_argument('output', metavar='output', type=str,
+                            help='File where the markdown output will be printed')
+    args = parser.parse_args()
+
+    base_pylint_results = get_pylint_results(args.base_pylint)
+    compare_pylint_results = get_pylint_results(args.compare_pylint)
+
+    pylint_results = {}
+    for k,v in compare_pylint_results.items():
+        if k not in base_pylint_results:
+            pylint_results[k] = v
+        else:
+            base_v = base_pylint_results[k]
+            new_messages = [vi for vi in v if vi not in base_v]
+            if new_messages:
+                pylint_results[k] = new_messages
 
     if pylint_results:
         output = "# Pylint errors found\n"
