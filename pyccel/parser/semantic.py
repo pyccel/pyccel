@@ -1221,7 +1221,7 @@ class SemanticParser(BasicParser):
             lhs = self._visit(lhs)
         elif isinstance(lhs, (PyccelSymbol, DottedName)):
 
-            name = str(lhs)
+            name = lhs
             if lhs == '_':
                 name = self.scope.get_new_name()
             dtype = d_var.pop('datatype')
@@ -1231,13 +1231,13 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            if isinstance(name, DottedName):
-                prefix = self.get_class_prefix(name)
+            if isinstance(lhs, DottedName):
+                prefix = self.get_class_prefix(lhs)
                 class_def = prefix.cls_base
-                attr_name = name.name[-1]
+                attr_name = lhs.name[-1]
                 attribute = class_def.scope.find(attr_name) if class_def else None
                 if attribute:
-                    attribute = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+                    var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
                 else:
                     var = None
             else:
