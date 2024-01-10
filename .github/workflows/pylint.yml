@@ -52,12 +52,12 @@ jobs:
           python -m pip install pylint
           python -m pip install defusedxml
         shell: bash
-      - name: Pylint
+      - name: Run Pylint
         run: |
           check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$")
           python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
         shell: bash
-      - name: Pylint
+      - name: Filter Pylint output
         id: pylint
         run: |
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
