@@ -38,7 +38,7 @@ def get_pylint_results(filename):
             _, key = line.split(' Module ')
             pylint_results[key] = []
         else:
-            file, line, start, code, message = line.split(':')
+            file, line, start, code, message = line.split(':', 4)
             pylint_results[key].append(PylintMessage(file, line, start, message.strip()))
         idx += 1
         line = pylint_output[idx]
