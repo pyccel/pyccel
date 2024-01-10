@@ -68,7 +68,6 @@ __all__ = ["CCodePrinter", "ccode"]
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs' : 'fabs',
-    'NumpyMin'  : 'minval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -92,8 +91,6 @@ numpy_ufunc_to_c_float = {
 
 numpy_ufunc_to_c_complex = {
     'NumpyAbs'  : 'cabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     # ---
     'NumpyExp' : 'cexp',
     'NumpyLog' : 'clog',
@@ -1760,6 +1757,22 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amax_complex{prec * 16}({name})'
         elif isinstance(dtype, NativeBool):
             return f'numpy_amax_bool({name})'
+
+    def _print_NumpyAmin(self, expr):
+        '''
+        Convert a call to numpy.min to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amin_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amin_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amin_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amin_bool({name})'
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
