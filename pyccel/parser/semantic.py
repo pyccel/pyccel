@@ -395,7 +395,8 @@ class SemanticParser(BasicParser):
             try:
                 class_def = prefix.cls_base
             except AttributeError:
-                class_def = get_cls_base(prefix.dtype, prefix.precision, prefix.class_type)
+                class_def = get_cls_base(prefix.dtype, prefix.precision, prefix.class_type) or \
+                            self.scope.find(prefix.class_type.name, 'classes')
 
             attr_name = name.name[-1]
             class_scope = class_def.scope
