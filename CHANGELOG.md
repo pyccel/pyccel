@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   Add support for `np.min` in C code.
+-   #1649 : Add support for `np.min` in C code.
 -   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
