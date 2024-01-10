@@ -64,13 +64,13 @@ def filter_pylint_results(pylint_results, diff):
     dict
         A dictionary containing only the pylint errors caused by this branch.
     """
-    lines = {k: [vi.line for vi in v] for k,v in pylint_results.items()}
+    lines = {k: [int(vi.line) for vi in v] for k,v in pylint_results.items()}
     filtered_lines = cov.compare_coverage_to_diff(lines, diff)
 
     filtered_pylint_results = {}
     for k,lines in filtered_lines.items():
         orig_errors = pylint_results[k]
-        filtered_pylint_results[k] = [v for v in orig_errors if v.line in lines]
+        filtered_pylint_results[k] = [v for v in orig_errors if int(v.line) in lines]
 
     return filtered_pylint_results
 
