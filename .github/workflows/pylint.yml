@@ -57,14 +57,12 @@ jobs:
         shell: bash
       - name: Reference Pylint
         run: |
-          python_files=$(find -name "*.py")
-          python -m pylint --rcfile=.pylintrc ${python_files} 2>&1 | tee pylint_results.txt || true
+          python -m pylint --rcfile=.pylintrc --recursive=true . 2>&1 | tee pylint_results.txt || true
         working-directory: base
         shell: bash
       - name: New Pylint
         run: |
-          python_files=$(find -name "*.py")
-          python -m pylint --rcfile=.pylintrc ${python_files} 2>&1 | tee pylint_results.txt || true
+          python -m pylint --rcfile=.pylintrc --recursive=true . 2>&1 | tee pylint_results.txt || true
         working-directory: compare
         shell: bash
       - name: Pylint
