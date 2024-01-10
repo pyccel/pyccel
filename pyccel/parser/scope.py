@@ -222,7 +222,7 @@ class Scope(object):
         Parameters
         ----------
         name : str
-            The name of the object we are searching for.
+            The Python name of the object we are searching for.
         category : str, optional
             The type of object we are searching for.
             This must be one of the strings in Scope.categories.
@@ -476,7 +476,7 @@ class Scope(object):
                 self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self._used_symbols.values())
+                        self.all_used_symbols)
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
