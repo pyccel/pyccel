@@ -35,18 +35,12 @@ def get_pylint_results(filename):
     line = pylint_output[idx]
     while not all(c=='-' for c in line):
         if line.startswith('***'):
-            _, key = line.split(' Module ')
-            pylint_results_by_mod[key] = []
+            continue
         else:
             file, line, start, code, message = line.split(':', 4)
-            pylint_results_by_mod[key].append(PylintMessage(file, line, start, message.strip()))
+            pylint_results_by_mod.get(file, []).append(PylintMessage(file, line, start, message.strip()))
         idx += 1
         line = pylint_output[idx]
-
-    # Use file as key as module output is not consistent
-    pylint_results = {}
-    for v in pylint_results_by_mod.values():
-        pylint_results[v[0].file] = v
 
     return pylint_results
 
