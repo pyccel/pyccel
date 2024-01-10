@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
@@ -31,6 +32,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1644 : Stop printing the step of a range if that step is 1.
 -   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
