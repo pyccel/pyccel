@@ -55,13 +55,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pylint
         shell: bash
-      - name: Reference Pylint
-        run: |
-          check_files=$(git diff ${{ inputs.ref }}..HEAD --name-only --diff-filter=DM | grep "\.py$")
-          python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
-        working-directory: base
-        shell: bash
-      - name: New Pylint
+      - name: Pylint
         run: |
           check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$")
           python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
@@ -72,7 +66,7 @@ jobs:
         run: |
           cd compare
           git diff ${{ inputs.base }}..HEAD --no-indent-heuristic --unified=0 --output=pull_diff.txt --no-color
-          python ci_tools/parse_pylint_output.py ../base/pylint_results.txt pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
+          python ci_tools/parse_pylint_output.py pylint_results.txt pull_diff.txt $GITHUB_STEP_SUMMARY
         shell: bash
       - name: "Post completed"
         if: always()

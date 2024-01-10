@@ -5,6 +5,9 @@ from collections import namedtuple
 import json
 import sys
 
+import coverage_analysis_tools as cov
+from git_evaluation_tools import get_diff_as_json
+
 PylintMessage = namedtuple('PylintMessage', ['file','line', 'position', 'message'])
 
 def get_pylint_results(filename):
@@ -42,36 +45,56 @@ def get_pylint_results(filename):
 
     return pylint_results
 
+def filter_pylint_results(pylint_results, diff):
+    """
+    Filter the pylint results to only show errors relevant to this PR.
+
+    Filter the pylint results to only report errors on lines which have been added
+    or changed in this PR.
+
+    Parameters
+    ----------
+    pylint_results : dict
+        The output of get_pylint_results. A dictionary containg the pylint results.
+    diff : dict
+        The git diff between this branch and the target.
+
+    Returns
+    -------
+    dict
+        A dictionary containing only the pylint errors caused by this branch.
+    """
+    lines = {k: [vi.line for vi in v] for k,v in pylint_results}
+    filtered_lines = cov.compare_coverage_to_diff(lines, diff)
+
+    filtered_pylint_results = {}
+    for k,lines in filtered_lines:
+        orig_errors = pylint_results[k]
+        filtered_pylint_results[k] = [v for v in orig_errors if v.line in lines]
+
+    return filtered_pylint_results
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Parse pylint output and format the output for neat bot results.')
-    parser.add_argument('base_pylint', type=str,
-                            help='The file containing the pylint output from the devel branch')
     parser.add_argument('compare_pylint', type=str,
                             help='The file containing the pylint output from the current branch')
+    parser.add_argument('diffFile', metavar='diffFile', type=str,
+                            help='File containing the git diff output')
     parser.add_argument('output', metavar='output', type=str,
                             help='File where the markdown output will be printed')
     args = parser.parse_args()
 
-    base_pylint_results = get_pylint_results(args.base_pylint)
-    compare_pylint_results = get_pylint_results(args.compare_pylint)
+    raw_pylint_results = get_pylint_results(args.compare_pylint)
+    diff = get_diff_as_json(args.diffFile)
+    filtered_results = filter_pylint_results(raw_pylint_results, diff)
 
-    pylint_results = {}
-    for k,v in compare_pylint_results.items():
-        if k not in base_pylint_results:
-            pylint_results[k] = v
-        else:
-            base_v = base_pylint_results[k]
-            new_messages = [vi for vi in v if vi not in base_v]
-            if new_messages:
-                pylint_results[k] = new_messages
-
-    if pylint_results:
+    if filtered_results:
         output = "# Pylint errors found\n"
     else:
         output = "# Success! No pylint errors found\n"
 
     annotations = []
-    for mod, msgs in pylint_results.items():
+    for mod, msgs in filtered_results.items():
         output += f"## Errors found in module {mod}\n"
         for m in msgs:
             output += f"-  On line {m.line} : {m.message}\n"
