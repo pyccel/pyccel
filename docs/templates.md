@@ -40,3 +40,26 @@ from pyccel.decorators import template
 def f(a : 'T', b : 'T'):
   pass
 ```
+
+In this example the arguments of **g** can either be a 1d integer array or a 2d integer array.
+```python
+from pyccel.decorators import template
+@template(name='T', types=['int[:]','int[:,:]'])
+def g(a : 'T', b : 'T'):
+  pass
+```
+
+The following shows a slightly more complex example:
+```python
+from pyccel.decorators import template
+@template(name='T', types=['int','float'])
+def h(a : 'T', b : 'T[:]'):
+  pass
+```
+In this example **h** will have one of the following 2 prototypes:
+```python
+def h(a : 'int', b : 'int[:]'):
+  pass
+def h(a : 'float', b : 'float[:]'):
+  pass
+```

@@ -12,11 +12,11 @@ import inspect
 from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode
+from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex)
-from .internals import PyccelArrayShapeElement, Slice, get_final_precision
+                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
+from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -25,17 +25,17 @@ errors = Errors()
 pyccel_stage = PyccelStage()
 
 __all__ = (
+    'AnnotatedPyccelSymbol',
     'Constant',
     'DottedName',
     'DottedVariable',
-    'HomogeneousTupleVariable',
     'IndexedElement',
     'InhomogeneousTupleVariable',
     'TupleVariable',
     'Variable'
 )
 
-class Variable(PyccelAstNode):
+class Variable(TypedAstNode):
     """
     Represents a typed variable.
 
@@ -51,6 +51,11 @@ class Variable(PyccelAstNode):
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
+
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
 
     rank : int, default: 0
         The number of dimensions for an array.
@@ -74,7 +79,7 @@ class Variable(PyccelAstNode):
 
     shape : tuple, default: None
         The shape of the array. A tuple whose elements indicate the number of elements along
-        each of the dimensions of an array. The elements of the tuple should be None or PyccelAstNodes.
+        each of the dimensions of an array. The elements of the tuple should be None or TypedAstNodes.
 
     cls_base : class, default: None
         Class base if variable is an object or an object member.
@@ -111,7 +116,7 @@ class Variable(PyccelAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
-            '_rank','_shape','_order','_is_private')
+            '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -119,6 +124,7 @@ class Variable(PyccelAstNode):
         dtype,
         name,
         *,
+        class_type = None,
         rank=0,
         memory_handling='stack',
         is_const=False,
@@ -180,7 +186,7 @@ class Variable(PyccelAstNode):
         self._is_argument    = is_argument
         self._is_temp        = is_temp
 
-        # ------------ PyccelAstNode Properties ---------------
+        # ------------ TypedAstNode Properties ---------------
         if isinstance(dtype, str) or str(dtype) == '*':
 
             dtype = datatype(dtype)
@@ -210,11 +216,20 @@ class Variable(PyccelAstNode):
         if not isinstance(precision,int) and precision is not None:
             raise TypeError('precision must be an integer or None.')
 
+        if rank > 0 and class_type is None:
+            raise TypeError("Multi-dimensional object requires a container type")
+        elif class_type is None:
+            class_type = dtype
+
+        if class_type is not dtype and cls_base is None:
+            raise TypeError(f"Missing class definition for type {dtype}")
+
         self._alloc_shape = shape
         self._dtype = dtype
         self._rank  = rank
         self._shape = self.process_shape(shape)
         self._precision = precision
+        self._class_type = class_type
         if self._rank < 2:
             self._order = None
 
@@ -252,11 +267,11 @@ class Variable(PyccelAstNode):
                 new_shape.append(s)
             elif isinstance(s, int):
                 new_shape.append(LiteralInteger(s))
-            elif s is None or isinstance(s, PyccelAstNode):
+            elif s is None or isinstance(s, TypedAstNode):
                 new_shape.append(PyccelArrayShapeElement(self, LiteralInteger(i)))
             else:
                 raise TypeError('shape elements cannot be '+str(type(s))+'. They must be one of the following types: LiteralInteger,'
-                                'Variable, Slice, PyccelAstNode, int, Function')
+                                'Variable, Slice, TypedAstNode, int, Function')
         return tuple(new_shape)
 
     def shape_can_change(self, i):
@@ -286,6 +301,23 @@ class Variable(PyccelAstNode):
         an If block.
         """
         self._shape = [PyccelArrayShapeElement(self, LiteralInteger(i)) for i in range(self.rank)]
+
+    def set_init_shape(self, shape):
+        """
+        Set the shape that was passed to the variable upon creation.
+
+        Set the shape that was passed to the variable upon creation. Normally this can be
+        deduced when the variable was created, however this may not be the case if the
+        variable was predeclared via a header or an annotation.
+
+        Parameters
+        ----------
+        shape : tuple
+            The shape of the array. A tuple whose elements indicate the number of elements along
+            each of the dimensions of an array. The elements of the tuple should be None or TypedAstNodes.
+        """
+        self._alloc_shape = shape
+        self._shape = self.process_shape(shape)
 
     @property
     def name(self):
@@ -353,8 +385,11 @@ class Variable(PyccelAstNode):
 
     @property
     def is_const(self):
-        """ Indicates if the Variable is constant
-        within its context
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
         """
         return self._is_const
 
@@ -472,19 +507,27 @@ class Variable(PyccelAstNode):
 
     def clone(self, name, new_class = None, **kwargs):
         """
+        Create a clone of the current variable.
+
         Create a new Variable object of the chosen class
-        with the provided name and options
+        with the provided name and options. All non-specified
+        options will match the current instance.
 
         Parameters
-        ==========
-        name      : str
-                    The name of the new Variable
-        new_class : type
-                    The class of the new Variable
-                    The default is the same class
-        kwargs    : dict
-                    Dictionary containing any keyword-value
-                    pairs which are valid constructor keywords
+        ----------
+        name : str
+            The name of the new Variable.
+        new_class : type, optional
+            The class type of the new Variable (e.g. DottedVariable).
+            The default is the same class type.
+        **kwargs : dict
+            Dictionary containing any keyword-value
+            pairs which are valid constructor keywords.
+
+        Returns
+        -------
+        Variable
+            The cloned variable.
         """
 
         if (new_class is None):
@@ -498,6 +541,7 @@ class Variable(PyccelAstNode):
                             if '_'+k in dir(self)}
         new_kwargs.update(kwargs)
         new_kwargs['name'] = name
+        new_kwargs['shape'] = self.alloc_shape
 
         return cls(**new_kwargs)
 
@@ -542,11 +586,17 @@ class Variable(PyccelAstNode):
 
     def __getitem__(self, *args):
 
-        if len(args) == 1 and isinstance(args[0], (tuple, list)):
-            args = args[0]
-
         if self.rank < len(args):
             raise IndexError('Rank mismatch.')
+
+        if len(args) == 1:
+            arg0 = args[0]
+            if isinstance(arg0, (tuple, list)):
+                args = arg0
+            elif isinstance(arg0, int):
+                self_len = self.shape[0]
+                if isinstance(self_len, LiteralInteger) and arg0 >= int(self_len):
+                    raise StopIteration
 
         return IndexedElement(self, *args)
 
@@ -562,7 +612,7 @@ class Variable(PyccelAstNode):
             raise ValueError("Variables cannot become temporary")
         self._is_temp = is_temp
 
-class DottedName(Basic):
+class DottedName(PyccelAstNode):
 
     """
     Represents a dotted object.
@@ -585,6 +635,12 @@ class DottedName(Basic):
     """
     __slots__ = ('_name',)
     _attribute_nodes = ()
+
+    def __new__(cls, *args):
+        if len(args) == 1:
+            return args[0]
+        else:
+            return super().__new__(cls)
 
     def __init__(self, *args):
 
@@ -613,72 +669,26 @@ class DottedName(Basic):
     def __hash__(self):
         return hash(str(self))
 
-class TupleVariable(Variable):
-
-    """Represents a tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
+class InhomogeneousTupleVariable(Variable):
     """
-    __slots__ = ()
+    Represents an inhomogeneous tuple variable in the code.
 
-    @property
-    def is_ndarray(self):
-        return False
-
-class HomogeneousTupleVariable(TupleVariable):
-
-    """Represents a tuple variable in the code.
+    Represents an inhomogeneous tuple variable in the code.
 
     Parameters
     ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import TupleVariable, Variable
-    >>> v1 = Variable('int','v1')
-    >>> v2 = Variable('bool','v2')
-    >>> n  = TupleVariable([v1, v2],'n')
-    >>> n
-    n
-    """
-    __slots__ = ()
-    is_homogeneous = True
-
-    def shape_can_change(self, i):
-        """
-        Indicates if the shape can change in the i-th dimension
-        """
-        return self.is_alias and i == (self.rank-1)
-
-    def __len__(self):
-        return self.shape[0]
-
-    def __iter__(self):
-        assert isinstance(self.shape[0], LiteralInteger)
-        return (self[i] for i in range(self.shape[0]))
-
-class InhomogeneousTupleVariable(TupleVariable):
-
-    """Represents a tuple variable in the code.
-
-    Parameters
-    ----------
-    arg_vars: Iterable
-        Multiple variables contained within the tuple
+    arg_vars : tuple of Variable
+        The variables contained within the tuple.
+    name : str
+        The name of the variable.
+    *args : tuple
+        See Variable.
+    class_type : DataType
+        The Python type of the variable. In the case of scalars this is equivalent to
+        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
+        this is the type of the container.
+    **kwargs : dict
+        See Variable.
 
     Examples
     --------
@@ -693,9 +703,9 @@ class InhomogeneousTupleVariable(TupleVariable):
     _attribute_nodes = ('_vars',)
     is_homogeneous = False
 
-    def __init__(self, arg_vars, dtype, name, *args, **kwargs):
+    def __init__(self, arg_vars, name, *args, class_type, **kwargs):
         self._vars = tuple(arg_vars)
-        super().__init__(dtype, name, *args, **kwargs)
+        super().__init__(class_type, name, *args, **kwargs, class_type = class_type)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -767,6 +777,15 @@ class InhomogeneousTupleVariable(TupleVariable):
             if var.rank > 0:
                 var.is_target = is_target
 
+    @property
+    def is_ndarray(self):
+        """
+        Helper function to determine whether the variable is a NumPy array.
+
+        Helper function to determine whether the variable is a NumPy array.
+        """
+        return False
+
 class Constant(Variable):
 
     """
@@ -808,10 +827,29 @@ class Constant(Variable):
 
 
 
-class IndexedElement(PyccelAstNode):
-
+class IndexedElement(TypedAstNode):
     """
-    Represents a mathematical object with indices.
+    Represents an indexed object in the code.
+
+    Represents an object which is a subset of a base object. The
+    indexed object is retrieved by passing indices to the base
+    object using the `[]` syntax.
+
+    In the semantic stage, the base object is an array, tuple or
+    list. This function then determines the new rank and shape of
+    the data block.
+
+    In the syntactic stage, this object is more versatile, it
+    stores anything which is indexed using `[]` syntax. This can
+    additionally include classes, maps, etc.
+
+    Parameters
+    ----------
+    base : Variable | PyccelSymbol | DottedName
+        The object being indexed.
+
+    *indices : tuple of TypedAstNode
+        The values used to index the base.
 
     Examples
     --------
@@ -819,28 +857,23 @@ class IndexedElement(PyccelAstNode):
     >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
     >>> i = Variable('i', dtype='int')
     >>> j = Variable('j', dtype='int')
-    >>> IndexedElement(A, i, j)
+    >>> IndexedElement(A, (i, j))
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order')
+    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
-    def __init__(
-        self,
-        base,
-        *args,
-        **kw_args
-        ):
+    def __init__(self, base, *indices):
 
-        if not args:
+        if not indices:
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
 
         if pyccel_stage == 'syntactic':
-            self._indices = args
+            self._indices = indices
             super().__init__()
             return
 
@@ -851,50 +884,47 @@ class IndexedElement(PyccelAstNode):
         rank  = base.rank
 
         # Add empty slices to fully index the object
-        if len(args) < rank:
-            args = args + tuple([Slice(None, None)]*(rank-len(args)))
+        if len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
 
-        if any(not isinstance(a, (int, PyccelAstNode, Slice)) for a in args):
+        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
             errors.report("Index is not of valid type",
-                    symbol = args, severity = 'fatal')
+                    symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in args)
+        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
         super().__init__()
 
         # Calculate new shape
+        new_shape = []
+        from .mathext import MathCeil
+        for a,s in zip(indices, shape):
+            if isinstance(a, Slice):
+                start = a.start
+                stop  = a.stop if a.stop is not None else s
+                step  = a.step
+                if isinstance(start, PyccelUnarySub):
+                    start = PyccelAdd(s, start, simplify=True)
+                if isinstance(stop, PyccelUnarySub):
+                    stop = PyccelAdd(s, stop, simplify=True)
 
-        if shape is not None:
-            new_shape = []
-            from .mathext import MathCeil
-            for a,s in zip(args, shape):
-                if isinstance(a, Slice):
-                    start = a.start
-                    stop  = a.stop if a.stop is not None else s
-                    step  = a.step
-                    if isinstance(start, PyccelUnarySub):
-                        start = PyccelAdd(s, start, simplify=True)
-                    if isinstance(stop, PyccelUnarySub):
-                        stop = PyccelAdd(s, stop, simplify=True)
+                _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
+                if step is not None:
+                    if isinstance(step, PyccelUnarySub):
+                        start = s if a.start is None else start
+                        _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
+                        step = PyccelUnarySub(step)
 
-                    _shape = stop if start is None else PyccelMinus(stop, start, simplify=True)
-                    if step is not None:
-                        if isinstance(step, PyccelUnarySub):
-                            start = s if a.start is None else start
-                            _shape = start if a.stop is None else PyccelMinus(start, stop, simplify=True)
-                            step = PyccelUnarySub(step)
-
-                        _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
-                    new_shape.append(_shape)
-            self._rank  = len(new_shape)
-            self._shape = None if self._rank == 0 else tuple(new_shape)
-        else:
-            new_rank = rank
-            for i in range(rank):
-                if not isinstance(args[i], Slice):
-                    new_rank -= 1
-            self._rank = new_rank
+                    _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
+                new_shape.append(_shape)
+        self._rank  = len(new_shape)
+        self._shape = None if self._rank == 0 else tuple(new_shape)
 
         self._order = None if self.rank < 2 else base.order
+
+        if self.rank == 0:
+            self._class_type = self.dtype
+        else:
+            self._class_type = base.class_type
 
     @property
     def base(self):
@@ -937,6 +967,16 @@ class IndexedElement(PyccelAstNode):
                 j += 1
             new_indexes.append(i)
         return IndexedElement(base, *new_indexes)
+
+    @property
+    def is_const(self):
+        """
+        Indicates whether the Variable is constant within its context.
+
+        Indicates whether the Variable is constant within its context.
+        True if the Variable is constant, false if it can be modified.
+        """
+        return self.base.is_const
 
 class DottedVariable(Variable):
 
@@ -987,3 +1027,58 @@ class DottedVariable(Variable):
         dtype = repr(self.dtype)
         classname = type(self).__name__
         return f'{classname}({lhs}.{name}, dtype={dtype}'
+
+class AnnotatedPyccelSymbol(PyccelAstNode):
+    """
+    Class representing a symbol in the code which has an annotation.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
+    This is very generic, and it can also represent a function or a module.
+
+    Parameters
+    ----------
+    name : str
+        Name of the symbol.
+
+    annotation : SyntacticTypeAnnotation
+        The annotation describing the type that the object will have.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
+    """
+    __slots__ = ('_name', '_annotation')
+    _attribute_nodes = ()
+
+    def __init__(self, name, annotation, is_temp = False):
+        if isinstance(name, (PyccelSymbol, DottedName)):
+            self._name = name
+        elif isinstance(name, str):
+            self._name = PyccelSymbol(name, is_temp)
+        else:
+            raise TypeError(f"Name should be a string or a PyccelSymbol not a {type(name)}")
+        self._annotation = annotation
+        super().__init__()
+
+    @property
+    def name(self):
+        """
+        Get the PyccelSymbol describing the name.
+
+        Get the PyccelSymbol describing the name of the symbol in the code.
+        """
+        return self._name
+
+    @property
+    def annotation(self):
+        """
+        Get the annotation.
+
+        Get the annotation left on the symbol. This should be a type annotation.
+        """
+        return self._annotation
+
+    def __str__(self):
+        return f'{self.name} : {self.annotation}'

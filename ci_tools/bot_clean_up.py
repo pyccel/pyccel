@@ -2,6 +2,7 @@
 """
 import json
 import os
+import sys
 from bot_tools.bot_funcs import Bot, test_dependencies, pr_test_keys as bot_pr_test_keys
 
 pr_test_keys = list(bot_pr_test_keys) + ['Codacy']
@@ -63,6 +64,9 @@ if __name__ == '__main__':
             events = bot.GAI.get_events(pr_id)
 
             shas = [e.get('sha', None) for e in events]
+            if events[-1].get('event', None) == 'closed':
+                sys.exit(0)
+
             print(shas)
             print([e.get('event', None) for e in events])
             page = 1

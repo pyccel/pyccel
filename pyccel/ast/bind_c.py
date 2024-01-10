@@ -8,15 +8,16 @@ Module describing all elements of the AST needed to represent elements which app
 file.
 """
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module
-from pyccel.ast.core import FunctionDef
+from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
 from pyccel.ast.variable import Variable
 
 __all__ = (
     'BindCArrayVariable',
+    'BindCClassDef',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
@@ -540,10 +541,34 @@ class BindCArrayVariable(Variable):
         return self._wrapper_function
 
 # =======================================================================================
+
+class BindCClassDef(ClassDef):
+    """
+    Represents a class which is compatible with C.
+
+    Represents a class which is compatible with C. This means that it stores
+    C-compatible versions of class methods and getters and setters for class
+    variables.
+
+    Parameters
+    ----------
+    original_class : ClassDef
+        The class being wrapped.
+
+    **kwargs : dict
+        See ClassDef.
+    """
+    __slots__ = ('_original_class',)
+
+    def __init__(self, original_class, **kwargs):
+        self._original_class = original_class
+        super().__init__(original_class.name, scope = original_class.scope, **kwargs)
+
+# =======================================================================================
 #                                   Utility functions
 # =======================================================================================
 
-class CLocFunc(Basic):
+class CLocFunc(PyccelAstNode):
     """
     Creates a C-compatible pointer to the argument.
 
@@ -588,7 +613,7 @@ class CLocFunc(Basic):
 
 # =======================================================================================
 
-class C_F_Pointer(Basic):
+class C_F_Pointer(PyccelAstNode):
     """
     Creates a Fortran array pointer from a C pointer and size information.
 

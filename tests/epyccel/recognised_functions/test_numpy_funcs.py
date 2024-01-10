@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import rand, randn, randint, uniform
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -2135,15 +2135,6 @@ def test_randint_expr(language):
     assert(all([isinstance(yi,int) for yi in y]))
     assert(len(set(y))>1)
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_int(language):
     def sum_call(x : 'int[:]'):
         from numpy import sum as np_sum
@@ -2153,15 +2144,15 @@ def test_sum_int(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+def test_sum_override_builtin(language):
+    def sum_call(x : 'int[:]'):
+        from numpy import sum
+        return sum(x)
+
+    f1 = epyccel(sum_call, language = language)
+    x = randint(99,size=10)
+    assert(f1(x) == sum_call(x))
+
 def test_sum_real(language):
     def sum_call(x : 'float[:]'):
         from numpy import sum as np_sum
@@ -2171,15 +2162,6 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_phrase(language):
     def sum_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import sum as np_sum
@@ -2191,15 +2173,6 @@ def test_sum_phrase(language):
     y = rand(15)
     assert(isclose(f2(x,y), sum_phrase(x,y), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="sum not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_sum_property(language):
     def sum_call(x : 'int[:]'):
         return x.sum()
@@ -2281,15 +2254,6 @@ def test_min_property(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_int(language):
     def max_call(x : 'int[:]'):
         from numpy import amax
@@ -2299,15 +2263,6 @@ def test_max_int(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_real(language):
     def max_call(x : 'float[:]'):
         from numpy import amax
@@ -2317,15 +2272,28 @@ def test_max_real(language):
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+def test_max_complex(language):
+    def max_call(x: 'complex128[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), max_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), max_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), max_call(x))
+
+def test_max_bool(language):
+    def max_call(x: 'bool[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == max_call(x)
+
 def test_max_phrase(language):
     def max_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import amax
@@ -2336,17 +2304,7 @@ def test_max_phrase(language):
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+    
 def test_max_property(language):
     def max_call(x : 'int[:]'):
         return x.max()
@@ -5183,15 +5141,8 @@ def test_where_combined_types(language):
 def test_numpy_linspace_scalar(language):
     from numpy import linspace
 
-    @types('int', 'int', 'int')
-    @types('int8', 'int', 'int')
-    @types('int16', 'int', 'int')
-    @types('int32', 'int', 'int')
-    @types('int64', 'int', 'int')
-    @types('float', 'int', 'int')
-    @types('float32', 'int', 'int')
-    @types('float64', 'int', 'int')
-    def get_linspace(start, steps, num):
+    @template('T', ['int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
+    def get_linspace(start : 'T', steps : int, num : int):
         from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)

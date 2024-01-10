@@ -13,7 +13,9 @@ pyccelised
 pyccelising
 allocatable
 deallocate
+deallocated
 deallocation
+deallocations
 conda
 PyPI
 CentOS
@@ -94,3 +96,11 @@ Bourne
 Güçlü
 Hadjout
 Ratnani
+unhandled
+unallocated
+mypy
+destructor
+destructor's
+Valgrind
+variadic
+subclasses

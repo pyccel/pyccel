@@ -11,12 +11,12 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
-from pyccel.ast.bind_c import BindCArrayVariable
+from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
 from pyccel.ast.core import AsName, Module, AliasAssign
-from pyccel.ast.datatypes import NativeNumeric
+from pyccel.ast.datatypes import NativeNumeric, CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
@@ -127,7 +127,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        PyccelAstNode
+        TypedAstNode
             An object which can be passed to a function call of the function
             being wrapped.
         """
@@ -250,7 +250,7 @@ class FortranToCWrapper(Wrapper):
         self.exit_scope()
 
         func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
-                doc_string = expr.doc_string)
+                docstring = expr.docstring)
 
         self.scope.functions[name] = func
 
@@ -315,7 +315,7 @@ class FortranToCWrapper(Wrapper):
         name = var.name
         self.scope.insert_symbol(name)
         collisionless_name = self.scope.get_expected_name(var.name)
-        if var.is_ndarray or var.is_optional:
+        if var.is_ndarray or var.is_optional or isinstance(var.dtype, CustomDataType):
             new_var = Variable(BindCPointer(), self.scope.get_new_name(f'bound_{name}'),
                                 is_argument = True, is_optional = False, memory_handling='alias')
             arg_var = var.clone(collisionless_name, is_argument = False, is_optional = False,
@@ -367,7 +367,7 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         local_var = var.clone(scope.get_expected_name(name))
 
-        if local_var.rank:
+        if local_var.rank or isinstance(local_var.dtype, CustomDataType):
             # Allocatable is not returned so it must appear in local scope
             scope.insert_variable(local_var, name)
 
@@ -417,7 +417,7 @@ class FortranToCWrapper(Wrapper):
 
         Returns
         -------
-        pyccel.ast.basic.Basic
+        pyccel.ast.basic.PyccelAstNode
             The AST object describing the code which must be printed in
             the wrapping module to expose the variable.
         """
@@ -455,3 +455,21 @@ class FortranToCWrapper(Wrapper):
                           original_function = expr)
             return expr.clone(expr.name, new_class = BindCArrayVariable, wrapper_function = func,
                                 original_variable = expr)
+
+    def _wrap_ClassDef(self, expr):
+        """
+        Create all objects necessary to expose a class definition to C.
+
+        Create all objects necessary to expose a class definition to C.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class to be wrapped.
+
+        Returns
+        -------
+        BindCClassDef
+            The wrapped class.
+        """
+        return BindCClassDef(expr, docstring = expr.docstring)

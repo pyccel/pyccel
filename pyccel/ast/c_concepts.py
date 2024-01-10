@@ -7,31 +7,49 @@
 Module representing object address.
 """
 
-from .basic import PyccelAstNode, Basic
+from .basic import TypedAstNode, PyccelAstNode
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
            'CStringExpression',
-           'ObjectAddress')
+           'ObjectAddress',
+           'PointerCast')
 
-class ObjectAddress(PyccelAstNode):
-    """Represents the address of an object.
-    ObjectAddress(Variable('int','a'))                            is  &a
-    ObjectAddress(Variable('int','a', memory_handling='alias'))   is   a
+class ObjectAddress(TypedAstNode):
+    """
+    Class representing the address of an object.
+
+    Class representing the address of an object. In most situations it will not be
+    necessary to use this object explicitly. E.g. if you assign a pointer to a
+    target then the pointer will be printed using `AliasAssign`. However for the
+    `_print_AliasAssign` function to print neatly, this class will be used.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose address should be printed.
+
+    Examples
+    --------
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    '&a'
+    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order')
+    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
-        if not isinstance(obj, PyccelAstNode):
-            raise TypeError("object must be an instance of PyccelAstNode")
-        self._obj       = obj
-        self._rank      = obj.rank
-        self._shape     = obj.shape
-        self._precision = obj.precision
-        self._dtype     = obj.dtype
-        self._order     = obj.order
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
+        self._obj        = obj
+        self._rank       = obj.rank
+        self._shape      = obj.shape
+        self._precision  = obj.precision
+        self._dtype      = obj.dtype
+        self._order      = obj.order
+        self._class_type = obj.class_type
         super().__init__()
 
     @property
@@ -40,8 +58,70 @@ class ObjectAddress(PyccelAstNode):
         """
         return self._obj
 
+
+class PointerCast(TypedAstNode):
+    """
+    A class which represents the casting of one pointer to another.
+
+    A class which represents the casting of one pointer to another in C code.
+    This is useful for storing addresses in a void pointer.
+    Using this class is not strictly necessary to produce correct C code,
+    but avoids compiler warnings about the implicit conversion of pointers.
+
+    Parameters
+    ----------
+    obj : Variable
+        The pointer being cast.
+    cast_type : TypedAstNode
+        A TypedAstNode describing the object resulting from the cast.
+    """
+    __slots__ = ('_obj', '_rank', '_precision', '_dtype', '_shape', '_order',
+            '_class_type', '_cast_type')
+    _attribute_nodes = ('_obj',)
+
+    def __init__(self, obj, cast_type):
+        if not isinstance(obj, TypedAstNode):
+            raise TypeError("object must be an instance of TypedAstNode")
+        assert getattr(obj, 'is_alias', False)
+        self._obj        = obj
+        self._rank       = cast_type.rank
+        self._shape      = cast_type.shape
+        self._precision  = cast_type.precision
+        self._dtype      = cast_type.dtype
+        self._class_type = cast_type.class_type
+        self._order      = cast_type.order
+        self._cast_type  = cast_type
+        super().__init__()
+
+    @property
+    def obj(self):
+        """
+        The object whose address is of interest.
+
+        The object whose address is of interest.
+        """
+        return self._obj
+
+    @property
+    def cast_type(self):
+        """
+        Get the TypedAstNode which describes the object resulting from the cast.
+
+        Get the TypedAstNode which describes the object resulting from the cast.
+        """
+        return self._cast_type
+
+    @property
+    def is_argument(self):
+        """
+        Indicates whether the variable is an argument.
+
+        Indicates whether the variable is an argument.
+        """
+        return self._obj.is_argument
+
 #------------------------------------------------------------------------------
-class CStringExpression(Basic):
+class CStringExpression(PyccelAstNode):
     """
     Internal class used to hold a C string that has LiteralStrings and C macros.
 
@@ -182,7 +262,7 @@ class CStringExpression(Basic):
         return self._expression
 
 #------------------------------------------------------------------------------
-class CMacro(Basic):
+class CMacro(PyccelAstNode):
     """Represents a c macro"""
     __slots__ = ('_macro',)
     _attribute_nodes  = ()

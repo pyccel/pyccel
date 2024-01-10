@@ -1,5 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 from math import nan, inf, modf
+import os
 import sys
 import pytest
 from numpy.random import rand, randint, uniform
@@ -536,9 +537,11 @@ def test_copysign_return_type_4(language): # copysign
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="isfinite not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
+@pytest.mark.skipif(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Nan not correctly passed to intel function')
 def test_isfinite_call(language): # isfinite
     def isfinite_call(x : 'float'):
         from math import isfinite
@@ -562,7 +565,8 @@ def test_isfinite_call(language): # isfinite
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="isinf not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_isinf_call(language): # isinf
@@ -607,7 +611,8 @@ def test_isnan_call(language): # isnan
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="ldexp not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python),
     )
 )
 def test_ldexp_call(language): # ldexp
@@ -633,7 +638,8 @@ def test_ldexp_call(language): # ldexp
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="ldexp not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_ldexp_return_type(language): # ldexp
@@ -662,7 +668,8 @@ def test_ldexp_return_type(language): # ldexp
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="remainder not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_remainder_call(language): # remainder
@@ -687,7 +694,8 @@ def test_remainder_call(language): # remainder
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="remainder not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_remainder_return_type(language): # remainder
@@ -753,7 +761,8 @@ def test_trunc_return_type(language): # trunc
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="expm1 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_expm1_call(language): # expm1
@@ -770,7 +779,8 @@ def test_expm1_call(language): # expm1
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="expm1 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_expm1_call_special_case(language): # expm1
@@ -787,7 +797,8 @@ def test_expm1_call_special_case(language): # expm1
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="expm1 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_expm1_phrase(language): # expm1
@@ -806,7 +817,8 @@ def test_expm1_phrase(language): # expm1
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="expm1 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_expm1_return_type(language): # expm1 # expm1
@@ -827,7 +839,8 @@ def test_expm1_return_type(language): # expm1 # expm1
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="log1p not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_log1p_call(language):
@@ -845,7 +858,8 @@ def test_log1p_call(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="log1p not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_log1p_phrase(language):
@@ -865,7 +879,8 @@ def test_log1p_phrase(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="log2 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_log2_call(language):
@@ -885,7 +900,8 @@ def test_log2_call(language):
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason="log2 not implemented"),
             pytest.mark.fortran]
-        )
+        ),
+        pytest.param("python", marks = pytest.mark.python)
     )
 )
 def test_log2_phrase(language):

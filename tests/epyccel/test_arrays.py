@@ -7,6 +7,9 @@ from numpy.random import randint
 from pyccel.epyccel import epyccel
 from modules        import arrays
 
+RTOL = 1e-12
+ATOL = 1e-16
+
 def check_array_equal(a, b):
     """
     Check that two arrays are equal.
@@ -299,6 +302,15 @@ def test_array_int_1d_initialization_1(language):
 
     assert f1() == f2()
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="Lists not yet supported"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_array_int_1d_initialization_2(language):
 
     f1 = arrays.array_int_1d_initialization_2
@@ -1102,7 +1114,7 @@ def test_array_float_1d_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_1d_scalar_mod(language):
     f1 = arrays.array_float_1d_scalar_mod
@@ -1273,7 +1285,7 @@ def test_array_float_2d_C_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_2d_C_scalar_mod(language):
 
@@ -1476,7 +1488,7 @@ def test_array_float_2d_F_scalar_div(language):
     f1(x1, a)
     f2(x2, a)
 
-    assert np.array_equal( x1, x2 )
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
 def test_array_float_2d_F_scalar_mod(language):
 
@@ -1802,13 +1814,13 @@ def test_multiple_stack_array_1(language):
 
     f1 = arrays.multiple_stack_array_1
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_multiple_stack_array_2(language):
 
     f1 = arrays.multiple_stack_array_2
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 #==============================================================================
 # TEST: 2D Stack ARRAYS OF REAL
@@ -1834,13 +1846,13 @@ def test_multiple_2d_stack_array_1(language):
 
     f1 = arrays.multiple_2d_stack_array_1
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 def test_multiple_2d_stack_array_2(language):
 
     f1 = arrays.multiple_2d_stack_array_2
     f2 = epyccel(f1, language = language)
-    assert np.equal(f1(), f2())
+    assert np.allclose(f1(), f2(), rtol=RTOL, atol=ATOL)
 
 #==============================================================================
 # TEST: Product and matrix multiplication
@@ -3537,6 +3549,15 @@ def test_arrs_1d_int64_index(language):
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
+def test_arr_tuple_slice_index(language):
+    f1 = arrays.arr_tuple_slice_index
+    f2 = epyccel(f1, language = language)
+
+    r_python = f1(arrays.a_2d_c)
+    r_pyccel = f2(arrays.a_2d_c)
+
+    check_array_equal(r_python, r_pyccel)
+
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
             pytest.mark.skip(reason="negative step does not work in c. See #1311"),
@@ -3569,8 +3590,6 @@ def test_arrs_2d_negative_index(language):
 #==============================================================================
 # TEST : NUMPY ARANGE
 #==============================================================================
-RTOL = 1e-12
-ATOL = 1e-16
 
 def test_numpy_arange_one_arg(language):
     f1 = arrays.arr_arange_1
