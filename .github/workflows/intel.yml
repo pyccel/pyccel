@@ -80,6 +80,8 @@ jobs:
         id: f_c_pytest
         timeout-minutes: 60
         uses: ./.github/actions/pytest_run
+        with:
+          pytest_mark: -v
       - name: Python tests with pytest
         id: python_pytest
         timeout-minutes: 20
