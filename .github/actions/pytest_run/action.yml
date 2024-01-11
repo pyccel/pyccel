@@ -22,7 +22,7 @@ runs:
           echo "DEBUG=1" >> $GITHUB_ENV
           export FLAGS="-xsv --log-cli-level DEBUG"
         else
-          export FLAGS=""
+          export FLAGS="-v"
         fi
         echo "FLAGS=${FLAGS}" >> $GITHUB_ENV
       shell: ${{ inputs.shell_cmd }}
