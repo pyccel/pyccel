@@ -173,6 +173,18 @@ def test_pass2_if(language):
     test.compare_epyccel(0.2)
     test.compare_epyccel(0.0)
 
+optional_marks = [
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+    ]
+if os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel':
+    optional_marks.append(pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="Intel does not use lazy evaluation. See #1668"),
+            pytest.mark.fortran]))
+else:
+    optional_marks.append(pytest.param("fortran", marks = pytest.mark.fortran))
+
+@pytest.mark.parametrize( 'language', optional_marks)
 def test_use_optional(language):
     test = epyccel_test(base.use_optional, lang=language)
     test.compare_epyccel()
