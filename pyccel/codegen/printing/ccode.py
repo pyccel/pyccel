@@ -68,8 +68,6 @@ __all__ = ["CCodePrinter", "ccode"]
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs' : 'fabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -93,8 +91,6 @@ numpy_ufunc_to_c_float = {
 
 numpy_ufunc_to_c_complex = {
     'NumpyAbs'  : 'cabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     # ---
     'NumpyExp' : 'cexp',
     'NumpyLog' : 'clog',
@@ -1486,22 +1482,32 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        #free the array if its already allocated and checking if its not null if the status is unknown
-        if  (expr.status == 'unknown'):
-            shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
-            free_code = f'if ({self._print(shape_var)} != NULL)\n'
-            free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
-        elif (expr.status == 'allocated'):
-            free_code += self._print(Deallocate(variable))
-        self.add_import(c_imports['ndarrays'])
-        shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
-        shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if variable.on_heap else 'true'
-        order = "order_f" if expr.order == "F" else "order_c"
-        alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-        return '{}{}'.format(free_code, alloc_code)
+        if variable.rank > 0:
+            #free the array if its already allocated and checking if its not null if the status is unknown
+            if  (expr.status == 'unknown'):
+                shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
+                free_code = f'if ({self._print(shape_var)} != NULL)\n'
+                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+            elif (expr.status == 'allocated'):
+                free_code += self._print(Deallocate(variable))
+            self.add_import(c_imports['ndarrays'])
+            shape = ", ".join(self._print(i) for i in expr.shape)
+            dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
+            shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
+            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+            is_view = 'false' if variable.on_heap else 'true'
+            order = "order_f" if expr.order == "F" else "order_c"
+            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+            return '{}{}'.format(free_code, alloc_code)
+        elif variable.is_alias:
+            var_code = self._print(ObjectAddress(variable))
+            if expr.like:
+                declaration_type = self.get_declare_type(expr.like)
+                return f'{var_code} = malloc(sizeof({declaration_type}));\n'
+            else:
+                raise NotImplementedError(f"Allocate not implemented for {variable}")
+        else:
+            raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
@@ -1735,6 +1741,38 @@ class CCodePrinter(CodePrinter):
         elif isinstance(dtype, NativeBool):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
+
+    def _print_NumpyAmax(self, expr):
+        '''
+        Convert a call to numpy.max to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amax_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amax_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amax_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amax_bool({name})'
+
+    def _print_NumpyAmin(self, expr):
+        '''
+        Convert a call to numpy.min to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amin_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amin_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amin_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amin_bool({name})'
 
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
@@ -2239,6 +2277,11 @@ class CCodePrinter(CodePrinter):
                 return f'{obj_code[2:-1]}'
             else:
                 return obj_code
+
+    def _print_PointerCast(self, expr):
+        declare_type = self.get_declare_type(expr.cast_type)
+        var_code = self._print(ObjectAddress(expr.obj))
+        return f'(*({declare_type}*)({var_code}))'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)

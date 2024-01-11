@@ -222,7 +222,7 @@ class Scope(object):
         Parameters
         ----------
         name : str
-            The name of the object we are searching for.
+            The Python name of the object we are searching for.
         category : str, optional
             The type of object we are searching for.
             This must be one of the strings in Scope.categories.
@@ -350,7 +350,7 @@ class Scope(object):
         else:
             raise RuntimeError("Variable not found in scope")
 
-    def insert_class(self, cls):
+    def insert_class(self, cls, name = None):
         """
         Add a class to the current scope.
 
@@ -361,11 +361,16 @@ class Scope(object):
         ----------
         cls : ClassDef
             The class to be inserted into the current scope.
+
+        name : str, optional
+            The name under which the classes should be indexed in the scope.
+            This defaults to the name of the class.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
 
-        name = cls.name
+        if name is None:
+            name = cls.name
 
         if self.is_loop:
             self.parent_scope.insert_class(cls)
@@ -471,7 +476,7 @@ class Scope(object):
                 self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self._used_symbols.values())
+                        self.all_used_symbols)
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
