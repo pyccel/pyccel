@@ -1942,33 +1942,68 @@ class NumpyMod(NumpyUfuncBinary):
             self._dtype = type_info.dtype
             self._precision = type_info.precision
 
-class NumpyAmin(NumpyUfuncUnary):
-    """Represent a call to the amin function in the Numpy library"""
-    __slots__ = ()
-    name = 'amin'
-    def _set_shape_rank(self, x):
-        self._shape     = None
-        self._rank      = 0
+class NumpyAmin(PyccelInternalFunction):
+    """
+    Represents a call to  numpy.min for code generation.
 
-    def _set_dtype_precision(self, x):
-        self._dtype     = x.dtype
-        self._precision = get_final_precision(x)
+    Represents a custom class for handling minimum operations.
+
+    Parameters
+    ----------
+    arg : array_like
+        The input array for which the minimum argument is calculated.
+    """
+    __slots__ = ('_dtype', '_precision', '_class_type')
+    name = 'amin'
+    _rank = 0
+    _shape = None
+    _order = None
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._dtype = arg.dtype
+        self._class_type = self._dtype
+        self._precision = max(arg.precision, default_precision[self._dtype])
 
     @property
-    def is_elemental(self):
-        return False
+    def arg(self):
+        """
+        Get the argument to the min function.
+        
+        This method retrieves the argument used in the min function.
+        """
+        return self._args[0]
 
-class NumpyAmax(NumpyUfuncUnary):
-    """Represent a call to the amax function in the Numpy library"""
-    __slots__ = ()
+class NumpyAmax(PyccelInternalFunction):
+    """
+    Represents a call to  numpy.max for code generation.
+
+    Represents a custom class for handling maximum operations.
+
+    Parameters
+    ----------
+    arg : array_like
+        The input array for which the maximum argument is calculated.
+    """
+    __slots__ = ('_dtype', '_precision', '_class_type')
     name = 'amax'
-    def _set_shape_rank(self, x):
-        self._shape     = None
-        self._rank      = 0
+    _rank = 0
+    _shape = None
+    _order = None
+    def __init__(self, arg):
+        super().__init__(arg)
+        self._dtype = arg.dtype
+        self._class_type = self._dtype
+        self._precision = max(arg.precision, default_precision[self._dtype])
 
-    def _set_dtype_precision(self, x):
-        self._dtype     = x.dtype
-        self._precision = get_final_precision(x)
+    @property
+    def arg(self):
+        """
+        Get the argument to the max function.
+
+        This method retrieves the argument used in the max function.
+        """
+        return self._args[0]
+
 
     @property
     def is_elemental(self):
