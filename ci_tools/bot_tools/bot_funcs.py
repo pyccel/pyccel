@@ -14,7 +14,7 @@ default_python_versions = {
         'anaconda_windows': '3.10',
         'coverage': '3.8',
         'docs': '3.8',
-        'intel': '3.9',
+        'intel': '3.10',
         'linux': '3.8',
         'macosx': '3.12',
         'pickle_wheel': '3.8',
@@ -45,7 +45,7 @@ test_names = {
 
 test_dependencies = {'coverage':['linux']}
 
-tests_with_base = ('coverage', 'docs', 'pyccel_lint')
+tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
                 'pyccel_lint', 'spelling')
@@ -425,7 +425,7 @@ class Bot:
             has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
                                                     and f != 'pyccel/version.py' for f in diff)
         elif key in ('pylint'):
-            has_relevant_change = lambda diff: any(f == 'pyccel/parser/semantic.py' for f in diff) #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('docs'):
             has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' #pylint: disable=unnecessary-lambda-assignment
                                                     for f in diff)

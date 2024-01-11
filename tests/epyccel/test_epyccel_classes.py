@@ -12,7 +12,7 @@ def test_class_import(language):
         def __init__(self : 'A'):
             pass
 
-    epyc_A = epyccel(A)
+    epyc_A = epyccel(A, language = language)
 
     assert isinstance(epyc_A, type)
 
