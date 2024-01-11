@@ -785,8 +785,8 @@ class CToPythonWrapper(Wrapper):
         # is an ndarray.
         for a in original_c_args:
             orig_var = getattr(a, 'original_function_argument_variable', a.var)
-            if orig_var.is_ndarray:
-                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
+            v = self.scope.find(orig_var.name, category='variables')
+            if v.is_ndarray:
                 if v.is_optional:
                     body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:

@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1649 : Add support for `np.min` in C code.
+-   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
@@ -29,9 +31,11 @@ All notable changes to this project will be documented in this file.
 -   #1564 : Fixed installation problems on Python 3.12.
 -   #1259 : Fix bug causing problems with user editable installation.
 -   #1651 : Fix name collision resolution to include parent scopes.
+-   #1156 : Raise an error for variable name collisions with non-variable objects.
 
 ### Changed
 
+-   #1644 : Stop printing the step of a range if that step is 1.
 -   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.

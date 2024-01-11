@@ -18,7 +18,7 @@ from pyccel.ast.basic import TypedAstNode
 
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule
 
-from pyccel.ast.builtins import PythonInt, PythonType,PythonPrint, PythonRange
+from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
 from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
@@ -82,9 +82,6 @@ __all__ = ["FCodePrinter", "fcode"]
 numpy_ufunc_to_fortran = {
     'NumpyAbs'  : 'abs',
     'NumpyFabs'  : 'abs',
-    'NumpyMin'  : 'minval',
-    'NumpyAmin'  : 'minval',
-    'NumpyAmax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -1278,7 +1275,33 @@ class FCodePrinter(CodePrinter):
         # Create statement for initialization
         init_value = self._print(expr.fill_value)
         return init_value
+    
+    def _print_NumpyAmax(self, expr):
+        array_arg = expr.arg
+        if array_arg.dtype is NativeBool():
+            arg_code = self._print(NumpyInt32(array_arg))
+        else:
+            arg_code = self._print(array_arg)
 
+        if array_arg.dtype is NativeComplex():
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'amax({array_arg})'
+        else:
+            return f'maxval({arg_code})'
+    
+    def _print_NumpyAmin(self, expr):
+        array_arg = expr.arg
+        if array_arg.dtype is NativeBool():
+            arg_code = self._print(NumpyInt32(array_arg))
+        else:
+            arg_code = self._print(array_arg)
+
+        if array_arg.dtype is NativeComplex():
+            self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
+            return f'amin({array_arg})'
+        else:
+            return f'minval({arg_code})'
+        
     def _print_PythonMin(self, expr):
         args = expr.args
         if len(args) == 1:
@@ -2076,9 +2099,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonRange(self, expr):
         start = self._print(expr.start)
-        step  = self._print(expr.step)
 
         test_step = expr.step
+        if isinstance(test_step, LiteralInteger) and test_step.python_value == 1:
+            step = ''
+        else:
+            step = ', '+self._print(expr.step)
+
         if isinstance(test_step, PyccelUnarySub):
             test_step = expr.step.args[0]
 
@@ -2094,7 +2121,7 @@ class FCodePrinter(CodePrinter):
                                      PyccelAdd(expr.stop, LiteralInteger(1), simplify = True))
 
         stop = self._print(stop)
-        return '{0}, {1}, {2}'.format(start, stop, step)
+        return f'{start}, {stop}{step}'
 
     def _print_FunctionalFor(self, expr):
         loops = ''.join(self._print(i) for i in expr.loops)
