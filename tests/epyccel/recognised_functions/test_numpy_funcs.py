@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 import pytest
 from numpy.random import rand, randn, randint, uniform
