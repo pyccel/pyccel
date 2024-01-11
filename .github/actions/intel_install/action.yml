@@ -29,8 +29,10 @@ runs:
     - name: Save Intel environment variables
       run: |
         relevant_folders=$(find /opt/intel/oneapi/compiler/ -mindepth 1 -maxdepth 1 ! -type l)
+        echo ${relevant_folders}
         for f in ${relevant_folders}
         do
+            ls $f/env/vars.sh
             source $f/env/vars.sh
         done
         echo "$PATH" > $GITHUB_PATH
