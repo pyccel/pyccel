@@ -14,7 +14,7 @@ default_python_versions = {
         'anaconda_windows': '3.10',
         'coverage': '3.8',
         'docs': '3.8',
-        'intel': '3.9',
+        'intel': '3.10',
         'linux': '3.8',
         'macosx': '3.12',
         'pickle_wheel': '3.8',

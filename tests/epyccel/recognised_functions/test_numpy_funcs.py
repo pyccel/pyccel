@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 import pytest
 from numpy.random import rand, randn, randint, uniform
@@ -3927,9 +3928,8 @@ def test_numpy_imag_array_like_2d(language):
         )
     )
 )
-
 # Not all the arguments supported
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
@@ -3994,7 +3994,7 @@ def test_numpy_mod_scalar(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
@@ -4041,7 +4041,7 @@ def test_numpy_mod_array_like_1d(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_2d(language):
 
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
@@ -4831,7 +4831,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
             pytest.mark.python])
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
@@ -4870,12 +4870,12 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert epyccel_func(bl) == get_matmul(bl)
-    assert epyccel_func(integer8) == get_matmul(integer8)
-    assert epyccel_func(integer16) == get_matmul(integer16)
-    assert epyccel_func(integer) == get_matmul(integer)
-    assert epyccel_func(integer32) == get_matmul(integer32)
-    assert epyccel_func(integer64) == get_matmul(integer64)
+    assert np.array_equal(epyccel_func(bl), get_matmul(bl))
+    assert np.array_equal(epyccel_func(integer8), get_matmul(integer8))
+    assert np.array_equal(epyccel_func(integer16), get_matmul(integer16))
+    assert np.array_equal(epyccel_func(integer), get_matmul(integer))
+    assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
+    assert np.array_equal(epyccel_func(integer64), get_matmul(integer64))
     assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
     assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)
