@@ -4047,7 +4047,7 @@ def test_numpy_mod_array_like_2d(language):
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
     def get_mod(arr : 'T'):
         from numpy import mod, shape
-        a = mod(arr, arr)
+        a = mod(arr, arr-2)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
