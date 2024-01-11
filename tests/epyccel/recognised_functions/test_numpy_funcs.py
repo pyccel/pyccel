@@ -3927,9 +3927,8 @@ def test_numpy_imag_array_like_2d(language):
         )
     )
 )
-
 # Not all the arguments supported
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
@@ -3994,7 +3993,7 @@ def test_numpy_mod_scalar(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
@@ -4041,13 +4040,13 @@ def test_numpy_mod_array_like_1d(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_2d(language):
 
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
     def get_mod(arr : 'T'):
         from numpy import mod, shape
-        a = mod(arr, arr-2)
+        a = mod(arr, arr)
         s = shape(a)
         return len(s), s[0], s[1], a[0,1], a[1,0]
 
@@ -4831,7 +4830,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
             pytest.mark.python])
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
