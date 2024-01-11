@@ -28,7 +28,11 @@ runs:
       shell: bash
     - name: Save Intel environment variables
       run: |
-        source /opt/intel/oneapi/setvars.sh
+        relevant_folders=$(find /opt/intel/oneapi/compiler/ -mindepth 1 -maxdepth 1 ! -type l)
+        for f in ${relevant_folders}
+        do
+            source $f/env/vars.sh
+        done
         echo "$PATH" > $GITHUB_PATH
         echo "LD_LIBRARY_PATH=$LD_LIBRARY_PATH" >> $GITHUB_ENV
         echo "LIBRARY_PATH=$LIBRARY_PATH" >> $GITHUB_ENV
