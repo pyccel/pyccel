@@ -1856,21 +1856,20 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            a = a.value
-            a = a if a else Nil()
+            arg_val = a.value or Nil()
             f = f.var
             if self.is_c_pointer(f):
-                if isinstance(a, Variable):
-                    args.append(ObjectAddress(a))
-                elif not self.is_c_pointer(a):
+                if isinstance(arg_val, Variable):
+                    args.append(ObjectAddress(arg_val))
+                elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
-                    assign = Assign(tmp_var, a)
+                    assign = Assign(tmp_var, arg_val)
                     self._additional_code += self._print(assign)
                     args.append(ObjectAddress(tmp_var))
                 else:
-                    args.append(a)
+                    args.append(arg_val)
             else :
-                args.append(a)
+                args.append(arg_val)
 
         args += self._temporary_args
         self._temporary_args = []
