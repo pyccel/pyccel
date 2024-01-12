@@ -55,7 +55,12 @@ jobs:
       - name: Run Pylint
         run: |
           check_files=$(git diff ${{ inputs.base }}..HEAD --name-only --diff-filter=AM | grep "\.py$" || true)
-          python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
+          if [ -z ${check_files} ]
+          then
+            touch pylint_results.txt
+          else
+            python -m pylint --rcfile=.pylintrc ${check_files} 2>&1 | tee pylint_results.txt || true
+          fi
         shell: bash
       - name: Filter Pylint output
         id: pylint
