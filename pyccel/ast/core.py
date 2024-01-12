@@ -1948,6 +1948,13 @@ class FunctionDefArgument(TypedAstNode):
 
     @property
     def bound_argument(self):
+        """
+        Indicate if the argument is bound to the function call.
+
+        Indicate if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+        """
         return self._bound_argument
 
     @bound_argument.setter

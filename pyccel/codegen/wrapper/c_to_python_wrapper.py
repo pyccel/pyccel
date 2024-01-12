@@ -139,6 +139,10 @@ class CToPythonWrapper(Wrapper):
         args : iterable of FunctionDefArguments
             The expected arguments of the function.
 
+        class_base : DataType, optional
+            The DataType of the class which the method belongs to. In the case of a method
+            defined in a module this value is None.
+
         Returns
         -------
         func_args : list of Variable
@@ -507,7 +511,27 @@ class CToPythonWrapper(Wrapper):
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
 
-    def _get_class_destructor(self, del_function, cls_dtype, cls_base):
+    def _get_class_destructor(self, del_function, cls_dtype):
+        """
+        Create the destructor for the class.
+
+        Create a function which will act as a destructor for the class. This
+        function calls the `__del__` function and frees the memory allocated
+        to store the class instance.
+
+        Parameters
+        ----------
+        del_function : FunctionDef
+            The `__del__` function in the translated class.
+
+        cls_dtype : DataType
+            The datatype of the class being translated.
+
+        Returns
+        -------
+        PyFunctionDef
+            A function that can be called to destroy the class instance.
+        """
         original_func = getattr(del_function, 'original_function', del_function)
         func_name = self.scope.get_new_name(original_func.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
@@ -1275,7 +1299,7 @@ class CToPythonWrapper(Wrapper):
 
         for f in expr.methods:
             if orig_scope.get_python_name(f.name) == '__del__':
-                wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, expr))
+                wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
 
