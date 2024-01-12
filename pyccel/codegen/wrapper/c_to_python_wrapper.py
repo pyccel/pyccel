@@ -895,7 +895,7 @@ class CToPythonWrapper(Wrapper):
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
 
-        if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
+        if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
