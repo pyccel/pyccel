@@ -364,8 +364,8 @@ class CWrapperCodePrinter(CCodePrinter):
                 del_func = f
                 del_string = f"    .tp_dealloc = (destructor) {del_func.name},\n"
             else:
-                docstring = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
-                                                        if f.doc_string else '""'
+                docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                                        if f.docstring else '""'
                 funcs[py_name] = (f.name, docstring)
         method_def_funcs = ''.join(('{\n'
                                      f'"{name}",\n'
