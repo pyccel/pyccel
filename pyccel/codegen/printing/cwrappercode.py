@@ -406,7 +406,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Deallocate(self, expr):
         variable = expr.variable
-        print(expr, variable.dtype, variable)
         if isinstance(variable.dtype, WrapperCustomDataType):
             class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
 
