@@ -468,7 +468,7 @@ module boo
 
     allocate(a(0:3_i64))
     pi_0001 = 3.14159_f64
-    do i_0002 = 0_i64, size(a, kind=i64) - 1_i64, 1_i64
+    do i_0002 = 0_i64, size(a, kind=i64) - 1_i64
       a(i_0002) = pi_0001
     end do
     pi = 3.14_f64

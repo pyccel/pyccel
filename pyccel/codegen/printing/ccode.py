@@ -68,8 +68,6 @@ __all__ = ["CCodePrinter", "ccode"]
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs' : 'fabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -93,8 +91,6 @@ numpy_ufunc_to_c_float = {
 
 numpy_ufunc_to_c_complex = {
     'NumpyAbs'  : 'cabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     # ---
     'NumpyExp' : 'cexp',
     'NumpyLog' : 'clog',
@@ -1751,6 +1747,38 @@ class CCodePrinter(CodePrinter):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
 
+    def _print_NumpyAmax(self, expr):
+        '''
+        Convert a call to numpy.max to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amax_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amax_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amax_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amax_bool({name})'
+
+    def _print_NumpyAmin(self, expr):
+        '''
+        Convert a call to numpy.min to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amin_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amin_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amin_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amin_bool({name})'
+
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
@@ -1833,20 +1861,20 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            a = a.value if a else Nil()
+            arg_val = a.value or Nil()
             f = f.var
             if self.is_c_pointer(f):
-                if isinstance(a, Variable):
-                    args.append(ObjectAddress(a))
-                elif not self.is_c_pointer(a):
+                if isinstance(arg_val, Variable):
+                    args.append(ObjectAddress(arg_val))
+                elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
-                    assign = Assign(tmp_var, a)
+                    assign = Assign(tmp_var, arg_val)
                     self._additional_code += self._print(assign)
                     args.append(ObjectAddress(tmp_var))
                 else:
-                    args.append(a)
+                    args.append(arg_val)
             else :
-                args.append(a)
+                args.append(arg_val)
 
         args += self._temporary_args
         self._temporary_args = []

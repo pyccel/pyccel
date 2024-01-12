@@ -344,6 +344,28 @@ class SemanticParser(BasicParser):
         self._program_namespace = self.scope
         self.scope = self._module_namespace
 
+    def get_class_prefix(self, name):
+        """
+        Search for the class prefix of a dotted name in the current scope.
+
+        Search for a Variable object with the class prefix found in the given
+        name inside the current scope, defined by the local and global Python
+        scopes. Return None if not found.
+
+        Parameters
+        ----------
+        name : DottedName
+            The dotted name which begins with a class definition.
+
+        Returns
+        -------
+        Variable
+            Returns the class definition if found or None otherwise.
+        """
+        prefix_parts = name.name[:-1]
+        syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
+        return self._visit(syntactic_prefix)
+
     def check_for_variable(self, name):
         """
         Search for a Variable object with the given name in the current scope.
@@ -353,7 +375,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        name : str
+        name : str | DottedName
             The object describing the variable.
 
         Returns
@@ -369,12 +391,20 @@ class SemanticParser(BasicParser):
         """
 
         if isinstance(name, DottedName):
-            prefix_parts = name.name[:-1]
-            syntactic_prefix = prefix_parts[0] if len(prefix_parts) == 1 else DottedName(*prefix_parts)
-            prefix = self._visit(syntactic_prefix)
-            class_def = self.scope.find(prefix.dtype.name, 'classes')
+            prefix = self.get_class_prefix(name)
+            try:
+                class_def = prefix.cls_base
+            except AttributeError:
+                class_def = get_cls_base(prefix.dtype, prefix.precision, prefix.class_type) or \
+                            self.scope.find(prefix.class_type.name, 'classes')
+
             attr_name = name.name[-1]
-            attribute = class_def.scope.find(attr_name, 'variables') if class_def else None
+            class_scope = class_def.scope
+            if class_scope is None:
+                # Pyccel defined classes have no variables
+                return None
+
+            attribute = class_scope.find(attr_name, 'variables') if class_def else None
             if attribute:
                 return attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
             else:
@@ -1192,7 +1222,7 @@ class SemanticParser(BasicParser):
             lhs = self._visit(lhs)
         elif isinstance(lhs, (PyccelSymbol, DottedName)):
 
-            name = str(lhs)
+            name = lhs
             if lhs == '_':
                 name = self.scope.get_new_name()
             dtype = d_var.pop('datatype')
@@ -1202,7 +1232,17 @@ class SemanticParser(BasicParser):
             if not arr_in_multirets:
                 self._ensure_target(rhs, d_lhs)
 
-            var = self.check_for_variable(lhs)
+            if isinstance(lhs, DottedName):
+                prefix = self.get_class_prefix(lhs)
+                class_def = prefix.cls_base
+                attr_name = lhs.name[-1]
+                attribute = class_def.scope.find(attr_name) if class_def else None
+                if attribute:
+                    var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = prefix)
+                else:
+                    var = None
+            else:
+                var = self.scope.find(lhs)
 
             # Variable not yet declared (hence array not yet allocated)
             if var is None:
@@ -1385,7 +1425,7 @@ class SemanticParser(BasicParser):
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
             name = var.name
-            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format('<module>', dtype),
+            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), dtype),
                     symbol=f'{name}={dtype}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
@@ -3125,8 +3165,8 @@ class SemanticParser(BasicParser):
             if isinstance(iterable.iterable, PythonEnumerate):
                 syntactic_index = iterator[0]
             else:
-                iterator = self.scope.get_expected_name(iterator)
                 syntactic_index = iterator
+
             index = self.check_for_variable(syntactic_index)
             if index is None:
                 index = self._assign_lhs_variable(syntactic_index, iterator_d_var,

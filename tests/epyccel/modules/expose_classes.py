@@ -25,4 +25,4 @@ def get_an_x_from_B(b_obj : 'B' = None):
     if b_obj is not None:
         return b_obj.x
     else:
-        return 5.0
+        return -2.0

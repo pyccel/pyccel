@@ -803,27 +803,13 @@ def test_basic_header():
                                         "scripts/classes/classes_4.py",
                                         "scripts/classes/classes_5.py",
                                         "scripts/classes/classes_6.py",
+                                        "scripts/classes/classes_7.py",
                                         "scripts/classes/classes_8.py",
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
                                         ] )
 def test_classes( test_file , language):
-    pyccel_test(test_file, language=language)
-
-#------------------------------------------------------------------------------
-@pytest.mark.xdist_incompatible
-@pytest.mark.parametrize( "test_file", ["scripts/classes/classes_7.py",
-                                        ] )
-@pytest.mark.parametrize( 'language', (
-        pytest.param("python", marks = pytest.mark.python),
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Issue #1156"),
-            pytest.mark.fortran])
-    )
-)
-def test_classes_as_args_and_results( test_file , language):
     pyccel_test(test_file, language=language)
 
 #------------------------------------------------------------------------------
@@ -1034,6 +1020,7 @@ def test_function(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
 
@@ -1048,6 +1035,7 @@ def test_inline(language):
         )
     )
 )
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline_import(language):
     pyccel_test("scripts/runtest_decorators_inline.py",
             dependencies = ("scripts/decorators_inline.py"),
