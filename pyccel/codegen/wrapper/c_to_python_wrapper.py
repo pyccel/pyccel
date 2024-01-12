@@ -654,7 +654,11 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
         original_funcs = expr.functions
         example_func = original_funcs[0]
-        class_base = expr.get_user_nodes((ClassDef,))
+        possible_class_base = expr.get_user_nodes((ClassDef,))
+        if possible_class_base:
+            class_base = possible_class_base[0]
+        else:
+            class_base = None
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -665,7 +669,7 @@ class CToPythonWrapper(Wrapper):
         func_args, body = self._unpack_python_args(python_args, class_base)
 
         # Get python arguments which will be passed to FunctionDefs
-        python_arg_objs = [self._python_object_map[a] for a in python_args]
+        python_arg_objs = [self._python_object_map[a] for a in python_args if not a.bound_argument]
 
         type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
         self.scope.insert_variable(type_indicator)
@@ -886,11 +890,10 @@ class CToPythonWrapper(Wrapper):
             The code which translates the `PyccelPyObject` to a C-compatible variable.
         """
 
+        collect_arg = self._python_object_map[expr]
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
-
-        collect_arg = self._python_object_map[expr]
 
         if orig_var.is_ndarray or isinstance(orig_var.dtype, CustomDataType):
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
