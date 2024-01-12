@@ -633,7 +633,7 @@ class PythonTupleFunction(TypedAstNode):
         if isinstance(arg, PythonTuple):
             return arg
         elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
-            return PythonTuple(*list(arg))
+            return PythonTuple(*arg)
         elif isinstance(arg.shape[0], LiteralInteger):
             return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
         else:
