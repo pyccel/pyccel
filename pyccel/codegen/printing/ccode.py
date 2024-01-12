@@ -764,7 +764,7 @@ class CCodePrinter(CodePrinter):
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     if not func.is_inline:
-                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
                         funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
