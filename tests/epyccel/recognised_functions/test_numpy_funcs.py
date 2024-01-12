@@ -1,8 +1,9 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+import os
 import sys
 import pytest
-from numpy.random import rand, randint, uniform
-from numpy import isclose, iinfo, finfo
+from numpy.random import rand, randn, randint, uniform
+from numpy import isclose, iinfo, finfo, complex64, complex128
 import numpy as np
 
 from pyccel.decorators import template, types
@@ -2208,15 +2209,6 @@ def test_sum_property(language):
     x = randint(99,size=10)
     assert(f1(x) == sum_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_int(language):
     def min_call(x : 'int[:]'):
         from numpy import amin
@@ -2226,15 +2218,6 @@ def test_min_int(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amin not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_min_real(language):
     def min_call(x : 'float[:]'):
         from numpy import amin
@@ -2243,6 +2226,28 @@ def test_min_real(language):
     f1 = epyccel(min_call, language = language)
     x = rand(10)
     assert(isclose(f1(x), min_call(x), rtol=RTOL, atol=ATOL))
+
+def test_min_complex(language):
+    def min_call(x: 'complex128[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), min_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), min_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), min_call(x))
+
+def test_min_bool(language):
+    def min_call(x: 'bool[:]'):
+        from numpy import amin
+        return amin(x)
+
+    f1 = epyccel(min_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == min_call(x)
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
@@ -2281,15 +2286,6 @@ def test_min_property(language):
     x = randint(99,size=10)
     assert(f1(x) == min_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_int(language):
     def max_call(x : 'int[:]'):
         from numpy import amax
@@ -2299,15 +2295,6 @@ def test_max_int(language):
     x = randint(99,size=10)
     assert(f1(x) == max_call(x))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_max_real(language):
     def max_call(x : 'float[:]'):
         from numpy import amax
@@ -2317,15 +2304,28 @@ def test_max_real(language):
     x = rand(10)
     assert(isclose(f1(x), max_call(x), rtol=RTOL, atol=ATOL))
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+def test_max_complex(language):
+    def max_call(x: 'complex128[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = randn(10) + 1j * randn(10)  
+    assert np.allclose(f1(x), max_call(x))
+    x = randn(10) + 1j  
+    assert np.allclose(f1(x), max_call(x))
+    x = 10 + 1j * randn(10) 
+    assert np.allclose(f1(x), max_call(x))
+
+def test_max_bool(language):
+    def max_call(x: 'bool[:]'):
+        from numpy import amax
+        return amax(x)
+
+    f1 = epyccel(max_call, language=language)
+    x = np.array([True, False, True, False])  # Generating a boolean array
+    assert f1(x) == max_call(x)
+
 def test_max_phrase(language):
     def max_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import amax
@@ -2336,17 +2336,7 @@ def test_max_phrase(language):
     x = rand(10)
     y = rand(15)
     assert(isclose(f2(x,y), max_phrase(x,y), rtol=RTOL, atol=ATOL))
-
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="amax not implemented"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
+    
 def test_max_property(language):
     def max_call(x : 'int[:]'):
         return x.max()
@@ -3965,9 +3955,8 @@ def test_numpy_imag_array_like_2d(language):
         )
     )
 )
-
 # Not all the arguments supported
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_scalar(language):
 
     @template('T', ['bool', 'int', 'int8', 'int16', 'int32', 'int64', 'float', 'float32', 'float64'])
@@ -4032,7 +4021,7 @@ def test_numpy_mod_scalar(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]'])
@@ -4079,7 +4068,7 @@ def test_numpy_mod_array_like_1d(language):
         )
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Rounding errors. See #1669')
 def test_numpy_mod_array_like_2d(language):
 
     @template('T', ['bool[:,:]', 'int[:,:]', 'int8[:,:]', 'int16[:,:]', 'int32[:,:]', 'int64[:,:]', 'float[:,:]', 'float32[:,:]', 'float64[:,:]'])
@@ -4869,7 +4858,7 @@ def test_numpy_norm_array_like_3d_fortran_order(language):
             pytest.mark.python])
     )
 )
-
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Boolean conversion. See #1670')
 def test_numpy_matmul_array_like_1d(language):
 
     @template('T', ['bool[:]', 'int[:]', 'int8[:]', 'int16[:]', 'int32[:]', 'int64[:]', 'float[:]', 'float32[:]', 'float64[:]', 'complex64[:]', 'complex128[:]'])
@@ -4908,12 +4897,12 @@ def test_numpy_matmul_array_like_1d(language):
 
     epyccel_func = epyccel(get_matmul, language=language)
 
-    assert epyccel_func(bl) == get_matmul(bl)
-    assert epyccel_func(integer8) == get_matmul(integer8)
-    assert epyccel_func(integer16) == get_matmul(integer16)
-    assert epyccel_func(integer) == get_matmul(integer)
-    assert epyccel_func(integer32) == get_matmul(integer32)
-    assert epyccel_func(integer64) == get_matmul(integer64)
+    assert np.array_equal(epyccel_func(bl), get_matmul(bl))
+    assert np.array_equal(epyccel_func(integer8), get_matmul(integer8))
+    assert np.array_equal(epyccel_func(integer16), get_matmul(integer16))
+    assert np.array_equal(epyccel_func(integer), get_matmul(integer))
+    assert np.array_equal(epyccel_func(integer32), get_matmul(integer32))
+    assert np.array_equal(epyccel_func(integer64), get_matmul(integer64))
     assert isclose(epyccel_func(fl),get_matmul(fl), rtol=RTOL, atol=ATOL)
     assert isclose(epyccel_func(fl32),get_matmul(fl32), rtol=RTOL32, atol=ATOL32)
     assert isclose(epyccel_func(fl64),get_matmul(fl64), rtol=RTOL, atol=ATOL)

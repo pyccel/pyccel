@@ -15,9 +15,13 @@ from pyccel.utilities.strings import create_incremented_string
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
                         PythonRange, PythonZip, PythonBool, Lambda)
+
+from .c_concepts import PointerCast
+
 from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
                         NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
                         NativeVoid)
+
 from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
@@ -453,18 +457,23 @@ class Allocate(PyccelAstNode):
     status : str {'allocated'|'unallocated'|'unknown'}
         Variable allocation status at object creation.
 
+    like : TypedAstNode, optional
+        A TypedAstNode describing the amount of memory which must be allocated.
+        In C this provides the size which will be passed to malloc. In Fortran
+        this provides the source argument of the allocate function.
+
     Notes
     -----
     An object of this class is immutable, although it contains a reference to a
     mutable Variable object.
     """
-    __slots__ = ('_variable', '_shape', '_order', '_status')
-    _attribute_nodes = ('_variable',)
+    __slots__ = ('_variable', '_shape', '_order', '_status', '_like')
+    _attribute_nodes = ('_variable', '_like')
 
     # ...
-    def __init__(self, variable, *, shape, order, status):
+    def __init__(self, variable, *, shape, order, status, like = None):
 
-        if not isinstance(variable, Variable):
+        if not isinstance(variable, (Variable, PointerCast)):
             raise TypeError("Can only allocate a 'Variable' object, got {} instead".format(type(variable)))
 
         if variable.on_stack:
@@ -491,24 +500,57 @@ class Allocate(PyccelAstNode):
         self._shape    = shape
         self._order    = order
         self._status   = status
+        self._like = like
         super().__init__()
     # ...
 
     @property
     def variable(self):
+        """
+        The variable to be allocated.
+
+        The variable to be allocated.
+        """
         return self._variable
 
     @property
     def shape(self):
+        """
+        The shape that the variable should be allocated to.
+
+        The shape that the variable should be allocated to.
+        """
         return self._shape
 
     @property
     def order(self):
+        """
+        The order that the variable will be allocated with.
+
+        The order that the variable will be allocated with.
+        """
         return self._order
 
     @property
     def status(self):
+        """
+        The allocation status of the variable before this allocation.
+
+        The allocation status of the variable before this allocation.
+        One of {'allocated'|'unallocated'|'unknown'}.
+        """
         return self._status
+
+    @property
+    def like(self):
+        """
+        TypedAstNode describing the amount of memory needed for the allocation.
+
+        A TypedAstNode describing the amount of memory which must be allocated.
+        In C this provides the size which will be passed to malloc. In Fortran
+        this provides the source argument of the allocate function.
+        """
+        return self._like
 
     def __str__(self):
         return 'Allocate({}, shape={}, order={}, status={})'.format(
