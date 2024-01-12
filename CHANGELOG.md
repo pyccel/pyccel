@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1597 : Handle class docstrings.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
+-   #1495 : Add support for functions with class instance arguments.
 
 ### Fixed
 

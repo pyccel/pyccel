@@ -97,6 +97,8 @@ class FortranToCWrapper(Wrapper):
                      for fa in func_def_args
                      if not isinstance(func_arg_to_call_arg[fa], IndexedElement) \
                         and fa.original_function_argument_variable.is_optional]
+            body += [C_F_Pointer(fa.var, func_arg_to_call_arg[fa]) for fa in func_def_args
+                    if isinstance(func_arg_to_call_arg[fa].dtype, CustomDataType)]
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
