@@ -375,7 +375,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                      '},\n')
                                      for name, (wrapper_name, doc_string) in funcs.items())
 
-        method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
                         f'{method_def_funcs}'
                         '{ NULL, NULL, 0, NULL}\n'
