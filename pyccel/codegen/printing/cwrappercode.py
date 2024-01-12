@@ -350,6 +350,8 @@ class CWrapperCodePrinter(CCodePrinter):
         original_scope = expr.original_class.scope
         functions = '\n'.join(self._print(f) for f in expr.methods)
         function_sigs = ''.join(self.function_signature(f)+';\n' for f in expr.methods)
+        init_string = ''
+        del_string = ''
         init_func = None
         del_func = None
         funcs = {}
@@ -357,8 +359,10 @@ class CWrapperCodePrinter(CCodePrinter):
             py_name = self.get_python_name(original_scope, f.original_function)
             if py_name == '__init__':
                 init_func = f
+                init_string = f"    .tp_init = (initproc) {init_func.name},\n"
             elif py_name == '__del__':
                 del_func = f
+                del_string = f"    .tp_dealloc = (destructor) {del_func.name},\n"
             else:
                 docstring = self._print(LiteralString('\n'.join(f.doc_string.comments))) \
                                                         if f.doc_string else '""'
@@ -385,8 +389,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 "    .tp_itemsize = 0,\n"
                 "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
                 "    .tp_new = PyType_GenericNew,\n"
-                f"    .tp_init = (initproc) {init_func.name},\n"
-                f"    .tp_dealloc = (destructor) {del_func.name},\n"
+                f"{init_string}{del_string}"
                 f"    .tp_methods = {method_def_name},\n"
                 "};\n")
 
