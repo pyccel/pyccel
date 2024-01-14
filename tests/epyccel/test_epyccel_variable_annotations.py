@@ -141,3 +141,25 @@ def test_homogeneous_tuple_2_annotation(language):
 
     assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
     assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
+
+def test_homogeneous_tuple_annotation_str(language):
+    def homogeneous_tuple_annotation():
+        a : 'tuple[int, ...]'
+        a = (1,2,3)
+        return a[0], a[1], a[2]
+
+    epyc_homogeneous_tuple_annotation = epyccel(homogeneous_tuple_annotation, language=language)
+
+    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
+
+def test_homogeneous_tuple_2_annotation_str(language):
+    def homogeneous_tuple_annotation():
+        a : 'tuple[tuple[int, ...], ...]'
+        a = ((1,2,3), (4,5,6))
+        return a[0][0], a[1][0], a[0][2]
+
+    epyc_homogeneous_tuple_annotation = epyccel(homogeneous_tuple_annotation, language=language)
+
+    assert epyc_homogeneous_tuple_annotation() == homogeneous_tuple_annotation()
+    assert isinstance(epyc_homogeneous_tuple_annotation(), type(homogeneous_tuple_annotation()))
