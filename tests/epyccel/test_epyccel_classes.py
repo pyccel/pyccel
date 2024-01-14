@@ -40,3 +40,7 @@ def test_class_argument(modnew):
     assert x == 3.0
     x = modnew.get_an_x_from_B()
     assert x == -2.0
+
+def test_class_function(modnew):
+    c = modnew.C()
+    assert c.get_3() == 3
