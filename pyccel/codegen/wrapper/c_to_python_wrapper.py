@@ -10,6 +10,7 @@ which creates an interface exposing C code to Python.
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
+from pyccel.ast.bind_c        import BindCClassDef
 from pyccel.ast.builtins      import PythonTuple
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
@@ -23,6 +24,7 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
+from pyccel.ast.cwrapper      import PyccelPyTypeObject
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
@@ -57,6 +59,8 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map = {}
         # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
+        # The object that should be returned to indicate an error
+        self._error_exit_code = Nil()
         super().__init__()
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
@@ -192,7 +196,7 @@ class CToPythonWrapper(Wrapper):
         body = [AliasAssign(py_arg, Py_None) for func_def_arg, py_arg in zip(args, arg_vars) if func_def_arg.has_default]
 
         body.append(keyword_list)
-        body.append(If(IfSection(PyccelNot(parse_node), [Return([Nil()])])))
+        body.append(If(IfSection(PyccelNot(parse_node), [Return([self._error_exit_code])])))
 
         return func_args, body
 
@@ -264,11 +268,6 @@ class CToPythonWrapper(Wrapper):
                                arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
                                results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
 
-            if raise_error:
-                message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
-                python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
-                error_code = (python_error,)
-
             func_call = FunctionCall(func, [py_obj])
         else:
             dtype = str(dtype)
@@ -291,6 +290,11 @@ class CToPythonWrapper(Wrapper):
             # No error code required as the error is raised inside pyarray_check
 
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
+
+        if raise_error:
+            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
+            python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
+            error_code = (python_error,)
 
         return func_call, error_code
 
@@ -432,7 +436,7 @@ class CToPythonWrapper(Wrapper):
         function = PyFunctionDef(name = name, arguments = func_args, results = func_results,
                 body = [FunctionCall(PyErr_SetString, [PyNotImplementedError,
                                         LiteralString(error_msg)]),
-                        Return([Nil()])],
+                        Return([self._error_exit_code])],
                 scope = scope, original_function = original_function)
 
         self.scope.functions[name] = function
@@ -511,6 +515,156 @@ class CToPythonWrapper(Wrapper):
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
 
+    def _get_class_allocator(self, class_dtype):
+        """
+        Create the allocator for the class.
+
+        Create a function which will allocate the memory for the class. This
+        is equivalent to the `__new__` function.
+
+        Parameters
+        ----------
+        cls_dtype : DataType
+            The datatype of the class being translated.
+
+        Returns
+        -------
+        PyFunctionDef
+            A function that can be called to create the class instance.
+        """
+        func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        result_name = self.scope.get_new_name('result')
+        result = Variable(class_dtype, result_name)
+        self_var = Variable(dtype=PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
+                              memory_handling='alias')
+        self.scope.insert_variable(self_var)
+        func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
+        func_args = [FunctionDefArgument(a) for a in func_args]
+
+        python_results = [FunctionDefResult(result)]
+        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+
+        # Get the results of the PyFunctionDef
+        python_result_var = self.get_new_PyObject('result_obj', class_dtype)
+        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated')]
+        scope = python_result_var.cls_base.scope
+        attribute = scope.find('instance', 'variables', raise_if_missing = True)
+        c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
+        body.append(Allocate(c_res, shape=(), order=None, status='unallocated',
+                             like = result))
+
+        body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
+
+        return PyFunctionDef(func_name, func_args, func_results,
+                             body, scope=func_scope, original_function = None)
+
+    def _get_class_initialiser(self, init_function, cls_dtype):
+        """
+        Create the constructor for the class.
+
+        Create a function which will initialise the class. This function creates
+        the `__new__` function to allocate the memory which stores the class
+        instance and calls the `__init__` function.
+
+        Parameters
+        ----------
+        init_function : FunctionDef
+            The `__init__` function in the translated class.
+
+        cls_dtype : DataType
+            The datatype of the class being translated.
+
+        Returns
+        -------
+        new_function : PyFunctionDef
+            A function that can be called to create the class instance.
+
+        init_function : PyFunctionDef
+            A function that can be called to create the class instance.
+        """
+        original_func = getattr(init_function, 'original_function', init_function)
+        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        class_dtype = init_function.arguments[0].var.dtype
+
+        is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
+
+        # Handle un-wrappable functions
+        if any(isinstance(getattr(a, 'original_function_argument_variable', a.var), FunctionAddress) for a in init_function.arguments):
+            self.exit_scope()
+            warnings.warn("Functions with functions as arguments will not be callable from Python")
+            return self._get_untranslatable_function(func_name,
+                         func_scope, init_function,
+                         "Cannot pass a function as an argument")
+
+        # Add the variables to the expected symbols in the scope
+        for a in init_function.arguments:
+            func_scope.insert_symbol(a.var.name)
+        for a in getattr(init_function, 'bind_c_arguments', ()):
+            func_scope.insert_symbol(a.original_function_argument_variable.name)
+
+        in_interface = False
+
+        # Get variables describing the arguments and results that are seen from Python
+        python_args = init_function.bind_c_arguments if is_bind_c_function_def else init_function.arguments
+
+        # Get variables describing the arguments and results that must be passed to the function
+        original_c_args = init_function.arguments
+
+        # Get the arguments of the PyFunctionDef
+        func_args, body = self._unpack_python_args(python_args, class_dtype)
+        func_args = [FunctionDefArgument(a) for a in func_args]
+
+        # Get the results of the PyFunctionDef
+        python_result_variable = Variable(NativeInteger(), self.scope.get_new_name(),
+                                          precision = -2, is_temp = True)
+
+        # Get the code required to extract the C-compatible arguments from the Python arguments
+        body += [l for a in python_args for l in self._wrap(a)]
+
+        # Get the arguments and results which should be used to call the c-compatible function
+        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+
+        # Call the C-compatible function
+        body.append(FunctionCall(init_function, func_call_args))
+
+        # Deallocate the C equivalent of any array arguments
+        # The C equivalent is the same variable that is passed to the function unless the target language is Fortran.
+        # In this case the function arguments are the data pointer and the shapes and strides, but the C equivalent
+        # is an ndarray.
+        for a in original_c_args:
+            orig_var = getattr(a, 'original_function_argument_variable', a.var)
+            if orig_var.is_ndarray:
+                v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
+                if v.is_optional:
+                    body.append(If( IfSection(PyccelIsNot(v, self._error_exit_code), [Deallocate(v)]) ))
+                else:
+                    body.append(Deallocate(v))
+
+        # Pack the Python compatible results of the function into one argument.
+        res = Py_None
+        func_results = [FunctionDefResult(python_result_variable)]
+        body.append(Return([LiteralInteger(0, precision=-2)]))
+
+        self.exit_scope()
+        for a in python_args:
+            if not a.bound_argument:
+                self._python_object_map.pop(a)
+
+        function = PyFunctionDef(func_name, func_args, func_results, body, scope=func_scope,
+                docstring = init_function.docstring, original_function = original_func)
+
+        self.scope.functions[func_name] = function
+        self._python_object_map[init_function] = function
+        self._error_exit_code = Nil()
+
+        return function
+
     def _get_class_destructor(self, del_function, cls_dtype):
         """
         Create the destructor for the class.
@@ -544,7 +698,8 @@ class CToPythonWrapper(Wrapper):
 
         attribute = self.scope.find('instance', 'variables')
         c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
-        body = [Deallocate(c_obj),
+        body = [FunctionCall(del_function, [c_obj]),
+                Deallocate(c_obj),
                 Deallocate(func_arg)]
 
         self.exit_scope()
@@ -556,6 +711,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[del_function] = function
 
         return function
+
     #--------------------------------------------------------------------------------------------------------------------------------------------
 
     def _wrap_Module(self, expr):
@@ -718,7 +874,7 @@ class CToPythonWrapper(Wrapper):
             functions.append(wrapped_func)
         if_sections.append(IfSection(LiteralTrue(),
                     [FunctionCall(PyErr_SetString, [PyTypeError, "Unexpected type combination"]),
-                     Return([Nil()])]))
+                     Return([self._error_exit_code])]))
         body.append(If(*if_sections))
         self.exit_scope()
 
@@ -850,7 +1006,7 @@ class CToPythonWrapper(Wrapper):
             if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
+                    body.append(If( IfSection(PyccelIsNot(v, self._error_exit_code), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
@@ -960,7 +1116,8 @@ class CToPythonWrapper(Wrapper):
                 self.scope.insert_variable(cast_type)
                 cast = [AliasAssign(cast_type, PointerCast(collect_arg, cast_type))]
             c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = cast_type)
-            cast.append(AliasAssign(arg_var, PointerCast(c_res, orig_var)))
+            cast_c_res = PointerCast(c_res, orig_var)
+            cast.append(AliasAssign(arg_var, cast_c_res))
         elif arg_var.rank == 0:
             prec  = get_final_precision(orig_var)
             try :
@@ -981,14 +1138,14 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, orig_var, False)
+            check_func, err = self._get_check_function(collect_arg, orig_var, True)
             body.append(If( IfSection(check_func, cast),
-                        IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([Nil()])])
+                        IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
                         ))
         elif not in_interface:
             check_func, err = self._get_check_function(collect_arg, orig_var, True)
             body.append(If( IfSection(check_func, cast),
-                        IfSection(LiteralTrue(), [*err, Return([Nil()])])
+                        IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
                         ))
         else:
             body.extend(cast)
@@ -1300,8 +1457,15 @@ class CToPythonWrapper(Wrapper):
         for f in expr.methods:
             if orig_scope.get_python_name(f.name) == '__del__':
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype))
+            elif orig_scope.get_python_name(f.name) == '__init__':
+                wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
+            elif orig_scope.get_python_name(f.name) == '__new__':
+                wrapped_class.add_alloc_method(self._wrap(f))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
+
+        if not isinstance(expr, BindCClassDef):
+            wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         self.exit_scope()
 
