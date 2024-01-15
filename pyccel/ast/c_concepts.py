@@ -120,6 +120,24 @@ class PointerCast(TypedAstNode):
         """
         return self._obj.is_argument
 
+    @property
+    def on_stack(self):
+        """
+        Indicate that a PointerCast is not associated with memory on the stack.
+
+        Indicate that a PointerCast is not associated with memory on the stack.
+        """
+        return False
+
+    @property
+    def is_alias(self):
+        """
+        Indicate that a PointerCast is an alias.
+
+        Indicate that a PointerCast is an alias.
+        """
+        return True
+
 #------------------------------------------------------------------------------
 class CStringExpression(PyccelAstNode):
     """
