@@ -34,6 +34,9 @@ def get_pylint_results(filename):
     pylint_output = [l.strip() for l in pylint_output]
 
     pylint_results = {}
+    if not pylint_output:
+        return pylint_results
+
     idx = 0
     line = pylint_output[idx]
     while not all(c=='-' for c in line):

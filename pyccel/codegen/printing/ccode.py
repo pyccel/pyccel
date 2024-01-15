@@ -48,7 +48,7 @@ from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -348,7 +348,7 @@ class CCodePrinter(CodePrinter):
         bool
             True if a C pointer, False otherwise.
         """
-        if isinstance(a, (Nil, ObjectAddress)):
+        if isinstance(a, (Nil, ObjectAddress, PointerCast)):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
@@ -1856,20 +1856,20 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            a = a.value if a else Nil()
+            arg_val = a.value or Nil()
             f = f.var
             if self.is_c_pointer(f):
-                if isinstance(a, Variable):
-                    args.append(ObjectAddress(a))
-                elif not self.is_c_pointer(a):
+                if isinstance(arg_val, Variable):
+                    args.append(ObjectAddress(arg_val))
+                elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
-                    assign = Assign(tmp_var, a)
+                    assign = Assign(tmp_var, arg_val)
                     self._additional_code += self._print(assign)
                     args.append(ObjectAddress(tmp_var))
                 else:
-                    args.append(a)
+                    args.append(arg_val)
             else :
-                args.append(a)
+                args.append(arg_val)
 
         args += self._temporary_args
         self._temporary_args = []
@@ -2280,8 +2280,10 @@ class CCodePrinter(CodePrinter):
 
     def _print_PointerCast(self, expr):
         declare_type = self.get_declare_type(expr.cast_type)
+        if not self.is_c_pointer(expr.cast_type):
+            declare_type += '*'
         var_code = self._print(ObjectAddress(expr.obj))
-        return f'(*({declare_type}*)({var_code}))'
+        return f'(*({declare_type})({var_code}))'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)
