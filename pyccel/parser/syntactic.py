@@ -521,8 +521,8 @@ class SyntaxParser(BasicParser):
 
         elif isinstance(stmt.value, str):
             if isinstance(self._context[-2], ast.Expr):
-                return CommentBlock(stmt.s)
-            return LiteralString(stmt.s)
+                return CommentBlock(stmt.value)
+            return LiteralString(stmt.value)
 
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
