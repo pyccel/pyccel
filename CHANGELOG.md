@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1597 : Handle class docstrings.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
+-   #1495 : Add support for functions with class instance arguments.
 
 ### Fixed
 
@@ -34,6 +35,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1672 : Make `icx` and `ifx` the default Intel compilers (Found in Intel oneAPI).
 -   #1644 : Stop printing the step of a range if that step is 1.
 -   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
@@ -194,7 +196,7 @@ All notable changes to this project will be documented in this file.
 -   #1404 : Bug preventing printing of some functions in a `print()` call.
 -   #1302 : Raise error message in case of empty class.
 -   #1407 : Raise an error if file name matches a Python built-in module.
--   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #929 : Allow optional variables when compiling with Intel or NVIDIA.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 -   #1415 : Fix incorrect handling of assignments augmented by function calls.
 -   #1418 : Fix `itertools.product` implementation.

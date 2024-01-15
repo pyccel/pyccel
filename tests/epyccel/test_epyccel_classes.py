@@ -12,7 +12,7 @@ def test_class_import(language):
         def __init__(self : 'A'):
             pass
 
-    epyc_A = epyccel(A)
+    epyc_A = epyccel(A, language = language)
 
     assert isinstance(epyc_A, type)
 
@@ -28,3 +28,15 @@ def test_class_return(modnew):
 
     b = modnew.get_B(3.0)
     assert isinstance(b, modnew.B)
+
+
+def test_class_argument(modnew):
+    b = modnew.get_B(3.0)
+    assert isinstance(b, modnew.B)
+
+    x = modnew.get_x_from_B(b)
+    assert x == 3.0
+    x = modnew.get_an_x_from_B(b)
+    assert x == 3.0
+    x = modnew.get_an_x_from_B()
+    assert x == -2.0
