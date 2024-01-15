@@ -260,6 +260,7 @@ class CCodePrinter(CodePrinter):
                       (NativeInteger(),8)     : 'int64_t',
                       (NativeInteger(),2)     : 'int16_t',
                       (NativeInteger(),1)     : 'int8_t',
+                      (NativeInteger(),-2)    : 'int',
                       (NativeBool(),-1) : 'bool',
                       (NativeVoid(), 0) : 'void',
                       }
