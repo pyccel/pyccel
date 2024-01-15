@@ -81,6 +81,16 @@ class PyccelPyClassType(DataType):
     __slots__ = ()
     _name = 'pyclasstype'
 
+class PyccelPyTypeObject(DataType):
+    """
+    Datatype representing a `PyTypeObject`.
+
+    Datatype representing a `PyTypeObject` which is the
+    class used to hold Python class objects in `Python.h`.
+    """
+    __slots__ = ()
+    _name = 'pytypeobject'
+
 class WrapperCustomDataType(CustomDataType):
     """
     Datatype representing a subclass of `PyObject`.
@@ -549,13 +559,15 @@ class PyClassDef(ClassDef):
         The class from which PyClassDef inherits. This is also the object being
         wrapped.
     """
-    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
+    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
+                 '_new_func')
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
+        self._new_func = None
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
         scope.insert_variable(variables[0])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
@@ -598,6 +610,23 @@ class PyClassDef(ClassDef):
         compatible with Python.
         """
         return self._original_class
+
+    def add_alloc_method(self, f):
+        """
+        Add the wrapper for `__new__` to the class definition.
+
+        Add the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        self._new_func = f
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
