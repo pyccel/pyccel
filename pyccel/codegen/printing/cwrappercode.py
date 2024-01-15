@@ -12,7 +12,7 @@ from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
-from pyccel.ast.cwrapper   import PyccelPyObject
+from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
 
@@ -50,6 +50,7 @@ class CWrapperCodePrinter(CCodePrinter):
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
                       (PyccelPyObject() , 0) : 'PyObject',
+                      (PyccelPyTypeObject() , 0) : 'PyTypeObject',
                       (BindCPointer()   , 0) : 'void'}
 
     def __init__(self, filename, target_language, **settings):
@@ -84,7 +85,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, PyccelPyObject):
+        if isinstance(a.dtype, (PyccelPyObject, PyccelPyTypeObject, WrapperCustomDataType)):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -348,21 +349,18 @@ class CWrapperCodePrinter(CCodePrinter):
                 "};\n")
 
         original_scope = expr.original_class.scope
-        functions = '\n'.join(self._print(f) for f in expr.methods)
-        function_sigs = ''.join(self.function_signature(f)+';\n' for f in expr.methods)
+        print_methods = expr.methods + (expr.new_func,)
+        functions = '\n'.join(self._print(f) for f in print_methods)
+        function_sigs = ''.join(self.function_signature(f)+';\n' for f in print_methods)
         init_string = ''
         del_string = ''
-        init_func = None
-        del_func = None
         funcs = {}
         for f in expr.methods:
             py_name = self.get_python_name(original_scope, f.original_function)
             if py_name == '__init__':
-                init_func = f
-                init_string = f"    .tp_init = (initproc) {init_func.name},\n"
+                init_string = f"    .tp_init = (initproc) {f.name},\n"
             elif py_name == '__del__':
-                del_func = f
-                del_string = f"    .tp_dealloc = (destructor) {del_func.name},\n"
+                del_string = f"    .tp_dealloc = (destructor) {f.name},\n"
             else:
                 docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
                                                         if f.docstring else '""'
@@ -386,9 +384,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
                 f"    .tp_basicsize = sizeof(struct {struct_name}),\n"
-                "    .tp_itemsize = 0,\n"
-                "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
-                "    .tp_new = PyType_GenericNew,\n"
+                 "    .tp_itemsize = 0,\n"
+                 "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
+                f"    .tp_new = {expr.new_func.name},\n"
                 f"{init_string}{del_string}"
                 f"    .tp_methods = {method_def_name},\n"
                 "};\n")
