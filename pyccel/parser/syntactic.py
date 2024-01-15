@@ -527,20 +527,6 @@ class SyntaxParser(BasicParser):
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
 
-    def _visit_NameConstant(self, stmt):
-        if stmt.value is None:
-            return Nil()
-
-        elif stmt.value is True:
-            return LiteralTrue()
-
-        elif stmt.value is False:
-            return LiteralFalse()
-
-        else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
-
-
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
         if self._in_lhs_assign:
