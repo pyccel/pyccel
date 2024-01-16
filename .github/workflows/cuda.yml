@@ -48,7 +48,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py cuda
       - name: CUDA Version
         run: nvcc --version # cuda install check
       - name: Install dependencies
