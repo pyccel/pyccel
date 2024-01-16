@@ -41,7 +41,8 @@ test_names = {
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
-        'windows': "Unit tests on Windows"
+        'windows': "Unit tests on Windows",
+        'cuda': "Unit tests on Linux using Cuda"
         }
 
 test_dependencies = {'coverage':['linux', 'cuda']}
