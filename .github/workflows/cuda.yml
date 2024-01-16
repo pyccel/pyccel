@@ -42,6 +42,7 @@ jobs:
           TZ=Europe/France
           ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
+          export PYCCEL_DEFAULT_COMPILER=nvidia
         shell: bash
       - name: Install python (setup-python action doesn't work with containers)
         uses: ./.github/actions/python_install
