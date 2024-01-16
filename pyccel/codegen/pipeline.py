@@ -173,6 +173,10 @@ def execute_pyccel(fname, *,
     if language is None:
         language = 'fortran'
 
+    # Choose Cuda compiler
+    if language == 'cuda':
+        compiler = 'nvidia'
+
     # Choose Fortran compiler
     if compiler is None:
         compiler = os.environ.get('PYCCEL_DEFAULT_COMPILER', 'GNU')
