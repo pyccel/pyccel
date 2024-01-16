@@ -42,7 +42,7 @@ test_names = {
         'pylint': "Python linting",
         'spelling': "Spelling verification",
         'windows': "Unit tests on Windows",
-        'cuda': "Unit tests on Linux using Cuda"
+        'cuda': "Unit tests on Linux with cuda"
         }
 
 test_dependencies = {'coverage':['linux', 'cuda']}
@@ -419,7 +419,7 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel'):
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel', 'cuda'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/'))  #pylint: disable=unnecessary-lambda-assignment
                                                     and f.endswith('.py') and f != 'pyccel/version.py'
                                                     for f in diff)

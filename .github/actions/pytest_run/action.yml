@@ -39,7 +39,7 @@ runs:
             # Test ndarray folder update (requires parallel tests to avoid clean)
             touch ${SITE_DIR}/pyccel/stdlib/cwrapper/cwrapper.h
             python -m pytest -n auto -rXx ${FLAGS} -m c -k test_array_int32_1d_scalar epyccel/test_arrays.py 2>&1 | tee s2_outfile.out
-        fi
+         fi
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_2
