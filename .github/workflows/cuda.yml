@@ -63,6 +63,7 @@ jobs:
       - name: Coverage install
         uses: ./.github/actions/coverage_install
       - name: Ccuda tests with pytest
+        id: cuda_pytest
         uses: ./.github/actions/pytest_run_cuda
       - name: Collect coverage information
         continue-on-error: True
@@ -76,5 +77,5 @@ jobs:
       - name: "Post completed"
         if: always()
         run:
-          python ci_tools/complete_check_run.py ${{ steps.f_c_pytest.outcome }} ${{ steps.python_pytest.outcome }} ${{ steps.parallel.outcome }} ${{ steps.valgrind.outcome }}
+          python ci_tools/complete_check_run.py ${{ steps.cuda_pytest.outcome }}
 
