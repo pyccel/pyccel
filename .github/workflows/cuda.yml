@@ -42,17 +42,17 @@ jobs:
           ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends tzdata
         shell: bash
-      - name: CUDA Version
-        run: nvcc --version # cuda install check
+      - name: Install python (setup-python action doesn't work with containers)
+        uses: ./.github/actions/python_install
       - name: "Setup"
         id: token
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py
+      - name: CUDA Version
+        run: nvcc --version # cuda install check
       - name: Install dependencies
         uses: ./.github/actions/linux_install
-      - name: Install python (setup-python action doesn't work with containers)
-        uses: ./.github/actions/python_install
       - name: Install Pyccel with tests
         run: |
             PATH=${PATH}:$HOME/.local/bin
