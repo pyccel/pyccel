@@ -23,6 +23,7 @@ files = [os.path.join(path_dir,f) \
          if f.endswith(".py") \
         ]
 @pytest.mark.c
+@pytest.mark.cuda
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
 
