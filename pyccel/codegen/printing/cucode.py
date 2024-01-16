@@ -8,14 +8,32 @@ from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 
 from pyccel.ast.c_concepts  import ObjectAddress
 from pyccel.ast.datatypes   import NativeInteger, NativeVoid
-from pyccel.ast.variable    import DottedVariable
-from pyccel.ast.core        import Deallocate, FunctionAddress, Declare, AsName
+from pyccel.ast.variable    import DottedVariable, DottedName
+from pyccel.ast.core        import Deallocate, AsName
 
 
 from pyccel.errors.errors   import Errors
 from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
                                     PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
+
+import_dict = {'omp_lib' : 'omp' }
+
+c_library_headers = (
+    "complex",
+    "ctype",
+    "float",
+    "math",
+    "stdarg",
+    "stdbool",
+    "stddef",
+    "stdint",
+    "stdio",
+    "stdlib",
+    "string",
+    "tgmath",
+    "inttypes",
+)
 
 errors = Errors()
 
@@ -54,112 +72,30 @@ class CudaCodePrinter(CCodePrinter):
         self._current_module = None
         self._in_header = False
 
-    def function_signature(self, expr, print_arg_names = True, extern_c=True):
-        """
-        Get the C representation of the function signature.
-
-        Extract from the function definition `expr` all the
-        information (name, input, output) needed to create the
-        function signature and return a string describing the
-        function.
-
-        This is not a declaration as the signature does not end
-        with a semi-colon.
-
-        Parameters
-        ----------
-        expr : FunctionDef
-            The function definition for which a signature is needed.
-
-        print_arg_names : bool, default : True
-            Indicates whether argument names should be printed.
-
-        Returns
-        -------
-        str
-            Signature of the function.
-        """
-        arg_vars = [a.var for a in expr.arguments]
-        result_vars = [r.var for r in expr.results if not r.is_argument]
-
-        n_results = len(result_vars)
-
-        if n_results == 1:
-            ret_type = self.get_declare_type(result_vars[0])
-        elif n_results > 1:
-            ret_type = self.find_in_dtype_registry(NativeInteger(), -1)
-            arg_vars.extend(result_vars)
-            self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
+    def _print_Import(self, expr):
+        if expr.ignore:
+            return ''
+        if isinstance(expr.source, AsName):
+            source = expr.source.name
         else:
-            ret_type = self.find_in_dtype_registry(NativeVoid(), 0)
-
-        name = expr.name
-        if not arg_vars:
-            arg_code = 'void'
+            source = expr.source
+        if isinstance(source, DottedName):
+            source = source.name[-1]
         else:
-            def get_arg_declaration(var):
-                """ Get the code which declares the argument variable.
-                """
-                code = "const " * var.is_const
-                code += self.get_declare_type(var)
-                if print_arg_names:
-                    code += ' ' + var.name
-                return code
+            source = self._print(source)
 
-            arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
-                                else get_arg_declaration(var) for var in arg_vars]
-            arg_code = ', '.join(arg_code_list)
+        # Get with a default value is not used here as it is
+        # slower and on most occasions the import will not be in the
+        # dictionary
+        if source in import_dict: # pylint: disable=consider-using-get
+            source = import_dict[source]
 
-        if self._additional_args :
-            self._additional_args.pop()
-        extern_c = ''
-        # extern_c = 'extern "C" ' if extern_c else ''
-        if isinstance(expr, FunctionAddress):
-            return f'{extern_c}{ret_type} (*{name})({arg_code})'
+        if source is None:
+            return ''
+        if expr.source in c_library_headers:
+            return f'#include <{source}.h>\n'
         else:
-            return f'{extern_c}{ret_type} {name}({arg_code})'
-
-    def _print_ModuleHeader(self, expr):
-        self.set_scope(expr.module.scope)
-        self._in_header = True
-        name = expr.module.name
-        if isinstance(name, AsName):
-            name = name.name
-        # TODO: Add interfaces
-        classes = ""
-        funcs = ""
-        for classDef in expr.module.classes:
-            if classDef.docstring is not None:
-                classes += self._print(classDef.docstring)
-            classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
-            for method in classDef.methods:
-                if not method.is_inline:
-                    method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
-                    funcs += f"{self.function_signature(method, extern_c=False)};\n"
-            for interface in classDef.interfaces:
-                for func in interface.functions:
-                    if not func.is_inline:
-                        func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
-                        funcs += f"{self.function_signature(func, extern_c=False)};\n"
-            classes += "};\n"
-        funcs += '\n'.join(f"{self.function_signature(f, extern_c=False)};" for f in expr.module.funcs)
-
-        global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
-
-        # Print imports last to be sure that all additional_imports have been collected
-        imports = [*expr.module.imports, *self._additional_imports.values()]
-        imports = ''.join(self._print(i) for i in imports)
-
-        self._in_header = False
-        self.exit_scope()
-        return (f"#ifndef {name.upper()}_H\n \
-                #define {name.upper()}_H\n\n \
-                {imports}\n \
-                {global_variables}\n \
-                {classes}\n \
-                {funcs}\n \
-                #endif // {name}_H\n")
+            return f'extern "C" {{\n#include "{source}.h"\n}}\n'
 
     def _print_Allocate(self, expr):
         free_code = ''
