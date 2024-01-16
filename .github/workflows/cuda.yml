@@ -48,7 +48,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py cuda
       - name: Install dependencies
         uses: ./.github/actions/linux_install
       - name: Install python (setup-python action doesn't work with containers)
