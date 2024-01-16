@@ -12,15 +12,15 @@
 # include <math.h>
 
 /* mapping the function array_fill to the correct type */
-# define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
-                                        int32_t : _array_fill_int32,\
-                                        int16_t : _array_fill_int16,\
-                                        int8_t : _array_fill_int8,\
-                                        float : _array_fill_float,\
-                                        double : _array_fill_double,\
-                                        bool : _array_fill_bool,\
-                                        float complex : _array_fill_cfloat,\
-                                        double complex : _array_fill_cdouble)(c, arr)
+// # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
+//                                         int32_t : _array_fill_int32,\
+//                                         int16_t : _array_fill_int16,\
+//                                         int8_t : _array_fill_int8,\
+//                                         float : _array_fill_float,\
+//                                         double : _array_fill_double,\
+//                                         bool : _array_fill_bool,\
+//                                         float complex : _array_fill_cfloat,\
+//                                         double complex : _array_fill_cdouble)(c, arr)
 
 typedef enum e_slice_type { ELEMENT, RANGE } t_slice_type;
 
@@ -123,16 +123,16 @@ typedef struct  s_ndarray
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape,
         t_types type, bool is_view, t_order order);
-void        _array_fill_int8(int8_t c, t_ndarray arr);
-void        _array_fill_int16(int16_t c, t_ndarray arr);
-void        _array_fill_int32(int32_t c, t_ndarray arr);
-void        _array_fill_int64(int64_t c, t_ndarray arr);
-void        _array_fill_float(float c, t_ndarray arr);
-void        _array_fill_double(double c, t_ndarray arr);
-void        _array_fill_bool(bool c, t_ndarray arr);
+void        array_fill_int8(int8_t c, t_ndarray arr);
+void        array_fill_int16(int16_t c, t_ndarray arr);
+void        array_fill_int32(int32_t c, t_ndarray arr);
+void        array_fill_int64(int64_t c, t_ndarray arr);
+void        array_fill_float(float c, t_ndarray arr);
+void        array_fill_double(double c, t_ndarray arr);
+void        array_fill_bool(bool c, t_ndarray arr);
 #ifndef __NVCC__
-void        _array_fill_cfloat(float complex c, t_ndarray arr);
-void        _array_fill_cdouble(double complex c, t_ndarray arr);
+void        array_fill_cfloat(float complex c, t_ndarray arr);
+void        array_fill_cdouble(double complex c, t_ndarray arr);
 #endif
 
 /* slicing */

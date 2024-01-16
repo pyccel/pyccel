@@ -480,12 +480,13 @@ class CCodePrinter(CodePrinter):
         lhs = expr.lhs
         code_init = ''
         declare_dtype = self.find_in_dtype_registry(rhs.dtype, rhs.precision)
+        nd_type = self.find_in_ndarray_type_registry(rhs.dtype, rhs.precision)
 
         if rhs.fill_value is not None:
             if isinstance(rhs.fill_value, Literal):
-                code_init += 'array_fill(({0}){1}, {2});\n'.format(declare_dtype, self._print(rhs.fill_value), self._print(lhs))
+                code_init += f'array_fill_{nd_type[3:]}(({declare_dtype}){self._print(rhs.fill_value)}, {self._print(lhs)});\n'
             else:
-                code_init += 'array_fill({0}, {1});\n'.format(self._print(rhs.fill_value), self._print(lhs))
+                code_init += f'array_fill_{nd_type[3:]}({self._print(rhs.fill_value)}, {self._print(lhs)});\n'
         return code_init
 
     def _init_stack_array(self, expr):
