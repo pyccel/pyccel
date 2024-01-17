@@ -2065,7 +2065,7 @@ class SemanticParser(BasicParser):
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
-                                is_kwonly = kwonly, is_argument = True, bound_argument = bound_argument),
+                                is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
                                 value = value, kwonly = kwonly, annotation = expr.annotation))
         return args
 
