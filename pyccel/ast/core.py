@@ -2384,7 +2384,7 @@ class FunctionDef(ScopedAstNode):
         Variables which will not be passed into the function.
 
     cls_name : str
-        Class name if the function is a method of cls_name.
+        The alternative name of the function required for classes.
 
     is_static : bool
         True for static functions. Needed for iso_c_binding interface.
@@ -2524,7 +2524,6 @@ class FunctionDef(ScopedAstNode):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
-#        body = tuple(i for i in body)
         # results
 
         if not iterable(results):
@@ -2532,15 +2531,10 @@ class FunctionDef(ScopedAstNode):
         if not all(isinstance(r, FunctionDefResult) for r in results):
             raise TypeError('results must be all be FunctionDefResults')
 
-        # if method
-
         if cls_name:
 
             if not isinstance(cls_name, str):
                 raise TypeError('cls_name must be a string')
-
-            # if not cls_variable:
-             #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
         if not isinstance(is_static, bool):
             raise TypeError('Expecting a boolean for is_static attribute')
@@ -2649,8 +2643,14 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def cls_name(self):
-        """ String containing the name of the class to which the method belongs.
-        If the function is not a class procedure then this returns None """
+        """
+        String containing an alternative name for the function if it is a class method.
+
+        If a function is a class method then in some languages an alternative name is
+        required. For example in Fortran a name is required for the definition of the
+        class in the module. This name is different from the name of the method which
+        is used when calling the function via the class variable.
+        """
         return self._cls_name
 
     @cls_name.setter
@@ -3301,6 +3301,9 @@ class ClassDef(ScopedAstNode):
 
     scope : Scope
         The scope for the class contents.
+
+    class_type : DataType
+        The data type associated with this class.
 
     Examples
     --------
