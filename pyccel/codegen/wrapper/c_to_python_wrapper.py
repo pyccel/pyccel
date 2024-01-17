@@ -1456,11 +1456,12 @@ class CToPythonWrapper(Wrapper):
         self.scope = wrapped_class.scope
 
         for f in expr.methods:
-            if orig_scope.get_python_name(f.name) == '__del__':
+            name = f.cls_name or f.name
+            if orig_scope.get_python_name(name) == '__del__':
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype))
-            elif orig_scope.get_python_name(f.name) == '__init__':
+            elif orig_scope.get_python_name(name) == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
-            elif orig_scope.get_python_name(f.name) == '__new__':
+            elif orig_scope.get_python_name(name) == '__new__':
                 wrapped_class.add_alloc_method(self._wrap(f))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
