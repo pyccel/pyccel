@@ -3319,7 +3319,7 @@ class ClassDef(ScopedAstNode):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
-    __slots__ = ('_name','_attributes','_methods','_options',
+    __slots__ = ('_name','_attributes','_methods','_options', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
@@ -3333,7 +3333,8 @@ class ClassDef(ScopedAstNode):
         superclasses=(),
         interfaces=(),
         docstring = None,
-        scope = None
+        scope = None,
+        class_type = None
         ):
 
         # name
@@ -3370,6 +3371,9 @@ class ClassDef(ScopedAstNode):
             for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
+
+            if not isinstance(class_type, DataType):
+                raise TypeError("class_type must be a DataType")
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3418,12 +3422,17 @@ class ClassDef(ScopedAstNode):
         self._superclasses  = superclasses
         self._interfaces = interfaces
         self._docstring = docstring
+        self._class_type = class_type
 
         super().__init__(scope = scope)
 
     @property
     def name(self):
         return self._name
+
+    @property
+    def class_type(self):
+        return self._class_type
 
     @property
     def attributes(self):
@@ -3522,7 +3531,6 @@ class ClassDef(ScopedAstNode):
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
         method.set_current_user_node(self)
-        method.arguments[0].bound_argument = True
         self._methods += (method,)
 
     def add_new_interface(self, interface):
