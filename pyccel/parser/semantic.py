@@ -38,7 +38,6 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
-from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
@@ -992,7 +991,7 @@ class SemanticParser(BasicParser):
                The arguments passed to the function.
 
         is_method : bool
-                Indicates if the function is a method (and should return a DottedFunctionCall).
+                Indicates if the function is a class method.
 
         Returns
         -------
@@ -1054,10 +1053,7 @@ class SemanticParser(BasicParser):
 
             args = input_args
 
-            if is_method:
-                new_expr = DottedFunctionCall(func, args, current_function = self._current_function, prefix = args[0].value)
-            else:
-                new_expr = FunctionCall(func, args, self._current_function)
+            new_expr = FunctionCall(func, args, self._current_function)
 
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
@@ -3880,7 +3876,7 @@ class SemanticParser(BasicParser):
             self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
-            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
             del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)

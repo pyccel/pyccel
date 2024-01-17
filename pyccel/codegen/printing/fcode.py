@@ -31,7 +31,7 @@ from pyccel.ast.core import FunctionAddress
 from pyccel.ast.core import Return, Module, For
 from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
-from pyccel.ast.core import FunctionCall, DottedFunctionCall, PyccelFunctionDef
+from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
@@ -1753,8 +1753,8 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(var.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__')
-            Pyccel_del_args = [FunctionCallArgument(arg) for arg in Pyccel__del.arguments]
-            return self._print(DottedFunctionCall(Pyccel__del, Pyccel_del_args, var))
+            Pyccel_del_args = [FunctionCallArgument(var)]
+            return self._print(FunctionCall(Pyccel__del, Pyccel_del_args))
 
         if var.is_alias:
             return ''
@@ -2962,8 +2962,19 @@ class FCodePrinter(CodePrinter):
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
-        if isinstance(expr, DottedFunctionCall):
+        if func.arguments and func.arguments[0].bound_argument:
+            class_variable = args[0].value
             args = args[1:]
+            if isinstance(class_variable, FunctionCall):
+                base = class_variable.funcdef.results[0].var
+                if (not self._additional_code):
+                    self._additional_code = ''
+                var = self.scope.get_temporary_variable(base)
+
+                self._additional_code = self._additional_code + self._print(Assign(var, class_variable)) + '\n'
+                f_name = f'{self._print(var)} % {f_name}'
+            else:
+                f_name = f'{self._print(class_variable)} % {f_name}'
 
         if (not self._additional_code):
             self._additional_code = ''
@@ -3036,24 +3047,6 @@ class FCodePrinter(CodePrinter):
             return '{0} = {1}\n'.format(self._print(results[0]), code)
         else:
             return code
-
-#=======================================================================================
-
-    def _print_DottedFunctionCall(self, expr):
-        if isinstance(expr.prefix, FunctionCall):
-            base = expr.prefix.funcdef.results[0].var
-            if (not self._additional_code):
-                self._additional_code = ''
-            var_name = self.scope.get_new_name()
-            var = base.clone(var_name)
-
-            self.scope.insert_variable(var)
-
-            self._additional_code = self._additional_code + self._print(Assign(var,expr.prefix)) + '\n'
-            user_node = expr.current_user_node
-            expr = DottedFunctionCall(expr.funcdef, expr.args, var)
-            expr.set_current_user_node(user_node)
-        return self._print_FunctionCall(expr)
 
 #=======================================================================================
 
