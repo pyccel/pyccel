@@ -544,7 +544,6 @@ class CToPythonWrapper(Wrapper):
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
         func_args = [FunctionDefArgument(a) for a in func_args]
 
-        python_results = [FunctionDefResult(result)]
         func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
 
         # Get the results of the PyFunctionDef
@@ -557,6 +556,50 @@ class CToPythonWrapper(Wrapper):
                              like = result))
 
         body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
+
+        return PyFunctionDef(func_name, func_args, func_results,
+                             body, scope=func_scope, original_function = None)
+
+    def _get_class_allocator_via_function(self, class_dtype, func):
+        """
+        Create the allocator for the class.
+
+        Create a function which will allocate the memory for the class. This
+        is equivalent to the `__new__` function.
+
+        Parameters
+        ----------
+        cls_dtype : DataType
+            The datatype of the class being translated.
+
+        func : FunctionDef
+            The function which provides a new instance of the class.
+
+        Returns
+        -------
+        PyFunctionDef
+            A function that can be called to create the class instance.
+        """
+        func_name = self.scope.get_new_name(f'{func.name}___wrapper')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        self_var = Variable(dtype=PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
+                              memory_handling='alias')
+        self.scope.insert_variable(self_var)
+        func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
+        func_args = [FunctionDefArgument(a) for a in func_args]
+
+        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
+
+        # Get the results of the PyFunctionDef
+        python_result_var = self.get_new_PyObject('result_obj', class_dtype)
+        scope = python_result_var.cls_base.scope
+        attribute = scope.find('instance', 'variables', raise_if_missing = True)
+        c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
+        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated'),
+                AliasAssign(c_res, FunctionCall(func, ())),
+                Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))])]
 
         return PyFunctionDef(func_name, func_args, func_results,
                              body, scope=func_scope, original_function = None)
@@ -798,6 +841,15 @@ class CToPythonWrapper(Wrapper):
         # Add external functions for normal functions
         for f in expr.funcs:
             external_funcs.append(FunctionDef(f.name.lower(), f.arguments, f.results, [], is_header = True, scope = Scope()))
+
+        for c in expr.classes:
+            m = c.new_func
+            external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+            for m in c.methods:
+                external_funcs.append(FunctionDef(m.name, m.arguments, m.results, [], is_header = True, scope = Scope()))
+            for i in c.interfaces:
+                for f in i.functions:
+                    external_funcs.append(FunctionDef(f.name, f.arguments, f.results, [], is_header = True, scope = Scope()))
         pymod.external_funcs = external_funcs
 
         return pymod
@@ -909,7 +961,7 @@ class CToPythonWrapper(Wrapper):
             The function which can be called from Python.
         """
         original_func = getattr(expr, 'original_function', expr)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         class_dtype = expr.arguments[0].var.dtype if expr.cls_name else None
@@ -1456,17 +1508,23 @@ class CToPythonWrapper(Wrapper):
         self.scope = wrapped_class.scope
 
         for f in expr.methods:
-            name = f.cls_name or f.name
+            orig_f = getattr(f, 'original_function', f)
+            name = orig_f.cls_name or orig_f.name
             if orig_scope.get_python_name(name) == '__del__':
                 wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype))
             elif orig_scope.get_python_name(name) == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
-            elif orig_scope.get_python_name(name) == '__new__':
-                wrapped_class.add_alloc_method(self._wrap(f))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
 
-        if not isinstance(expr, BindCClassDef):
+        for i in expr.interfaces:
+            for f in i.functions:
+                self._wrap(f)
+            wrapped_class.add_new_interface(self._wrap(i))
+
+        if isinstance(expr, BindCClassDef):
+            wrapped_class.add_alloc_method(self._get_class_allocator_via_function(orig_cls_dtype, expr.new_func))
+        else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         self.exit_scope()
