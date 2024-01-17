@@ -490,8 +490,7 @@ class FCodePrinter(CodePrinter):
             self._calculate_class_names(c)
 
         class_decs_and_methods = [self._print(i) for i in expr.classes]
-        if not isinstance(expr, BindCModule):
-            decs += '\n'.join(c[0] for c in class_decs_and_methods)
+        decs += '\n'.join(c[0] for c in class_decs_and_methods)
         # ...
 
         decs += ''.join(self._print(i) for i in expr.declarations)
@@ -517,8 +516,7 @@ class FCodePrinter(CodePrinter):
 
         func_strings = []
         # Get class functions
-        if not isinstance(expr, BindCModule):
-            func_strings += [c[1] for c in class_decs_and_methods]
+        func_strings += [c[1] for c in class_decs_and_methods]
         if expr.funcs:
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
         if isinstance(expr, BindCModule):
@@ -3227,7 +3225,8 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.wrapper_function)
 
     def _print_BindCClassDef(self, expr):
-        return ''
+        sep = f'\n{self._print(SeparatorComment(40))}\n'
+        return '', sep.join(self._print(f) for f in expr.methods)
 
 
 def fcode(expr, filename, assign_to=None, **settings):
