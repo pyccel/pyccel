@@ -442,7 +442,12 @@ class FCodePrinter(CodePrinter):
         Calculate the class names of the functions in a class.
 
         Calculate the names that will be referenced from the class
-        for each function in a class.
+        for each function in a class. Also rename magic methods.
+
+        Parameters
+        ----------
+        expr : ClassDef
+            The class whose functions should be renamed.
         """
         scope = expr.scope
         name = expr.name
