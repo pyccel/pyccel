@@ -1087,8 +1087,8 @@ class PythonCodePrinter(CodePrinter):
         return classDef
 
     def _print_ConstructorCall(self, expr):
-        cls_name = expr.funcdef.cls_name
         cls_variable = expr.cls_variable
+        cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
         return f"{cls_variable} = {cls_name}({args})\n"
 
