@@ -437,6 +437,31 @@ class FCodePrinter(CodePrinter):
 
         return decs
 
+    def _calculate_class_names(self, expr):
+        """
+        Calculate the class names of the functions in a class.
+
+        Calculate the names that will be referenced from the class
+        for each function in a class.
+        """
+        scope = expr.scope
+        name = expr.name
+        for method in expr.methods:
+            if not method.is_inline:
+                m_name = method.name
+                if m_name in _default_methods:
+                    suggested_name = _default_methods[m_name]
+                    scope.rename_function(method, suggested_name)
+                method.cls_name = scope.get_new_name(f'{name}_{method.name}')
+        for i in expr.interfaces:
+            for f in i.functions:
+                if not f.is_inline:
+                    i_name = f.name
+                    if i_name in _default_methods:
+                        suggested_name = _default_methods[i_name]
+                        scope.rename_function(f, suggested_name)
+                    f.cls_name = scope.get_new_name(f'{name}_{f.name}')
+
     # ============ Elements ============ #
     def _print_PyccelSymbol(self, expr):
         return expr
@@ -449,14 +474,16 @@ class FCodePrinter(CodePrinter):
             name = self._print(expr.name)
         name = name.replace('.', '_')
         if not name.startswith('mod_') and self.prefix_module:
-            name = '{prefix}_{name}'.format(prefix=self.prefix_module,
-                                            name=name)
+            name = f'{self.prefix_module}_{name}'
 
         imports = ''.join(self._print(i) for i in expr.imports)
 
         # Define declarations
         decs = ''
         # ...
+        for c in expr.classes:
+            self._calculate_class_names(c)
+
         class_decs_and_methods = [self._print(i) for i in expr.classes]
         if not isinstance(expr, BindCModule):
             decs += '\n'.join(c[0] for c in class_decs_and_methods)
@@ -1955,20 +1982,7 @@ class FCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
 
 
-        name = self._print(expr.name)
-
-        if expr.cls_name:
-            for k, m in list(_default_methods.items()):
-                name = name.replace(k, m)
-
-            cls_name = expr.cls_name
-            if not (cls_name == '__UNDEFINED__'):
-                name = '{0}_{1}'.format(cls_name, name)
-        else:
-            for i in _default_methods:
-                # because we may have a class Point with init: Point___init__
-                if i in name:
-                    name = name.replace(i, _default_methods[i])
+        name = expr.cls_name or expr.name
 
         sig_parts = self.function_signature(expr, name)
         bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
@@ -2047,17 +2061,12 @@ class FCodePrinter(CodePrinter):
 
         aliases = []
         names   = []
-        ls = [self._print(i.name) for i in expr.methods if not i.is_inline]
-        for i in ls:
-            j = _default_methods.get(i,i)
-            aliases.append(j)
-            names.append('{0}_{1}'.format(name, self._print(j)))
-        methods = ''.join('procedure :: {0} => {1}\n'.format(i, j) for i, j in zip(aliases, names))
+        methods = ''.join(f'procedure :: {method.name} => {method.cls_name}\n' for method in expr.methods)
         for i in expr.interfaces:
-            names = ','.join('{0}_{1}'.format(name, self._print(j.name)) for j in i.functions if not j.is_inline)
+            names = ','.join(f.cls_name for f in i.functions if not f.is_inline)
             if names:
-                methods += 'generic, public :: {0} => {1}\n'.format(self._print(i.name), names)
-                methods += 'procedure :: {0}\n'.format(names)
+                methods += f'generic, public :: {i.name} => {names}\n'
+                methods += f'procedure :: {names}\n'
 
 
 
