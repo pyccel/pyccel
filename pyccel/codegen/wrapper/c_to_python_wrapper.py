@@ -1439,16 +1439,17 @@ class CToPythonWrapper(Wrapper):
         """
         name = expr.name
         struct_name = self.scope.get_new_name(f'Py{name}Object')
+        dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
 
         type_name = self.scope.get_new_name(f'Py{name}Type')
         docstring = expr.docstring
-        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name), docstring = docstring)
+        wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
+                                   docstring = docstring, class_type = dtype)
 
         orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
 
         self._python_object_map[expr] = wrapped_class
-        self._python_object_map[orig_cls_dtype] = \
-                DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+        self._python_object_map[orig_cls_dtype] = dtype
 
         self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
