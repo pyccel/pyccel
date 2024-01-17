@@ -3391,10 +3391,20 @@ class ClassDef(ScopedAstNode):
 
     @property
     def name(self):
+        """
+        The name of the class.
+
+        The name of the class.
+        """
         return self._name
 
     @property
     def class_type(self):
+        """
+        The DataType of an object of the described class.
+
+        The DataType of an object of the described class.
+        """
         return self._class_type
 
     @property
@@ -3592,6 +3602,13 @@ class ClassDef(ScopedAstNode):
 
     @property
     def is_unused(self):
+        """
+        Indicates whether the class has any users.
+
+        This function always returns False as a class definition
+        shouldn't be invalidated and deleted due to a lack of
+        users.
+        """
         return False
 
 
