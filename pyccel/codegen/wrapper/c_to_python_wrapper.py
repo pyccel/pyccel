@@ -515,7 +515,7 @@ class CToPythonWrapper(Wrapper):
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
 
-    def _get_class_allocator(self, class_dtype):
+    def _get_class_allocator(self, class_dtype, func = None):
         """
         Create the allocator for the class.
 
@@ -527,52 +527,7 @@ class CToPythonWrapper(Wrapper):
         cls_dtype : DataType
             The datatype of the class being translated.
 
-        Returns
-        -------
-        PyFunctionDef
-            A function that can be called to create the class instance.
-        """
-        func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
-        func_scope = self.scope.new_child_scope(func_name)
-        self.scope = func_scope
-
-        result_name = self.scope.get_new_name('result')
-        result = Variable(class_dtype, result_name)
-        self_var = Variable(dtype=PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
-                              memory_handling='alias')
-        self.scope.insert_variable(self_var)
-        func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
-        func_args = [FunctionDefArgument(a) for a in func_args]
-
-        func_results = [FunctionDefResult(self.get_new_PyObject("result", is_temp=True))]
-
-        # Get the results of the PyFunctionDef
-        python_result_var = self.get_new_PyObject('result_obj', class_dtype)
-        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated')]
-        scope = python_result_var.cls_base.scope
-        attribute = scope.find('instance', 'variables', raise_if_missing = True)
-        c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
-        body.append(Allocate(c_res, shape=(), order=None, status='unallocated',
-                             like = result))
-
-        body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
-
-        return PyFunctionDef(func_name, func_args, func_results,
-                             body, scope=func_scope, original_function = None)
-
-    def _get_class_allocator_via_function(self, class_dtype, func):
-        """
-        Create the allocator for the class.
-
-        Create a function which will allocate the memory for the class. This
-        is equivalent to the `__new__` function.
-
-        Parameters
-        ----------
-        cls_dtype : DataType
-            The datatype of the class being translated.
-
-        func : FunctionDef
+        func : FunctionDef, optional
             The function which provides a new instance of the class.
 
         Returns
@@ -580,7 +535,10 @@ class CToPythonWrapper(Wrapper):
         PyFunctionDef
             A function that can be called to create the class instance.
         """
-        func_name = self.scope.get_new_name(f'{func.name}___wrapper')
+        if func:
+            func_name = self.scope.get_new_name(f'{func.name}___wrapper')
+        else:
+            func_name = self.scope.get_new_name(f'{class_dtype.name}__new___wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -597,9 +555,18 @@ class CToPythonWrapper(Wrapper):
         scope = python_result_var.cls_base.scope
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
-        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated'),
-                AliasAssign(c_res, FunctionCall(func, ())),
-                Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))])]
+
+        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated', like = self_var)]
+
+        if func:
+            body.append(AliasAssign(c_res, FunctionCall(func, ())))
+        else:
+            result_name = self.scope.get_new_name('result')
+            result = Variable(class_dtype, result_name)
+            body.append(Allocate(c_res, shape=(), order=None, status='unallocated',
+                         like = result))
+
+        body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
 
         return PyFunctionDef(func_name, func_args, func_results,
                              body, scope=func_scope, original_function = None)
@@ -1523,7 +1490,7 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_new_interface(self._wrap(i))
 
         if isinstance(expr, BindCClassDef):
-            wrapped_class.add_alloc_method(self._get_class_allocator_via_function(orig_cls_dtype, expr.new_func))
+            wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype, expr.new_func))
         else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
