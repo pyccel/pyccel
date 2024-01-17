@@ -349,9 +349,11 @@ class CWrapperCodePrinter(CCodePrinter):
                 "};\n")
 
         original_scope = expr.original_class.scope
-        print_methods = expr.methods + (expr.new_func,)
+        print_methods = expr.methods + (expr.new_func,) + expr.interfaces
         functions = '\n'.join(self._print(f) for f in print_methods)
-        function_sigs = ''.join(self.function_signature(f)+';\n' for f in print_methods)
+        sig_methods = expr.methods + (expr.new_func,) + tuple(f for i in expr.interfaces for f in i.functions) + \
+                      tuple(i.interface_func for i in expr.interfaces)
+        function_sigs = ''.join(self.function_signature(f)+';\n' for f in sig_methods)
         init_string = ''
         del_string = ''
         funcs = {}
@@ -365,6 +367,13 @@ class CWrapperCodePrinter(CCodePrinter):
                 docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
                                                         if f.docstring else '""'
                 funcs[py_name] = (f.name, docstring)
+
+        for f in expr.interfaces:
+            py_name = self.get_python_name(original_scope, f.original_function)
+            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                                    if f.docstring else '""'
+            funcs[py_name] = (f.name, docstring)
+
         method_def_funcs = ''.join(('{\n'
                                      f'"{name}",\n'
                                      f'(PyCFunction){wrapper_name},\n'
