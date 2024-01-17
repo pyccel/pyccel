@@ -3570,7 +3570,7 @@ class SemanticParser(BasicParser):
         is_inline       = expr.is_inline
         docstring      = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
-        current_class = expr.get_user_nodes(ClassDef, excluded_nodes = (FunctionCall,))
+        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
         if cls_name:
             bound_class = self.scope.find(cls_name, 'classes')
