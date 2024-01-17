@@ -136,6 +136,20 @@ class BindCFunctionDef(FunctionDef):
         """
         return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
 
+    def rename(self, newname):
+        """
+        Rename the FunctionDef name->newname.
+
+        Rename the FunctionDef name->newname.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the FunctionDef.
+        """
+        assert newname == newname.lower()
+        self._name = newname
+
 # =======================================================================================
 
 
@@ -555,14 +569,27 @@ class BindCClassDef(ClassDef):
     original_class : ClassDef
         The class being wrapped.
 
+    new_func : BindCFunctionDef
+        The function which provides a new instance of the class.
+
     **kwargs : dict
         See ClassDef.
     """
-    __slots__ = ('_original_class',)
+    __slots__ = ('_original_class', '_new_func')
 
-    def __init__(self, original_class, **kwargs):
+    def __init__(self, original_class, new_func, **kwargs):
         self._original_class = original_class
+        self._new_func = new_func
         super().__init__(original_class.name, scope = original_class.scope, **kwargs)
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 # =======================================================================================
 #                                   Utility functions
