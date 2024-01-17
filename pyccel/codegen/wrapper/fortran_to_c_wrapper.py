@@ -102,7 +102,7 @@ class FortranToCWrapper(Wrapper):
 
             # If the function is inlined and takes an array argument create a pointer to ensure that the bounds
             # are respected
-            if func.is_inline and any(isinstance(a.value, IndexedElement) for a in args):
+            if getattr(func, 'is_inline', False) and any(isinstance(a.value, IndexedElement) for a in args):
                 array_args = {a: self.scope.get_temporary_variable(a.value.base, a.keyword, memory_handling = 'alias') for a in args if isinstance(a.value, IndexedElement)}
                 body += [AliasAssign(v, k.value) for k,v in array_args.items()]
                 args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
@@ -222,7 +222,8 @@ class FortranToCWrapper(Wrapper):
         if expr.is_private:
             return EmptyNode()
 
-        name = self.scope.get_new_name(f'bind_c_{expr.name.lower()}')
+        orig_name = expr.cls_name or expr.name
+        name = self.scope.get_new_name(f'bind_c_{orig_name.lower()}')
         self._wrapper_names_dict[expr.name] = name
 
         # Create the scope
@@ -244,7 +245,12 @@ class FortranToCWrapper(Wrapper):
 
         func_call_results = [r.var.clone(self.scope.get_expected_name(r.var.name)) for r in expr.results]
 
-        body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
+        interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
+
+        if interface:
+            body = self._get_function_def_body(interface[0], func_arguments, func_to_call, func_call_results)
+        else:
+            body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
 
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
@@ -474,5 +480,36 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
+        name = expr.name
+        func_name = self.scope.get_new_name(f'{name}_bind_c_alloc'.lower())
+        func_scope = self.scope.new_child_scope(func_name)
+
+        local_var = Variable(expr.class_type, func_scope.get_new_name(f'{name}_obj'),
+                             cls_base = expr, memory_handling='alias')
+
+        # Allocatable is not returned so it must appear in local scope
+        func_scope.insert_variable(local_var)
+
+        # Create the C-compatible data pointer
+        bind_var = Variable(dtype=BindCPointer(),
+                            name=func_scope.get_new_name('bound_'+name),
+                            is_const=False, memory_handling='alias')
+        func_scope.insert_variable(bind_var)
+
+        result = BindCFunctionDefResult(bind_var, local_var, func_scope)
+
+        # Define the additional steps necessary to define and fill ptr_var
+        alloc = Allocate(local_var, shape=(), order=None, status='unallocated')
+        c_loc = CLocFunc(local_var, bind_var)
+        body = [alloc, c_loc]
+
+        new_method = BindCFunctionDef(func_name, [], [result], body, original_function = None, scope = func_scope)
+
         methods = [self._wrap(m) for m in expr.methods]
-        return BindCClassDef(expr, methods = methods, docstring = expr.docstring, class_type = expr.class_type)
+        for i in expr.interfaces:
+            for f in i.functions:
+                self._wrap(f)
+        interfaces = [self._wrap(i) for i in expr.interfaces]
+        return BindCClassDef(expr, new_func = new_method, methods = methods,
+                             interfaces = interfaces,
+                             docstring = expr.docstring, class_type = expr.class_type)
