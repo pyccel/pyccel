@@ -8,6 +8,8 @@ Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
 """
 
+from pyccel.utilities.metaclasses import Singleton
+
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -28,8 +30,6 @@ from .literals  import LiteralString
 from .variable  import Variable
 
 from .c_concepts import ObjectAddress
-
-from pyccel.utilities.metaclasses import Singleton
 
 
 errors = Errors()
