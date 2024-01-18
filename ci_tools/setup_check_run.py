@@ -2,6 +2,7 @@
 """
 import json
 import os
+import sys
 from bot_tools.bot_funcs import Bot
 
 if __name__ == '__main__':
@@ -14,16 +15,16 @@ if __name__ == '__main__':
         # (documented here : https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables)
         # The contents of this json file depend on the triggering event and are
         # described here :  https://docs.github.com/en/webhooks-and-events/webhooks/webhook-events-and-payloads
-        with open(os.environ["GITHUB_EVENT_PATH"], encoding="utf-8") as event_file:
-            event = json.load(event_file)
-        workflow_file = event["workflow"]
-        test_key = os.path.splitext(os.path.basename(workflow_file))[0]
+        test_key = sys.argv[1]
         posted = bot.create_in_progress_check_run(test_key)
     else:
         posted = bot.post_in_progress(int(os.environ['GITHUB_RUN_ATTEMPT']) > 1)
 
     run_id = posted['id']
-    pr_id = bot.get_pr_id()
+    try:
+        pr_id = bot.get_pr_id()
+    except StopIteration:
+        pr_id = 0
     sha = posted['head_sha']
 
     print(f"check_run_id={run_id}", sep='')

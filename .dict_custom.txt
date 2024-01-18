@@ -13,6 +13,9 @@ pyccelised
 pyccelising
 allocatable
 deallocate
+deallocated
+deallocation
+deallocations
 conda
 PyPI
 CentOS
@@ -61,8 +64,8 @@ Quickstart
 FST
 AST
 RedBaron
-intel
-nvidia
+Intel
+NVIDIA
 boolean
 booleans
 quicksort
@@ -93,3 +96,12 @@ Bourne
 Güçlü
 Hadjout
 Ratnani
+unhandled
+unallocated
+mypy
+destructor
+destructor's
+Valgrind
+variadic
+subclasses
+oneAPI

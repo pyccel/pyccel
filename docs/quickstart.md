@@ -111,6 +111,14 @@ For scalar variables and arrays Pyccel supports the following data types:
 -   NumPy real types: `float32`, `float64`, `double`
 -   NumPy complex types: `complex64`, `complex128`
 
+Scalar variables can also be specified without using string type annotations:
+```python
+def fun(arg1: type1, arg2: type2, ..., argN: typeN) -> return_type:
+```
+Such type annotations are compatible with mypy and as such are recommended for use where this is possible. NumPy does not yet provide mypy compatible type annotations which provide sufficient information for Pyccel so string annotations are still necessary for arrays.
+
+:warning: When running Pyccel in interactive mode with `epyccel` anything imported before the function being translated is not copied into the file which will be translated. Using non-string types here is therefore likely to generate errors as the necessary imports for these objects will be missing.
+
 ## How to use Pyccel
 
 ### Installation
@@ -281,14 +289,14 @@ def matmul(a: 'float[:,:](order=C)',
     if p != q or m != r or n != s:
         return -1
 
-#$ omp parallel
-#$ omp for schedule(runtime)
+    #$ omp parallel
+    #$ omp for schedule(runtime)
     for i in range(m):
         for j in range(n):
             c[i, j] = 0.0
             for k in range(p):
                 c[i, j] += a[i, k] * b[k, j]
-#$ omp end parallel
+    #$ omp end parallel
 
     return 0
 ```
@@ -323,57 +331,59 @@ And this is the Fortran file `mod.f90`:
 ```fortran
 module mod
 
-use, intrinsic :: ISO_C_BINDING
 
-implicit none
-
-contains
-
-!........................................
-function matmul(a, b, c) result(Out_0001)
-
+  use, intrinsic :: ISO_C_Binding, only : i64 => C_INT64_T , f64 => &
+        C_DOUBLE
   implicit none
 
-  integer(C_INT64_T) :: Out_0001
-  real(C_DOUBLE), intent(in) :: a(0:,0:)
-  real(C_DOUBLE), intent(in) :: b(0:,0:)
-  real(C_DOUBLE), intent(inout) :: c(0:,0:)
-  integer(C_INT64_T) :: m
-  integer(C_INT64_T) :: p
-  integer(C_INT64_T) :: q
-  integer(C_INT64_T) :: n
-  integer(C_INT64_T) :: r
-  integer(C_INT64_T) :: s
-  integer(C_INT64_T) :: i
-  integer(C_INT64_T) :: j
-  integer(C_INT64_T) :: k
+  contains
 
-  m = size(a, 2, C_INT64_T)
-  p = size(a, 1, C_INT64_T)
-  q = size(b, 1, C_INT64_T)
-  n = size(b, 2, C_INT64_T)
-  r = size(c, 2, C_INT64_T)
-  s = size(c, 1, C_INT64_T)
-  if (p /= q .or. m /= r .or. n /= s) then
-    Out_0001 = -1_C_INT64_T
-    return
-  end if
-  !$omp parallel
-  !$omp do schedule(runtime)
-  do i = 0_C_INT64_T, m-1_C_INT64_T, 1_C_INT64_T
-    do j = 0_C_INT64_T, n-1_C_INT64_T, 1_C_INT64_T
-      c(j, i) = 0.0_C_DOUBLE
-      do k = 0_C_INT64_T, p-1_C_INT64_T, 1_C_INT64_T
-        c(j, i) = c(j, i) + a(k, i) * b(k, j)
+  !........................................
+  function matmul(a, b, c) result(Out_0001)
+
+    implicit none
+
+    integer(i64) :: Out_0001
+    real(f64), intent(in) :: a(0:,0:)
+    real(f64), intent(in) :: b(0:,0:)
+    real(f64), intent(inout) :: c(0:,0:)
+    integer(i64) :: m
+    integer(i64) :: p
+    integer(i64) :: q
+    integer(i64) :: n
+    integer(i64) :: r
+    integer(i64) :: s
+    integer(i64) :: i
+    integer(i64) :: j
+    integer(i64) :: k
+
+    m = size(a, 2_i64, i64)
+    p = size(a, 1_i64, i64)
+    q = size(b, 1_i64, i64)
+    n = size(b, 2_i64, i64)
+    r = size(c, 2_i64, i64)
+    s = size(c, 1_i64, i64)
+    if (p /= q .or. m /= r .or. n /= s) then
+      Out_0001 = -1_i64
+      return
+    end if
+    !$omp parallel
+    !$omp do schedule(runtime)
+    do i = 0_i64, m - 1_i64
+      do j = 0_i64, n - 1_i64
+        c(j, i) = 0.0_f64
+        do k = 0_i64, p - 1_i64
+          c(j, i) = c(j, i) + a(k, i) * b(k, j)
+        end do
       end do
     end do
-  end do
-  !$omp end parallel
-  Out_0001 = 0_C_INT64_T
-  return
+    !$omp end do
+    !$omp end parallel
+    Out_0001 = 0_i64
+    return
 
-end function matmul
-!........................................
+  end function matmul
+  !........................................
 
 end module mod
 ```

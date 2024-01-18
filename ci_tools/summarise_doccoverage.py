@@ -48,7 +48,7 @@ if __name__ == '__main__':
     added_mod = [mod for mod in results['compare_no_mod'] if mod not in results['base_no_mod']]
     added_obj = {(mod, cls): methods for mod, obj in results['compare_no_obj'].items() \
                                      for cls, methods in obj.items() \
-                                     if methods != results['base_no_obj'].get(mod, {}).get(cls, None)}
+                                     if any(m not in results['base_no_obj'].get(mod, {}).get(cls, []) for m in methods)}
 
     base_folder = os.path.abspath(args.base[:-4])
 
@@ -91,13 +91,16 @@ if __name__ == '__main__':
                     if obj == []:
                         continue
                     obj_name = '.'.join(obj)
-                    file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, mod)
                     if obj in results['base_no_obj'].get(mod, {}).get(cls, []):
                         level = 'warning'
                     else:
                         level = 'failure'
                         print_to_string(f'{idx + 1}.  {mod}.{cls}.{obj_name}', text=summary)
                         idx += 1
+                    try:
+                        file, start, end = get_code_file_and_lines(f"{cls}.{obj_name}", base_folder, mod)
+                    except AttributeError:
+                        continue
                     annotations.append({
                         "annotation_level":level,
                         "start_line":start,

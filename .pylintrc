@@ -48,7 +48,7 @@ unsafe-load-any-extension=no
 
 # Minimum Python version to use for version dependent checks. Will default to
 # the version used to run pylint.
-py-version=3.7 # Set to last python which has not reached end-of-life
+py-version=3.8 # Set to last python which has not reached end-of-life
 
 [MESSAGES CONTROL]
 
@@ -100,6 +100,7 @@ disable=invalid-name,
         abstract-method, # Raised when a method contains raise NotImplementedError
         redundant-keyword-arg,
         duplicate-code,
+        cyclic-import, # Output not consistent between pylint calls. This should be reactivated if cyclic dependencies can be fixed.
         unused-wildcard-import, # Raised by everything not used in pyccel.errors.messages when using 'from pyccel.errors.messages import *'
         isinstance-second-argument-not-valid-type # prevents doing isinstance(a, acceptable_iterable_types)
         

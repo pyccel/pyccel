@@ -8,6 +8,7 @@
 	that do not have any parameters.
 """
 
+MISSING_TYPE_ANNOTATIONS = 'Missing type annotation. Pyccel needs arguments to be annotated with types to know which types are required in the translated code. See https://github.com/pyccel/pyccel/blob/devel/docs/quickstart.md#type-annotations for information on how to specify the type information.'
 NO_RETURN_VALUE_EXPECTED = 'No return value expected'
 MISSING_RETURN_STATEMENT = 'Missing return statement'
 INVALID_IMPLICIT_RETURN = 'Implicit return in function which does not return'
@@ -104,7 +105,7 @@ PYCCEL_RESTRICTION_IMPORT_IN_DEF = 'Only From Import is allowed inside a def sta
 PYCCEL_RESTRICTION_IMPORT_STAR = 'import * not allowed'
 PYCCEL_RESTRICTION_OPTIONAL_NONE = 'Variables cannot be equal to None unless they are optional arguments and None is the default value'
 PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX = 'Pyccel has encountered syntax that it does not recognise'
-PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language"
+PYCCEL_RESTRICTION_TODO = "Pyccel has encountered syntax that has not been implemented yet. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem. Do not forget to specify your target language."
 PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS = 'Uncovered multi operator comparison statement'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehension expression must be saved in a variable"
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
@@ -118,7 +119,6 @@ FORTRAN_ELEMENTAL_SINGLE_ARGUMENT = 'Elemental functions are defined as scalar o
 
 # other Pyccel messages
 PYCCEL_INVALID_HEADER = 'Annotated comments must start with omp, acc or header'
-PYCCEL_MISSING_HEADER = 'Cannot find associated header'
 MACRO_MISSING_HEADER_OR_FUNC = 'Cannot find associated header/FunctionDef to macro'
 PYCCEL_UNFOUND_IMPORTED_MODULE = 'Unable to import'
 FOUND_DUPLICATED_IMPORT = 'Duplicated import '

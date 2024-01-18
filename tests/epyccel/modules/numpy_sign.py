@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-from pyccel.decorators import types
 
 def complex_nul():
     import numpy as np
@@ -193,103 +192,87 @@ def literal_float_nul():
 
 # Intergers
 
-@types('int8[:]')
-def array_1d_int8(x):
+def array_1d_int8(x : 'int8[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int16[:]')
-def array_1d_int16(x):
+def array_1d_int16(x : 'int16[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int32[:]')
-def array_1d_int32(x):
+def array_1d_int32(x : 'int32[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int64[:]')
-def array_1d_int64(x):
+def array_1d_int64(x : 'int64[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int8[:,:]')
-def array_2d_int8(x):
+def array_2d_int8(x : 'int8[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int16[:,:]')
-def array_2d_int16(x):
+def array_2d_int16(x : 'int16[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int32[:,:]')
-def array_2d_int32(x):
+def array_2d_int32(x : 'int32[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('int64[:,:]')
-def array_2d_int64(x):
+def array_2d_int64(x : 'int64[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
 # Floats
 
-@types('float32[:]')
-def array_1d_float32(x):
+def array_1d_float32(x : 'float32[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('float64[:]')
-def array_1d_float64(x):
+def array_1d_float64(x : 'float64[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('float32[:,:]')
-def array_2d_float32(x):
+def array_2d_float32(x : 'float32[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('float64[:,:]')
-def array_2d_float64(x):
+def array_2d_float64(x : 'float64[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
 # Complexs
 
-@types('complex64[:]')
-def array_1d_complex64(x):
+def array_1d_complex64(x : 'complex64[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('complex128[:]')
-def array_1d_complex128(x):
+def array_1d_complex128(x : 'complex128[:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
-@types('complex64[:,:]')
-def array_2d_complex64(x):
+def array_2d_complex64(x : 'complex64[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y
 
 
-@types('complex128[:,:]')
-def array_2d_complex128(x):
+def array_2d_complex128(x : 'complex128[:,:]'):
     import numpy as np
     y = np.sign(x)
     return y

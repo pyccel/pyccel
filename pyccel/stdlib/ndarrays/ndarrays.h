@@ -9,6 +9,7 @@
 # include <complex.h>
 # include <stdbool.h>
 # include <stdint.h>
+# include <math.h>
 
 /* mapping the function array_fill to the correct type */
 # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
@@ -21,14 +22,14 @@
                                         float complex : _array_fill_cfloat,\
                                         double complex : _array_fill_cdouble)(c, arr)
 
-enum e_slice_type { ELEMENT, RANGE };
+typedef enum e_slice_type { ELEMENT, RANGE } t_slice_type;
 
 typedef struct  s_slice
 {
     int32_t             start;
     int32_t             end;
     int32_t             step;
-    enum e_slice_type   type;
+    t_slice_type   type;
 }               t_slice;
 
 #define GET_INDEX_EXP1(t, arr, a) t(arr, 0, a)
@@ -60,7 +61,7 @@ typedef struct  s_slice
 ** Map e_types enum to numpy NPY_TYPES enum
 ** ref: numpy_repo: numpy/numpy/core/include/numpy/ndarraytypes.h
 */
-enum e_types
+typedef enum e_types
 {
         nd_bool     = 0,
         nd_int8     = 1,
@@ -71,7 +72,13 @@ enum e_types
         nd_double   = 12,
         nd_cfloat   = 14,
         nd_cdouble  = 15
-};
+} t_types;
+
+typedef enum e_order
+{
+    order_f,
+    order_c,
+} t_order;
 
 typedef struct  s_ndarray
 {
@@ -92,10 +99,10 @@ typedef struct  s_ndarray
     int32_t                 nd;
     /* shape 'size of each dimension' */
     int64_t                 *shape;
-    /* strides 'number of bytes to skip to get the next element' */
+    /* strides 'number of elements to skip to get the next element' */
     int64_t                 *strides;
     /* type of the array elements */
-    enum e_types            type;
+    t_types            type;
     /* type size of the array elements */
     int32_t                 type_size;
     /* number of element in the array */
@@ -104,6 +111,8 @@ typedef struct  s_ndarray
     int32_t                 buffer_size;
     /* True if the array does not own the data */
     bool                    is_view;
+    /* stores the order of the array: order_f or order_c */
+    t_order            order;
 }               t_ndarray;
 
 /* functions prototypes */
@@ -111,7 +120,7 @@ typedef struct  s_ndarray
 /* allocations */
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape,
-        enum e_types type, bool is_view);
+        t_types type, bool is_view, t_order order);
 void        _array_fill_int8(int8_t c, t_ndarray arr);
 void        _array_fill_int16(int16_t c, t_ndarray arr);
 void        _array_fill_int32(int32_t c, t_ndarray arr);
@@ -124,7 +133,7 @@ void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
                 /* creating a Slice object */
-t_slice new_slice(int32_t start, int32_t end, int32_t step, enum e_slice_type type);
+t_slice new_slice(int32_t start, int32_t end, int32_t step, t_slice_type type);
                 /* creating an array view */
 t_ndarray   array_slicing(t_ndarray arr, int n, ...);
 
@@ -133,8 +142,8 @@ void        alias_assign(t_ndarray *dest, t_ndarray src);
 void        transpose_alias_assign(t_ndarray *dest, t_ndarray src);
 
 /* free */
-int32_t         free_array(t_ndarray dump);
-int32_t         free_pointer(t_ndarray dump);
+int32_t         free_array(t_ndarray* dump);
+int32_t         free_pointer(t_ndarray* dump);
 
 /* indexing */
 int64_t         get_index(t_ndarray arr, ...);
@@ -142,6 +151,9 @@ int64_t         get_index(t_ndarray arr, ...);
 /* data converting between numpy and ndarray */
 int64_t     *numpy_to_ndarray_strides(int64_t *np_strides, int type_size, int nd);
 int64_t     *numpy_to_ndarray_shape(int64_t *np_shape, int nd);
+void print_ndarray_memory(t_ndarray nd);
+/* copy data from ndarray */
+void array_copy_data(t_ndarray* dest, t_ndarray src, uint32_t offset);
 
 /* numpy sum */
 
@@ -154,5 +166,29 @@ float              numpy_sum_float32(t_ndarray arr);
 double             numpy_sum_float64(t_ndarray arr);
 float complex      numpy_sum_complex64(t_ndarray arr);
 double complex     numpy_sum_complex128(t_ndarray arr);
+
+/*numpy max/amax */
+
+int64_t            numpy_amax_bool(t_ndarray arr);
+int64_t            numpy_amax_int8(t_ndarray arr);
+int64_t            numpy_amax_int16(t_ndarray arr);
+int64_t            numpy_amax_int32(t_ndarray arr);
+int64_t            numpy_amax_int64(t_ndarray arr);
+float              numpy_amax_float32(t_ndarray arr);
+double             numpy_amax_float64(t_ndarray arr);
+float complex      numpy_amax_complex64(t_ndarray arr);
+double complex     numpy_amax_complex128(t_ndarray arr);
+
+/* numpy min/amin */
+
+int64_t            numpy_amin_bool(t_ndarray arr);
+int64_t            numpy_amin_int8(t_ndarray arr);
+int64_t            numpy_amin_int16(t_ndarray arr);
+int64_t            numpy_amin_int32(t_ndarray arr);
+int64_t            numpy_amin_int64(t_ndarray arr);
+float              numpy_amin_float32(t_ndarray arr);
+double             numpy_amin_float64(t_ndarray arr);
+float complex      numpy_amin_complex64(t_ndarray arr);
+double complex     numpy_amin_complex128(t_ndarray arr);
 
 #endif

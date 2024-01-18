@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
-from .basic     import Basic, PyccelAstNode, Immutable
+from .basic     import PyccelAstNode, TypedAstNode, Immutable
 from .datatypes import NativeInteger, default_precision
 from .literals  import LiteralInteger
 
@@ -19,6 +19,7 @@ pyccel_stage = PyccelStage()
 
 __all__ = (
     'PrecomputedCode',
+    'PyccelArrayShapeElement',
     'PyccelArraySize',
     'PyccelInternalFunction',
     'PyccelSymbol',
@@ -28,101 +29,185 @@ __all__ = (
 )
 
 
-class PyccelInternalFunction(PyccelAstNode):
-    """ Abstract class used by function calls
-    which are translated to Pyccel objects
+class PyccelInternalFunction(TypedAstNode):
+    """
+    Abstract class for function calls translated to Pyccel objects.
+
+    A subclass of this base class represents calls to a specific internal
+    function of Pyccel, which may be simplified at a later stage, or made
+    available in the target language when printing the generated code.
+
+    Parameters
+    ----------
+    *args : iterable
+        The arguments passed to the function call.
     """
     __slots__ = ('_args',)
     _attribute_nodes = ('_args',)
     name = None
+
     def __init__(self, *args):
-        self._args   = tuple(args)
+        self._args = tuple(args)
         super().__init__()
 
     @property
     def args(self):
-        """ The arguments passed to the function
+        """
+        The arguments passed to the function.
+
+        Tuple containing all the arguments passed to the function call.
         """
         return self._args
 
     @property
     def is_elemental(self):
-        """ Indicates whether the function should be
-        called elementwise for an array argument
+        """
+        Whether the function acts elementwise on an array argument.
+
+        Boolean indicating whether the (scalar) function should be called
+        elementwise on an array argument. Here we set the default to False.
         """
         return False
 
 
 class PyccelArraySize(PyccelInternalFunction):
     """
-    Class representing a call to a function which would
-    return the shape of an object in a given dimension
+    Gets the total number of elements in an array.
+
+    Class representing a call to a function which would return
+    the total number of elements in a multi-dimensional array.
 
     Parameters
-    ==========
-    arg   : PyccelAstNode
-            A PyccelAstNode of unknown shape
-    index : int
-            The dimension along which the shape is
-            provided
+    ----------
+    arg : TypedAstNode
+        An array of unknown size.
     """
-    __slots__ = ('_arg','_index')
-    name   = 'shape'
-    _attribute_nodes = ('_arg', '_index')
+    __slots__ = ()
+    name = 'size'
+
     _dtype = NativeInteger()
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
+    _class_type = NativeInteger()
 
-    def __init__(self, arg, index):
-        if not isinstance(arg, (list,
-                                tuple,
-                                PyccelAstNode)):
-            raise TypeError('Unknown type of  %s.' % type(arg))
-        if isinstance(index, int):
-            index = LiteralInteger(index)
-        elif not isinstance(index, PyccelAstNode):
-            raise TypeError('Unknown type of  %s.' % type(index))
-
-        self._arg   = arg
-        self._index = index
-        super().__init__()
+    def __init__(self, arg):
+        super().__init__(arg)
 
     @property
     def arg(self):
-        """ Object whose size is investigated
         """
-        return self._arg
+        Object whose size is investigated.
 
-    @property
-    def index(self):
-        """ Dimension along which the size is calculated
+        The argument of the function call, i.e. the object whose size is
+        investigated.
         """
-        return self._index
+        return self._args[0]
 
     def __str__(self):
-        return 'Shape({},{})'.format(str(self.arg), str(self.index))
+        return f'Size({self.arg})'
 
     def __eq__(self, other):
         if isinstance(other, PyccelArraySize):
+            return self.arg == other.arg
+        else:
+            return False
+
+
+class PyccelArrayShapeElement(PyccelInternalFunction):
+    """
+    Gets the number of elements in a given dimension of an array.
+
+    Class representing a call to a function which would return
+    the shape of a multi-dimensional array in a given dimension.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        An array of unknown shape.
+
+    index : int
+        The dimension along which the shape should be provided.
+    """
+    __slots__ = ()
+    name = 'shape'
+
+    _dtype = NativeInteger()
+    _precision = -1
+    _rank  = 0
+    _shape = None
+    _order = None
+    _class_type = NativeInteger()
+
+    def __init__(self, arg, index):
+        if not isinstance(arg, TypedAstNode):
+            raise TypeError(f'Unknown type {type(arg)} of {arg}.')
+
+        if isinstance(index, int):
+            index = LiteralInteger(index)
+        elif not isinstance(index, TypedAstNode):
+            raise TypeError(f'Unknown type {type(index)} of {index}.')
+
+        super().__init__(arg, index)
+
+    @property
+    def arg(self):
+        """
+        Object whose size is investigated.
+
+        The first argument of the function call, i.e. the array whose size is
+        investigated.
+        """
+        return self._args[0]
+
+    @property
+    def index(self):
+        """
+        Dimension along which the size is calculated.
+
+        The second argument of the function call, i.e. the dimension along
+        which the array size is calculated.
+        """
+        return self._args[1]
+
+    def __str__(self):
+        return f'Shape({self.arg}, {self.index})'
+
+    def __eq__(self, other):
+        if isinstance(other, PyccelArrayShapeElement):
             return self.arg == other.arg and self.index == other.index
         else:
             return False
 
-class Slice(Basic):
 
-    """Represents a slice in the code.
+class Slice(PyccelAstNode):
+    """
+    Represents a slice in the code.
+
+    An object of this class represents the slicing of a Numpy array along one of
+    its dimensions. In most cases this corresponds to a Python slice in the user
+    code, where it is represented by a `python.ast.Slice` object.
+
+    In addition, at the wrapper and code generation stages, an integer index
+    `i` used to create a view of a Numpy array is converted to an object
+    `Slice(i, i+1, 1, slice_type = Slice.Element)`. This allows using C
+    variadic arguments in the function `array_slicing` (in file
+    pyccel/stdlib/ndarrays/ndarrays.c).
 
     Parameters
     ----------
     start : PyccelSymbol or int
-        starting index
+        Starting index.
 
     stop : PyccelSymbol or int
-        ending index
+        Ending index.
 
-    step : PyccelSymbol or int default None
+    step : PyccelSymbol or int, default=None
+        The step between indices.
+
+    slice_type : LiteralInteger
+        The type of the slice. Either Slice.Range or Slice.Element.
 
     Examples
     --------
@@ -198,14 +283,24 @@ class Slice(Basic):
             stop = str(self.stop)
         return '{0} : {1}'.format(start, stop)
 
+
 class PyccelSymbol(str, Immutable):
-    """Symbolic placeholder for a Python variable, which has a name but no type yet.
+    """
+    Class representing a symbol in the code.
+
+    Symbolic placeholder for a Python variable, which has a name but no type yet.
     This is very generic, and it can also represent a function or a module.
 
     Parameters
     ----------
-    name : String
-        name of the symbol
+    name : str
+        Name of the symbol.
+
+    is_temp : bool
+        Indicates if the symbol is a temporary object. This either means that the
+        symbol represents an object originally named `_` in the code, or that the
+        symbol represents an object created by Pyccel in order to assign a
+        temporary object. This is sometimes necessary to facilitate the translation.
 
     Examples
     --------
@@ -230,13 +325,13 @@ class PyccelSymbol(str, Immutable):
         """
         return self._is_temp
 
-class PrecomputedCode(Basic):
+class PrecomputedCode(PyccelAstNode):
     """
     Internal helper class for storing code which must be defined by the printer
     before it is needed chronologically (e.g. for inline functions as arguments
     to the same function).
     This class should be avoided if at all possible as it may break code which
-    searches through attribute nodes, where possible use Basic's methods,
+    searches through attribute nodes, where possible use PyccelAstNode's methods,
     e.g. substitute
 
     Parameters
@@ -259,6 +354,7 @@ class PrecomputedCode(Basic):
         """ The string containing the precomputed code
         """
         return self._code
+
 
 def symbols(names):
     """
@@ -287,37 +383,53 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
-def max_precision(objs : list, dtype = None, allow_native = True):
+
+def max_precision(objs : list, allow_native : bool = True):
     """
-    Returns the largest precision of an object in the list
+    Return the largest precision amongst the objects in the list.
+
+    Return the largest precision amongst the objects in the list.
 
     Parameters
     ----------
     objs : list
-           A list of PyccelAstNodes
-    dtype : Dtype class
-            If this argument is provided then only the
-            precision of objects with this dtype are
-            considered
+       A list of TypedAstNodes.
+
+    allow_native : bool, default=True
+        Allow the final result to be a native precision (i.e. -1).
+
+    Returns
+    -------
+    int
+        The largest precision found.
     """
     if allow_native and all(o.precision == -1 for o in objs):
         return -1
-    elif dtype:
-        def_prec = default_precision[str(dtype)]
-        return max(def_prec if o.precision == -1 \
-                else o.precision for o in objs if o.dtype is dtype)
     else:
         ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
         if ndarray_list:
             return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
         return max(get_final_precision(o) for o in objs)
 
+
 def get_final_precision(obj):
     """
-    Get the the usable precision of an object. Ie. the precision that you
-    can use to print, eg 8 instead of -1 for a default precision float
+    Get the usable precision of an object.
+
+    Get the usable precision of an object. I.e. the precision that you
+    can use to print, e.g. 8 instead of -1 for a default precision float.
 
     If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned
+    precision is returned, otherwise the provided precision is returned.
+
+    Parameters
+    ----------
+    obj : TypedAstNode
+        The object whose precision we want to investigate.
+
+    Returns
+    -------
+    int
+        The precision of the object to be used in the code.
     """
-    return default_precision[str(obj.dtype)] if obj.precision == -1 else obj.precision
+    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision

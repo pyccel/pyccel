@@ -41,7 +41,7 @@ jobs:
         id: token
         run: |
           pip install jwt requests
-          python ci_tools/setup_check_run.py
+          python ci_tools/setup_check_run.py spelling
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools

@@ -14,7 +14,7 @@ import traceback as tb
 from collections import OrderedDict
 from os.path import basename
 
-from pyccel.ast.basic import Basic
+from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton
 
 # ...
@@ -77,13 +77,46 @@ class PyccelCodegenError(PyccelError):
 
 
 class ErrorInfo:
-    """Representation of a single error message."""
+    """
+    Representation of a single error message.
+
+    A class which holds all of the information necessary to describe
+    an error message raised by Pyccel.
+
+    Parameters
+    ----------
+    stage : str
+        The parser stage when the error occured.
+
+    filename : str
+        The file where the error was detected.
+
+    message : str
+        The message to be displayed to the user.
+
+    line : int, optional
+        The line where the error was detected.
+
+    column : int, optional
+        The column in the line of code where the error was detected.
+
+    severity : str, optional
+        The severity of the error. This is one of : [warning/error/fatal].
+
+    symbol : pyccel.ast.basic.PyccelAstNode, optional
+        The PyccelAstNode object which caused the error to need to be raised.
+        This object is printed in the error message.
+
+    traceback : str, optional
+        The traceback describing the execution of the code when the error
+        was raised.
+    """
 
     def __init__(self, *, stage, filename,
+                 message,
                  line=None,
                  column=None,
                  severity=None,
-                 message='',
                  symbol=None,
                  traceback=None):
         # The parser stage
@@ -103,7 +136,7 @@ class ErrorInfo:
         # Symbol associated to the message
         self.symbol = symbol
         # If True, we should halt build after the file that generated this error.
-        self.blocker = (ErrorsMode().value == 'developer' and severity != 'warning') \
+        self.blocker = (ErrorsMode().value == 'developer' and severity != 'warning' and 'raise ' not in traceback) \
                 or (severity == 'fatal')
         # The traceback at the moment that the error was raised
         self.traceback = traceback
@@ -153,7 +186,11 @@ class ErrorsMode(metaclass = Singleton):
 
 
 class Errors(metaclass = Singleton):
-    """Container for compile errors.
+    """
+    Container for compile errors.
+
+    A singleton class which contains all functions necessary to
+    raise neat user-friendly errors in Pyccel.
     """
 
     def __init__(self):
@@ -216,37 +253,46 @@ class Errors(metaclass = Singleton):
                severity = 'error',
                symbol = None,
                filename = None,
+               traceback = None,
                verbose = False):
         """
+        Report an error.
+
         Report message at the given line using the current error context.
-        stage: 'syntax', 'semantic' or 'codegen'
+        stage: 'syntax', 'semantic' or 'codegen'.
 
         Parameters
         ----------
         message : str
-                  The message to be displayed to the user
-        line    : int
-                  The line at which the error can be found
-                  Default: If a symbol is provided with a known line number
-                  then this line number is used
-        column  : int
-                  The column at which the error can be found
-                  Default: If a symbol is provided with a known column
-                  then this column is used
-        bounding_box : tuple
-                  An optional tuple containing the line and column
-        severity : str
-                  Indicates the seriousness of the error. Should be one of:
-                  'warning', 'error', 'fatal'
-                  Default: 'error'
-        symbol   : pyccel.ast.Basic
-                  The Basic object which caused the error to need to be raised.
-                  This object is printed in the error message
-        filename : str
-                  The file which was being treated when the error was found
-        verbose  : bool
-                  Flag to add verbosity
-                  Default: False
+            The message to be displayed to the user.
+
+        line : int, optional
+            The line at which the error can be found.
+            Default: If a symbol is provided with a known line number then this line number is used.
+
+        column : int, optional
+            The column at which the error can be found.
+            Default: If a symbol is provided with a known column then this column is used.
+
+        bounding_box : tuple, optional
+            An optional tuple containing the line and column.
+
+        severity : str, default='error'
+            Indicates the seriousness of the error. Should be one of: 'warning', 'error', 'fatal'.
+            Default: 'error'.
+
+        symbol : pyccel.ast.PyccelAstNode, optional
+            The PyccelAstNode object which caused the error to need to be raised.
+            This object is printed in the error message.
+
+        filename : str, optional
+            The file which was being treated when the error was found.
+
+        traceback : types.TracebackType
+            The traceback that was raised when the error appeared.
+
+        verbose : bool, default=False
+            Flag to add verbosity.
         """
         # filter internal errors
         if (self.mode == 'user') and (severity == 'internal'):
@@ -260,32 +306,38 @@ class Errors(metaclass = Singleton):
             line   = bounding_box[0]
             column = bounding_box[1]
 
-        fst = None
+        ast_node = None
 
         if symbol is not None:
             if isinstance(symbol, ast.AST):
-                fst = symbol
+                ast_node = symbol
                 if sys.version_info < (3, 9):
-                    symbol = ast.dump(fst)
+                    symbol = ast.dump(ast_node)
                 else:
-                    symbol = ast.unparse(fst) # pylint: disable=no-member
-            elif isinstance(symbol, Basic):
-                fst = symbol.fst
+                    symbol = ast.unparse(ast_node) # pylint: disable=no-member
+            elif isinstance(symbol, PyccelAstNode):
+                ast_node = symbol.python_ast
 
-        if fst:
-            line   = getattr(fst, 'lineno', None)
-            column = getattr(fst, 'col_offset', None)
+        if ast_node:
+            if line is None:
+                line   = getattr(ast_node, 'lineno', None)
+            if column is None:
+                column = getattr(ast_node, 'col_offset', None)
 
-        traceback = None
         if self.mode == 'developer':
-            traceback = ''.join(tb.format_stack(limit=5))
+            if traceback:
+                traceback = ''.join(tb.format_tb(traceback, limit=-5))
+            else:
+                traceback = ''.join(tb.format_stack(limit=5))
+        else:
+            traceback = None
 
         info = ErrorInfo(stage=self._parser_stage,
                          filename=filename,
+                         message=message,
                          line=line,
                          column=column,
                          severity=severity,
-                         message=message,
                          symbol=symbol,
                          traceback=traceback)
 

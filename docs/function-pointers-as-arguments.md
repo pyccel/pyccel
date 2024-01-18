@@ -79,16 +79,6 @@ module boo
 end module boo
 ```
 
-Here is the version using a function-header:
-
-```Python
-#$ header function high_int_int_1((int)(int), (int)(int), int)
-def high_int_int_1(function1, function2, a):
-    x = function1(a)
-    y = function2(a)
-    return x + y
-```
-
 Here is the generated C code:
 
 ```C
