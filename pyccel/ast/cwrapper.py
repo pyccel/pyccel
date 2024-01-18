@@ -62,7 +62,7 @@ __all__ = (
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(DataType):
+class PyccelPyObject(DataType, metaclass=Singleton):
     """
     Datatype representing a `PyObject`.
 
@@ -72,7 +72,7 @@ class PyccelPyObject(DataType):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(DataType):
+class PyccelPyClassType(DataType, metaclass=Singleton):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -82,7 +82,7 @@ class PyccelPyClassType(DataType):
     __slots__ = ()
     _name = 'pyclasstype'
 
-class PyccelPyTypeObject(DataType):
+class PyccelPyTypeObject(DataType, metaclass=Singleton):
     """
     Datatype representing a `PyTypeObject`.
 
@@ -91,10 +91,6 @@ class PyccelPyTypeObject(DataType):
     """
     __slots__ = ()
     _name = 'pytypeobject'
-
-    def __init__(self): #pylint: disable=useless-parent-delegation
-        # Init function required to specify parameters
-        super().__init__()
 
 class WrapperCustomDataType(CustomDataType):
     """
