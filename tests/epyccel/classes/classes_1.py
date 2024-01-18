@@ -1,6 +1,5 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
-import numpy as np
 
 class Point(object):
     def __init__(self : 'Point', x : 'float[:]'):
