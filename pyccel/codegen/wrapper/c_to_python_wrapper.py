@@ -1176,7 +1176,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create any necessary type checks and errors
         if expr.has_default:
-            check_func, err = self._get_check_function(collect_arg, orig_var, True)
+            check_func, err = self._get_check_function(collect_arg, orig_var, False)
             body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
                         ))
