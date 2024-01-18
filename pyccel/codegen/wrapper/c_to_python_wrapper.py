@@ -125,7 +125,10 @@ class CToPythonWrapper(Wrapper):
         list of Variable
             Variables which will hold the arguments in Python.
         """
-        collect_args = [self.get_new_PyObject(getattr(a, 'original_function_argument_variable', a.var).name+'_obj') for a in args]
+        orig_args = [getattr(a, 'original_function_argument_variable', a.var) for a in args]
+        collect_args = [self.get_new_PyObject(o_a.name+'_obj',
+                                              dtype = o_a.dtype if a.bound_argument else None)
+                        for a, o_a in zip(args, orig_args)]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
@@ -865,9 +868,9 @@ class CToPythonWrapper(Wrapper):
         example_func = original_funcs[0]
         possible_class_base = expr.get_user_nodes((ClassDef,))
         if possible_class_base:
-            class_base = possible_class_base[0]
+            class_dtype = possible_class_base[0].class_type
         else:
-            class_base = None
+            class_dtype = None
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -875,7 +878,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create necessary arguments
         python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
-        func_args, body = self._unpack_python_args(python_args, class_base)
+        func_args, body = self._unpack_python_args(python_args, class_dtype)
 
         # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
