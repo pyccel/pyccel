@@ -29,6 +29,8 @@ from .variable  import Variable
 
 from .c_concepts import ObjectAddress
 
+from pyccel.utilities.metaclasses import Singleton
+
 
 errors = Errors()
 
