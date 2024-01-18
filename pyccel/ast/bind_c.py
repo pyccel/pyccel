@@ -26,6 +26,7 @@ __all__ = (
     'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
+    'DeallocatePointer',
 )
 
 # =======================================================================================
@@ -720,3 +721,4 @@ class DeallocatePointer(Deallocate):
     variable : pyccel.ast.core.Variable
         The typed variable (usually an array) that needs memory deallocation.
     """
+    __slots__ = ()
