@@ -738,8 +738,8 @@ class AliasAssign(PyccelAstNode):
            Variable.
 
     rhs : PyccelSymbol | Variable, IndexedElement
-        An assignable variable can be of any rank and any datatype, however its
-        shape must be known (not None)
+        The target of the assignment. A PyccelSymbol in the syntactic stage,
+        a Variable or a Slice of an array in the semantic stage.
 
     Examples
     --------
@@ -750,7 +750,6 @@ class AliasAssign(PyccelAstNode):
     >>> x = Variable('int', 'x', rank=1, shape=[n])
     >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
-
     """
     __slots__ = ('_lhs','_rhs')
     _attribute_nodes = ('_lhs','_rhs')
