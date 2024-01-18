@@ -719,18 +719,26 @@ class CodeBlock(PyccelAstNode):
                 l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
+    """
+    Representing assignment of an alias to its target.
 
-    """Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
+    Represents aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where lhs is a pointer and rhs is a target. In other words
+    the contents of `lhs` will change if the contents of `rhs` are modfied.
 
     Parameters
     ----------
-    lhs : PyccelSymbol
-        at this point we don't know yet all information about lhs, this is why a
-        PyccelSymbol is the appropriate type.
+    lhs : TypedAstNode
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include PyccelSymbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable.
 
-    rhs : Variable, IndexedElement
-        an assignable variable can be of any rank and any datatype, however its
+    rhs : PyccelSymbol | Variable, IndexedElement
+        An assignable variable can be of any rank and any datatype, however its
         shape must be known (not None)
 
     Examples
