@@ -145,8 +145,8 @@ def test_classes_3(language):
 
     assert p_py.get_coordinates() == p_l.get_coordinates()
 
-    p_py.set_coordinates(2.3, 5.1) 
-    p_l.set_coordinates(2.3, 5.1) 
+    p_py.set_coordinates(2.3, 5.1)
+    p_l.set_coordinates(2.3, 5.1)
 
     assert p_py.get_coordinates() == p_l.get_coordinates()
 
