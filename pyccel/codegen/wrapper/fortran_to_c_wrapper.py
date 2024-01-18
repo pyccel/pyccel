@@ -15,7 +15,7 @@ from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePoint
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
-from pyccel.ast.core import AsName, Module, AliasAssign
+from pyccel.ast.core import AsName, Module, AliasAssign, ClassDef
 from pyccel.ast.datatypes import NativeNumeric, CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
@@ -225,6 +225,7 @@ class FortranToCWrapper(Wrapper):
         orig_name = expr.cls_name or expr.name
         name = self.scope.get_new_name(f'bind_c_{orig_name.lower()}')
         self._wrapper_names_dict[expr.name] = name
+        in_cls = expr.arguments and expr.arguments[0].bound_argument
 
         # Create the scope
         func_scope = self.scope.new_child_scope(name)
@@ -247,7 +248,7 @@ class FortranToCWrapper(Wrapper):
 
         interface = expr.get_direct_user_nodes(lambda u: isinstance(u, Interface))
 
-        if interface:
+        if in_cls and interface:
             body = self._get_function_def_body(interface[0], func_arguments, func_to_call, func_call_results)
         else:
             body = self._get_function_def_body(expr, func_arguments, func_to_call, func_call_results)
