@@ -126,9 +126,10 @@ class CToPythonWrapper(Wrapper):
             Variables which will hold the arguments in Python.
         """
         orig_args = [getattr(a, 'original_function_argument_variable', a.var) for a in args]
+        is_bound = [getattr(a, 'wrapping_bound_argument', a.bound_argument) for a in args]
         collect_args = [self.get_new_PyObject(o_a.name+'_obj',
-                                              dtype = o_a.dtype if a.bound_argument else None)
-                        for a, o_a in zip(args, orig_args)]
+                                              dtype = o_a.dtype if b else None)
+                        for a, b, o_a in zip(args, is_bound, orig_args)]
         self._python_object_map.update(dict(zip(args, collect_args)))
         return collect_args
 
