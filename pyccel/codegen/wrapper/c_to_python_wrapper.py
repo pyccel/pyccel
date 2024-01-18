@@ -624,8 +624,6 @@ class CToPythonWrapper(Wrapper):
         for a in getattr(init_function, 'bind_c_arguments', ()):
             func_scope.insert_symbol(a.original_function_argument_variable.name)
 
-        in_interface = False
-
         # Get variables describing the arguments and results that are seen from Python
         python_args = init_function.bind_c_arguments if is_bind_c_function_def else init_function.arguments
 
@@ -663,7 +661,6 @@ class CToPythonWrapper(Wrapper):
                     body.append(Deallocate(v))
 
         # Pack the Python compatible results of the function into one argument.
-        res = Py_None
         func_results = [FunctionDefResult(python_result_variable)]
         body.append(Return([LiteralInteger(0, precision=-2)]))
 
