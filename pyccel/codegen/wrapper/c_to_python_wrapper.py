@@ -568,6 +568,8 @@ class CToPythonWrapper(Wrapper):
 
         body.append(Return([ObjectAddress(PointerCast(python_result_var, func_results[0].var))]))
 
+        self.exit_scope()
+
         return PyFunctionDef(func_name, func_args, func_results,
                              body, scope=func_scope, original_function = None)
 
@@ -675,7 +677,7 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
-    def _get_class_destructor(self, del_function, cls_dtype):
+    def _get_class_destructor(self, del_function, cls_dtype, wrapper_scope):
         """
         Create the destructor for the class.
 
@@ -690,6 +692,9 @@ class CToPythonWrapper(Wrapper):
 
         cls_dtype : DataType
             The datatype of the class being translated.
+
+        wrapper_scope : Scope
+            The scope for the wrapped version of the class.
 
         Returns
         -------
@@ -706,11 +711,16 @@ class CToPythonWrapper(Wrapper):
             func_scope.insert_symbol(a.var.name)
         func_arg = self.get_new_PyObject('self', cls_dtype)
 
-        attribute = self.scope.find('instance', 'variables')
+        attribute = wrapper_scope.find('instance', 'variables')
         c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
-        body = [FunctionCall(del_function, [c_obj]),
-                Deallocate(c_obj),
-                Deallocate(func_arg)]
+
+        if isinstance(del_function, BindCFunctionDef):
+            body = [FunctionCall(del_function, [c_obj]),
+                    Deallocate(func_arg)]
+        else:
+            body = [FunctionCall(del_function, [c_obj]),
+                    Deallocate(c_obj),
+                    Deallocate(func_arg)]
 
         self.exit_scope()
 
@@ -868,7 +878,7 @@ class CToPythonWrapper(Wrapper):
         func_args, body = self._unpack_python_args(python_args, class_base)
 
         # Get python arguments which will be passed to FunctionDefs
-        python_arg_objs = [self._python_object_map[a] for a in python_args if not a.bound_argument]
+        python_arg_objs = [self._python_object_map[a] for a in python_args]
 
         type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
         self.scope.insert_variable(type_indicator)
@@ -931,7 +941,12 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(expr.name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
-        class_dtype = expr.arguments[0].var.dtype if expr.cls_name else None
+
+        possible_class_base = expr.get_user_nodes((ClassDef,))
+        if possible_class_base:
+            class_dtype = possible_class_base[0].class_type
+        else:
+            class_dtype = None
 
         is_bind_c_function_def = isinstance(expr, BindCFunctionDef)
 
@@ -1093,6 +1108,7 @@ class CToPythonWrapper(Wrapper):
         in_interface = len(expr.get_user_nodes(Interface)) > 0
 
         orig_var = getattr(expr, 'original_function_argument_variable', expr.var)
+        bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
         if orig_var.is_ndarray:
             arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
@@ -1161,7 +1177,7 @@ class CToPythonWrapper(Wrapper):
             body.append(If( IfSection(check_func, cast),
                         IfSection(PyccelIsNot(collect_arg, Py_None), [*err, Return([self._error_exit_code])])
                         ))
-        elif not in_interface:
+        elif not (in_interface or bound_argument):
             check_func, err = self._get_check_function(collect_arg, orig_var, True)
             body.append(If( IfSection(check_func, cast),
                         IfSection(LiteralTrue(), [*err, Return([self._error_exit_code])])
@@ -1472,14 +1488,14 @@ class CToPythonWrapper(Wrapper):
 
         self.scope.insert_class(wrapped_class, name)
         orig_scope = expr.scope
-        self.scope = wrapped_class.scope
 
         for f in expr.methods:
             orig_f = getattr(f, 'original_function', f)
-            name = orig_f.cls_name or orig_f.name
-            if orig_scope.get_python_name(name) == '__del__':
-                wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype))
-            elif orig_scope.get_python_name(name) == '__init__':
+            name = orig_f.name
+            python_name = orig_scope.get_python_name(name)
+            if python_name == '__del__':
+                wrapped_class.add_new_method(self._get_class_destructor(f, orig_cls_dtype, wrapped_class.scope))
+            elif python_name == '__init__':
                 wrapped_class.add_new_method(self._get_class_initialiser(f, orig_cls_dtype))
             else:
                 wrapped_class.add_new_method(self._wrap(f))
@@ -1493,7 +1509,5 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype, expr.new_func))
         else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
-
-        self.exit_scope()
 
         return wrapped_class
