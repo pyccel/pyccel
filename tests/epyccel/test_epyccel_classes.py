@@ -150,6 +150,27 @@ def test_classes_3(language):
 
     assert p_py.get_coordinates() == p_l.get_coordinates()
 
+def test_classes_4(language):
+    import classes.classes_4 as mod
+    modnew = epyccel(mod, language = language)
+
+    x1 = np.array([0.,0.,0.])
+    x2 = np.array([0.,0.,0.])
+    a = np.array([1.,1.,1.])
+
+    p1_py = mod.Point(x1)
+    p1_l  = modnew.Point(x2)
+
+    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+
+    p1_py.translate(a)
+    p1_l.translate(a)
+
+    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
+
+    p1_py = mod.Point()
+
 def test_classes_6(language):
     import classes.classes_6 as mod
     modnew = epyccel(mod, language = language)
