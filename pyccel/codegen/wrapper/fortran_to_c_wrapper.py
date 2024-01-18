@@ -11,7 +11,7 @@ import warnings
 from pyccel.ast.bind_c import BindCFunctionDefArgument, BindCFunctionDefResult
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
-from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef
+from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
@@ -255,6 +255,9 @@ class FortranToCWrapper(Wrapper):
         body.extend(self._additional_exprs)
         self._additional_exprs.clear()
 
+        if expr.scope.get_python_name(expr.name) == '__del__':
+            body.append(DeallocatePointer(call_arguments[0]))
+
         self.exit_scope()
 
         func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
@@ -334,7 +337,8 @@ class FortranToCWrapper(Wrapper):
         self.scope.insert_variable(new_var)
 
         return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,
-                kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope)
+                kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope,
+                wrapping_bound_argument = expr.bound_argument)
 
     def _wrap_FunctionDefResult(self, expr):
         """
