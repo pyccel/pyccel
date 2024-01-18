@@ -395,24 +395,6 @@ class SyntaxParser(BasicParser):
 
         return stmt
 
-    def _visit_Str(self, stmt):
-        val =  stmt.s
-        if isinstance(self._context[-2], ast.Expr):
-            return CommentBlock(val)
-        return LiteralString(val)
-
-    def _visit_Num(self, stmt):
-        val = stmt.n
-
-        if isinstance(val, int):
-            return LiteralInteger(val)
-        elif isinstance(val, float):
-            return LiteralFloat(val)
-        elif isinstance(val, complex):
-            return LiteralComplex(val.real, val.imag)
-        else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
-
     def _visit_Assign(self, stmt):
 
         self._in_lhs_assign = True
@@ -538,24 +520,12 @@ class SyntaxParser(BasicParser):
             return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
-            return self._visit_Str(stmt)
+            if isinstance(self._context[-2], ast.Expr):
+                return CommentBlock(stmt.value)
+            return LiteralString(stmt.value)
 
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
-
-    def _visit_NameConstant(self, stmt):
-        if stmt.value is None:
-            return Nil()
-
-        elif stmt.value is True:
-            return LiteralTrue()
-
-        elif stmt.value is False:
-            return LiteralFalse()
-
-        else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
-
 
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)

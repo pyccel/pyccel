@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1645 : Handle deprecated `ast` classes.
 -   #1649 : Add support for `np.min` in C code.
 -   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
