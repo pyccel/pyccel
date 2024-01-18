@@ -15,7 +15,7 @@ from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePoint
 from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface
-from pyccel.ast.core import AsName, Module, AliasAssign, ClassDef
+from pyccel.ast.core import AsName, Module, AliasAssign
 from pyccel.ast.datatypes import NativeNumeric, CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
