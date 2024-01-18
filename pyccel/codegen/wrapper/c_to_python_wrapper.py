@@ -656,7 +656,7 @@ class CToPythonWrapper(Wrapper):
             if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, self._error_exit_code), [Deallocate(v)]) ))
+                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
 
@@ -1041,7 +1041,7 @@ class CToPythonWrapper(Wrapper):
             if orig_var.is_ndarray:
                 v = self.scope.find(orig_var.name, category='variables', raise_if_missing = True)
                 if v.is_optional:
-                    body.append(If( IfSection(PyccelIsNot(v, self._error_exit_code), [Deallocate(v)]) ))
+                    body.append(If( IfSection(PyccelIsNot(v, Nil()), [Deallocate(v)]) ))
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
