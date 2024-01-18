@@ -528,7 +528,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        cls_dtype : DataType
+        class_dtype : DataType
             The datatype of the class being translated.
 
         func : FunctionDef, optional

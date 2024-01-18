@@ -92,6 +92,10 @@ class PyccelPyTypeObject(DataType):
     __slots__ = ()
     _name = 'pytypeobject'
 
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # Init function required to specify parameters
+        super().__init__()
+
 class WrapperCustomDataType(CustomDataType):
     """
     Datatype representing a subclass of `PyObject`.
@@ -617,6 +621,11 @@ class PyClassDef(ClassDef):
         Add the wrapper for `__new__` to the class definition.
 
         Add the wrapper for `__new__` which allocates the memory for the class instance.
+
+        Parameters
+        ----------
+        f : PyFunctionDef
+            The wrapper for the `__new__` function.
         """
         self._new_func = f
 
