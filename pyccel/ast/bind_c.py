@@ -178,6 +178,10 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         in a C-Fortran interface. This variable may have a type which is not
         compatible with C.
 
+    wrapping_bound_argument : bool
+        Indicates if the argument being wrapped was a bound argument of a
+        class method.
+
     **kwargs : dict
         See FunctionDefArgument.
 
