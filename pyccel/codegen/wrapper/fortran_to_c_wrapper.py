@@ -511,6 +511,7 @@ class FortranToCWrapper(Wrapper):
         new_method = BindCFunctionDef(func_name, [], [result], body, original_function = None, scope = func_scope)
 
         methods = [self._wrap(m) for m in expr.methods]
+        methods = [m for m in methods if not isinstance(m, EmptyNode)]
         for i in expr.interfaces:
             for f in i.functions:
                 self._wrap(f)
