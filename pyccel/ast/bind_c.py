@@ -9,7 +9,7 @@ file.
 """
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.core import Module
+from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
@@ -186,11 +186,11 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         The class from which BindCFunctionDefArgument inherits which
         contains all details about the args and kwargs.
     """
-    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank')
+    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank', '_wrapping_bound_argument')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
                         ('_shape', '_strides', '_original_arg_var')
 
-    def __init__(self, var, scope, original_arg_var, **kwargs):
+    def __init__(self, var, scope, original_arg_var, wrapping_bound_argument, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
         shape   = [scope.get_temporary_variable(NativeInteger(),
@@ -202,6 +202,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         self._shape = shape
         self._strides = strides
         self._original_arg_var = original_arg_var
+        self._wrapping_bound_argument = wrapping_bound_argument
         super().__init__(var, **kwargs)
 
     @property
@@ -278,6 +279,16 @@ class BindCFunctionDefArgument(FunctionDefArgument):
             return [False] + [False, False]*self._rank
         else:
             return super().inout
+
+    @property
+    def wrapping_bound_argument(self):
+        """
+        Indicates if the argument being wrapped was originally a bound argument.
+
+        Indicates if the argument being wrapped originally appeared in a class
+        method as a bound argument.
+        """
+        return self._wrapping_bound_argument
 
 # =======================================================================================
 
@@ -695,3 +706,17 @@ class C_F_Pointer(PyccelAstNode):
         determine the size of the array in each dimension.
         """
         return self._shape
+
+class DeallocatePointer(Deallocate):
+    """
+    Represents memory deallocation for memory only stored in a pointer.
+
+    Represents memory deallocation for memory only stored in a pointer. Usually
+    `deallocate` is not called on pointers so as not to delete the target values
+    however this capability is necessary in the wrapper.
+
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory deallocation.
+    """
