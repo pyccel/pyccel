@@ -25,7 +25,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
+from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
@@ -102,6 +102,8 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation
+
+from pyccel.ast.typingext import TypingFinal
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -1766,6 +1768,37 @@ class SemanticParser(BasicParser):
 
         return VariableTypeAnnotation(dtype, class_type, prec, rank, order)
 
+    def _get_indexed_type(self, base, args, expr):
+        """
+        Extract a type annotation from an IndexedElement.
+
+        Extract a type annotation from an IndexedElement. This may be a type indexed with
+        slices (indicating a NumPy array), or a class type such as tuple/list/etc which is
+        indexed with the datatype.
+
+        Parameters
+        ----------
+        base : type deriving from PyccelAstNode
+            The object being indexed.
+        args : tuple of PyccelAstNode
+            The indices being used to access the base.
+        expr : PyccelAstNode
+            The annotation, used for error printing.
+
+        Returns
+        -------
+        UnionTypeAnnotation
+            The type annotation described by this object.
+        """
+        if base.cls_name is TypingFinal:
+            annotation = self._visit(SyntacticTypeAnnotation(args, ranks = [0], orders = [None]))
+            for t in annotation.type_list:
+                t.is_const = True
+            return annotation
+        else:
+            raise errors.report("Unrecognised type slice",
+                    severity='fatal', symbol=expr)
+
     #====================================================
     #                 _visit functions
     #====================================================
@@ -2200,6 +2233,10 @@ class SemanticParser(BasicParser):
 
     def _visit_IndexedElement(self, expr):
         var = self._visit(expr.base)
+
+        if isinstance(var, PyccelFunctionDef):
+            return self._get_indexed_type(var, expr.indices, expr)
+
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
@@ -2231,7 +2268,9 @@ class SemanticParser(BasicParser):
         if var is None:
             var = self.scope.find(name)
         if var is None:
-            var = python_builtin_datatype(name)
+            var = builtin_functions_dict.get(name, None)
+            if var is not None:
+                var = PyccelFunctionDef(name, var)
 
         if var is None:
             if name == '_':
@@ -2327,7 +2366,7 @@ class SemanticParser(BasicParser):
             if rank > 1 and order is None:
                 order = 'C'
 
-            if isinstance(dtype_name, (PyccelSymbol, DottedName)):
+            if isinstance(dtype_name, (PyccelSymbol, DottedName, IndexedElement)):
                 dtype_from_scope = self._visit(dtype_name)
             else:
                 dtype_from_scope = self.scope.find(dtype_name)
@@ -2349,6 +2388,8 @@ class SemanticParser(BasicParser):
                 rank = 0
                 order = None
                 types.append(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
+            elif isinstance(dtype_from_scope, UnionTypeAnnotation):
+                types.extend(dtype_from_scope.type_list)
             elif dtype_from_scope is not None:
                 errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
                         severity='fatal', symbol=expr)
