@@ -18,7 +18,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import (NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeGeneric)
 from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
-from .datatypes import NativeHomogeneousList
+from .datatypes import NativeHomogeneousList, NativeTuple
 from .internals import PyccelInternalFunction, Slice, get_final_precision, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -1015,7 +1015,10 @@ class PythonSum(PyccelInternalFunction):
             raise TypeError(f'Unknown type of {type(arg)}.' )
         self._dtype = arg.dtype
         self._precision = -1
-        self._class_type = arg.dtype
+        if isinstance(arg.class_type, (NativeHomogeneousList, NativeTuple)):
+            self._class_type = arg.dtype
+        else:
+            self._class_type = arg.class_type
         super().__init__(arg)
 
     @property
@@ -1060,7 +1063,10 @@ class PythonMax(PyccelInternalFunction):
                              f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
-        self._class_type = x.dtype
+        if isinstance(x.class_type, (NativeHomogeneousList, NativeTuple)):
+            self._class_type = x.dtype
+        else:
+            self._class_type = x.class_type
         super().__init__(x)
 
 
@@ -1096,7 +1102,10 @@ class PythonMin(PyccelInternalFunction):
                               f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
         self._precision = x.precision
-        self._class_type = x.dtype
+        if isinstance(x.class_type, (NativeHomogeneousList, NativeTuple)):
+            self._class_type = x.dtype
+        else:
+            self._class_type = x.class_type
         super().__init__(x)
 
 #==============================================================================
