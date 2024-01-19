@@ -7,7 +7,8 @@ import warnings
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
-from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType
+from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
+from pyccel.ast.builtins   import PythonComplex
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall, PyccelFunctionDef
 from pyccel.ast.datatypes  import NativeHomogeneousTuple
@@ -178,7 +179,7 @@ class PythonCodePrinter(CodePrinter):
             cls = type(expr)
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
-        if name == type_name and cls.__name__.startswith('Numpy'):
+        if name == type_name and cls not in (PythonBool, PythonInt, PythonFloat, PythonComplex):
             self.insert_new_import(
                     source = 'numpy',
                     target = AsName(cls, name))
