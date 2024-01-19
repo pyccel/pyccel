@@ -128,6 +128,10 @@ class VariableTypeAnnotation(PyccelAstNode):
         """
         return self._is_const
 
+    @is_const.setter
+    def is_const(self, val):
+        self._is_const = val
+
     def __hash__(self):
         return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
 
@@ -165,10 +169,10 @@ class FunctionTypeAnnotation(PyccelAstNode):
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
     """
-    __slots__ = ('_args', '_results',)
-    _attribute_nodes = ('_args', '_results')
+    __slots__ = ('_args', '_results', '_is_const')
+    _attribute_nodes = ('_args', '_results', '_is_const')
 
-    def __init__(self, args, results):
+    def __init__(self, args, results, is_const = False):
         if pyccel_stage == 'syntactic':
             self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
@@ -177,6 +181,8 @@ class FunctionTypeAnnotation(PyccelAstNode):
         else:
             self._args = args
             self._results = results
+
+        self._is_const = is_const
 
         super().__init__()
 
@@ -205,6 +211,20 @@ class FunctionTypeAnnotation(PyccelAstNode):
     def __repr__(self):
         return f'func({repr(self.args)}) -> {repr(self.results)}'
 
+    @property
+    def is_const(self):
+        """
+        Indicates whether the object will remain constant.
+
+        Returns a boolean which is false if the value of the object can be
+        modified, and true otherwise.
+        """
+        return self._is_const
+
+    @is_const.setter
+    def is_const(self, val):
+        self._is_const = val
+
 class UnionTypeAnnotation(PyccelAstNode):
     """
     A class which holds multiple possible type annotations.
@@ -220,6 +240,7 @@ class UnionTypeAnnotation(PyccelAstNode):
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
+        assert len(type_annotations) > 0
         annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
         self._type_annotations = tuple(set(annots))
 
