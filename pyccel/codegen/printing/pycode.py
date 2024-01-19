@@ -178,7 +178,7 @@ class PythonCodePrinter(CodePrinter):
             cls = type(expr)
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
-        if name == type_name:
+        if name == type_name and cls.__name__.startswith('Numpy'):
             self.insert_new_import(
                     source = 'numpy',
                     target = AsName(cls, name))
