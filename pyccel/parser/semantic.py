@@ -3763,7 +3763,8 @@ class SemanticParser(BasicParser):
                     cls = self.scope.find(cls_name, 'classes')
 
                     # update the class methods
-                    cls.add_new_method(func)
+                    if not is_interface:
+                        cls.add_new_method(func)
 
                 funcs += [func]
 
