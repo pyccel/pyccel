@@ -240,7 +240,6 @@ class UnionTypeAnnotation(PyccelAstNode):
     _attribute_nodes = ('_type_annotations',)
 
     def __init__(self, *type_annotations):
-        assert len(type_annotations) > 0
         annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
         self._type_annotations = tuple(set(annots))
 
