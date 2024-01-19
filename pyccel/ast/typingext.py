@@ -7,7 +7,8 @@
 """ Module containing objects from the typing module understood by pyccel
 """
 
-from .core      import Module
+from .basic     import TypedAstNode
+from .core      import Module, PyccelFunctionDef
 from .datatypes import NativeSymbol
 from .variable  import Variable
 
@@ -18,11 +19,18 @@ __all__ = (
 
 #==============================================================================
 
-typing_constants = {
-        'Final': Variable(NativeSymbol(), 'Final'),
+class TypingFinal(TypedAstNode):
+    """
+    """
+    __slots__ = ()
+
+#==============================================================================
+
+typing_funcs = {
+        'Final': PyccelFunctionDef('Final', TypingFinal),
     }
 
 typing_mod = Module('typing',
-    variables = typing_constants.values(),
-    funcs = (),
+    variables = (),
+    funcs = typing_funcs.values(),
     )
