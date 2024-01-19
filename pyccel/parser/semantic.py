@@ -2396,6 +2396,7 @@ class SemanticParser(BasicParser):
                 errors.report("Cannot get attribute of function call with multiple returns",
                         symbol=expr, severity='fatal')
             first = results[0].var
+
         rhs_name = _get_name(rhs)
 
         # Handle case of imported module
@@ -3763,8 +3764,7 @@ class SemanticParser(BasicParser):
                     cls = self.scope.find(cls_name, 'classes')
 
                     # update the class methods
-                    if expr.name == func.name:
-                        cls.add_new_method(func)
+                    cls.add_new_method(func)
 
                 funcs += [func]
 

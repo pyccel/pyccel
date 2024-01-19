@@ -3544,6 +3544,10 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        if self.scope is not None:
+            # Collect translated name from scope
+            name = self.scope.get_expected_name(name)
+
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
         except StopIteration:
