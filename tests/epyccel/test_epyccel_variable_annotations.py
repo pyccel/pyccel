@@ -110,3 +110,12 @@ def test_stack_array_annotation_2(language):
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
+
+def test_final_annotation(language):
+    def final_annotation():
+        from typing import Final
+        a : Final[int] = 3
+        a = 4
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(final_annotation, language=language)
