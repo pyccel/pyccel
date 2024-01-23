@@ -9,8 +9,6 @@
 
 from .basic     import TypedAstNode
 from .core      import Module, PyccelFunctionDef
-from .datatypes import NativeSymbol
-from .variable  import Variable
 
 __all__ = (
     'TypingFinal',
