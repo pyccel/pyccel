@@ -1082,3 +1082,6 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
 
     def __str__(self):
         return f'{self.name} : {self.annotation}'
+
+    def __reduce_ex__(self, i):
+        return (self.__class__, (self.name, self.annotation))
