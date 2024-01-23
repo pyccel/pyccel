@@ -892,6 +892,39 @@ def test_type_print( language ):
     pyccel_test("scripts/runtest_type_print.py",
                 language = language, output_dtype=str)
 
+def test_container_type_print(language):
+    test_file = "scripts/runtest_array_type_print.py"
+
+    rel_test_dir = os.path.dirname(test_file)
+
+    test_file = os.path.normpath(test_file)
+
+    cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
+
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = " --language="+language
+
+    if language=="python":
+        output_dir = os.path.join(get_abs_path(rel_test_dir), '__pyccel__')
+        pyccel_commands += " --output "+output_dir
+        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    else:
+        output_test_file = test_file
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+    lang_out = get_lang_output(output_test_file, language)
+
+    rx = re.compile(r'\bnumpy.ndarray\b')
+    assert rx.search(lang_out)
+
+    if language!="python":
+        rx = re.compile(r'\bfloat64\b')
+        assert rx.search(lang_out)
+#------------------------------------------------------------------------------
+
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("python", marks = pytest.mark.python),
