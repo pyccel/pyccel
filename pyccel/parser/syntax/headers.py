@@ -20,7 +20,7 @@ from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
 from pyccel.ast.internals import PyccelSymbol, Slice
 from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
-from pyccel.ast.type_annotations import SyntacticTypeAnnotation
+from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
 from pyccel.ast.typingext import TypingFinal
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
@@ -104,6 +104,16 @@ class Type(BasicStmt):
         return SyntacticTypeAnnotation(dtype, order)
 
     def handle_trailer_arg(self, s):
+        """
+        Get the Pyccel object equivalent to the argument in the trailing object.
+
+        Get the Pyccel object equivalent to the argument in the trailing object.
+
+        Parameters
+        ----------
+        s : str
+            The argument in the trailing section.
+        """
         if s == ':':
             return Slice(None, None)
         else:
@@ -613,9 +623,9 @@ header_grammar = join(this_folder, '../grammar/headers.tx')
 types_meta = metamodel_from_file(types_grammar, classes=type_classes)
 register_language("types", metamodel=types_meta)
 
-with open(header_grammar, 'r') as f:
+with open(header_grammar, 'r', encoding="utf-8") as f:
     grammar = f.read()
-with open(types_grammar, 'r') as f:
+with open(types_grammar, 'r', encoding="utf-8") as f:
     grammar += f.read()
 
 meta = metamodel_from_str(grammar, classes=hdr_classes+type_classes)
