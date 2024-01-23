@@ -2265,6 +2265,8 @@ class SemanticParser(BasicParser):
             var = numpy_funcs.get(name, None)
             if name == 'real':
                 var = numpy_funcs['float']
+            elif name == '*':
+                return NativeGeneric()
 
         if var is None:
             if name == '_':
@@ -2381,6 +2383,8 @@ class SemanticParser(BasicParser):
             rank = 0
             order = None
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
+        elif isinstance(visited_dtype, DataType):
+            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information',
                     severity='fatal', symbol=expr)
