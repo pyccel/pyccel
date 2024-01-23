@@ -1130,6 +1130,10 @@ class PythonCodePrinter(CodePrinter):
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
         return f"({results})({args})"
 
+    def _print_TypingFinal(self, expr):
+        annotation = self._print(expr.arg)
+        return f'const {annotation}'
+
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code
