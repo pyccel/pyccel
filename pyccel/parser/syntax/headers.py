@@ -191,39 +191,6 @@ class TemplateStmt(BasicStmt):
         dtypes = {SyntacticTypeAnnotation.build_from_textx(t)  for t in self.dtypes}
         return Template(self.name, dtypes)
 
-class VariableType(BasicStmt):
-    """
-    Base class representing a header type in the grammar.
-
-    Base class representing a header type in the grammar.
-
-    Parameters
-    ----------
-    dtype : str
-        The variable type.
-
-    prec : int, optional
-        The precision of the object.
-
-    trailer : iterable, TrailerSubscriptsList
-        An object created by textx describing the trailing decorators of the
-        type. The number of elements is equal to the rank. The order is also
-        described when the iterable is non-empty.
-
-    **kwargs : dict
-        The textx arguments.
-    """
-
-    def __init__(self, dtype, prec = None, trailer = (), **kwargs):
-        self.dtype   = dtype
-        self.prec    = prec
-        if trailer:
-            self.trailer = trailer
-        else:
-            self.trailer = []
-
-        super().__init__(**kwargs)
-
 class ShapedID(BasicStmt):
     """class representing a ShapedID in the grammar.
 
@@ -636,7 +603,6 @@ class FunctionMacroStmt(BasicStmt):
 # lists.
 type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
 hdr_classes = [Header,
-               VariableType,
                ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
