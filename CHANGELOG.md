@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
+-   #1680 : Add support for `typing.Final`.
 
 ### Fixed
 
@@ -44,6 +45,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
 -   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
 -   \[INTERNALS\] #1582 : Remove the `HomogeneousTupleVariable` type.
+-   \[INTERNALS\] #1581 : Unify handling of string and Python annotations.
 
 ### Deprecated
 
