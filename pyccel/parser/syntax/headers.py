@@ -178,7 +178,7 @@ class TemplateStmt(BasicStmt):
                         severity='error')
             return EmptyNode()
 
-        dtypes = {SyntacticTypeAnnotation.build_from_textx(t)  for t in self.dtypes}
+        dtypes = {t.expr  for t in self.dtypes}
         return Template(self.name, dtypes)
 
 class ShapedID(BasicStmt):
@@ -294,8 +294,7 @@ class HeaderResults(BasicStmt):
 
         Get the Pyccel equivalent of this object.
         """
-        decs = SyntacticTypeAnnotation.build_from_textx(self.decs)
-        return decs
+        return [d.expr for d in self.decs]
 
 
 class VariableHeaderStmt(BasicStmt):
@@ -333,7 +332,7 @@ class VariableHeaderStmt(BasicStmt):
                       "in your code. If you find it is necessary please open a discussion " +
                       "at https://github.com/pyccel/pyccel/discussions so we do not " +
                       "remove support until an alternative is in place.", FutureWarning)
-        dtype = SyntacticTypeAnnotation.build_from_textx(self.dec)
+        dtype = self.dec.expr
 
         return AnnotatedPyccelSymbol(self.name, annotation=dtype)
 
@@ -376,7 +375,7 @@ class FunctionHeaderStmt(BasicStmt):
 
         Get the Pyccel equivalent of this object.
         """
-        dtypes = SyntacticTypeAnnotation.build_from_textx(self.decs)
+        dtypes = [d.expr for d in self.decs]
 
         if self.kind is None:
             kind = 'function'
