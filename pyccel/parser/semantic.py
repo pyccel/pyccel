@@ -595,10 +595,15 @@ class SemanticParser(BasicParser):
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                         continue
+                self._pointer_targets.pop(i, None)
+
+            for i in self._allocs[-1]:
+                if isinstance(i, DottedVariable):
+                    if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                        continue
                 if isinstance(i.dtype, CustomDataType) and i.is_alias:
                     continue
                 deallocs.append(Deallocate(i))
-                self._pointer_targets.pop(i, None)
         self._allocs.pop()
         return deallocs
 
@@ -1063,6 +1068,17 @@ class SemanticParser(BasicParser):
                 new_expr = DottedFunctionCall(func, args, current_function = self._current_function, prefix = args[0].value)
             else:
                 new_expr = FunctionCall(func, args, self._current_function)
+
+            for a, f_a in zip(new_expr.args, func_args):
+                if f_a.persistent_target:
+                    assert is_method
+                    val = a.value
+                    if isinstance(val, Variable):
+                        a.value.is_target = True
+                        self._pointer_targets.setdefault(args[0].value, []).append(a.value)
+                    else:
+                        errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
+                                severity='error', symbol=expr)
 
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
@@ -2766,6 +2782,17 @@ class SemanticParser(BasicParser):
                             expr, method.is_elemental)
 
             expr = ConstructorCall(method, args, cls_variable)
+
+            for a, f_a in zip(expr.args, method.arguments):
+                if f_a.persistent_target:
+                    val = a.value
+                    if isinstance(val, Variable):
+                        a.value.is_target = True
+                        self._pointer_targets.setdefault(lhs, []).append(a.value)
+                    else:
+                        errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
+                                severity='error', symbol=expr)
+
             self._allocs[-1].append(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
