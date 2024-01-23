@@ -591,12 +591,7 @@ class SemanticParser(BasicParser):
 
         deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            for i in self._allocs[-1]:
-                if isinstance(i, DottedVariable):
-                    if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
-                        continue
-                self._pointer_targets.pop(i, None)
-
+            self._check_pointer_targets()
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
@@ -606,6 +601,24 @@ class SemanticParser(BasicParser):
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
         return deallocs
+
+    def _check_pointer_targets(self, exceptions = ()):
+        for i in self._allocs[-1]:
+            if isinstance(i, DottedVariable):
+                if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                    continue
+            if i in exceptions:
+                continue
+            self._pointer_targets.pop(i, None)
+        for i in self._allocs[-1]:
+            if isinstance(i, DottedVariable):
+                if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                    continue
+            if i in exceptions:
+                continue
+            if i in chain(*self._pointer_targets.values()):
+                errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
+                        severity='error', symbol=i.get_user_nodes((AliasAssign, ConstructorCall)))
 
     def _infer_type(self, expr):
         """
@@ -2788,7 +2801,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._pointer_targets.setdefault(lhs, []).append(a.value)
+                        self._pointer_targets.setdefault(cls_variable, []).append(a.value)
                     else:
                         errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
@@ -3587,6 +3600,7 @@ class SemanticParser(BasicParser):
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
+        self._check_pointer_targets(results)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if code:
             expr  = Return(results, CodeBlock(code))
