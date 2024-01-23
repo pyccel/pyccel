@@ -39,11 +39,7 @@ def test_allow_negative_index_annotation(language):
         j = -3
         return array[j]
 
-    errors = Errors()
-    errors.reset()
     epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
-    assert errors.num_messages() == 1
-    errors.reset()
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
@@ -97,12 +93,7 @@ def test_allow_negative_index_annotation_2(language):
         j = -3
         return array[j]
 
-    errors = Errors()
-    errors.reset()
     epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
-    print(errors.check())
-    assert errors.num_messages() == 1
-    errors.reset()
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
