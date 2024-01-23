@@ -451,5 +451,10 @@ def apply_pickle(class_type, args, kwargs):
 
     kwargs : dict
         The keyword arguments to be passed to the constructor.
+
+    Returns
+    -------
+    class_type
+        An object of class_type built from the args and kwargs.
     """
     return class_type(*args, **kwargs)

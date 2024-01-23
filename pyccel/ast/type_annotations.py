@@ -172,11 +172,14 @@ class FunctionTypeAnnotation(PyccelAstNode):
         The type annotations describing the results of the function address.
         In the syntactic stage these objects are of type SyntacticTypeAnnotation.
         In the semantic stage these objects are of type UnionTypeAnnotation.
+
+    is_const : bool, default=True
+        True if the function pointer cannot be modified, false otherwise.
     """
     __slots__ = ('_args', '_results', '_is_const')
     _attribute_nodes = ('_args', '_results', '_is_const')
 
-    def __init__(self, args, results, is_const = False):
+    def __init__(self, args, results, is_const = True):
         if pyccel_stage == 'syntactic':
             self._args = [FunctionDefArgument(AnnotatedPyccelSymbol('_', a), annotation = a) \
                             for i, a in enumerate(args)]
@@ -293,7 +296,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtypes : PyccelSymbol | IndexedElement | DottedName
+    dtype : PyccelSymbol | IndexedElement | DottedName
         The dtype named in the type annotation.
 
     order : str | None

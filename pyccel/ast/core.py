@@ -4060,13 +4060,15 @@ class EmptyNode(PyccelAstNode):
 
 
 class Comment(PyccelAstNode):
+    """
+    Represents a Comment in the code.
 
-    """Represents a Comment in the code.
+    Represents a Comment in the code.
 
     Parameters
     ----------
     text : str
-       the comment line
+       The comment line.
 
     Examples
     --------

@@ -113,6 +113,11 @@ class Type(BasicStmt):
         ----------
         s : str
             The argument in the trailing section.
+
+        Returns
+        -------
+        PyccelAstNode
+            The Pyccel object being described.
         """
         if s == ':':
             return Slice(None, None)

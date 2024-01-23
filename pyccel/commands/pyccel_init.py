@@ -22,8 +22,10 @@ def pyccel_init():
         parser.parse(verbose=False)
 
 def pyccel_init_command():
-    """ Wrapper around the pyccel_init function removing the need
-    for ArgumentParser
+    """
+    Wrapper around the pyccel_init function removing the need for ArgumentParser.
+
+    Wrapper around the pyccel_init function removing the need for ArgumentParser.
     """
     parser = ArgumentParser(description='Pickle internal pyccel files')
     parser.parse_args()
