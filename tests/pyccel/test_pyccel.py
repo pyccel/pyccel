@@ -820,6 +820,7 @@ def test_classes_type_print(language):
     test_file = os.path.normpath(test_file)
 
     cwd = os.path.dirname(test_file)
+    cwd = get_abs_path(cwd)
 
     test_file = get_abs_path(test_file)
 
