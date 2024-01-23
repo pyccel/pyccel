@@ -64,7 +64,7 @@ class TrailerSubscriptList(BasicStmt):
     """
     def __init__(self, args, order, **kwargs):
         self.args = args
-        self.order = order or None
+        self.order = order.capitalize() or None
         super().__init__(**kwargs)
 
 class Type(BasicStmt):
