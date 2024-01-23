@@ -1844,7 +1844,7 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target')
     _attribute_nodes = ('_value','_var')
 
     def __init__(self, name, *, value = None, kwonly=False, annotation=None):
@@ -1862,6 +1862,7 @@ class FunctionDefArgument(TypedAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._persistent_target = False
 
         if isinstance(name, Variable):
             name.declare_as_argument()
@@ -1939,6 +1940,21 @@ class FunctionDefArgument(TypedAstNode):
         modifying the inout flag.
         """
         self._inout = False
+
+    @property
+    def persistent_target(self):
+        """
+        Indicate if the object passed as this argument becomes a target.
+
+        Indicate if the object passed as this argument becomes a pointer target after
+        a call to the function associated with this argument. This may be the case
+        in class methods.
+        """
+        return self._persistent_target
+
+    @persistent_target.setter
+    def persistent_target(self, persistent_target):
+        self._persistent_target = persistent_target
 
     def __str__(self):
         if self.has_default:

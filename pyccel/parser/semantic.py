@@ -231,6 +231,10 @@ class SemanticParser(BasicParser):
         # used to store variables if optional parameters are changed
         self._optional_params = {}
 
+        # used to link pointers to their targets. This is important for classes which may
+        # contain persistent pointers
+        self._pointer_targets = {}
+
         #
         self._code = parser._code
         # ...
@@ -594,6 +598,7 @@ class SemanticParser(BasicParser):
                 if isinstance(i.dtype, CustomDataType) and i.is_alias:
                     continue
                 deallocs.append(Deallocate(i))
+                self._pointer_targets.pop(i, None)
         self._allocs.pop()
         return deallocs
 
@@ -3118,6 +3123,7 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
+                    self._pointer_targets.setdefault(l, []).append(r)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
@@ -3871,6 +3877,16 @@ class SemanticParser(BasicParser):
                         severity='fatal')
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
+                new_pointer_targets = self._pointer_targets.copy()
+                for p, t_list in self._pointer_targets.items():
+                    if isinstance(p, DottedVariable) and p.lhs == init_func.arguments[0].var:
+                        for t in t_list:
+                            if t.is_argument:
+                                argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
+                                assert len(argument_objects) == 1
+                                argument_objects[0].persistent_target = True
+                        new_pointer_targets.pop(p)
+                self._pointer_targets = new_pointer_targets
 
                 # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
