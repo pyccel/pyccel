@@ -18,7 +18,7 @@ from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse
-from pyccel.ast.internals import PyccelSymbol, Slice as PyccelSlice
+from pyccel.ast.internals import PyccelSymbol, Slice
 from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation
 from pyccel.ast.typingext import TypingFinal
@@ -46,22 +46,6 @@ class Header(object):
         self.statements = statements
         super().__init__(**kwargs)
 
-class Slice(BasicStmt):
-    """
-    Class representing a slice in the grammar.
-
-    Class representing a slice in the grammar.
-    """
-
-    @property
-    def expr(self):
-        """
-        Get the Pyccel object equivalent to this grammar object.
-
-        Get the Pyccel object equivalent to this grammar object.
-        """
-        return Slice(None,None)
-
 class TrailerSubscriptList(BasicStmt):
     """
     Class representing subscripts that appear trailing a type in the grammar.
@@ -73,14 +57,14 @@ class TrailerSubscriptList(BasicStmt):
     ----------
     args : iterable
         The arguments that appear in the subscript.
-    order : str, None
+    order : str
         The order specified in brackets.
     **kwargs : dict
         TextX keyword arguments.
     """
-    def __init__(self, args, order = None, **kwargs):
+    def __init__(self, args, order, **kwargs):
         self.args = args
-        self.order = order
+        self.order = order or None
         super().__init__(**kwargs)
 
 class Type(BasicStmt):
@@ -114,10 +98,16 @@ class Type(BasicStmt):
         dtype = PyccelSymbol(self.dtype)
         order = None
         if self.trailer:
-            args = [a.expr for a in self.trailer.args]
+            args = [self.handle_trailer_arg(a) for a in self.trailer.args]
             dtype = IndexedElement(dtype, *args)
             order = self.trailer.order
         return SyntacticTypeAnnotation(dtype, order)
+
+    def handle_trailer_arg(self, s):
+        if s == ':':
+            return Slice(None, None)
+        else:
+            raise NotImplementedError("Unrecognised type trailer argument")
 
 class FuncType(BasicStmt):
     """
