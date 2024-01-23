@@ -1750,24 +1750,35 @@ class SemanticParser(BasicParser):
         UnionTypeAnnotation
             The type annotation described by this object.
         """
-        if base.cls_name is TypingFinal:
-            syntactic_annotation = args[0]
-            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-            annotation = self._visit(syntactic_annotation)
-            for t in annotation.type_list:
-                t.is_const = True
-            return annotation
-        elif isinstance(base, PyccelFunctionDef) and all(isinstance(a, Slice) for a in args):
-            dtype_cls = base.cls_name
-            dtype = dtype_cls.static_dtype()
-            prec = dtype_cls.static_precision()
-            class_type = NumpyNDArrayType()
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
+                syntactic_annotation = args[0]
+                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                annotation = self._visit(syntactic_annotation)
+                for t in annotation.type_list:
+                    t.is_const = True
+                return annotation
+
+        if all(isinstance(a, Slice) for a in args):
+            if isinstance(base, VariableTypeAnnotation):
+                dtype = base.datatype
+                prec = base.precision
+                class_type = base.class_type
+                if class_type is dtype:
+                    class_type = NumpyNDArrayType()
+                if base.rank != 0:
+                    raise errors.report("Can't index a vector type",
+                            severity='fatal', symbol=expr)
+            elif isinstance(base, PyccelFunctionDef):
+                dtype_cls = base.cls_name
+                dtype = dtype_cls.static_dtype()
+                prec = dtype_cls.static_precision()
+                class_type = NumpyNDArrayType()
             rank = len(args)
             return VariableTypeAnnotation(dtype, class_type, prec, rank)
-        else:
-            raise errors.report("Unrecognised type slice",
-                    severity='fatal', symbol=expr)
+
+        raise errors.report("Unrecognised type slice",
+                severity='fatal', symbol=expr)
 
     #====================================================
     #                 _visit functions
@@ -2210,7 +2221,7 @@ class SemanticParser(BasicParser):
     def _visit_IndexedElement(self, expr):
         var = self._visit(expr.base)
 
-        if isinstance(var, PyccelFunctionDef):
+        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
             return self._get_indexed_type(var, expr.indices, expr)
 
         # TODO check consistency of indices with shape/rank
