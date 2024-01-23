@@ -282,6 +282,8 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
+            annot = annotation.expr
+            print(annot, type(annot))
             annot = SyntacticTypeAnnotation.build_from_textx(annotation)
             if isinstance(stmt, PyccelAstNode):
                 annot.set_current_ast(stmt.python_ast)

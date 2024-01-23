@@ -289,39 +289,25 @@ class SyntacticTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    dtypes : list of str
-        The dtypes named in the type annotation.
+    dtypes : PyccelSymbol | IndexedElement | DottedName
+        The dtype named in the type annotation.
 
-    ranks : list of int
-        The number of ranks requested for each possible annotation.
-
-    orders : list of str or None
-        The orders requested in the type annotation.
-
-    is_const : bool, optional
-        The constness as specified in the type annotation.
-        If the constness is unknown then its value will be fixed in the
-        semantic stage.
+    order : str | None
+        The order requested in the type annotation.
     """
-    __slots__ = ('_dtypes', '_ranks', '_orders', '_is_const')
+    __slots__ = ('_dtype', '_order')
     _attribute_nodes = ()
-    def __init__(self, dtypes, ranks, orders, is_const = None):
-        if any(not isinstance(d, (str, DottedName, IndexedElement)) for d in dtypes):
+    def __init__(self, dtype, order):
+        if not isinstance(dtype, (str, DottedName, IndexedElement)):
             raise ValueError("Syntactic datatypes should be strings")
-        if any(not isinstance(r, int) for r in ranks):
-            raise ValueError("Ranks should have integer values")
-        if not all(o is None or isinstance(o, str) for o in orders):
-            raise ValueError("Orders should be strings")
-        if not (isinstance(is_const, bool) or is_const is None):
-            raise ValueError("Is const should be a boolean")
-        self._dtypes = tuple(dtypes)
-        self._ranks = tuple(ranks)
-        self._orders = tuple(o if o != '' else None for o in orders)
-        self._is_const = is_const
+        if not (order is None or isinstance(order, str)):
+            raise ValueError("Order should be a string")
+        self._dtype = dtype
+        self._order = order
         super().__init__()
 
     @property
-    def dtypes(self):
+    def dtype(self):
         """
         A list of the dtypes named in the type annotation.
 
@@ -331,99 +317,21 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         return self._dtypes
 
     @property
-    def ranks(self):
-        """
-        A list of the ranks requested for each possible annotation.
-
-        A list of integers indicating the number of ranks of the generated
-        object.
-        """
-        return self._ranks
-
-    @property
-    def orders(self):
+    def order(self):
         """
         A list of the orders requested for each possible annotation.
 
         A list of strings or None values indicating the order of the generated
         object.
         """
-        return self._orders
-
-    @property
-    def is_const(self):
-        """
-        Indicates whether the variable should remain constant.
-
-        Returns a boolean which is false if the value of the variable can be
-        modified, and false otherwise.
-        """
-        return self._is_const
+        return self._order
 
     def __hash__(self):
-        return hash((self._dtypes, self._ranks, self._orders))
+        return hash((self._dtype, self._order))
 
     def __eq__(self, o):
         if isinstance(o, SyntacticTypeAnnotation):
-            return self.dtypes == o.dtypes and \
-                    self.ranks == o.ranks and \
-                    self.orders == o.orders
+            return self.dtype == o.dtype and \
+                    self.order == o.order
         else:
             return False
-
-    @staticmethod
-    def build_from_textx(annotation):
-        """
-        Build a SyntacticTypeAnnotation from a textx annotation.
-
-        Build a SyntacticTypeAnnotation from a textx annotation. This function should
-        be moved to the SyntacticParser once headers are deprecated. When that is
-        done there should only be 1 textx object handling types so the if conditions
-        can be changed to use isinstance.
-
-        Parameters
-        ----------
-        annotation : object
-            An object created by textx. Once headers are deprecated this object will
-            have type parser.syntax.basic.BasicStmt.
-
-        Returns
-        -------
-        SyntacticTypeAnnotation
-            A new SyntacticTypeAnnotation describing the parsed type.
-
-        Raises
-        ------
-        TypeError
-            Raised if the type of the argument is not handled.
-        """
-        if isinstance(annotation, (list, tuple)):
-            return tuple(SyntacticTypeAnnotation.build_from_textx(a) for a in annotation)
-        elif hasattr(annotation, 'const'):
-            # Handle UnionTypeStmt
-            is_const = annotation.const
-            dtypes = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.dtypes]
-            if any(isinstance(d, FunctionTypeAnnotation) for d in dtypes):
-                if any(not isinstance(d, FunctionTypeAnnotation) for d in dtypes):
-                    raise TypeError("Can't mix function address with basic types")
-                return UnionTypeAnnotation(*dtypes)
-            else:
-                dtype_names = [n for d in dtypes for n in d.dtypes]
-                ranks = [r for d in dtypes for r in d.ranks]
-                orders = [o for d in dtypes for o in d.orders]
-                return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
-        elif hasattr(annotation, 'dtype'):
-            # Handle VariableType
-            is_const = None
-            dtype_names = [annotation.dtype]
-            ranks = [len(getattr(annotation.trailer, 'args', ()))]
-            orders = [getattr(annotation.trailer, 'order', None)]
-            return SyntacticTypeAnnotation(dtype_names, ranks, orders, is_const)
-        elif hasattr(annotation, 'results'):
-            # Handle FuncType
-            args = [SyntacticTypeAnnotation.build_from_textx(a) for a in annotation.decs]
-            results = [SyntacticTypeAnnotation.build_from_textx(r) for r in annotation.results]
-            return FunctionTypeAnnotation(args, results)
-        else:
-            raise TypeError("Unexpected type")
-
