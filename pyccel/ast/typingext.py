@@ -34,9 +34,15 @@ class TypingFinal(TypedAstNode):
 
     def __init__(self, arg):
         self._arg = arg
+        super().__init__()
 
     @property
     def arg(self):
+        """
+        Get the argument describing the type annotation for an object.
+
+        Get the argument describing the type annotation for an object.
+        """
         return self._arg
 
 #==============================================================================
