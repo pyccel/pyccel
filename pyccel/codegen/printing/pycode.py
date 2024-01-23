@@ -251,7 +251,7 @@ class PythonCodePrinter(CodePrinter):
         default = ''
 
         if expr.annotation:
-            type_annotation = self._print(expr.annotation)
+            type_annotation = f"'{self._print(expr.annotation)}'"
         else:
             var = expr.var
             def get_type_annotation(var):
@@ -292,7 +292,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if isinstance(expr.base.class_type, NativeHomogeneousTuple):
+            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, NativeHomogeneousTuple):
                 indices = ']['.join(i for i in indices)
             else:
                 indices = ','.join(i for i in indices)
@@ -1118,7 +1118,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_UnionTypeAnnotation(self, expr):
         types = [self._print(t)[1:-1] for t in expr.type_list]
-        return "'" + ' | '.join(types) + "'"
+        return ' | '.join(types)
 
     def _print_SyntacticTypeAnnotation(self, expr):
         dtype = self._print(expr.dtype)
@@ -1128,7 +1128,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_FunctionTypeAnnotation(self, expr):
         args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
-        return "'" + f"({results})({args})" + "'"
+        return f"({results})({args})"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
