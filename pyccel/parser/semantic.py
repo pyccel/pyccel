@@ -2386,7 +2386,7 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, DataType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
         else:
-            raise errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information',
+            raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
 
 
