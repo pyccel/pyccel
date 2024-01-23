@@ -8,7 +8,7 @@
 import warnings
 from os.path import join, dirname
 
-from textx.metamodel import metamodel_from_file
+from textx import metamodel_from_file, register_language
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
@@ -635,7 +635,8 @@ class FunctionMacroStmt(BasicStmt):
 # whenever a new rule is added in the grammar, we must update the following
 # lists.
 type_classes = [UnionTypeStmt, Type, TrailerSubscriptList, FuncType]
-hdr_classes = [Header, VariableType,
+hdr_classes = [Header,
+               VariableType,
                ShapedID,
                HeaderResults,
                FunctionHeaderStmt,
@@ -646,16 +647,18 @@ hdr_classes = [Header, VariableType,
                MacroStmt,
                MacroArg,
                MacroList,
-               FunctionMacroStmt,StringStmt]
+               FunctionMacroStmt, StringStmt]
 
 this_folder = dirname(__file__)
 
 # Get meta-model from language description
-grammar = join(this_folder, '../grammar/headers.tx')
 types_grammar = join(this_folder, '../grammar/types.tx')
+grammar = join(this_folder, '../grammar/headers.tx')
 
-meta = metamodel_from_file(grammar, classes=hdr_classes)
 types_meta = metamodel_from_file(types_grammar, classes=type_classes)
+register_language("types", metamodel=types_meta)
+meta = metamodel_from_file(grammar, classes=hdr_classes)
+register_language("headers", metamodel=meta)
 
 def parse(filename=None, stmts=None):
     """ Parse header pragmas

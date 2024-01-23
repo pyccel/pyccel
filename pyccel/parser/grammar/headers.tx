@@ -1,3 +1,5 @@
+reference types
+
 Header:
   statements*=HeaderStmt
 ;
@@ -13,29 +15,17 @@ Statement:
   | InterfaceStmt
 ;
 
-TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
-
-DataType: ID|STAR;
-
-VariableType: dtype=DataType (trailer=TrailerSubscriptList)?;
-
-FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
-
-TypeHeader: FuncType|VariableType;
-UnionTypeStmt: (const?=Const) dtypes+=TypeHeader['|'] ;
-Const: 'const';
-
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=[types.UnionTypeStmt];
 
 FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=[types.UnionTypeStmt][','] ')' (results=HeaderResults)?
 ;
 
-TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
+TemplateStmt: 'template' name = ID '(' dtypes+=[types.TypeHeader]['|'] ')';
 
 FunctionKind: 'function' | 'method';
 Static: 'static';
-HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
+HeaderResults: 'results' '(' decs+=[types.TypeHeader][','] ')'; 
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
@@ -78,6 +68,4 @@ FunctionMacroStmt:
 ;
 
 // ****************
-
-STAR: '*';
 
