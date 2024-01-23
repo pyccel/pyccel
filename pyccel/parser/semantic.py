@@ -2241,6 +2241,8 @@ class SemanticParser(BasicParser):
 
         if var is None and self._in_annotation:
             var = numpy_funcs.get(name, None)
+            if name == 'real':
+                var = numpy_funcs['float']
 
         if var is None:
             if name == '_':
