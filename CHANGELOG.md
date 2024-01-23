@@ -34,12 +34,15 @@ All notable changes to this project will be documented in this file.
 -   #1259 : Fix bug causing problems with user editable installation.
 -   #1651 : Fix name collision resolution to include parent scopes.
 -   #1156 : Raise an error for variable name collisions with non-variable objects.
+-   Ensure `pyccel-init` calls the related function.
+-   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex`.
 
 ### Changed
 
 -   #1672 : Make `icx` and `ifx` the default Intel compilers (Found in Intel oneAPI).
 -   #1644 : Stop printing the step of a range if that step is 1.
 -   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
+-   Don't raise a warning for an unnecessary specification of the order.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
@@ -54,6 +57,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
+-   \[INTERNALS\] #1683 : Remove unused redundant class from `pyccel.ast.datatypes`: `UnionType`.
 
 ## \[1.10.0\] - 2023-10-23
 
