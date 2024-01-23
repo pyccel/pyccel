@@ -2348,8 +2348,9 @@ class SemanticParser(BasicParser):
             if visited_dtype.rank > 1:
                 visited_dtype.order = order or visited_dtype.order or 'C'
             return UnionTypeAnnotation(visited_dtype)
-        elif isinstance(dtype_from_scope, ClassDef):
-            dtype = self.get_class_construct(dtype_name)
+        elif isinstance(visited_dtype, ClassDef):
+            # TODO: Improve when #1676 is merged
+            dtype = self.get_class_construct(visited_dtype.name)
             prec = 0
             rank = 0
             order = None
