@@ -132,6 +132,10 @@ class VariableTypeAnnotation(PyccelAstNode):
     def is_const(self, val):
         self._is_const = val
 
+    @order.setter
+    def order(self, order):
+        self._order = order
+
     def __hash__(self):
         return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
 
@@ -297,7 +301,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_dtype', '_order')
     _attribute_nodes = ()
-    def __init__(self, dtype, order):
+    def __init__(self, dtype, order = None):
         if not isinstance(dtype, (str, DottedName, IndexedElement)):
             raise ValueError("Syntactic datatypes should be strings")
         if not (order is None or isinstance(order, str)):
@@ -314,7 +318,7 @@ class SyntacticTypeAnnotation(PyccelAstNode):
         A list of the dtypes named in the type annotation. These dtypes are
         all strings.
         """
-        return self._dtypes
+        return self._dtype
 
     @property
     def order(self):
