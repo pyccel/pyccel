@@ -945,9 +945,6 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        if result_annotation and not isinstance(result_annotation, tuple):
-            result_annotation = [result_annotation]
-
         for i,r in enumerate(zip(*returns)):
             r0 = r[0]
 
