@@ -1751,13 +1751,13 @@ class SemanticParser(BasicParser):
             The type annotation described by this object.
         """
         if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
-                syntactic_annotation = args[0]
-                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
-                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
-                annotation = self._visit(syntactic_annotation)
-                for t in annotation.type_list:
-                    t.is_const = True
-                return annotation
+            syntactic_annotation = args[0]
+            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+            annotation = self._visit(syntactic_annotation)
+            for t in annotation.type_list:
+                t.is_const = True
+            return annotation
 
         if all(isinstance(a, Slice) for a in args):
             if isinstance(base, VariableTypeAnnotation):
