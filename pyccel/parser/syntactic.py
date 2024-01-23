@@ -271,10 +271,8 @@ class SyntaxParser(BasicParser):
         """
         if isinstance(annotation, (tuple, list)):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
-        if isinstance(annotation, (PyccelSymbol, DottedName)):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
-        elif isinstance(annotation, IndexedElement):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[len(annotation.indices)], orders=[None], is_const=False)
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return SyntacticTypeAnnotation(dtype=annotation)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
@@ -283,8 +281,6 @@ class SyntaxParser(BasicParser):
                         symbol = stmt, column = e.col,
                         severity='fatal')
             annot = annotation.expr
-            print(annot, type(annot))
-            annot = SyntacticTypeAnnotation.build_from_textx(annotation)
             if isinstance(stmt, PyccelAstNode):
                 annot.set_current_ast(stmt.python_ast)
             else:
