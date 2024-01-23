@@ -27,3 +27,4 @@ def pyccel_init_command():
     """
     parser = ArgumentParser(description='Pickle internal pyccel files')
     parser.parse_args()
+    pyccel_init()
