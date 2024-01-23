@@ -1,5 +1,3 @@
-reference types
-
 Header:
   statements*=HeaderStmt
 ;
@@ -15,17 +13,17 @@ Statement:
   | InterfaceStmt
 ;
 
-VariableHeaderStmt: 'variable'  name=ID ('::')? dec=[types.UnionTypeStmt];
+VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=[types.UnionTypeStmt][','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
-TemplateStmt: 'template' name = ID '(' dtypes+=[types.TypeHeader]['|'] ')';
+TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'method';
 Static: 'static';
-HeaderResults: 'results' '(' decs+=[types.TypeHeader][','] ')'; 
+HeaderResults: 'results' '(' decs+=TypeHeader[','] ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;

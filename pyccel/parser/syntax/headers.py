@@ -8,7 +8,7 @@
 import warnings
 from os.path import join, dirname
 
-from textx import metamodel_from_file, register_language
+from textx import metamodel_from_file, register_language, metamodel_from_str
 
 from pyccel.parser.syntax.basic import BasicStmt
 from pyccel.ast.headers   import FunctionHeader, MethodHeader, Template
@@ -609,11 +609,17 @@ this_folder = dirname(__file__)
 
 # Get meta-model from language description
 types_grammar = join(this_folder, '../grammar/types.tx')
-grammar = join(this_folder, '../grammar/headers.tx')
+header_grammar = join(this_folder, '../grammar/headers.tx')
 
 types_meta = metamodel_from_file(types_grammar, classes=type_classes)
 register_language("types", metamodel=types_meta)
-meta = metamodel_from_file(grammar, classes=hdr_classes)
+
+with open(header_grammar, 'r') as f:
+    grammar = f.read()
+with open(types_grammar, 'r') as f:
+    grammar += f.read()
+
+meta = metamodel_from_str(grammar, classes=hdr_classes+type_classes)
 register_language("headers", metamodel=meta)
 
 def parse(filename=None, stmts=None):
