@@ -25,7 +25,7 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .variable  import IndexedElement, InhomogeneousTupleVariable
+from .variable  import IndexedElement
 
 pyccel_stage = PyccelStage()
 
@@ -516,16 +516,17 @@ class PythonTuple(TypedAstNode):
             self._rank  = 0
             self._shape = None
             self._order = None
+            self._class_type = NativeGeneric()
             self._is_homogeneous = False
             return
         arg0 = args[0]
         precision = get_final_precision(arg0)
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
+        is_homogeneous = all(not isinstance(a.dtype, (NativeGeneric, NativeInhomogeneousTuple)) and \
                              arg0.dtype == a.dtype and \
                              precision == get_final_precision(a) and \
-                             arg0.rank  == a.rank  and \
-                             arg0.order == a.order for a in args[1:])
+                             (a.rank == 0 or isinstance(a.class_type, NativeHomogeneousTuple)) and \
+                             arg0.order == a.order and \
+                             not getattr(a, 'is_alias', False) for a in args)
         self._inconsistent_shape = not all(arg0.shape==a.shape   for a in args[1:])
         self._is_homogeneous = is_homogeneous
         if is_homogeneous:
@@ -539,17 +540,11 @@ class PythonTuple(TypedAstNode):
             self._class_type = NativeHomogeneousTuple()
 
         else:
-            max_rank = max(a.rank for a in args)
-            self._rank       = max_rank + 1
+            self._rank       = 1
             self._dtype      = NativeInhomogeneousTuple(*[a.dtype for a in args])
             self._precision  = 0
             self._class_type = self._dtype
-            if self._rank == 1:
-                self._shape     = (LiteralInteger(len(args)), )
-            elif any(a.rank != max_rank for a in args):
-                self._shape     = (LiteralInteger(len(args)), ) + (None,)*(self._rank-1)
-            else:
-                self._shape     = (LiteralInteger(len(args)), ) + args[0].shape
+            self._shape     = (LiteralInteger(len(args)), )
 
         self._order = None if self._rank < 2 else 'C'
 
@@ -613,13 +608,14 @@ class PythonTuple(TypedAstNode):
         """
         return self._args
 
-class PythonTupleFunction(TypedAstNode):
+class PythonTupleFunction(PyccelInternalFunction):
     """
     Class representing a call to the `tuple` function.
 
     Class representing a call to the `tuple` function. This is
     different to the `(,)` syntax as it only takes one argument
-    and unpacks any variables.
+    and unpacks any variables. This class is only used in the
+    syntactic stage.
 
     Parameters
     ----------
@@ -627,17 +623,9 @@ class PythonTupleFunction(TypedAstNode):
         The argument passed to the function call.
     """
     __slots__ = ()
-    _attribute_nodes = ()
 
-    def __new__(cls, arg):
-        if isinstance(arg, PythonTuple):
-            return arg
-        elif isinstance(arg, (PythonList, InhomogeneousTupleVariable)):
-            return PythonTuple(*list(arg.__iter__()))
-        elif isinstance(arg.shape[0], LiteralInteger):
-            return PythonTuple(*[arg[i] for i in range(arg.shape[0])])
-        else:
-            raise TypeError(f"Can't unpack {arg} into a tuple")
+    def __init__(self, arg):
+        super().__init__(arg)
 
 #==============================================================================
 class PythonLen(PyccelInternalFunction):
@@ -1259,5 +1247,4 @@ builtin_functions_dict = {
     'not'      : PyccelNot,
     'map'      : PythonMap,
     'type'     : PythonType,
-    'tuple'    : PythonTupleFunction,
 }

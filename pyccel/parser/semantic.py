@@ -111,7 +111,6 @@ from pyccel.ast.utilities import recognised_source
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 from pyccel.ast.variable import IndexedElement, AnnotatedPyccelSymbol
 from pyccel.ast.variable import DottedName, DottedVariable
 
@@ -508,6 +507,34 @@ class SemanticParser(BasicParser):
         else:
             return result
 
+    def get_tuple_element(self, tuple_elem : PyccelAstNode):
+        """
+        Get an element of a tuple.
+
+        Parameters
+        ----------
+        tuple_elem : PyccelAstNode
+            The element of the tuple obtained via the `__getitem__` function.
+        """
+        if isinstance(tuple_elem, IndexedElement) and isinstance(tuple_elem.base.dtype, NativeInhomogeneousTuple):
+            if isinstance(tuple_elem.base, DottedVariable):
+                base = tuple_elem.base.clone(tuple_elem.base.name, Variable)
+                tuple_elem_search = IndexedElement(base, *tuple_elem.indices)
+            else:
+                tuple_elem_search = tuple_elem
+
+            result = self.scope.find(tuple_elem_search, 'symbolic_alias')
+
+            if result is None:
+                msg = f'Internal error. Tuple element {tuple_elem} could not be found.'
+                return errors.report(msg,
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='fatal')
+            else:
+                return result
+        else:
+            return tuple_elem
+
     def insert_import(self, name, target, storage_name = None):
         """
         Insert a new import into the scope.
@@ -560,6 +587,35 @@ class SemanticParser(BasicParser):
                     headers.append(container.headers[name])
             container = container.parent_scope
         return headers
+
+    def insert_variable_to_scope(self, var, name = None, scope = None):
+        """
+        Insert a variable into the scope.
+
+        Insert a variable into the scope. For most variables this simply
+        involves calling Scope.insert_variable, however for non-homogeneous
+        tuple variables the variables which will represent the elements in
+        the code must also be inserted into the scope.
+
+        Parameters
+        ----------
+        var : Variable
+            The variable to be inserted.
+        name : str, optional
+            The name which will be used to search for the variable within
+            the scope.
+        scope : Scope, optional
+            The scope where the variable should be inserted. By default
+            the current scope is used.
+        """
+        if scope is None:
+            scope = self.scope
+
+        if isinstance(var.class_type, NativeInhomogeneousTuple):
+            for v in var:
+                self.insert_variable_to_scope(self.get_tuple_element(v), scope=scope)
+
+        scope.insert_variable(var, name)
 
 
     #=======================================================
@@ -639,28 +695,6 @@ class SemanticParser(BasicParser):
             d_var['is_target'      ] = expr.is_target
             return d_var
 
-        elif isinstance(expr, PythonTuple):
-            d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'heap'
-            return d_var
-
-        elif isinstance(expr, Concatenate):
-            d_var['cls_base'      ] = TupleClass
-            if any(getattr(a, 'on_heap', False) for a in expr.args):
-                d_var['memory_handling'] = 'heap'
-            else:
-                d_var['memory_handling'] = 'stack'
-            return d_var
-
-        elif isinstance(expr, Duplicate):
-            d = self._infer_type(expr.val)
-            d_var['cls_base'      ] = TupleClass
-            if d.get('on_stack', False) and isinstance(expr.length, LiteralInteger):
-                d_var['memory_handling'] = 'stack'
-            else:
-                d_var['memory_handling'] = 'heap'
-            return d_var
-
         elif isinstance(expr, NumpyNewArray):
             d_var['cls_base'   ] = NumpyArrayClass
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
@@ -677,7 +711,7 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, TypedAstNode):
 
-            d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
+            d_var['memory_handling'] = 'heap' if expr.rank > 0 and not isinstance(expr.dtype, NativeTuple) else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
             return d_var
 
@@ -752,7 +786,7 @@ class SemanticParser(BasicParser):
 
         indices = tuple(indices)
 
-        if isinstance(var, InhomogeneousTupleVariable):
+        if isinstance(var.class_type, NativeInhomogeneousTuple):
 
             arg = indices[0]
 
@@ -763,28 +797,34 @@ class SemanticParser(BasicParser):
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
 
-                idx = slice(arg.start, arg.stop)
-                selected_vars = var.get_var(idx)
-                if len(selected_vars)==1:
+                start = int(arg.start)
+                stop  = int(arg.stop)
+                n_idx = stop - start
+                idx = slice(start, stop)
+                if n_idx == 1:
+                    var = IndexedElement(var, start)
                     if len(indices) == 1:
-                        return selected_vars[0]
+                        return var
                     else:
-                        var = selected_vars[0]
                         return self._extract_indexed_from_var(var, indices[1:], expr)
-                elif len(selected_vars)<1:
+                elif n_idx < 1:
                     return None
-                elif len(indices)==1:
-                    return PythonTuple(*selected_vars)
                 else:
-                    return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
+                    selected_vars = [IndexedElement(var, i) for i in idx]
+                    if len(indices)==1:
+                        return PythonTuple(*selected_vars)
+                    else:
+                        return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
             elif isinstance(arg, LiteralInteger):
+                indexed = var[arg]
+                if isinstance(var.dtype, NativeInhomogeneousTuple):
+                    indexed = self.get_tuple_element(indexed)
 
                 if len(indices)==1:
-                    return var[arg]
+                    return indexed
 
-                var = var[arg]
-                return self._extract_indexed_from_var(var, indices[1:], expr)
+                return self._extract_indexed_from_var(indexed, indices[1:], expr)
 
             else:
                 errors.report(INDEXED_TUPLE, symbol=var,
@@ -871,10 +911,7 @@ class SemanticParser(BasicParser):
                     symbol=Duplicate(val, length),
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='fatal')
-            if isinstance(val, InhomogeneousTupleVariable):
-                return PythonTuple(*(val.get_vars()*length))
-            else:
-                return PythonTuple(*(val.args*length))
+                return PythonTuple(*(list(val)*length))
 
     def _handle_function_args(self, arguments):
         """
@@ -1068,7 +1105,7 @@ class SemanticParser(BasicParser):
                             expr, func.is_elemental)
             return new_expr
 
-    def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
+    def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False, insertion_scope = None):
         """
         Create a new variable.
 
@@ -1107,42 +1144,35 @@ class SemanticParser(BasicParser):
             is_temp = name.is_temp
         else:
             is_temp = False
+        if insertion_scope is None:
+            insertion_scope = self.scope
 
-        if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
+        if isinstance(dtype, NativeInhomogeneousTuple):
             if isinstance(rhs, FunctionCall):
                 iterable = [r.var for r in rhs.funcdef.results]
             else:
                 iterable = rhs
             elem_vars = []
-            is_homogeneous = True
             elem_d_lhs_ref = None
-            for i,r in enumerate(iterable):
+            for i, tuple_elem in enumerate(iterable):
+                r = self.get_tuple_element(tuple_elem)
                 elem_name = self.scope.get_new_name( name + '_' + str(i) )
                 elem_d_lhs = self._infer_type( r )
 
                 if not arr_in_multirets:
                     self._ensure_target( r, elem_d_lhs )
-                if elem_d_lhs_ref is None:
-                    elem_d_lhs_ref = elem_d_lhs.copy()
-                    is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
-                elif elem_d_lhs != elem_d_lhs_ref:
-                    is_homogeneous = False
 
                 elem_dtype = elem_d_lhs.pop('datatype')
 
                 var = self._create_variable(elem_name, elem_dtype, r, elem_d_lhs)
                 elem_vars.append(var)
 
-            if any(v.is_alias for v in elem_vars):
-                d_lhs['memory_handling'] = 'alias'
-            else:
-                d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
+            d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'stack'
 
-            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
-                lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
-            else:
-                lhs = InhomogeneousTupleVariable(elem_vars, name, **d_lhs, is_temp=is_temp)
+            lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
+
+            for i, v in enumerate(elem_vars):
+                insertion_scope.insert_symbolic_alias(IndexedElement(lhs, i), v)
 
         else:
             lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
@@ -1178,7 +1208,7 @@ class SemanticParser(BasicParser):
             d_lhs['memory_handling'] = 'alias'
             rhs.base.is_target = not rhs.base.is_alias
 
-    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
+    def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign, arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
         
@@ -1259,11 +1289,11 @@ class SemanticParser(BasicParser):
                         attribute_name = lhs.name[-1]
                         new_name = class_def.scope.get_expected_name(attribute_name)
                         # Create the attribute
-                        member = self._create_variable(new_name, dtype, rhs, d_lhs)
+                        member = self._create_variable(new_name, dtype, rhs, d_lhs, insertion_scope=class_def.scope)
 
                         # Insert the attribute to the class scope
                         # Passing the original name ensures that the attribute can be found under this name
-                        class_def.scope.insert_variable(member, attribute_name)
+                        self.insert_variable_to_scope(member, attribute_name, scope = class_def.scope)
 
                         # Create the local DottedVariable
                         lhs = member.clone(member.name, new_class = DottedVariable, lhs = var)
@@ -1306,71 +1336,13 @@ class SemanticParser(BasicParser):
                     lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
                     # Add variable to scope
-                    self.scope.insert_variable(lhs, name)
+                    self.insert_variable_to_scope(lhs, name)
 
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
                                             and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, NativeHomogeneousTuple)) or arr_in_multirets
-                if lhs.on_heap and not array_declared_in_function:
-                    if self.scope.is_loop:
-                        # Array defined in a loop may need reallocation at every cycle
-                        errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                            severity='warning',
-                            bounding_box=(self.current_ast_node.lineno,
-                                self.current_ast_node.col_offset))
-                        status='unknown'
-                    else:
-                        # Array defined outside of a loop will be allocated only once
-                        status='unallocated'
-
-                    # Create Allocate node
-                    if isinstance(lhs, InhomogeneousTupleVariable):
-                        args = [v for v in lhs.get_vars() if v.rank>0]
-                        new_args = []
-                        while len(args) > 0:
-                            for a in args:
-                                if isinstance(a, InhomogeneousTupleVariable):
-                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
-                                else:
-                                    new_expressions.append(Allocate(a,
-                                        shape=a.alloc_shape, order=a.order, status=status))
-                                    # Add memory deallocation for array variables
-                                    self._allocs[-1].append(a)
-                            args = new_args
-                    else:
-                        new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
-                # ...
-
-                # ...
-                # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.on_stack:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
-                # ...
-
-                # Add memory deallocation for class constructor
-                if isinstance(lhs.dtype, CustomDataType) and not lhs.is_alias:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
-                # ...
-
-                # We cannot allow the definition of a stack array in a loop
-                if lhs.is_stack_array and self.scope.is_loop:
-                    errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=name,
-                        severity='error',
-                        bounding_box=(self.current_ast_node.lineno,
-                            self.current_ast_node.col_offset))
-
-                # Not yet supported for arrays: x=y+z, x=b[:]
-                # Because we cannot infer shape of right-hand side yet
-                know_lhs_shape = (lhs.rank == 0) or all(sh is not None for sh in lhs.alloc_shape)
-
-                if not know_lhs_shape:
-                    msg = f"Cannot infer shape of right-hand side for expression {lhs} = {rhs}"
-                    errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                        severity='fatal')
+                self._build_first_allocation_node(lhs, array_declared_in_function, new_expressions)
 
             # Variable already exists
             else:
@@ -1391,6 +1363,78 @@ class SemanticParser(BasicParser):
             raise NotImplementedError(f"_assign_lhs_variable does not handle {lhs_type}")
 
         return lhs
+
+    def _build_first_allocation_node(self, variable, variable_allocated_in_function, new_expressions):
+        """
+        Ensure correct handling of memory allocation for a variable.
+
+        Create an Allocate node which allocates memory for the variable. This function should be called
+        the first time that memory is allocated. When memory is reallocated the steps are slightly
+        different. In this case the allocation creation is handled by _ensure_inferred_type_matches_existing.
+        Whenever memory is allocated an equivalent Deallocate node should also be created. This function
+        adds the variable to self._allocs and therefore ensures that this is the case.
+
+        Parameters
+        ----------
+        variable : Variable
+            The variable being allocated.
+
+        variable_allocated_in_function : bool
+            Indicate whether the variable was created inside a function. If this is the case then the
+            deallocation needs taking care of but there is no Allocate node needed.
+
+        new_expressions : list of PyccelAstNode
+            A list of nodes to which any nodes created in this function (e.g. Allocate) must be appended.
+        """
+        if variable.on_heap and not variable_allocated_in_function:
+            if self.scope.is_loop:
+                # Array defined in a loop may need reallocation at every cycle
+                errors.report(ARRAY_DEFINITION_IN_LOOP, symbol=variable.name,
+                    severity='warning',
+                    bounding_box=(self.current_ast_node.lineno,
+                        self.current_ast_node.col_offset))
+                status='unknown'
+            else:
+                # Array defined outside of a loop will be allocated only once
+                status='unallocated'
+
+            new_expressions.append(Allocate(variable, shape=variable.alloc_shape, order=variable.order, status=status))
+        # ...
+
+        # Create Allocate node
+        elif isinstance(variable.class_type, NativeInhomogeneousTuple):
+            for l in variable:
+                self._build_first_allocation_node(self.get_tuple_element(l), variable_allocated_in_function, new_expressions)
+
+        # ...
+        # Ensure memory deallocation will be created
+        if variable.is_alias:
+            # Deallocate array pointers (to deallocate shape/stride information)
+            if isinstance(variable.class_type, NumpyNDArrayType):
+                self._allocs[-1].append(variable)
+        else:
+            # Deallocate heap memory and call destructors for classes
+            if variable.on_heap or isinstance(variable.dtype, CustomDataType):
+                # Create Deallocate node
+                self._allocs[-1].append(variable)
+        # ...
+
+        # We cannot allow the definition of a stack array in a loop
+        if variable.is_stack_array and self.scope.is_loop:
+            errors.report(STACK_ARRAY_DEFINITION_IN_LOOP, symbol=variable.name,
+                severity='error',
+                bounding_box=(self.current_ast_node.lineno,
+                    self.current_ast_node.col_offset))
+
+        # Not yet supported for arrays: x=y+z, x=b[:]
+        # Because we cannot infer shape of right-hand side yet
+        know_lhs_shape = (variable.rank == 0) or all(sh is not None for sh in variable.alloc_shape)
+
+        if not know_lhs_shape:
+            msg = f"Cannot infer shape of variable {variable}"
+            errors.report(PYCCEL_RESTRICTION_TODO+'\n'+msg,
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                severity='fatal')
 
     def _ensure_inferred_type_matches_existing(self, dtype, d_var, var, is_augassign, new_expressions, rhs):
         """
@@ -1594,7 +1638,10 @@ class SemanticParser(BasicParser):
         nlevels = 0
         # Create throw-away variable to help obtain result type
         index   = Variable('int',self.scope.get_new_name('to_delete'), is_temp=True)
+
+        # We don't need to use insert_variable_to_scope as we know that index is not a tuple
         self.scope.insert_variable(index)
+
         new_expr = []
         while isinstance(loop, For):
             nlevels+=1
@@ -1648,7 +1695,7 @@ class SemanticParser(BasicParser):
         else:
             lhs_name = self.scope.get_expected_name(lhs_name)
             lhs = Variable(dtype, lhs_name, **d_var)
-            self.scope.insert_variable(lhs)
+            self.insert_variable_to_scope(lhs)
 
         # Iterate over the loops
         # This provides the definitions of iterators as well
@@ -1875,7 +1922,7 @@ class SemanticParser(BasicParser):
             to_remove = []
             for v in self.scope.variables.values():
                 if v.is_temp:
-                    init_scope.insert_variable(v)
+                    self.insert_variable_to_scope(v, scope = init_scope)
                     to_remove.append(v)
 
             # Remove in a second loop so the dictionary doesn't change during iteration
@@ -2085,7 +2132,7 @@ class SemanticParser(BasicParser):
                 ls.extend(line.body)
             # ----- If block to handle VariableHeader. To be removed when headers are deprecated. ---
             elif isinstance(line, list) and isinstance(line[0], Variable):
-                self.scope.insert_variable(line[0])
+                self.insert_variable_to_scope(line[0])
                 if len(line) != 1:
                     errors.report(f"Variable {line[0]} cannot have multiple types",
                             severity='error', symbol=line[0])
@@ -2199,6 +2246,10 @@ class SemanticParser(BasicParser):
         return Slice(start, stop, step)
 
     def _visit_IndexedElement(self, expr):
+        inhomogeneous_element = self.scope.find(expr, 'symbolic_alias')
+        if inhomogeneous_element is not None:
+            return inhomogeneous_element
+
         var = self._visit(expr.base)
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
@@ -2506,27 +2557,23 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
-            is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
-            if is_inhomogeneous:
-                def get_vars(a):
-                    if isinstance(a, InhomogeneousTupleVariable):
-                        return a.get_vars()
-                    elif isinstance(a, PythonTuple):
-                        return a.args
-                    elif isinstance(a.class_type, NativeHomogeneousTuple):
-                        n_vars = a.shape[0]
-                        if not isinstance(a.shape[0], (LiteralInteger, int)):
-                            errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
-                                    symbol=expr, severity='fatal')
-                        return [a[i] for i in range(n_vars)]
-                    else:
-                        a_type = type(a)
-                        raise NotImplementedError(f"Unexpected type {a_type} in tuple addition")
-                tuple_args = [ai for a in args for ai in get_vars(a)]
-                expr_new = PythonTuple(*tuple_args)
-            else:
+        arg0 = args[0]
+        if isinstance(arg0.class_type, (NativeTuple, NativeHomogeneousList)):
+            arg1 = args[1]
+            is_homogeneous = not isinstance(arg0.class_type, NativeInhomogeneousTuple) and \
+                                arg0.dtype is arg1.dtype and \
+                                arg0.precision == arg1.precision and \
+                                arg0.rank  == arg1.rank  and \
+                                arg0.order == arg1.order
+            if is_homogeneous:
                 return Concatenate(*args)
+            else:
+                if not (isinstance(arg0.shape[0], (LiteralInteger, int)) and isinstance(arg1.shape[0], (LiteralInteger, int))):
+                    errors.report(f"Can't create an inhomogeneous object from objects of unknown size",
+                            severity='fatal', symbol=expr)
+
+                tuple_args = [ai for ai in arg0] + [ai for ai in arg1]
+                expr_new = PythonTuple(*tuple_args)
         else:
             expr_new = self._create_PyccelOperator(expr, args)
         return expr_new
@@ -2738,12 +2785,15 @@ class SemanticParser(BasicParser):
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
             cls_def = self.scope.find(method.cls_name, 'classes')
-            d_var = {'datatype': self.get_class_construct(method.cls_name),
-                    'memory_handling':'stack',
-                    'shape' : None,
-                    'rank' : 0,
-                    'is_target' : False,
-                    'cls_base' : cls_def}
+            cls_dtype = self.get_class_construct(method.cls_name)
+            d_var = {'datatype': cls_dtype,
+                     'precision' : 0,
+                     'memory_handling':'stack',
+                     'shape' : None,
+                     'rank' : 0,
+                     'is_target' : False,
+                     'cls_base' : cls_def,
+                     'class_type' : cls_dtype}
             new_expression = []
 
             lhs = expr.get_user_nodes(Assign)[0].lhs
@@ -2974,7 +3024,7 @@ class SemanticParser(BasicParser):
             else:
                 insert_scope = self.scope
             try:
-                insert_scope.insert_variable(semantic_lhs_var)
+                self.insert_variable_to_scope(semantic_lhs_var, scope = insert_scope)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
             lhs = lhs.name
@@ -2988,54 +3038,23 @@ class SemanticParser(BasicParser):
                         severity='error')
                     return None
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
-        elif isinstance(lhs, PythonTuple):
+        elif isinstance(lhs, (PythonTuple, PythonList)):
             n = len(lhs)
-            if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, FunctionCall)):
-                if isinstance(rhs, FunctionCall):
-                    r_iter = [r.var for r in rhs.funcdef.results]
-                else:
-                    r_iter = rhs
-                new_lhs = []
-                for i,(l,r) in enumerate(zip(lhs,r_iter)):
-                    d = self._infer_type(r)
-                    new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ) )
-                lhs = PythonTuple(*new_lhs)
-
-            elif isinstance(rhs.class_type, NativeHomogeneousTuple):
-                new_lhs = []
-                d_var = self._infer_type(rhs[0])
-                new_rhs = []
-                for i,l in enumerate(lhs):
-                    new_lhs.append( self._assign_lhs_variable(l, d_var.copy(),
-                        rhs[i], new_expressions, isinstance(expr, AugAssign)) )
-                    new_rhs.append(rhs[i])
-                rhs = PythonTuple(*new_rhs)
-                d_var = [d_var]
-                lhs = PythonTuple(*new_lhs)
-
-            elif isinstance(d_var, list) and len(d_var)== n:
-                new_lhs = []
-                if hasattr(rhs,'__getitem__'):
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, isinstance(expr, AugAssign)) )
-                else:
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
-                lhs = PythonTuple(*new_lhs)
-
-            elif d_var['shape'][0]==n:
-                new_lhs = []
-                new_rhs = []
-
-                for l, r in zip(lhs, rhs):
-                    new_lhs.append( self._assign_lhs_variable(l, self._infer_type(r), r, new_expressions, isinstance(expr, AugAssign)) )
-                    new_rhs.append(r)
-
-                lhs = PythonTuple(*new_lhs)
-                rhs = new_rhs
+            new_lhs = []
+            if isinstance(rhs, FunctionCall):
+                r_iter = [r.var for r in rhs.funcdef.results]
+            elif isinstance(rhs.class_type, NativeInhomogeneousTuple):
+                r_iter = [self.get_tuple_element(v) for v in rhs]
             else:
-                errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
-                return None
+                r_iter = rhs
+
+            body = []
+            for i,(l,r) in enumerate(zip(lhs,r_iter)):
+                pyccel_stage.set_stage('syntactic')
+                local_assign = Assign(l,r, python_ast = expr.python_ast)
+                pyccel_stage.set_stage('semantic')
+                body.append(self._visit(local_assign))
+            return CodeBlock(body)
         else:
             lhs = self._visit(lhs)
 
@@ -3051,8 +3070,6 @@ class SemanticParser(BasicParser):
             is_pointer = lhs.is_alias
         elif isinstance(lhs, IndexedElement):
             is_pointer = False
-        elif isinstance(lhs, (PythonTuple, PythonList)):
-            is_pointer = any(l.is_alias for l in lhs if isinstance(lhs, Variable))
 
         # TODO: does is_pointer refer to any/all or last variable in list (currently last)
         is_pointer = is_pointer and isinstance(rhs, (Variable, Duplicate))
@@ -3068,11 +3085,20 @@ class SemanticParser(BasicParser):
             new_rhs = []
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
-                if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)) \
+                if isinstance(l, PythonTuple) and not isinstance(r, FunctionCall):
+                    unpacked_l = list(l)
+                    new_lhs.extend(unpacked_l)
+                    if isinstance(r.class_type, NativeInhomogeneousTuple) and isinstance(r, Variable):
+                        new_rhs.extend(self.get_tuple_element(v) for v in r)
+                    else:
+                        new_rhs.extend([self.get_tuple_element(r[i]) for i in range(len(unpacked_l))])
+                    # Repeat step to handle tuples of tuples of etc.
+                    unravelling = True
+                elif isinstance(l.class_type, NativeInhomogeneousTuple) \
+                        and isinstance(r.class_type, (NativeTuple, NativeHomogeneousList)) \
                         and not isinstance(r, FunctionCall):
-                    new_lhs.extend(l)
-                    new_rhs.extend(r)
+                    new_lhs.extend(self.get_tuple_element(v) for v in l)
+                    new_rhs.extend(self.get_tuple_element(v) for v in r)
                     # Repeat step to handle tuples of tuples of etc.
                     unravelling = True
                 elif isinstance(l, Variable) and l.is_optional:
@@ -3284,7 +3310,7 @@ class SemanticParser(BasicParser):
                     errors.report(f"Variable {var} already exists with different type",
                             symbol = expr, severity='error')
             else:
-                self.scope.insert_variable(var)
+                self.insert_variable_to_scope(var)
             step.invalidate_node()
             step  = pyccel_to_sympy(step , idx_subs, tmp_used_names)
             start.invalidate_node()
@@ -3542,6 +3568,7 @@ class SemanticParser(BasicParser):
 
         return_objs = self.scope.find(f_name, 'functions').results
         assigns     = []
+
         for o,r in zip(return_objs, results):
             v = o.var
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
@@ -3644,7 +3671,7 @@ class SemanticParser(BasicParser):
                     if isinstance(a_var, FunctionAddress):
                         self.insert_function(a_var)
                     else:
-                        self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
+                        self.insert_variable_to_scope(a_var, expr.scope.get_python_name(a.name))
 
                 results = expr.results
                 if results and results[0].annotation:
@@ -3850,7 +3877,7 @@ class SemanticParser(BasicParser):
                         severity='error', symbol=a)
             else:
                 v = a[0]
-                scope.insert_variable(v)
+                self.insert_variable_to_scope(v, scope = scope)
                 attributes.append(v)
 
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
@@ -4262,5 +4289,15 @@ class SemanticParser(BasicParser):
                 errors.report("The type of the result of a function definition cannot be a union of multiple types.",
                         severity = 'error', symbol = expr)
             var = var[0]
-            self.scope.insert_variable(var)
+            self.insert_variable_to_scope(var)
         return FunctionDefResult(var, annotation = expr.annotation)
+
+    def _visit_PythonTupleFunction(self, expr):
+        func_arg, = self._handle_function_args(expr.args)
+        arg = func_arg.value
+        if isinstance(arg, PythonTuple):
+            return arg
+        elif isinstance(arg.shape[0], LiteralInteger):
+            return PythonTuple(*[self.get_tuple_element(a) for a in arg])
+        else:
+            raise TypeError(f"Can't unpack {arg} into a tuple")

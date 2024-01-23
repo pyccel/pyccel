@@ -28,6 +28,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
 from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
 from pyccel.ast.datatypes import CustomDataType, NativeString, NativeHomogeneousTuple
+from pyccel.ast.datatypes import NativeInhomogeneousTuple
 
 from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
 
@@ -46,7 +47,6 @@ from pyccel.ast.variable import IndexedElement
 from pyccel.ast.variable import Variable
 from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
-from pyccel.ast.variable import InhomogeneousTupleVariable
 
 from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 
@@ -1035,7 +1035,7 @@ class CCodePrinter(CodePrinter):
 
         for i, f in enumerate(orig_args):
             f = f.value
-            if isinstance(f, (InhomogeneousTupleVariable, PythonTuple)):
+            if isinstance(f.class_type, NativeInhomogeneousTuple):
                 if args_format:
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
@@ -1242,14 +1242,15 @@ class CCodePrinter(CodePrinter):
         return f'{ret_type} (*{name})({arg_code});\n'
 
     def _print_Declare(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+        variable = expr.variable
+        if isinstance(variable.class_type, NativeInhomogeneousTuple):
+            return ''
 
-        declaration_type = self.get_declare_type(expr.variable)
-        variable = self._print(expr.variable.name)
+        declaration_type = self.get_declare_type(variable)
+        variable_code = self._print(variable.name)
 
-        if expr.variable.is_stack_array:
-            preface, init = self._init_stack_array(expr.variable,)
+        if variable.is_stack_array:
+            preface, init = self._init_stack_array(variable,)
         elif declaration_type == 't_ndarray' and not self._in_header:
             preface = ''
             init    = ' = {.shape = NULL}'
@@ -1259,7 +1260,7 @@ class CCodePrinter(CodePrinter):
 
         external = 'extern ' if expr.external else ''
 
-        declaration = f'{external}{declaration_type} {variable}{init};\n'
+        declaration = f'{external}{declaration_type} {variable_code}{init};\n'
 
         return preface + declaration
 
@@ -1309,6 +1310,7 @@ class CCodePrinter(CodePrinter):
             def get_arg_declaration(var):
                 """ Get the code which declares the argument variable.
                 """
+                declarations = self._print(Declare(var.dtype, var))
                 code = "const " * var.is_const
                 code += self.get_declare_type(var)
                 if print_arg_names:
@@ -1316,7 +1318,7 @@ class CCodePrinter(CodePrinter):
                 return code
 
             arg_code_list = [self.function_signature(var, False) if isinstance(var, FunctionAddress)
-                                else get_arg_declaration(var) for var in arg_vars]
+                    else get_arg_declaration(var) for var in arg_vars]
             arg_code = ', '.join(arg_code_list)
 
         if self._additional_args :
@@ -1328,6 +1330,10 @@ class CCodePrinter(CodePrinter):
             return f'{ret_type} {name}({arg_code})'
 
     def _print_IndexedElement(self, expr):
+        tuple_var = self.scope.find(expr, 'symbolic_alias')
+        if tuple_var:
+            return self._print(tuple_var)
+
         base = expr.base
         inds = list(expr.indices)
         base_shape = base.shape
@@ -1510,13 +1516,14 @@ class CCodePrinter(CodePrinter):
             raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
-        if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print(Deallocate(v)) for v in expr.variable)
-        variable_address = self._print(ObjectAddress(expr.variable))
-        if isinstance(expr.variable.dtype, CustomDataType):
-            Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
+        variable = expr.variable
+        if isinstance(variable.class_type, NativeInhomogeneousTuple):
+            return ''.join(self._print(Deallocate(self.scope.find(v, 'symbolic_alias'))) for v in variable)
+        variable_address = self._print(ObjectAddress(variable))
+        if isinstance(variable.dtype, CustomDataType):
+            Pyccel__del = variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        if expr.variable.is_alias:
+        if variable.is_alias:
             return f'free_pointer({variable_address});\n'
         return f'free_array({variable_address});\n'
 

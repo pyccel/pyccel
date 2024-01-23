@@ -19,7 +19,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
-from .datatypes     import NativeHomogeneousTuple
+from .datatypes     import NativeHomogeneousTuple, NativeInhomogeneousTuple, NativeTuple
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, Nil
@@ -30,7 +30,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
-from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
+from .variable      import Variable, IndexedElement
 
 from .c_concepts import ObjectAddress
 
@@ -685,7 +685,7 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
                     if isinstance(a.lhs, Variable) \
                     and isinstance(a.lhs.class_type, NativeHomogeneousTuple) \
-                    and isinstance(a.rhs.class_type, NativeHomogeneousTuple)]
+                    and isinstance(a.rhs.class_type, NativeTuple)]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)
@@ -699,8 +699,9 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
         block.substitute(allocs_to_unravel, new_allocs)
 
     assigns = [a for a in block.get_attribute_nodes(Assign) \
-                if isinstance(a.lhs, InhomogeneousTupleVariable) \
-                and isinstance(a.rhs, (PythonTuple, InhomogeneousTupleVariable))]
+                if isinstance(a.lhs.class_type, NativeInhomogeneousTuple) \
+                and isinstance(a.rhs.class_type, NativeInhomogeneousTuple) \
+                and not isinstance(a.rhs, FunctionCall)]
     if len(assigns) != 0:
         new_assigns = [[Assign(l,r) for l,r in zip(a.lhs, a.rhs)] for a in assigns]
         block.substitute(assigns, new_assigns)

@@ -244,7 +244,9 @@ class Duplicate(TypedAstNode):
         self._dtype      = val.dtype
         self._precision  = val.precision
         self._rank       = val.rank
-        self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
+        self._shape      = (PyccelMul(val.shape[0], length, simplify=True),)
+        if not isinstance(val.dtype, NativeInhomogeneousTuple):
+            self._shape += tuple(val.shape[1:])
         self._order      = val.order
         self._class_type = val.class_type
 
@@ -260,6 +262,12 @@ class Duplicate(TypedAstNode):
     def length(self):
         return self._length
 
+    def __getitem__(self, idx):
+        if idx < self.shape[0].python_value:
+            return self._val[idx % self._val.shape[0].python_value]
+        else:
+            raise IndexError
+
     def __str__(self):
         return '{} * {}'.format(str(self.val), str(self.length))
 
@@ -270,7 +278,11 @@ class Concatenate(TypedAstNode):
     """
     A class representing the + operator for Python tuples.
 
-    A class representing the + operator for Python tuples.
+    A class representing the + operator for homogeneous Python tuples.
+    This operator should only be used when concatenating two homogeneous
+    tuples which, when concatenated, can be saved into a homogeneous
+    tuple. If this is not the case then an inhomogeneous tuple should
+    be crated using `PythonTuple`.
 
     Parameters
     ----------
@@ -286,8 +298,7 @@ class Concatenate(TypedAstNode):
         self._dtype      = arg1.dtype
         self._precision  = arg1.precision
         self._rank       = arg1.rank
-        shape_addition   = arg2.shape[0]
-        self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
+        self._shape      = (PyccelAdd(arg1.shape[0], arg2.shape[0], simplify=True),) + arg1.shape[1:]
         self._order      = arg1.order
         self._class_type = arg1.class_type
 
@@ -297,6 +308,18 @@ class Concatenate(TypedAstNode):
     @property
     def args(self):
         return self._args
+
+    def __getitem__(self, idx):
+        if idx < self.shape[0].python_value:
+            for a in self._args:
+                s = a.shape[0].python_value
+                if idx < s:
+                    return a[idx]
+                else:
+                    idx -= s
+            return RuntimeError
+        else:
+            raise IndexError
 
 
 class Assign(PyccelAstNode):
@@ -1991,7 +2014,7 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, PythonTuple)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
         elif not isinstance(var, Variable):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
@@ -2510,6 +2533,7 @@ class FunctionDef(ScopedAstNode):
             raise TypeError('results must be an iterable')
         if not all(isinstance(r, FunctionDefResult) for r in results):
             raise TypeError('results must be all be FunctionDefResults')
+        assert len(results)<2
 
         # if method
 

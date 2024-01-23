@@ -52,7 +52,7 @@ from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
 from pyccel.ast.builtins import PythonTuple, PythonList
-from pyccel.ast.builtins import PythonPrint, Lambda
+from pyccel.ast.builtins import PythonPrint, Lambda, PythonTupleFunction
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.literals import LiteralFalse, LiteralTrue, LiteralString
@@ -947,9 +947,6 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        if result_annotation and not isinstance(result_annotation, tuple):
-            result_annotation = [result_annotation]
-
         for i,r in enumerate(zip(*returns)):
             r0 = r[0]
 
@@ -963,10 +960,15 @@ class SyntaxParser(BasicParser):
                 result_name, result_counter = self.scope.get_new_incremented_symbol('Out', result_counter)
 
             if result_annotation:
-                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation[i])
+                result_name = AnnotatedPyccelSymbol(result_name, annotation = result_annotation)
 
-            results.append(FunctionDefResult(result_name, annotation = result_annotation))
+            results.append(result_name)
             results[-1].set_current_ast(stmt)
+
+        if len(results) == 1:
+            results = [FunctionDefResult(results[0], annotation = getattr(results[0], 'annotation', None))]
+        elif len(results) > 1:
+            results = [FunctionDefResult(PythonTuple(*results), annotation = getattr(results[0], 'annotation', None))]
 
         self.exit_function_scope()
 
@@ -1079,6 +1081,8 @@ class SyntaxParser(BasicParser):
         if isinstance(func, PyccelSymbol):
             if func == "print":
                 func = PythonPrint(PythonTuple(*args))
+            elif func == "tuple":
+                func = PythonTupleFunction(*args)
             else:
                 func = FunctionCall(func, args)
         elif isinstance(func, DottedName):
