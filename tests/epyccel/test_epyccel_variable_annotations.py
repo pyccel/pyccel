@@ -116,6 +116,7 @@ def test_final_annotation(language):
         from typing import Final
         a : Final[int] = 3
         a = 4
+        return a
 
     with pytest.raises(PyccelSemanticError):
         epyccel(final_annotation, language=language)
