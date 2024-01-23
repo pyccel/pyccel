@@ -808,6 +808,7 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
+                                        "scripts/classes/empty_class.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
