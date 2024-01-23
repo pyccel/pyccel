@@ -1751,7 +1751,10 @@ class SemanticParser(BasicParser):
             The type annotation described by this object.
         """
         if base.cls_name is TypingFinal:
-            annotation = self._visit(SyntacticTypeAnnotation(args, ranks = [0], orders = [None]))
+            syntactic_annotation = args[0]
+            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+            annotation = self._visit(syntactic_annotation)
             for t in annotation.type_list:
                 t.is_const = True
             return annotation
@@ -2046,7 +2049,13 @@ class SemanticParser(BasicParser):
     def _visit_FunctionTypeAnnotation(self, expr):
         arg_types = [self._visit(a)[0] for a in expr.args]
         res_types = [self._visit(r)[0] for r in expr.results]
-        return FunctionTypeAnnotation(arg_types, res_types)
+        return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_types))
+
+    def _visit_TypingFinal(self, expr):
+        annotation = self._visit(expr.arg)
+        for t in annotation:
+            t.is_const = True
+        return annotation
 
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
@@ -2350,6 +2359,8 @@ class SemanticParser(BasicParser):
             if visited_dtype.rank > 1:
                 visited_dtype.order = order or visited_dtype.order or 'C'
             return UnionTypeAnnotation(visited_dtype)
+        elif isinstance(visited_dtype, UnionTypeAnnotation):
+            return visited_dtype
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
             dtype = self.get_class_construct(visited_dtype.name)
