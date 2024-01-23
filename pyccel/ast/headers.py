@@ -8,10 +8,9 @@ from ..errors.errors    import Errors
 from .basic             import PyccelAstNode, iterable
 from .core              import Assign, FunctionCallArgument
 from .core              import FunctionCall
-from .datatypes         import UnionType
 from .internals         import PyccelSymbol, Slice
 from .macros            import Macro, MacroShape, construct_macro
-from .type_annotations  import SyntacticTypeAnnotation
+from .type_annotations  import SyntacticTypeAnnotation, UnionTypeAnnotation
 from .variable          import DottedName, DottedVariable
 from .variable          import Variable
 
@@ -304,11 +303,11 @@ class MethodHeader(FunctionHeader):
             raise TypeError("Expecting dtypes to be iterable.")
 
         for d in dtypes:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
         for d in results:
-            if not isinstance(d, (UnionType, SyntacticTypeAnnotation)):
+            if not isinstance(d, (UnionTypeAnnotation, SyntacticTypeAnnotation)):
                 raise TypeError("Wrong element in dtypes.")
 
 
