@@ -808,10 +808,36 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
-                                        "scripts/classes/empty_class.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
+
+def test_classes_type_print(language):
+    test_file = "scripts/classes/empty_class.py"
+
+    rel_test_dir = os.path.dirname(test_file)
+
+    test_file = os.path.normpath(test_file)
+
+    cwd = os.path.dirname(test_file)
+
+    test_file = get_abs_path(test_file)
+
+    pyccel_commands = " --language="+language
+
+    if language=="python":
+        output_dir = os.path.join(get_abs_path(rel_test_dir), '__pyccel__')
+        pyccel_commands += " --output "+output_dir
+        output_test_file = os.path.join(output_dir, os.path.basename(test_file))
+    else:
+        output_test_file = test_file
+
+    compile_pyccel(cwd, test_file, pyccel_commands)
+
+    lang_out = get_lang_output(output_test_file, language)
+
+    rx = re.compile(r'\bA\b')
+    assert rx.search(lang_out)
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible

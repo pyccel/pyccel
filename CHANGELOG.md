@@ -16,6 +16,7 @@ All notable changes to this project will be documented in this file.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
+-   #1685 : Add support for `type()` function with class instance argument.
 
 ### Fixed
 
