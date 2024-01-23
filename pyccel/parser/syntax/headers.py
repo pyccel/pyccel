@@ -275,7 +275,7 @@ class UnionTypeStmt(BasicStmt):
         if len(dtypes)==1:
             return dtypes[0]
 
-        return UnionTypeAnnotation(dtypes)
+        return UnionTypeAnnotation(*dtypes)
 
 class HeaderResults(BasicStmt):
     """
