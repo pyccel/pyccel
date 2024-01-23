@@ -1775,6 +1775,8 @@ class SemanticParser(BasicParser):
                 prec = dtype_cls.static_precision()
                 class_type = NumpyNDArrayType()
             rank = len(args)
+            if prec == -1:
+                prec = default_precision[dtype]
             return VariableTypeAnnotation(dtype, class_type, prec, rank)
 
         raise errors.report("Unrecognised type slice",
