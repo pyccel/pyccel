@@ -523,7 +523,7 @@ class CToPythonWrapper(Wrapper):
         """
         Create the allocator for the class.
 
-        Create a function which will allocate the memory for the class. This
+        Create a function which will allocate the memory for the class instance. This
         is equivalent to the `__new__` function.
 
         Parameters
