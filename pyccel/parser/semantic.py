@@ -308,7 +308,7 @@ class SemanticParser(BasicParser):
 
         ast = self.ast
 
-        self._allocs.append([])
+        self._allocs.append(set())
         self._pointer_targets.append({})
         # we add the try/except to allow the parser to find all possible errors
         pyccel_stage.set_stage('semantic')
@@ -333,7 +333,7 @@ class SemanticParser(BasicParser):
         a `if __name__ == '__main__':` block). It is assumed that
         the current namespace is the module namespace.
         """
-        self._allocs.append([])
+        self._allocs.append(set())
         self._pointer_targets.append({})
         self._module_namespace = self.scope
         self.scope = self._program_namespace
@@ -645,7 +645,7 @@ class SemanticParser(BasicParser):
                 continue
             if i in chain(*self._pointer_targets[-1].values()):
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
-                        severity='error', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
+                        severity='warning', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
@@ -659,6 +659,12 @@ class SemanticParser(BasicParser):
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                             assert len(argument_objects) == 1
                             argument_objects[0].persistent_target = True
+
+    def _indicate_pointer_target(self, pointer, target):
+        if isinstance(pointer, DottedVariable):
+            self._indicate_pointer_target(pointer.lhs, target)
+        else:
+            self._pointer_targets[-1].setdefault(pointer, []).append(target)
 
     def _infer_type(self, expr):
         """
@@ -1125,7 +1131,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._pointer_targets[-1].setdefault(args[0].value, []).append(a.value)
+                        self._indicate_pointer_target(args[0].value, []).append(a.value)
                     else:
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
@@ -1422,10 +1428,10 @@ class SemanticParser(BasicParser):
                                 if isinstance(a, InhomogeneousTupleVariable):
                                     new_args.extend(v for v in a.get_vars() if v.rank>0)
                                 else:
-                                    self._allocs[-1].append(a)
+                                    self._allocs[-1].add(a)
                             args = new_args
                     else:
-                        self._allocs[-1].append(lhs)
+                        self._allocs[-1].add(lhs)
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
@@ -2841,12 +2847,12 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._pointer_targets[-1].setdefault(cls_variable, []).append(a.value)
+                        self._indicate_pointer_target(cls_variable, a.value)
                     else:
                         errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
 
-            self._allocs[-1].append(cls_variable)
+            self._allocs[-1].add(cls_variable)
             #if len(stmts) > 0:
             #    stmts.append(expr)
             #    return CodeBlock(stmts)
@@ -3203,7 +3209,7 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
-                    self._pointer_targets[-1].setdefault(l, []).append(r)
+                    self._indicate_pointer_target(l, r)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
@@ -3749,7 +3755,7 @@ class SemanticParser(BasicParser):
                 self.insert_function(recursive_func_obj)
 
                 # Create a new list that store local variables for each FunctionDef to handle nested functions
-                self._allocs.append([])
+                self._allocs.append(set())
                 self._pointer_targets.append({})
 
                 # we annotate the body
@@ -3986,9 +3992,9 @@ class SemanticParser(BasicParser):
                         attribute.append(attr)
                 if attribute:
                     # Create a new list that store local attributes
-                    self._allocs.append([])
+                    self._allocs.append(set())
                     self._pointer_targets.append({})
-                    self._allocs[-1].extend(attribute)
+                    self._allocs[-1].update(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))
