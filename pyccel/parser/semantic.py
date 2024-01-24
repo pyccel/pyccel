@@ -3869,7 +3869,6 @@ class SemanticParser(BasicParser):
                     errors.report("Pyccel does not support interface constructor", symbol=method,
                         severity='fatal')
                 methods.pop(i)
-                init_func = self.scope.functions[m_name]
 
                 # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
