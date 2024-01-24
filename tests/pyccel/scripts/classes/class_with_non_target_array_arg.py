@@ -6,7 +6,7 @@ class MyClass:
         self.param1 = param1
         my_param2 = param2[::2]
         self.param2 = np.sum(my_param2)
-        print("MyClass Object created!")
+        print(123456789)
 
 
 if __name__ == '__main__':
