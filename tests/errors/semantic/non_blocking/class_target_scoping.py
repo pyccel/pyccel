@@ -1,5 +1,5 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 import numpy as np
-from pyccel.decorators import inline
 
 class MyClass:
     def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
