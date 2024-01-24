@@ -1960,8 +1960,8 @@ class FunctionDefArgument(TypedAstNode):
 
     @bound_argument.setter
     def bound_argument(self, bound):
-        if not isinstance(bound_argument, bool):
-            raise TypeError("bound_argument must be a boolean")
+        if not isinstance(bound, bool):
+            raise TypeError("bound must be a boolean")
         self._bound_argument = bound
 
     def __str__(self):
