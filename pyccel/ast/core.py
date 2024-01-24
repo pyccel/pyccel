@@ -755,7 +755,6 @@ class AliasAssign(PyccelAstNode):
             if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
-
         self._lhs = lhs
         self._rhs = rhs
         super().__init__()
