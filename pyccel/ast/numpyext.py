@@ -436,21 +436,21 @@ class NumpyComplex128(NumpyComplex):
     name = 'complex128'
 
 DtypePrecisionToCastFunction = {
-    'Int' : {
+    'int' : {
        -1 : PythonInt,
         1 : NumpyInt8,
         2 : NumpyInt16,
         4 : NumpyInt32,
         8 : NumpyInt64},
-    'Float' : {
+    'float' : {
        -1 : PythonFloat,
         4 : NumpyFloat32,
         8 : NumpyFloat64},
-    'Complex' : {
+    'complex' : {
        -1 : PythonComplex,
         4 : NumpyComplex64,
         8 : NumpyComplex128,},
-    'Bool':  {
+    'bool':  {
        -1 : PythonBool,
         4 : NumpyBool}
 }

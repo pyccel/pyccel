@@ -1000,7 +1000,7 @@ class SyntaxParser(BasicParser):
                 methods.append(visited_i)
                 visited_i.arguments[0].bound_argument = True
             elif isinstance(visited_i, Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+                continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
             elif isinstance(visited_i, CommentBlock):
