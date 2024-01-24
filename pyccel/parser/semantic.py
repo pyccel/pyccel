@@ -38,7 +38,6 @@ from pyccel.ast.core import AugAssign, CodeBlock
 from pyccel.ast.core import Return, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core import ConstructorCall, InlineFunctionDef
 from pyccel.ast.core import FunctionDef, Interface, FunctionAddress, FunctionCall, FunctionCallArgument
-from pyccel.ast.core import DottedFunctionCall
 from pyccel.ast.core import ClassDef
 from pyccel.ast.core import For
 from pyccel.ast.core import Module
@@ -992,7 +991,7 @@ class SemanticParser(BasicParser):
                The arguments passed to the function.
 
         is_method : bool
-                Indicates if the function is a method (and should return a DottedFunctionCall).
+                Indicates if the function is a class method.
 
         Returns
         -------
@@ -1054,10 +1053,7 @@ class SemanticParser(BasicParser):
 
             args = input_args
 
-            if is_method:
-                new_expr = DottedFunctionCall(func, args, current_function = self._current_function, prefix = args[0].value)
-            else:
-                new_expr = FunctionCall(func, args, self._current_function)
+            new_expr = FunctionCall(func, args, self._current_function)
 
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
@@ -2053,6 +2049,7 @@ class SemanticParser(BasicParser):
         value = None if expr.value is None else self._visit(expr.value)
         kwonly = expr.is_kwonly
         is_optional = isinstance(value, Nil)
+        bound_argument = expr.bound_argument
 
         args = []
         for v in arg:
@@ -2064,11 +2061,11 @@ class SemanticParser(BasicParser):
                         value.precision != prec:
                     value = convert_to_literal(value.python_value, dtype, prec)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
-                args.append(FunctionDefArgument(clone_var,
+                args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
             else:
                 args.append(FunctionDefArgument(v.clone(v.name, is_optional = is_optional,
-                                is_kwonly = kwonly, is_argument = True),
+                                is_kwonly = kwonly, is_argument = True), bound_argument = bound_argument,
                                 value = value, kwonly = kwonly, annotation = expr.annotation))
         return args
 
@@ -2737,8 +2734,8 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
-            cls_def = self.scope.find(method.cls_name, 'classes')
-            d_var = {'datatype': self.get_class_construct(method.cls_name),
+            cls_def = method.arguments[0].var.cls_base
+            d_var = {'datatype': method.arguments[0].var.class_type,
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
@@ -2749,7 +2746,7 @@ class SemanticParser(BasicParser):
             lhs = expr.get_user_nodes(Assign)[0].lhs
             if isinstance(lhs, AnnotatedPyccelSymbol):
                 annotation = self._visit(lhs.annotation)
-                if len(annotation.type_list) != 1 or annotation.type_list[0].class_type.name != method.cls_name:
+                if len(annotation.type_list) != 1 or annotation.type_list[0].class_type != method.arguments[0].var.class_type:
                     errors.report(f"Unexpected type annotation in creation of {cls_def.name}",
                             symbol=annotation, severity='error')
                 lhs = lhs.name
@@ -3563,7 +3560,6 @@ class SemanticParser(BasicParser):
 
     def _visit_FunctionDef(self, expr):
         name            = self.scope.get_expected_name(expr.name)
-        cls_name        = expr.cls_name
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []
@@ -3573,6 +3569,11 @@ class SemanticParser(BasicParser):
         is_private      = expr.is_private
         is_inline       = expr.is_inline
         docstring      = self._visit(expr.docstring) if expr.docstring else expr.docstring
+
+        current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
+        cls_name = current_class[0].name if current_class else None
+        if cls_name:
+            bound_class = self.scope.find(cls_name, 'classes')
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
@@ -3600,6 +3601,7 @@ class SemanticParser(BasicParser):
 
         # this for the case of a function without arguments => no headers
         interface_name = name
+        interface_counter = 0
 
         for tmpl_idx in range(n_templates):
             # Change to syntactic FunctionDef scope to ensure get_expected_name is available
@@ -3624,12 +3626,12 @@ class SemanticParser(BasicParser):
                 arg_dict = {a.name:a.var for a in arguments}
 
                 if is_interface:
-                    name = interface_name + '_' + str(tmpl_idx*n_interface_funcs + i).zfill(2)
+                    name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
                 scope = self.create_new_function_scope(name, decorators = decorators,
                         used_symbols = expr.scope.local_used_symbols.copy(),
                         original_symbols = expr.scope.python_names.copy())
 
-                if cls_name:
+                if len(arguments)>0 and arguments[0].bound_argument:
                     if arguments[0].var.cls_base.name != cls_name:
                         errors.report('Class method self argument does not have the expected type',
                                 severity='error', symbol=arguments[0])
@@ -3732,7 +3734,6 @@ class SemanticParser(BasicParser):
 
                 func_kwargs = {
                         'global_vars':global_vars,
-                        'cls_name':cls_name,
                         'is_pure':is_pure,
                         'is_elemental':is_elemental,
                         'is_private':is_private,
@@ -3760,11 +3761,9 @@ class SemanticParser(BasicParser):
                     recursive_func_obj.invalidate_node()
 
                 if cls_name:
-                    cls = self.scope.find(cls_name, 'classes')
-
                     # update the class methods
                     if expr.name == func.name:
-                        cls.add_new_method(func)
+                        bound_class.add_new_method(func)
 
                 funcs += [func]
 
@@ -3778,21 +3777,8 @@ class SemanticParser(BasicParser):
 
             funcs = Interface(interface_name, funcs)
             if cls_name:
-                cls = self.scope.find(cls_name, 'classes')
-                cls.add_new_interface(funcs)
+                bound_class.add_new_interface(funcs)
             self.insert_function(funcs)
-#        TODO move this to codegen
-#        if vec_func:
-#           self._visit_FunctionDef(vec_func)
-#           vec_func = self.scope.functions.pop(vec_name)
-#           if isinstance(funcs, Interface):
-#               funcs = list(funcs.funcs)+[vec_func]
-#           else:
-#               self.scope.sons_scopes['sc_'+ name] = self.scope.sons_scopes[name]
-#               funcs = funcs.rename('sc_'+ name)
-#               funcs = [funcs, vec_func]
-#           funcs = Interface(name, funcs)
-#           self.insert_function(funcs)
         return EmptyNode()
 
     def _visit_PythonPrint(self, expr):
@@ -3856,7 +3842,7 @@ class SemanticParser(BasicParser):
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
-                docstring = docstring)
+                docstring = docstring, class_type = dtype())
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
@@ -3901,9 +3887,10 @@ class SemanticParser(BasicParser):
             self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
-            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
+            self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
+            del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)

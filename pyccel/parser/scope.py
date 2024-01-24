@@ -736,3 +736,24 @@ class Scope(object):
         """ Get map of new names to original python names
         """
         return self._original_symbol
+
+    def rename_function(self, o, name):
+        """
+        Rename a function that exists in the scope.
+
+        Rename a function that exists in the scope. This is done by
+        finding a new collisionless name, renaming the FunctionDef
+        instance, and updating the dictionary of symbols.
+
+        Parameters
+        ----------
+        o : FunctionDef
+            The object that should be renamed.
+
+        name : str
+            The suggested name for the new function.
+        """
+        newname = self.get_new_name(name)
+        python_name = self._original_symbol.pop(o.name)
+        o.rename(newname)
+        self._original_symbol[newname] = python_name
