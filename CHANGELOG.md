@@ -35,6 +35,7 @@ All notable changes to this project will be documented in this file.
 -   #1259 : Fix bug causing problems with user editable installation.
 -   #1651 : Fix name collision resolution to include parent scopes.
 -   #1156 : Raise an error for variable name collisions with non-variable objects.
+-   #1507 : Fix problems with name collisions in class functions.
 
 ### Changed
 
