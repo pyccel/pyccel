@@ -3515,7 +3515,6 @@ class ClassDef(ScopedAstNode):
         if not isinstance(method, FunctionDef):
             raise TypeError("Method must be FunctionDef")
         method.set_current_user_node(self)
-        method.arguments[0].bound_argument = True
         self._methods += (method,)
 
     def add_new_interface(self, interface):
