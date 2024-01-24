@@ -645,15 +645,15 @@ class SemanticParser(BasicParser):
                 continue
             if i in chain(*self._pointer_targets[-1].values()):
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
-                        severity='warning', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
+                        severity='error', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
             current_func = self.scope.functions[func_name]
-            arg_vars = [a.var for a in current_func.arguments]
+            arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
-                if isinstance(p, DottedVariable) and p.lhs in arg_vars:
+                if p in arg_vars and arg_vars[p].bound_argument:
                     for t in t_list:
                         if t.is_argument:
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
