@@ -645,7 +645,7 @@ class SemanticParser(BasicParser):
                 continue
             if i in chain(*self._pointer_targets[-1].values()):
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
-                        severity='error', symbol=i.get_user_nodes(FunctionCallArgument)[-1])
+                        severity='error', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
