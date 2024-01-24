@@ -808,6 +808,8 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
+                                        "scripts/classes/class_temporary_in_constructor.py",
+                                        "scripts/classes/class_with_non_target_array_arg.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)

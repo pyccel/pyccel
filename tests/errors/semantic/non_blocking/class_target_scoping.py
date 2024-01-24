@@ -1,0 +1,18 @@
+import numpy as np
+from pyccel.decorators import inline
+
+class MyClass:
+    def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
+        self.param1 = param1
+        self.param2 = param2
+        print("MyClass Object created!")
+
+def get_MyClass():
+    my_array = np.ones(4)
+    my_class = MyClass(2, my_array)
+    my_array[2] = 4.0 # Must also modify the array in my_class
+    return my_class # my_array is auto-deallocated as it goes out of scope, but my_class is still in scope
+
+if __name__ == '__main__':
+    obj = get_MyClass()
+    print(obj.param1, obj.param2)
