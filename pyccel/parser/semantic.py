@@ -636,7 +636,6 @@ class SemanticParser(BasicParser):
                                 argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                                 assert len(argument_objects) == 1
                                 argument_objects[0].persistent_target = True
-                        new_pointer_targets.pop(p)
         self._pointer_targets.pop()
 
     def _infer_type(self, expr):
