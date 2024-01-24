@@ -605,6 +605,31 @@ class SemanticParser(BasicParser):
         return deallocs
 
     def _check_pointer_targets(self, exceptions = ()):
+        """
+        Check that all pointer targets to be deallocated are not needed beyond this scope.
+
+        At the end of a scope (function/module/class) the objects contained within it are
+        deallocated. However some objects may persist beyond the scope. For example a
+        class instance persists after a call to a class method, and the arguments of a
+        function persist after a call to that function. If one of these persistent objects
+        contains a pointer then it is important that the target of that pointer has the
+        same lifetime. The target must not be deallocated at the end of the function if
+        the pointer persists.
+
+        This function checks through self._pointer_targets[-1] which is the dictionary
+        describing the association of pointers to targets in this scope. First it removes
+        all pointers which are deallocated at the end of this context. Next it checks if
+        any of the objects which will be deallocated are present amongst the targets for
+        the scope. If this is the case then an error is raised. Finally it loops through
+        the remaining pointer/target pairs and ensures that any arguments which are targets
+        are marked as such.
+
+        Parameters
+        ----------
+        exceptions : tuple of Variables
+            A list of objects in `_allocs` which are to be ignored (variables appearing
+            in a return statement).
+        """
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
                 if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
@@ -624,18 +649,15 @@ class SemanticParser(BasicParser):
 
         if self._current_function:
             current_func = self.scope.functions[self._current_function]
-            first_arg = None
-            if current_func.arguments:
-                first_arg = current_func.arguments[0]
+            arg_vars = [a.var for a in current_func.arguments]
 
-            if first_arg and first_arg.bound_argument:
-                for p, t_list in self._pointer_targets[-1].items():
-                    if isinstance(p, DottedVariable) and p.lhs == first_arg.var:
-                        for t in t_list:
-                            if t.is_argument:
-                                argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
-                                assert len(argument_objects) == 1
-                                argument_objects[0].persistent_target = True
+            for p, t_list in self._pointer_targets[-1].items():
+                if isinstance(p, DottedVariable) and p.lhs in arg_vars:
+                    for t in t_list:
+                        if t.is_argument:
+                            argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
+                            assert len(argument_objects) == 1
+                            argument_objects[0].persistent_target = True
         self._pointer_targets.pop()
 
     def _infer_type(self, expr):
