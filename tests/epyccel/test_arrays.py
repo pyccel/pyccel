@@ -36,9 +36,6 @@ def test_array_assigned_dtype(language):
     fl32 = np.float32(fl)
     fl64 = np.float64(fl)
 
-    cmplx64 = np.complex64(fl32)
-    cmplx128 = np.complex128(fl64)
-
     epyccel_func = epyccel(arrays.array_return_first_element, language=language)
 
     f_integer_output = epyccel_func(integer, integer)
@@ -73,12 +70,24 @@ def test_array_assigned_dtype(language):
     test_float64_output = arrays.array_return_first_element(fl64, fl64)
     assert isinstance(f_fl64_output, type(test_float64_output))
 
+def test_array_assigned_dtype_complex(language):
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max,   dtype=int)
+
+    fl = float(integer)
+    fl32 = np.float32(fl)
+    fl64 = np.float64(fl)
+
+    cmplx64 = np.complex64(fl32)
+    cmplx128 = np.complex128(fl64)
+
+    epyccel_func = epyccel(arrays.array_return_first_element_complex, language=language)
+
     f_cmplx64_output = epyccel_func(cmplx64, cmplx64)
-    test_cmplx64_output = arrays.array_return_first_element(cmplx64, cmplx64)
+    test_cmplx64_output = arrays.array_return_first_element_complex(cmplx64, cmplx64)
     assert isinstance(f_cmplx64_output, type(test_cmplx64_output))
 
     f_cmplx128_output = epyccel_func(cmplx128, cmplx128)
-    test_cmplx128_output = arrays.array_return_first_element(cmplx128, cmplx128)
+    test_cmplx128_output = arrays.array_return_first_element_complex(cmplx128, cmplx128)
     assert isinstance(f_cmplx128_output, type(test_cmplx128_output))
 
 #==============================================================================
