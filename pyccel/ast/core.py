@@ -3551,6 +3551,14 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+        if self.scope is not None:
+            # Collect translated name from scope
+            try:
+                name = self.scope.get_expected_name(name)
+            except RuntimeError:
+                errors.report(f"Can't find method {name} in class {self.name}",
+                        severity='fatal', symbol=self)
+
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
         except StopIteration:
