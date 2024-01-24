@@ -1131,7 +1131,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._indicate_pointer_target(args[0].value, []).append(a.value)
+                        self._indicate_pointer_target(args[0].value, a.value)
                     else:
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
