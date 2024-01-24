@@ -648,7 +648,8 @@ class SemanticParser(BasicParser):
                         severity='error', symbol=i.get_user_nodes(FunctionCallArgument)[-1])
 
         if self._current_function:
-            current_func = self.scope.functions[self._current_function]
+            func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
+            current_func = self.scope.functions[func_name]
             arg_vars = [a.var for a in current_func.arguments]
 
             for p, t_list in self._pointer_targets[-1].items():
