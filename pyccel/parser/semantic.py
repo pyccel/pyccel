@@ -3762,7 +3762,7 @@ class SemanticParser(BasicParser):
 
                 if cls_name:
                     # update the class methods
-                    if expr.name == func.name:
+                    if not is_interface:
                         bound_class.add_new_method(func)
 
                 funcs += [func]
