@@ -601,6 +601,7 @@ class SemanticParser(BasicParser):
                     continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
+        self._pointer_targets.pop()
         return deallocs
 
     def _check_pointer_targets(self, exceptions = ()):
@@ -657,7 +658,6 @@ class SemanticParser(BasicParser):
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                             assert len(argument_objects) == 1
                             argument_objects[0].persistent_target = True
-        self._pointer_targets.pop()
 
     def _infer_type(self, expr):
         """
@@ -3639,7 +3639,6 @@ class SemanticParser(BasicParser):
         # the arrays that will be returned.
         self._check_pointer_targets(results)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
-        self._allocs.pop()
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
