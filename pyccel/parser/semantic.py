@@ -233,7 +233,7 @@ class SemanticParser(BasicParser):
 
         # used to link pointers to their targets. This is important for classes which may
         # contain persistent pointers
-        self._pointer_targets = {}
+        self._pointer_targets = []
 
         #
         self._code = parser._code
@@ -310,6 +310,7 @@ class SemanticParser(BasicParser):
         ast = self.ast
 
         self._allocs.append([])
+        self._pointer_targets.append({})
         # we add the try/except to allow the parser to find all possible errors
         pyccel_stage.set_stage('semantic')
         ast = self._visit(ast)
@@ -334,6 +335,7 @@ class SemanticParser(BasicParser):
         the current namespace is the module namespace.
         """
         self._allocs.append([])
+        self._pointer_targets.append({})
         self._module_namespace = self.scope
         self.scope = self._program_namespace
 
@@ -609,16 +611,33 @@ class SemanticParser(BasicParser):
                     continue
             if i in exceptions:
                 continue
-            self._pointer_targets.pop(i, None)
+            self._pointer_targets[-1].pop(i, None)
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
                 if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                     continue
             if i in exceptions:
                 continue
-            if i in chain(*self._pointer_targets.values()):
+            if i in chain(*self._pointer_targets[-1].values()):
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
-                        severity='error', symbol=i.get_user_nodes((AliasAssign, ConstructorCall)))
+                        severity='error', symbol=i.get_user_nodes(FunctionCallArgument)[-1])
+
+        if self._current_function:
+            current_func = self.scope.functions[self._current_function]
+            first_arg = None
+            if current_func.arguments:
+                first_arg = current_func.arguments[0]
+
+            if first_arg and first_arg.bound_argument:
+                for p, t_list in self._pointer_targets[-1].items():
+                    if isinstance(p, DottedVariable) and p.lhs == first_arg.var:
+                        for t in t_list:
+                            if t.is_argument:
+                                argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
+                                assert len(argument_objects) == 1
+                                argument_objects[0].persistent_target = True
+                        new_pointer_targets.pop(p)
+        self._pointer_targets.pop()
 
     def _infer_type(self, expr):
         """
@@ -1088,7 +1107,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._pointer_targets.setdefault(args[0].value, []).append(a.value)
+                        self._pointer_targets[-1].setdefault(args[0].value, []).append(a.value)
                     else:
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
@@ -2801,7 +2820,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._pointer_targets.setdefault(cls_variable, []).append(a.value)
+                        self._pointer_targets[-1].setdefault(cls_variable, []).append(a.value)
                     else:
                         errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
@@ -3163,7 +3182,7 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
-                    self._pointer_targets.setdefault(l, []).append(r)
+                    self._pointer_targets[-1].setdefault(l, []).append(r)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
@@ -3602,6 +3621,7 @@ class SemanticParser(BasicParser):
         # the arrays that will be returned.
         self._check_pointer_targets(results)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
+        self._allocs.pop()
         if code:
             expr  = Return(results, CodeBlock(code))
         else:
@@ -3705,6 +3725,7 @@ class SemanticParser(BasicParser):
 
                 # Create a new list that store local variables for each FunctionDef to handle nested functions
                 self._allocs.append([])
+                self._pointer_targets.append({})
 
                 # we annotate the body
                 body = self._visit(expr.body)
@@ -3918,16 +3939,6 @@ class SemanticParser(BasicParser):
                         severity='fatal')
                 methods.pop(i)
                 init_func = self.scope.functions.pop(m_name)
-                new_pointer_targets = self._pointer_targets.copy()
-                for p, t_list in self._pointer_targets.items():
-                    if isinstance(p, DottedVariable) and p.lhs == init_func.arguments[0].var:
-                        for t in t_list:
-                            if t.is_argument:
-                                argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
-                                assert len(argument_objects) == 1
-                                argument_objects[0].persistent_target = True
-                        new_pointer_targets.pop(p)
-                self._pointer_targets = new_pointer_targets
 
                 # create a new attribute to check allocation
                 deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
@@ -3966,6 +3977,7 @@ class SemanticParser(BasicParser):
                 if attribute:
                     # Create a new list that store local attributes
                     self._allocs.append([])
+                    self._pointer_targets.append({})
                     self._allocs[-1].extend(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
                 condition = If(IfSection(PyccelNot(deallocater),
