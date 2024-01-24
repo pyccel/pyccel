@@ -1870,6 +1870,8 @@ class FunctionDefArgument(TypedAstNode):
             self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
+        if not isinstance(bound_argument, bool):
+            raise TypeError("bound_argument must be a boolean")
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
@@ -1965,6 +1967,8 @@ class FunctionDefArgument(TypedAstNode):
 
     @bound_argument.setter
     def bound_argument(self, bound):
+        if not isinstance(bound, bool):
+            raise TypeError("bound must be a boolean")
         self._bound_argument = bound
 
     def __str__(self):
