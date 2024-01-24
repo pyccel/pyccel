@@ -998,8 +998,9 @@ class SyntaxParser(BasicParser):
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
+                visited_i.arguments[0].bound_argument = True
             elif isinstance(visited_i, Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+                continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
             elif isinstance(visited_i, CommentBlock):
@@ -1007,8 +1008,6 @@ class SyntaxParser(BasicParser):
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
-        for i in methods:
-            i.cls_name = name
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,

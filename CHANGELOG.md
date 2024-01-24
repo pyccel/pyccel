@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
+-   #1684 : Add support for classes without `__init__` functions.
+-   #1685 : Add support for `type()` function with class instance argument.
 
 ### Fixed
 
@@ -53,6 +55,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
+-   \[INTERNALS\] #1676 : Remove `DottedFunctionCall` from `pyccel.ast.core` (use `bound_argument` instead).
 
 ## \[1.10.0\] - 2023-10-23
 

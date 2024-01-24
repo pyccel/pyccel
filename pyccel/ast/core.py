@@ -59,7 +59,6 @@ __all__ = (
     'Declare',
     'Decorator',
     'Del',
-    'DottedFunctionCall',
     'Duplicate',
     'DoConcurrent',
     'EmptyNode',
@@ -1833,6 +1832,11 @@ class FunctionDefArgument(TypedAstNode):
     annotation : str
         The type annotation describing the argument.
 
+    bound_argument : bool
+        Indicates if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
@@ -1844,10 +1848,10 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1859,9 +1863,12 @@ class FunctionDefArgument(TypedAstNode):
             self._name = name.name
         else:
             raise TypeError("Name must be a PyccelSymbol, Variable or FunctionAddress")
+        if not isinstance(bound_argument, bool):
+            raise TypeError("bound_argument must be a boolean")
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
             name.declare_as_argument()
@@ -1939,6 +1946,23 @@ class FunctionDefArgument(TypedAstNode):
         modifying the inout flag.
         """
         self._inout = False
+
+    @property
+    def bound_argument(self):
+        """
+        Indicate if the argument is bound to the function call.
+
+        Indicate if the argument is bound to the function call. This is
+        the case if the argument is the first argument of a method of a
+        class.
+        """
+        return self._bound_argument
+
+    @bound_argument.setter
+    def bound_argument(self, bound):
+        if not isinstance(bound, bool):
+            raise TypeError("bound must be a boolean")
+        self._bound_argument = bound
 
     def __str__(self):
         if self.has_default:
@@ -2198,46 +2222,7 @@ class FunctionCall(TypedAstNode):
         """
         return c is None or isinstance(c, (FunctionDef, *cls._ignored_types))
 
-class DottedFunctionCall(FunctionCall):
-    """
-    Represents a function call in the code where
-    the function is defined in another object
-    (e.g. module/class)
-
-    a.f()
-
-    Parameters
-    ==========
-    func             : FunctionDef
-                       The definition of the function being called
-    args             : tuple
-                       The arguments being passed to the function
-    prefix           : TypedAstNode
-                       The object in which the function is defined
-                       E.g. for a.f()
-                       prefix will contain a
-    current_function : str
-                        The function from which this call occurs
-                        (This is required in order to recognise
-                        recursive functions)
-    """
-    __slots__ = ('_prefix',)
-    _attribute_nodes = (*FunctionCall._attribute_nodes, '_prefix')
-
-    def __init__(self, func, args, prefix, current_function=None):
-        self._prefix = prefix
-        super().__init__(func, args, current_function)
-        self._func_name = DottedName(prefix, self._func_name)
-        if self._interface:
-            self._interface_name = DottedName(prefix, self._interface_name)
-
-    @property
-    def prefix(self):
-        """ The object in which the function is defined
-        """
-        return self._prefix
-
-class ConstructorCall(DottedFunctionCall):
+class ConstructorCall(FunctionCall):
 
     """
     Represents a Constructor call in the code.
@@ -2253,7 +2238,7 @@ class ConstructorCall(DottedFunctionCall):
     arguments : list, tuple, None
         A list of arguments.
 
-    cls_variable : CustomDataType, optional
+    cls_variable : Variable
         The variable on the left-hand side of an assignment,
         where the right-hand side is a constructor call.
         Used to store data inside the class, set during object creation.
@@ -2267,7 +2252,7 @@ class ConstructorCall(DottedFunctionCall):
         self,
         func,
         arguments,
-        cls_variable=None,
+        cls_variable
         ):
         if not isinstance(func, (FunctionDef, Interface, str)):
             raise TypeError('Expecting func to be a FunctionDef or str')
@@ -2363,7 +2348,7 @@ class FunctionDef(ScopedAstNode):
         Variables which will not be passed into the function.
 
     cls_name : str
-        Class name if the function is a method of cls_name.
+        The alternative name of the function required for classes.
 
     is_static : bool
         True for static functions. Needed for iso_c_binding interface.
@@ -2503,7 +2488,6 @@ class FunctionDef(ScopedAstNode):
         elif not isinstance(body,CodeBlock):
             raise TypeError('body must be an iterable or a CodeBlock')
 
-#        body = tuple(i for i in body)
         # results
 
         if not iterable(results):
@@ -2511,15 +2495,10 @@ class FunctionDef(ScopedAstNode):
         if not all(isinstance(r, FunctionDefResult) for r in results):
             raise TypeError('results must be all be FunctionDefResults')
 
-        # if method
-
         if cls_name:
 
             if not isinstance(cls_name, str):
                 raise TypeError('cls_name must be a string')
-
-            # if not cls_variable:
-             #   raise TypeError('Expecting a instance of {0}'.format(cls_name))
 
         if not isinstance(is_static, bool):
             raise TypeError('Expecting a boolean for is_static attribute')
@@ -2628,8 +2607,14 @@ class FunctionDef(ScopedAstNode):
 
     @property
     def cls_name(self):
-        """ String containing the name of the class to which the method belongs.
-        If the function is not a class procedure then this returns None """
+        """
+        String containing an alternative name for the function if it is a class method.
+
+        If a function is a class method then in some languages an alternative name is
+        required. For example in Fortran a name is required for the definition of the
+        class in the module. This name is different from the name of the method which
+        is used when calling the function via the class variable.
+        """
         return self._cls_name
 
     @cls_name.setter
@@ -3281,6 +3266,9 @@ class ClassDef(ScopedAstNode):
     scope : Scope
         The scope for the class contents.
 
+    class_type : DataType
+        The data type associated with this class.
+
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
@@ -3298,7 +3286,7 @@ class ClassDef(ScopedAstNode):
     >>> ClassDef('Point', attributes, methods)
     ClassDef(Point, (x, y), (FunctionDef(translate, (x, y, a, b), (z, t), [y := a + x], [], [], None, False, function),), [public])
     """
-    __slots__ = ('_name','_attributes','_methods','_options',
+    __slots__ = ('_name','_attributes','_methods','_options', '_class_type',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
 
@@ -3312,7 +3300,8 @@ class ClassDef(ScopedAstNode):
         superclasses=(),
         interfaces=(),
         docstring = None,
-        scope = None
+        scope = None,
+        class_type = None
         ):
 
         # name
@@ -3349,6 +3338,9 @@ class ClassDef(ScopedAstNode):
             for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
+
+            if not isinstance(class_type, DataType):
+                raise TypeError("class_type must be a DataType")
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3397,12 +3389,27 @@ class ClassDef(ScopedAstNode):
         self._superclasses  = superclasses
         self._interfaces = interfaces
         self._docstring = docstring
+        self._class_type = class_type
 
         super().__init__(scope = scope)
 
     @property
     def name(self):
+        """
+        The name of the class.
+
+        The name of the class.
+        """
         return self._name
+
+    @property
+    def class_type(self):
+        """
+        The DataType of an object of the described class.
+
+        The DataType of an object of the described class.
+        """
+        return self._class_type
 
     @property
     def attributes(self):
@@ -3607,6 +3614,13 @@ class ClassDef(ScopedAstNode):
 
     @property
     def is_unused(self):
+        """
+        Indicates whether the class has any users.
+
+        This function always returns False as a class definition
+        shouldn't be invalidated and deleted due to a lack of
+        users.
+        """
         return False
 
 
