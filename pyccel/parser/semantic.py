@@ -3210,6 +3210,9 @@ class SemanticParser(BasicParser):
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
                     self._indicate_pointer_target(l, r)
+                    if not isinstance(r, (IndexedElement, Variable)):
+                        errors.report("Pointer cannot point at a temporary object",
+                            severity='error', symbol=expr)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
