@@ -11,7 +11,7 @@ class MyClass2:
     def __init__(self : 'MyClass2', param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
         obj1 = MyClass1(param1, param2)
-        self.param2 = sum(obj1.param2)
+        self.param2 = np.sum(obj1.param2)
         print("MyClass2 Object created!")
 
 if __name__ == '__main__':
