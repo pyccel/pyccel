@@ -474,4 +474,4 @@ class FortranToCWrapper(Wrapper):
         BindCClassDef
             The wrapped class.
         """
-        return BindCClassDef(expr, docstring = expr.docstring)
+        return BindCClassDef(expr, docstring = expr.docstring, class_type = expr.class_type)
