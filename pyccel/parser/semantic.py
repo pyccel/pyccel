@@ -3865,7 +3865,7 @@ class SemanticParser(BasicParser):
         if not any(method.name == '__init__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls))
             scope = self.create_new_function_scope('__init__')
-            init_func = FunctionDef('__init__', [argument], (), [Pass()], cls_name=cls.name, scope=scope)
+            init_func = FunctionDef('__init__', [argument], (), [], cls_name=cls.name, scope=scope)
             self.exit_function_scope()
             self.insert_function(init_func)
             cls.add_new_method(init_func)
