@@ -9,7 +9,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 from pyccel.ast.c_concepts  import ObjectAddress
 from pyccel.ast.datatypes   import NativeInteger, NativeVoid
 from pyccel.ast.variable    import DottedVariable, DottedName
-from pyccel.ast.core        import Deallocate, AsName
+from pyccel.ast.core        import Deallocate, AsName, Import, Module
 
 
 from pyccel.errors.errors   import Errors
@@ -72,30 +72,38 @@ class CudaCodePrinter(CCodePrinter):
         self._current_module = None
         self._in_header = False
 
-    def _print_Import(self, expr):
-        if expr.ignore:
-            return ''
-        if isinstance(expr.source, AsName):
-            source = expr.source.name
-        else:
-            source = expr.source
-        if isinstance(source, DottedName):
-            source = source.name[-1]
-        else:
-            source = self._print(source)
+    def _print_Module(self, expr):
+        self.set_scope(expr.scope)
+        self._current_module = expr.name
+        body    = ''.join(self._print(i) for i in expr.body)
 
-        # Get with a default value is not used here as it is
-        # slower and on most occasions the import will not be in the
-        # dictionary
-        if source in import_dict: # pylint: disable=consider-using-get
-            source = import_dict[source]
+        global_variables = ''.join([self._print(d) for d in expr.declarations])
 
-        if source is None:
-            return ''
-        if expr.source in c_library_headers:
-            return f'#include <{source}.h>\n'
-        else:
-            return f'extern "C" {{\n#include "{source}.h"\n}}\n'
+        # Print imports last to be sure that all additional_imports have been collected
+        imports = [Import(expr.name, Module(expr.name,(),())), *self._additional_imports.values()]
+        c_headers_imports = ''
+        local_imports = ''
+
+        for imp in imports:
+            if imp.source in c_library_headers:
+                c_headers_imports += self._print(imp)
+            else:
+                local_imports += self._print(imp)
+
+        imports = f'{c_headers_imports}\
+                    extern "C"{{\n\
+                    {local_imports}\
+                    }}'
+
+        code = ('{imports}\n'
+                '{variables}\n'
+                '{body}\n').format(
+                        imports   = imports,
+                        variables = global_variables,
+                        body      = body)
+
+        self.exit_scope()
+        return code
 
     def _print_Allocate(self, expr):
         free_code = ''
