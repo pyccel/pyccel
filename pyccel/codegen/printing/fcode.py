@@ -177,7 +177,7 @@ type_to_print_format = {
         ('complex'): '"(",F0.12," + ",F0.12,")"',
         ('int'): 'I0',
         ('bool'): 'A',
-        ('string'): 'A',
+        ('str'): 'A',
         ('tuple'):  '*'
 }
 

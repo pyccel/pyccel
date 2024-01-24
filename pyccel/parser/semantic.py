@@ -3848,11 +3848,24 @@ class SemanticParser(BasicParser):
         methods = list(expr.methods)
         init_func = None
 
+        if not any(method.name == '__init__' for method in methods):
+            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
+            self.scope.insert_symbol('__init__')
+            scope = self.create_new_function_scope('__init__')
+            init_func = FunctionDef('__init__', [argument], (), [], cls_name=cls.name, scope=scope)
+            self.exit_function_scope()
+            self.insert_function(init_func)
+            cls.add_new_method(init_func)
+            methods.append(init_func)
+
         for (i, method) in enumerate(methods):
             m_name = method.name
             if m_name == '__init__':
-                self._visit(method)
-                if cls.interfaces:
+                if init_func is None:
+                    self._visit(method)
+                    init_func = self.scope.functions.pop(m_name)
+
+                if isinstance(init_func, Interface):
                     errors.report("Pyccel does not support interface constructor", symbol=method,
                         severity='fatal')
                 methods.pop(i)
@@ -3864,7 +3877,7 @@ class SemanticParser(BasicParser):
                 deallocater = DottedVariable(lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
                 cls.add_new_attribute(deallocater)
                 deallocater_assign = Assign(deallocater, LiteralFalse())
-                cls.methods[i].body.insert2body(deallocater_assign, back=False)
+                init_func.body.insert2body(deallocater_assign, back=False)
                 break
 
         if not init_func:
