@@ -51,7 +51,7 @@ def test_class_function(modnew):
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Name collision. See #1507"),
+            pytest.mark.skip(reason="Argument reference count not increased. See #1586"),
             pytest.mark.fortran]
         ),
         pytest.param("c", marks = [
