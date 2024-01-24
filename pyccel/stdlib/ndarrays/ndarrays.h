@@ -11,17 +11,6 @@
 # include <stdint.h>
 # include <math.h>
 
-/* mapping the function array_fill to the correct type */
-// # define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
-//                                         int32_t : _array_fill_int32,\
-//                                         int16_t : _array_fill_int16,\
-//                                         int8_t : _array_fill_int8,\
-//                                         float : _array_fill_float,\
-//                                         double : _array_fill_double,\
-//                                         bool : _array_fill_bool,\
-//                                         float complex : _array_fill_cfloat,\
-//                                         double complex : _array_fill_cdouble)(c, arr)
-
 typedef enum e_slice_type { ELEMENT, RANGE } t_slice_type;
 
 typedef struct  s_slice
