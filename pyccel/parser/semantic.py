@@ -2871,7 +2871,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._indicate_pointer_target(cls_variable, a.value, expr.current_user_node)
+                        self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
                     else:
                         errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
