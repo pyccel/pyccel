@@ -627,7 +627,8 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
-        class_dtype = init_function.arguments[0].var.dtype
+        init_function_self_argument = init_function.arguments[0]
+        class_dtype = getattr(init_function_self_argument, 'original_function_argument_variable', init_function_self_argument.var).dtype
 
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
