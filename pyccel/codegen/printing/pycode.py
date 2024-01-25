@@ -10,7 +10,7 @@ from pyccel.decorators import __all__ as pyccel_decorators
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
 from pyccel.ast.builtins   import PythonComplex
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
-from pyccel.ast.core       import IfSection, FunctionDef, Module, DottedFunctionCall, PyccelFunctionDef
+from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import NativeHomogeneousTuple
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
@@ -548,14 +548,16 @@ class PythonCodePrinter(CodePrinter):
         return '.'.join(self._print(n) for n in expr.name)
 
     def _print_FunctionCall(self, expr):
-        if expr.funcdef in self._ignore_funcs:
+        func = expr.funcdef
+        if func in self._ignore_funcs:
             return ''
         if expr.interface:
             func_name = expr.interface_name
         else:
             func_name = expr.func_name
         args = expr.args
-        if isinstance(expr, DottedFunctionCall):
+        if func.arguments and func.arguments[0].bound_argument:
+            func_name = f'{self._print(args[0])}.{func_name}'
             args = args[1:]
         args_str = ', '.join(self._print(i) for i in args)
         code = f'{func_name}({args_str})'
@@ -1088,8 +1090,8 @@ class PythonCodePrinter(CodePrinter):
         return classDef
 
     def _print_ConstructorCall(self, expr):
-        cls_name = expr.funcdef.cls_name
         cls_variable = expr.cls_variable
+        cls_name = cls_variable.cls_base.name
         args = ', '.join(self._print(arg) for arg in expr.args[1:])
         return f"{cls_variable} = {cls_name}({args})\n"
 

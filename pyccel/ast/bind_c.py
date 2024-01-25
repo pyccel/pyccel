@@ -9,7 +9,7 @@ file.
 """
 
 from pyccel.ast.basic import PyccelAstNode
-from pyccel.ast.core import Module
+from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import DataType, NativeInteger
@@ -26,6 +26,7 @@ __all__ = (
     'BindCVariable',
     'CLocFunc',
     'C_F_Pointer',
+    'DeallocatePointer',
 )
 
 # =======================================================================================
@@ -136,6 +137,20 @@ class BindCFunctionDef(FunctionDef):
         """
         return [ai for a in self._arguments for ai in a.get_all_function_def_arguments()]
 
+    def rename(self, newname):
+        """
+        Rename the FunctionDef name->newname.
+
+        Rename the FunctionDef name->newname.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the FunctionDef.
+        """
+        assert newname == newname.lower()
+        self._name = newname
+
 # =======================================================================================
 
 
@@ -163,6 +178,10 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         in a C-Fortran interface. This variable may have a type which is not
         compatible with C.
 
+    wrapping_bound_argument : bool
+        Indicates if the argument being wrapped was a bound argument of a
+        class method.
+
     **kwargs : dict
         See FunctionDefArgument.
 
@@ -172,11 +191,11 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         The class from which BindCFunctionDefArgument inherits which
         contains all details about the args and kwargs.
     """
-    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank')
+    __slots__ = ('_shape', '_strides', '_original_arg_var', '_rank', '_wrapping_bound_argument')
     _attribute_nodes = FunctionDefArgument._attribute_nodes + \
                         ('_shape', '_strides', '_original_arg_var')
 
-    def __init__(self, var, scope, original_arg_var, **kwargs):
+    def __init__(self, var, scope, original_arg_var, wrapping_bound_argument, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
         shape   = [scope.get_temporary_variable(NativeInteger(),
@@ -188,6 +207,7 @@ class BindCFunctionDefArgument(FunctionDefArgument):
         self._shape = shape
         self._strides = strides
         self._original_arg_var = original_arg_var
+        self._wrapping_bound_argument = wrapping_bound_argument
         super().__init__(var, **kwargs)
 
     @property
@@ -264,6 +284,16 @@ class BindCFunctionDefArgument(FunctionDefArgument):
             return [False] + [False, False]*self._rank
         else:
             return super().inout
+
+    @property
+    def wrapping_bound_argument(self):
+        """
+        Indicates if the argument being wrapped was originally a bound argument.
+
+        Indicates if the argument being wrapped originally appeared in a class
+        method as a bound argument.
+        """
+        return self._wrapping_bound_argument
 
 # =======================================================================================
 
@@ -555,14 +585,27 @@ class BindCClassDef(ClassDef):
     original_class : ClassDef
         The class being wrapped.
 
+    new_func : BindCFunctionDef
+        The function which provides a new instance of the class.
+
     **kwargs : dict
         See ClassDef.
     """
-    __slots__ = ('_original_class',)
+    __slots__ = ('_original_class', '_new_func')
 
-    def __init__(self, original_class, **kwargs):
+    def __init__(self, original_class, new_func, **kwargs):
         self._original_class = original_class
+        self._new_func = new_func
         super().__init__(original_class.name, scope = original_class.scope, **kwargs)
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 # =======================================================================================
 #                                   Utility functions
@@ -668,3 +711,18 @@ class C_F_Pointer(PyccelAstNode):
         determine the size of the array in each dimension.
         """
         return self._shape
+
+class DeallocatePointer(Deallocate):
+    """
+    Represents memory deallocation for memory only stored in a pointer.
+
+    Represents memory deallocation for memory only stored in a pointer. Usually
+    `deallocate` is not called on pointers so as not to delete the target values
+    however this capability is necessary in the wrapper.
+
+    Parameters
+    ----------
+    variable : pyccel.ast.core.Variable
+        The typed variable (usually an array) that needs memory deallocation.
+    """
+    __slots__ = ()
