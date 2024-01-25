@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   #1156 : Raise an error for variable name collisions with non-variable objects.
 -   #1507 : Fix problems with name collisions in class functions.
 -   #1687 : Pointers in tuples are deallocated.
+-   #1586 : Raise an error for targets of class instances which go out of scope to early.
 
 ### Changed
 
