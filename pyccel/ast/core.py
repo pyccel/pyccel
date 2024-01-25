@@ -1824,7 +1824,8 @@ class FunctionDefArgument(TypedAstNode):
     __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False,
+            persistent_target = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1841,7 +1842,7 @@ class FunctionDefArgument(TypedAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
-        self._persistent_target = False
+        self._persistent_target = persistent_target
         self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
