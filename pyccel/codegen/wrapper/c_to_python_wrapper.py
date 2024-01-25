@@ -1312,7 +1312,6 @@ class CToPythonWrapper(Wrapper):
 
         name = self.scope.get_expected_name(orig_var.name)
 
-        body = []
         # Create a variable to store the C-compatible result.
         if orig_var.is_ndarray:
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
@@ -1329,6 +1328,8 @@ class CToPythonWrapper(Wrapper):
         # Cast from C to Python
         if not isinstance(orig_var.dtype, CustomDataType):
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
+        else:
+            body = [FunctionCall(Py_INCREF, (python_res,))]
 
         # Deallocate any unused memory
         if orig_var.rank:
@@ -1401,7 +1402,8 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            body.append(AliasAssign(attrib_var, c_res))
+            body.extend([AliasAssign(attrib_var, c_res),
+                         FunctionCall(Py_INCREF, (python_res,))])
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
