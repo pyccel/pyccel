@@ -93,8 +93,6 @@ __all__ = (
     'SympyFunction',
     'While',
     'With',
-    'create_variable',
-    'create_incremented_string',
 )
 
 #==============================================================================
@@ -108,38 +106,6 @@ __all__ = (
 
 #==============================================================================
 def apply(func, args, kwargs):return func(*args, **kwargs)
-
-#==============================================================================
-def create_variable(forbidden_names, prefix = None, counter = 1):
-    """This function takes a prefix and a counter and uses them to construct
-    a PyccelSymbol with a name of the form:
-            prefix_counter
-    Where counter is formatted to fill 4 characters
-    The new name is checked against a list of forbidden expressions. If the
-    constructed name is forbidden then the counter is incremented until a valid
-    name is found
-
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
-
-      Returns
-      ----------
-      name            : PyccelSymbol
-                        A PyccelSymbol with the incremented string name
-      counter         : int
-                        The expected value of the next name
-
-    """
-
-    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
-
-    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(PyccelAstNode):
