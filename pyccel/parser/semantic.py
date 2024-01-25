@@ -637,15 +637,16 @@ class SemanticParser(BasicParser):
             if i in exceptions:
                 continue
             self._pointer_targets[-1].pop(i, None)
+        targets = {t[0]:t[1] for target_list in self._pointer_targets[-1].values() for t in target_list}
         for i in self._allocs[-1]:
             if isinstance(i, DottedVariable):
                 if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
                     continue
             if i in exceptions:
                 continue
-            if i in chain(*self._pointer_targets[-1].values()):
+            if i in targets:
                 errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
-                        severity='error', symbol=i.get_user_nodes((FunctionCallArgument, AliasAssign))[-1])
+                        severity='error', symbol=targets[i])
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
@@ -654,19 +655,40 @@ class SemanticParser(BasicParser):
 
             for p, t_list in self._pointer_targets[-1].items():
                 if p in arg_vars and arg_vars[p].bound_argument:
-                    for t in t_list:
+                    for t,_ in t_list:
                         if t.is_argument:
                             argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
                             assert len(argument_objects) == 1
                             argument_objects[0].persistent_target = True
 
-    def _indicate_pointer_target(self, pointer, target):
+    def _indicate_pointer_target(self, pointer, target, expr):
+        """
+        Indicate that a pointer is targetting a specific target.
+
+        Indicate that a pointer is targetting a specific target by adding the pair
+        to a dictionary in self._pointer_targets (the last dictionary in the list
+        should be used as this is the one for the current scope.
+
+        Parameters
+        ----------
+        pointer : Variable
+            The variable which is pointing at something.
+
+        target : Variable | IndexedElement
+            The object being pointed at by the pointer.
+
+        expr : PyccelAstNode
+            The expression where the pointer was created (used for clear error
+            messages).
+        """
         if isinstance(pointer, DottedVariable):
-            self._indicate_pointer_target(pointer.lhs, target)
+            self._indicate_pointer_target(pointer.lhs, target, expr)
+        elif isinstance(target, DottedVariable):
+            self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
-            self._pointer_targets[-1].setdefault(pointer, []).append(target.base)
+            self._pointer_targets[-1].setdefault(pointer, []).append((target.base, expr))
         else:
-            self._pointer_targets[-1].setdefault(pointer, []).append(target)
+            self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
 
     def _infer_type(self, expr):
         """
@@ -1133,7 +1155,7 @@ class SemanticParser(BasicParser):
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._indicate_pointer_target(args[0].value, a.value)
+                        self._indicate_pointer_target(args[0].value, a.value, expr)
                     else:
                         errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
@@ -2842,23 +2864,20 @@ class SemanticParser(BasicParser):
             self._check_argument_compatibility(args, method.arguments,
                             expr, method.is_elemental)
 
-            expr = ConstructorCall(method, args, cls_variable)
+            new_expr = ConstructorCall(method, args, cls_variable)
 
-            for a, f_a in zip(expr.args, method.arguments):
+            for a, f_a in zip(new_expr.args, method.arguments):
                 if f_a.persistent_target:
                     val = a.value
                     if isinstance(val, Variable):
                         a.value.is_target = True
-                        self._indicate_pointer_target(cls_variable, a.value)
+                        self._indicate_pointer_target(cls_variable, a.value, expr.current_user_node)
                     else:
                         errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
                                 severity='error', symbol=expr)
 
             self._allocs[-1].add(cls_variable)
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
-            return expr
+            return new_expr
         else:
 
             # first we check if it is a macro, in this case, we will create
@@ -3212,7 +3231,7 @@ class SemanticParser(BasicParser):
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
                     if isinstance(r, (Variable, IndexedElement)):
-                        self._indicate_pointer_target(l, r)
+                        self._indicate_pointer_target(l, r, expr)
                     else:
                         errors.report("Pointer cannot point at a temporary object",
                             severity='error', symbol=expr)
