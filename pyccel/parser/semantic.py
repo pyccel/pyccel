@@ -663,6 +663,8 @@ class SemanticParser(BasicParser):
     def _indicate_pointer_target(self, pointer, target):
         if isinstance(pointer, DottedVariable):
             self._indicate_pointer_target(pointer.lhs, target)
+        elif isinstance(target, IndexedElement):
+            self._pointer_targets[-1].setdefault(pointer, []).append(target.base)
         else:
             self._pointer_targets[-1].setdefault(pointer, []).append(target)
 
@@ -3209,8 +3211,9 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
-                    self._indicate_pointer_target(l, r)
-                    if not isinstance(r, (IndexedElement, Variable)):
+                    if isinstance(r, (Variable, IndexedElement)):
+                        self._indicate_pointer_target(l, r)
+                    else:
                         errors.report("Pointer cannot point at a temporary object",
                             severity='error', symbol=expr)
 
