@@ -16,6 +16,7 @@ deallocate
 deallocated
 deallocation
 deallocations
+deallocating
 conda
 PyPI
 CentOS
