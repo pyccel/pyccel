@@ -90,7 +90,7 @@ def test_classes_1(language):
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
     l_py = mod.Line(p1_py)
-    l_l  = mod.Line(p1_l)
+    l_l  = modnew.Line(p1_l)
 
     assert p1_py.get_X() == p1_l.get_X()
     assert l_py.get_x() == l_l.get_x()
