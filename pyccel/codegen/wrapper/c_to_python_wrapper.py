@@ -449,6 +449,32 @@ class CToPythonWrapper(Wrapper):
         return function
 
     def _save_referenced_objects(self, func, func_args):
+        """
+        Save any arguments passed to the wrapper which are then stored in pointers.
+
+        If arguments are saved into pointers (e.g. inside classes) then their reference
+        counter must be incremented. This prevents them being deallocated if they go
+        out of scope in Python. The class must then take care to decrement their
+        reference counter when it is itself deallocated to prevent a memory leak.
+        The attribute `FucntionDefArgument.persistent_target` indicates whether an
+        argument is a target inside the function. When it is true then additional code
+        is added to the wrapper body. This code increments the reference counter for
+        the argument and adds the object to a list of objects whose reference counter
+        must be decremented in the class destructor.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        func_args : list of FunctionDefArguments
+            The arguments passed by Python to the function (self, args, kwargs).
+
+        Returns
+        -------
+        list
+            A list of any expressions which should be added to the wrapper body to
+            add references to the arguments.
+        """
         body = []
         class_arg_var = func_args[0].var
         class_scope = class_arg_var.cls_base.scope
