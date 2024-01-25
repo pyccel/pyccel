@@ -623,12 +623,11 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
-        init_function_self_argument = init_function.arguments[0]
-        class_dtype = getattr(init_function_self_argument, 'original_function_argument_variable', init_function_self_argument.var).dtype
 
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
@@ -653,7 +652,7 @@ class CToPythonWrapper(Wrapper):
         original_c_args = init_function.arguments
 
         # Get the arguments of the PyFunctionDef
-        func_args, body = self._unpack_python_args(python_args, class_dtype)
+        func_args, body = self._unpack_python_args(python_args, cls_dtype)
         func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
@@ -727,7 +726,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -900,11 +900,6 @@ class CToPythonWrapper(Wrapper):
         self.scope = func_scope
         original_funcs = expr.functions
         example_func = original_funcs[0]
-        possible_class_base = expr.get_user_nodes((ClassDef,))
-        if possible_class_base:
-            class_dtype = possible_class_base[0].class_type
-        else:
-            class_dtype = None
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -912,7 +907,7 @@ class CToPythonWrapper(Wrapper):
 
         # Create necessary arguments
         python_args = getattr(example_func, 'bind_c_arguments', example_func.arguments)
-        func_args, body = self._unpack_python_args(python_args, class_dtype)
+        func_args, body = self._unpack_python_args(python_args, cls_dtype)
 
         # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
