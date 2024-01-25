@@ -1810,6 +1810,10 @@ class FunctionDefArgument(TypedAstNode):
         the case if the argument is the first argument of a method of a
         class.
 
+    persistent_target : bool, default: False
+        Indicate if the object passed as this argument becomes a target.
+        This argument will usually only be passed by the wrapper.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
