@@ -685,19 +685,27 @@ class CodeBlock(PyccelAstNode):
                 l.set_current_ast(ast_node)
 
 class AliasAssign(PyccelAstNode):
+    """
+    Representing assignment of an alias to its target.
 
-    """Represents aliasing for code generation. An alias is any statement of the
-    form `lhs := rhs` where
+    Represents aliasing for code generation. An alias is any statement of the
+    form `lhs := rhs` where lhs is a pointer and rhs is a target. In other words
+    the contents of `lhs` will change if the contents of `rhs` are modfied.
 
     Parameters
     ----------
-    lhs : PyccelSymbol
-        at this point we don't know yet all information about lhs, this is why a
-        PyccelSymbol is the appropriate type.
+    lhs : TypedAstNode
+        In the syntactic stage:
+           Object representing the lhs of the expression. These should be
+           singular objects, such as one would use in writing code. Notable types
+           include PyccelSymbol, and IndexedElement. Types that
+           subclass these types are also supported.
+        In the semantic stage:
+           Variable.
 
-    rhs : Variable, IndexedElement
-        an assignable variable can be of any rank and any datatype, however its
-        shape must be known (not None)
+    rhs : PyccelSymbol | Variable, IndexedElement
+        The target of the assignment. A PyccelSymbol in the syntactic stage,
+        a Variable or a Slice of an array in the semantic stage.
 
     Examples
     --------
@@ -708,7 +716,6 @@ class AliasAssign(PyccelAstNode):
     >>> x = Variable('int', 'x', rank=1, shape=[n])
     >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
-
     """
     __slots__ = ('_lhs','_rhs')
     _attribute_nodes = ('_lhs','_rhs')
@@ -718,7 +725,7 @@ class AliasAssign(PyccelAstNode):
             if not lhs.is_alias:
                 raise TypeError('lhs must be a pointer')
 
-            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].is_alias:
+            if isinstance(rhs, FunctionCall) and not rhs.funcdef.results[0].var.is_alias:
                 raise TypeError("A pointer cannot point to the address of a temporary variable")
 
         self._lhs = lhs
