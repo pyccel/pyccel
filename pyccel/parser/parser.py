@@ -142,6 +142,7 @@ class Parser(object):
         if d_parsers_by_filename is None:
             d_parsers_by_filename = {}
 
+
         self._d_parsers = self.parse_sons(d_parsers_by_filename, verbose=verbose)
 
         return parser.ast

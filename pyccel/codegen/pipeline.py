@@ -169,7 +169,6 @@ def execute_pyccel(fname, *,
 
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
-
     if language is None:
         language = 'fortran'
 
@@ -274,7 +273,7 @@ def execute_pyccel(fname, *,
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
-    mod_obj = CompileObj(file_name = fname,
+    mod_obj =  CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,

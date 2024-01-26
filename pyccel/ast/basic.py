@@ -66,7 +66,6 @@ class PyccelAstNode:
         self._recursion_in_progress = False
         for c_name in self._my_attribute_nodes: #pylint: disable=not-an-iterable
             c = getattr(self, c_name)
-
             from pyccel.ast.literals import convert_to_literal
 
             if PyccelAstNode._ignore(c):

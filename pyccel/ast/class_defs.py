@@ -6,6 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 from .builtins  import PythonImag, PythonReal, PythonConjugate
+from .builtin_objects.list_functions import   PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListPop, PythonListRemove, PythonListReverse, PythonListSort
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
@@ -133,6 +134,29 @@ TupleClass = ClassDef('tuple',
         methods=[
             #index
             #count
+            ])
+
+#=======================================================================================
+
+ListClass = ClassDef('list',
+        methods=[
+            PyccelFunctionDef('append',[],[],body=[], decorators={'lists_wrapper':PythonListAppend}),
+            PyccelFunctionDef('extend',[],[],body=[],
+                decorators={'lists_wrapper':PythonListExtend}),
+            PyccelFunctionDef('insert',[],[],body=[],
+                decorators={'lists_wrapper':PythonListInsert}),
+            PyccelFunctionDef('count',[],[],body=[],
+                decorators={'lists_wrapper':PythonListCount}),
+            PyccelFunctionDef('clear',[],[],body=[],
+                decorators={'lists_wrapper':PythonListClear}),
+            PyccelFunctionDef('sort',[],[],body=[],
+                decorators={'lists_wrapper':PythonListSort}),
+            PyccelFunctionDef('reverse',[],[],body=[],
+                decorators={'lists_wrapper':PythonListReverse}),
+            PyccelFunctionDef('pop',[],[],body=[],
+                decorators={'lists_wrapper':PythonListPop}),
+            PyccelFunctionDef('remove',[],[],body=[],
+                decorators={'lists_wrapper':PythonListRemove}),
             ])
 
 #=======================================================================================

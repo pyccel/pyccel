@@ -171,6 +171,7 @@ class SyntaxParser(BasicParser):
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
+
         self._ast = ast
 
         self._syntax_done = True
@@ -325,7 +326,6 @@ class SyntaxParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
-
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
