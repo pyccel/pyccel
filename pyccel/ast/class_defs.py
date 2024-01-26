@@ -5,11 +5,16 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
+
+from pyccel.ast.builtin_objects.list_functions import (ListAppend, ListPop, ListInsert,
+                                                       ListClear, ListExtend, ListReverse)
+
+
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
-                        NativeTuple, CustomDataType)
+                        NativeTuple, CustomDataType, NativeHomogeneousList)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -126,6 +131,24 @@ StringClass = ClassDef('string', class_type = NativeString(),
                 #upper
                 #zfill
                 ])
+
+#=======================================================================================
+
+ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
+        methods=[
+            PyccelFunctionDef('append', func_class = ListAppend,
+                decorators = {}),
+            PyccelFunctionDef('pop', func_class = ListPop,
+                decorators = {}),
+            PyccelFunctionDef('insert', func_class = ListInsert,
+                decorators = {}),
+            PyccelFunctionDef('clear', func_class = ListClear,
+                decorators = {}),
+            PyccelFunctionDef('extend', func_class = ListExtend,
+                decorators = {}),
+            PyccelFunctionDef('reverse', func_class = ListReverse,
+                decorators = {}),
+        ])
 
 #=======================================================================================
 
