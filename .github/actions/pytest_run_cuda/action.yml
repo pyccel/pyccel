@@ -11,7 +11,7 @@ runs:
     - name: Ccuda tests with pytest
       run: |
         # Catch exit 5 (no tests found)
-        python -m pytest -rXx ${FLAGS} -m "xdist_incompatible and not parallel and cuda ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays codegen epyccel/test_base.py 2>&1 | tee s1_outfile.out
+        python -m pytest -rXx ${FLAGS} -m "not (xdist_incompatible or parallel) and cuda ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays codegen epyccel/test_base.py 2>&1 | tee s1_outfile.out
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
