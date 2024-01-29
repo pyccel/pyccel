@@ -1,6 +1,12 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[Cuda - UNRELEASED\]
+
+### Added
+
+-   #32 : add support for nvcc Compiler and `cuda` language as a possible option.
+
 ## \[UNRELEASED\]
 
 ### Added
