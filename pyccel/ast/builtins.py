@@ -235,7 +235,7 @@ class PythonBool(PyccelInternalFunction):
         return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(TypedAstNode):
+class PythonComplex(PyccelInternalFunction):
     """
     Represents a call to Python's native `complex()` function.
 
