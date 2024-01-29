@@ -14,6 +14,7 @@ from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
 from pyccel.ast.variable  import Constant
+from pyccel.pyccel.ast.basic import TypedAstNode
 
 from .mathext import math_constants, MathFunctionBase
 from .mathext import MathIsfinite, MathIsinf, MathIsnan

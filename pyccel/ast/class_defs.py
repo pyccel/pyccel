@@ -8,7 +8,7 @@ This module contains all types which define a python class which is automaticall
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric,
+                        NativeComplex, NativeString, NativeNumeric,NativeList,
                         NativeTuple, CustomDataType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
@@ -21,9 +21,51 @@ __all__ = ('BooleanClass',
         'ComplexClass',
         'StringClass',
         'NumpyArrayClass',
+        'ListClassDef',
         'TupleClass',
         'literal_classes',
         'get_cls_base')
+#=======================================================================================
+
+class ListClassDef(ClassDef):
+    def __init__(self, name, elements_type=None):
+        super().__init__(name, class_type=elements_type if elements_type else NativeList,
+                         methods=[
+                             PyccelFunctionDef('__init__', argument_description={'self': None, 'values': None}),
+                             PyccelFunctionDef('append', argument_description={'self': None, 'value': None}),
+                             PyccelFunctionDef('pop', argument_description={'self': None, 'index': None}),
+                             PyccelFunctionDef('insert', argument_description={'self': None, 'index': None, 'value': None}),
+                             PyccelFunctionDef('__str__', argument_description={'self': None}),
+                             PyccelFunctionDef('slice_method', argument_description={'self': None, 'start': None, 'stop': None, 'step': None}),
+                             PyccelFunctionDef('clear', argument_description={'self': None}),
+                             PyccelFunctionDef('extend', argument_description={'self': None, 'iterable': None}),
+                             PyccelFunctionDef('reverse', argument_description={'self': None}),
+                             PyccelFunctionDef('sort', argument_description={'self': None,'key':None,'reverse':None}),
+                             PyccelFunctionDef('remove', argument_description={'self': None,'value':None}),
+                             PyccelFunctionDef('index', argument_description={'self': None,'value':None}),
+                             PyccelFunctionDef('count', argument_description={'self': None,'value':None}),
+                         ])
+
+    def __str__(self):
+        return f"class {self.name}({self.class_type}):"
+
+# Example of adding list methods
+list_class = ListClassDef(name='list', elements_type=int)
+list_class.methods.extend([
+    PyccelFunctionDef('__init__', argument_description={'self': None, 'values': None}),
+    PyccelFunctionDef('append', argument_description={'self': None, 'value': None}),
+    PyccelFunctionDef('pop', argument_description={'self': None, 'index': None}),
+    PyccelFunctionDef('insert', argument_description={'self': None, 'index': None, 'value': None}),
+    PyccelFunctionDef('__str__', argument_description={'self': None}),
+    PyccelFunctionDef('slice_method', argument_description={'self': None, 'start': None, 'stop': None, 'step': None}),
+    PyccelFunctionDef('clear', argument_description={'self': None}),
+    PyccelFunctionDef('extend', argument_description={'self': None, 'iterable': None}),
+    PyccelFunctionDef('reverse', argument_description={'self': None}),
+    PyccelFunctionDef('sort', argument_description={'self': None,'key':None,'reverse':None}),
+    PyccelFunctionDef('remove', argument_description={'self': None,'value':None}),
+    PyccelFunctionDef('index', argument_description={'self': None,'value':None}),
+    PyccelFunctionDef('count', argument_description={'self': None,'value':None}),
+])
 
 #=======================================================================================
 
