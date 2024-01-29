@@ -251,7 +251,6 @@ class PythonComplex(PyccelInternalFunction):
     arg1 : TypedAstNode, default=0
         The second argument passed to the function (the imaginary part).
     """
-    
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
 
