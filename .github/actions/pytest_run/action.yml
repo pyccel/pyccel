@@ -51,13 +51,13 @@ runs:
       working-directory: ./tests
       id: pytest_3
     - name: Test Fortran translations
-      run: python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python or ccuda) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s4_outfile.out
+      run: python -m pytest -n auto -rXx ${FLAGS} -m "not (parallel or xdist_incompatible) and not (c or python or cuda) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays 2>&1 | tee s4_outfile.out
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
       id: pytest_4
     - name: Test multi-file Fortran translations
       run: |
-        python -m pytest -rXx ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python or ccuda) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays | tee s5_outfile.out
+        python -m pytest -rXx ${FLAGS} -m "xdist_incompatible and not parallel and not (c or python or cuda) ${{ inputs.pytest_mark }}" --ignore=symbolic --ignore=ndarrays | tee s5_outfile.out
         pyccel-clean
       shell: ${{ inputs.shell_cmd }}
       working-directory: ./tests
