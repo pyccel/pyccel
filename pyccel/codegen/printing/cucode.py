@@ -6,15 +6,10 @@
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 
-from pyccel.ast.c_concepts  import ObjectAddress
-from pyccel.ast.datatypes   import NativeInteger, NativeVoid
-from pyccel.ast.variable    import DottedVariable, DottedName
-from pyccel.ast.core        import Deallocate, AsName, Import, Module
-
+from pyccel.ast.variable    import InhomogeneousTupleVariable
+from pyccel.ast.core        import Declare, Import, Module
 
 from pyccel.errors.errors   import Errors
-from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, INCOMPATIBLE_TYPEVAR_TO_FUNC,
-                                    PYCCEL_RESTRICTION_IS_ISNOT, UNSUPPORTED_ARRAY_RANK)
 
 
 import_dict = {'omp_lib' : 'omp' }
@@ -105,37 +100,26 @@ class CudaCodePrinter(CCodePrinter):
         self.exit_scope()
         return code
 
-    def _print_Allocate(self, expr):
-        free_code = ''
-        variable = expr.variable
-        if variable.rank > 0:
-            #free the array if its already allocated and checking if its not null if the status is unknown
-            if  (expr.status == 'unknown'):
-                shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
-                free_code = f'if ({self._print(shape_var)} != NULL)\n'
-                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
-            elif (expr.status == 'allocated'):
-                free_code += self._print(Deallocate(variable))
-            self.add_import(c_imports['ndarrays'])
-            shape = ", ".join(self._print(i) for i in expr.shape)
-            dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
-            shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
-            tmp_shape = self.scope.get_new_name('tmp_shape')
-            shape_Assign = "{} {}[] = {{{}}};".format(shape_dtype, tmp_shape, shape)
-            is_view = 'false' if variable.on_heap else 'true'
-            order = "order_f" if expr.order == "F" else "order_c"
-            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {tmp_shape}, {dtype}, {is_view}, {order});\n"
-            return f'{free_code}\n{shape_Assign}\n{alloc_code}'
-        elif variable.is_alias:
-            var_code = self._print(ObjectAddress(variable))
-            if expr.like:
-                declaration_type = self.get_declare_type(expr.like)
-                return f'{var_code} = malloc(sizeof({declaration_type}));\n'
-            else:
-                raise NotImplementedError(f"Allocate not implemented for {variable}")
-        else:
-            raise NotImplementedError(f"Allocate not implemented for {variable}")
+    def _print_Declare(self, expr):
+        if isinstance(expr.variable, InhomogeneousTupleVariable):
+            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
+        declaration_type = self.get_declare_type(expr.variable)
+        variable = self._print(expr.variable.name)
+
+        if expr.variable.is_stack_array:
+            preface, init = self._init_stack_array(expr.variable,)
+        elif declaration_type == 't_ndarray' and not self._in_header:
+            preface = ''
+            init    = ' = {.shape = NULL}'
+        else:
+            preface = ''
+            init    = ''
+
+        print(preface, init)
+        declaration = f'{declaration_type} {variable}{init};\n'
+
+        return preface + declaration
 
 def cucode(expr, filename, assign_to=None, **settings):
     """Converts an expr to a string of cuda code

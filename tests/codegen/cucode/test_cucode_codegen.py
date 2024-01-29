@@ -22,7 +22,7 @@ files = [os.path.join(path_dir,f) \
          for f in files \
          if f.endswith(".py") \
         ]
-@pytest.mark.c
+@pytest.mark.cuda
 @pytest.mark.parametrize("f", files)
 def test_codegen(f):
 
@@ -46,7 +46,7 @@ def test_codegen(f):
     name = os.path.splitext(name)[0]
 
     codegen = Codegen(ast, name)
-    codegen.doprint(language='c')
+    codegen.doprint(language='cuda')
 
     # Assert codegen success
     assert(not errors.has_errors())
