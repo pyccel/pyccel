@@ -1457,6 +1457,42 @@ class CToPythonWrapper(Wrapper):
 
         return body
 
+    def _wrap_DottedVariable(self, expr):
+        """
+        """
+        lhs = expr.lhs
+        class_type = lhs.cls_base
+        python_class_type = self.scope.find(class_type.name, 'classes', raise_if_missing = True)
+        class_scope = python_class_type.scope
+
+        class_ptr_attrib = class_scope.find('instance', 'variables', raise_if_missing = True)
+
+        getter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_getter')
+        getter_scope = self.scope.new_child_scope(getter_name)
+        self.scope = getter_scope
+        getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
+                       getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+        getter_result = self.get_new_PyObject(expr.name)
+
+        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+        self.scope.insert_variable(class_obj)
+
+        attrib = expr.clone(expr.name, lhs = class_obj)
+        # Cast the C variable into a Python variable
+        wrapper_function = C_to_Python(expr)
+        getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
+                                                                                 new_class = DottedVariable,
+                                                                                lhs = getter_args[0]),
+                                                          cast_type = lhs)),
+                       AliasAssign(getter_result, FunctionCall(wrapper_function, [attrib])),
+                       Return((getter_result,))]
+        self.exit_scope()
+
+        args = [FunctionDefArgument(a) for a in getter_args]
+        getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
+                                original_function = expr, scope = getter_scope)
+        return getter
+
     def _wrap_ClassDef(self, expr):
         """
         Get the code which exposes a class definition to Python.
@@ -1510,5 +1546,8 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype, expr.new_func))
         else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
+
+        for a in expr.attributes:
+            wrapped_class.add_new_method(self._wrap(a))
 
         return wrapped_class
