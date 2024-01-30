@@ -259,6 +259,18 @@ def test_classes(language):
     assert p_py.x == p_l.x
     assert p_py.y == p_l.y
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason="Can't return a pointer. Fixed in #1686"),
+            pytest.mark.fortran]
+        ),
+        pytest.param("c", marks = [
+            pytest.mark.xfail(reason="Can't return a pointer. Fixed in #1686"),
+            pytest.mark.c]
+        ),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_class_out(language):
     import classes.array_attribute as mod
     modnew = epyccel(mod, language = language)
