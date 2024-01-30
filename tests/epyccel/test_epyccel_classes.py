@@ -288,3 +288,27 @@ def test_class_out(language):
     if language != 'python':
         with pytest.raises(AttributeError):
             p_l.x[:] = np.ones(6)
+
+def test_ptr_in_class(language):
+    import classes.ptr_in_class as mod
+    modnew = epyccel(mod, language = language)
+
+    x = np.ones(4)
+    a_py = mod.A(x)
+    a_l = modnew.A(x)
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    x[2] = 3
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    y = np.zeros(3)
+    a_py.x = y
+    a_l.x = y
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    y[0] = -3
+
+    assert np.array_equal(a_py.x, a_l.x)
