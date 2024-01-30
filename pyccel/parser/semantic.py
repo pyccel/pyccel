@@ -58,7 +58,7 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, ListClass ,get_cls_base
 
 from pyccel.ast.datatypes import str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
@@ -642,7 +642,10 @@ class SemanticParser(BasicParser):
             d_var['cls_base'       ] = TupleClass
             d_var['memory_handling'] = 'heap'
             return d_var
-
+        elif isinstance(expr, PythonList):
+            d_var['cls_base'       ] = ListClass
+            d_var['memory_handling'] = 'heap'
+            return d_var
         elif isinstance(expr, Concatenate):
             d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
@@ -675,9 +678,9 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, TypedAstNode):
-
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
+            print("In TypedAstNode")
             return d_var
 
         else:
