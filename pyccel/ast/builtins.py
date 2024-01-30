@@ -236,7 +236,7 @@ class PythonBool(PyccelInternalFunction):
         return f'Bool({self.arg})'
 
 #==============================================================================
-class PythonComplex(TypedAstNode):
+class PythonComplex(PyccelInternalFunction):
     """
     Represents a call to Python's native `complex()` function.
 
@@ -1208,13 +1208,15 @@ class PythonType(PyccelAstNode):
         then be easily printed in each language.
         """
         prec = self.precision
-        dtype = str(self.dtype)
-        if prec in (None, -1):
+        dtype = self.dtype.name
+        if prec in (None, 0, -1):
             return LiteralString(f"<class '{dtype}'>")
 
+        class_type = self._obj.class_type
+
         precision = prec * (16 if self.dtype is NativeComplex() else 8)
-        if self._obj.rank > 0:
-            return LiteralString(f"<class 'numpy.ndarray' ({dtype}{precision})>")
+        if class_type != self.dtype:
+            return LiteralString(f"<class '{class_type}' ({dtype}{precision})>")
         else:
             return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 

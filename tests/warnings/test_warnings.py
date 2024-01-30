@@ -9,9 +9,12 @@
 import os
 import pytest
 
+from wrapper import HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS
+
 from pyccel.parser.parser   import Parser
 from pyccel.codegen.codegen import Codegen
 from pyccel.errors.errors   import Errors
+from pyccel.epyccel         import epyccel
 
 def get_files_from_folder(foldername):
     base_dir = os.path.dirname(os.path.realpath(__file__))
@@ -71,6 +74,17 @@ def test_semantic_warnings(f):
 #
 #    assert(errors.has_warnings())
 #    assert(not errors.has_errors())
+
+
+@pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
+def test_cwrapper_warnings(f, language):
+    with pytest.warns(UserWarning):
+        epyccel(f, language='c')
+
+@pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
+def test_bind_c_warnings(f, language):
+    with pytest.warns(UserWarning):
+        epyccel(f, language='fortran')
 
 ######################
 if __name__ == '__main__':
