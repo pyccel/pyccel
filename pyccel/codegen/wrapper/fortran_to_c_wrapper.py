@@ -382,10 +382,7 @@ class FortranToCWrapper(Wrapper):
         scope.insert_symbol(name)
         wrap_dotted = isinstance(var, DottedVariable)
         stored_in_c_ptr = var.rank or isinstance(var.dtype, CustomDataType)
-        if stored_in_c_ptr:
-            memory_handling = 'alias' if wrap_dotted else 'heap'
-        else:
-            memory_handling = 'stack'
+        memory_handling = 'alias' if wrap_dotted and stored_in_c_ptr else var.memory_handling
         local_var = var.clone(scope.get_expected_name(name), new_class = Variable,
                             memory_handling = memory_handling)
 
@@ -407,7 +404,6 @@ class FortranToCWrapper(Wrapper):
             if wrap_dotted:
                 ptr_var = local_var
             else:
-                print(wrap_dotted, var)
                 # Create an array variable which can be passed to CLocFunc
                 ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
                                     memory_handling='alias', new_class = Variable)
