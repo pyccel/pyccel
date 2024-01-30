@@ -6,8 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_objects.list_functions import (ListAppend, ListPop, ListInsert,
-                                                       ListClear, ListExtend, ListReverse)
+from pyccel.ast.builtin_objects.list_functions import (ListAppend)
 
 
 from .builtins  import PythonImag, PythonReal, PythonConjugate
@@ -138,16 +137,6 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
         methods=[
             PyccelFunctionDef('append', func_class = ListAppend,
                 decorators = {}),
-            PyccelFunctionDef('pop', func_class = ListPop,
-                decorators = {}),
-            PyccelFunctionDef('insert', func_class = ListInsert,
-                decorators = {}),
-            PyccelFunctionDef('clear', func_class = ListClear,
-                decorators = {}),
-            PyccelFunctionDef('extend', func_class = ListExtend,
-                decorators = {}),
-            PyccelFunctionDef('reverse', func_class = ListReverse,
-                decorators = {}),
         ])
 
 #=======================================================================================
@@ -239,6 +228,7 @@ def get_cls_base(dtype, precision, container_type):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
+    #check if instance is nativelist
     else:
         if container_type:
             type_name = str(container_type)
