@@ -1596,8 +1596,13 @@ class CToPythonWrapper(Wrapper):
                         for r in expr.getter.results]
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in res_vars]
 
+        if len(c_results) == 1:
+            call = Assign(c_results[0], FunctionCall(expr.getter, (class_obj,)))
+        else:
+            call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
+
         getter_body = [*arg_code,
-                       Assign(c_results, FunctionCall(expr.getter, (class_obj,))),
+                       call,
                        *res_wrapper,
                        Return((getter_result,))]
         self.exit_scope()
