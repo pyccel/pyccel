@@ -24,7 +24,7 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper      import PyccelPyTypeObject
+from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyGetSetDefElement
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
@@ -1547,7 +1547,9 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map.pop(new_set_val_arg)
         # ----------------------------------------------------------------------------------
 
-        return getter
+        python_name = class_type.scope.get_python_name(expr.name)
+        return PyGetSetDefElement(python_name, getter, setter,
+                                LiteralString(f"The attribute {python_name}"))
 
     def _wrap_ClassDef(self, expr):
         """
@@ -1605,6 +1607,6 @@ class CToPythonWrapper(Wrapper):
 
         for a in expr.attributes:
             if not a.is_private:
-                wrapped_class.add_new_method(self._wrap(a))
+                wrapped_class.add_property(self._wrap(a))
 
         return wrapped_class

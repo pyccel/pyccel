@@ -563,7 +563,7 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func')
+                 '_new_func', '_properties')
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -571,6 +571,7 @@ class PyClassDef(ClassDef):
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
+        self._properties = ()
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
         scope.insert_variable(variables[0])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
@@ -635,6 +636,46 @@ class PyClassDef(ClassDef):
         Get the wrapper for `__new__` which allocates the memory for the class instance.
         """
         return self._new_func
+
+    def add_property(self, p):
+        p.set_current_user_node(self)
+        self._properties += (p,)
+
+    @property
+    def properties(self):
+        return self._properties
+
+#-------------------------------------------------------------------
+
+class PyGetSetDefElement(PyccelAstNode):
+    _attribute_nodes = ('_getter', '_setter', '_docstring')
+    __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
+    def __init__(self, python_name, getter, setter, docstring):
+        if not isinstance(getter, PyFunctionDef):
+            raise TypeError("Getter should be a PyFunctionDef")
+        if not isinstance(setter, PyFunctionDef):
+            raise TypeError("Setter should be a PyFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self._docstring = docstring
+        super().__init__()
+
+    @property
+    def python_name(self):
+        return self._python_name
+
+    @property
+    def getter(self):
+        return self._getter
+
+    @property
+    def setter(self):
+        return self._setter
+
+    @property
+    def docstring(self):
+        return self._docstring
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
