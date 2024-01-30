@@ -572,6 +572,30 @@ class BindCArrayVariable(Variable):
 
 # =======================================================================================
 
+class BindCClassProperty(PyccelAstNode):
+    __slots__ = ('_getter', '_setter', '_python_name', '_docstring')
+    _attribute_nodes = ('_getter', '_setter')
+    def __init__(self, python_name, getter, setter, docstring = None):
+        if not isinstance(getter, BindCFunctionDef):
+            raise TypeError("Getter should be a BindCFunctionDef")
+        if not isinstance(setter, BindCFunctionDef):
+            raise TypeError("Setter should be a BindCFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self_docstring = docstring
+        super().__init__()
+
+    @property
+    def getter(self):
+        return self._getter
+
+    @property
+    def setter(self):
+        return self._setter
+
+# =======================================================================================
+
 class BindCClassDef(ClassDef):
     """
     Represents a class which is compatible with C.

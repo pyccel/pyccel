@@ -1575,6 +1575,7 @@ class CToPythonWrapper(Wrapper):
         docstring = expr.docstring
         wrapped_class = PyClassDef(expr, struct_name, type_name, self.scope.new_child_scope(expr.name),
                                    docstring = docstring, class_type = dtype)
+        bound_class = isinstance(expr, BindCClassDef)
 
         orig_cls_dtype = expr.scope.parent_scope.cls_constructs[name]
 
@@ -1600,13 +1601,13 @@ class CToPythonWrapper(Wrapper):
                 self._wrap(f)
             wrapped_class.add_new_interface(self._wrap(i))
 
-        if isinstance(expr, BindCClassDef):
+        if bound_class:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype, expr.new_func))
         else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         for a in expr.attributes:
-            if not a.is_private:
+            if bound_class or not a.is_private:
                 wrapped_class.add_property(self._wrap(a))
 
         return wrapped_class
