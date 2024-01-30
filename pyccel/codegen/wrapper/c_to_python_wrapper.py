@@ -1467,6 +1467,9 @@ class CToPythonWrapper(Wrapper):
 
         class_ptr_attrib = class_scope.find('instance', 'variables', raise_if_missing = True)
 
+        # ----------------------------------------------------------------------------------
+        #                        Create getter
+        # ----------------------------------------------------------------------------------
         getter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_getter')
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
@@ -1491,7 +1494,44 @@ class CToPythonWrapper(Wrapper):
         args = [FunctionDefArgument(a) for a in getter_args]
         getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
                                 original_function = expr, scope = getter_scope)
-        return getter
+
+        # ----------------------------------------------------------------------------------
+        #                        Create setter
+        # ----------------------------------------------------------------------------------
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        setter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_setter')
+        setter_scope = self.scope.new_child_scope(setter_name)
+        self.scope = setter_scope
+        setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
+                       self.get_new_PyObject(f'{expr.name}_obj'),
+                       setter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(NativeInteger(), precision=-2))]
+        self.scope.insert_symbol(expr.name)
+        new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
+        self._python_object_map[new_set_val_arg] = setter_args[1]
+
+        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+        self.scope.insert_variable(class_obj)
+
+        attrib = expr.clone(expr.name, lhs = class_obj)
+        arg_wrapper = self._wrap(new_set_val_arg)
+        new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+        # Cast the C variable into a Python variable
+        wrapper_function = C_to_Python(expr)
+        setter_body = [*arg_wrapper,
+                       AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
+                                                                                 new_class = DottedVariable,
+                                                                                lhs = getter_args[0]),
+                                                          cast_type = lhs)),
+                       Assign(attrib, new_set_val),
+                       Return((LiteralInteger(0, precision=-2),))]
+        self.exit_scope()
+
+        args = [FunctionDefArgument(a) for a in setter_args]
+        setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
+                                original_function = expr, scope = setter_scope)
+        self._error_exit_code = Nil()
+        return setter
 
     def _wrap_ClassDef(self, expr):
         """
