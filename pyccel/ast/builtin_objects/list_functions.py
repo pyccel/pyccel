@@ -15,25 +15,28 @@ from pyccel.errors.errors import PyccelError
 from pyccel.utilities.stage import PyccelStage
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode
-from pyccel.ast.datatypes import NativeHomogeneousList
+from pyccel.ast.internals import PyccelInternalFunction
 
 pyccel_stage = PyccelStage()
 
-class ListAppend():
-    pass
+class ListAppend(PyccelInternalFunction):
+    """
+    Represents a call to the .append() method.
 
-class ListPop():
-    pass
+    Represents a call to the .append() method of an object with a list type,
+    which adds an element to the end of the list.
+    The append method is called as follows:
 
-class ListInsert():
-    pass
+    >>> a = []
+    >>> a.append(1)
+    >>> print(a)
+    [1]
 
-class ListClear():
-    pass
+    Parameters
+    ----------
+    arg : TypedAstNode.
+    """
+    __slots__ = ()
+    name = 'append'
 
-class ListExtend():
-    pass
-
-class ListReverse():
-    pass
 
