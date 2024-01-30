@@ -59,7 +59,7 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base, ListClass
 
 from pyccel.ast.datatypes import str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
@@ -288,6 +288,7 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             An annotated object which can be printed.
         """
+        
 
         if self.semantic_done:
             print ('> semantic analysis already done')
@@ -630,7 +631,6 @@ class SemanticParser(BasicParser):
                 'order'    : expr.order,
                 'class_type' : expr.class_type,
             }
-
         if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
             d_var['class_type'     ] = expr.class_type
@@ -641,8 +641,13 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['cls_base'       ] = TupleClass
             d_var['memory_handling'] = 'heap'
+            print("aaah ana hnaaa ")
             return d_var
-
+        elif isinstance(expr, PythonList):
+            d_var['cls_base'       ] = ListClass
+            d_var['memory_handling'] = 'heap'
+            print("salaaam ")
+            return d_var
         elif isinstance(expr, Concatenate):
             d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
@@ -675,9 +680,9 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, TypedAstNode):
-
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
+            print("ana diiima hna ", d_var['cls_base'])
             return d_var
 
         else:
@@ -1795,10 +1800,9 @@ class SemanticParser(BasicParser):
         #      - line and column
         #      - blocking errors
         current_ast = self.current_ast_node
-
+        
         if getattr(expr,'python_ast', None) is not None:
             self._current_ast_node = expr.python_ast
-        # print("holaa " , type(expr))
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
@@ -2696,7 +2700,6 @@ class SemanticParser(BasicParser):
             pass
 
         func     = self.scope.find(name, 'functions')
-
         # Check for specialised method
         if isinstance(func, PyccelFunctionDef):
             annotation_method = '_visit_' + func.cls_name.__name__
@@ -2883,7 +2886,6 @@ class SemanticParser(BasicParser):
         elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
-
             rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
                 i.set_current_ast(python_ast)

@@ -10,7 +10,7 @@ from .builtin_objects.list_functions import   PythonListAppend, PythonListClear,
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
-                        NativeTuple, CustomDataType)
+                        NativeTuple, CustomDataType, NativeHomogeneousList)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -140,55 +140,56 @@ TupleClass = ClassDef('tuple',
 
 ListClass = ClassDef('list',
         methods=[
-            PyccelFunctionDef('append',[],[],body=[], decorators={'lists_wrapper':PythonListAppend}),
-            PyccelFunctionDef('extend',[],[],body=[],
-                decorators={'lists_wrapper':PythonListExtend}),
-            PyccelFunctionDef('insert',[],[],body=[],
-                decorators={'lists_wrapper':PythonListInsert}),
-            PyccelFunctionDef('count',[],[],body=[],
-                decorators={'lists_wrapper':PythonListCount}),
-            PyccelFunctionDef('clear',[],[],body=[],
-                decorators={'lists_wrapper':PythonListClear}),
-            PyccelFunctionDef('sort',[],[],body=[],
-                decorators={'lists_wrapper':PythonListSort}),
-            PyccelFunctionDef('reverse',[],[],body=[],
-                decorators={'lists_wrapper':PythonListReverse}),
-            PyccelFunctionDef('pop',[],[],body=[],
-                decorators={'lists_wrapper':PythonListPop}),
-            PyccelFunctionDef('remove',[],[],body=[],
-                decorators={'lists_wrapper':PythonListRemove}),
+            PyccelFunctionDef('append',func_class = PythonListAppend, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('extend',func_class = PythonListExtend, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('insert',func_class = PythonListInsert, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('count',func_class = PythonListCount, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('clear',func_class = PythonListClear, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('sort',func_class = PythonListSort, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('reverse',func_class = PythonListReverse, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('pop',func_class = PythonListPop, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
+            PyccelFunctionDef('remove',func_class = PythonListRemove, 
+                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
             ])
 
 #=======================================================================================
 
 NumpyArrayClass = ClassDef('numpy.ndarray',
         methods=[
-            PyccelFunctionDef('shape', func_class = NumpyShape,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('size', func_class = NumpySize,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('T', func_class = NumpyTranspose,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('transpose', func_class = NumpyTranspose,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('sum', func_class = NumpySum,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('min', func_class = NumpyAmin,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('max', func_class = NumpyAmax,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('imag', func_class = NumpyImag,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('real', func_class = NumpyReal,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('conj', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('dtype', func_class = NumpyResultType,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('shape', func_class = NumpyShape,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('size', func_class = NumpySize,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('T', func_class = NumpyTranspose,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('transpose', func_class = NumpyTranspose,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('sum', func_class = NumpySum,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('min', func_class = NumpyAmin,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('max', func_class = NumpyAmax,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('imag', func_class = NumpyImag,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('real', func_class = NumpyReal,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('conj', func_class = NumpyConjugate,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('dtype', func_class = NumpyResultType,
+            #     decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+            # PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+            #     decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )
 
@@ -232,15 +233,18 @@ def get_cls_base(dtype, precision, container_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
+    
     if isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
     if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType):
+    elif isinstance(container_type, NumpyNDArrayType):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
-    else:
+    elif isinstance(container_type, NativeHomogeneousList):
+        return ListClass
+    else:        
         if container_type:
             type_name = str(container_type)
         else:

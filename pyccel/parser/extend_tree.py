@@ -90,6 +90,7 @@ def extend_tree(code):
             tree.body  = list(comments)
         return tree
 
+    
     insert_comments(tree, comment_lines_no, comments, else_no)
     return tree
 

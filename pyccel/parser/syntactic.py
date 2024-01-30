@@ -141,9 +141,9 @@ class SyntaxParser(BasicParser):
         self._context = []
 
         self.load()
-
         tree                = extend_tree(code)
         self._fst           = tree
+        
         self._in_lhs_assign = False
 
         self.parse()

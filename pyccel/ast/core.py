@@ -3301,7 +3301,6 @@ class ClassDef(ScopedAstNode):
     __slots__ = ('_name','_attributes','_methods','_options',
                  '_imports','_superclasses','_interfaces', '_docstring')
     _attribute_nodes = ('_attributes', '_methods', '_imports', '_interfaces', '_docstring')
-
     def __init__(
         self,
         name,
@@ -3316,7 +3315,6 @@ class ClassDef(ScopedAstNode):
         ):
 
         # name
-
         if isinstance(name, str):
             name = PyccelSymbol(name)
         else:
@@ -3385,9 +3383,7 @@ class ClassDef(ScopedAstNode):
 
          #  methods = list(methods) + [free]
          # TODO move this somewhere else
-
         methods = tuple(methods)
-
         # ...
         self._name = name
         self._attributes = attributes
@@ -3544,8 +3540,10 @@ class ClassDef(ScopedAstNode):
         ValueError
             Raised if the method cannot be found.
         """
+
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
+            print(method)
         except StopIteration:
             method = None
             i = 0

@@ -217,6 +217,7 @@ def execute_pyccel(fname, *,
 
     # Annotate abstract syntax Tree
     try:
+        
         settings = {'verbose':verbose}
         parser.annotate(**settings)
     except NotImplementedError as error:

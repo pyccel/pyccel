@@ -1,121 +1,108 @@
-from ..basic import PyccelAstNode
+from ..basic import PyccelAstNode, TypedAstNode
 from pyccel.utilities.stage import PyccelStage
 from ..datatypes import(NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeString, str_dtype,
-                        NativeGeneric, default_precision)
-from ..internals import max_precision, PyccelInternalFunction
+                        NativeComplex, NativeString, str_dtype, NativeHomogeneousList,
+                        NativeGeneric, default_precision, )
+from ..internals import max_precision, PyccelInternalFunction,get_final_precision
+
 from ..literals import LiteralFalse, LiteralInteger
 pyccel_stage = PyccelStage()
 
-class PythonList(PyccelAstNode):
-    """ Represents a call to Python's native list() function.
-    """
-    __slots__ = ('_args', '_is_homogeneous',
-            '_dtype', '_precision', '_rank', '_shape', '_order')
-    _iterable = True
-    _attribute_nodes = ('_args',)
+# class PythonList(TypedAstNode):
+#     """
+#     Class representing a call to Python's `[,]` function.
 
-    def __init__(self, *args):
+#     Class representing a call to Python's `[,]` function which generates
+#     a literal Python list.
 
-        # TODO: Need to include empty lists. Now, an Inhomogeneous list error is raised
+#     Parameters
+#     ----------
+#     *args : tuple of TypedAstNodes
+#         The arguments passed to the operator.
 
-        self._args = args
-        super().__init__()
-        if pyccel_stage == 'syntactic':
-            return
-        if len(args) == 0:
-            self._dtype = NativeGeneric()
-            self._precision = 0
-            self._rank = 0
-            self._shape = None
-            self._order = None
-            self._is_homogeneous = True
-        else:
-            a0_precision = args[0].precision
-            a0_dtype     = args[0].dtype
-            a0_shape     = args[0].shape
-            a0_order     = args[0].order
-            a0_rank      = args[0].rank
-            is_homogeneous  = not isinstance(args[0], NativeGeneric) and \
-                            all(not isinstance(a, NativeGeneric) and \
-                                a.dtype     == a0_dtype and \
-                                a.precision == a0_precision and \
-                                a.rank      == a0_rank and \
-                                a.shape     == a0_shape and \
-                                a.order     == a0_order \
-                                for a in args[1:])
-            self._is_homogeneous = is_homogeneous
-            if is_homogeneous:
-                strts    = [a for a in self._args if a.dtype == NativeString()]
-                integers = [a for a in self._args if a.dtype == NativeInteger()]
-                floats   = [a for a in self._args if a.dtype == NativeFloat()]
-                cmplxs   = [a for a in self._args if a.dtype == NativeComplex()]
-                bools    = [a for a in self._args if a.dtype == NativeBool()]
+#     See Also
+#     --------
+#     FunctionalFor
+#         The `[]` function when it describes a comprehension.
+#     """
+#     __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order')
+#     _attribute_nodes = ('_args',)
+#     _class_type = NativeHomogeneousList()
 
-                if strts:
-                    self._dtype = NativeString()
-                    self._precision = 0
-                elif integers:
-                    self._dtype = NativeInteger()
-                    self._precision = max_precision(integers)
-                elif floats:
-                    self._dtype = NativeFloat()
-                    self._precision = max_precision(floats)
-                elif cmplxs:
-                    self._dtype = NativeComplex()
-                    self._precision = max_precision(cmplxs)
-                elif bools:
-                    self._dtype = NativeBool()
-                    self._precision = max_precision(bools)
-                else:
-                    raise TypeError('Cannot determine the type of {}'.format(self))
+#     def __init__(self, *args):
+#         self._args = args
+#         super().__init__()
+#         if pyccel_stage == 'syntactic':
+#             return
+#         elif len(args) == 0:
+#             self._dtype = NativeGeneric()
+#             self._precision = 0
+#             self._rank  = 0
+#             self._shape = None
+#             self._order = None
+#             return
+#         arg0 = args[0]
+#         precision = get_final_precision(arg0)
+#         is_homogeneous = arg0.dtype is not NativeGeneric() and \
+#                          all(a.dtype is not NativeGeneric() and \
+#                              arg0.dtype == a.dtype and \
+#                              precision == get_final_precision(a) and \
+#                              arg0.rank  == a.rank  and \
+#                              arg0.order == a.order for a in args[1:])
+#         if is_homogeneous:
+#             self._dtype = arg0.dtype
+#             self._precision = arg0.precision
 
-                self._rank = self._args[0].rank + 1
-                self._order = None if self._rank < 2 else 'C'
-                self._shape = (LiteralInteger(len(self._args)),) + (self._args[0].shape or ())
+#             inner_shape = [() if a.rank == 0 else a.shape for a in args]
+#             self._rank = max(a.rank for a in args) + 1
+#             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+#             self._rank  = len(self._shape)
 
-            else:
-                raise TypeError('Inhomogeneous lists are not supported.')
+#         else:
+#             raise TypeError("Can't create an inhomogeneous list")
 
-    def __getitem__(self, i):
-        #TODO: ensure i is integer
-        return self._args[i]
+#         self._order = None if self._rank < 2 else 'C'
 
-    def __iter__(self):
-        return self._args.__iter__()
+#     def __iter__(self):
+#         return self._args.__iter__()
 
-    def __len__(self):
-        return len(self._args)
+#     def __str__(self):
+#         args = ', '.join(str(a) for a in self)
+#         return f'({args})'
 
-    def __str__(self):
-        return '[{}]'.format(', '.join(str(a) for a in self._args))
+#     def __repr__(self):
+#         args = ', '.join(str(a) for a in self)
+#         return f'PythonList({args})'
 
-    def __repr__(self):
-        return 'PythonList({})'.format(', '.join(str(a) for a in self._args))
+#     @property
+#     def args(self):
+#         """
+#         Arguments of the list.
 
-    def __add__(self, other):
-        return PythonList(*(self.args + other.args))
+#         The arguments that were used to initialise the list.
+#         """
+#         return self._args
 
-    @property
-    def args(self):
-        """ Arguments of the list
-        """
-        return self._args
+#     @property
+#     def is_homogeneous(self):
+#         """
+#         Indicates whether the list is homogeneous or inhomogeneous.
 
-    @property
-    def is_homogeneous(self):
-        """ Indicates if the list is homogeneous or not
-        """
-        return self._is_homogeneous
+#         Indicates whether all elements of the list have the same dtype, precision,
+#         rank, etc (homogenous) or if these values can vary (inhomogeneous). Lists
+#         are always homogeneous.
+#         """
+#         return True
 
 class PythonListMethod(PyccelInternalFunction):
     __slots__ = ('_list', '_args')
     _dtype = NativeInteger()
+    _class_type = NativeHomogeneousList()
+
     _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-
     def __init__(self, *args):
         super().__init__(*args)
         self._list = args[0]
@@ -143,7 +130,6 @@ class PythonListMethod(PyccelInternalFunction):
 
 class PythonListAppend(PythonListMethod):
     name = 'append'
-
     def __init__(self, *args):
         super().__init__(*args)
 
