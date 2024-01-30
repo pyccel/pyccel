@@ -1475,25 +1475,39 @@ class CToPythonWrapper(Wrapper):
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        getter_result = self.get_new_PyObject(expr.name)
+        self.scope.insert_symbol(expr.name)
+        getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
+        get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
+        self._python_object_map[get_val_result] = getter_result
 
         class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
         self.scope.insert_variable(class_obj)
 
         attrib = expr.clone(expr.name, lhs = class_obj)
         # Cast the C variable into a Python variable
-        wrapper_function = C_to_Python(expr)
+        res_wrapper = self._wrap(get_val_result)
+        new_res_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+        if new_res_val.rank > 0:
+            body = [AliasAssign(new_res_val, attrib), *res_wrapper]
+        elif isinstance(expr.dtype, CustomDataType):
+            self.scope.remove_variable(new_res_val, name = expr.name)
+            body = [Allocate(getter_result, shape=(), order=None, status='unallocated'),
+                    AliasAssign(new_res_val, attrib),
+                    *res_wrapper]
+        else:
+            body = [Assign(new_res_val, attrib), *res_wrapper]
         getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
                                                                                 lhs = getter_args[0]),
                                                           cast_type = lhs)),
-                       AliasAssign(getter_result, FunctionCall(wrapper_function, [attrib])),
+                       *body,
                        Return((getter_result,))]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in getter_args]
         getter = PyFunctionDef(getter_name, args, (FunctionDefResult(getter_result),), getter_body,
                                 original_function = expr, scope = getter_scope)
+        self._python_object_map.pop(get_val_result)
 
         # ----------------------------------------------------------------------------------
         #                        Create setter
@@ -1517,7 +1531,6 @@ class CToPythonWrapper(Wrapper):
         arg_wrapper = self._wrap(new_set_val_arg)
         new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
         # Cast the C variable into a Python variable
-        wrapper_function = C_to_Python(expr)
         setter_body = [*arg_wrapper,
                        AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
@@ -1531,7 +1544,10 @@ class CToPythonWrapper(Wrapper):
         setter = PyFunctionDef(setter_name, args, setter_result, setter_body,
                                 original_function = expr, scope = setter_scope)
         self._error_exit_code = Nil()
-        return setter
+        self._python_object_map.pop(new_set_val_arg)
+        # ----------------------------------------------------------------------------------
+
+        return getter
 
     def _wrap_ClassDef(self, expr):
         """
@@ -1588,6 +1604,7 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         for a in expr.attributes:
-            wrapped_class.add_new_method(self._wrap(a))
+            if not a.is_private:
+                wrapped_class.add_new_method(self._wrap(a))
 
         return wrapped_class
