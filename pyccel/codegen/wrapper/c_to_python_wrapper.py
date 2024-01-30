@@ -1538,13 +1538,19 @@ class CToPythonWrapper(Wrapper):
         attrib = expr.clone(expr.name, lhs = class_obj)
         arg_wrapper = self._wrap(new_set_val_arg)
         new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+
+        if expr.memory_handling == 'alias':
+            update = AliasAssign(attrib, new_set_val)
+        else:
+            update = Assign(attrib, new_set_val)
+
         # Cast the C variable into a Python variable
         setter_body = [*arg_wrapper,
                        AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
                                                                                 lhs = getter_args[0]),
                                                           cast_type = lhs)),
-                       Assign(attrib, new_set_val),
+                       update,
                        Return((LiteralInteger(0, precision=-2),))]
         self.exit_scope()
 
