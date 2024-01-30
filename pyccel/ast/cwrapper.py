@@ -55,10 +55,14 @@ __all__ = (
     'Py_False',
     'Py_None',
     'flags_registry',
+    'PyNotImplementedError',
+    'PyTypeError',
+    'PyAttributeError',
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
     'PyObject_TypeCheck',
+    'PyErr_SetString',
 )
 
 #-------------------------------------------------------------------
@@ -805,6 +809,7 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
+PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')), FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
