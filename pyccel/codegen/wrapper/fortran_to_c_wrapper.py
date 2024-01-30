@@ -381,11 +381,12 @@ class FortranToCWrapper(Wrapper):
         # Make name available for later
         scope.insert_symbol(name)
         wrap_dotted = isinstance(var, DottedVariable)
-        memory_handling = 'alias' if wrap_dotted else 'heap'
+        stored_in_c_ptr = var.rank or isinstance(var.dtype, CustomDataType)
+        memory_handling = 'alias' if wrap_dotted and stored_in_c_ptr else 'heap'
         local_var = var.clone(scope.get_expected_name(name), new_class = Variable,
                             memory_handling = memory_handling)
 
-        if local_var.rank or isinstance(local_var.dtype, CustomDataType):
+        if stored_in_c_ptr:
             # Allocatable is not returned so it must appear in local scope
             scope.insert_variable(local_var, name)
 
@@ -493,7 +494,7 @@ class FortranToCWrapper(Wrapper):
         self.scope.insert_symbol(expr.name)
         getter_result = self._wrap(FunctionDefResult(expr))
 
-        getter_arg = self._wrap(FunctionDefArgument(lhs))
+        getter_arg = self._wrap(FunctionDefArgument(lhs, bound_argument = True))
         self_obj = self._get_call_argument(getter_arg)
 
         getter_body = [C_F_Pointer(getter_arg.var, self_obj)]
@@ -520,7 +521,7 @@ class FortranToCWrapper(Wrapper):
         self.scope = setter_scope
         self.scope.insert_symbol(expr.name)
 
-        setter_args = (self._wrap(FunctionDefArgument(lhs)),
+        setter_args = (self._wrap(FunctionDefArgument(lhs, bound_argument = True)),
                        self._wrap(FunctionDefArgument(expr)))
         self_obj = self._get_call_argument(setter_args[0])
         set_val = self._get_call_argument(setter_args[1])
@@ -543,7 +544,7 @@ class FortranToCWrapper(Wrapper):
         setter = BindCFunctionDef(setter_name, setter_args, (), setter_body,
                                 original_function = expr, scope = setter_scope)
         return BindCClassProperty(lhs.cls_base.scope.get_python_name(expr.name),
-                                  getter, setter)
+                                  getter, setter, lhs)
 
     def _wrap_ClassDef(self, expr):
         """
