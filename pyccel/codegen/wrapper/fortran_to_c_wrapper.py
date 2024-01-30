@@ -481,6 +481,7 @@ class FortranToCWrapper(Wrapper):
                                 original_variable = expr)
 
     def _wrap_DottedVariable(self, expr):
+        assert expr.memory_handling != 'alias'
         lhs = expr.lhs
         class_dtype = lhs.dtype
         # ----------------------------------------------------------------------------------
