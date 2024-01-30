@@ -528,11 +528,12 @@ class FortranToCWrapper(Wrapper):
 
         if isinstance(set_val.dtype, CustomDataType):
             setter_body.append(C_F_Pointer(setter_args[1].var, set_val))
-        elif isinstance(set_val.rank, IndexedElement):
-            size = set_val.shape[::-1] if expr.order == 'C' else set_val.shape
-            stride = set_val.strides[::-1] if expr.order == 'C' else set_val.strides
+        elif isinstance(set_val, IndexedElement):
+            func_arg = setter_args[1]
+            size = func_arg.shape[::-1] if expr.order == 'C' else func_arg.shape
+            stride = func_arg.strides[::-1] if expr.order == 'C' else func_arg.strides
             orig_size = [PyccelMul(sz,st) for sz,st in zip(size, stride)]
-            setter_body.append(C_F_Pointer(setter_args[1].var, set_val, orig_size))
+            setter_body.append(C_F_Pointer(func_arg.var, set_val.base, orig_size))
 
         attrib = expr.clone(expr.name, lhs = self_obj)
         # Cast the C variable into a Python variable
