@@ -573,6 +573,8 @@ class BindCArrayVariable(Variable):
 # =======================================================================================
 
 class BindCClassProperty(PyccelAstNode):
+    """
+    """
     __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_var')
     _attribute_nodes = ('_getter', '_setter')
     def __init__(self, python_name, getter, setter, class_var, docstring = None):
@@ -584,15 +586,27 @@ class BindCClassProperty(PyccelAstNode):
         self._getter = getter
         self._setter = setter
         self._class_var = class_var
-        self_docstring = docstring
+        self._docstring = docstring
         super().__init__()
 
     @property
     def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
         return self._getter
 
     @property
     def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
         return self._setter
 
     @property
@@ -602,6 +616,10 @@ class BindCClassProperty(PyccelAstNode):
     @property
     def python_name(self):
         return self._python_name
+
+    @property
+    def docstring(self):
+        self._docstring
 
 # =======================================================================================
 

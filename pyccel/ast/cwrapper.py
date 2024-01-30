@@ -671,10 +671,22 @@ class PyGetSetDefElement(PyccelAstNode):
 
     @property
     def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
         return self._getter
 
     @property
     def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
         return self._setter
 
     @property
