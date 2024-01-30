@@ -8,6 +8,13 @@ class B:
     def __init__(self : 'B', x : float):
         self.x = x
 
+class C:
+    def __init__(self):
+        pass
+
+    def get_3(self):
+        return 3
+
 def get_A():
     return A()
 
