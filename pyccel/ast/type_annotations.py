@@ -118,6 +118,12 @@ class VariableTypeAnnotation(PyccelAstNode):
         """
         return self._order
 
+    @order.setter
+    def order(self, order):
+        if order not in ('C', 'F', None):
+            raise ValueError("Order must be C, F, or None")
+        self._order = order
+
     @property
     def is_const(self):
         """
@@ -131,10 +137,6 @@ class VariableTypeAnnotation(PyccelAstNode):
     @is_const.setter
     def is_const(self, val):
         self._is_const = val
-
-    @order.setter
-    def order(self, order):
-        self._order = order
 
     def __hash__(self):
         return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
