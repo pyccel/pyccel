@@ -136,6 +136,8 @@ class VariableTypeAnnotation(PyccelAstNode):
 
     @is_const.setter
     def is_const(self, val):
+        if not isinstance(val, bool):
+            raise TypeError("Is const value should be a boolean")
         self._is_const = val
 
     def __hash__(self):
