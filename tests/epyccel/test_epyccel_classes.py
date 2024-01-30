@@ -150,6 +150,19 @@ def test_classes_3(language):
 
     assert p_py.get_coordinates() == p_l.get_coordinates()
 
+    assert p_py.x == p_l.x
+    assert p_py.X == p_l.X
+    assert isinstance(p_py.x, type(p_l.x))
+    assert isinstance(p_py.X, type(p_l.X))
+
+    p_py.x = -1.2
+    p_py.X = -10.2
+
+    p_l.x = -1.2
+    p_l.X = -10.2
+
+    assert p_py.get_coordinates() == p_l.get_coordinates()
+
 def test_classes_4(language):
     import classes.classes_4 as mod
     modnew = epyccel(mod, language = language)
@@ -208,3 +221,58 @@ def test_generic_methods(language):
 
     assert p_py.get_x() == p_l.get_x()
     assert p_py.get_y() == p_l.get_y()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Attribute renamed. See #1705"),
+            pytest.mark.python]
+        )
+    )
+)
+def test_classes(language):
+    import classes.classes as mod
+    modnew = epyccel(mod, language = language)
+
+    p_py = mod.Point(0.0, 0.0)
+    p_l  = modnew.Point(0.0, 0.0)
+
+    assert p_py.x == p_l.x
+    assert isinstance(p_py.x, type(p_l.x))
+
+    assert p_py.y == p_l.y
+    assert isinstance(p_py.y, type(p_l.y))
+
+    p_py.x = 2.0
+    p_l.x = 2.0
+
+    if language != 'python':
+        with pytest.raises(TypeError):
+            p_l.y = 1j
+
+    assert p_py.x == p_l.x
+
+    p_py.translate(1.0, 2.0)
+    p_l.translate(1.0, 2.0)
+
+    assert p_py.x == p_l.x
+    assert p_py.y == p_l.y
+
+def test_class_out(language):
+    import classes.array_attribute as mod
+    modnew = epyccel(mod, language = language)
+
+    p_py = mod.A(5)
+    p_l  = modnew.A(5)
+
+    assert np.array_equal(p_py.x, p_l.x)
+    assert np.array_equal(p_py.get_x(), p_l.get_x())
+    assert np.array_equal(p_py.x, p_py.get_x())
+
+    p_py.x[:] = 4
+    p_l.x[:] = 4
+
+    if language != 'python':
+        with pytest.raises(AttributeError):
+            p_l.x[:] = np.ones(6)
