@@ -17,7 +17,8 @@ All notable changes to this project will be documented in this file.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
 -   #1685 : Add support for `type()` function with class instance argument.
--   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
+-   #1605 : Add support for methods and interfaces in classes (including `__init__` and `__del__`).
+-   #1618 : Add support for class instance attributes.
 
 ### Fixed
 
