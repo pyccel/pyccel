@@ -1116,7 +1116,8 @@ class CToPythonWrapper(Wrapper):
         bound_argument = getattr(expr, 'wrapping_bound_argument', expr.bound_argument)
 
         if orig_var.is_ndarray:
-            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False, memory_handling='alias')
+            arg_var = orig_var.clone(self.scope.get_expected_name(orig_var.name), is_argument = False,
+                                    memory_handling='alias', new_class = Variable)
             self._wrapping_arrays = orig_var.is_ndarray
             self.scope.insert_variable(arg_var, orig_var.name)
         else:
@@ -1340,7 +1341,8 @@ class CToPythonWrapper(Wrapper):
 
         if orig_var.rank:
             # C-compatible result variable
-            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False, memory_handling='alias')
+            c_res = orig_var.clone(self.scope.get_new_name(orig_var_name), is_argument = False,
+                                    memory_handling='alias', new_class = Variable)
             self._wrapping_arrays = True
             # Result of calling the bind-c function
             arg_var = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
@@ -1572,9 +1574,11 @@ class CToPythonWrapper(Wrapper):
 
         get_val_arg = expr.getter.arguments[0]
         self.scope.insert_symbol(get_val_arg.var.name)
-        get_val_result = expr.getter.results[0]
+        get_val_result = expr.getter.bind_c_results[0]
         result_name = get_val_result.var.name
         self.scope.insert_symbol(result_name)
+        for r in expr.getter.results:
+            self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
@@ -1588,10 +1592,12 @@ class CToPythonWrapper(Wrapper):
 
         # Cast the C variable into a Python variable
         res_wrapper = self._wrap(get_val_result)
-        new_res_val = self.scope.find(result_name, category='variables', raise_if_missing = True)
+        res_vars = [self.scope.find(r.var.name, category='variables', raise_if_missing = True)
+                        for r in expr.getter.results]
+        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in res_vars]
 
         getter_body = [*arg_code,
-                       Assign(new_res_val, FunctionCall(expr.getter, (class_obj,))),
+                       Assign(c_results, FunctionCall(expr.getter, (class_obj,))),
                        *res_wrapper,
                        Return((getter_result,))]
         self.exit_scope()
@@ -1608,12 +1614,15 @@ class CToPythonWrapper(Wrapper):
         setter_scope = self.scope.new_child_scope(setter_name)
         self.scope = setter_scope
 
-        original_args = expr.setter.arguments
+        original_args = expr.setter.bind_c_arguments
+        f_wrapped_args = expr.setter.arguments
 
         self_arg = original_args[0]
         set_val_arg = original_args[1]
-        self.scope.insert_symbol(self_arg.var.name)
-        self.scope.insert_symbol(set_val_arg.var.name)
+        for a in f_wrapped_args:
+            self.scope.insert_symbol(a.var.name)
+        self.scope.insert_symbol(self_arg.original_function_argument_variable.name)
+        self.scope.insert_symbol(set_val_arg.original_function_argument_variable.name)
 
         setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        self.get_new_PyObject(f'{name}_obj'),
@@ -1625,7 +1634,7 @@ class CToPythonWrapper(Wrapper):
 
         arg_code = [l for a in original_args for l in self._wrap(a)]
 
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_args]
+        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
 
         setter_body = [*arg_code,
                        FunctionCall(expr.setter, func_call_args),

@@ -481,7 +481,6 @@ class FortranToCWrapper(Wrapper):
                                 original_variable = expr)
 
     def _wrap_DottedVariable(self, expr):
-        assert expr.memory_handling != 'alias'
         lhs = expr.lhs
         class_dtype = lhs.dtype
         # ----------------------------------------------------------------------------------
@@ -537,7 +536,10 @@ class FortranToCWrapper(Wrapper):
 
         attrib = expr.clone(expr.name, lhs = self_obj)
         # Cast the C variable into a Python variable
-        setter_body.append(Assign(attrib, set_val))
+        if expr.memory_handling == 'alias':
+            setter_body.append(AliasAssign(attrib, set_val))
+        else:
+            setter_body.append(Assign(attrib, set_val))
         self.exit_scope()
 
         setter = BindCFunctionDef(setter_name, setter_args, (), setter_body,
