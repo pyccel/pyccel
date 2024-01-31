@@ -599,7 +599,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
@@ -700,7 +701,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -753,7 +755,7 @@ class CToPythonWrapper(Wrapper):
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.scope = mod_scope
 
-        imports = [self._wrap(i) for i in expr.imports]
+        imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
         imports = [i for i in imports if i]
 
         # Wrap classes
