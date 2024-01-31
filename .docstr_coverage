@@ -1,3 +1,4 @@
 .*code _print_.*
+cucode _print_.*
 semantic _visit_.*
 syntactic _visit_.*
