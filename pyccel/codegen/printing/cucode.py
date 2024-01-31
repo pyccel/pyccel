@@ -113,7 +113,6 @@ class CudaCodePrinter(CCodePrinter):
             preface = ''
             init    = ''
 
-        print(preface, init)
         declaration = f'{declaration_type} {variable}{init};\n'
 
         return preface + declaration
