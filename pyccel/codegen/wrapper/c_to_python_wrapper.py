@@ -91,14 +91,11 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            try:
-                var = Variable(dtype=self._python_object_map[dtype],
-                                name=self.scope.get_new_name(name),
-                                memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
-                                is_temp=is_temp)
-            except KeyError as e:
-                raise NotImplementedError("Can't return an object whose type was imported. See #1650") from e
+            var = Variable(dtype=self._python_object_map[dtype],
+                            name=self.scope.get_new_name(name),
+                            memory_handling='alias',
+                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
+                            is_temp=is_temp)
         else:
             var = Variable(dtype=PyccelPyObject(),
                             name=self.scope.get_new_name(name),
@@ -756,6 +753,9 @@ class CToPythonWrapper(Wrapper):
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.scope = mod_scope
 
+        imports = [self._wrap(i) for i in expr.imports]
+        imports = [i for i in imports if i]
+
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
 
@@ -776,7 +776,7 @@ class CToPythonWrapper(Wrapper):
 
         self.exit_scope()
 
-        imports = [cwrapper_ndarray_import] if self._wrapping_arrays else []
+        imports += [cwrapper_ndarray_import] if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
@@ -1512,3 +1512,26 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         return wrapped_class
+
+    def _wrap_Import(self, expr):
+        # Imports do not use collision handling as there is not enough context available.
+        # This should be fixed when stub files and proper pickling is added
+        import_wrapper = False
+        for as_name in expr.target:
+            t = as_name.object
+            if isinstance(t, ClassDef):
+                name = t.name
+                struct_name = f'Py{name}Object'
+                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+                type_name = f'Py{name}Type'
+                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
+                self._python_object_map[t] = wrapped_class
+                self._python_object_map[t.class_type] = dtype
+                self.scope.imports['classes'][t.name] = wrapped_class
+                import_wrapper = True
+
+        if import_wrapper:
+            wrapper_name = f'{expr.source}_wrapper'
+            return Import(wrapper_name, Module(wrapper_name,(), ()))
+        else:
+            return None
