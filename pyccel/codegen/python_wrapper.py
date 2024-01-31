@@ -106,7 +106,7 @@ def create_shared_library(codegen,
         sharedlib_modname = module_name
 
     wrapper_filename_root = f'{module_name}_wrapper'
-    wrapper_header_filename = '{wrapper_filename_root}.h'
+    wrapper_header_filename = f'{wrapper_filename_root}.h'
     wrapper_filename = f'{wrapper_filename_root}.c'
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
