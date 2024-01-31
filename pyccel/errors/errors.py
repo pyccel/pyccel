@@ -16,6 +16,7 @@ from os.path import basename
 
 from pyccel.ast.basic import PyccelAstNode
 from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.stage import PyccelStage
 
 # ...
 #ERROR = 'error'
@@ -56,6 +57,7 @@ _severity_registry = {'error': ERROR,
                       'fatal': FATAL,
                       'warning': WARNING}
 
+pyccel_stage = PyccelStage()
 
 class PyccelError(Exception):
     def __init__(self, message, errors=''):
@@ -196,14 +198,9 @@ class Errors(metaclass = Singleton):
     def __init__(self):
         self.error_info_map = None
         self._target = None
-        self._parser_stage = None
         self._mode = ErrorsMode()
 
         self.initialize()
-
-    @property
-    def parser_stage(self):
-        return self._parser_stage
 
     @property
     def target(self):
@@ -224,10 +221,6 @@ class Errors(metaclass = Singleton):
 
     def reset(self):
         self.initialize()
-
-    def set_parser_stage(self, stage):
-        assert(stage in ['syntax', 'semantic', 'codegen'])
-        self._parser_stage = stage
 
     def set_target(self, target, kind):
         assert(kind in ['file', 'module', 'function', 'class'])
@@ -332,7 +325,7 @@ class Errors(metaclass = Singleton):
         else:
             traceback = None
 
-        info = ErrorInfo(stage=self._parser_stage,
+        info = ErrorInfo(stage=pyccel_stage.current_stage,
                          filename=filename,
                          message=message,
                          line=line,
@@ -346,11 +339,11 @@ class Errors(metaclass = Singleton):
         self.add_error_info(info)
 
         if info.blocker:
-            if self._parser_stage == 'syntax':
+            if pyccel_stage == 'syntax':
                 raise PyccelSyntaxError(message)
-            elif self._parser_stage == 'semantic':
+            elif pyccel_stage == 'semantic':
                 raise PyccelSemanticError(message)
-            elif self._parser_stage == 'codegen':
+            elif pyccel_stage == 'codegen':
                 raise PyccelCodegenError(message)
             else:
                 raise PyccelError(message)
