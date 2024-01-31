@@ -34,7 +34,6 @@ __all__ = (
     'NativeSymbol',
     'NativeTuple',
     'NativeVoid',
-    'UnionType',
     'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
@@ -148,7 +147,7 @@ class NativeBool(DataType, metaclass=Singleton):
     Class representing a boolean datatype.
     """
     __slots__ = ()
-    _name = 'Bool'
+    _name = 'bool'
 
     @lru_cache
     def __add__(self, other):
@@ -164,7 +163,7 @@ class NativeInteger(DataType, metaclass=Singleton):
     Class representing an integer datatype.
     """
     __slots__ = ()
-    _name = 'Int'
+    _name = 'int'
 
     @lru_cache
     def __add__(self, other):
@@ -183,7 +182,7 @@ class NativeFloat(DataType, metaclass=Singleton):
     Class representing a float datatype.
     """
     __slots__ = ()
-    _name = 'Float'
+    _name = 'float'
 
     @lru_cache
     def __add__(self, other):
@@ -202,7 +201,7 @@ class NativeComplex(DataType, metaclass=Singleton):
     Class representing a complex datatype.
     """
     __slots__ = ()
-    _name = 'Complex'
+    _name = 'complex'
 
     @lru_cache
     def __add__(self, other):
@@ -221,7 +220,7 @@ class NativeString(DataType, metaclass=Singleton):
     Class representing a string datatype.
     """
     __slots__ = ()
-    _name = 'String'
+    _name = 'str'
 
     @lru_cache
     def __add__(self, other):
@@ -239,7 +238,7 @@ class NativeVoid(DataType, metaclass=Singleton):
     pointers from Fortran.
     """
     __slots__ = ()
-    _name = 'Void'
+    _name = 'void'
 
 class NativeTuple(DataType):
     """
@@ -256,7 +255,7 @@ class NativeTuple(DataType):
         Any keyword arguments required by the class.
     """
     __slots__ = ()
-    _name = 'Tuple'
+    _name = 'tuple'
 
     @lru_cache
     def __add__(self, other):
@@ -323,7 +322,7 @@ class NativeHomogeneousList(DataType, metaclass = Singleton):
     is a container type and should be used as the class_type.
     """
     __slots__ = ()
-    _name = 'List'
+    _name = 'list'
 
     @lru_cache
     def __add__(self, other):
@@ -413,22 +412,6 @@ default_precision = {Float : 8,
                      Int : numpy.dtype(int).alignment,
                      Cmplx : 8,
                      Bool : -1}
-
-class UnionType:
-    """ Class representing multiple different possible
-    datatypes for a function argument. If multiple
-    arguments have union types then the result is a
-    cross product of types
-    """
-    __slots__ = ('_args',)
-
-    def __init__(self, args):
-        self._args = args
-        super().__init__()
-
-    @property
-    def args(self):
-        return self._args
 
 
 def DataTypeFactory(name, argnames=["_name"],

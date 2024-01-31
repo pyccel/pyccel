@@ -372,11 +372,8 @@ class SyntaxParser(BasicParser):
         """
         if isinstance(annotation, (tuple, list)):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
-        if isinstance(annotation, (PyccelSymbol, DottedName)):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
-        elif isinstance(annotation, IndexedElement):
-            indices = [self._treat_type_annotation(stmt, i) for i in annotation.indices]
-            return SyntacticTypeAnnotation(dtypes=[IndexedElement(annotation.base, *indices)], ranks=[len(indices)], orders=[None], is_const=False)
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return SyntacticTypeAnnotation(dtype=annotation)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
@@ -384,7 +381,7 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
-            annot = self._build_annotation_from_textx(annotation, stmt)
+            annot = annotation.expr
             if isinstance(stmt, PyccelAstNode):
                 annot.set_current_ast(stmt.python_ast)
             else:
@@ -1054,7 +1051,7 @@ class SyntaxParser(BasicParser):
 
         local_symbols = self.scope.local_used_symbols
 
-        if result_annotation and not isinstance(result_annotation, tuple):
+        if result_annotation and not isinstance(result_annotation, (tuple, list)):
             result_annotation = [result_annotation]
 
         for i,r in enumerate(zip(*returns)):
@@ -1105,8 +1102,9 @@ class SyntaxParser(BasicParser):
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
+                visited_i.arguments[0].bound_argument = True
             elif isinstance(visited_i, Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+                continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
             elif isinstance(visited_i, CommentBlock):
@@ -1114,8 +1112,6 @@ class SyntaxParser(BasicParser):
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
-        for i in methods:
-            i.cls_name = name
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,

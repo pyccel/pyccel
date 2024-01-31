@@ -1,6 +1,5 @@
 # pylint: disable=missing-class-docstring, missing-function-docstring, missing-module-docstring
 # coding: utf-8
-import numpy as np
 
 class Point(object):
     def __init__(self : 'Point', x : 'float[:]'):
@@ -13,30 +12,18 @@ class Point(object):
     def translate(self : 'Point', a : 'float[:]'):
         self._x[:]   =  self._x + a
 
-    def print_x(self : 'Point'):
-        print(self._x)
+    def get_x(self : 'Point'):
+        return self._x[0]
 
-    def print_X(self : 'Point'):
-        print(self._X)
+    def get_X(self : 'Point'):
+        return self._X
 
 class Line(object):
     def __init__(self : 'Line', l : Point):
         self.l = l
         self.l._X = 11
-        print(self.l._X)
 
-        self.l.print_x()
+        self._x = self.l.get_x()
 
-if __name__ == '__main__':
-    x = np.array([0.,0.,0.])
-    p = Point(x)
-
-    a = np.array([1.,1.,1.])
-
-    p.translate(a)
-    p.print_x()
-    p.print_X()
-
-    p = Point(np.array([6.,6.,6.]))
-    p.translate(a)
-    p.print_x()
+    def get_x(self):
+        return self._x

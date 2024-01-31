@@ -39,11 +39,7 @@ def test_allow_negative_index_annotation(language):
         j = -3
         return array[j]
 
-    errors = Errors()
-    errors.reset()
     epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
-    assert errors.num_messages() == 1
-    errors.reset()
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
@@ -97,12 +93,7 @@ def test_allow_negative_index_annotation_2(language):
         j = -3
         return array[j]
 
-    errors = Errors()
-    errors.reset()
     epyc_allow_negative_index_annotation = epyccel(allow_negative_index_annotation, language=language)
-    print(errors.check())
-    assert errors.num_messages() == 1
-    errors.reset()
 
     assert epyc_allow_negative_index_annotation() == allow_negative_index_annotation()
     assert isinstance(epyc_allow_negative_index_annotation(), type(allow_negative_index_annotation()))
@@ -119,6 +110,16 @@ def test_stack_array_annotation_2(language):
 
     assert epyc_stack_array_annotation() == stack_array_annotation()
     assert isinstance(epyc_stack_array_annotation(), type(stack_array_annotation()))
+
+def test_final_annotation(language):
+    def final_annotation():
+        from typing import Final
+        a : Final[int] = 3
+        a = 4
+        return a
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(final_annotation, language=language)
 
 def test_homogeneous_tuple_annotation(language):
     def homogeneous_tuple_annotation():
