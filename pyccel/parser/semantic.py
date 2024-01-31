@@ -680,7 +680,6 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, TypedAstNode):
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
-            print("In TypedAstNode")
             return d_var
 
         else:
