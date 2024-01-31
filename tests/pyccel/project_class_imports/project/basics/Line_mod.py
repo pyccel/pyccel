@@ -1,3 +1,4 @@
+# pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
 from .Point_mod import Point
 
 class Line:
