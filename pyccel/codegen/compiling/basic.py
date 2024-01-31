@@ -245,7 +245,7 @@ class CompileObj:
         Parameters
         ----------
         *args : tuple of strs
-            The absolute path to a library
+            The absolute path to a library.
         """
         for a in args:
             if a.endswith('.a') or a.endswith('.so'):
