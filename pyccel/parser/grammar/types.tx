@@ -5,7 +5,7 @@ TypeHeader: FuncType|Type;
 
 Slice: ':';
 Ellipsis: '...';
-IndexType: Slice | Type;
+IndexType: Slice | Ellipsis | Type;
 Type: dtype=DataType (trailer=TrailerSubscriptList)?;
 TrailerSubscriptList: '[' args*=IndexType [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
