@@ -2273,9 +2273,6 @@ class SemanticParser(BasicParser):
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
-        if isinstance(var, type):
-            return self._get_indexed_type(var, args, expr)
-
         if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), NativeTuple)):
             args = args[0]
 
