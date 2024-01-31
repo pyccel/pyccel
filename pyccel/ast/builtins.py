@@ -1235,6 +1235,7 @@ builtin_functions_dict = {
     'bool'     : PythonBool,
     'sum'      : PythonSum,
     'len'      : PythonLen,
+    'list'     : PythonList,
     'max'      : PythonMax,
     'min'      : PythonMin,
     'not'      : PyccelNot,
