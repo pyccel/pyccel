@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #32 : add support for nvcc Compiler and `cuda` language as a possible option.
+-   #32 : add support for `nvcc` Compiler and `cuda` language as a possible option.
 
 ## \[UNRELEASED\]
 
