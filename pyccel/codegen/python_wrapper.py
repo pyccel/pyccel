@@ -7,6 +7,7 @@
 import os
 
 from pyccel.ast.core                        import ModuleHeader
+from pyccel.ast.cwrapper                    import PyModule
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
@@ -175,6 +176,13 @@ def create_shared_library(codegen,
 
     with open(wrapper_header_filename, 'w') as f:
         f.writelines(wrapper_header_code)
+
+    # Update compiler targets to link any dependent modules (for shared types)
+    py_suffix = wrapper_compiler.get_python_suffix()
+    for i in cwrap_ast.imports:
+        for t in i.target:
+            if isinstance(t.object, PyModule):
+                wrapper_compile_obj.add_libs(os.path.join(base_dirpath, t.object.original_module.name.name + py_suffix))
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
