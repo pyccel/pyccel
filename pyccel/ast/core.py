@@ -22,7 +22,7 @@ from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple
                         NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
                         NativeVoid)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -105,7 +105,6 @@ __all__ = (
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
-def apply(func, args, kwargs):return func(*args, **kwargs)
 
 
 class AsName(PyccelAstNode):
@@ -663,7 +662,7 @@ class CodeBlock(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(body = self.body)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
         """
@@ -2807,7 +2806,7 @@ class FunctionDef(ScopedAstNode):
            and its arguments.
         """
         args, kwargs = self.__getnewargs__()
-        out = (apply, (self.__class__, args, kwargs))
+        out = (apply_pickle, (self.__class__, args, kwargs))
         return out
 
 
@@ -4077,13 +4076,15 @@ class EmptyNode(PyccelAstNode):
 
 
 class Comment(PyccelAstNode):
+    """
+    Represents a Comment in the code.
 
-    """Represents a Comment in the code.
+    Represents a Comment in the code.
 
     Parameters
     ----------
     text : str
-       the comment line
+       The comment line.
 
     Examples
     --------
@@ -4124,7 +4125,7 @@ class Comment(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(text = self.text)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):
