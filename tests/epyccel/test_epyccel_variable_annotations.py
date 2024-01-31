@@ -123,7 +123,8 @@ def test_final_annotation(language):
 
 def test_homogeneous_tuple_annotation(language):
     def homogeneous_tuple_annotation():
-        a : tuple[int, ...]
+        # Not valid in Python 3.8
+        a : tuple[int, ...] #pylint: disable=unsubscriptable-object
         a = (1,2,3)
         return a[0], a[1], a[2]
 
@@ -134,7 +135,8 @@ def test_homogeneous_tuple_annotation(language):
 
 def test_homogeneous_tuple_2_annotation(language):
     def homogeneous_tuple_annotation():
-        a : tuple[tuple[int, ...], ...]
+        # Not valid in Python 3.8
+        a : tuple[tuple[int, ...], ...] #pylint: disable=unsubscriptable-object
         a = ((1,2,3), (4,5,6))
         return a[0][0], a[1][0], a[0][2]
 
