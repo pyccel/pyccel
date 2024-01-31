@@ -1147,8 +1147,6 @@ def test_class_imports(language):
 
     test_file = get_abs_path('project_class_imports/runtest.py')
 
-    rel_test_dir = os.path.dirname(test_file)
-
     pyth_out = get_python_output(test_file, cwd)
 
     compile_file = get_abs_path('project_class_imports/project/basics/Point_mod.py')
