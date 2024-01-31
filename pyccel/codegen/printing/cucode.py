@@ -90,12 +90,9 @@ class CudaCodePrinter(CCodePrinter):
                     {local_imports}\
                     }}'
 
-        code = ('{imports}\n'
-                '{variables}\n'
-                '{body}\n').format(
-                        imports   = imports,
-                        variables = global_variables,
-                        body      = body)
+        code = f'{imports}\n\
+                 {global_variables}\n\
+                 {body}\n'
 
         self.exit_scope()
         return code

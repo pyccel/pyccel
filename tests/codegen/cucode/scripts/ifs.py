@@ -4,6 +4,7 @@ x = 0
 y = 0
 z = 3
 
+# pylint: disable-next=comparison-of-constants
 if 1<0:
     x=4
 
@@ -18,9 +19,11 @@ if x>2 or y<=1:
     x = x-1
     y = y-1
 
+# pylint: disable-next=using-constant-test
 if True:
     x = 5
 
+# pylint: disable-next=using-constant-test
 if False:
     y = 0
 
