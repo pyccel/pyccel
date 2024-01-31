@@ -1514,6 +1514,24 @@ class CToPythonWrapper(Wrapper):
         return wrapped_class
 
     def _wrap_Import(self, expr):
+        """
+        Examine an Import statement and collect any relevant objects.
+
+        Examine an Import statement used in the module being wrapped. If it imports a class
+        from a module then a PyClassDef is added to the scope imports to ensure that its
+        description is available for functions wishing to use this type for an argument
+        or return value.
+
+        Parameters
+        ----------
+        expr : Import
+            The import found in the module being wrapped.
+
+        Returns
+        -------
+        Import | None
+            The import needed in the wrapper, or None if none is necessary.
+        """
         # Imports do not use collision handling as there is not enough context available.
         # This should be fixed when stub files and proper pickling is added
         import_wrapper = False
