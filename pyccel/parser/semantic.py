@@ -989,7 +989,7 @@ class SemanticParser(BasicParser):
         func : FunctionDef instance, Interface instance or PyccelInternalFunction type
                The function being called.
 
-        args : tuple
+        args : list
                The arguments passed to the function.
 
         is_method : bool
