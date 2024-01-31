@@ -245,6 +245,35 @@ class CWrapperCodePrinter(CCodePrinter):
             var = f'(PyObject*) {var}'
         return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
+    def _print_ModuleHeader(self, expr):
+        mod = expr.module
+        name = mod.name
+        imports  = module_imports.copy()
+        imports  = ''.join(self._print(i) for i in imports)
+
+        function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
+
+        classes = []
+        for c in mod.classes:
+            struct_name = c.struct_name
+            attributes = ''.join(self._print(Declare(a.dtype, a)) for a in c.attributes)
+            classes.append(f"struct {struct_name} {{\n"
+                    "    PyObject_HEAD\n"
+                    + attributes +
+                    "};\n")
+            sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
+                          tuple(i.interface_func for i in c.interfaces)
+            function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
+
+        class_code = '\n'.join(classes)
+
+        return (f"#ifndef {name.upper()}_H\n \
+                #define {name.upper()}_H\n\n \
+                {imports}\n \
+                {class_code}\n \
+                {function_signatures}\n \
+                #endif // {name}_H\n")
+
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
@@ -263,8 +292,6 @@ class CWrapperCodePrinter(CCodePrinter):
 
         self._module_name  = self.get_python_name(scope, expr)
         sep = self._print(SeparatorComment(40))
-
-        function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in expr.external_funcs)
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
         funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
@@ -325,14 +352,15 @@ class CWrapperCodePrinter(CCodePrinter):
         # Print imports last to be sure that all additional_imports have been collected
         for i in expr.imports:
             self.add_import(i)
-        imports  = module_imports.copy()
-        imports += self._additional_imports.values()
+
+        pymod_name = f'{expr.name}_wrapper'
+        imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
         imports  = ''.join(self._print(i) for i in imports)
 
         self.exit_scope()
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
-                imports, decs, function_signatures, sep, class_defs, sep,
+                imports, decs, sep, class_defs, sep,
                 function_defs, exec_func, sep, method_def, sep, slots_def, sep,
                 module_def, sep, init_func])
 
@@ -342,18 +370,10 @@ class CWrapperCodePrinter(CCodePrinter):
         name = self.scope.get_python_name(expr.name)
         docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
                     if expr.docstring else '""'
-        attributes = ''.join(self._print(Declare(a.dtype, a)) for a in expr.attributes)
-        class_code = (f"struct {struct_name} {{\n"
-                "    PyObject_HEAD\n"
-                + attributes +
-                "};\n")
 
         original_scope = expr.original_class.scope
         print_methods = expr.methods + (expr.new_func,) + expr.interfaces
         functions = '\n'.join(self._print(f) for f in print_methods)
-        sig_methods = expr.methods + (expr.new_func,) + tuple(f for i in expr.interfaces for f in i.functions) + \
-                      tuple(i.interface_func for i in expr.interfaces)
-        function_sigs = ''.join(self.function_signature(f)+';\n' for f in sig_methods)
         init_string = ''
         del_string = ''
         funcs = {}
@@ -400,7 +420,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_methods = {method_def_name},\n"
                 "};\n")
 
-        return class_code + '\n' + function_sigs + '\n' + method_def + '\n' + type_code + '\n' + functions
+        return method_def + '\n' + type_code + '\n' + functions
 
     def _print_Allocate(self, expr):
         variable = expr.variable

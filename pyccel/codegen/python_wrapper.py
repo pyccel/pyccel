@@ -6,6 +6,7 @@
 
 import os
 
+from pyccel.ast.core                        import ModuleHeader
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
@@ -104,6 +105,7 @@ def create_shared_library(codegen,
         sharedlib_modname = module_name
 
     wrapper_filename_root = '{}_wrapper'.format(module_name)
+    wrapper_header_filename = '{}.h'.format(wrapper_filename_root)
     wrapper_filename = '{}.c'.format(wrapper_filename_root)
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
@@ -168,6 +170,11 @@ def create_shared_library(codegen,
 
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
+
+    wrapper_header_code = wrapper_codegen.doprint(ModuleHeader(cwrap_ast))
+
+    with open(wrapper_header_filename, 'w') as f:
+        f.writelines(wrapper_header_code)
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
