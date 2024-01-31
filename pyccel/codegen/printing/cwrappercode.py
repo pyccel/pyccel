@@ -15,6 +15,7 @@ from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
+from pyccel.ast.variable   import Variable
 
 from pyccel.errors.errors  import Errors
 
@@ -85,7 +86,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, (PyccelPyObject, PyccelPyTypeObject, WrapperCustomDataType)):
+        if isinstance(a.dtype, (PyccelPyObject, WrapperCustomDataType)):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -256,6 +257,7 @@ class CWrapperCodePrinter(CCodePrinter):
         function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
 
         classes = []
+        decs = []
         for c in mod.classes:
             struct_name = c.struct_name
             attributes = ''.join(self._print(Declare(a.dtype, a)) for a in c.attributes)
@@ -263,9 +265,12 @@ class CWrapperCodePrinter(CCodePrinter):
                     "    PyObject_HEAD\n"
                     + attributes +
                     "};\n")
+            decs.append(Declare(PyccelPyTypeObject(), Variable(PyccelPyTypeObject(), c.type_name), external = True))
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces)
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
+
+        type_declarations = ''.join(self._print(d) for d in decs)
 
         class_code = '\n'.join(classes)
 
@@ -273,6 +278,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 #define {name.upper()}_WRAPPER_H\n\n \
                 {imports}\n \
                 {class_code}\n \
+                {type_declarations}\n \
                 {function_signatures}\n \
                 #endif // {name}_WRAPPER_H\n")
 
@@ -406,7 +412,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        type_code = (f"static PyTypeObject {type_name} = {{\n"
+        type_code = (f"PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
