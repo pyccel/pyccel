@@ -7,5 +7,18 @@ class Square:
         self.c = c
         self.d = d
 
-    def get_corners(self):
-        return self.a.get_val(), self.b.get_val(), self.c.get_val(), self.d.get_val()
+    def get_corner_1(self):
+        x,y = self.a.get_val()
+        return x,y
+
+    def get_corner_2(self):
+        x,y = self.b.get_val()
+        return x,y
+
+    def get_corner_3(self):
+        x,y = self.c.get_val()
+        return x,y
+
+    def get_corner_4(self):
+        x,y = self.d.get_val()
+        return x,y

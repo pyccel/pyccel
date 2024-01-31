@@ -6,7 +6,9 @@ class Line:
         self.end = end
 
     def get_start(self):
-        return self.start.get_val()
+        x,y = self.start.get_val()
+        return x,y
 
     def get_end(self):
-        return self.end.get_val()
+        x,y = self.end.get_val()
+        return x,y
