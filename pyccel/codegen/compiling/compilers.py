@@ -304,7 +304,7 @@ class Compiler:
 
         # Get libraries and library directories
         libs = self._get_libs(compile_obj.libs, accelerators)
-        libs_flags = [s if s.startswith('-l') else f'-l{s}' for s in libs]
+        libs_flags = [s if s.startswith('-l') or s.endswith('.so') or s.endswith('.a') else f'-l{s}' for s in libs]
         libdirs = self._get_libdirs(compile_obj.libdirs, accelerators)
         libdirs_flags = self._insert_prefix_to_list(libdirs, '-L')
 
@@ -522,3 +522,16 @@ class Compiler:
         with open(compiler_export_file,'w', encoding="utf-8") as out_file:
             print(json.dumps(self._info, indent=4),
                     file=out_file)
+
+    def get_python_suffix(self):
+        """
+        Get the suffix which would appear on a Python shared library.
+
+        Get the suffix which would appear on a Python shared library.
+
+        Returns
+        -------
+        str
+            The suffix which would appear on a Python shared library.
+        """
+        return self._info['python']['shared_suffix']
