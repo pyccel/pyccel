@@ -248,7 +248,9 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_ModuleHeader(self, expr):
         mod = expr.module
         name = mod.name
-        imports  = module_imports.copy()
+
+        # Print imports last to be sure that all additional_imports have been collected
+        imports  = [*module_imports, *mod.imports]
         imports  = ''.join(self._print(i) for i in imports)
 
         function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
@@ -267,12 +269,12 @@ class CWrapperCodePrinter(CCodePrinter):
 
         class_code = '\n'.join(classes)
 
-        return (f"#ifndef {name.upper()}_H\n \
-                #define {name.upper()}_H\n\n \
+        return (f"#ifndef {name.upper()}_WRAPPER_H\n \
+                #define {name.upper()}_WRAPPER_H\n\n \
                 {imports}\n \
                 {class_code}\n \
                 {function_signatures}\n \
-                #endif // {name}_H\n")
+                #endif // {name}_WRAPPER_H\n")
 
     def _print_PyModule(self, expr):
         scope = expr.scope
@@ -348,10 +350,6 @@ class CWrapperCodePrinter(CCodePrinter):
                 'import_array();\n'
                 f'return PyModuleDef_Init(&{module_def_name});\n'
                 '}\n')
-
-        # Print imports last to be sure that all additional_imports have been collected
-        for i in expr.imports:
-            self.add_import(i)
 
         pymod_name = f'{expr.name}_wrapper'
         imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
