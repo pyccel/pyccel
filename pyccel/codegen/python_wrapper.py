@@ -183,7 +183,7 @@ def create_shared_library(codegen,
     for i in cwrap_ast.imports:
         for t in i.target:
             if isinstance(t.object, PyModule):
-                name = str(i.source).rstrip('_wrapper')
+                name = str(i.source)[:-8] # Remove '_wrapper'
                 source_file = get_filename_from_import(name, input_folder=base_dirpath)
                 base,_ = os.path.splitext(source_file)
                 try:
