@@ -17,6 +17,7 @@ from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.naming                 import name_clash_checkers
+from pyccel.parser.base            import get_filename_from_import
 from pyccel.parser.scope           import Scope
 from pyccel.utilities.stage        import PyccelStage
 from .compiling.basic     import CompileObj
@@ -182,7 +183,14 @@ def create_shared_library(codegen,
     for i in cwrap_ast.imports:
         for t in i.target:
             if isinstance(t.object, PyModule):
-                wrapper_compile_obj.add_libs(os.path.join(base_dirpath, t.object.original_module.name.name + py_suffix))
+                name = str(i.source).rstrip('_wrapper')
+                source_file = get_filename_from_import(name, input_folder=base_dirpath)
+                base,_ = os.path.splitext(source_file)
+                try:
+                    wrapper_compile_obj.add_libs(base + py_suffix)
+                except AssertionError:
+                    errors.report(f"Can't link to file {source_file} which does not seem to have been pyccelised.",
+                            severity='fatal')
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
