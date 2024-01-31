@@ -782,7 +782,7 @@ class CToPythonWrapper(Wrapper):
         original_mod = getattr(expr, 'original_module', expr)
         return PyModule(original_mod.name, [], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = exec_func)
+                        init_func = exec_func, original_module = original_mod)
 
     def _wrap_BindCModule(self, expr):
         """
@@ -1532,6 +1532,6 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            return Import(wrapper_name, Module(wrapper_name,(), ()))
+            return Import(wrapper_name, PyModule(wrapper_name, (), (), original_module = expr.source_module))
         else:
             return None

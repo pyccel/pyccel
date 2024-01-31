@@ -347,6 +347,9 @@ class PyModule(Module):
     *args : tuple
         See Module.
 
+    original_module : Module
+        The module being wrapped.
+
     external_funcs : iterable of FunctionDef
         A list of external functions.
 
@@ -363,14 +366,16 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
-    def __init__(self, *args, external_funcs = (), declarations = (), init_func = None, **kwargs):
+    __slots__ = ('_external_funcs', '_declarations', '_original_module')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_original_module')
+    def __init__(self, *args, original_module, external_funcs = (), declarations = (), init_func = None, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
+        self._original_module = original_module
         super().__init__(*args, **kwargs)
         self._init_func = init_func
-        init_func.set_current_user_node(self)
+        if init_func:
+            init_func.set_current_user_node(self)
 
     @property
     def external_funcs(self):
@@ -409,6 +414,16 @@ class PyModule(Module):
         self._declarations = decs
         for d in decs:
             d.set_current_user_node(self)
+
+    @property
+    def original_module(self):
+        """
+        The module which is wrapped by this PyFunctionDef.
+
+        The module which would be printed in pure C/Fortran which is not
+        compatible with Python.
+        """
+        return self._original_module
 
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
