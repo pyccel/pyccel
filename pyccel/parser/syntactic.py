@@ -63,7 +63,6 @@ from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
-from pyccel.ast.type_annotations import FunctionTypeAnnotation
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
