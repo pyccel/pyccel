@@ -288,8 +288,6 @@ class SyntaxParser(BasicParser):
             return annot
         elif annotation is Nil():
             return None
-        elif annotation is LiteralEllipsis():
-            return annotation
         elif isinstance(annotation, PyccelBitOr):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation.args])
         else:
