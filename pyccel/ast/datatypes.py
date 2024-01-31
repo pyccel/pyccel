@@ -34,7 +34,6 @@ __all__ = (
     'NativeSymbol',
     'NativeTuple',
     'NativeVoid',
-    'UnionType',
     'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
@@ -413,22 +412,6 @@ default_precision = {Float : 8,
                      Int : numpy.dtype(int).alignment,
                      Cmplx : 8,
                      Bool : -1}
-
-class UnionType:
-    """ Class representing multiple different possible
-    datatypes for a function argument. If multiple
-    arguments have union types then the result is a
-    cross product of types
-    """
-    __slots__ = ('_args',)
-
-    def __init__(self, args):
-        self._args = args
-        super().__init__()
-
-    @property
-    def args(self):
-        return self._args
 
 
 def DataTypeFactory(name, argnames=["_name"],

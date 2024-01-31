@@ -7,7 +7,8 @@ import warnings
 
 from pyccel.decorators import __all__ as pyccel_decorators
 
-from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType
+from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
+from pyccel.ast.builtins   import PythonComplex
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
 from pyccel.ast.datatypes  import NativeHomogeneousTuple
@@ -178,7 +179,7 @@ class PythonCodePrinter(CodePrinter):
             cls = type(expr)
         type_name = expr.name
         name = self._aliases.get(cls, type_name)
-        if name == type_name:
+        if name == type_name and cls not in (PythonBool, PythonInt, PythonFloat, PythonComplex):
             self.insert_new_import(
                     source = 'numpy',
                     target = AsName(cls, name))
@@ -250,7 +251,7 @@ class PythonCodePrinter(CodePrinter):
         default = ''
 
         if expr.annotation:
-            type_annotation = self._print(expr.annotation)
+            type_annotation = f"'{self._print(expr.annotation)}'"
         else:
             var = expr.var
             def get_type_annotation(var):
@@ -291,7 +292,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if isinstance(expr.base.class_type, NativeHomogeneousTuple):
+            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, NativeHomogeneousTuple):
                 indices = ']['.join(i for i in indices)
             else:
                 indices = ','.join(i for i in indices)
@@ -1119,20 +1120,21 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_UnionTypeAnnotation(self, expr):
         types = [self._print(t)[1:-1] for t in expr.type_list]
-        return "'" + ' | '.join(types) + "'"
+        return ' | '.join(types)
 
     def _print_SyntacticTypeAnnotation(self, expr):
-        dtypes = expr.dtypes
-        ranks = [f"[{','.join(':'*r)}]" if r>0 else '' for r in expr.ranks]
-        order = [f"(order={o})" if o else '' for o in expr.orders]
-        annot = [f'{d}{r}{o}' for d,r,o in zip(dtypes, ranks, order)]
-        const = 'const ' if expr.is_const else ''
-        return "'" + const + ' | '.join(annot) + "'"
+        dtype = self._print(expr.dtype)
+        order = f"(order={expr.order})" if expr.order else ''
+        return f'{dtype}{order}'
 
     def _print_FunctionTypeAnnotation(self, expr):
         args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
-        return "'" + f"({results})({args})" + "'"
+        return f"({results})({args})"
+
+    def _print_TypingFinal(self, expr):
+        annotation = self._print(expr.arg)
+        return f'const {annotation}'
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):

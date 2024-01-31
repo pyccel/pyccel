@@ -30,6 +30,7 @@ from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
+from .typingext     import typing_mod
 from .variable      import (Variable, IndexedElement, InhomogeneousTupleVariable )
 
 from .c_concepts import ObjectAddress
@@ -87,6 +88,7 @@ builtin_import_registry = Module('__main__',
             Import('math', math_mod),
             Import('pyccel', pyccel_mod),
             Import('sys', sys_mod),
+            Import('typing', typing_mod)
             ])
 if sys.version_info < (3, 10):
     from .builtin_imports import python_builtin_libs
