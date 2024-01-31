@@ -23,7 +23,7 @@ from sympy import ceiling
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -1790,48 +1790,27 @@ class SemanticParser(BasicParser):
                 prec = default_precision[dtype]
             return VariableTypeAnnotation(dtype, class_type, prec, rank)
 
-        raise errors.report("Unrecognised type slice",
-                severity='fatal', symbol=expr)
-
-    def _get_indexed_type(self, base, args, expr):
-        """
-        Extract a type annotation from an IndexedElement.
-
-        Extract a type annotation from an IndexedElement. This may be a type indexed with
-        slices (indicating a NumPy array), or a class type such as tuple/list/etc which is
-        indexed with the datatype.
-
-        Parameters
-        ----------
-        base : type deriving from PyccelAstNode
-            The object being indexed.
-
-        args : tuple of PyccelAstNode
-            The indices being used to access the base.
-
-        expr : PyccelAstNode
-            The annotation, used for error printing.
-
-        Returns
-        -------
-        UnionTypeAnnotation
-            The type annotation described by this object.
-        """
-        if all(isinstance(a, Slice) for a in args):
-            rank = len(args)
-            return self._PyccelAstNode_to_TypeAnnotation(base, rank)
-        elif not any(isinstance(a, Slice) for a in args):
+        if not any(isinstance(a, Slice) for a in args):
+            if isinstance(base, PyccelFunctionDef):
+                dtype_cls = base.cls_name
+            else:
+                raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='fatal', symbol=expr)
             rank = 1
             if len(args) == 2 and args[1] is LiteralEllipsis():
-                internal_datatypes = args[0]
+                syntactic_annotation = args[0]
+                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
-                if base is PythonTuple:
+                if dtype_cls is PythonTupleFunction:
                     class_type = NativeHomogeneousTuple()
-                elif base is PythonList:
+                elif dtype_cls is PythonList:
                     class_type = NativeHomogeneousList()
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
+                print(internal_datatypes, type(internal_datatypes))
                 for u in internal_datatypes.type_list:
                     rank = u.rank+1
                     order = None if rank == 1 else 'C'
@@ -1841,9 +1820,9 @@ class SemanticParser(BasicParser):
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
                         severity='fatal', symbol=expr)
-        else:
-            raise errors.report("Unrecognised type slice",
-                    severity='fatal', symbol=expr)
+
+        raise errors.report("Unrecognised type slice",
+                severity='fatal', symbol=expr)
 
 
     #====================================================
@@ -2817,8 +2796,9 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
+            dtype = method.arguments[0].var.class_type
             cls_def = method.arguments[0].var.cls_base
-            d_var = {'datatype': method.arguments[0].var.class_type,
+            d_var = {'datatype': dtype,
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
