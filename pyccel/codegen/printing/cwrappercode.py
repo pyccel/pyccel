@@ -252,6 +252,8 @@ class CWrapperCodePrinter(CCodePrinter):
 
         # Print imports last to be sure that all additional_imports have been collected
         imports  = [*module_imports, *mod.imports]
+        for i in imports:
+            self.add_import(i)
         imports  = ''.join(self._print(i) for i in imports)
 
         function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
