@@ -11,7 +11,7 @@ from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.c_concepts import CStackArray
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
-from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New
+from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil
@@ -24,11 +24,7 @@ __all__ = ("CWrapperCodePrinter", "cwrappercode")
 
 errors = Errors()
 
-module_imports = [Import('numpy_version', Module('numpy_version',(),())),
-            Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
-            Import('cwrapper', Module('cwrapper',(),()))]
-
-cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+module_imports = [Import('cwrapper', Module('cwrapper',(),()))]
 
 
 class CWrapperCodePrinter(CCodePrinter):
@@ -89,7 +85,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyModule_Create)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -252,6 +248,9 @@ class CWrapperCodePrinter(CCodePrinter):
         var  = self._print(expr.API_var)
         return f'PyCapsule_New((void *){var}, "{name}", NULL)'
 
+    def _print_PyModule_Create(self, expr):
+        return f'PyModule_Create(&{expr.module_def_name})'
+
     def _print_ModuleHeader(self, expr):
         mod = expr.module
         name = mod.name
@@ -359,10 +358,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         exec_func = self._print(expr.init_func)
 
-        init_func = (f'PyMODINIT_FUNC PyInit_{self._module_name}(void)\n{{\n'
-                'import_array();\n'
-                f'return PyModuleDef_Init(&{module_def_name});\n'
-                '}\n')
+        init_func = self._print(expr.import_func)
 
         pymod_name = f'{expr.name}_wrapper'
         imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
@@ -434,6 +430,14 @@ class CWrapperCodePrinter(CCodePrinter):
 
         return method_def + '\n' + type_code + '\n' + functions
 
+    def _print_PyModInitFunc(self, expr):
+        decs = ''.join(self._print(d) for d in expr.declarations)
+        body = self._print(expr.body)
+        return ''.join([f'PyMODINIT_FUNC {expr.name}(void)\n{{\n',
+                *decs,
+                *body,
+                '}\n'])
+
     def _print_Allocate(self, expr):
         variable = expr.variable
         if isinstance(variable.dtype, WrapperCustomDataType):
@@ -464,12 +468,13 @@ class CWrapperCodePrinter(CCodePrinter):
             if isinstance(var.dtype, (PyccelPyObject, WrapperCustomDataType, BindCPointer)):
                 declaration_type = f'{declaration_type}*'
 
+            static = 'static ' if expr.static else ''
             external = 'extern ' if expr.external else ''
             size = var.shape[0]
 
             variable = self._print(expr.variable.name)
 
-            declaration = f'{external}{declaration_type} {variable}[{size}];\n'
+            declaration = f'{static}{external}{declaration_type} {variable}[{size}];\n'
 
             return declaration
         else:

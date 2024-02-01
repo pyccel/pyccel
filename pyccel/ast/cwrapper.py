@@ -13,15 +13,17 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode
+from .basic     import PyccelAstNode, ScopedAstNode
+
+from .bind_c    import BindCPointer
 
 from .datatypes import DataType, default_precision, CustomDataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeVoid
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionDef, ClassDef
-from .core      import Module, Interface
+from .core      import FunctionDef, ClassDef, CodeBlock
+from .core      import Module, Interface, Declare
 
 from .internals import get_final_precision, PyccelInternalFunction
 
@@ -332,6 +334,25 @@ class PyModule_AddObject(PyccelInternalFunction):
         return self._var
 
 #-------------------------------------------------------------------
+class PyModule_Create(PyccelInternalFunction):
+    __slots__ = ('_module_def_name',)
+    _attribute_nodes = ()
+    _dtype = PyccelPyObject()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = PyccelPyObject()
+
+    def __init__(self, module_def_name):
+        self._module_def_name = module_def_name
+        super().__init__()
+
+    @property
+    def module_def_name(self):
+        return self._module_def_name
+
+#-------------------------------------------------------------------
 class PyCapsule_New(PyccelInternalFunction):
     __slots__ = ('_name', '_API_var')
     _attribute_nodes = ('_API_var',)
@@ -356,6 +377,25 @@ class PyCapsule_New(PyccelInternalFunction):
         return self._API_var
 
 #-------------------------------------------------------------------
+class PyCapsule_Import(PyccelInternalFunction):
+    __slots__ = ('_name',)
+    _attribute_nodes = ()
+    _dtype = BindCPointer()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = BindCPointer()
+
+    def __init__(self, module_name):
+        self._name = f'{module_name}._C_API'
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
+
+#-------------------------------------------------------------------
 class PyModule(Module):
     """
     Class to hold a module which is accessible from Python.
@@ -368,6 +408,9 @@ class PyModule(Module):
 
     Parameters
     ----------
+    name : str
+        Name of the module.
+
     *args : tuple
         See Module.
 
@@ -377,8 +420,20 @@ class PyModule(Module):
     declarations : iterable
         Any declarations of (external) variables which should be made in the module.
 
+    exe_func : FunctionDef, optional
+        The function which is executed when a module is executed.
+        This is equivalent to executing the code of a Python module: typically,
+        this function adds classes and constants to the module.
+        See: https://docs.python.org/3/c-api/module.html#c.Py_mod_exec.
+
     init_func : FunctionDef, optional
-        A definition of the initialisation function.
+        The function which is executed when a module is initialised.
+        See: https://docs.python.org/3/c-api/module.html#multi-phase-initialization.
+
+    import_func : FunctionDef, optional
+        The function which allows types from this module to be imported in other
+        modules.
+        See: https://docs.python.org/3/extending/extending.html.
 
     **kwargs : dict
         See Module.
@@ -387,12 +442,19 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
-    def __init__(self, *args, external_funcs = (), declarations = (), init_func = None, **kwargs):
+    __slots__ = ('_external_funcs', '_declarations', '_import_func', '_exe_func')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func', '_exe_func')
+
+    def __init__(self, name, *args, external_funcs = (), declarations = (), exe_func = None, init_func = None,
+                        import_func = None, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
-        super().__init__(*args, **kwargs)
+        self._exe_func = exe_func
+        if import_func is None:
+            self._import_func = FunctionDef(f'{name}_import', (), (), ())
+        else:
+            self._import_func = import_func
+        super().__init__(name, *args, **kwargs)
         self._init_func = init_func
         if init_func:
             init_func.set_current_user_node(self)
@@ -434,6 +496,34 @@ class PyModule(Module):
         self._declarations = decs
         for d in decs:
             d.set_current_user_node(self)
+
+    @property
+    def import_func(self):
+        """
+        The function which allows types from this module to be imported in other modules.
+
+        The function which allows types from this module to be imported in other modules.
+
+        See Also
+        --------
+        https://docs.python.org/3/extending/extending.html
+        """
+        return self._import_func
+
+    @property
+    def exe_func(self):
+        """
+        Get the function which is executed when a module is executed.
+
+        The function which is executed when a module is executed.
+        This is equivalent to executing the code of a Python module: typically,
+        this function adds classes and constants to the module.
+
+        See Also
+        --------
+        https://docs.python.org/3/c-api/module.html#c.Py_mod_exec
+        """
+        return self._exe_func
 
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
@@ -660,6 +750,33 @@ class PyClassDef(ClassDef):
         Get the wrapper for `__new__` which allocates the memory for the class instance.
         """
         return self._new_func
+
+#-------------------------------------------------------------------
+class PyModInitFunc(ScopedAstNode):
+    __slots__ = ('_name', '_body', '_static_vars')
+    _attribute_nodes = ('_body',)
+
+    def __init__(self, name, body, static_vars, scope):
+        self._name = name
+        self._body = CodeBlock(body)
+        self._static_vars = static_vars
+        super().__init__(scope)
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def declarations(self):
+        """ Returns the declarations of the variables
+        """
+        return [Declare(v.dtype, v, static=(v in self._static_vars)) \
+                for v in self.scope.variables.values()]
+
+    @property
+    def body(self):
+        return self._body
+
 
 #-------------------------------------------------------------------
 #                      Python.h Constants

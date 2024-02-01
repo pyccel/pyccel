@@ -18,8 +18,8 @@ from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionD
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef
-from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
-from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
+from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
+from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
@@ -31,12 +31,12 @@ from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, 
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
-from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq
+from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
@@ -46,7 +46,9 @@ from .wrapper                 import Wrapper
 
 errors = Errors()
 
-cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+cwrapper_ndarray_imports = [Import('numpy_version', Module('numpy_version',(),())),
+                            Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+                            Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
 
 class CToPythonWrapper(Wrapper):
     """
@@ -478,11 +480,6 @@ class CToPythonWrapper(Wrapper):
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         result_var = self.scope.get_temporary_variable('int', precision=4)
-        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
-                                    class_type = CStackArray(), cls_base = StackArrayClass)
-        self.scope.insert_variable(API_var)
-        capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
         # Call the initialisation function
         if expr.init_func:
@@ -490,35 +487,21 @@ class CToPythonWrapper(Wrapper):
         else:
             body = []
 
-        class_construction_body = []
-
         # Save classes to the module variable
         for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
             class_name = wrapped_class.name
 
-            API_elem = IndexedElement(API_var, i)
-            body.append(AliasAssign(API_elem, PointerCast(ObjectAddress(type_object), API_elem)))
-
             ready_type = FunctionCall(PyType_Ready, (type_object,))
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
                             [Return([self._error_exit_code])]))
-            class_construction_body.append(if_expr)
-            class_construction_body.append(FunctionCall(Py_INCREF, (type_object,)))
+            body.append(if_expr)
+            body.append(FunctionCall(Py_INCREF, (type_object,)))
             add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
             if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
                             [Return([self._error_exit_code])]))
-            class_construction_body.append(if_expr)
-
-        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
-        add_expr = PyModule_AddObject(module_var, LiteralString('_C_API'), capsule_obj)
-        if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                        [FunctionCall(Py_XDECREF, [capsule_obj]),
-                         FunctionCall(Py_DECREF, [module_var]),
-                         Return([self._error_exit_code])]))
-        body.append(if_expr)
-        body.extend(class_construction_body)
+            body.append(if_expr)
 
         # Save module variables to the module variable
         for v in expr.variables:
@@ -540,6 +523,67 @@ class CToPythonWrapper(Wrapper):
 
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
+
+    def _build_module_init_function(self, expr):
+        """
+        Build the function that will be called when the module is first imported.
+
+        Build the function that will be called when the module is first imported.
+        This function must call any initialisation function of the underlying
+        module and must add any variables to the module variable.
+
+        Parameters
+        ----------
+        expr : Module
+            The module of interest.
+
+        Returns
+        -------
+        PyModInitFunc
+            The initialisation function.
+        """
+        mod_name = getattr(expr, 'original_module', expr).name
+        # Initialise the scope
+        func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        n_classes = len(expr.classes)
+
+        # Create necessary variables
+        module_var = self.get_new_PyObject("mod")
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
+                                    class_type = CStackArray(), cls_base = StackArrayClass)
+        self.scope.insert_variable(API_var)
+        capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
+
+        module_def_name = self.scope.get_new_name(f'{mod_name}_module')
+        body = [AliasAssign(module_var, PyModule_Create(module_def_name)),
+                If(IfSection(PyccelIs(module_var, Nil()), [Return([self._error_exit_code])]))]
+
+        # Save classes to the module variable
+        for i,c in enumerate(expr.classes):
+            wrapped_class = self._python_object_map[c]
+            type_object = wrapped_class.type_object
+
+            API_elem = IndexedElement(API_var, i)
+            body.append(AliasAssign(API_elem, PointerCast(ObjectAddress(type_object), API_elem)))
+
+        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
+        add_expr = PyModule_AddObject(module_var, LiteralString('_C_API'), capsule_obj)
+        if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                        [FunctionCall(Py_XDECREF, [capsule_obj]),
+                         FunctionCall(Py_DECREF, [module_var]),
+                         Return([self._error_exit_code])]))
+        body.append(if_expr)
+        if self._wrapping_arrays:
+            body.append(FunctionCall(import_array, ()))
+        body.append(Return([module_var]))
+
+        self.exit_scope()
+
+        return PyModInitFunc(func_name, body, [API_var], func_scope)
 
     def _get_class_allocator(self, class_dtype, func = None):
         """
@@ -801,15 +845,17 @@ class CToPythonWrapper(Wrapper):
 
         exec_func = self._build_module_exec_function(expr)
 
+        init_func = self._build_module_init_function(expr)
+
         self.exit_scope()
 
-        imports += [cwrapper_ndarray_import] if self._wrapping_arrays else []
+        imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
         return PyModule(original_mod.name, [], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = exec_func)
+                        init_func = exec_func, import_func = init_func)
 
     def _wrap_BindCModule(self, expr):
         """
