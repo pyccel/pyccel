@@ -66,7 +66,7 @@ jobs:
         run: |
           pip install jwt requests
           python ci_tools/setup_check_run.py windows
-       Uncomment to examine DLL requirements with 'objdump -x FILE'
+      # Uncomment to examine DLL requirements with 'objdump -x FILE'
       - name: Install mingw tools
         uses: msys2/setup-msys2@v2
       - name: Install dependencies
@@ -78,10 +78,11 @@ jobs:
         shell: bash
       - name: Test
         run: |
-          pyccel project/basics/Point_mod.py --language='c' --verbose
+          pyccel project/basics/Point_mod.py --language=c --verbose
           ls project/basics/__pyccel__
           objdump -x project/basics/Point_mod*.pyd
-          pyccel project/basics/Line_mod.py --language='c' --verbose
+          pyccel project/basics/Line_mod.py --language=c --verbose
+        shell: bash
         working-directory: ./tests/pyccel/project_class_imports
       #- name: Fortran/C tests with pytest
       #  id: f_c_pytest
