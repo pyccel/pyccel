@@ -1150,25 +1150,25 @@ def test_class_imports(language):
     pyth_out = get_python_output(test_file, cwd)
 
     compile_file = get_abs_path('project_class_imports/project/basics/Point_mod.py')
-    compile_pyccel(cwd, compile_file, f"--language={language}")
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
 
     out1 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out1, float, 'python')
 
     compile_file = get_abs_path('project_class_imports/project/basics/Line_mod.py')
-    compile_pyccel(cwd, compile_file, f"--language={language}")
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
 
     out2 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out2, float, 'python')
 
     compile_file = get_abs_path('project_class_imports/project/shapes/Square_mod.py')
-    compile_pyccel(cwd, compile_file, f"--language={language}")
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
 
     out3 = get_python_output(test_file, cwd)
     compare_pyth_fort_output(pyth_out, out3, float, 'python')
 
     compile_file = get_abs_path('project_class_imports/runtest.py')
-    compile_pyccel(cwd, compile_file, f"--language={language}")
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
