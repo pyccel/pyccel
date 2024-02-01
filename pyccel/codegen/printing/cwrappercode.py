@@ -414,7 +414,7 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
-        type_code = (f"PyTypeObject {type_name} = {{\n"
+        type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
