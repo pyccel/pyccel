@@ -11,7 +11,7 @@ from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.c_concepts import CStackArray
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
-from pyccel.ast.cwrapper   import PyBuildValueNode
+from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil
@@ -89,7 +89,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
-        elif isinstance(a, PyBuildValueNode):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -246,6 +246,11 @@ class CWrapperCodePrinter(CCodePrinter):
         if expr.variable.dtype is not PyccelPyObject():
             var = f'(PyObject*) {var}'
         return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
+
+    def _print_PyCapsule_New(self, expr):
+        name = expr.name
+        var  = self._print(expr.API_var)
+        return f'PyCapsule_New((void *){var}, "{name}", NULL)'
 
     def _print_ModuleHeader(self, expr):
         mod = expr.module
