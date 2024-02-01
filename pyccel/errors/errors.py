@@ -88,7 +88,7 @@ class ErrorInfo:
     Parameters
     ----------
     stage : str
-        The parser stage when the error occured.
+        The Pyccel stage when the error occured.
 
     filename : str
         The file where the error was detected.
@@ -251,8 +251,8 @@ class Errors(metaclass = Singleton):
         """
         Report an error.
 
-        Report message at the given line using the current error context.
-        stage: 'syntax', 'semantic' or 'codegen'.
+        Report message at the given line using the current error context
+        stage: 'syntactic', 'semantic' 'codegen', or 'cwrapper'.
 
         Parameters
         ----------
@@ -339,7 +339,7 @@ class Errors(metaclass = Singleton):
         self.add_error_info(info)
 
         if info.blocker:
-            if pyccel_stage == 'syntax':
+            if pyccel_stage == 'syntactic':
                 raise PyccelSyntaxError(message)
             elif pyccel_stage == 'semantic':
                 raise PyccelSemanticError(message)
