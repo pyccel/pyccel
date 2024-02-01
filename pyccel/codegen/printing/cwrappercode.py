@@ -267,12 +267,9 @@ class CWrapperCodePrinter(CCodePrinter):
                     "    PyObject_HEAD\n"
                     + attributes +
                     "};\n")
-            decs.append(Declare(PyccelPyTypeObject(), Variable(PyccelPyTypeObject(), c.type_name), external = True))
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces)
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
-
-        type_declarations = ''.join(self._print(d) for d in decs)
 
         class_code = '\n'.join(classes)
 
@@ -280,8 +277,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 #define {name.upper()}_WRAPPER_H\n\n \
                 {imports}\n \
                 {class_code}\n \
-                {type_declarations}\n \
+                #ifdef {name.upper()}_WRAPPER\n\n \
                 {function_signatures}\n \
+                #else\n\n \
+                #endif\n \
                 #endif // {name}_WRAPPER_H\n")
 
     def _print_PyModule(self, expr):
@@ -366,6 +365,7 @@ class CWrapperCodePrinter(CCodePrinter):
         self.exit_scope()
 
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
+                f'#define {pymod_name.upper()}\n',
                 imports, decs, sep, class_defs, sep,
                 function_defs, exec_func, sep, method_def, sep, slots_def, sep,
                 module_def, sep, init_func])
