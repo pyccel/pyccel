@@ -1335,10 +1335,12 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
 
+        static = 'static ' if expr.is_static else ''
+
         if isinstance(expr, FunctionAddress):
-            return f'{ret_type} (*{name})({arg_code})'
+            return f'{static}{ret_type} (*{name})({arg_code})'
         else:
-            return f'{ret_type} {name}({arg_code})'
+            return f'{static}{ret_type} {name}({arg_code})'
 
     def _print_IndexedElement(self, expr):
         base = expr.base

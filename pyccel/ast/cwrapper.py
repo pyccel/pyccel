@@ -444,7 +444,7 @@ class PyFunctionDef(FunctionDef):
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, is_static = True)
 
     @property
     def original_function(self):

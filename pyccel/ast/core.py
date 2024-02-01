@@ -2706,6 +2706,15 @@ class FunctionDef(ScopedAstNode):
         return False
 
     @property
+    def is_static(self):
+        """
+        Indicates if the function is static.
+
+        Indicates if the function is static.
+        """
+        return self._is_static
+
+    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
