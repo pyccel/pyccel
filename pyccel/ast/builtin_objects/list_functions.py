@@ -10,14 +10,9 @@ always available.
 In this module we implement List methods.
 """
 
-from pyccel.errors.errors import PyccelError
-
-from pyccel.utilities.stage import PyccelStage
-
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode
+from pyccel.ast.datatypes import NativeVoid
 from pyccel.ast.internals import PyccelInternalFunction
 
-pyccel_stage = PyccelStage()
 
 class ListAppend(PyccelInternalFunction):
     """
@@ -27,16 +22,24 @@ class ListAppend(PyccelInternalFunction):
     which adds an element to the end of the list.
     The append method is called as follows:
 
-    >>> a = []
-    >>> a.append(1)
+    >>> a = [1]
+    >>> a.append(2)
     >>> print(a)
-    [1]
+    [1, 2]
 
     Parameters
     ----------
-    arg : TypedAstNode.
+    *args : iterable
+        The arguments passed to the function call.
+    Returns:
+    --------
+    None
     """
     __slots__ = ()
+    _dtype = NativeVoid()
     name = 'append'
+
+    def __init__(self, *args) -> None:
+        super().__init__(*args)
 
 
