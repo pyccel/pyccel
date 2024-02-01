@@ -3315,7 +3315,7 @@ class ClassDef(ScopedAstNode):
         if isinstance(name, str):
             name = PyccelSymbol(name)
         else:
-            raise TypeError('Function name must be PyccelSymbol or string')
+            raise TypeError('Class name must be PyccelSymbol or string')
 
         # attributes
 
