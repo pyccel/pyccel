@@ -22,3 +22,5 @@ if __name__ == '__main__':
     e_x, e_y = l.get_end()
     print(s_x, s_y)
     print(e_x, e_y)
+    print(int(l.longer_than(0.5)))
+    print(int(l.longer_than(2)))
