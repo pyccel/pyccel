@@ -15,7 +15,7 @@ class Line:
         x,y = self.end.get_val()
         return x,y
 
-    def longer_than(self, length : int | float):
+    def longer_than(self, length : 'int | float'):
         s_x, s_y = self.get_start()
         e_x, e_y = self.get_end()
         my_length = np.sqrt((e_x-s_x)**2+(e_y-s_y)**2)
