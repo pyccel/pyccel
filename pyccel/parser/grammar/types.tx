@@ -3,10 +3,11 @@ UnionTypeStmt: (const ?= Const) dtypes += TypeHeader['|'];
 Const: 'const';
 TypeHeader: FuncType|Type;
 
+Slice: ':';
 Type: dtype=DataType (trailer=TrailerSubscriptList)?;
-TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
+TrailerSubscriptList: '[' args*=Slice [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
-FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
+FuncType: '('(results*=TypeHeader[','])?')' '('args*=UnionTypeStmt[',']')';
 
 DataType: ID|STAR;
 STAR: '*';
