@@ -10,6 +10,8 @@ always available.
 In this module we implement List methods.
 """
 
+from pyccel.errors.errors import PyccelError
+
 from pyccel.ast.datatypes import NativeVoid
 from pyccel.ast.internals import PyccelInternalFunction
 
@@ -38,8 +40,11 @@ class ListAppend(PyccelInternalFunction):
     __slots__ = ()
     _dtype = NativeVoid()
     name = 'append'
-
+    
     def __init__(self, *args) -> None:
         super().__init__(*args)
+        if (args[0].dtype != args[1].dtype):
+            raise PyccelError("Can't append argument of type {} to list of type {}".format(args[1].dtype, args[0].dtype))
+
 
 
