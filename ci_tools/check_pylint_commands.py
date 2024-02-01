@@ -20,7 +20,7 @@ accepted_pylint_commands = {re.compile('.*/IMPORTING_EXISTING_IDENTIFIED3.py'):[
                             re.compile('tests/codegen/fcode/scripts/precision.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/expressions.py'):['unused-variable'],
                             re.compile('tests/semantic/scripts/calls.py'):['unused-variable'],
-                            re.compile('tests/pyccel/project_class_imports/.*':['relative-beyond-top-level'] # ignore Codacy bad pylint call
+                            re.compile('tests/pyccel/project_class_imports/.*'):['relative-beyond-top-level'] # ignore Codacy bad pylint call
                            }
 
 def run_pylint(file, flag, messages):
