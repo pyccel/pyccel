@@ -7,14 +7,29 @@
 Module representing object address.
 """
 
-from .basic import TypedAstNode, PyccelAstNode
+from .basic     import TypedAstNode, PyccelAstNode
+from .datatypes import DataType
 from .literals  import LiteralString
+from pyccel.utilities.metaclasses import Singleton
 
 __all__ = ('CMacro',
            'CStringExpression',
            'ObjectAddress',
            'PointerCast')
 
+#------------------------------------------------------------------------------
+
+class CStackArray(DataType, metaclass=Singleton):
+    """
+    A data type representing an array allocated on the stack.
+
+    A data type representing an array allocated on the stack.
+    E.g. `float a[4];`
+    """
+    __slots__ = ()
+    _name = 'c_stackarray'
+
+#------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
     """
     Class representing the address of an object.
@@ -58,7 +73,11 @@ class ObjectAddress(TypedAstNode):
         """
         return self._obj
 
+    @property
+    def is_alias(self):
+        return True
 
+#------------------------------------------------------------------------------
 class PointerCast(TypedAstNode):
     """
     A class which represents the casting of one pointer to another.

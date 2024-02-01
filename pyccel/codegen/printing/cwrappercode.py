@@ -8,6 +8,7 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
+from pyccel.ast.c_concepts import CStackArray
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode
@@ -86,7 +87,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, (PyccelPyObject, WrapperCustomDataType)):
+        if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -450,6 +451,32 @@ class CWrapperCodePrinter(CCodePrinter):
             return f'{type_name}.tp_free({var_code});\n'
         else:
             return CCodePrinter._print_Deallocate(self, expr)
+
+    def _print_Declare(self, expr):
+        var = expr.variable
+        if isinstance(var.class_type, CStackArray):
+            declaration_type = self.find_in_dtype_registry(var.dtype, var.precision)
+            if isinstance(var.dtype, (PyccelPyObject, WrapperCustomDataType, BindCPointer)):
+                declaration_type = f'{declaration_type}*'
+
+            external = 'extern ' if expr.external else ''
+            size = var.shape[0]
+
+            variable = self._print(expr.variable.name)
+
+            declaration = f'{external}{declaration_type} {variable}[{size}];\n'
+
+            return declaration
+        else:
+            return CCodePrinter._print_Declare(self, expr)
+
+    def _print_IndexedElement(self, expr):
+        if isinstance(expr.base.class_type, CStackArray):
+            base = self._print(expr.base.name)
+            idxs = ''.join(f'[{self._print(a)}]' for a in expr.indices)
+            return f'{base}{idxs}'
+        else:
+            CCodePrinter._print_IndexedElement(self, expr)
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code

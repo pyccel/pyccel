@@ -12,6 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFuncti
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef
 from pyccel.ast.builtins      import PythonTuple
+from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
@@ -25,7 +26,7 @@ from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.cwrapper      import PyccelPyTypeObject
-from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
+from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
@@ -37,7 +38,7 @@ from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, 
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq
 from pyccel.ast.operators     import PyccelLt
-from pyccel.ast.variable      import Variable, DottedVariable
+from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -462,10 +463,13 @@ class CToPythonWrapper(Wrapper):
         FunctionDef
             The initialisation function.
         """
+        mod_name = getattr(expr, 'original_module', expr).name
         # Initialise the scope
-        func_name = self.scope.get_new_name(expr.name+'_exec_func')
+        func_name = self.scope.get_new_name(mod_name+'_exec_func')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+
+        n_classes = len(expr.classes)
 
         for v in expr.variables:
             func_scope.insert_symbol(v.name)
@@ -473,6 +477,10 @@ class CToPythonWrapper(Wrapper):
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         result_var = self.scope.get_temporary_variable('int', precision=4)
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
+                                    class_type = CStackArray(), cls_base = StackArrayClass)
+        self.scope.insert_variable(API_var)
 
         # Call the initialisation function
         if expr.init_func:
@@ -481,10 +489,13 @@ class CToPythonWrapper(Wrapper):
             body = []
 
         # Save classes to the module variable
-        for c in expr.classes:
+        for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
             class_name = wrapped_class.name
+
+            API_elem = IndexedElement(API_var, i)
+            body.append(AliasAssign(API_elem, PointerCast(ObjectAddress(type_object), API_elem)))
 
             ready_type = FunctionCall(PyType_Ready, (type_object,))
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),

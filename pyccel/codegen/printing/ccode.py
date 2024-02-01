@@ -2301,7 +2301,10 @@ class CCodePrinter(CodePrinter):
         declare_type = self.get_declare_type(expr.cast_type)
         if not self.is_c_pointer(expr.cast_type):
             declare_type += '*'
-        var_code = self._print(ObjectAddress(expr.obj))
+        obj = expr.obj
+        if not isinstance(obj, ObjectAddress):
+            obj = ObjectAddress(expr.obj)
+        var_code = self._print(obj)
         return f'(*({declare_type})({var_code}))'
 
     def _print_Comment(self, expr):
