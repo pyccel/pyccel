@@ -13,7 +13,7 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode, TypedAstNode
+from .basic     import PyccelAstNode
 
 from .datatypes import DataType, default_precision, CustomDataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
@@ -23,7 +23,7 @@ from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
 from .core      import Module, Interface
 
-from .internals import get_final_precision
+from .internals import get_final_precision, PyccelInternalFunction
 
 from .literals  import LiteralString
 
@@ -235,7 +235,7 @@ class PyArg_ParseTupleNode(PyccelAstNode):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyBuildValueNode(TypedAstNode):
+class PyBuildValueNode(PyccelInternalFunction):
     """
     Represents a call to the function PyBuildValueNode.
 
@@ -277,7 +277,7 @@ class PyBuildValueNode(TypedAstNode):
         return self._result_args
 
 #-------------------------------------------------------------------
-class PyModule_AddObject(TypedAstNode):
+class PyModule_AddObject(PyccelInternalFunction):
     """
     Represents a call to the PyModule_AddObject function.
 
@@ -330,6 +330,30 @@ class PyModule_AddObject(TypedAstNode):
         """ The variable containing the PythonObject
         """
         return self._var
+
+#-------------------------------------------------------------------
+class PyCapsule_New(PyccelInternalFunction):
+    __slots__ = ('_name', '_API_var')
+    _attribute_nodes = ('_API_var',)
+    _dtype = PyccelPyObject()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = PyccelPyObject()
+
+    def __init__(self, API_var, module_name):
+        self._name = f'{module_name}._C_API'
+        self._API_var = API_var
+        super().__init__()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def API_var(self):
+        return self._API_var
 
 #-------------------------------------------------------------------
 class PyModule(Module):
@@ -656,6 +680,12 @@ Py_INCREF = FunctionDef(name = 'Py_INCREF',
 
 # https://docs.python.org/3/c-api/refcounting.html#c.Py_DECREF
 Py_DECREF = FunctionDef(name = 'Py_DECREF',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
+                        results = [])
+
+# https://docs.python.org/3/c-api/refcounting.html#c.Py_XDECREF
+Py_XDECREF = FunctionDef(name = 'Py_XDECREF',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
