@@ -25,7 +25,7 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New
+from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, Py_XDECREF
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
@@ -468,6 +468,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(mod_name+'_exec_func')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1))
 
         n_classes = len(expr.classes)
 
@@ -502,15 +503,21 @@ class CToPythonWrapper(Wrapper):
 
             ready_type = FunctionCall(PyType_Ready, (type_object,))
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+                            [Return([self._error_exit_code])]))
             class_construction_body.append(if_expr)
             class_construction_body.append(FunctionCall(Py_INCREF, (type_object,)))
             add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
             if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+                            [Return([self._error_exit_code])]))
             class_construction_body.append(if_expr)
 
         body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
+        add_expr = PyModule_AddObject(module_var, LiteralString('_C_API'), capsule_obj)
+        if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
+                        [FunctionCall(Py_XDECREF, [capsule_obj]),
+                         FunctionCall(Py_DECREF, [module_var]),
+                         Return([self._error_exit_code])]))
+        body.append(if_expr)
         body.extend(class_construction_body)
 
         # Save module variables to the module variable
@@ -523,12 +530,13 @@ class CToPythonWrapper(Wrapper):
             var_name = LiteralString(self.scope.get_python_name(name))
             add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
             if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+                            [Return([self._error_exit_code])]))
             body.append(if_expr)
 
         body.append(Return([LiteralInteger(0)]))
 
         self.exit_scope()
+        self._error_exit_code = Nil()
 
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
