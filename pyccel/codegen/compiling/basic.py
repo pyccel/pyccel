@@ -236,22 +236,6 @@ class CompileObj:
             raise TypeError("Dependencies require necessary compile information")
         self._dependencies.update({a.module_target:a for a in args})
 
-    def add_libs(self, *args):
-        """
-        Add an additional library dependency to the object.
-
-        Add an additional library dependency to the object.
-
-        Parameters
-        ----------
-        *args : tuple of strs
-            The absolute path to a library.
-        """
-        for a in args:
-            if a.endswith('.a') or a.endswith('.so'):
-                assert os.path.isabs(a) and os.path.exists(a)
-        self._libs.extend(args)
-
     def __enter__(self):
         self.compilation_in_progress.acquire()
         self.acquire_lock()
