@@ -448,74 +448,6 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
-    def _build_module_exec_function(self, expr):
-        """
-        Build the function that will be called when the module is first imported.
-
-        Build the function that will be called when the module is first imported.
-        This function must call any initialisation function of the underlying
-        module and must add any variables to the module variable.
-
-        Parameters
-        ----------
-        expr : Module
-            The module of interest.
-
-        Returns
-        -------
-        FunctionDef
-            The initialisation function.
-        """
-        mod_name = getattr(expr, 'original_module', expr).name
-        # Initialise the scope
-        func_name = self.scope.get_new_name(mod_name+'_exec_func')
-        func_scope = self.scope.new_child_scope(func_name)
-        self.scope = func_scope
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1))
-
-        # Call the initialisation function
-        if expr.init_func:
-            body = [FunctionCall(expr.init_func, [])]
-        else:
-            body = []
-
-        # Save classes to the module variable
-        for c in expr.classes:
-            wrapped_class = self._python_object_map[c]
-            type_object = wrapped_class.type_object
-            class_name = wrapped_class.name
-
-            ready_type = FunctionCall(PyType_Ready, (type_object,))
-            if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
-                            [Return([self._error_exit_code])]))
-            body.append(if_expr)
-            body.append(FunctionCall(Py_INCREF, (type_object,)))
-            add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
-            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([self._error_exit_code])]))
-            body.append(if_expr)
-
-        # Save module variables to the module variable
-        for v in expr.variables:
-            if v.is_private:
-                continue
-            body.extend(self._wrap(v))
-            wrapped_var = self._python_object_map[v]
-            name = getattr(v, 'indexed_name', v.name)
-            var_name = LiteralString(self.scope.get_python_name(name))
-            add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
-            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([self._error_exit_code])]))
-            body.append(if_expr)
-
-        body.append(Return([LiteralInteger(0)]))
-
-        self.exit_scope()
-        self._error_exit_code = Nil()
-
-        return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
-                scope = func_scope, is_static=True)
-
     def _add_object_to_mod(self, module_var, obj, name, initialised):
         """
         Get code for adding an object to the module.
@@ -658,8 +590,11 @@ class CToPythonWrapper(Wrapper):
         Build the function that will be called in order to use the module from another module.
 
         Build the function that will be called when the module is first imported.
-        This function must call any initialisation function of the underlying
-        module and must add any variables to the module variable.
+        This function must import the capsule created in the module initialisation.
+        In order for this to work from any folder the `sys.path` list is modified to include
+        the folder where the file is located (currently this is done by temporarily modifying
+        an element of the list as the stable C-Python API doesn't contain any functions for
+        reducing the size of lists).
 
         Parameters
         ----------
