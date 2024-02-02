@@ -24,8 +24,8 @@ __all__ = ("CWrapperCodePrinter", "cwrappercode")
 errors = Errors()
 
 module_imports = [Import('numpy_version', Module('numpy_version',(),())),
-              Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
-              Import('cwrapper', Module('cwrapper',(),()))]
+            Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+            Import('cwrapper', Module('cwrapper',(),()))]
 
 
 class CWrapperCodePrinter(CCodePrinter):
