@@ -526,6 +526,10 @@ class PyModule(Module):
         """
         return self._exe_func
 
+    @property
+    def API_var(self):
+        return self.variables[0]
+
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
     """
@@ -778,7 +782,6 @@ class PyModInitFunc(ScopedAstNode):
     def body(self):
         return self._body
 
-
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
@@ -812,6 +815,31 @@ PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
+
+PySys_GetObject = FunctionDef(name = 'PySys_GetObject',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2)),
+                                     FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = [])
+
+#-------------------------------------------------------------------
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {

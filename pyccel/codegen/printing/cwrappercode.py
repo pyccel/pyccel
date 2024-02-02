@@ -247,7 +247,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_PyCapsule_New(self, expr):
         name = expr.name
-        var  = self._print(expr.API_var)
+        var  = self._print(ObjectAddress(expr.API_var))
         return f'PyCapsule_New((void *){var}, "{name}", NULL)'
 
     def _print_PyCapsule_Import(self, expr):

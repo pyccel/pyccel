@@ -161,7 +161,7 @@ def create_shared_library(codegen,
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper = CToPythonWrapper()
+    wrapper = CToPythonWrapper(base_dirpath)
     cwrap_ast = wrapper.wrap(c_ast)
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)

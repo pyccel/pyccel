@@ -17,7 +17,7 @@ from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionC
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -26,6 +26,7 @@ from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, Py_XDECREF, PyCapsule_Import
+from pyccel.ast.cwrapper      import PySys_GetObject, PyList_GetItem, PyList_SetItem, PyUnicode_FromString
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
@@ -55,13 +56,15 @@ class CToPythonWrapper(Wrapper):
     A class which provides all necessary functions for wrapping different AST
     objects such that the resulting AST is Python-compatible.
     """
-    def __init__(self):
+    def __init__(self, base_dirpath):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
         # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
+
+        self._file_location = base_dirpath
         super().__init__()
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
@@ -691,7 +694,18 @@ class CToPythonWrapper(Wrapper):
         ok_code = LiteralInteger(0, precision=-2)
         error_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
 
-        body = [AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
+        # Create variables to temporarily modify the Python path so the file will be discovered
+        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
+        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
+
+        body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
+                AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, precision=-2)])),
+                FunctionCall(Py_INCREF, [stash_path]),
+                FunctionCall(PyList_SetItem, [current_path,
+                                              LiteralInteger(0, precision=-2),
+                                              FunctionCall(PyUnicode_FromString, [LiteralString(self._file_location)])]),
+                AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
+                FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, precision=-2), stash_path]),
                 Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
 
         result = func_scope.get_temporary_variable(NativeInteger(), precision=-2)
@@ -957,8 +971,6 @@ class CToPythonWrapper(Wrapper):
 
         # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces]
-
-        #exec_func = self._build_module_exec_function(expr)
 
         init_func = self._build_module_init_function(expr, imports)
 
@@ -1740,7 +1752,7 @@ class CToPythonWrapper(Wrapper):
 
         if import_wrapper:
             wrapper_name = f'{expr.source}_wrapper'
-            mod_spoof = PyModule(expr.source_module.name.name, (), ())
-            return Import(wrapper_name, mod_spoof, mod = mod_spoof)
+            mod_spoof = PyModule(expr.source_module.name.name, (), (), scope = Scope())
+            return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
         else:
             return None
