@@ -335,6 +335,22 @@ class PyModule_AddObject(PyccelInternalFunction):
 
 #-------------------------------------------------------------------
 class PyModule_Create(PyccelInternalFunction):
+    """
+    Represents a call to the PyModule_Create function.
+
+    The PyModule_Create function can be found in Python.h.
+    It acts as a constructor for a module. More information about
+    this function can be found in Python's documentation.
+
+    Parameters
+    ----------
+    module_def_name : str
+        The name of the structure which defined the module.
+
+    See Also
+    --------
+    https://docs.python.org/3/c-api/module.html#c.PyModule_Create
+    """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
     _dtype = PyccelPyObject()
@@ -350,11 +366,37 @@ class PyModule_Create(PyccelInternalFunction):
 
     @property
     def module_def_name(self):
+        """
+        Get the name of the structure which defined the module.
+
+        Get the name of the structure which defined the module.
+        """
         return self._module_def_name
 
 #-------------------------------------------------------------------
 class PyCapsule_New(PyccelInternalFunction):
-    __slots__ = ('_name', '_API_var')
+    """
+    Represents a call to the function PyCapsule_New.
+
+    The function PyCapsule_New can be found in Python.h. It describes
+    the creation of a capsule. A capsule contains all information
+    from a module which should be exposed to other modules that import
+    this module.
+
+    Parameters
+    ----------
+    API_var : Variable
+        The variable which contains all elements of the API which should be exposed.
+
+    module_name : str
+        The name of the module being exposed.
+
+    See Also
+    --------
+    https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New
+    https://docs.python.org/3/extending/extending.html#using-capsules
+    """
+    __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
     _dtype = PyccelPyObject()
     _precision = 0
@@ -364,21 +406,50 @@ class PyCapsule_New(PyccelInternalFunction):
     _class_type = PyccelPyObject()
 
     def __init__(self, API_var, module_name):
-        self._name = f'{module_name}._C_API'
+        self._capsule_name = f'{module_name}._C_API'
         self._API_var = API_var
         super().__init__()
 
     @property
-    def name(self):
-        return self._name
+    def capsule_name(self):
+        """
+        Get the name of the capsule being created.
+
+        Get the name of the capsule being created.
+        """
+        return self._capsule_name
 
     @property
     def API_var(self):
+        """
+        Get the variable describing the API.
+
+        Get the variable which contains all elements of the API which
+        should be exposed.
+        """
         return self._API_var
 
 #-------------------------------------------------------------------
 class PyCapsule_Import(PyccelInternalFunction):
-    __slots__ = ('_name',)
+    """
+    Represents a call to the function PyCapsule_Import.
+
+    The function PyCapsule_Import can be found in Python.h. It describes
+    the initialisation of a capsule by importing the information from
+    another module. A capsule contains all information from a module
+    which should be exposed to other modules that import this module.
+
+    Parameters
+    ----------
+    module_name : str
+        The name of the module being retrieved.
+
+    See Also
+    --------
+    https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import
+    https://docs.python.org/3/extending/extending.html#using-capsules
+    """
+    __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
     _dtype = BindCPointer()
     _precision = 0
@@ -388,12 +459,17 @@ class PyCapsule_Import(PyccelInternalFunction):
     _class_type = BindCPointer()
 
     def __init__(self, module_name):
-        self._name = f'{module_name}._C_API'
+        self._capsule_name = f'{module_name}._C_API'
         super().__init__()
 
     @property
-    def name(self):
-        return self._name
+    def capsule_name(self):
+        """
+        Get the name of the capsule being retrieved.
+
+        Get the name of the capsule being retrieved.
+        """
+        return self._capsule_name
 
 #-------------------------------------------------------------------
 class PyModule(Module):
@@ -420,12 +496,6 @@ class PyModule(Module):
     declarations : iterable
         Any declarations of (external) variables which should be made in the module.
 
-    exe_func : FunctionDef, optional
-        The function which is executed when a module is executed.
-        This is equivalent to executing the code of a Python module: typically,
-        this function adds classes and constants to the module.
-        See: https://docs.python.org/3/c-api/module.html#c.Py_mod_exec.
-
     init_func : FunctionDef, optional
         The function which is executed when a module is initialised.
         See: https://docs.python.org/3/c-api/module.html#multi-phase-initialization.
@@ -442,23 +512,19 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations', '_import_func', '_exe_func')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func', '_exe_func')
+    __slots__ = ('_external_funcs', '_declarations', '_import_func')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
 
-    def __init__(self, name, *args, external_funcs = (), declarations = (), exe_func = None, init_func = None,
+    def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
                         import_func = None, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
-        self._exe_func = exe_func
         if import_func is None:
             self._import_func = FunctionDef(f'{name}_import', (),
                             (FunctionDefResult(Variable(NativeInteger(), '_', precision=-2, is_temp=True)),), ())
         else:
             self._import_func = import_func
-        super().__init__(name, *args, **kwargs)
-        self._init_func = init_func
-        if init_func:
-            init_func.set_current_user_node(self)
+        super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property
     def external_funcs(self):
@@ -512,22 +578,13 @@ class PyModule(Module):
         return self._import_func
 
     @property
-    def exe_func(self):
-        """
-        Get the function which is executed when a module is executed.
-
-        The function which is executed when a module is executed.
-        This is equivalent to executing the code of a Python module: typically,
-        this function adds classes and constants to the module.
-
-        See Also
-        --------
-        https://docs.python.org/3/c-api/module.html#c.Py_mod_exec
-        """
-        return self._exe_func
-
-    @property
     def API_var(self):
+        """
+        The variable which describes the API for this module.
+
+        Get the variable which describes the API for this module. This variable holds
+        the information passed to or retrieved from a Capsule.
+        """
         return self.variables[0]
 
 #-------------------------------------------------------------------
@@ -757,19 +814,12 @@ class PyClassDef(ClassDef):
         return self._new_func
 
 #-------------------------------------------------------------------
-class PyModInitFunc(ScopedAstNode):
-    __slots__ = ('_name', '_body', '_static_vars')
-    _attribute_nodes = ('_body',)
+class PyModInitFunc(FunctionDef):
+    __slots__ = ('_static_vars')
 
     def __init__(self, name, body, static_vars, scope):
-        self._name = name
-        self._body = CodeBlock(body)
         self._static_vars = static_vars
-        super().__init__(scope)
-
-    @property
-    def name(self):
-        return self._name
+        super().__init__(name, (), (), body, scope=scope)
 
     @property
     def declarations(self):
@@ -777,10 +827,6 @@ class PyModInitFunc(ScopedAstNode):
         """
         return [Declare(v.dtype, v, static=(v in self._static_vars)) \
                 for v in self.scope.variables.values()]
-
-    @property
-    def body(self):
-        return self._body
 
 #-------------------------------------------------------------------
 #                      Python.h Constants

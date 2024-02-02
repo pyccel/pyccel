@@ -246,12 +246,12 @@ class CWrapperCodePrinter(CCodePrinter):
         return f'PyModule_AddObject({expr.mod_name}, {name}, {var})'
 
     def _print_PyCapsule_New(self, expr):
-        name = expr.name
+        name = expr.capsule_name
         var  = self._print(ObjectAddress(expr.API_var))
         return f'PyCapsule_New((void *){var}, "{name}", NULL)'
 
     def _print_PyCapsule_Import(self, expr):
-        name = expr.name
+        name = expr.capsule_name
         return f'(void**)PyCapsule_Import("{name}", 0)'
 
     def _print_PyModule_Create(self, expr):

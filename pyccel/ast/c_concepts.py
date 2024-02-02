@@ -7,10 +7,10 @@
 Module representing object address.
 """
 
+from pyccel.utilities.metaclasses import Singleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import DataType
 from .literals  import LiteralString
-from pyccel.utilities.metaclasses import Singleton
 
 __all__ = ('CMacro',
            'CStringExpression',
@@ -75,6 +75,11 @@ class ObjectAddress(TypedAstNode):
 
     @property
     def is_alias(self):
+        """
+        Indicate that an ObjectAddress uses alias memory handling.
+
+        Indicate that an ObjectAddress uses alias memory handling.
+        """
         return True
 
 #------------------------------------------------------------------------------
