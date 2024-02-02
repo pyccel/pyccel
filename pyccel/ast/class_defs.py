@@ -5,12 +5,16 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
+
+from pyccel.ast.builtin_objects.list_functions import (ListPop)
+
+
 from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .builtin_objects.list_functions import   PythonListAppend, PythonListClear, PythonListCount, PythonListExtend, PythonListInsert, PythonListPop, PythonListRemove, PythonListReverse, PythonListSort
+# from .builtin_objects.list_functions import   
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
-                        NativeTuple, CustomDataType, NativeHomogeneousList)
+                        NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousList)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -23,6 +27,7 @@ __all__ = ('BooleanClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
+        'ListClass'
         'literal_classes',
         'get_cls_base')
 
@@ -130,34 +135,18 @@ StringClass = ClassDef('string', class_type = NativeString(),
 
 #=======================================================================================
 
+ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
+        methods=[
+            PyccelFunctionDef('pop', func_class = ListPop,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple', class_type = NativeTuple(),
         methods=[
             #index
             #count
-            ])
-
-#=======================================================================================
-
-ListClass = ClassDef('list',
-        methods=[
-            PyccelFunctionDef('append',func_class = PythonListAppend, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('extend',func_class = PythonListExtend, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('insert',func_class = PythonListInsert, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('count',func_class = PythonListCount, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('clear',func_class = PythonListClear, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('sort',func_class = PythonListSort, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('reverse',func_class = PythonListReverse, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('pop',func_class = PythonListPop, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
-            PyccelFunctionDef('remove',func_class = PythonListRemove, 
-                              decorators = {'property': 'property', 'lists_wrapper': 'lists_wrapper'}),
             ])
 
 #=======================================================================================
@@ -233,7 +222,6 @@ def get_cls_base(dtype, precision, container_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    
     if isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
     if precision in (-1, 0, None) and container_type is dtype:
@@ -243,8 +231,8 @@ def get_cls_base(dtype, precision, container_type):
     elif isinstance(container_type, NativeTuple):
         return TupleClass
     elif isinstance(container_type, NativeHomogeneousList):
-        return ListClass
-    else:        
+        return ListClass       
+    else:
         if container_type:
             type_name = str(container_type)
         else:

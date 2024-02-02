@@ -58,7 +58,8 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base, ListClass
+
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, ListClass ,get_cls_base
 
 from pyccel.ast.datatypes import str_dtype
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
@@ -640,12 +641,14 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, PythonTuple):
             d_var['cls_base'       ] = TupleClass
             d_var['memory_handling'] = 'heap'
-            print("aaah ana hnaaa ")
             return d_var
         elif isinstance(expr, PythonList):
             d_var['cls_base'       ] = ListClass
             d_var['memory_handling'] = 'heap'
-            print("salaaam ")
+            return d_var
+        elif isinstance(expr, PythonList):
+            d_var['cls_base'       ] = ListClass
+            d_var['memory_handling'] = 'heap'
             return d_var
         elif isinstance(expr, Concatenate):
             d_var['cls_base'      ] = TupleClass
@@ -681,7 +684,6 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, TypedAstNode):
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
-            print("ana diiima hna ", d_var['cls_base'])
             return d_var
 
         else:
@@ -2379,7 +2381,6 @@ class SemanticParser(BasicParser):
 
 
     def _visit_DottedName(self, expr):
-
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
@@ -2387,6 +2388,7 @@ class SemanticParser(BasicParser):
         lhs = expr.name[0] if len(expr.name) == 2 \
                 else DottedName(*expr.name[:-1])
         rhs = expr.name[-1]
+
 
         visited_lhs = self._visit(lhs)
         first = visited_lhs
@@ -2442,7 +2444,6 @@ class SemanticParser(BasicParser):
         if isinstance(first, ClassDef):
             errors.report("Static class methods are not yet supported", symbol=expr,
                     severity='fatal')
-
         d_var = self._infer_type(first)
         dtype = d_var['datatype']
         cls_base = get_cls_base(dtype, d_var['precision'], d_var['class_type'])
@@ -2459,7 +2460,6 @@ class SemanticParser(BasicParser):
                 args = [self._visit(i) for i in args]
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
-
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             method = cls_base.get_method(rhs_name)
             if cls_base.name == 'numpy.ndarray':

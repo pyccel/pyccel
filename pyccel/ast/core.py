@@ -3556,7 +3556,6 @@ class ClassDef(ScopedAstNode):
         """
         try:
             method = next(i for i in chain(self.methods, self.interfaces) if i.name == name)
-            print(method)
         except StopIteration:
             method = None
             i = 0

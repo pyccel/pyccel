@@ -1,0 +1,67 @@
+{
+    "exec": "gfortran",
+    "mpi_exec": "mpif90",
+    "language": "fortran",
+    "module_output_flag": "-J",
+    "debug_flags": [
+        "-fcheck=bounds",
+        "-g",
+        "-O0"
+    ],
+    "release_flags": [
+        "-O3",
+        "-funroll-loops"
+    ],
+    "general_flags": [
+        "-fPIC"
+    ],
+    "standard_flags": [
+        "-std=f2003"
+    ],
+    "mpi": {},
+    "openmp": {
+        "flags": [
+            "-fopenmp"
+        ],
+        "libs": [
+            "gomp"
+        ]
+    },
+    "openacc": {
+        "flags": [
+            "-ta=multicore",
+            "-Minfo=accel"
+        ]
+    },
+    "family": "GNU",
+    "libs": [
+        "-lm"
+    ],
+    "python": {
+        "flags": [
+            "-Wsign-compare",
+            "-DNDEBUG",
+            "-g",
+            "-fwrapv",
+            "-O2",
+            "-Wall",
+            "-g",
+            "-fstack-protector-strong",
+            "-fstack-clash-protection",
+            "-Wformat",
+            "-Werror=format-security",
+            "-fcf-protection",
+            "-g",
+            "-fwrapv",
+            "-O2"
+        ],
+        "includes": [
+            "/usr/include/python3.11",
+            "/usr/local/lib/python3.11/dist-packages/numpy/core/include"
+        ],
+        "shared_suffix": ".cpython-311-x86_64-linux-gnu.so",
+        "dependencies": [
+            "/usr/lib/x86_64-linux-gnu/libpython3.11.so"
+        ]
+    }
+}

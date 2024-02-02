@@ -248,7 +248,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
         default = ''
-
         if expr.annotation:
             type_annotation = self._print(expr.annotation)
         else:
@@ -439,6 +438,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonList(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
+        # print(args)
         return '['+args+']'
 
     def _print_PythonBool(self, expr):
@@ -1133,7 +1133,10 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
         return "'" + f"({results})({args})" + "'"
-
+    
+    def _print_ListPop(self, expr):
+        args = ','.join(self._print(a) for a in expr.args[1:]) 
+        return "{}.{}({})".format(expr.args[0], expr.name, args)
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code
