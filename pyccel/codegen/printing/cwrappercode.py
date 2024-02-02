@@ -16,7 +16,6 @@ from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.c_concepts import ObjectAddress
-from pyccel.ast.variable   import Variable
 
 from pyccel.errors.errors  import Errors
 
@@ -25,8 +24,8 @@ __all__ = ("CWrapperCodePrinter", "cwrappercode")
 errors = Errors()
 
 module_imports = [Import('numpy_version', Module('numpy_version',(),())),
-                  Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
-                  Import('cwrapper', Module('cwrapper',(),()))]
+              Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+              Import('cwrapper', Module('cwrapper',(),()))]
 
 
 class CWrapperCodePrinter(CCodePrinter):
@@ -307,8 +306,6 @@ class CWrapperCodePrinter(CCodePrinter):
     def _print_PyModule(self, expr):
         scope = expr.scope
         self.set_scope(scope)
-        # The initialisation and deallocation shouldn't be exposed to python
-        funcs_to_wrap = [f for f in expr.funcs]
 
         # Insert declared objects into scope
         variables = expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables
@@ -324,7 +321,7 @@ class CWrapperCodePrinter(CCodePrinter):
         sep = self._print(SeparatorComment(40))
 
         interface_funcs = [f.name for i in expr.interfaces for f in i.functions]
-        funcs += [*expr.interfaces, *(f for f in funcs_to_wrap if f.name not in interface_funcs)]
+        funcs += [*expr.interfaces, *(f for f in expr.funcs if f.name not in interface_funcs)]
 
         self._in_header = True
         decs = ''.join(self._print(d) for d in expr.declarations)
