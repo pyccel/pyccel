@@ -178,20 +178,6 @@ def create_shared_library(codegen,
     with open(wrapper_header_filename, 'w', encoding="utf-8") as f:
         f.writelines(wrapper_header_code)
 
-    # Update compiler targets to link any dependent modules (for shared types)
-    py_suffix = wrapper_compiler.get_python_suffix()
-    for i in cwrap_ast.imports:
-        for t in i.target:
-            if isinstance(t.object, PyModule):
-                name = str(i.source)[:-8] # Remove '_wrapper'
-                source_file = get_filename_from_import(name, input_folder=base_dirpath)
-                base,_ = os.path.splitext(source_file)
-                try:
-                    wrapper_compile_obj.add_libs(base + py_suffix)
-                except AssertionError:
-                    errors.report(f"Can't link to file {source_file} which does not seem to have been pyccelised.",
-                            severity='fatal')
-
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
