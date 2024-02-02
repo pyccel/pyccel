@@ -178,7 +178,7 @@ def epyccel_seq(function_or_module, *,
 
     # Define working directory 'folder'
     if folder is None:
-        folder = os.path.dirname(dirpath)
+        folder = dirpath
     else:
         folder = os.path.abspath(folder)
 
