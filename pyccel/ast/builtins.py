@@ -54,7 +54,6 @@ __all__ = (
     'PythonType',
     'PythonZip',
     'builtin_functions_dict',
-    'python_builtin_datatype',
 )
 
 #==============================================================================
@@ -1221,32 +1220,10 @@ class PythonType(PyccelAstNode):
             return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
 
 #==============================================================================
-python_builtin_datatypes_dict = {
-    'bool'   : PythonBool,
-    'float'  : PythonFloat,
-    'int'    : PythonInt,
-    'complex': PythonComplex,
-    'str'    : LiteralString
-}
-
-def python_builtin_datatype(name):
-    """
-    Given a symbol name, return the corresponding datatype.
-
-    name: str
-        Datatype as written in Python.
-
-    """
-    if not isinstance(name, str):
-        raise TypeError('name must be a string')
-
-    if name in python_builtin_datatypes_dict:
-        return python_builtin_datatypes_dict[name]
-
-    return None
 
 builtin_functions_dict = {
     'abs'      : PythonAbs,
+    'bool'     : PythonBool,
     'range'    : PythonRange,
     'zip'      : PythonZip,
     'enumerate': PythonEnumerate,
@@ -1260,6 +1237,7 @@ builtin_functions_dict = {
     'min'      : PythonMin,
     'not'      : PyccelNot,
     'map'      : PythonMap,
+    'str'      : LiteralString,
     'type'     : PythonType,
     'tuple'    : PythonTupleFunction,
 }

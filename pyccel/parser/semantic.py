@@ -25,7 +25,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint
 from pyccel.ast.builtins import PythonComplex
-from pyccel.ast.builtins import python_builtin_datatype, PythonImag, PythonReal
+from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
@@ -61,7 +61,7 @@ from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, ListClass ,get_cls_base
 
-from pyccel.ast.datatypes import str_dtype
+from pyccel.ast.datatypes import str_dtype, DataType
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
@@ -84,7 +84,7 @@ from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
-from pyccel.ast.numpyext import NumpyMatmul
+from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
@@ -102,6 +102,8 @@ from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
 from pyccel.ast.type_annotations import FunctionTypeAnnotation
+
+from pyccel.ast.typingext import TypingFinal
 
 from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
@@ -221,6 +223,8 @@ class SemanticParser(BasicParser):
         self.scope.imports['imports'] = {}
         self._module_namespace  = self.scope
         self._program_namespace = self.scope.new_child_scope('__main__')
+
+        self._in_annotation = False
 
         # used to store the local variables of a code block needed for garbage collecting
         self._allocs = []
@@ -1726,47 +1730,59 @@ class SemanticParser(BasicParser):
 
         return list(parent.values())
 
-    def _PyccelAstNode_to_TypeAnnotation(self, expr, input_rank = 0, input_order = None):
+    def _get_indexed_type(self, base, args, expr):
         """
-        Convert a PyccelAstNode class type to a TypeAnnotation.
+        Extract a type annotation from an IndexedElement.
 
-        Convert a PyccelAstNode class type to a TypeAnnotation. This is done using
-        the static dtype, precision and rank stored in the class.
+        Extract a type annotation from an IndexedElement. This may be a type indexed with
+        slices (indicating a NumPy array), or a class type such as tuple/list/etc which is
+        indexed with the datatype.
 
         Parameters
         ----------
-        expr : type deriving from PyccelAstNode
-            The object which was passed to the type annotation.
-
-        input_rank : int, default=0
-            The rank that was deduced from the annotation.
-
-        input_order : str, optional
-            The order that was deduced from the annotation.
+        base : type deriving from PyccelAstNode
+            The object being indexed.
+        args : tuple of PyccelAstNode
+            The indices being used to access the base.
+        expr : PyccelAstNode
+            The annotation, used for error printing.
 
         Returns
         -------
-        VariableTypeAnnotation
-            Object describing the type that should be created.
+        UnionTypeAnnotation
+            The type annotation described by this object.
         """
-        dtype = expr.static_dtype()
-        prec = expr.static_precision()
-        if input_rank != 0:
-            rank = input_rank
-            order = input_order
-        else:
-            rank = expr.static_rank()
-            if not isinstance(rank, int):
-                rank = 0
-            order = expr.static_order()
-            if order is not None and not isinstance(order, str):
-                order = None
-        if rank > 1 and order is None:
-            order = 'C'
+        if isinstance(base, PyccelFunctionDef) and base.cls_name is TypingFinal:
+            syntactic_annotation = args[0]
+            if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+            annotation = self._visit(syntactic_annotation)
+            for t in annotation.type_list:
+                t.is_const = True
+            return annotation
 
-        class_type = dtype if rank == 0 else expr.static_class_type()
+        if all(isinstance(a, Slice) for a in args):
+            if isinstance(base, VariableTypeAnnotation):
+                dtype = base.datatype
+                prec = base.precision
+                class_type = base.class_type
+                if class_type is dtype:
+                    class_type = NumpyNDArrayType()
+                if base.rank != 0:
+                    raise errors.report("Can't index a vector type",
+                            severity='fatal', symbol=expr)
+            elif isinstance(base, PyccelFunctionDef):
+                dtype_cls = base.cls_name
+                dtype = dtype_cls.static_dtype()
+                prec = dtype_cls.static_precision()
+                class_type = NumpyNDArrayType()
+            rank = len(args)
+            if prec == -1:
+                prec = default_precision[dtype]
+            return VariableTypeAnnotation(dtype, class_type, prec, rank)
 
-        return VariableTypeAnnotation(dtype, class_type, prec, rank, order)
+        raise errors.report("Unrecognised type slice",
+                severity='fatal', symbol=expr)
 
     #====================================================
     #                 _visit functions
@@ -2047,7 +2063,13 @@ class SemanticParser(BasicParser):
     def _visit_FunctionTypeAnnotation(self, expr):
         arg_types = [self._visit(a)[0] for a in expr.args]
         res_types = [self._visit(r)[0] for r in expr.results]
-        return FunctionTypeAnnotation(arg_types, res_types)
+        return UnionTypeAnnotation(FunctionTypeAnnotation(arg_types, res_types))
+
+    def _visit_TypingFinal(self, expr):
+        annotation = self._visit(expr.arg)
+        for t in annotation:
+            t.is_const = True
+        return annotation
 
     def _visit_FunctionDefArgument(self, expr):
         arg = self._visit(expr.var)
@@ -2202,6 +2224,10 @@ class SemanticParser(BasicParser):
 
     def _visit_IndexedElement(self, expr):
         var = self._visit(expr.base)
+
+        if isinstance(var, (PyccelFunctionDef, VariableTypeAnnotation)):
+            return self._get_indexed_type(var, expr.indices, expr)
+
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
@@ -2233,7 +2259,16 @@ class SemanticParser(BasicParser):
         if var is None:
             var = self.scope.find(name)
         if var is None:
-            var = python_builtin_datatype(name)
+            var = builtin_functions_dict.get(name, None)
+            if var is not None:
+                var = PyccelFunctionDef(name, var)
+
+        if var is None and self._in_annotation:
+            var = numpy_funcs.get(name, None)
+            if name == 'real':
+                var = numpy_funcs['float']
+            elif name == '*':
+                return NativeGeneric()
 
         if var is None:
             if name == '_':
@@ -2322,62 +2357,39 @@ class SemanticParser(BasicParser):
         return possible_args
 
     def _visit_SyntacticTypeAnnotation(self, expr):
-        is_const = expr.is_const is True
         types = []
 
-        for dtype_name, rank, order in zip(expr.dtypes, expr.ranks, expr.orders):
-            if rank > 1 and order is None:
-                order = 'C'
+        self._in_annotation = True
+        visited_dtype = self._visit(expr.dtype)
+        self._in_annotation = False
+        order = expr.order
 
-            if isinstance(dtype_name, (PyccelSymbol, DottedName)):
-                dtype_from_scope = self._visit(dtype_name)
-            else:
-                dtype_from_scope = self.scope.find(dtype_name)
-
-            if isinstance(dtype_from_scope, type) and PyccelAstNode in dtype_from_scope.__mro__:
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope, rank, order))
-            elif isinstance(dtype_from_scope, PyccelFunctionDef):
-                types.append(self._PyccelAstNode_to_TypeAnnotation(dtype_from_scope.cls_name, rank, order))
-            elif isinstance(dtype_from_scope, VariableTypeAnnotation):
-                if rank == 0:
-                    types.append(dtype_from_scope)
-                else:
-                    types.append(VariableTypeAnnotation(dtype_from_scope.datatype,
-                        dtype_from_scope.class_type, dtype_from_scope.precision,
-                        rank, order, dtype_from_scope.is_const))
-            elif isinstance(dtype_from_scope, ClassDef):
-                dtype = self.get_class_construct(dtype_name)
-                prec = 0
-                rank = 0
-                order = None
-                types.append(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
-            elif dtype_from_scope is not None:
-                errors.report(PYCCEL_RESTRICTION_TODO + f' Could not deduce type information from {type(dtype_from_scope)} object',
-                        severity='fatal', symbol=expr)
-            else:
-                # Find the DataType instance and the associated precision
-                try:
-                    dtype, prec = dtype_and_precision_registry[dtype_name]
-                except KeyError:
-                    errors.report(f'Could not identify type : {dtype_name}',
-                            severity='fatal', symbol=expr)
-
-                # NumPy objects cannot have default precision
-                if prec == -1 and rank > 0:
-                    prec = default_precision[dtype]
-
-                if order is not None and rank < 2:
-                    errors.report(f"Ordering is not applicable to objects with rank {rank}",
-                            symbol=expr, severity='warning')
-                    order = None
-
-                cls_type = dtype if rank == 0 else NumpyNDArrayType()
-
-                # Save the potential type
-                types.append(VariableTypeAnnotation(dtype, cls_type, prec, rank, order, is_const))
-
-        # Collect all possible types into a UnionTypeAnnotation
-        return UnionTypeAnnotation(*types)
+        if isinstance(visited_dtype, PyccelFunctionDef):
+            dtype_cls = visited_dtype.cls_name
+            dtype = dtype_cls.static_dtype()
+            prec = dtype_cls.static_precision()
+            class_type = dtype_cls.static_class_type()
+            if not isinstance(class_type, DataType):
+                class_type = dtype
+            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, class_type, prec, 0, None))
+        elif isinstance(visited_dtype, VariableTypeAnnotation):
+            if visited_dtype.rank > 1:
+                visited_dtype.order = order or visited_dtype.order or 'C'
+            return UnionTypeAnnotation(visited_dtype)
+        elif isinstance(visited_dtype, UnionTypeAnnotation):
+            return visited_dtype
+        elif isinstance(visited_dtype, ClassDef):
+            # TODO: Improve when #1676 is merged
+            dtype = self.get_class_construct(visited_dtype.name)
+            prec = 0
+            rank = 0
+            order = None
+            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
+        elif isinstance(visited_dtype, DataType):
+            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
+        else:
+            raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
+                    severity='fatal', symbol=expr)
 
 
     def _visit_DottedName(self, expr):
@@ -3593,7 +3605,7 @@ class SemanticParser(BasicParser):
         arg_annotations = [annot for a in templatable_args for annot in (a.type_list \
                                         if isinstance(a, UnionTypeAnnotation) else [a]) \
                                         if isinstance(annot, SyntacticTypeAnnotation)]
-        used_type_names = set(type_names for a in arg_annotations for type_names in a.dtypes)
+        used_type_names = set(a.dtype for a in arg_annotations)
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
