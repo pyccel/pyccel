@@ -78,10 +78,11 @@ jobs:
         shell: bash
       - name: Test
         run: |
+          python3 runtest.py
           pyccel project/basics/Point_mod.py --language=c --verbose
-          ls project/basics/__pyccel__
-          objdump -x project/basics/Point_mod*.pyd
+          python3 runtest.py
           pyccel project/basics/Line_mod.py --language=c --verbose
+          python3 runtest.py
         shell: bash
         working-directory: ./tests/pyccel/project_class_imports
       #- name: Fortran/C tests with pytest
