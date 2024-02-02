@@ -11,10 +11,10 @@ from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.c_concepts import CStackArray
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
 from pyccel.ast.core       import Import, Module, Declare
-from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyModule_Create
+from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
-from pyccel.ast.literals   import LiteralString, Nil
+from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
 from pyccel.ast.c_concepts import ObjectAddress
 from pyccel.ast.variable   import Variable
 
@@ -24,7 +24,9 @@ __all__ = ("CWrapperCodePrinter", "cwrappercode")
 
 errors = Errors()
 
-module_imports = [Import('cwrapper', Module('cwrapper',(),()))]
+module_imports = [Import('numpy_version', Module('numpy_version',(),())),
+                  Import('numpy/arrayobject', Module('numpy/arrayobject',(),())),
+                  Import('cwrapper', Module('cwrapper',(),()))]
 
 
 class CWrapperCodePrinter(CCodePrinter):
@@ -85,7 +87,7 @@ class CWrapperCodePrinter(CCodePrinter):
         """
         if isinstance(a.dtype, (WrapperCustomDataType, BindCPointer)):
             return True
-        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyModule_Create)):
+        elif isinstance(a, (PyBuildValueNode, PyCapsule_New, PyCapsule_Import, PyModule_Create)):
             return True
         else:
             return CCodePrinter.is_c_pointer(self,a)
@@ -248,6 +250,10 @@ class CWrapperCodePrinter(CCodePrinter):
         var  = self._print(expr.API_var)
         return f'PyCapsule_New((void *){var}, "{name}", NULL)'
 
+    def _print_PyCapsule_Import(self, expr):
+        name = expr.name
+        return f'(void**)PyCapsule_Import("{name}", 0)'
+
     def _print_PyModule_Create(self, expr):
         return f'PyModule_Create(&{expr.module_def_name})'
 
@@ -263,10 +269,13 @@ class CWrapperCodePrinter(CCodePrinter):
 
         function_signatures = ''.join(self.function_signature(f, print_arg_names = False) + ';\n' for f in mod.external_funcs)
 
+        API_var = mod.variables[0]
+
+        macro_defs = ''
         classes = []
-        decs = []
-        for c in mod.classes:
+        for i,c in enumerate(mod.classes):
             struct_name = c.struct_name
+            type_name = c.type_name
             attributes = ''.join(self._print(Declare(a.dtype, a)) for a in c.attributes)
             classes.append(f"struct {struct_name} {{\n"
                     "    PyObject_HEAD\n"
@@ -275,8 +284,12 @@ class CWrapperCodePrinter(CCodePrinter):
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
                           tuple(i.interface_func for i in c.interfaces)
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
+            macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
         class_code = '\n'.join(classes)
+
+        static_import_decs = self._print(Declare(API_var.dtype, API_var, static=True))
+        import_func = self._print(mod.import_func)
 
         return (f"#ifndef {name.upper()}_WRAPPER_H\n \
                 #define {name.upper()}_WRAPPER_H\n\n \
@@ -285,6 +298,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 #ifdef {name.upper()}_WRAPPER\n\n \
                 {function_signatures}\n \
                 #else\n\n \
+                {static_import_decs}\n \
+                {macro_defs}\n \
+                {import_func}\n \
                 #endif\n \
                 #endif // {name}_WRAPPER_H\n")
 
@@ -292,7 +308,7 @@ class CWrapperCodePrinter(CCodePrinter):
         scope = expr.scope
         self.set_scope(scope)
         # The initialisation and deallocation shouldn't be exposed to python
-        funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+        funcs_to_wrap = [f for f in expr.funcs]
 
         # Insert declared objects into scope
         variables = expr.original_module.variables if isinstance(expr, BindCModule) else expr.variables
@@ -328,14 +344,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = f.name,
                                             docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
                                                         if f.docstring else '""')
-                                     for f in funcs if f is not expr.init_func and not getattr(f, 'is_header', False))
-
-        slots_name = self.scope.get_new_name('{}_slots'.format(expr.name))
-        exec_func_name = expr.init_func.name
-        slots_def = (f'static PyModuleDef_Slot {slots_name}[] = {{\n'
-                     f'{{Py_mod_exec, {exec_func_name}}},\n'
-                     '{0, NULL},\n'
-                     '};\n')
+                                     for f in funcs if f is not expr.exe_func and not getattr(f, 'is_header', False))
 
         method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
@@ -353,12 +362,9 @@ class CWrapperCodePrinter(CCodePrinter):
                 '/* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */\n'
                 '0,\n'
                 f'{method_def_name},\n'
-                f'{slots_name}\n'
                 '};\n')
 
-        exec_func = self._print(expr.init_func)
-
-        init_func = self._print(expr.import_func)
+        init_func = self._print(expr.init_func)
 
         pymod_name = f'{expr.name}_wrapper'
         imports = [Import(pymod_name, Module(pymod_name,(),())), *self._additional_imports.values()]
@@ -369,7 +375,7 @@ class CWrapperCodePrinter(CCodePrinter):
         return '\n'.join(['#define PY_ARRAY_UNIQUE_SYMBOL CWRAPPER_ARRAY_API',
                 f'#define {pymod_name.upper()}\n',
                 imports, decs, sep, class_defs, sep,
-                function_defs, exec_func, sep, method_def, sep, slots_def, sep,
+                function_defs, sep, method_def, sep,
                 module_def, sep, init_func])
 
     def _print_PyClassDef(self, expr):
@@ -463,20 +469,22 @@ class CWrapperCodePrinter(CCodePrinter):
 
     def _print_Declare(self, expr):
         var = expr.variable
-        if isinstance(var.class_type, CStackArray):
-            declaration_type = self.find_in_dtype_registry(var.dtype, var.precision)
-            if isinstance(var.dtype, (PyccelPyObject, WrapperCustomDataType, BindCPointer)):
-                declaration_type = f'{declaration_type}*'
+        if isinstance(var.dtype, BindCPointer):
+            declaration_type = 'void*'
 
             static = 'static ' if expr.static else ''
             external = 'extern ' if expr.external else ''
-            size = var.shape[0]
 
             variable = self._print(expr.variable.name)
 
-            declaration = f'{static}{external}{declaration_type} {variable}[{size}];\n'
+            if var.rank == 0:
+                return f'{static}{external}{declaration_type} {variable};\n'
 
-            return declaration
+            size = var.shape[0]
+            if isinstance(size, LiteralInteger):
+                return f'{static}{external}{declaration_type} {variable}[{size}];\n'
+            else:
+                return f'{static}{external}{declaration_type}* {variable};\n'
         else:
             return CCodePrinter._print_Declare(self, expr)
 
