@@ -55,8 +55,14 @@ class CToPythonWrapper(Wrapper):
 
     A class which provides all necessary functions for wrapping different AST
     objects such that the resulting AST is Python-compatible.
+
+    Parameters
+    ----------
+    file_location : str
+        The folder where the translated code is located and where the generated .so file will
+        be located.
     """
-    def __init__(self, base_dirpath):
+    def __init__(self, file_location):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
         # Indicate if arrays were wrapped.
@@ -64,7 +70,7 @@ class CToPythonWrapper(Wrapper):
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
 
-        self._file_location = base_dirpath
+        self._file_location = file_location
         super().__init__()
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
