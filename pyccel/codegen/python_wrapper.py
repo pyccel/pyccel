@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 import os
+import time
 
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
@@ -112,15 +113,20 @@ def create_shared_library(codegen,
             accelerators = ('python',))
 
     if language == 'fortran':
+        start_bind_c_wrapping = time.time()
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
         bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
         bind_c_filename = '{}.f90'.format(bind_c_mod.name)
+        bind_c_wrapping_time = time.time() - start_bind_c_wrapping
 
+        start_bind_c_printing = time.time()
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
+        bind_c_printing_time = time.time() - start_bind_c_printing
 
+        start_bind_c_compiling = time.time()
         bind_c_obj=CompileObj(file_name = bind_c_filename,
                 folder = pyccel_dirpath,
                 flags  = main_obj.flags,
@@ -129,6 +135,7 @@ def create_shared_library(codegen,
         src_compiler.compile_module(compile_obj=bind_c_obj,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
+        bind_c_compiling_time = time.time() - start_bind_c_compiling
         c_ast = bind_c_mod
     else:
         c_ast = codegen.ast
@@ -143,10 +150,12 @@ def create_shared_library(codegen,
     cwrapper_lib = internal_libs["cwrapper"][1]
     cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
 
+    start_compile_libs = time.time()
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
                       compiler = wrapper_compiler,
                       verbose  = verbose)
+    compile_libs_time = time.time() - start_compile_libs
 
     wrapper_compile_obj.add_dependencies(cwrapper_lib)
 
@@ -166,12 +175,15 @@ def create_shared_library(codegen,
 
     codegen.ast.set_name(module_old_name)
 
+    start_print_cwrapper = time.time()
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
+    print_cwrapper_time = time.time() - start_print_cwrapper
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
+    start_compile_libs = time.time()
     for lib_name in ("ndarrays", "cwrapper_ndarrays"):
         if lib_name in wrapper_codegen.get_additional_imports():
             stdlib_folder, stdlib = internal_libs[lib_name]
@@ -186,10 +198,12 @@ def create_shared_library(codegen,
                               verbose  = verbose)
 
             wrapper_compile_obj.add_dependencies(stdlib)
+    compile_libs_time += time.time() - start_compile_libs
 
     #---------------------------------------
     #         Compile code
     #---------------------------------------
+    start_compile_wrapper = time.time()
     wrapper_compiler.compile_module(wrapper_compile_obj,
                                 output_folder = pyccel_dirpath,
                                 verbose = verbose)
@@ -198,9 +212,17 @@ def create_shared_library(codegen,
                                                     output_folder = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
                                                     verbose = verbose)
+    compile_wrapper_time = time.time() - start_compile_wrapper
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
 
     # Return absolute path of shared library
-    return sharedlib_filepath, {}
+    timings = {'Dependency compilation' : compile_libs_time,
+               'Wrapper printing': print_cwrapper_time,
+               'Wrapper compilation': compile_wrapper_time}
+    if language == 'fortran':
+        timings['Bind C wrapping'] = bind_c_wrapping_time
+        timings['Bind C printing'] = bind_c_printing_time
+        timings['Bind C compiling'] = bind_c_compiling_time
+    return sharedlib_filepath, timings

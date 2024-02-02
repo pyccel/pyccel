@@ -384,7 +384,7 @@ def execute_pyccel(fname, *,
         end_compile_target_language = time.time()
 
         # Create shared library
-        generated_filepath, timers = create_shared_library(codegen,
+        generated_filepath, shared_lib_timers = create_shared_library(codegen,
                                                mod_obj,
                                                language,
                                                wrapper_flags,
@@ -439,9 +439,12 @@ def execute_pyccel(fname, *,
     end = time.time()
 
     if show_timings:
+        timers = {"Initialisation" : start_syntax-start,
+                  "Syntactic Stage": end_syntax - start_syntax,
+                  "Semantic Stage": end_semantic - start_semantic,
+                  "Codegen Stage": end_codegen - start_codegen}
+        timers.update(shared_lib_timers)
+        timers['Total'] = end-start
         print("-------------------- Timers -------------------------")
-        print("Initialisation  : ", start_syntax-start)
-        print("Syntactic Stage : ", end_syntax - start_syntax)
-        print("Semantic Stage  : ", end_semantic - start_semantic)
-        print("Codegen Stage   : ", end_codegen - start_codegen)
-        print("Total           : ", end-start)
+        for n,t in timers.items():
+            print(f'{n:<23}: ',t)
