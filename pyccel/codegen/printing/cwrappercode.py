@@ -341,7 +341,7 @@ class CWrapperCodePrinter(CCodePrinter):
                                             wrapper_name = f.name,
                                             docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
                                                         if f.docstring else '""')
-                                     for f in funcs if f is not expr.exe_func and not getattr(f, 'is_header', False))
+                                     for f in funcs if not getattr(f, 'is_header', False))
 
         method_def_name = self.scope.get_new_name('{}_methods'.format(expr.name))
         method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
