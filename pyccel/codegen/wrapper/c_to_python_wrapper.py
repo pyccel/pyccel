@@ -25,7 +25,7 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, Py_XDECREF, PyCapsule_Import
+from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyList_GetItem, PyList_SetItem, PyUnicode_FromString
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
@@ -480,7 +480,7 @@ class CToPythonWrapper(Wrapper):
             body = []
 
         # Save classes to the module variable
-        for i,c in enumerate(expr.classes):
+        for c in expr.classes:
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
             class_name = wrapped_class.name

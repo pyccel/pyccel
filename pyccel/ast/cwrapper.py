@@ -851,33 +851,32 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
 
-# https://docs.python.org/3/c-api/refcounting.html#c.Py_XDECREF
-Py_XDECREF = FunctionDef(name = 'Py_XDECREF',
-                        body = [],
-                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [])
-
+# https://docs.python.org/3/c-api/type.html#c.PyType_Ready
 PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
 
+# https://docs.python.org/3/c-api/sys.html#PySys_GetObject
 PySys_GetObject = FunctionDef(name = 'PySys_GetObject',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FromString
 PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
                                      FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
+# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
 PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
