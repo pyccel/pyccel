@@ -451,7 +451,8 @@ class PyModule(Module):
         self._declarations = declarations
         self._exe_func = exe_func
         if import_func is None:
-            self._import_func = FunctionDef(f'{name}_import', (), (), ())
+            self._import_func = FunctionDef(f'{name}_import', (),
+                            (FunctionDefResult(Variable(NativeInteger(), '_', precision=-2, is_temp=True)),), ())
         else:
             self._import_func = import_func
         super().__init__(name, *args, **kwargs)
