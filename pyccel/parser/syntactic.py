@@ -70,12 +70,12 @@ from pyccel.parser.utilities   import read_file
 from pyccel.parser.utilities   import get_default_path
 
 from pyccel.parser.syntax.headers import parse as hdr_parse, types_meta
-from pyccel.parser.syntax.openmp  import parse as omp_parse
 from pyccel.parser.syntax.openacc import parse as acc_parse
 
 from pyccel.utilities.stage import PyccelStage
 
 from pyccel.errors.errors import Errors
+
 
 # TODO - remove import * and only import what we need
 from pyccel.errors.messages import *
@@ -171,6 +171,8 @@ class SyntaxParser(BasicParser):
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
+
+
         self._ast = ast
 
         self._syntax_done = True
@@ -203,14 +205,7 @@ class SyntaxParser(BasicParser):
         """
         if line.startswith('#$'):
             env = line[2:].lstrip()
-            if env.startswith('omp'):
-                try:
-                    expr = omp_parse(stmts=line)
-                except TextXSyntaxError as e:
-                    errors.report(f"Invalid OpenMP header. {e.message}",
-                            symbol = stmt, column = e.col,
-                              severity='fatal')
-            elif env.startswith('acc'):
+            if env.startswith('acc'):
                 try:
                     expr = acc_parse(stmts=line)
                 except TextXSyntaxError as e:
@@ -323,7 +318,6 @@ class SyntaxParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
-
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):
@@ -1262,6 +1256,7 @@ class SyntaxParser(BasicParser):
         if len(exprs) == 1:
             return exprs[0]
         else:
+            #causes errors in omp
             return CodeBlock(exprs)
 
     def _visit_CommentLine(self, stmt):

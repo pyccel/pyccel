@@ -20,7 +20,9 @@ def get_max_threads():
 
 def f1(i : 'int'):
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
+    import numpy as np
     out = -1
+    idx = np.int32(0)
     #$ omp parallel private(idx)
     idx = omp_get_thread_num()
 
@@ -211,6 +213,7 @@ def test_omp_get_set_schedule():
     import numpy as np
     from pyccel.stdlib.internal.openmp import omp_get_schedule, omp_set_schedule
     func_result = 0
+    i = 0
     #$ omp parallel private(i)
     omp_set_schedule(np.int32(2), np.int32(3))
     _, chunk_size = omp_get_schedule()
@@ -227,6 +230,8 @@ def test_nowait_schedule(n : int):
     a = np.zeros(n)
     imin_res = np.empty(4)
     imax_res = np.empty(4)
+    rank, nb_tasks = np.int32(0), np.int32(0)
+    i_min, i_max = 0, 0
 
     #$omp parallel private(rank,nb_tasks,i_min,i_max)
     rank = omp_get_thread_num()
@@ -262,6 +267,7 @@ def test_omp_get_max_task_priority():
     return max_task_priority_var
 
 def omp_matmul(A : 'float[:,:]', x : 'float[:,:]', out : 'float[:,:]'):
+    i, j, k = 0, 0, 0
     #$ omp parallel shared(A,x,out) private(i,j,k)
     #$ omp for
     for i in range(len(A)):# pylint: disable=C0200
@@ -296,6 +302,7 @@ def omp_nowait(x : 'int[:]', y : 'int[:]', z : 'float[:]'):
 
 def omp_arraysum(x : 'int[:]'):
     func_result = 0
+    i = 0
     #$ omp parallel private(i)
     #$ omp for reduction (+:func_result)
     for i in range(0, 5):
@@ -353,6 +360,8 @@ def omp_tasks(x : 'int'):
     def fib(n : int) -> int:
         if n < 2:
             return n
+        i = 0
+        j = 0
         #$ omp task shared(i) firstprivate(n)
         i = fib(n-1)
         #$ omp end task
@@ -384,7 +393,7 @@ def omp_simd(n : 'int'):
 def omp_flush():
     from pyccel.stdlib.internal.openmp import omp_get_thread_num
     flag = 0
-    #$ omp parallel num_threads(2)
+    #$ omp parallel num_threads(3)
     if omp_get_thread_num() == 0:
         #$ omp atomic update
         flag = flag + 1
@@ -393,8 +402,16 @@ def omp_flush():
         while flag < 1:
             pass
             #$ omp flush(flag)
-        #$ omp atomic update
+        #$ omp atomic seq_cst
         flag = flag + 1
+    elif omp_get_thread_num() == 2:
+        #$ omp flush(flag)
+        while flag < 1:
+            pass
+            #$ omp flush(flag)
+        #$ omp atomic seq_cst, update
+        flag = flag + 1
+
     #$ omp end parallel
     return flag
 
@@ -463,6 +480,7 @@ def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm : 'int[:]', long_varia
     n3     = long_variable_3_oiweqxhnoijaqed34023423.shape[0]
     n4     = long_variable_4_oiweaxaijaqedqd34023423.shape[0]
     n5     = long_variable_5_oiwed423rnoic3242ewdx35.shape[0]
+    i1, i2, i3, i4, i5 = 0, 0, 0, 0, 0
 
     #$ omp parallel private(i1, i2, i3, i4, i5) shared(long_variable_1_oiwed423rnoij21d4kojklm, long_variable_2_oiwedqwrnoij2asxaxnjkna, long_variable_3_oiweqxhnoijaqed34023423, long_variable_4_oiweaxaijaqedqd34023423, long_variable_5_oiwed423rnoic3242ewdx35, n1, n2, n3, n4, n5)
 
@@ -488,3 +506,38 @@ def omp_long_line(long_variable_1_oiwed423rnoij21d4kojklm : 'int[:]', long_varia
 
     #$ omp end parallel
     return func_result
+
+def potential_internal_data_race_condition():
+    #most of runs will succed even if there is a race condition, a synchronization point should be inside the generated
+    #loops to increase the chance of capture.
+    import numpy as np
+    x = np.array([1,2,3,4])
+    y = np.array([1,2,3,4])
+    #$ omp parallel num_threads(4)
+    #$ omp single nowait
+    z = x + y
+    #$ omp end single
+    #$ omp single nowait
+    t = x + y
+    #$omp end single
+    #$ omp end parallel
+    return z + t
+
+
+def parallel_if(n : int):
+    import numpy as np
+    from pyccel.stdlib.internal.openmp import omp_get_thread_num, omp_get_num_threads
+    a = np.zeros(n)
+    id, nthrds =  np.int32(0), np.int32(0)
+    start, end = 0, 0
+
+    #$ omp parallel if(parallel:n > 10) private(id, nthrds, start, end) num_threads(4)
+    id = omp_get_thread_num()
+    nthrds = omp_get_num_threads()
+
+    start = int(id * n / nthrds)
+    end = int((id + 1) * n / nthrds)
+    for i in range(start, end):
+        a[i] = 2 * i
+    #$ omp end parallel
+    return a

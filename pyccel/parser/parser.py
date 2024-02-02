@@ -13,9 +13,13 @@ import os
 from pyccel.parser.base      import get_filename_from_import
 from pyccel.parser.syntactic import SyntaxParser
 from pyccel.parser.semantic  import SemanticParser
+from pyccel.utilities.extensions import Extensions
 
 # TODO [AR, 18.11.2018] to be modified as a function
 # TODO [YG, 28.01.2020] maybe pass filename to the parse method?
+
+extensions = Extensions()
+
 class Parser(object):
 
     def __init__(self, filename, **kwargs):
@@ -135,7 +139,7 @@ class Parser(object):
         if self._syntax_parser:
             return self._syntax_parser.ast
 
-        parser             = SyntaxParser(self._filename, **self._kwargs)
+        parser             = extensions.extend_syntax_parser(SyntaxParser)(self._filename, **self._kwargs)
         self.syntax_parser = parser
         parser.ast        = parser.ast
 
@@ -157,7 +161,7 @@ class Parser(object):
         self._annotate_sons(verbose=verbose)
 
         # Create a new semantic parser and store it in object
-        parser = SemanticParser(self._syntax_parser,
+        parser = extensions.extend_semantic_parser(SemanticParser)(self._syntax_parser,
                                 d_parsers=self.d_parsers,
                                 parents=self.parents,
                                 **settings)

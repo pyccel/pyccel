@@ -230,6 +230,7 @@ c_imports = {n : Import(n, Module(n, (), ())) for n in
                  'assert',
                  'numpy_c']}
 
+
 class CCodePrinter(CodePrinter):
     """
     A printer for printing code in C.
@@ -2324,30 +2325,6 @@ class CCodePrinter(CodePrinter):
 
     def _print_EmptyNode(self, expr):
         return ''
-
-    #=================== OMP ==================
-
-    def _print_OmpAnnotatedComment(self, expr):
-        clauses = ''
-        if expr.combined:
-            clauses = ' ' + expr.combined
-        clauses += str(expr.txt)
-        if expr.has_nowait:
-            clauses = clauses + ' nowait'
-        omp_expr = '#pragma omp {}{}\n'.format(expr.name, clauses)
-
-        if expr.is_multiline:
-            if expr.combined is None:
-                omp_expr += '{\n'
-            elif (expr.combined and "for" not in expr.combined):
-                if ("masked taskloop" not in expr.combined) and ("distribute" not in expr.combined):
-                    omp_expr += '{\n'
-
-        return omp_expr
-
-    def _print_Omp_End_Clause(self, expr):
-        return '}\n'
-    #=====================================
 
     def _print_Program(self, expr):
         self.set_scope(expr.scope)

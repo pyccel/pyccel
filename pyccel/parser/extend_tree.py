@@ -8,6 +8,7 @@
 
 """
 
+import re
 from numpy import array, logical_and, where
 from ast   import AST, If as IfNode, parse
 from pyccel.errors.errors import Errors
@@ -48,7 +49,7 @@ def get_comments(code):
     if comments:
         new_comments    = [[comments[0]]]
         for index in range(1,len(comments)):
-            if comments[index][1] == comments[index-1][1]+1 and comments[index][2] == comments[index-1][2]:
+            if comments[index][1] == comments[index-1][1]+1 and comments[index][2] == comments[index-1][2] and not re.match(r'^#\$ *omp', comments[index - 1][0]):
                 new_comments[-1].append(comments[index])
             else:
                 new_comments.append([comments[index]])

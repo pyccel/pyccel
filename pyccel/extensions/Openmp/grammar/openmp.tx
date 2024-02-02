@@ -1,0 +1,420 @@
+OmpStatement:
+  '#$' 'omp' statement=OmpDirective raw='' omp_version=OMP_VERSION
+;
+
+OmpDirective:
+    name=/parallel\s+for\s+simd/ _tx_clauses*=ParallelForSimdClauses
+    | name=/parallel\s+for/ _tx_clauses*=ParallelForClauses
+    | name=/parallel\s+sections/ _tx_clauses*=ParallelSectionsClauses require_end_directive=TRUE
+    | name=/for\s+simd/ _tx_clauses*=ForSimdClauses
+    | name='parallel' _tx_clauses*=ParallelClauses _invalid_clauses*=AllOmpClauses require_end_directive=TRUE
+    | name='for' _tx_clauses*=ForClauses
+    | name='sections' _tx_clauses*=SectionsClauses require_end_directive=TRUE
+    | name='section' require_end_directive=TRUE
+    | name='single' _tx_clauses*=SingleClauses require_end_directive=TRUE
+    | name='simd' _tx_clauses*=SimdClauses
+    | name='taskloop' _tx_clauses*=TaskloopClauses
+    | name='taskyield'
+    | name='taskwait'
+    | name='taskgroup'
+    | name='task' _tx_clauses*=TaskClauses require_end_directive=TRUE
+    | name='target' _tx_clauses*=TargetClauses require_end_directive=TRUE
+    | name='teams' _tx_clauses*=TeamsClauses require_end_directive=TRUE
+    | name='distribute' _tx_clauses*=DistributeClauses
+    | name='master' require_end_directive=TRUE
+    | name='critical' require_end_directive=TRUE
+    | name='barrier'
+    | name='ordered' _tx_clauses*=OrderedClauses
+    | name='cancel' _tx_clauses*=CancelClauses
+    | name='atomic' (_tx_clauses=memory_order_clause ',')? _tx_clauses=atomic_clause (',' _tx_clauses=memory_order_clause)?
+    | name='atomic' (_tx_clauses=memory_order_clause)?
+    | name='flush' ('('_tx_clauses=OmpList')')?
+    | 'end' name=DirectivesNames _tx_clauses*=AllOmpClauses is_end_directive=TRUE
+;
+
+////////////////////////////////////////////////////
+//      Clauses for Constructs and Directives
+////////////////////////////////////////////////////
+
+ParallelForClauses:
+    ParallelClauses
+    | !nowait_clause ForClauses
+;
+ForSimdClauses:
+    ForClauses
+    | SimdClauses
+;
+
+ParallelSectionsClauses:
+    ParallelClauses
+    | !nowait_clause SectionsClauses
+;
+
+ParallelForSimdClauses:
+    ParallelClauses
+    | ForSimdClauses
+;
+
+ParallelClauses:
+    clause=if_clause
+    | clause=num_threads_clause
+    | clause=default_clause
+    | clause=private_clause
+    | clause=firstprivate_clause
+    | clause=shared_clause
+    | clause=copyin_clause
+    | clause=reduction_clause
+    | clause=proc_bind_clause
+    | clause=allocate_clause VERSION=OMP_5_0
+;
+
+ForClauses:
+    clause=private_clause
+    | clause=firstprivate_clause
+    | clause=lastprivate_clause
+    | clause=linear_clause
+    | clause=reduction_clause
+    | clause=schedule_clause
+    | clause=collapse_clause
+    | clause=ordered_clause
+    | clause=nowait_clause
+    | clause=allocate_clause
+    | clause=allocate_clause VERSION=OMP_5_0
+;
+
+SectionsClauses:
+    clause=private_clause
+    | clause=firstprivate_clause
+    | clause=lastprivate_clause
+    | clause=linear_clause
+    | clause=reduction_clause
+    | clause=nowait_clause
+    | clause=allocate_clause VERSION=OMP_5_0
+;
+
+SingleClauses:
+    clause=private_clause
+    | clause=firstprivate_clause
+    | clause=copyprivate_clause
+    | clause=nowait_clause
+;
+
+SimdClauses:
+    clause=safelen_clause
+    | clause=simdlen_clause
+    | clause=linear_clause
+    | clause=aligned_clause
+    | clause=private_clause
+    | clause=lastprivate_clause
+    | clause=reduction_clause
+    | clause=collapse_clause
+;
+
+TaskClauses:
+    clause=if_clause
+    | clause=final_clause
+    | clause=untied_clause
+    | clause=default_clause
+    | clause=mergeable_clause
+    | clause=private_clause
+    | clause=shared_clause
+    | clause=depend_clause
+    | clause=priority_clause
+    | clause=firstprivate_clause //todo is this a 5.0 clause?
+;
+
+TaskloopClauses:
+    clause=if_clause
+    | clause=shared_clause
+    | clause=private_clause
+    | clause=firstprivate_clause
+    | clause=lastprivate_clause
+    | clause=default_clause
+    | clause=grainsize_clause
+    | clause=num_tasks_clause
+    | clause=collapse_clause
+    | clause=final_clause
+    | clause=priority_clause
+    | clause=untied_clause
+    | clause=mergeable_clause
+    //| nogroup_clause
+;
+
+TargetClauses:
+    clause=if_clause
+    | clause=device_clause
+    | clause=private_clause
+    | clause=firstprivate_clause
+    | clause=map_clause
+    | clause=is_device_ptr_clause
+    | clause=defaultmap_clause
+    | clause=nowait_clause
+    | clause=depend_clause
+;
+
+TeamsClauses:
+    clause=num_teams_clause
+    | clause=thread_limit_clause
+    | clause=default_clause
+    | clause=private_clause
+    | clause=firstprivate_clause
+    | clause=shared_clause
+    | clause=reduction_clause
+    | clause=allocate_clause VERSION=OMP_5_0
+;
+
+DistributeClauses:
+    clause=private_clause
+    | clause=firstprivate_clause
+    | clause=lastprivate_clause
+    | clause=collapse_clause
+    | clause=dist_schedule_clause
+;
+
+OrderedClauses:
+    clause=threads_clause
+    | clause=simd_clause
+;
+
+CancelClauses:
+    clause=if_clause
+;
+
+
+AllOmpClauses:
+      if_clause
+    | num_threads_clause
+    | default_clause
+    | private_clause
+    | firstprivate_clause
+    | shared_clause
+    | copyin_clause
+    | reduction_clause
+    | proc_bind_clause
+    | lastprivate_clause
+    | linear_clause
+    | schedule_clause
+    | collapse_clause
+    | ordered_clause
+    | nowait_clause
+    | copyprivate_clause
+    | safelen_clause
+    | simdlen_clause
+    | aligned_clause
+    | final_clause
+    | untied_clause
+    | mergeable_clause
+    | depend_clause
+    | priority_clause
+    | grainsize_clause
+    | num_tasks_clause
+    | device_clause
+    | map_clause
+    | defaultmap_clause
+    | is_device_ptr_clause
+    | num_teams_clause
+    | thread_limit_clause
+    | dist_schedule_clause
+    | atomic_clause
+    | memory_order_clause
+    | allocate_clause
+;
+
+////////////////////////////////////////////////////
+//              Clauses definitions
+////////////////////////////////////////////////////
+
+if_clause: name='if' '('(
+                    VERSION=OMP_5_0 directive_name_modifier='parallel' ':' omp_expr=OmpScalarExpr allowed_parents+=PARALLEL_PARENT[';'] //we force allowed_parents to be a list
+                    | VERSION=OMP_4_5  omp_expr=OmpScalarExpr
+             )')';
+
+num_threads_clause: name='num_threads' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+default_clause: name='default' '('(
+                   VERSION=OMP_4_5 attribute=DataSharingAttribute
+                   | VERSION=OMP_5_0 attribute=OmpDirective
+             )')';
+
+private_clause: name='private' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+firstprivate_clause: name='firstprivate' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+lastprivate_clause: name='lastprivate' '('(
+                       VERSION=OMP_4_5 ( VERSION=OMP_5_0 modifier=lastprivate_modifier ':')? omp_exprs=OmpList
+             )')';
+
+
+shared_clause: name='shared' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+copyin_clause: name='copyin' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+reduction_clause: name='reduction' '('(
+                   VERSION=OMP_5_0 modifier=ReductionModifier ',' operator=ReductionOperator ':' omp_exprs=OmpList
+                   | VERSION=OMP_4_5 operator=ReductionOperator ':' omp_exprs=OmpList
+             )')';
+
+proc_bind_clause: name='proc_bind' '('(
+                     VERSION=OMP_4_5                     affinity_policy=AffinityPolicy // supported for 4.5 and later
+                   | VERSION=OMP_4_5 DEPRECATED=OMP_5_1  affinity_policy='master' // deprecated in 5.1
+                   | VERSION=OMP_5_1                     affinity_policy='primary' // supported for 5.1 and later
+             )')';
+
+linear_clause: name='linear' '('(
+                     VERSION=OMP_4_5 omp_exprs=OmpList ':' omp_exprs=OmpIntegerExpr
+             )')';
+
+schedule_clause: name='schedule' '('
+                     VERSION=OMP_4_5 (modifier*=ScheduleModifier[','] ':')? kind=ScheduleKind (',' omp_exprs=OmpIntegerExpr)?
+             ')';
+
+collapse_clause: name='collapse' '('(
+                     VERSION=OMP_4_5 omp_exprs=OmpConstantPositiveInteger
+             )')';
+
+ordered_clause: name='ordered' VERSION=OMP_4_5 ('('
+                     omp_exprs=OmpConstantPositiveInteger
+             ')')?;
+
+nowait_clause: name='nowait' VERSION=OMP_4_5;
+
+copyprivate_clause: name='copyprivate' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+safelen_clause: name='safelen' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+simdlen_clause: name='simdlen' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+aligned_clause: name='aligned' '('(
+                     VERSION=OMP_4_5 omp_exprs=OmpList ':' omp_exprs=OmpIntegerExpr
+             )')';
+
+final_clause: name='final' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpScalarExpr
+             )')';
+
+untied_clause: name='untied' VERSION=OMP_4_5;
+
+mergeable_clause: name='mergeable' VERSION=OMP_4_5;
+
+depend_clause: name='depend' '('(
+                     VERSION=OMP_4_5 dependence_type=DependenceType ':' omp_exprs=OmpList
+             )')';
+
+priority_clause: name='priority' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+grainsize_clause: name='grainsize' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+num_tasks_clause: name='num_tasks' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+device_clause: name='device' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpIntegerExpr
+             )')';
+
+map_clause: name='map' '('(
+                   VERSION=OMP_4_5 ((map_type_modifier=MapTypeModifier (',')?)? map_type=MapType)? omp_exprs=OmpList
+             )')';
+
+is_device_ptr_clause: name='is_device_ptr' '('(
+                   VERSION=OMP_4_5 omp_exprs=OmpList
+             )')';
+
+defaultmap_clause: name='defaultmap' '('(
+                   VERSION=OMP_4_5 'tofrom' ':' omp_exprs=OmpScalarExpr
+             )')';
+
+num_teams_clause: name='num_teams' '('(
+                   VERSION=OMP_4_5 'num_teams' ':' omp_exprs=OmpIntegerExpr
+             )')';
+
+thread_limit_clause: name='thread_limit' '('(
+                   VERSION=OMP_4_5 'num_teams' ':' omp_exprs=OmpIntegerExpr
+             )')';
+
+dist_schedule_clause: name='dist_schedule' '('(
+                   VERSION=OMP_4_5 (kind='static')? omp_exprs=OmpIntegerExpr
+             )')';
+
+threads_clause: VERSION=OMP_4_5 name='threads';
+
+simd_clause: VERSION=OMP_4_5 name='simd';
+
+atomic_clause: VERSION=OMP_4_5 value=atomic_clause_values;
+
+memory_order_clause: VERSION=OMP_4_5 value='seq_cst';
+
+allocate_clause: name='allocate' '('(
+                   VERSION=OMP_5_0 omp_exprs=OmpList
+             )')';
+
+order_clause: name='order' '('
+                   VERSION=OMP_5_0 'concurent'
+                   ')';
+
+////////////////////////////////////////////////////
+//              Clauses values
+////////////////////////////////////////////////////
+atomic_clause_values: 'read' | 'write' | 'update' | 'capture';
+OmpScalarExpr: value=InnerContent | ParenthesisContent;
+OmpIntegerExpr: value=InnerContent | ParenthesisContent;
+OmpConstantPositiveInteger: value=/[0-9]+/;
+OmpList: throw_away+=ID[','];
+ParenthesizedExpression: (('(' ParenthesizedExpression ')') | /[^()]*/)*; // TODO: find a better way to do this as this will not escape the parenthesis inside of a string
+DataSharingAttribute: ('shared' | 'none' | 'private' | 'firstprivate');
+ReductionOperator: ('+' | '-' | '*' | '&' | '|' | '^' | '&&' | '||' | 'min' | 'max'); // TODO: those are only the implicitly declared ones for C and C++. Add the others for Fortran and support user-defined ones (see specs https://www.openmp.org/spec-html/5.0/openmpsu107.html#x140-581002)
+AffinityPolicy: ('close' | 'spread');
+
+ReductionModifier: VERSION=OMP_5_0 'inscan'
+                        allowed_parents += PARALLEL_PARENT[';']
+                    | VERSION=OMP_5_0 'task'
+                        allowed_parents += PARALLEL_PARENT[';']
+                    | VERSION=OMP_5_0 'default'
+                        allowed_parents += PARALLEL_PARENT[';']
+                        allowed_parents += TEAMS_PARENT[';']
+                    ;
+
+lastprivate_modifier: 'conditional';
+ScheduleModifier: 'monotonic' | 'nonmonotonic' | 'simd';
+ScheduleKind: 'static' | 'dynamic' | 'guided' | 'auto' | 'runtime';
+DependenceType: 'in' | 'out' | 'inout';
+MapType: 'to' | 'from' | 'tofrom' | 'alloc' | 'release' | 'delete';
+MapTypeModifier: 'always';
+ConstructTypeClause: 'parallel' | 'sections' | 'for' | 'taskgroup';
+ParenthesisContent: '(' (InnerContent | ParenthesisContent | QuotedString)* ')';
+InnerContent: /[^():]+/;
+QuotedString: quote=QUOTE contents=/[^'"]*/ quote=QUOTE;
+QUOTE: '"' | "'";
+DirectivesNames: 'parallel' | 'for' | 'sections' | 'section' | 'single' | 'simd' | 'taskloop' | 'taskyeild' | 'task' | 'target'
+| 'teams' | 'distribute' | 'master' | 'critical' | 'barrier' | 'taskwait' | 'taskgroup' | 'ordered' | 'cancel'
+| 'threadprivate' | 'metadirective';
+////////////////////////////////////////////////////
+//              Omp Versions
+////////////////////////////////////////////////////
+OMP_4_5: '';
+OMP_5_0: '';
+OMP_5_1: '';
+TRUE: '';
+PARALLEL_PARENT: '';
+TEAMS_PARENT: '';
+OMP_VERSION: '';
