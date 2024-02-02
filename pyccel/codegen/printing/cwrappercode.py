@@ -290,18 +290,20 @@ class CWrapperCodePrinter(CCodePrinter):
         static_import_decs = self._print(Declare(API_var.dtype, API_var, static=True))
         import_func = self._print(mod.import_func)
 
-        return (f"#ifndef {name.upper()}_WRAPPER_H\n \
-                #define {name.upper()}_WRAPPER_H\n\n \
+        header_id = f'{name.upper()}_WRAPPER'
+        header_guard = f'{header_id}_H'
+        return (f"#ifndef {header_guard}\n \
+                #define {header_guard}\n\n \
                 {imports}\n \
                 {class_code}\n \
-                #ifdef {name.upper()}_WRAPPER\n\n \
+                #ifdef {header_id}\n\n \
                 {function_signatures}\n \
                 #else\n\n \
                 {static_import_decs}\n \
                 {macro_defs}\n \
                 {import_func}\n \
                 #endif\n \
-                #endif // {name}_WRAPPER_H\n")
+                #endif // {header_guard}\n")
 
     def _print_PyModule(self, expr):
         scope = expr.scope
