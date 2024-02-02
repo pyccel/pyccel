@@ -19,6 +19,7 @@ All notable changes to this project will be documented in this file.
 -   #1685 : Add support for `type()` function with class instance argument.
 -   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
 -   #1680 : Add support for `typing.Final`.
+-   #1690 : Add support for pop() method for 
 
 ### Fixed
 
