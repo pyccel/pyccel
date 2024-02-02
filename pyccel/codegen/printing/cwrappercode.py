@@ -491,7 +491,7 @@ class CWrapperCodePrinter(CCodePrinter):
             idxs = ''.join(f'[{self._print(a)}]' for a in expr.indices)
             return f'{base}{idxs}'
         else:
-            CCodePrinter._print_IndexedElement(self, expr)
+            return CCodePrinter._print_IndexedElement(self, expr)
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
