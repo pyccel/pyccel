@@ -7,7 +7,6 @@
 import os
 
 from pyccel.ast.core                        import ModuleHeader
-from pyccel.ast.cwrapper                    import PyModule
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
@@ -17,7 +16,6 @@ from pyccel.codegen.utilities      import recompile_object
 from pyccel.codegen.utilities      import copy_internal_library
 from pyccel.codegen.utilities      import internal_libs
 from pyccel.naming                 import name_clash_checkers
-from pyccel.parser.base            import get_filename_from_import
 from pyccel.parser.scope           import Scope
 from pyccel.utilities.stage        import PyccelStage
 from .compiling.basic     import CompileObj
