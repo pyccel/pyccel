@@ -44,7 +44,7 @@ class ListAppend(PyccelInternalFunction):
     def __init__(self, *args) -> None:
         super().__init__(*args)
         if not isinstance(args[1].dtype, type(args[0].dtype)):
-            errors.report('Argument of type {} is incompatible to list of type {}'.format(args[1].dtype, args[0].dtype),
+            errors.report(f'Argument of type {args[1].dtype} is incompatible with list of type {args[0].dtype}',
                         severity='fatal')
 
 

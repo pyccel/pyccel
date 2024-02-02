@@ -844,12 +844,12 @@ class PythonCodePrinter(CodePrinter):
         arg = '{}, {}{}'.format(arr, axis, keep_dims)
 
         return "{}({})".format(name, arg)
-    
+
     def _print_ListAppend(self, expr):
         method_name = expr.name
         dotted_var = self._print(expr.args[0])
         method_args = self._print(expr.args[1])
-        
+
         return "{}.{}({})".format(dotted_var, method_name, method_args)
 
     def _print_Slice(self, expr):
