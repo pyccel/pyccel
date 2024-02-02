@@ -10,16 +10,8 @@ always available.
 In this module we implement List methods.
 """
 
-from pyccel.errors.errors import PyccelError
-
-from pyccel.utilities.stage import PyccelStage
-from ..datatypes import (NativeInteger, NativeHomogeneousList, NativeVoid)
-
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode
 from pyccel.ast.internals import PyccelInternalFunction
-
-pyccel_stage = PyccelStage()
-
+from ..datatypes import NativeHomogeneousList
 
 class ListPop(PyccelInternalFunction) :
     """

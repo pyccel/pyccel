@@ -24,7 +24,7 @@ __all__ = ('BooleanClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
-        'ListClass'
+        'ListClass',
         'literal_classes',
         'get_cls_base')
 
