@@ -1271,8 +1271,9 @@ class CCodePrinter(CodePrinter):
             init    = ''
 
         external = 'extern ' if expr.external else ''
+        static = 'static ' if expr.static else ''
 
-        declaration = f'{external}{declaration_type} {variable}{init};\n'
+        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
