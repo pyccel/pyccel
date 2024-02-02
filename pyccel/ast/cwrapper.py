@@ -37,21 +37,25 @@ from .c_concepts import ObjectAddress
 errors = Errors()
 
 __all__ = (
-#
+# --------- DATATYPES -----------
+    'PyccelPyObject',
+    'PyccelPyClassType',
+    'PyccelPyTypeObject',
+    'WrapperCustomDataType',
+    'CStackArray',
 # --------- CLASSES -----------
-#
     'PyFunctionDef',
     'PyInterface',
     'PyClassDef',
     'PyModule',
-    'PyccelPyClassType',
-    'PyccelPyObject',
-    'PyccelPyTypeObject',
-    'WrapperCustomDataType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyCapsule_New',
+    'PyCapsule_Import',
+    'PyModule_Create',
     'PyModule_AddObject',
+    'PyModInitFunc',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
@@ -61,6 +65,15 @@ __all__ = (
     'Py_INCREF',
     'Py_DECREF',
     'PyObject_TypeCheck',
+    'PySys_GetObject',
+    'PyUnicode_FromString',
+    'PyList_GetItem',
+    'PyList_SetItem'
+    'PyErr_Occurred'
+    'PyErr_SetString'
+    'PyNotImplementedError'
+    'PyTypeError'
+    'PyObject_TypeCheck'
 )
 
 #-------------------------------------------------------------------
@@ -1011,7 +1024,8 @@ PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedE
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
 
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
-            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')), FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
+            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),
+                         FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
             results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
             body = [])
 
