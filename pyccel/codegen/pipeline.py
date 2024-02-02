@@ -10,6 +10,7 @@ Contains the execute_pyccel function which carries out the main steps required t
 import os
 import sys
 import shutil
+import time
 from pathlib import Path
 
 from pyccel.errors.errors          import Errors, PyccelError
@@ -45,6 +46,7 @@ def execute_pyccel(fname, *,
                    semantic_only = False,
                    convert_only  = False,
                    verbose       = False,
+                   show_timings  = False,
                    folder        = None,
                    language      = None,
                    compiler      = None,
@@ -110,6 +112,7 @@ def execute_pyccel(fname, *,
     conda_warnings : str, optional
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
+    start = time.time()
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
@@ -196,6 +199,7 @@ def execute_pyccel(fname, *,
     # Change working directory to 'folder'
     os.chdir(folder)
 
+    start_syntax = time.time()
     # Parse Python file
     try:
         parser = Parser(pymod_filepath)
@@ -212,14 +216,16 @@ def execute_pyccel(fname, *,
         handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
+    end_syntax = time.time()
+
     if syntax_only:
         pyccel_stage.pyccel_finished()
         return
 
+    start_semantic = time.time()
     # Annotate abstract syntax Tree
     try:
-        settings = {'verbose':verbose}
-        parser.annotate(**settings)
+        parser.annotate(verbose = verbose)
     except NotImplementedError as error:
         msg = str(error)
         errors.report(msg+'\n'+PYCCEL_RESTRICTION_TODO,
@@ -234,6 +240,8 @@ def execute_pyccel(fname, *,
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
+    end_semantic = time.time()
+
     if semantic_only:
         pyccel_stage.pyccel_finished()
         return
@@ -241,6 +249,7 @@ def execute_pyccel(fname, *,
     # -------------------------------------------------------------------------
 
     semantic_parser = parser.semantic_parser
+    start_codegen = time.time()
     # Generate .f90 file
     try:
         codegen = Codegen(semantic_parser, module_name)
@@ -259,6 +268,7 @@ def execute_pyccel(fname, *,
     if errors.has_errors():
         handle_error('code generation')
         raise PyccelCodegenError('Code generation failed')
+    end_codegen = time.time()
 
     if language == 'python':
         output_file = (output_name + '.py') if output_name else os.path.basename(fname)
@@ -349,6 +359,7 @@ def execute_pyccel(fname, *,
         get_module_dependencies(son, deps)
     mod_obj.add_dependencies(*deps.values())
 
+    start_compile_target_language = time.time()
     # Compile code to modules
     try:
         src_compiler.compile_module(compile_obj=mod_obj,
@@ -359,6 +370,7 @@ def execute_pyccel(fname, *,
         raise
 
 
+    end_compile_target_language = time.time()
     try:
         if codegen.is_program:
             prog_obj = CompileObj(file_name = prog_name,
@@ -368,8 +380,11 @@ def execute_pyccel(fname, *,
             generated_program_filepath = src_compiler.compile_program(compile_obj=prog_obj,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
+
+        end_compile_target_language = time.time()
+
         # Create shared library
-        generated_filepath = create_shared_library(codegen,
+        generated_filepath, timers = create_shared_library(codegen,
                                                mod_obj,
                                                language,
                                                wrapper_flags,
@@ -421,3 +436,12 @@ def execute_pyccel(fname, *,
     # Change working directory back to starting point
     os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
+    end = time.time()
+
+    if show_timings:
+        print("-------------------- Timers -------------------------")
+        print("Initialisation  : ", start_syntax-start)
+        print("Syntactic Stage : ", end_syntax - start_syntax)
+        print("Semantic Stage  : ", end_semantic - start_semantic)
+        print("Codegen Stage   : ", end_codegen - start_codegen)
+        print("Total           : ", end-start)

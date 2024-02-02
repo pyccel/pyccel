@@ -203,4 +203,4 @@ def create_shared_library(codegen,
     os.chdir(base_dirpath)
 
     # Return absolute path of shared library
-    return sharedlib_filepath
+    return sharedlib_filepath, {}
