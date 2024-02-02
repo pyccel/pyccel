@@ -13,7 +13,7 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode, ScopedAstNode
+from .basic     import PyccelAstNode
 
 from .bind_c    import BindCPointer
 
@@ -22,7 +22,7 @@ from .datatypes import NativeInteger, NativeFloat, NativeComplex
 from .datatypes import NativeBool, NativeString, NativeVoid
 
 from .core      import FunctionDefArgument, FunctionDefResult
-from .core      import FunctionDef, ClassDef, CodeBlock
+from .core      import FunctionDef, ClassDef
 from .core      import Module, Interface, Declare
 
 from .internals import get_final_precision, PyccelInternalFunction
@@ -815,7 +815,27 @@ class PyClassDef(ClassDef):
 
 #-------------------------------------------------------------------
 class PyModInitFunc(FunctionDef):
-    __slots__ = ('_static_vars')
+    """
+    A class representing the PyModInitFunc function def.
+
+    A class representing the PyModInitFunc function def. This function returns the
+    macro PyModInitFunc, takes no arguments and initialises a module.
+
+    Parameters
+    ----------
+    name : str
+        The name of the function.
+
+    body : list[PyccelAstNode]
+        The code executed in the function.
+
+    static_vars : list[Variable]
+        A list of variables which should be declared as static objects.
+
+    scope : Scope
+        The scope of the function.
+    """
+    __slots__ = ('_static_vars',)
 
     def __init__(self, name, body, static_vars, scope):
         self._static_vars = static_vars
@@ -823,7 +843,10 @@ class PyModInitFunc(FunctionDef):
 
     @property
     def declarations(self):
-        """ Returns the declarations of the variables
+        """
+        Returns the declarations of the variables.
+
+        Returns the declarations of the variables.
         """
         return [Declare(v.dtype, v, static=(v in self._static_vars)) \
                 for v in self.scope.variables.values()]
