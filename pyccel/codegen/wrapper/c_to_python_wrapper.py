@@ -266,7 +266,7 @@ class CToPythonWrapper(Wrapper):
             try :
                 cast_function = check_type_registry[(dtype, prec)]
             except KeyError:
-                errors.report(f"Can't check the type of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
@@ -280,7 +280,7 @@ class CToPythonWrapper(Wrapper):
             try :
                 type_ref = numpy_dtype_registry[(dtype, prec)]
             except KeyError:
-                errors.report(f"Can't check the type of an array of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of an array of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
 
             # order flag
@@ -297,7 +297,7 @@ class CToPythonWrapper(Wrapper):
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
 
         if raise_error:
-            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
+            message = LiteralString(f"Expected an argument of type {dtype.name} for argument {arg.name}")
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
