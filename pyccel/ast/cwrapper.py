@@ -590,16 +590,6 @@ class PyModule(Module):
         """
         return self._import_func
 
-    @property
-    def API_var(self):
-        """
-        The variable which describes the API for this module.
-
-        Get the variable which describes the API for this module. This variable holds
-        the information passed to or retrieved from a Capsule.
-        """
-        return self.variables[0]
-
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
     """
