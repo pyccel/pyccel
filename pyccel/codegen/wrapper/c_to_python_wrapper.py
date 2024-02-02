@@ -601,6 +601,8 @@ class CToPythonWrapper(Wrapper):
         the folder where the file is located (currently this is done by temporarily modifying
         an element of the list as the stable C-Python API doesn't contain any functions for
         reducing the size of lists).
+        See <https://docs.python.org/3/extending/extending.html>
+        for more details.
 
         Parameters
         ----------
@@ -614,10 +616,6 @@ class CToPythonWrapper(Wrapper):
 
         import_func : FunctionDef
             The import function.
-
-        See Also
-        --------
-        https://docs.python.org/3/extending/extending.html
         """
         mod_name = getattr(expr, 'original_module', expr).name
         # Initialise the scope
