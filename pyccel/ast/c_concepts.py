@@ -13,6 +13,7 @@ from .datatypes import DataType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
+           'CStackArray',
            'CStringExpression',
            'ObjectAddress',
            'PointerCast')

@@ -42,7 +42,6 @@ __all__ = (
     'PyccelPyClassType',
     'PyccelPyTypeObject',
     'WrapperCustomDataType',
-    'CStackArray',
 # --------- CLASSES -----------
     'PyFunctionDef',
     'PyInterface',
@@ -68,12 +67,12 @@ __all__ = (
     'PySys_GetObject',
     'PyUnicode_FromString',
     'PyList_GetItem',
-    'PyList_SetItem'
-    'PyErr_Occurred'
-    'PyErr_SetString'
-    'PyNotImplementedError'
-    'PyTypeError'
-    'PyObject_TypeCheck'
+    'PyList_SetItem',
+    'PyErr_Occurred',
+    'PyErr_SetString',
+    'PyNotImplementedError',
+    'PyTypeError',
+    'PyObject_TypeCheck',
 )
 
 #-------------------------------------------------------------------
