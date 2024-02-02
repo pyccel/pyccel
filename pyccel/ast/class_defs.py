@@ -228,7 +228,7 @@ def get_cls_base(dtype, precision, container_type):
     elif isinstance(container_type, NativeTuple):
         return TupleClass
     elif isinstance(container_type, NativeHomogeneousList):
-        return ListClass       
+        return ListClass
     else:
         if container_type:
             type_name = str(container_type)

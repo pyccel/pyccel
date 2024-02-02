@@ -1130,7 +1130,7 @@ class PythonCodePrinter(CodePrinter):
         args = ', '.join(self._print(a.annotation)[1:-1] for a in expr.args)
         results = ', '.join(self._print(r.annotation)[1:-1] for r in expr.results)
         return f"({results})({args})"
-    
+
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'

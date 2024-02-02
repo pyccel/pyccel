@@ -11,7 +11,7 @@ In this module we implement List methods.
 """
 
 from pyccel.ast.internals import PyccelInternalFunction
-from ..datatypes import NativeHomogeneousList
+from pyccel.ast.datatypes import NativeHomogeneousList
 
 class ListPop(PyccelInternalFunction) :
     """
@@ -26,7 +26,7 @@ class ListPop(PyccelInternalFunction) :
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ('_dtype')
+    __slots__ = ('_dtype',)
     _precision = -1
     _rank  = 0
     _shape = None
