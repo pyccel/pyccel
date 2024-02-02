@@ -141,9 +141,9 @@ class SyntaxParser(BasicParser):
         self._context = []
 
         self.load()
+
         tree                = extend_tree(code)
         self._fst           = tree
-        
         self._in_lhs_assign = False
 
         self.parse()
@@ -171,7 +171,6 @@ class SyntaxParser(BasicParser):
 
         pyccel_stage.set_stage('syntactic')
         ast       = self._visit(self.fst)
-
         self._ast = ast
 
         self._syntax_done = True

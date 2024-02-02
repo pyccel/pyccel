@@ -58,7 +58,6 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, ListClass ,get_cls_base
 
 from pyccel.ast.datatypes import str_dtype, DataType
@@ -292,7 +291,6 @@ class SemanticParser(BasicParser):
         pyccel.ast.basic.PyccelAstNode
             An annotated object which can be printed.
         """
-        
 
         if self.semantic_done:
             print ('> semantic analysis already done')
@@ -644,10 +642,6 @@ class SemanticParser(BasicParser):
 
         elif isinstance(expr, PythonTuple):
             d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'heap'
-            return d_var
-        elif isinstance(expr, PythonList):
-            d_var['cls_base'       ] = ListClass
             d_var['memory_handling'] = 'heap'
             return d_var
         elif isinstance(expr, PythonList):
@@ -1814,7 +1808,7 @@ class SemanticParser(BasicParser):
         #      - line and column
         #      - blocking errors
         current_ast = self.current_ast_node
-        
+
         if getattr(expr,'python_ast', None) is not None:
             self._current_ast_node = expr.python_ast
         classes = type(expr).__mro__
@@ -2400,7 +2394,6 @@ class SemanticParser(BasicParser):
         lhs = expr.name[0] if len(expr.name) == 2 \
                 else DottedName(*expr.name[:-1])
         rhs = expr.name[-1]
-
 
         visited_lhs = self._visit(lhs)
         first = visited_lhs

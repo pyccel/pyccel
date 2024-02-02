@@ -31,8 +31,8 @@ class ListPop(PyccelInternalFunction) :
     
     Parameters
     ----------
-    arg : TypedAstNode
-       
+    *args : iterable
+        The arguments passed to the function call.
     """
     __slots__ = ('_dtype')
     _precision = -1

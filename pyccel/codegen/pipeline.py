@@ -217,7 +217,6 @@ def execute_pyccel(fname, *,
 
     # Annotate abstract syntax Tree
     try:
-        
         settings = {'verbose':verbose}
         parser.annotate(**settings)
     except NotImplementedError as error:
@@ -274,7 +273,7 @@ def execute_pyccel(fname, *,
 
     compile_libs = [*libs, parser.metavars['libraries']] \
                     if 'libraries' in parser.metavars else libs
-    mod_obj =  CompileObj(file_name = fname,
+    mod_obj = CompileObj(file_name = fname,
             folder       = pyccel_dirpath,
             flags        = fflags,
             includes     = includes,
