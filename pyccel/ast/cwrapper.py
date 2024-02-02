@@ -352,15 +352,12 @@ class PyModule_Create(PyccelInternalFunction):
     The PyModule_Create function can be found in Python.h.
     It acts as a constructor for a module. More information about
     this function can be found in Python's documentation.
+    See <https://docs.python.org/3/c-api/module.html#c.PyModule_Create>.
 
     Parameters
     ----------
     module_def_name : str
         The name of the structure which defined the module.
-
-    See Also
-    --------
-    https://docs.python.org/3/c-api/module.html#c.PyModule_Create
     """
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
@@ -393,6 +390,10 @@ class PyCapsule_New(PyccelInternalFunction):
     the creation of a capsule. A capsule contains all information
     from a module which should be exposed to other modules that import
     this module.
+    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    for a tutorial involving capsules.
+    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New>
+    for the API docstrings for this method.
 
     Parameters
     ----------
@@ -401,11 +402,6 @@ class PyCapsule_New(PyccelInternalFunction):
 
     module_name : str
         The name of the module being exposed.
-
-    See Also
-    --------
-    https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New
-    https://docs.python.org/3/extending/extending.html#using-capsules
     """
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
@@ -449,16 +445,15 @@ class PyCapsule_Import(PyccelInternalFunction):
     the initialisation of a capsule by importing the information from
     another module. A capsule contains all information from a module
     which should be exposed to other modules that import this module.
+    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    for a tutorial involving capsules.
+    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import>
+    for the API docstrings for this method.
 
     Parameters
     ----------
     module_name : str
         The name of the module being retrieved.
-
-    See Also
-    --------
-    https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import
-    https://docs.python.org/3/extending/extending.html#using-capsules
     """
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
@@ -509,12 +504,12 @@ class PyModule(Module):
 
     init_func : FunctionDef, optional
         The function which is executed when a module is initialised.
-        See: https://docs.python.org/3/c-api/module.html#multi-phase-initialization.
+        See: <https://docs.python.org/3/c-api/module.html#multi-phase-initialization>.
 
     import_func : FunctionDef, optional
         The function which allows types from this module to be imported in other
         modules.
-        See: https://docs.python.org/3/extending/extending.html.
+        See: <https://docs.python.org/3/extending/extending.html>.
 
     **kwargs : dict
         See Module.
@@ -581,10 +576,8 @@ class PyModule(Module):
         The function which allows types from this module to be imported in other modules.
 
         The function which allows types from this module to be imported in other modules.
-
-        See Also
-        --------
-        https://docs.python.org/3/extending/extending.html
+        See <https://docs.python.org/3/extending/extending.html> to understand how this
+        is done.
         """
         return self._import_func
 
