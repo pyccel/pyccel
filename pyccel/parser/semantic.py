@@ -1820,7 +1820,7 @@ class SemanticParser(BasicParser):
                     obj.set_current_ast(self.current_ast_node)
                 self._current_ast_node = current_ast
                 return obj
-        
+
         # Unknown object, we raise an error.
         return errors.report(PYCCEL_RESTRICTION_TODO, symbol=type(expr),
             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -2002,7 +2002,7 @@ class SemanticParser(BasicParser):
                     scope=self.scope)
         container = self._program_namespace.imports
         container['imports'][mod_name] = Import(mod_name, mod)
-        
+
         if program_body:
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])

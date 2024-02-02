@@ -1134,7 +1134,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
-    
+
     def _print_ListPop(self, expr):
         args = ','.join(self._print(a) for a in expr.args[1:]) 
         return "{}.{}({})".format(expr.args[0], expr.name, args)
