@@ -225,7 +225,8 @@ def get_cls_base(dtype, precision, container_type):
         return None
     if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif isinstance(container_type, NumpyNDArrayType):
+    elif (dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType)) \
+        and not isinstance(container_type, NativeHomogeneousList):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
