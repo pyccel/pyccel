@@ -8,10 +8,10 @@ from pyccel.epyccel import epyccel
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="append not implemented in c"),
+            pytest.mark.skip(reason="append() not implemented in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append not implemented in fortran"),
+            pytest.mark.skip(reason="append() not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
@@ -27,10 +27,10 @@ def test_append_basic(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="append not implemented in c"),
+            pytest.mark.skip(reason="append() not implemented in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append not implemented in fortran"),
+            pytest.mark.skip(reason="append() not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
@@ -48,10 +48,10 @@ def test_append_multiple(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="append not implemented in c"),
+            pytest.mark.skip(reason="append() not implemented in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append not implemented in fortran"),
+            pytest.mark.skip(reason="append() not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
@@ -67,10 +67,10 @@ def test_append_list(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="append not implemented in c"),
+            pytest.mark.skip(reason="append() not implemented in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append not implemented in fortran"),
+            pytest.mark.skip(reason="append() not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
@@ -88,10 +88,10 @@ def test_append_range(language):
 
 @pytest.mark.parametrize( 'language', [
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="append not implemented in c"),
+            pytest.mark.skip(reason="append() not implemented in c"),
             pytest.mark.c]),
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append not implemented in fortran"),
+            pytest.mark.skip(reason="append() not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("python", marks = pytest.mark.python)
     ]
