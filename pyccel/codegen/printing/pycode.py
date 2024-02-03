@@ -850,7 +850,7 @@ class PythonCodePrinter(CodePrinter):
         dotted_var = self._print(expr.args[0])
         method_args = self._print(expr.args[1])
 
-        return "{}.{}({})\n".format(dotted_var, method_name, method_args)
+        return f"{dotted_var}.{method_name}({method_args})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
