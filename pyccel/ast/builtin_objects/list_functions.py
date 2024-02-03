@@ -21,7 +21,7 @@ class ListAppend(PyccelInternalFunction):
     Represents a call to the .append() method.
 
     Represents a call to the .append() method of an object with a list type,
-    which adds an element to the end of the list.
+    which adds an element to the end of the list. This method returns `None`.
     The append method is called as follows:
 
     >>> a = [1]
@@ -33,9 +33,6 @@ class ListAppend(PyccelInternalFunction):
     ----------
     *args : iterable
         The arguments passed to the function call.
-    Returns:
-    --------
-    None
     """
     __slots__ = ()
     _dtype = NativeVoid()
