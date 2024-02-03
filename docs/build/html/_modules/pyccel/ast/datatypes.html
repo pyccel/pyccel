@@ -1,0 +1,586 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.datatypes &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.datatypes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.datatypes</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Classes and methods that handle supported datatypes in C/Fortran.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.utilities.metaclasses</span> <span class="kn">import</span> <span class="n">Singleton</span>
+
+<span class="c1"># TODO [YG, 12.03.2020] verify why we need all these types</span>
+<span class="c1"># NOTE: symbols not used in pyccel are commented out</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+<span class="c1">#</span>
+<span class="c1"># --------- CLASSES -----------</span>
+<span class="c1">#</span>
+    <span class="s1">&#39;CustomDataType&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DataType&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FunctionType&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeBool&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeComplex&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeGeneric&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeInteger&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeTuple&#39;</span><span class="p">,</span>
+<span class="c1">#    &#39;NativeNil&#39;,</span>
+    <span class="s1">&#39;NativeRange&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeFloat&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeString&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeSymbol&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;NativeVoid&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;UnionType&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;VariableType&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;DataTypeFactory&#39;</span><span class="p">,</span>
+<span class="c1">#</span>
+<span class="c1"># --------- FUNCTIONS -----------</span>
+<span class="c1">#</span>
+    <span class="s1">&#39;datatype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_iterable_datatype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_pyccel_datatype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;is_with_construct_datatype&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;str_dtype&#39;</span><span class="p">,</span>
+<span class="c1">#</span>
+<span class="c1"># --------- VARIABLES -----------</span>
+<span class="c1">#</span>
+    <span class="s1">&#39;Bool&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Cmplx&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Generic&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Int&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Nil&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Float&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;String&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Void&#39;</span><span class="p">,</span>
+	<span class="s1">&#39;NativeNumeric&#39;</span><span class="p">,</span>
+<span class="c1">#    &#39;_Symbol&#39;,</span>
+    <span class="s1">&#39;default_precision&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dtype_and_precision_registry&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;dtype_registry&#39;</span>
+<span class="p">)</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="n">iso_c_binding</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;integer&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="mi">1</span>  <span class="p">:</span> <span class="s1">&#39;C_INT8_T&#39;</span><span class="p">,</span>
+        <span class="mi">2</span>  <span class="p">:</span> <span class="s1">&#39;C_INT16_T&#39;</span><span class="p">,</span>
+        <span class="mi">4</span>  <span class="p">:</span> <span class="s1">&#39;C_INT32_T&#39;</span><span class="p">,</span>
+        <span class="mi">8</span>  <span class="p">:</span> <span class="s1">&#39;C_INT64_T&#39;</span><span class="p">,</span>
+        <span class="mi">16</span> <span class="p">:</span> <span class="s1">&#39;C_INT128_T&#39;</span><span class="p">},</span> <span class="c1">#no supported yet</span>
+    <span class="s2">&quot;real&quot;</span>    <span class="p">:</span> <span class="p">{</span>
+        <span class="mi">4</span>  <span class="p">:</span> <span class="s1">&#39;C_FLOAT&#39;</span><span class="p">,</span>
+        <span class="mi">8</span>  <span class="p">:</span> <span class="s1">&#39;C_DOUBLE&#39;</span><span class="p">,</span>
+        <span class="mi">16</span> <span class="p">:</span> <span class="s1">&#39;C_LONG_DOUBLE&#39;</span><span class="p">},</span>
+    <span class="s2">&quot;complex&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="mi">4</span>  <span class="p">:</span> <span class="s1">&#39;C_FLOAT_COMPLEX&#39;</span><span class="p">,</span>
+        <span class="mi">8</span>  <span class="p">:</span> <span class="s1">&#39;C_DOUBLE_COMPLEX&#39;</span><span class="p">,</span>
+        <span class="mi">16</span> <span class="p">:</span> <span class="s1">&#39;C_LONG_DOUBLE_COMPLEX&#39;</span><span class="p">},</span>
+    <span class="s2">&quot;logical&quot;</span> <span class="p">:</span> <span class="p">{</span>
+        <span class="mi">4</span>  <span class="p">:</span> <span class="s2">&quot;C_BOOL&quot;</span><span class="p">}</span>
+<span class="p">}</span>
+<span class="n">iso_c_binding_shortcut_mapping</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;C_INT8_T&#39;</span>              <span class="p">:</span> <span class="s1">&#39;i8&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_INT16_T&#39;</span>             <span class="p">:</span> <span class="s1">&#39;i16&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_INT32_T&#39;</span>             <span class="p">:</span> <span class="s1">&#39;i32&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_INT64_T&#39;</span>             <span class="p">:</span> <span class="s1">&#39;i64&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_INT128_T&#39;</span>            <span class="p">:</span> <span class="s1">&#39;i128&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_FLOAT&#39;</span>               <span class="p">:</span> <span class="s1">&#39;f32&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_DOUBLE&#39;</span>              <span class="p">:</span> <span class="s1">&#39;f64&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_LONG_DOUBLE&#39;</span>         <span class="p">:</span> <span class="s1">&#39;f128&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_FLOAT_COMPLEX&#39;</span>       <span class="p">:</span> <span class="s1">&#39;c32&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_DOUBLE_COMPLEX&#39;</span>      <span class="p">:</span> <span class="s1">&#39;c64&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_LONG_DOUBLE_COMPLEX&#39;</span> <span class="p">:</span> <span class="s1">&#39;c128&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;C_BOOL&#39;</span>                <span class="p">:</span> <span class="s1">&#39;b4&#39;</span>
+<span class="p">}</span>
+<span class="n">default_precision</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;float&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+                    <span class="s1">&#39;int&#39;</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">alignment</span><span class="p">,</span>
+                    <span class="s1">&#39;integer&#39;</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">alignment</span><span class="p">,</span>
+                    <span class="s1">&#39;complex&#39;</span><span class="p">:</span> <span class="mi">8</span><span class="p">,</span>
+                    <span class="s1">&#39;bool&#39;</span><span class="p">:</span><span class="mi">4</span><span class="p">}</span>
+<span class="n">dtype_and_precision_registry</span> <span class="o">=</span> <span class="p">{</span> <span class="s1">&#39;float&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;double&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;real&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;pythonfloat&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="c1"># built-in float</span>
+                                 <span class="s1">&#39;float32&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                                 <span class="s1">&#39;float64&#39;</span><span class="p">:(</span><span class="s1">&#39;float&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                                 <span class="s1">&#39;pythoncomplex&#39;</span><span class="p">:(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;complex&#39;</span><span class="p">:(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># to create numpy array with dtype=&#39;complex&#39;</span>
+                                 <span class="s1">&#39;complex64&#39;</span><span class="p">:(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                                 <span class="s1">&#39;complex128&#39;</span><span class="p">:(</span><span class="s1">&#39;complex&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                                 <span class="s1">&#39;int8&#39;</span> <span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;int16&#39;</span><span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span>
+                                 <span class="s1">&#39;int32&#39;</span><span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">4</span><span class="p">),</span>
+                                 <span class="s1">&#39;int64&#39;</span><span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                                 <span class="s1">&#39;int&#39;</span>  <span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;pythonint&#39;</span>  <span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;integer&#39;</span><span class="p">:(</span><span class="s1">&#39;int&#39;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;bool&#39;</span> <span class="p">:(</span><span class="s1">&#39;bool&#39;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                                 <span class="s1">&#39;pythonbool&#39;</span> <span class="p">:(</span><span class="s1">&#39;bool&#39;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)}</span>
+
+
+<div class="viewcode-block" id="DataType"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.DataType">[docs]</a><span class="k">class</span> <span class="nc">DataType</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">Singleton</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class representing native datatypes&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;__UNDEFINED__&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span><span class="o">+</span><span class="s1">&#39;()&#39;</span></div>
+
+<div class="viewcode-block" id="NativeBool"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeBool">[docs]</a><span class="k">class</span> <span class="nc">NativeBool</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing boolean datatype&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Bool&#39;</span></div>
+
+<div class="viewcode-block" id="NativeInteger"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeInteger">[docs]</a><span class="k">class</span> <span class="nc">NativeInteger</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing integer datatype&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Int&#39;</span></div>
+
+<div class="viewcode-block" id="NativeFloat"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeFloat">[docs]</a><span class="k">class</span> <span class="nc">NativeFloat</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing float datatype&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Float&#39;</span></div>
+
+<div class="viewcode-block" id="NativeComplex"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeComplex">[docs]</a><span class="k">class</span> <span class="nc">NativeComplex</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing complex datatype&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Complex&#39;</span></div>
+
+<span class="n">NativeNumeric</span> <span class="o">=</span> <span class="p">(</span><span class="n">NativeBool</span><span class="p">(),</span> <span class="n">NativeInteger</span><span class="p">(),</span> <span class="n">NativeFloat</span><span class="p">(),</span> <span class="n">NativeComplex</span><span class="p">())</span>
+
+<div class="viewcode-block" id="NativeString"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeString">[docs]</a><span class="k">class</span> <span class="nc">NativeString</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Class representing string datatype&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;String&#39;</span></div>
+
+<div class="viewcode-block" id="NativeVoid"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeVoid">[docs]</a><span class="k">class</span> <span class="nc">NativeVoid</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Void&#39;</span></div>
+
+<span class="k">class</span> <span class="nc">NativeNil</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Nil&#39;</span>
+
+<div class="viewcode-block" id="NativeTuple"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeTuple">[docs]</a><span class="k">class</span> <span class="nc">NativeTuple</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class representing native datatypes&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Tuple&#39;</span></div>
+
+<div class="viewcode-block" id="NativeRange"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeRange">[docs]</a><span class="k">class</span> <span class="nc">NativeRange</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Range&#39;</span></div>
+
+<div class="viewcode-block" id="NativeSymbol"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeSymbol">[docs]</a><span class="k">class</span> <span class="nc">NativeSymbol</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Symbol&#39;</span></div>
+
+
+<span class="c1"># TODO to be removed</span>
+<div class="viewcode-block" id="CustomDataType"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.CustomDataType">[docs]</a><span class="k">class</span> <span class="nc">CustomDataType</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_name&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;__UNDEFINED__&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="NativeGeneric"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.NativeGeneric">[docs]</a><span class="k">class</span> <span class="nc">NativeGeneric</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39;Generic&#39;</span></div>
+
+
+<span class="c1"># ...</span>
+<div class="viewcode-block" id="VariableType"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.VariableType">[docs]</a><span class="k">class</span> <span class="nc">VariableType</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_alias&#39;</span><span class="p">,</span><span class="s1">&#39;_rhs&#39;</span><span class="p">,</span><span class="s1">&#39;_name&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rhs</span><span class="p">,</span> <span class="n">alias</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alias</span> <span class="o">=</span> <span class="n">alias</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rhs</span> <span class="o">=</span> <span class="n">rhs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">alias</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alias</span></div>
+
+<div class="viewcode-block" id="FunctionType"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.FunctionType">[docs]</a><span class="k">class</span> <span class="nc">FunctionType</span><span class="p">(</span><span class="n">DataType</span><span class="p">):</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_domain&#39;</span><span class="p">,</span><span class="s1">&#39;_codomain&#39;</span><span class="p">,</span><span class="s1">&#39;_domains&#39;</span><span class="p">,</span><span class="s1">&#39;_name&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">domains</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span> <span class="o">=</span> <span class="n">domains</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_codomain</span> <span class="o">=</span> <span class="n">domains</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_domains</span> <span class="o">=</span> <span class="n">domains</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s1">&#39; -&gt; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">V</span><span class="p">)</span> <span class="k">for</span> <span class="n">V</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_domains</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">domain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_domain</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">codomain</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_codomain</span></div>
+<span class="c1"># ...</span>
+
+
+
+<span class="n">Bool</span>           <span class="o">=</span> <span class="n">NativeBool</span><span class="p">()</span>
+<span class="n">Int</span>            <span class="o">=</span> <span class="n">NativeInteger</span><span class="p">()</span>
+<span class="n">Float</span>          <span class="o">=</span> <span class="n">NativeFloat</span><span class="p">()</span>
+<span class="n">Cmplx</span>          <span class="o">=</span> <span class="n">NativeComplex</span><span class="p">()</span>
+<span class="n">Void</span>           <span class="o">=</span> <span class="n">NativeVoid</span><span class="p">()</span>
+<span class="n">Nil</span>            <span class="o">=</span> <span class="n">NativeNil</span><span class="p">()</span>
+<span class="n">String</span>         <span class="o">=</span> <span class="n">NativeString</span><span class="p">()</span>
+<span class="n">_Symbol</span>        <span class="o">=</span> <span class="n">NativeSymbol</span><span class="p">()</span>
+<span class="n">Generic</span>        <span class="o">=</span> <span class="n">NativeGeneric</span><span class="p">()</span>
+
+<span class="n">dtype_registry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bool&#39;</span><span class="p">:</span> <span class="n">Bool</span><span class="p">,</span>
+                  <span class="s1">&#39;int&#39;</span><span class="p">:</span> <span class="n">Int</span><span class="p">,</span>
+                  <span class="s1">&#39;integer&#39;</span><span class="p">:</span> <span class="n">Int</span><span class="p">,</span>
+                  <span class="s1">&#39;float&#39;</span>   <span class="p">:</span> <span class="n">Float</span><span class="p">,</span>
+                  <span class="s1">&#39;complex&#39;</span><span class="p">:</span> <span class="n">Cmplx</span><span class="p">,</span>
+                  <span class="s1">&#39;void&#39;</span><span class="p">:</span> <span class="n">Void</span><span class="p">,</span>
+                  <span class="s1">&#39;nil&#39;</span><span class="p">:</span> <span class="n">Nil</span><span class="p">,</span>
+                  <span class="s1">&#39;symbol&#39;</span><span class="p">:</span> <span class="n">_Symbol</span><span class="p">,</span>
+                  <span class="s1">&#39;*&#39;</span><span class="p">:</span> <span class="n">Generic</span><span class="p">,</span>
+                  <span class="s1">&#39;str&#39;</span><span class="p">:</span> <span class="n">String</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="UnionType"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.UnionType">[docs]</a><span class="k">class</span> <span class="nc">UnionType</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot; Class representing multiple different possible</span>
+<span class="sd">    datatypes for a function argument. If multiple</span>
+<span class="sd">    arguments have union types then the result is a</span>
+<span class="sd">    cross product of types</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_args&#39;</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_args</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">args</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_args</span></div>
+
+
+<div class="viewcode-block" id="DataTypeFactory"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.DataTypeFactory">[docs]</a><span class="k">def</span> <span class="nf">DataTypeFactory</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">argnames</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;_name&quot;</span><span class="p">],</span>
+                    <span class="n">BaseClass</span><span class="o">=</span><span class="n">CustomDataType</span><span class="p">,</span>
+                    <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">alias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">is_iterable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">is_with_construct</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">is_polymorphic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="c1"># here, the argnames variable is the one passed to the</span>
+            <span class="c1"># DataTypeFactory call</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">argnames</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Argument </span><span class="si">%s</span><span class="s2"> not valid for </span><span class="si">%s</span><span class="s2">&quot;</span>
+                    <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="n">BaseClass</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="s2">&quot;Class&quot;</span><span class="p">)])</span>
+
+    <span class="k">if</span> <span class="n">prefix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;Pyccel&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">prefix</span> <span class="o">=</span> <span class="s1">&#39;Pyccel</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span>
+
+    <span class="n">newclass</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">BaseClass</span><span class="p">,),</span>
+                    <span class="p">{</span><span class="s2">&quot;__init__&quot;</span><span class="p">:</span>          <span class="fm">__init__</span><span class="p">,</span>
+                     <span class="s2">&quot;_name&quot;</span><span class="p">:</span>             <span class="n">name</span><span class="p">,</span>
+                     <span class="s2">&quot;prefix&quot;</span><span class="p">:</span>            <span class="n">prefix</span><span class="p">,</span>
+                     <span class="s2">&quot;alias&quot;</span><span class="p">:</span>             <span class="n">alias</span><span class="p">,</span>
+                     <span class="s2">&quot;is_iterable&quot;</span><span class="p">:</span>       <span class="n">is_iterable</span><span class="p">,</span>
+                     <span class="s2">&quot;is_with_construct&quot;</span><span class="p">:</span> <span class="n">is_with_construct</span><span class="p">,</span>
+                     <span class="s2">&quot;is_polymorphic&quot;</span><span class="p">:</span>    <span class="n">is_polymorphic</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">newclass</span></div>
+
+<div class="viewcode-block" id="is_pyccel_datatype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.is_pyccel_datatype">[docs]</a><span class="k">def</span> <span class="nf">is_pyccel_datatype</span><span class="p">(</span><span class="n">expr</span><span class="p">):</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">CustomDataType</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="is_iterable_datatype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.is_iterable_datatype">[docs]</a><span class="k">def</span> <span class="nf">is_iterable_datatype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if dtype is an iterable class.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_pyccel_datatype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dtype</span><span class="o">.</span><span class="n">is_iterable</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeRange</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<span class="c1"># TODO improve</span>
+<div class="viewcode-block" id="is_with_construct_datatype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.is_with_construct_datatype">[docs]</a><span class="k">def</span> <span class="nf">is_with_construct_datatype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if dtype is an with_construct class.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_pyccel_datatype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dtype</span><span class="o">.</span><span class="n">is_with_construct</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<span class="c1"># TODO check the use of Floats</span>
+<div class="viewcode-block" id="datatype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.datatype">[docs]</a><span class="k">def</span> <span class="nf">datatype</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the datatype singleton for the given dtype.</span>
+
+<span class="sd">    arg : str or pyccel expression</span>
+<span class="sd">        If a str (&#39;bool&#39;, &#39;int&#39;, &#39;float&#39;,&#39;complex&#39;, or &#39;void&#39;), return the</span>
+<span class="sd">        singleton for the corresponding dtype. If a pyccel expression, return</span>
+<span class="sd">        the datatype that best fits the expression. This is determined from the</span>
+<span class="sd">        assumption system. For more control, use the `DataType` class directly.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        DataType</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">arg</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dtype_registry</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized datatype &quot;</span> <span class="o">+</span> <span class="n">arg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dtype_registry</span><span class="p">[</span><span class="n">arg</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">DataType</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dtype_registry</span><span class="p">[</span><span class="n">arg</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting a DataType&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="str_dtype"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.builtins.str_dtype">[docs]</a><span class="k">def</span> <span class="nf">str_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function takes a datatype and returns a pyccel datatype as a string</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; str_dtype(&#39;int&#39;)</span>
+<span class="sd">    &#39;integer&#39;</span>
+<span class="sd">    &gt;&gt;&gt; str_dtype(NativeInteger())</span>
+<span class="sd">    &#39;integer&#39;</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="s1">&#39;int&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;integer&#39;</span>
+        <span class="k">elif</span> <span class="n">dtype</span><span class="o">==</span> <span class="s1">&#39;float&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;float&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">dtype</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeInteger</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;integer&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeFloat</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;float&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeComplex</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;complex&#39;</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">NativeBool</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;bool&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Unknown datatype </span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">dtype</span><span class="p">)))</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

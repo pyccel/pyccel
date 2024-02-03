@@ -1,0 +1,644 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.pipeline &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Contains the execute_pyccel function which carries out the main steps required to execute pyccel</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>          <span class="kn">import</span> <span class="n">Errors</span><span class="p">,</span> <span class="n">PyccelError</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span>          <span class="kn">import</span> <span class="n">PyccelSyntaxError</span><span class="p">,</span> <span class="n">PyccelSemanticError</span><span class="p">,</span> <span class="n">PyccelCodegenError</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.messages</span>        <span class="kn">import</span> <span class="n">PYCCEL_RESTRICTION_TODO</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.parser</span>          <span class="kn">import</span> <span class="n">Parser</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.codegen</span>        <span class="kn">import</span> <span class="n">Codegen</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">recompile_object</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">copy_internal_library</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.utilities</span>      <span class="kn">import</span> <span class="n">internal_libs</span>
+<span class="kn">from</span> <span class="nn">pyccel.codegen.python_wrapper</span> <span class="kn">import</span> <span class="n">create_shared_library</span>
+<span class="kn">from</span> <span class="nn">pyccel.naming</span>                 <span class="kn">import</span> <span class="n">name_clash_checkers</span>
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span>        <span class="kn">import</span> <span class="n">PyccelStage</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.scope</span>           <span class="kn">import</span> <span class="n">Scope</span>
+
+<span class="kn">from</span> <span class="nn">.compiling.basic</span>     <span class="kn">import</span> <span class="n">CompileObj</span>
+<span class="kn">from</span> <span class="nn">.compiling.compilers</span> <span class="kn">import</span> <span class="n">Compiler</span>
+
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;execute_pyccel&#39;</span><span class="p">]</span>
+
+<span class="c1">#==============================================================================</span>
+<span class="c1"># NOTE:</span>
+<span class="c1"># [..]_dirname is the name of a directory</span>
+<span class="c1"># [..]_dirpath is the full (absolute) path of a directory</span>
+
+<span class="c1"># TODO: change name of variable &#39;module_name&#39;, as it could be a program</span>
+<span class="c1"># TODO [YG, 04.02.2020]: check if we should catch BaseException instead of Exception</span>
+<div class="viewcode-block" id="execute_pyccel"><a class="viewcode-back" href="../../../pyccel.codegen.html#pyccel.codegen.pipeline.execute_pyccel">[docs]</a><span class="k">def</span> <span class="nf">execute_pyccel</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                   <span class="n">syntax_only</span>   <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                   <span class="n">semantic_only</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                   <span class="n">convert_only</span>  <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                   <span class="n">verbose</span>       <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                   <span class="n">folder</span>        <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">language</span>      <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">compiler</span>      <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">fflags</span>        <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">wrapper_flags</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">includes</span>      <span class="o">=</span> <span class="p">(),</span>
+                   <span class="n">libdirs</span>       <span class="o">=</span> <span class="p">(),</span>
+                   <span class="n">modules</span>       <span class="o">=</span> <span class="p">(),</span>
+                   <span class="n">libs</span>          <span class="o">=</span> <span class="p">(),</span>
+                   <span class="n">debug</span>         <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                   <span class="n">accelerators</span>  <span class="o">=</span> <span class="p">(),</span>
+                   <span class="n">output_name</span>   <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                   <span class="n">compiler_export_file</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Carries out the main steps required to execute pyccel</span>
+<span class="sd">    - Parses the python file (syntactic stage)</span>
+<span class="sd">    - Annotates the abstract syntax tree (semantic stage)</span>
+<span class="sd">    - Generates the translated file(s) (codegen stage)</span>
+<span class="sd">    - Compiles the files to generate an executable and/or a shared library</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname         : str</span>
+<span class="sd">                    Name of python file to be translated</span>
+
+<span class="sd">    syntax_only   : bool</span>
+<span class="sd">                    Boolean indicating whether the pipeline should stop</span>
+<span class="sd">                    after the syntax stage</span>
+<span class="sd">                    Default : False</span>
+
+<span class="sd">    semantic_only : bool</span>
+<span class="sd">                    Boolean indicating whether the pipeline should stop</span>
+<span class="sd">                    after the semantic stage</span>
+<span class="sd">                    Default : False</span>
+
+<span class="sd">    convert_only  : bool</span>
+<span class="sd">                    Boolean indicating whether the pipeline should stop</span>
+<span class="sd">                    after the codegen stage</span>
+<span class="sd">                    Default : False</span>
+
+<span class="sd">    verbose       : bool</span>
+<span class="sd">                    Boolean indicating whether debugging messages should be printed</span>
+<span class="sd">                    Default : False</span>
+
+<span class="sd">    folder        : str</span>
+<span class="sd">                    Path to the working directory</span>
+<span class="sd">                    Default : folder containing the file to be translated</span>
+
+<span class="sd">    language      : str</span>
+<span class="sd">                    The language which pyccel is translating to</span>
+<span class="sd">                    Default : fortran</span>
+
+<span class="sd">    compiler      : str</span>
+<span class="sd">                    The compiler used to compile the generated files</span>
+<span class="sd">                    Default : GNU</span>
+
+<span class="sd">    fflags        : str</span>
+<span class="sd">                    The flags passed to the compiler</span>
+<span class="sd">                    Default : provided by Compiler</span>
+
+<span class="sd">    wrapper_flags : str</span>
+<span class="sd">                    The flags passed to the compiler to compile the c wrapper</span>
+<span class="sd">                    Default : provided by Compiler</span>
+
+<span class="sd">    includes      : list</span>
+<span class="sd">                    list of include directories paths</span>
+
+<span class="sd">    libdirs       : list</span>
+<span class="sd">                    list of paths to directories containing the required libraries</span>
+
+<span class="sd">    modules       : list</span>
+<span class="sd">                    list of files which must also be compiled in order to compile this module</span>
+
+<span class="sd">    libs          : list</span>
+<span class="sd">                    list of required libraries</span>
+
+<span class="sd">    debug         : bool</span>
+<span class="sd">                    Boolean indicating whether the file should be compiled in debug mode</span>
+<span class="sd">                    (currently this only implies that the flag -fcheck=bounds is added)</span>
+<span class="sd">                    Default : False</span>
+
+<span class="sd">    accelerators  : iterable</span>
+<span class="sd">                    Tool used to accelerate the code (e.g. openmp openacc)</span>
+
+<span class="sd">    output_name   : str</span>
+<span class="sd">                    Name of the generated module</span>
+<span class="sd">                    Default : Same name as the file which was translated</span>
+<span class="sd">    export_compile_info : str</span>
+<span class="sd">                    Name of the json file to which compiler information is exported</span>
+<span class="sd">                    Default : None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">fname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.pyh&#39;</span><span class="p">):</span>
+        <span class="n">syntax_only</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Header file recognised, stopping after syntactic stage&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Reset Errors singleton before parsing a new file</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+    <span class="n">errors</span><span class="o">.</span><span class="n">reset</span><span class="p">()</span>
+
+    <span class="c1"># TODO [YG, 03.02.2020]: test validity of function arguments</span>
+
+    <span class="c1"># Copy list arguments to local lists to avoid unexpected behavior</span>
+    <span class="n">includes</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">includes</span><span class="p">]</span>
+    <span class="n">libdirs</span>  <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">l</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">libdirs</span><span class="p">]</span>
+    <span class="n">modules</span>  <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">modules</span><span class="p">]</span>
+    <span class="n">libs</span>     <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">libs</span><span class="p">]</span>
+
+
+    <span class="c1"># Store current directory and add it to sys.path</span>
+    <span class="c1"># variable to imitate Python&#39;s import behavior</span>
+    <span class="n">base_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">base_dirpath</span><span class="p">)</span>
+
+    <span class="c1"># Unified way to handle errors: print formatted error message, then move</span>
+    <span class="c1"># to original working directory. Caller should then raise exception.</span>
+    <span class="k">def</span> <span class="nf">handle_error</span><span class="p">(</span><span class="n">stage</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">ERROR at </span><span class="si">{}</span><span class="s1"> stage&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stage</span><span class="p">))</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+
+    <span class="c1"># Identify absolute path, directory, and filename</span>
+    <span class="n">pymod_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">pymod_dirpath</span><span class="p">,</span> <span class="n">pymod_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">pymod_filepath</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">compiler_export_file</span><span class="p">:</span>
+        <span class="n">compiler_export_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">compiler_export_file</span><span class="p">)</span>
+
+    <span class="c1"># Extract module name</span>
+    <span class="n">module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">pymod_filename</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Define working directory &#39;folder&#39;</span>
+    <span class="k">if</span> <span class="n">folder</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">folder</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">pymod_dirpath</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+    <span class="c1"># Define directory name and path for pyccel &amp; cpython build</span>
+    <span class="n">pyccel_dirname</span> <span class="o">=</span> <span class="s1">&#39;__pyccel__&#39;</span>
+    <span class="n">pyccel_dirpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">pyccel_dirname</span><span class="p">)</span>
+
+    <span class="c1"># Create new directories if not existing</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">syntax_only</span> <span class="ow">or</span> <span class="n">semantic_only</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">pyccel_dirpath</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># Change working directory to &#39;folder&#39;</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">language</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">language</span> <span class="o">=</span> <span class="s1">&#39;fortran&#39;</span>
+
+    <span class="c1"># Choose Fortran compiler</span>
+    <span class="k">if</span> <span class="n">compiler</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">compiler</span> <span class="o">=</span> <span class="s1">&#39;GNU&#39;</span>
+
+    <span class="n">fflags</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">fflags</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">fflags</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">wrapper_flags</span> <span class="o">=</span> <span class="p">[]</span> <span class="k">if</span> <span class="n">wrapper_flags</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">wrapper_flags</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="c1"># Get compiler object</span>
+    <span class="n">src_compiler</span> <span class="o">=</span> <span class="n">Compiler</span><span class="p">(</span><span class="n">compiler</span><span class="p">,</span> <span class="n">language</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+    <span class="n">wrapper_compiler</span> <span class="o">=</span> <span class="n">Compiler</span><span class="p">(</span><span class="s1">&#39;GNU&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">debug</span><span class="p">)</span>
+
+    <span class="c1"># Export the compiler information if requested</span>
+    <span class="k">if</span> <span class="n">compiler_export_file</span><span class="p">:</span>
+        <span class="n">src_compiler</span><span class="o">.</span><span class="n">export_compiler_info</span><span class="p">(</span><span class="n">compiler_export_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="p">:</span>
+            <span class="k">return</span>
+
+    <span class="n">Scope</span><span class="o">.</span><span class="n">name_clash_checker</span> <span class="o">=</span> <span class="n">name_clash_checkers</span><span class="p">[</span><span class="n">language</span><span class="p">]</span>
+
+    <span class="c1"># Parse Python file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">Parser</span><span class="p">(</span><span class="n">pymod_filepath</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PyccelError</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;parsing (syntax)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;parsing (syntax)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PyccelSyntaxError</span><span class="p">(</span><span class="s1">&#39;Syntax step failed&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">syntax_only</span><span class="p">:</span>
+        <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">pyccel_finished</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Annotate abstract syntax Tree</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;verbose&#39;</span><span class="p">:</span><span class="n">verbose</span><span class="p">}</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="o">**</span><span class="n">settings</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PyccelError</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;annotation (semantic)&#39;</span><span class="p">)</span>
+        <span class="c1"># Raise a new error to avoid a large traceback</span>
+        <span class="k">raise</span> <span class="n">PyccelSemanticError</span><span class="p">(</span><span class="s1">&#39;Semantic step failed&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;annotation (semantic)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PyccelSemanticError</span><span class="p">(</span><span class="s1">&#39;Semantic step failed&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">semantic_only</span><span class="p">:</span>
+        <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">pyccel_finished</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="c1"># -------------------------------------------------------------------------</span>
+
+    <span class="n">semantic_parser</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">semantic_parser</span>
+    <span class="c1"># Generate .f90 file</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">codegen</span> <span class="o">=</span> <span class="n">Codegen</span><span class="p">(</span><span class="n">semantic_parser</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">pyccel_dirpath</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+        <span class="n">fname</span><span class="p">,</span> <span class="n">prog_name</span> <span class="o">=</span> <span class="n">codegen</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">language</span><span class="o">=</span><span class="n">language</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">PyccelError</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;code generation&#39;</span><span class="p">)</span>
+        <span class="c1"># Raise a new error to avoid a large traceback</span>
+        <span class="k">raise</span> <span class="n">PyccelCodegenError</span><span class="p">(</span><span class="s1">&#39;Code generation failed&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;code generation&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PyccelCodegenError</span><span class="p">(</span><span class="s1">&#39;Code generation failed&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">language</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+        <span class="n">output_file</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_name</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">output_name</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+        <span class="n">new_location</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">output_file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;cp </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">new_location</span><span class="p">))</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copyfile</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">new_location</span><span class="p">)</span>
+
+        <span class="c1"># Change working directory back to starting point</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+        <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">pyccel_finished</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="n">compile_libs</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">libs</span><span class="p">,</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span><span class="p">[</span><span class="s1">&#39;libraries&#39;</span><span class="p">]]</span> \
+                    <span class="k">if</span> <span class="s1">&#39;libraries&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span> <span class="k">else</span> <span class="n">libs</span>
+    <span class="n">mod_obj</span> <span class="o">=</span> <span class="n">CompileObj</span><span class="p">(</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">fname</span><span class="p">,</span>
+            <span class="n">folder</span>       <span class="o">=</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+            <span class="n">flags</span>        <span class="o">=</span> <span class="n">fflags</span><span class="p">,</span>
+            <span class="n">includes</span>     <span class="o">=</span> <span class="n">includes</span><span class="p">,</span>
+            <span class="n">libs</span>         <span class="o">=</span> <span class="n">compile_libs</span><span class="p">,</span>
+            <span class="n">libdirs</span>      <span class="o">=</span> <span class="n">libdirs</span><span class="p">,</span>
+            <span class="n">dependencies</span> <span class="o">=</span> <span class="n">modules</span><span class="p">,</span>
+            <span class="n">accelerators</span> <span class="o">=</span> <span class="n">accelerators</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">compile_obj</span> <span class="o">=</span> <span class="n">mod_obj</span>
+
+    <span class="c1">#------------------------------------------------------</span>
+    <span class="c1"># TODO: collect dependencies and proceed recursively</span>
+    <span class="c1"># if recursive:</span>
+    <span class="c1">#     for dep in parser.sons:</span>
+    <span class="c1">#         # Call same function on &#39;dep&#39;</span>
+    <span class="c1">#         pass</span>
+    <span class="c1">#------------------------------------------------------</span>
+
+    <span class="c1"># Iterate over the internal_libs list and determine if the printer</span>
+    <span class="c1"># requires an internal lib to be included.</span>
+    <span class="k">for</span> <span class="n">lib_name</span><span class="p">,</span> <span class="p">(</span><span class="n">stdlib_folder</span><span class="p">,</span> <span class="n">stdlib</span><span class="p">)</span> <span class="ow">in</span> <span class="n">internal_libs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">lib_name</span> <span class="ow">in</span> <span class="n">codegen</span><span class="o">.</span><span class="n">get_printer_imports</span><span class="p">():</span>
+
+            <span class="n">lib_dest_path</span> <span class="o">=</span> <span class="n">copy_internal_library</span><span class="p">(</span><span class="n">stdlib_folder</span><span class="p">,</span> <span class="n">pyccel_dirpath</span><span class="p">)</span>
+
+            <span class="c1"># stop after copying lib to __pyccel__ directory for</span>
+            <span class="c1"># convert only</span>
+            <span class="k">if</span> <span class="n">convert_only</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="c1"># Pylint determines wrong type</span>
+            <span class="n">stdlib</span><span class="o">.</span><span class="n">reset_folder</span><span class="p">(</span><span class="n">lib_dest_path</span><span class="p">)</span> <span class="c1"># pylint: disable=E1101</span>
+            <span class="c1"># get the include folder path and library files</span>
+            <span class="n">recompile_object</span><span class="p">(</span><span class="n">stdlib</span><span class="p">,</span>
+                              <span class="n">compiler</span> <span class="o">=</span> <span class="n">src_compiler</span><span class="p">,</span>
+                              <span class="n">verbose</span>  <span class="o">=</span> <span class="n">verbose</span><span class="p">)</span>
+
+            <span class="n">mod_obj</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="n">stdlib</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">convert_only</span><span class="p">:</span>
+        <span class="c1"># Change working directory back to starting point</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+        <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">pyccel_finished</span><span class="p">()</span>
+        <span class="k">return</span>
+
+    <span class="n">deps</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="c1"># ...</span>
+    <span class="c1"># Determine all .o files and all folders needed by executable</span>
+    <span class="k">def</span> <span class="nf">get_module_dependencies</span><span class="p">(</span><span class="n">parser</span><span class="p">,</span> <span class="n">deps</span><span class="p">):</span>
+        <span class="n">mod_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">filename</span><span class="p">),</span> <span class="s2">&quot;__pyccel__&quot;</span><span class="p">)</span>
+        <span class="n">mod_base</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">filename</span><span class="p">)</span>
+
+        <span class="c1"># Stop conditions</span>
+        <span class="k">if</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;module_name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;omp_lib&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">parser</span><span class="o">.</span><span class="n">compile_obj</span><span class="p">:</span>
+            <span class="n">deps</span><span class="p">[</span><span class="n">mod_base</span><span class="p">]</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">compile_obj</span>
+        <span class="k">elif</span> <span class="n">mod_base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">deps</span><span class="p">:</span>
+            <span class="n">compile_libs</span> <span class="o">=</span> <span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">metavars</span><span class="p">[</span><span class="s1">&#39;libraries&#39;</span><span class="p">],)</span> <span class="k">if</span> <span class="s1">&#39;libraries&#39;</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span> <span class="k">else</span> <span class="p">()</span>
+            <span class="n">no_target</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;no_target&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="n">parser</span><span class="o">.</span><span class="n">metavars</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ignore_at_import&#39;</span><span class="p">,</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">deps</span><span class="p">[</span><span class="n">mod_base</span><span class="p">]</span> <span class="o">=</span> <span class="n">CompileObj</span><span class="p">(</span><span class="n">mod_base</span><span class="p">,</span>
+                                <span class="n">folder</span>          <span class="o">=</span> <span class="n">mod_folder</span><span class="p">,</span>
+                                <span class="n">libs</span>            <span class="o">=</span> <span class="n">compile_libs</span><span class="p">,</span>
+                                <span class="n">has_target_file</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">no_target</span><span class="p">)</span>
+
+        <span class="c1"># Proceed recursively</span>
+        <span class="k">for</span> <span class="n">son</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sons</span><span class="p">:</span>
+            <span class="n">get_module_dependencies</span><span class="p">(</span><span class="n">son</span><span class="p">,</span> <span class="n">deps</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">son</span> <span class="ow">in</span> <span class="n">parser</span><span class="o">.</span><span class="n">sons</span><span class="p">:</span>
+        <span class="n">get_module_dependencies</span><span class="p">(</span><span class="n">son</span><span class="p">,</span> <span class="n">deps</span><span class="p">)</span>
+    <span class="n">mod_obj</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="o">*</span><span class="n">deps</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="c1"># Compile code to modules</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">src_compiler</span><span class="o">.</span><span class="n">compile_module</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">=</span><span class="n">mod_obj</span><span class="p">,</span>
+                <span class="n">output_folder</span><span class="o">=</span><span class="n">pyccel_dirpath</span><span class="p">,</span>
+                <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;Fortran compilation&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">codegen</span><span class="o">.</span><span class="n">is_program</span><span class="p">:</span>
+            <span class="n">prog_obj</span> <span class="o">=</span> <span class="n">CompileObj</span><span class="p">(</span><span class="n">file_name</span> <span class="o">=</span> <span class="n">prog_name</span><span class="p">,</span>
+                    <span class="n">folder</span>       <span class="o">=</span> <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                    <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(</span><span class="n">mod_obj</span><span class="p">,),</span>
+                    <span class="n">prog_target</span>  <span class="o">=</span> <span class="n">module_name</span><span class="p">)</span>
+            <span class="n">generated_program_filepath</span> <span class="o">=</span> <span class="n">src_compiler</span><span class="o">.</span><span class="n">compile_program</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">=</span><span class="n">prog_obj</span><span class="p">,</span>
+                    <span class="n">output_folder</span><span class="o">=</span><span class="n">pyccel_dirpath</span><span class="p">,</span>
+                    <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="c1"># Create shared library</span>
+        <span class="n">generated_filepath</span> <span class="o">=</span> <span class="n">create_shared_library</span><span class="p">(</span><span class="n">codegen</span><span class="p">,</span>
+                                               <span class="n">mod_obj</span><span class="p">,</span>
+                                               <span class="n">language</span><span class="p">,</span>
+                                               <span class="n">wrapper_flags</span><span class="p">,</span>
+                                               <span class="n">pyccel_dirpath</span><span class="p">,</span>
+                                               <span class="n">src_compiler</span><span class="p">,</span>
+                                               <span class="n">wrapper_compiler</span><span class="p">,</span>
+                                               <span class="n">output_name</span><span class="p">,</span>
+                                               <span class="n">verbose</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">error</span><span class="p">)</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="o">+</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">+</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+            <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;code generation (wrapping)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PyccelCodegenError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="bp">None</span>
+    <span class="k">except</span> <span class="n">PyccelError</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;code generation (wrapping)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+    <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;shared library generation&#39;</span><span class="p">)</span>
+        <span class="k">raise</span>
+
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_errors</span><span class="p">():</span>
+        <span class="n">handle_error</span><span class="p">(</span><span class="s1">&#39;code generation (wrapping)&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">PyccelCodegenError</span><span class="p">(</span><span class="s1">&#39;Code generation failed&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Move shared library to folder directory</span>
+    <span class="c1"># (First construct absolute path of target location)</span>
+    <span class="n">generated_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">generated_filepath</span><span class="p">)</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">generated_filename</span><span class="p">)</span>
+    <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">generated_filepath</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">generated_filepath</span> <span class="o">=</span> <span class="n">target</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;&gt; Shared library has been created: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">generated_filepath</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">codegen</span><span class="o">.</span><span class="n">is_program</span><span class="p">:</span>
+        <span class="n">generated_program_filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">generated_program_filepath</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">generated_program_filename</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">generated_program_filepath</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+        <span class="n">generated_program_filepath</span> <span class="o">=</span> <span class="n">target</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span> <span class="s1">&#39;&gt; Executable has been created: </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">generated_program_filepath</span><span class="p">))</span>
+
+    <span class="c1"># Print all warnings now</span>
+    <span class="k">if</span> <span class="n">errors</span><span class="o">.</span><span class="n">has_warnings</span><span class="p">():</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">check</span><span class="p">()</span>
+
+    <span class="c1"># Change working directory back to starting point</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">base_dirpath</span><span class="p">)</span>
+    <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">pyccel_finished</span><span class="p">()</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

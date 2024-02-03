@@ -1,0 +1,465 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.compiling.basic &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.compiling.basic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.compiling.basic</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module handling classes for compiler information relevant to a given object</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span>
+
+<div class="viewcode-block" id="CompileObj"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj">[docs]</a><span class="k">class</span> <span class="nc">CompileObj</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class containing all information necessary for compiling</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_name     : str</span>
+<span class="sd">                    Name of file to be compiled</span>
+
+<span class="sd">    folder        : str</span>
+<span class="sd">                    Name of the folder where the file is found</span>
+
+<span class="sd">    flags         : str</span>
+<span class="sd">                    Any non-default flags passed to the compiler</span>
+
+<span class="sd">    includes      : iterable of strs</span>
+<span class="sd">                    include directories paths</span>
+
+<span class="sd">    libs          : iterable of strs</span>
+<span class="sd">                    required libraries</span>
+
+<span class="sd">    libdirs       : iterable of strs</span>
+<span class="sd">                    paths to directories containing the required libraries</span>
+
+<span class="sd">    dependencies  : iterable of CompileObjs</span>
+<span class="sd">                    objects which must also be compiled in order to compile this module/program</span>
+
+<span class="sd">    accelerators  : str</span>
+<span class="sd">                    Tool used to accelerate the code (e.g. openmp openacc)</span>
+
+<span class="sd">    has_target_file : bool</span>
+<span class="sd">                    If set to false then this flag indicates that the file has no target.</span>
+<span class="sd">                    Eg an interface for a library</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_file&#39;</span><span class="p">,</span><span class="s1">&#39;_folder&#39;</span><span class="p">,</span><span class="s1">&#39;_module_name&#39;</span><span class="p">,</span><span class="s1">&#39;_module_target&#39;</span><span class="p">,</span><span class="s1">&#39;_prog_target&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;_lock&#39;</span><span class="p">,</span><span class="s1">&#39;_flags&#39;</span><span class="p">,</span><span class="s1">&#39;_includes&#39;</span><span class="p">,</span><span class="s1">&#39;_libs&#39;</span><span class="p">,</span><span class="s1">&#39;_libdirs&#39;</span><span class="p">,</span><span class="s1">&#39;_accelerators&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;_dependencies&#39;</span><span class="p">,</span><span class="s1">&#39;_has_target_file&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">file_name</span><span class="p">,</span>
+                 <span class="n">folder</span><span class="p">,</span>
+                 <span class="n">flags</span>        <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">includes</span>     <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">libs</span>         <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">libdirs</span>      <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">accelerators</span> <span class="o">=</span> <span class="p">(),</span>
+                 <span class="n">has_target_file</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                 <span class="n">prog_target</span>  <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">rel_mod_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_target</span> <span class="o">=</span> <span class="n">rel_mod_name</span><span class="o">+</span><span class="s1">&#39;.o&#39;</span>
+
+        <span class="k">if</span> <span class="n">prog_target</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">prog_target</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span> <span class="o">=</span> <span class="n">rel_mod_name</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span> <span class="o">+=</span> <span class="s1">&#39;.exe&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_target</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span>         <span class="o">=</span> <span class="n">FileLock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_target</span><span class="o">+</span><span class="s1">&#39;.lock&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>        <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">has_target_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span>     <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="n">folder</span><span class="p">,</span> <span class="o">*</span><span class="n">includes</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">includes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_libs</span>         <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">libs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_libdirs</span>      <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">libdirs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_accelerators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">accelerators</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dependencies</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_dependencies</span><span class="p">(</span><span class="o">*</span><span class="n">dependencies</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_target_file</span> <span class="o">=</span> <span class="n">has_target_file</span>
+
+<div class="viewcode-block" id="CompileObj.reset_folder"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.reset_folder">[docs]</a>    <span class="k">def</span> <span class="nf">reset_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">folder</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Change the folder in which the source file is saved (useful for stdlib)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_target_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">folder</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span> <span class="o">=</span> <span class="n">folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_folder</span><span class="p">)</span>
+
+        <span class="n">rel_mod_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_module_target</span> <span class="o">=</span> <span class="n">rel_mod_name</span><span class="o">+</span><span class="s1">&#39;.o&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span> <span class="o">=</span> <span class="n">rel_mod_name</span>
+        <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;win32&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span> <span class="o">+=</span> <span class="s1">&#39;.exe&#39;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span>         <span class="o">=</span> <span class="n">FileLock</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_target</span><span class="o">+</span><span class="s1">&#39;.lock&#39;</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the file to be compiled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the location of the file to be compiled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_folder</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">python_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the python name of the file to be compiled</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_name</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">module_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the .o file to be generated by the compilation step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_module_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">program_target</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the program to be generated by the compilation step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prog_target</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">flags</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the additional flags required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">includes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the additional include directories required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">libs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the additional libraries required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_libs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">libdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the additional library directories required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_libdirs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">extra_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the additional objects required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">deps</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">d</span><span class="o">.</span><span class="n">has_target_file</span><span class="p">:</span>
+                <span class="n">deps</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">module_target</span><span class="p">)</span>
+                <span class="n">deps</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">extra_modules</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">deps</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the objects which the file to be compiled uses</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+<div class="viewcode-block" id="CompileObj.get_dependency"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.get_dependency">[docs]</a>    <span class="k">def</span> <span class="nf">get_dependency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the objects which the file to be compiled uses</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompileObj.add_dependencies"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.add_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">add_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicate that the file to be compiled depends on a given other file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        *args : CompileObj</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">CompileObj</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">args</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Dependencies require necessary compile information&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dependencies</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="n">a</span><span class="o">.</span><span class="n">module_target</span><span class="p">:</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">})</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_includes</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">includes</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_libs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">libs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_libdirs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">libdirs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_accelerators</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">accelerators</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CompileObj.acquire_lock"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.acquire_lock">[docs]</a>    <span class="k">def</span> <span class="nf">acquire_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lock the file and its dependencies to prevent race conditions</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">acquire_simple_lock</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">acquire_simple_lock</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CompileObj.acquire_simple_lock"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.acquire_simple_lock">[docs]</a>    <span class="k">def</span> <span class="nf">acquire_simple_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Lock the file to prevent race conditions but not its dependencies</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_target_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CompileObj.release_lock"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.release_lock">[docs]</a>    <span class="k">def</span> <span class="nf">release_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unlock the file and its dependencies</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">release_simple_lock</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dependencies</span><span class="p">:</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">release_simple_lock</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="CompileObj.release_simple_lock"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.basic.CompileObj.release_simple_lock">[docs]</a>    <span class="k">def</span> <span class="nf">release_simple_lock</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unlock the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_target_file</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">accelerators</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Returns the names of the accelerators required to compile the file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_accelerators</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_target</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">module_target</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_target</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_target_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Indicates whether the file has a target.</span>
+<span class="sd">        Eg an interface for a library may not have a target</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_target_file</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

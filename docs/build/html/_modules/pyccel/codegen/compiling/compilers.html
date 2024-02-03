@@ -1,0 +1,648 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.codegen.compiling.compilers &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.codegen.compiling.compilers</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.codegen.compiling.compilers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/python</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Module handling everything related to the compilers used to compile the various generated files</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">platform</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span>
+<span class="kn">from</span> <span class="nn">pyccel.compilers.default_compilers</span> <span class="kn">import</span> <span class="n">available_compilers</span><span class="p">,</span> <span class="n">vendors</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+
+<span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Darwin&#39;</span><span class="p">:</span>
+    <span class="c1"># Collect version using mac tools to avoid unexpected results on Big Sur</span>
+    <span class="c1"># https://developer.apple.com/documentation/macos-release-notes/macos-big-sur-11_0_1-release-notes#Third-Party-Apps</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">([</span><span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="s2">&quot;sw_vers&quot;</span><span class="p">),</span> <span class="s2">&quot;-productVersion&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">result</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+    <span class="n">mac_version_tuple</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">mac_target</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">.</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">mac_version_tuple</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MACOSX_DEPLOYMENT_TARGET&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mac_target</span>
+
+<div class="viewcode-block" id="get_condaless_search_path"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.get_condaless_search_path">[docs]</a><span class="k">def</span> <span class="nf">get_condaless_search_path</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot; Get the value of the PATH variable to be set when searching for the compiler.</span>
+<span class="sd">    This is the same as the environment PATH variable but without any conda paths</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path_sep</span> <span class="o">=</span> <span class="s1">&#39;;&#39;</span> <span class="k">if</span> <span class="n">platform</span><span class="o">.</span><span class="n">system</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;Windows&#39;</span> <span class="k">else</span> <span class="s1">&#39;:&#39;</span>
+    <span class="n">current_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span>
+    <span class="n">folders</span> <span class="o">=</span> <span class="p">{</span><span class="n">f</span><span class="p">:</span> <span class="n">f</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">sep</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">current_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path_sep</span><span class="p">)}</span>
+    <span class="n">conda_folder_names</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;conda&#39;</span><span class="p">,</span> <span class="s1">&#39;anaconda&#39;</span><span class="p">,</span> <span class="s1">&#39;miniconda&#39;</span><span class="p">,</span>
+                          <span class="s1">&#39;Conda&#39;</span><span class="p">,</span> <span class="s1">&#39;Anaconda&#39;</span><span class="p">,</span> <span class="s1">&#39;Miniconda&#39;</span><span class="p">)</span>
+    <span class="n">conda_folders</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="n">folders</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">con</span> <span class="ow">in</span> <span class="n">f</span> <span class="k">for</span> <span class="n">con</span> <span class="ow">in</span> <span class="n">conda_folder_names</span><span class="p">)]</span>
+    <span class="k">if</span> <span class="n">conda_folders</span><span class="p">:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">(</span><span class="s2">&quot;Ignoring conda paths when searching for compiler : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">conda_folders</span><span class="p">)))</span>
+    <span class="n">acceptable_search_paths</span> <span class="o">=</span> <span class="n">path_sep</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">folders</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conda_folders</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">acceptable_search_paths</span></div>
+
+<span class="c1">#------------------------------------------------------------</span>
+<div class="viewcode-block" id="Compiler"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler">[docs]</a><span class="k">class</span> <span class="nc">Compiler</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class which handles all compiler options</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name  : str</span>
+<span class="sd">               Name of the family of compilers</span>
+<span class="sd">    language : str</span>
+<span class="sd">               Language that we are translating to</span>
+<span class="sd">    debug : bool</span>
+<span class="sd">            Indicates whether we are compiling in debug mode</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_debug&#39;</span><span class="p">,</span><span class="s1">&#39;_info&#39;</span><span class="p">)</span>
+    <span class="n">_acceptable_bin_paths</span> <span class="o">=</span> <span class="n">get_condaless_search_path</span><span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vendor</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">language</span> <span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">language</span><span class="o">==</span><span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="n">vendor</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.json&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">vendor</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_info</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">vendor</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">language</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;language&#39;</span><span class="p">]:</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">(</span><span class="s2">&quot;Language does not match compiler. Using GNU compiler&quot;</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_info</span> <span class="o">=</span> <span class="n">available_compilers</span><span class="p">[(</span><span class="s1">&#39;GNU&#39;</span><span class="p">,</span><span class="n">language</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">vendor</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">vendors</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Unrecognised compiler vendor : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vendor</span><span class="p">))</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_info</span> <span class="o">=</span> <span class="n">available_compilers</span><span class="p">[(</span><span class="n">vendor</span><span class="p">,</span><span class="n">language</span><span class="p">)]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Compiler not available&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span> <span class="o">=</span> <span class="n">debug</span>
+
+<div class="viewcode-block" id="Compiler._get_exec"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_exec">[docs]</a>    <span class="k">def</span> <span class="nf">_get_exec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">):</span>
+        <span class="c1"># Get executable</span>
+        <span class="n">exec_cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;mpi_exec&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;mpi&#39;</span> <span class="ow">in</span> <span class="n">accelerators</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;exec&#39;</span><span class="p">]</span>
+
+        <span class="c1"># Clean conda paths out of the PATH variable</span>
+        <span class="n">current_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_acceptable_bin_paths</span>
+
+        <span class="c1"># Find the exact path of the executable</span>
+        <span class="n">exec_loc</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">which</span><span class="p">(</span><span class="n">exec_cmd</span><span class="p">)</span>
+
+        <span class="c1"># Reset PATH variable</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PATH&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">current_path</span>
+
+        <span class="k">if</span> <span class="n">exec_loc</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Could not find compiler (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exec_cmd</span><span class="p">),</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">exec_loc</span></div>
+
+<div class="viewcode-block" id="Compiler._get_flags"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_flags">[docs]</a>    <span class="k">def</span> <span class="nf">_get_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">flags</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary compile flags</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        flags        : iterable of str</span>
+<span class="sd">                       Any additional flags requested by the user</span>
+<span class="sd">                       / required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">flags</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_debug</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;debug_flags&#39;</span><span class="p">,()))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;release_flags&#39;</span><span class="p">,()))</span>
+
+        <span class="n">flags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;general_flags&#39;</span><span class="p">,()))</span>
+        <span class="c1"># M_PI is not in the standard</span>
+        <span class="c1">#if &#39;python&#39; not in accelerators:</span>
+        <span class="c1">#    # Python sets its own standard</span>
+        <span class="c1">#    flags.extend(self._info.get(&#39;standard_flags&#39;,()))</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">accelerators</span><span class="p">:</span>
+            <span class="n">flags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">,()))</span>
+
+        <span class="k">return</span> <span class="n">flags</span></div>
+
+<div class="viewcode-block" id="Compiler._get_property"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_property">[docs]</a>    <span class="k">def</span> <span class="nf">_get_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">prop</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary compile property</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        property     : iterable of str</span>
+<span class="sd">                       Any additional values of the property</span>
+<span class="sd">                       requested by the user / required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Use dict keys as an ordered set</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">prop</span><span class="p">)</span>
+
+        <span class="n">prop</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,())))</span>
+
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">accelerators</span><span class="p">:</span>
+            <span class="n">prop</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">a</span><span class="p">,{})</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,())))</span>
+
+        <span class="k">return</span> <span class="n">prop</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Compiler._get_includes"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_includes">[docs]</a>    <span class="k">def</span> <span class="nf">_get_includes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">includes</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary compile include directories</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        includes     : iterable of str</span>
+<span class="sd">                       Any additional include directories requested by the user</span>
+<span class="sd">                       / required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property</span><span class="p">(</span><span class="s1">&#39;includes&#39;</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compiler._get_libs"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_libs">[docs]</a>    <span class="k">def</span> <span class="nf">_get_libs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">libs</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary compile libraries</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        libs         : iterable of str</span>
+<span class="sd">                       Any additional libraries requested by the user</span>
+<span class="sd">                       / required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property</span><span class="p">(</span><span class="s1">&#39;libs&#39;</span><span class="p">,</span> <span class="n">libs</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compiler._get_libdirs"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_libdirs">[docs]</a>    <span class="k">def</span> <span class="nf">_get_libdirs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">libdirs</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary compile library directories</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        libdirs      : iterable of str</span>
+<span class="sd">                       Any additional library directories</span>
+<span class="sd">                       requested by the user / required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property</span><span class="p">(</span><span class="s1">&#39;libdirs&#39;</span><span class="p">,</span> <span class="n">libdirs</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compiler._get_dependencies"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_dependencies">[docs]</a>    <span class="k">def</span> <span class="nf">_get_dependencies</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dependencies</span> <span class="o">=</span> <span class="p">(),</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect necessary dependencies</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dependencies : iterable of str</span>
+<span class="sd">                       Any additional dependencies required by the file</span>
+<span class="sd">        accelerators : iterable or str</span>
+<span class="sd">                       Accelerators used by the code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_property</span><span class="p">(</span><span class="s1">&#39;dependencies&#39;</span><span class="p">,</span> <span class="n">dependencies</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Compiler._insert_prefix_to_list"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._insert_prefix_to_list">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_insert_prefix_to_list</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">prefix</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a prefix into a list. E.g:</span>
+<span class="sd">        &gt;&gt;&gt; lst = [1, 2, 3]</span>
+<span class="sd">        &gt;&gt;&gt; _insert_prefix_to_list(lst, &#39;num:&#39;)</span>
+<span class="sd">        [&#39;num:&#39;, 1, &#39;num:&#39;, 2, &#39;num:&#39;, 3]</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        lst    : iterable</span>
+<span class="sd">                 The list into which the prefix is inserted</span>
+<span class="sd">        prefix : str</span>
+<span class="sd">                 The prefix</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">lst</span> <span class="o">=</span> <span class="p">[(</span><span class="n">prefix</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lst</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">fi</span> <span class="ow">in</span> <span class="n">lst</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">fi</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Compiler._get_compile_components"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler._get_compile_components">[docs]</a>    <span class="k">def</span> <span class="nf">_get_compile_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_obj</span><span class="p">,</span> <span class="n">accelerators</span> <span class="o">=</span> <span class="p">()):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provide all components required for compiling</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        compile_obj  : CompileObj</span>
+<span class="sd">                       Object containing all information about the object to be compiled</span>
+<span class="sd">        accelerators : iterable of str</span>
+<span class="sd">                       Name of all tools used by the code which require additional flags/includes/etc</span>
+
+<span class="sd">        Results</span>
+<span class="sd">        -------</span>
+<span class="sd">        exec_cmd      : str</span>
+<span class="sd">                        The command required to run the executable</span>
+<span class="sd">        inc_flags     : iterable of strs</span>
+<span class="sd">                        The include directories required to compile</span>
+<span class="sd">        libs_flags    : iterable of strs</span>
+<span class="sd">                        The libraries required to compile</span>
+<span class="sd">        libdirs_flags : iterable of strs</span>
+<span class="sd">                        The directories containing libraries required to compile</span>
+<span class="sd">        m_code        : iterable of strs</span>
+<span class="sd">                        The objects required to compile</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get includes</span>
+        <span class="n">includes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_includes</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">includes</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">inc_flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_prefix_to_list</span><span class="p">(</span><span class="n">includes</span><span class="p">,</span> <span class="s1">&#39;-I&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get dependencies (.o/.a)</span>
+        <span class="n">m_code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_dependencies</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">extra_modules</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="c1"># Get libraries and library directories</span>
+        <span class="n">libs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_libs</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">libs</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">libs_flags</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;-l&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39;-l</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">libs</span><span class="p">]</span>
+        <span class="n">libdirs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_libdirs</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">libdirs</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">libdirs_flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_prefix_to_list</span><span class="p">(</span><span class="n">libdirs</span><span class="p">,</span> <span class="s1">&#39;-L&#39;</span><span class="p">)</span>
+
+        <span class="n">exec_cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_exec</span><span class="p">(</span><span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">exec_cmd</span><span class="p">,</span> <span class="n">inc_flags</span><span class="p">,</span> <span class="n">libs_flags</span><span class="p">,</span> <span class="n">libdirs_flags</span><span class="p">,</span> <span class="n">m_code</span></div>
+
+<div class="viewcode-block" id="Compiler.compile_module"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler.compile_module">[docs]</a>    <span class="k">def</span> <span class="nf">compile_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_obj</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compile a module</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        compile_obj   : CompileObj</span>
+<span class="sd">                        Object containing all information about the object to be compiled</span>
+<span class="sd">        output_folder : str</span>
+<span class="sd">                        The folder where the result should be saved</span>
+<span class="sd">        verbose       : bool</span>
+<span class="sd">                        Indicates whether additional output should be shown</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">accelerators</span> <span class="o">=</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">accelerators</span>
+
+        <span class="c1"># Get flags</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_flags</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">flags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get includes</span>
+        <span class="n">includes</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_includes</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">includes</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">inc_flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_prefix_to_list</span><span class="p">(</span><span class="n">includes</span><span class="p">,</span> <span class="s1">&#39;-I&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Get executable</span>
+        <span class="n">exec_cmd</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_exec</span><span class="p">(</span><span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;language&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
+            <span class="n">j_code</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;module_output_flag&#39;</span><span class="p">],</span> <span class="n">output_folder</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j_code</span> <span class="o">=</span> <span class="p">()</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">exec_cmd</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">,</span> <span class="o">*</span><span class="n">inc_flags</span><span class="p">,</span>
+                <span class="n">compile_obj</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">module_target</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">j_code</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="s1">&#39;.lock_acquisition.lock&#39;</span><span class="p">):</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">acquire_lock</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">release_lock</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Compiler.compile_program"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler.compile_program">[docs]</a>    <span class="k">def</span> <span class="nf">compile_program</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_obj</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compile a program</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        compile_obj   : CompileObj</span>
+<span class="sd">                        Object containing all information about the object to be compiled</span>
+<span class="sd">        output_folder : str</span>
+<span class="sd">                        The folder where the result should be saved</span>
+<span class="sd">        verbose       : bool</span>
+<span class="sd">                        Indicates whether additional output should be shown</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">accelerators</span> <span class="o">=</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">accelerators</span>
+
+        <span class="c1"># get flags</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_flags</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="c1"># Get compile options</span>
+        <span class="n">exec_cmd</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">libs_flags</span><span class="p">,</span> <span class="n">libdirs_flags</span><span class="p">,</span> <span class="n">m_code</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_compile_components</span><span class="p">(</span><span class="n">compile_obj</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">linker_libdirs_flags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-Wl,-rpath&#39;</span> <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;-L&#39;</span> <span class="k">else</span> <span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">libdirs_flags</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;language&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
+            <span class="n">j_code</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;module_output_flag&#39;</span><span class="p">],</span> <span class="n">output_folder</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">j_code</span> <span class="o">=</span> <span class="p">()</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">exec_cmd</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">,</span> <span class="o">*</span><span class="n">includes</span><span class="p">,</span> <span class="o">*</span><span class="n">libdirs_flags</span><span class="p">,</span>
+                 <span class="o">*</span><span class="n">linker_libdirs_flags</span><span class="p">,</span> <span class="o">*</span><span class="n">m_code</span><span class="p">,</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">source</span><span class="p">,</span>
+                <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">program_target</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">libs_flags</span><span class="p">,</span> <span class="o">*</span><span class="n">j_code</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="s1">&#39;.lock_acquisition.lock&#39;</span><span class="p">):</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">acquire_lock</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">release_lock</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">program_target</span></div>
+
+<div class="viewcode-block" id="Compiler.compile_shared_library"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler.compile_shared_library">[docs]</a>    <span class="k">def</span> <span class="nf">compile_shared_library</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compile_obj</span><span class="p">,</span> <span class="n">output_folder</span><span class="p">,</span> <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">sharedlib_modname</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compile a module to a shared library</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        compile_obj   : CompileObj</span>
+<span class="sd">                        Object containing all information about the object to be compiled</span>
+<span class="sd">        output_folder : str</span>
+<span class="sd">                        The folder where the result should be saved</span>
+<span class="sd">        verbose       : bool</span>
+<span class="sd">                        Indicates whether additional output should be shown</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        file_out : str</span>
+<span class="sd">                   Generated library name</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure python options are collected</span>
+        <span class="n">accelerators</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="n">accelerators</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>
+
+        <span class="c1"># get flags</span>
+        <span class="n">flags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_flags</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+
+        <span class="n">accelerators</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s1">&#39;python&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Collect compile information</span>
+        <span class="n">exec_cmd</span><span class="p">,</span> <span class="n">includes</span><span class="p">,</span> <span class="n">libs_flags</span><span class="p">,</span> <span class="n">libdirs_flags</span><span class="p">,</span> <span class="n">m_code</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_compile_components</span><span class="p">(</span><span class="n">compile_obj</span><span class="p">,</span> <span class="n">accelerators</span><span class="p">)</span>
+        <span class="n">linker_libdirs_flags</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;-Wl,-rpath&#39;</span> <span class="k">if</span> <span class="n">l</span> <span class="o">==</span> <span class="s1">&#39;-L&#39;</span> <span class="k">else</span> <span class="n">l</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">libdirs_flags</span><span class="p">]</span>
+
+        <span class="n">flags</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="s2">&quot;-shared&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get name of file</span>
+        <span class="n">ext_suffix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">[</span><span class="s1">&#39;python&#39;</span><span class="p">][</span><span class="s1">&#39;shared_suffix&#39;</span><span class="p">]</span>
+        <span class="n">sharedlib_modname</span> <span class="o">=</span> <span class="n">sharedlib_modname</span> <span class="ow">or</span> <span class="n">compile_obj</span><span class="o">.</span><span class="n">python_module</span>
+        <span class="n">file_out</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">compile_obj</span><span class="o">.</span><span class="n">source_folder</span><span class="p">,</span> <span class="n">sharedlib_modname</span><span class="o">+</span><span class="n">ext_suffix</span><span class="p">)</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">exec_cmd</span><span class="p">,</span> <span class="o">*</span><span class="n">flags</span><span class="p">,</span> <span class="o">*</span><span class="n">includes</span><span class="p">,</span> <span class="o">*</span><span class="n">libdirs_flags</span><span class="p">,</span> <span class="o">*</span><span class="n">linker_libdirs_flags</span><span class="p">,</span>
+                <span class="n">compile_obj</span><span class="o">.</span><span class="n">module_target</span><span class="p">,</span> <span class="o">*</span><span class="n">m_code</span><span class="p">,</span>
+                <span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">file_out</span><span class="p">,</span> <span class="o">*</span><span class="n">libs_flags</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="s1">&#39;.lock_acquisition.lock&#39;</span><span class="p">):</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">acquire_lock</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">run_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">verbose</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">compile_obj</span><span class="o">.</span><span class="n">release_lock</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">file_out</span></div>
+
+<div class="viewcode-block" id="Compiler.run_command"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler.run_command">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">run_command</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">verbose</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Run the provided command and collect the output</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        cmd     : iterable</span>
+<span class="sd">                  The command to run</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">                  Indicates whether additional output should be shown</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">cmd</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span>
+                <span class="n">universal_newlines</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">out</span><span class="p">,</span> <span class="n">err</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">communicate</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="n">out</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Failed to build module&quot;</span>
+            <span class="n">err_msg</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">err</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="ne">UserWarning</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">cmd</span></div>
+
+<div class="viewcode-block" id="Compiler.export_compiler_info"><a class="viewcode-back" href="../../../../pyccel.codegen.compiling.html#pyccel.codegen.compiling.compilers.Compiler.export_compiler_info">[docs]</a>    <span class="k">def</span> <span class="nf">export_compiler_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler_export_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Print the information describing all compiler options</span>
+<span class="sd">        to the specified file in json format</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_info</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+                <span class="n">file</span><span class="o">=</span><span class="nb">open</span><span class="p">(</span><span class="n">compiler_export_file</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">))</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

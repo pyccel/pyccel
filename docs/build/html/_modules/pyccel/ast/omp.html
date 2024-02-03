@@ -1,0 +1,433 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.ast.omp &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.ast.omp</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.ast.omp</h1><div class="highlight"><pre>
+<span></span><span class="c1"># coding: utf-8</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">OpenMP has several constructs and directives, and this file contains the OpenMP types that are supported.</span>
+<span class="sd">We represent some types with the OmpAnnotatedComment type.</span>
+<span class="sd">These types are detailed on our documentation:</span>
+<span class="sd">https://github.com/pyccel/pyccel/blob/master/tutorial/openmp.md</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+
+<div class="viewcode-block" id="OmpAnnotatedComment"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OmpAnnotatedComment">[docs]</a><span class="k">class</span> <span class="nc">OmpAnnotatedComment</span><span class="p">(</span><span class="n">Basic</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Represents an OpenMP Annotated Comment in the code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    txt: str</span>
+<span class="sd">        statement to print</span>
+
+<span class="sd">    combined: List (Optional)</span>
+<span class="sd">        constructs to be combined with the current construct</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from pyccel.ast.omp import OmpAnnotatedComment</span>
+<span class="sd">    &gt;&gt;&gt; OmpAnnotatedComment(&#39;parallel&#39;)</span>
+<span class="sd">    OmpAnnotatedComment(parallel)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;_txt&#39;</span><span class="p">,</span> <span class="s1">&#39;_combined&#39;</span><span class="p">,</span> <span class="s1">&#39;_has_nowait&#39;</span><span class="p">)</span>
+    <span class="n">_attribute_nodes</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">combined</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_txt</span> <span class="o">=</span> <span class="n">txt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_combined</span> <span class="o">=</span> <span class="n">combined</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_nowait</span> <span class="o">=</span> <span class="n">has_nowait</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_multiline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to check if the construct needs brackets.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_multiline</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">has_nowait</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to check if the construct has a nowait clause.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_has_nowait</span>
+
+    <span class="nd">@has_nowait</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">has_nowait</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to set the _has_nowait var.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_has_nowait</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">txt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to store clauses.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_txt</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">combined</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used to store the combined construct of a directive.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combined</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Used for Pickling self.&quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">txt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">args</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">instructions</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">combined</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">txt</span><span class="p">]</span>
+        <span class="k">return</span> <span class="s1">&#39;#$ omp &#39;</span><span class="o">+</span><span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">instructions</span> <span class="k">if</span> <span class="n">i</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OMP_For_Loop"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_For_Loop">[docs]</a><span class="k">class</span> <span class="nc">OMP_For_Loop</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Loop construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;for&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Simd_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Simd_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Simd_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Simd construct&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;simd&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_TaskLoop_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_TaskLoop_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_TaskLoop_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Taskloop construct&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;taskloop&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Distribute_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Distribute_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Distribute_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Distribute construct&quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;distribute&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Parallel_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Parallel_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Parallel_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Parallel construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;parallel&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Task_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Task_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Task_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Task construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OMP_Single_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Single_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Single_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Single construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;single&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Critical_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Critical_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Critical_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents an OpenMP Critical construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OMP_Master_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Master_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Master_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Master construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OMP_Masked_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Masked_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Masked_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Masked construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;masked&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Cancel_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Cancel_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Cancel_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Cancel construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="OMP_Target_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Target_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Target_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Target construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;target&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Teams_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Teams_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Teams_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Teams construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;teams&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Sections_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Sections_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Sections_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents OpenMP Sections construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Name of the construct.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s1">&#39;sections&#39;</span></div>
+
+<div class="viewcode-block" id="OMP_Section_Construct"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.OMP_Section_Construct">[docs]</a><span class="k">class</span> <span class="nc">OMP_Section_Construct</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represent OpenMP Section construct. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">_is_multiline</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Omp_End_Clause"><a class="viewcode-back" href="../../../pyccel.ast.html#pyccel.ast.omp.Omp_End_Clause">[docs]</a><span class="k">class</span> <span class="nc">Omp_End_Clause</span><span class="p">(</span><span class="n">OmpAnnotatedComment</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Represents the End of an OpenMP block. &quot;&quot;&quot;</span>
+    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">txt</span><span class="p">,</span> <span class="n">has_nowait</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

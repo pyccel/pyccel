@@ -1,0 +1,1351 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>pyccel.parser.syntactic &mdash; pyccel * documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/fonts.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> pyccel
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../modules.html">docBranck</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">pyccel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+<div class="git-ribbon">
+  <a href="http://github.com/SwissDataScienceCenter" rel="me">Join us on GitHub</a>
+</div>
+
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>pyccel.parser.syntactic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pyccel.parser.syntactic</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+<span class="c1"># This file is part of Pyccel which is released under MIT License. See the LICENSE file or #</span>
+<span class="c1"># go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #</span>
+<span class="c1">#------------------------------------------------------------------------------------------#</span>
+
+<span class="c1"># pylint: disable=missing-function-docstring</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">ast</span>
+
+<span class="c1">#==============================================================================</span>
+
+<span class="kn">from</span> <span class="nn">sympy.core</span> <span class="kn">import</span> <span class="n">cache</span>
+
+<span class="c1">#==============================================================================</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.basic</span> <span class="kn">import</span> <span class="n">Basic</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">FunctionCallArgument</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Module</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Assign</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">AugAssign</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Return</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Pass</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">FunctionDef</span><span class="p">,</span> <span class="n">InlineFunctionDef</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">SympyFunction</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">ClassDef</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">For</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">If</span><span class="p">,</span> <span class="n">IfSection</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">While</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Del</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Assert</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">EmptyNode</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Break</span><span class="p">,</span> <span class="n">Continue</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">FunctionDefArgument</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">Import</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">AsName</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">CommentBlock</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">With</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">StarredArguments</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">CodeBlock</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.core</span> <span class="kn">import</span> <span class="n">IndexedElement</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.bitwise_operators</span> <span class="kn">import</span> <span class="n">PyccelRShift</span><span class="p">,</span> <span class="n">PyccelLShift</span><span class="p">,</span> <span class="n">PyccelBitXor</span><span class="p">,</span> <span class="n">PyccelBitOr</span><span class="p">,</span> <span class="n">PyccelBitAnd</span><span class="p">,</span> <span class="n">PyccelInvert</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">PyccelPow</span><span class="p">,</span> <span class="n">PyccelAdd</span><span class="p">,</span> <span class="n">PyccelMul</span><span class="p">,</span> <span class="n">PyccelDiv</span><span class="p">,</span> <span class="n">PyccelMod</span><span class="p">,</span> <span class="n">PyccelFloorDiv</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">PyccelEq</span><span class="p">,</span>  <span class="n">PyccelNe</span><span class="p">,</span>  <span class="n">PyccelLt</span><span class="p">,</span>  <span class="n">PyccelLe</span><span class="p">,</span>  <span class="n">PyccelGt</span><span class="p">,</span>  <span class="n">PyccelGe</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">PyccelAnd</span><span class="p">,</span> <span class="n">PyccelOr</span><span class="p">,</span>  <span class="n">PyccelNot</span><span class="p">,</span> <span class="n">PyccelMinus</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">PyccelUnary</span><span class="p">,</span> <span class="n">PyccelUnarySub</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">PyccelIs</span><span class="p">,</span> <span class="n">PyccelIsNot</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.operators</span> <span class="kn">import</span> <span class="n">IfTernaryOperator</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.numpyext</span>  <span class="kn">import</span> <span class="n">NumpyMatmul</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.builtins</span> <span class="kn">import</span> <span class="n">PythonTuple</span><span class="p">,</span> <span class="n">PythonList</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.builtins</span> <span class="kn">import</span> <span class="n">PythonPrint</span><span class="p">,</span> <span class="n">Lambda</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.headers</span>  <span class="kn">import</span> <span class="n">MetaVariable</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.literals</span> <span class="kn">import</span> <span class="n">LiteralInteger</span><span class="p">,</span> <span class="n">LiteralFloat</span><span class="p">,</span> <span class="n">LiteralComplex</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.literals</span> <span class="kn">import</span> <span class="n">LiteralFalse</span><span class="p">,</span> <span class="n">LiteralTrue</span><span class="p">,</span> <span class="n">LiteralString</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.literals</span> <span class="kn">import</span> <span class="n">Nil</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.functionalexpr</span> <span class="kn">import</span> <span class="n">FunctionalSum</span><span class="p">,</span> <span class="n">FunctionalMax</span><span class="p">,</span> <span class="n">FunctionalMin</span><span class="p">,</span> <span class="n">GeneratorComprehension</span><span class="p">,</span> <span class="n">FunctionalFor</span>
+<span class="kn">from</span> <span class="nn">pyccel.ast.variable</span>  <span class="kn">import</span> <span class="n">DottedName</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.ast.internals</span> <span class="kn">import</span> <span class="n">Slice</span><span class="p">,</span> <span class="n">PyccelSymbol</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.parser.base</span>        <span class="kn">import</span> <span class="n">BasicParser</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.extend_tree</span> <span class="kn">import</span> <span class="n">extend_tree</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.utilities</span>   <span class="kn">import</span> <span class="n">read_file</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.utilities</span>   <span class="kn">import</span> <span class="n">get_default_path</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.parser.syntax.headers</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">hdr_parse</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.syntax.openmp</span>  <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">omp_parse</span>
+<span class="kn">from</span> <span class="nn">pyccel.parser.syntax.openacc</span> <span class="kn">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">acc_parse</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.utilities.stage</span> <span class="kn">import</span> <span class="n">PyccelStage</span>
+
+<span class="kn">from</span> <span class="nn">pyccel.errors.errors</span> <span class="kn">import</span> <span class="n">Errors</span>
+
+<span class="c1"># TODO - remove import * and only import what we need</span>
+<span class="kn">from</span> <span class="nn">pyccel.errors.messages</span> <span class="kn">import</span> <span class="o">*</span>
+
+<div class="viewcode-block" id="get_name"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.get_name">[docs]</a><span class="k">def</span> <span class="nf">get_name</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; get the name of variable or an argument of the AST node.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Name</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">id</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">arg</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">FunctionDef</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<span class="c1">#==============================================================================</span>
+<span class="n">errors</span> <span class="o">=</span> <span class="n">Errors</span><span class="p">()</span>
+<span class="n">pyccel_stage</span> <span class="o">=</span> <span class="n">PyccelStage</span><span class="p">()</span>
+<span class="c1">#==============================================================================</span>
+
+<span class="n">strip_ansi_escape</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]&#39;</span><span class="p">)</span>
+
+<span class="c1"># use this to delete ansi_escape characters from a string</span>
+<span class="c1"># Useful for very coarse version differentiation.</span>
+
+<span class="c1">#==============================================================================</span>
+
+<div class="viewcode-block" id="SyntaxParser"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser">[docs]</a><span class="k">class</span> <span class="nc">SyntaxParser</span><span class="p">(</span><span class="n">BasicParser</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot; Class for a Syntax Parser.</span>
+
+<span class="sd">        inputs: str</span>
+<span class="sd">            filename or code to parse as a string</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">BasicParser</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># check if inputs is a file</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="n">inputs</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_filename</span> <span class="o">=</span> <span class="n">inputs</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">set_target</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;file&#39;</span><span class="p">)</span>
+
+            <span class="c1"># we don&#39;t use is_valid_filename_py since it uses absolute path</span>
+            <span class="c1"># file extension</span>
+
+            <span class="n">code</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_code</span>    <span class="o">=</span> <span class="n">code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+
+        <span class="n">tree</span>                <span class="o">=</span> <span class="n">extend_tree</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fst</span>           <span class="o">=</span> <span class="n">tree</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dump</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SyntaxParser.parse"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;converts python ast to sympy ast.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">syntax_done</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ast</span>
+
+        <span class="c1"># TODO - add settings to Errors</span>
+        <span class="c1">#      - filename</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">set_parser_stage</span><span class="p">(</span><span class="s1">&#39;syntax&#39;</span><span class="p">)</span>
+
+        <span class="n">pyccel_stage</span><span class="o">.</span><span class="n">set_stage</span><span class="p">(</span><span class="s1">&#39;syntactic&#39;</span><span class="p">)</span>
+        <span class="n">ast</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fst</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ast</span> <span class="o">=</span> <span class="n">ast</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_syntax_done</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="n">ast</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._treat_iterable"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._treat_iterable">[docs]</a>    <span class="k">def</span> <span class="nf">_treat_iterable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">stmt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._treat_comment_line"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._treat_comment_line">[docs]</a>    <span class="k">def</span> <span class="nf">_treat_comment_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;#$&#39;</span><span class="p">):</span>
+            <span class="n">env</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">env</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;omp&#39;</span><span class="p">):</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">omp_parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">env</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;acc&#39;</span><span class="p">):</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">acc_parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">env</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;header&#39;</span><span class="p">):</span>
+                <span class="n">expr</span> <span class="o">=</span> <span class="n">hdr_parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="n">line</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">expr</span><span class="p">,</span> <span class="n">MetaVariable</span><span class="p">):</span>
+
+                    <span class="c1"># a metavar will not appear in the semantic stage.</span>
+                    <span class="c1"># but can be used to modify the ast</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_metavars</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">expr</span><span class="o">.</span><span class="n">name</span><span class="p">)]</span> <span class="o">=</span> <span class="n">expr</span><span class="o">.</span><span class="n">value</span>
+                    <span class="n">expr</span> <span class="o">=</span> <span class="n">EmptyNode</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+
+                <span class="k">raise</span> <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_INVALID_HEADER</span><span class="p">,</span>
+                              <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                              <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">()</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">Comment</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span>
+
+        <span class="n">expr</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+    <span class="c1">#====================================================</span>
+    <span class="c1">#                 _visit functions</span>
+    <span class="c1">#====================================================</span>
+
+<div class="viewcode-block" id="SyntaxParser._visit"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit">[docs]</a>    <span class="k">def</span> <span class="nf">_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates AST from FST.&quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO - add settings to Errors</span>
+        <span class="c1">#      - line and column</span>
+        <span class="c1">#      - blocking errors</span>
+
+        <span class="bp">cls</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="n">syntax_method</span> <span class="o">=</span> <span class="s1">&#39;_visit_&#39;</span> <span class="o">+</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syntax_method</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">syntax_method</span><span class="p">)(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">Basic</span><span class="p">)</span> <span class="ow">and</span> <span class="n">result</span><span class="o">.</span><span class="n">fst</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">AST</span><span class="p">):</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="k">return</span> <span class="n">result</span>
+
+        <span class="c1"># Unknown object, we raise an error.</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX</span><span class="p">,</span> <span class="n">symbol</span><span class="o">=</span><span class="n">stmt</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Module"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Module">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Visits the ast and splits the result into elements relevant for the module or the program&quot;&quot;&quot;</span>
+        <span class="n">body</span>          <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">]</span>
+
+        <span class="c1"># Define the name of the module</span>
+        <span class="c1"># The module name allows it to be correctly referenced from an import command</span>
+        <span class="n">mod_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_filename</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">AsName</span><span class="p">(</span><span class="n">mod_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">get_new_name</span><span class="p">(</span><span class="n">mod_name</span><span class="p">))</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="p">[</span><span class="n">b</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">body</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">body</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">CodeBlock</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">i</span><span class="p">])]</span>
+        <span class="k">return</span> <span class="n">Module</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">[],</span> <span class="p">[],</span> <span class="n">program</span> <span class="o">=</span> <span class="n">CodeBlock</span><span class="p">(</span><span class="n">body</span><span class="p">),</span> <span class="n">scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Expr"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Expr">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Expr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">CommentBlock</span><span class="p">,</span> <span class="n">PythonPrint</span><span class="p">)):</span>
+            <span class="c1"># Collect any results of standalone expressions</span>
+            <span class="c1"># into a variable to avoid errors in C/Fortran</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Tuple"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Tuple">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PythonTuple</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_iterable</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">elts</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_List"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_List">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_List</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">PythonList</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_iterable</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">elts</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_tuple"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_tuple">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_tuple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_iterable</span><span class="p">(</span><span class="n">stmt</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_list"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_list">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_iterable</span><span class="p">(</span><span class="n">stmt</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_alias"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_alias">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_alias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;Expecting a string&#39;</span><span class="p">)</span>
+
+        <span class="n">old</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">asname</span><span class="p">:</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">asname</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">AsName</span><span class="p">(</span><span class="n">old</span><span class="p">,</span> <span class="n">new</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">old</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Dict"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Dict">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+                <span class="n">symbol</span><span class="o">=</span><span class="n">stmt</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_NoneType"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_NoneType">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_NoneType</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Nil</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_str"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_str">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="k">return</span> <span class="n">stmt</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Str"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Str">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span>  <span class="n">stmt</span><span class="o">.</span><span class="n">s</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="n">ast</span><span class="o">.</span><span class="n">Expr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">CommentBlock</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">LiteralString</span><span class="p">(</span><span class="n">val</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Num"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Num">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Num</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">n</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralComplex</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Num type </span><span class="si">{}</span><span class="s1"> not recognised&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Assign"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Assign">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Assign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lhs</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">PythonTuple</span><span class="p">(</span><span class="o">*</span><span class="n">lhs</span><span class="p">)</span>
+
+        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+
+        <span class="c1"># we set the fst to keep track of needed information for errors</span>
+
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_AugAssign"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_AugAssign">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_AugAssign</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">rhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;/&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Mod</span><span class="p">):</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span> <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="c1"># we set the fst to keep track of needed information for errors</span>
+
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_arguments"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_arguments">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_arguments</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">vararg</span> <span class="ow">or</span> <span class="n">stmt</span><span class="o">.</span><span class="n">kwarg</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">VARARGS</span><span class="p">,</span> <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="n">arguments</span>       <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">n_expl</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="n">positional_args</span>        <span class="o">=</span> <span class="p">[</span><span class="n">FunctionDefArgument</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">),</span>
+                                            <span class="n">annotation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">annotation</span><span class="p">))</span>
+                                        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">[:</span><span class="n">n_expl</span><span class="p">]]</span>
+            <span class="n">valued_arguments</span>       <span class="o">=</span> <span class="p">[</span><span class="n">FunctionDefArgument</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">),</span>
+                                            <span class="n">annotation</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">annotation</span><span class="p">),</span>
+                                            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">d</span><span class="p">))</span>
+                                        <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="n">n_expl</span><span class="p">:],</span><span class="n">stmt</span><span class="o">.</span><span class="n">defaults</span><span class="p">)]</span>
+            <span class="n">arguments</span>              <span class="o">=</span> <span class="n">positional_args</span> <span class="o">+</span> <span class="n">valued_arguments</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbols</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">d</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">kwonlyargs</span><span class="p">,</span><span class="n">stmt</span><span class="o">.</span><span class="n">kw_defaults</span><span class="p">):</span>
+                <span class="n">annotation</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">d</span>
+                <span class="n">arg</span> <span class="o">=</span> <span class="n">FunctionDefArgument</span><span class="p">(</span><span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">),</span>
+                            <span class="n">annotation</span><span class="o">=</span><span class="n">annotation</span><span class="p">,</span>
+                            <span class="n">value</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">kwonly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+                <span class="n">arguments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbol</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">arg</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">arguments</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Constant"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Constant">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Constant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="c1"># New in python3.8 this class contains NameConstant, Num, and String types</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Nil</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralTrue</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralFalse</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralFloat</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">complex</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">LiteralComplex</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">imag</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit_Str</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;Constant type </span><span class="si">{}</span><span class="s1"> not recognised&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)))</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_NameConstant"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_NameConstant">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_NameConstant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Nil</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralTrue</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="n">stmt</span><span class="o">.</span><span class="n">value</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LiteralFalse</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Unknown NameConstant : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SyntaxParser._visit_Name"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Name">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbol</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">name</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._treat_import_source"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._treat_import_source">[docs]</a>    <span class="k">def</span> <span class="nf">_treat_import_source</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">level</span><span class="p">):</span>
+        <span class="n">source</span> <span class="o">=</span> <span class="s1">&#39;.&#39;</span><span class="o">*</span><span class="n">level</span> <span class="o">+</span> <span class="n">source</span>
+        <span class="k">if</span> <span class="n">source</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbol</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">DottedName</span><span class="p">(</span><span class="o">*</span><span class="n">source</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">get_default_path</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Import"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Import">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Import</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">imp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">imp</span><span class="p">,</span> <span class="n">AsName</span><span class="p">):</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="n">AsName</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_import_source</span><span class="p">(</span><span class="n">imp</span><span class="o">.</span><span class="n">object</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">imp</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treat_import_source</span><span class="p">(</span><span class="n">imp</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">import_line</span> <span class="o">=</span> <span class="n">Import</span><span class="p">(</span><span class="n">source</span><span class="p">)</span>
+            <span class="n">import_line</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_import</span><span class="p">(</span><span class="n">import_line</span><span class="p">)</span>
+            <span class="n">expr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">import_line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">expr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">CodeBlock</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_ImportFrom"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_ImportFrom">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_ImportFrom</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treat_import_source</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">level</span><span class="p">)</span>
+
+        <span class="n">targets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">names</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="o">==</span> <span class="s1">&#39;*&#39;</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_IMPORT_STAR</span><span class="p">,</span>
+                              <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                              <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+
+            <span class="n">targets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">Import</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">insert_import</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Delete"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Delete">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">arg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Del</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_UnaryOp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_UnaryOp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_UnaryOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">operand</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Not</span><span class="p">):</span>
+            <span class="n">Func</span> <span class="o">=</span> <span class="n">PyccelNot</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">UAdd</span><span class="p">):</span>
+            <span class="n">Func</span> <span class="o">=</span> <span class="n">PyccelUnary</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">USub</span><span class="p">):</span>
+            <span class="n">Func</span> <span class="o">=</span> <span class="n">PyccelUnarySub</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Invert</span><span class="p">):</span>
+            <span class="n">Func</span> <span class="o">=</span> <span class="n">PyccelInvert</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX</span><span class="p">,</span>
+                          <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Func</span><span class="p">(</span><span class="n">target</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_BinOp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_BinOp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_BinOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">first</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">right</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Add</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Mult</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelMul</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Sub</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelMinus</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Div</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelDiv</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Pow</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelPow</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">FloorDiv</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelFloorDiv</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Mod</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelMod</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">RShift</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelRShift</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">LShift</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelLShift</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BitXor</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelBitXor</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BitOr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelBitOr</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">BitAnd</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelBitAnd</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">MatMult</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">NumpyMatmul</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX</span><span class="p">,</span>
+                          <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_BoolOp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_BoolOp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_BoolOp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">a</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">values</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">And</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelAnd</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Or</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelOr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX</span><span class="p">,</span>
+                      <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">op</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Compare"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Compare">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">ops</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_MULTIPLE_COMPARISONS</span><span class="p">,</span>
+                      <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="n">first</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">left</span><span class="p">)</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">comparators</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Eq</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelEq</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">NotEq</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelNe</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Lt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelLt</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Gt</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelGt</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">LtE</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelLe</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">GtE</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelGe</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Is</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelIs</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">IsNot</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">PyccelIsNot</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_UNSUPPORTED_SYNTAX</span><span class="p">,</span>
+                      <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Return"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Return">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Return</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">results</span> <span class="ow">is</span> <span class="n">Nil</span><span class="p">():</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">,</span> <span class="n">PythonList</span><span class="p">)):</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">results</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">Return</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Pass"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Pass">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Pass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Pass</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_FunctionDef"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_FunctionDef">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_FunctionDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="c1">#  TODO check all inputs and which ones should be treated in stage 1 or 2</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbol</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_function_scope</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">arguments</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="n">global_vars</span>  <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">headers</span>      <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">template</span>    <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">is_pure</span>      <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">is_elemental</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">is_private</span>   <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">is_inline</span>    <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">imports</span>      <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">doc_string</span>   <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">def</span> <span class="nf">fill_types</span><span class="p">(</span><span class="n">ls</span><span class="p">):</span>
+            <span class="n">container</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">ls</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">FunctionCallArgument</span><span class="p">):</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">value</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">PyccelSymbol</span><span class="p">):</span>
+                    <span class="n">container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">LiteralString</span><span class="p">):</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                    <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">)</span>
+                    <span class="n">container</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Invalid argument of type </span><span class="si">{}</span><span class="s1"> passed to types decorator&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">container</span>
+
+        <span class="n">decorators</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># add the decorator @types if the arguments are annotated</span>
+        <span class="n">annotated_args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">:</span>
+            <span class="n">annotated_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">annotation</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">Nil</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">annotated_args</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">returns</span><span class="p">:</span>
+                <span class="n">returns</span> <span class="o">=</span> <span class="n">FunctionCallArgument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">returns</span><span class="p">),</span> <span class="n">keyword</span><span class="o">=</span><span class="s1">&#39;results&#39;</span><span class="p">)</span>
+                <span class="n">annotated_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span>
+            <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">FunctionCall</span><span class="p">(</span><span class="s1">&#39;types&#39;</span><span class="p">,</span> <span class="n">annotated_args</span><span class="p">)]</span>
+
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">decorator_list</span><span class="p">):</span>
+            <span class="n">tmp_var</span> <span class="o">=</span> <span class="n">d</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">PyccelSymbol</span><span class="p">)</span> <span class="k">else</span> <span class="n">d</span><span class="o">.</span><span class="n">funcdef</span>
+            <span class="k">if</span> <span class="n">tmp_var</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+                <span class="n">decorators</span><span class="p">[</span><span class="n">tmp_var</span><span class="p">]</span> <span class="o">+=</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">decorators</span><span class="p">[</span><span class="n">tmp_var</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;bypass&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">EmptyNode</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;stack_array&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+            <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;stack_array&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;stack_array&#39;</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;allow_negative_index&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+            <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;allow_negative_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;allow_negative_index&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">a</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">template</span><span class="p">[</span><span class="s1">&#39;template_dict&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># extract the templates</span>
+        <span class="k">if</span> <span class="s1">&#39;template&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">comb_types</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;template&#39;</span><span class="p">]:</span>
+                <span class="n">cache</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+                <span class="n">types</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Number of Arguments provided to the template decorator is not valid&#39;</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">comb_types</span><span class="p">,</span>
+                                    <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">has_keyword</span> <span class="ow">and</span> <span class="n">i</span><span class="o">.</span><span class="n">keyword</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;types&#39;</span><span class="p">):</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Argument provided to the template decorator is not valid&#39;</span>
+                        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                        <span class="n">symbol</span> <span class="o">=</span> <span class="n">comb_types</span><span class="p">,</span>
+                                        <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                        <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">has_keyword</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">):</span>
+                    <span class="n">tp_name</span><span class="p">,</span> <span class="n">ls</span> <span class="o">=</span> <span class="p">(</span><span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span> <span class="k">if</span>\
+                            <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keyword</span> <span class="o">==</span> <span class="s1">&#39;name&#39;</span> <span class="k">else</span>\
+                            <span class="p">(</span><span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tp_name</span> <span class="o">=</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                    <span class="n">ls</span> <span class="o">=</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">tp_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">tp_name</span><span class="p">)</span>
+                    <span class="n">ls</span> <span class="o">=</span> <span class="n">ls</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ls</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Argument provided to the template decorator is not valid&#39;</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">comb_types</span><span class="p">,</span>
+                                    <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+                <span class="n">types</span> <span class="o">=</span> <span class="n">fill_types</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span>
+
+                <span class="n">txt</span>  <span class="o">=</span> <span class="s1">&#39;#$ header template &#39;</span> <span class="o">+</span> <span class="n">tp_name</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39;|&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+                <span class="k">if</span> <span class="n">tp_name</span> <span class="ow">in</span> <span class="n">template</span><span class="p">[</span><span class="s1">&#39;template_dict&#39;</span><span class="p">]:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;The template &quot;</span><span class="si">{}</span><span class="s1">&quot; is duplicated&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tp_name</span><span class="p">)</span>
+                    <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;warning&#39;</span><span class="p">)</span>
+                <span class="c1"># Make templates decorator dict accessible from decorators dict</span>
+                <span class="n">template</span><span class="p">[</span><span class="s1">&#39;template_dict&#39;</span><span class="p">][</span><span class="n">tp_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">hdr_parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="n">txt</span><span class="p">)</span>
+            <span class="c1"># Make template decorator list accessible from decorators dict</span>
+            <span class="n">template</span><span class="p">[</span><span class="s1">&#39;decorator_list&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;template&#39;</span><span class="p">]</span>
+            <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">template</span><span class="p">[</span><span class="s1">&#39;template_dict&#39;</span><span class="p">]:</span>
+            <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># extract the types to construct a header</span>
+        <span class="k">if</span> <span class="s1">&#39;types&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">comb_types</span> <span class="ow">in</span> <span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;types&#39;</span><span class="p">]:</span>
+
+                <span class="n">cache</span><span class="o">.</span><span class="n">clear_cache</span><span class="p">()</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">ls</span> <span class="o">=</span> <span class="n">comb_types</span><span class="o">.</span><span class="n">args</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">ls</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">has_keyword</span><span class="p">:</span>
+                    <span class="n">arg_name</span> <span class="o">=</span> <span class="n">ls</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">keyword</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">arg_name</span> <span class="o">==</span> <span class="s1">&#39;results&#39;</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Argument &quot;</span><span class="si">{}</span><span class="s1">&quot; provided to the types decorator is not valid&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">arg_name</span><span class="p">)</span>
+                        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span>
+                                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">comb_types</span><span class="p">,</span>
+                                    <span class="n">bounding_box</span> <span class="o">=</span> <span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                                    <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">container</span> <span class="o">=</span> <span class="n">ls</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+                        <span class="n">container</span> <span class="o">=</span> <span class="n">container</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">container</span><span class="p">,</span> <span class="n">PythonTuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">container</span><span class="p">]</span>
+                        <span class="n">results</span> <span class="o">=</span> <span class="n">fill_types</span><span class="p">(</span><span class="n">container</span><span class="p">)</span>
+                    <span class="n">types</span> <span class="o">=</span> <span class="n">fill_types</span><span class="p">(</span><span class="n">ls</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">types</span> <span class="o">=</span> <span class="n">fill_types</span><span class="p">(</span><span class="n">ls</span><span class="p">)</span>
+
+                <span class="n">txt</span>  <span class="o">=</span> <span class="s1">&#39;#$ header &#39;</span> <span class="o">+</span> <span class="n">name</span>
+                <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39;(&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">types</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+
+                <span class="k">if</span> <span class="n">results</span><span class="p">:</span>
+                    <span class="n">txt</span> <span class="o">+=</span> <span class="s1">&#39; results(&#39;</span> <span class="o">+</span> <span class="s1">&#39;,&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;)&#39;</span>
+
+                <span class="n">header</span> <span class="o">=</span> <span class="n">hdr_parse</span><span class="p">(</span><span class="n">stmts</span><span class="o">=</span><span class="n">txt</span><span class="p">)</span>
+                <span class="n">headers</span> <span class="o">+=</span> <span class="p">[</span><span class="n">header</span><span class="p">]</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">body</span>
+
+        <span class="k">if</span> <span class="s1">&#39;sympy&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># TODO maybe we should run pylint here</span>
+            <span class="n">stmt</span><span class="o">.</span><span class="n">decorators</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">SympyFunction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">arguments</span><span class="p">,</span> <span class="p">[],</span>
+                    <span class="p">[</span><span class="n">stmt</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()])</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">insert_function</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">EmptyNode</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CommentBlock</span><span class="p">):</span>
+            <span class="n">doc_string</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">doc_string</span><span class="o">.</span><span class="n">header</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="s1">&#39;pure&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">is_pure</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="s1">&#39;elemental&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">is_elemental</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arguments</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">FORTRAN_ELEMENTAL_SINGLE_ARGUMENT</span><span class="p">,</span>
+                              <span class="n">symbol</span><span class="o">=</span><span class="n">decorators</span><span class="p">[</span><span class="s1">&#39;elemental&#39;</span><span class="p">],</span>
+                              <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                              <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s1">&#39;private&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">is_private</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="s1">&#39;inline&#39;</span> <span class="ow">in</span> <span class="n">decorators</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">is_inline</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">CodeBlock</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="n">returns</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">expr</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">get_attribute_nodes</span><span class="p">(</span><span class="n">Return</span><span class="p">,</span>
+                    <span class="n">excluded_nodes</span> <span class="o">=</span> <span class="p">(</span><span class="n">Assign</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">PyccelInternalFunction</span><span class="p">,</span> <span class="n">FunctionDef</span><span class="p">))]</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">returns</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">returns</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_inline</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">returns</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="s2">&quot;Inline functions cannot have multiple return statements&quot;</span><span class="p">,</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                    <span class="n">severity</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span><span class="p">)</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">result_counter</span> <span class="o">=</span> <span class="mi">1</span>
+
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">returns</span><span class="p">):</span>
+            <span class="n">r0</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">pyccel_symbol</span>  <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r0</span><span class="p">,</span> <span class="n">PyccelSymbol</span><span class="p">)</span>
+            <span class="n">same_results</span>   <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">r0</span> <span class="o">==</span> <span class="n">ri</span> <span class="k">for</span> <span class="n">ri</span> <span class="ow">in</span> <span class="n">r</span><span class="p">)</span>
+            <span class="n">name_available</span> <span class="o">=</span> <span class="nb">all</span><span class="p">(</span><span class="n">r0</span> <span class="o">!=</span> <span class="n">a</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arguments</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">pyccel_symbol</span> <span class="ow">and</span> <span class="n">same_results</span> <span class="ow">and</span> <span class="n">name_available</span><span class="p">:</span>
+                <span class="n">result_name</span> <span class="o">=</span> <span class="n">r0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result_name</span><span class="p">,</span> <span class="n">result_counter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">get_new_incremented_symbol</span><span class="p">(</span><span class="s1">&#39;Out&#39;</span><span class="p">,</span> <span class="n">result_counter</span><span class="p">)</span>
+
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result_name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_function_scope</span><span class="p">()</span>
+
+        <span class="bp">cls</span> <span class="o">=</span> <span class="n">InlineFunctionDef</span> <span class="k">if</span> <span class="n">is_inline</span> <span class="k">else</span> <span class="n">FunctionDef</span>
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+               <span class="n">name</span><span class="p">,</span>
+               <span class="n">arguments</span><span class="p">,</span>
+               <span class="n">results</span><span class="p">,</span>
+               <span class="n">body</span><span class="p">,</span>
+               <span class="n">global_vars</span><span class="o">=</span><span class="n">global_vars</span><span class="p">,</span>
+               <span class="n">is_pure</span><span class="o">=</span><span class="n">is_pure</span><span class="p">,</span>
+               <span class="n">is_elemental</span><span class="o">=</span><span class="n">is_elemental</span><span class="p">,</span>
+               <span class="n">is_private</span><span class="o">=</span><span class="n">is_private</span><span class="p">,</span>
+               <span class="n">imports</span><span class="o">=</span><span class="n">imports</span><span class="p">,</span>
+               <span class="n">decorators</span><span class="o">=</span><span class="n">decorators</span><span class="p">,</span>
+               <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+               <span class="n">doc_string</span><span class="o">=</span><span class="n">doc_string</span><span class="p">,</span>
+               <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">func</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_ClassDef"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_ClassDef">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_ClassDef</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_class_scope</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">methods</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">body</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">FunctionDef</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">:</span>
+            <span class="n">i</span><span class="o">.</span><span class="n">cls_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="n">attributes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">var</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">methods</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">arguments</span><span class="p">]</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">bases</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_class_scope</span><span class="p">()</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">ClassDef</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span>
+                        <span class="n">methods</span><span class="o">=</span><span class="n">methods</span><span class="p">,</span> <span class="n">superclass</span><span class="o">=</span><span class="n">parent</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+
+        <span class="c1"># we set the fst to keep track of needed information for errors</span>
+
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Subscript"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Subscript">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Subscript</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">ch</span> <span class="o">=</span> <span class="n">stmt</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ch</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Subscript</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">ch</span><span class="o">.</span><span class="n">slice</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">PythonTuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">args</span> <span class="o">+=</span> <span class="n">val</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+            <span class="n">ch</span> <span class="o">=</span> <span class="n">ch</span><span class="o">.</span><span class="n">value</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">ch</span><span class="p">)</span>
+        <span class="n">var</span> <span class="o">=</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">var</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_ExtSlice"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_ExtSlice">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_ExtSlice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Slice"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Slice">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">upper</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">upper</span><span class="p">)</span> <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">lower</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span> <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">lower</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">step</span><span class="p">)</span> <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">Slice</span><span class="p">(</span><span class="n">lower</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">step</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Index"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Index">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Attribute"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Attribute">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">val</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="o">.</span><span class="n">insert_symbol</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span>
+        <span class="n">attr</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">attr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">DottedName</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SyntaxParser._visit_Call"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Call">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">+=</span> <span class="p">[</span><span class="n">FunctionCallArgument</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">a</span><span class="p">))</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">keywords</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">keywords</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">GeneratorComprehension</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+
+        <span class="n">func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">PyccelSymbol</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">func</span> <span class="o">==</span> <span class="s2">&quot;print&quot;</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="n">PythonPrint</span><span class="p">(</span><span class="n">PythonTuple</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">func</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">DottedName</span><span class="p">):</span>
+            <span class="n">func_attr</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">args</span><span class="p">)</span>
+            <span class="n">func</span> <span class="o">=</span> <span class="n">DottedName</span><span class="p">(</span><span class="o">*</span><span class="n">func</span><span class="o">.</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">func_attr</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39; Unknown function type </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">func</span><span class="p">))))</span>
+
+        <span class="k">return</span> <span class="n">func</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_keyword"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_keyword">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_keyword</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">target</span> <span class="o">=</span> <span class="n">stmt</span><span class="o">.</span><span class="n">arg</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">FunctionCallArgument</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">keyword</span><span class="o">=</span><span class="n">target</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_For"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_For">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_For</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_loop_scope</span><span class="p">()</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">For</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_comprehension"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_comprehension">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_comprehension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">iterator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_in_lhs_assign</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">iter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_loop_scope</span><span class="p">()</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">For</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">iterable</span><span class="p">,</span> <span class="p">[],</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_ListComp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_ListComp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_ListComp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+
+        <span class="n">generators</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">generators</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span><span class="n">ast</span><span class="o">.</span><span class="n">Assign</span><span class="p">):</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN</span><span class="p">,</span>
+                          <span class="n">symbol</span> <span class="o">=</span> <span class="n">stmt</span><span class="p">,</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lhs</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">lhs</span> <span class="o">=</span> <span class="n">lhs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;A list comprehension cannot be unpacked&quot;</span><span class="p">)</span>
+
+        <span class="n">index</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">IndexedElement</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="n">assign1</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">assign1</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert2body</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">assign2</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">PyccelAdd</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">LiteralInteger</span><span class="p">(</span><span class="mi">1</span><span class="p">)))</span>
+        <span class="n">assign2</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">stmt</span><span class="p">)</span>
+        <span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert2body</span><span class="p">(</span><span class="n">assign2</span><span class="p">)</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[</span><span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">target</span><span class="p">]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">generators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">F</span> <span class="o">=</span> <span class="n">generators</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert2body</span><span class="p">(</span><span class="n">F</span><span class="p">)</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">FunctionalFor</span><span class="p">([</span><span class="n">assign1</span><span class="p">,</span> <span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span><span class="n">target</span><span class="o">.</span><span class="n">rhs</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">lhs</span><span class="p">,</span>
+                             <span class="n">indices</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_GeneratorExp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_GeneratorExp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_GeneratorExp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">elt</span><span class="p">)</span>
+
+        <span class="n">generators</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">generators</span><span class="p">)</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Call</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;GeneratorExp is not the argument of a function call&quot;</span><span class="p">)</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">parent</span><span class="o">.</span><span class="n">func</span><span class="p">)</span>
+
+        <span class="n">grandparent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">grandparent</span><span class="p">,</span> <span class="n">ast</span><span class="o">.</span><span class="n">Assign</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">grandparent</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Cannot unpack function with generator expression argument&quot;</span><span class="p">)</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">grandparent</span><span class="o">.</span><span class="n">targets</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lhs</span> <span class="o">=</span> <span class="n">PyccelSymbol</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">,</span> <span class="n">is_temp</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">body</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">AugAssign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">Assign</span><span class="p">(</span><span class="n">lhs</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+
+        <span class="n">body</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">generators</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">generators</span><span class="p">)</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">generators</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">target</span><span class="p">)</span>
+            <span class="n">generators</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">insert2body</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">generators</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;sum&#39;</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">FunctionalSum</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;min&#39;</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">FunctionalMin</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;max&#39;</span><span class="p">:</span>
+            <span class="n">expr</span> <span class="o">=</span> <span class="n">FunctionalMax</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">lhs</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TODO</span><span class="p">,</span>
+                          <span class="n">symbol</span> <span class="o">=</span> <span class="n">name</span><span class="p">,</span>
+                          <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                          <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;fatal&#39;</span><span class="p">)</span>
+
+        <span class="n">expr</span><span class="o">.</span><span class="n">set_fst</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_If"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_If">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_If</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">orelse</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">orelse</span><span class="p">)</span><span class="o">==</span><span class="mi">1</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="n">If</span><span class="p">):</span>
+            <span class="n">orelse</span> <span class="o">=</span> <span class="n">orelse</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">blocks</span>
+            <span class="k">return</span> <span class="n">If</span><span class="p">(</span><span class="n">IfSection</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">body</span><span class="p">),</span> <span class="o">*</span><span class="n">orelse</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">orelse</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">If</span><span class="p">(</span><span class="n">IfSection</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">body</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">orelse</span> <span class="o">=</span> <span class="n">IfSection</span><span class="p">(</span><span class="n">LiteralTrue</span><span class="p">(),</span> <span class="n">orelse</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">If</span><span class="p">(</span><span class="n">IfSection</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">body</span><span class="p">),</span> <span class="n">orelse</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_IfExp"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_IfExp">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_IfExp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">test1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="n">first</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">second</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">orelse</span><span class="p">)</span>
+        <span class="n">expr</span> <span class="o">=</span> <span class="n">IfTernaryOperator</span><span class="p">(</span><span class="n">test1</span><span class="p">,</span> <span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">expr</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_While"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_While">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_While</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">scope</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_new_loop_scope</span><span class="p">()</span>
+
+        <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exit_loop_scope</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">While</span><span class="p">(</span><span class="n">test</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="n">scope</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Assert"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Assert">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Assert</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">test</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Assert</span><span class="p">(</span><span class="n">test</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_CommentMultiLine"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_CommentMultiLine">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_CommentMultiLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">exprs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_treat_comment_line</span><span class="p">(</span><span class="n">com</span><span class="p">,</span> <span class="n">stmt</span><span class="p">)</span> <span class="k">for</span> <span class="n">com</span> <span class="ow">in</span> <span class="n">stmt</span><span class="o">.</span><span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">exprs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">exprs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CodeBlock</span><span class="p">(</span><span class="n">exprs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_CommentLine"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_CommentLine">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_CommentLine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_treat_comment_line</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">s</span><span class="p">,</span> <span class="n">stmt</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Break"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Break">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Break</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Break</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Continue"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Continue">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Continue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Continue</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Lambda"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Lambda">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Lambda</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+
+        <span class="n">expr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Lambda</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">),</span> <span class="n">expr</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_withitem"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_withitem">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_withitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="c1"># stmt.optional_vars</span>
+        <span class="n">context</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">context_expr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">stmt</span><span class="o">.</span><span class="n">optional_vars</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">AsName</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">optional_vars</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">context</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_With"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_With">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_With</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">domain</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">domain</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">domain</span> <span class="o">=</span> <span class="n">domain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">body</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">With</span><span class="p">(</span><span class="n">domain</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Try"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Try">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Try</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="c1"># this is a blocking error, since we don&#39;t want to convert the try body</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_TRY_EXCEPT_FINALLY</span><span class="p">,</span>
+                      <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Raise"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Raise">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Raise</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_RAISE</span><span class="p">,</span>
+                      <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Yield"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Yield">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Yield</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="n">errors</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">PYCCEL_RESTRICTION_YIELD</span><span class="p">,</span>
+                      <span class="n">bounding_box</span><span class="o">=</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">stmt</span><span class="o">.</span><span class="n">col_offset</span><span class="p">),</span>
+                      <span class="n">severity</span><span class="o">=</span><span class="s1">&#39;error&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SyntaxParser._visit_Starred"><a class="viewcode-back" href="../../../pyccel.parser.html#pyccel.parser.syntactic.SyntaxParser._visit_Starred">[docs]</a>    <span class="k">def</span> <span class="nf">_visit_Starred</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stmt</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">StarredArguments</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">stmt</span><span class="o">.</span><span class="n">value</span><span class="p">))</span></div></div>
+
+<span class="c1">#==============================================================================</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expecting an argument for filename&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">SyntaxParser</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">parser</span><span class="o">.</span><span class="n">ast</span><span class="p">)</span>
+
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2023, *.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
