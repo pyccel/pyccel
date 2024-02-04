@@ -8,9 +8,12 @@ import os
 import sys
 import sysconfig
 import subprocess
+import shutil
 
 from numpy import get_include as get_numpy_include
+
 from pyccel import __version__ as pyccel_version
+
 
 gfort_info = {'exec' : 'gfortran',
               'mpi_exec' : 'mpif90',
@@ -31,6 +34,7 @@ gfort_info = {'exec' : 'gfortran',
                   },
               'family': 'GNU',
               }
+
 if sys.platform == "win32":
     gfort_info['mpi_exec'] = 'gfortran'
     gfort_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
