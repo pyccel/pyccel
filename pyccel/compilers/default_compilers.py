@@ -7,6 +7,8 @@ import glob
 import os
 import sys
 import sysconfig
+import subprocess
+
 from numpy import get_include as get_numpy_include
 from pyccel import __version__ as pyccel_version
 
@@ -110,13 +112,19 @@ gcc_info = {'exec' : 'gcc',
                 },
             'family': 'GNU',
             }
+
 if sys.platform == "darwin":
-    OMP_PATH = os.path.join(os.environ['HOMEBREW_PREFIX'], 'opt/libomp')
+    p = subprocess.run(['brew', '--prefix'], check=True, capture_output=True)
+    HOMEBREW_PREFIX = p.stdout.decode().strip()
+    OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
+
     gcc_info['openmp']['flags']    = ("-Xpreprocessor",'-fopenmp')
     gcc_info['openmp']['libs']     = ('omp',)
     gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
     gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
+
 elif sys.platform == "win32":
+
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
     gcc_info['mpi']['libs']     = ('msmpi',)
