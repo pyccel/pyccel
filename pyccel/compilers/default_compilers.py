@@ -111,10 +111,11 @@ gcc_info = {'exec' : 'gcc',
             'family': 'GNU',
             }
 if sys.platform == "darwin":
-    gcc_info['openmp']['flags'] = ("-Xpreprocessor",'-fopenmp')
-    gcc_info['openmp']['libs'] = ('omp',)
-    gcc_info['openmp']['libdirs'] = ('/usr/local/opt/libomp/lib',)
-    gcc_info['openmp']['includes'] = ('/usr/local/opt/libomp/include',)
+    OMP_PATH = os.path.join(os.environ['HOMEBREW_PREFIX'], 'opt/libomp')
+    gcc_info['openmp']['flags']    = ("-Xpreprocessor",'-fopenmp')
+    gcc_info['openmp']['libs']     = ('omp',)
+    gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
+    gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
 elif sys.platform == "win32":
     gcc_info['mpi_exec'] = 'gcc'
     gcc_info['mpi']['flags']    = ('-D','USE_MPI_MODULE')
