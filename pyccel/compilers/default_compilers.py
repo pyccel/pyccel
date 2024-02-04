@@ -114,11 +114,11 @@ gcc_info = {'exec' : 'gcc',
             }
 
 if sys.platform == "darwin":
-    p = subprocess.run(['brew', '--prefix'], check=True, capture_output=True)
+    p = subprocess.run([shutil.which('brew'), '--prefix'], check=True, capture_output=True)
     HOMEBREW_PREFIX = p.stdout.decode().strip()
     OMP_PATH = os.path.join(HOMEBREW_PREFIX, 'opt/libomp')
 
-    gcc_info['openmp']['flags']    = ("-Xpreprocessor",'-fopenmp')
+    gcc_info['openmp']['flags']    = ("-Xpreprocessor", '-fopenmp')
     gcc_info['openmp']['libs']     = ('omp',)
     gcc_info['openmp']['libdirs']  = (os.path.join(OMP_PATH, 'lib'),)
     gcc_info['openmp']['includes'] = (os.path.join(OMP_PATH, 'include'),)
