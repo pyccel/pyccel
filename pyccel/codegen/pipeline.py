@@ -442,9 +442,10 @@ def execute_pyccel(fname, *,
         timers = {"Initialisation" : start_syntax-start,
                   "Syntactic Stage": end_syntax - start_syntax,
                   "Semantic Stage": end_semantic - start_semantic,
-                  "Codegen Stage": end_codegen - start_codegen}
+                  "Codegen Stage": end_codegen - start_codegen,
+                  "Compilation without wrapper": end_compile_target_language - start_compile_target_language}
         timers.update(shared_lib_timers)
         timers['Total'] = end-start
         print("-------------------- Timers -------------------------")
         for n,t in timers.items():
-            print(f'{n:<23}: ',t)
+            print(f'{n:<30}: ',t)
