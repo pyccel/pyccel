@@ -51,7 +51,7 @@ from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -71,8 +71,6 @@ __all__ = ["CCodePrinter", "ccode"]
 numpy_ufunc_to_c_float = {
     'NumpyAbs'  : 'fabs',
     'NumpyFabs' : 'fabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     'NumpyFloor': 'floor',  # TODO: might require special treatment with casting
     # ---
     'NumpyExp' : 'exp',
@@ -96,8 +94,6 @@ numpy_ufunc_to_c_float = {
 
 numpy_ufunc_to_c_complex = {
     'NumpyAbs'  : 'cabs',
-    'NumpyMin'  : 'minval',
-    'NumpyMax'  : 'maxval',
     # ---
     'NumpyExp' : 'cexp',
     'NumpyLog' : 'clog',
@@ -267,6 +263,7 @@ class CCodePrinter(CodePrinter):
                       (NativeInteger(),8)     : 'int64_t',
                       (NativeInteger(),2)     : 'int16_t',
                       (NativeInteger(),1)     : 'int8_t',
+                      (NativeInteger(),-2)    : 'int',
                       (NativeBool(),-1) : 'bool',
                       (NativeVoid(), 0) : 'void',
                       }
@@ -355,7 +352,7 @@ class CCodePrinter(CodePrinter):
         bool
             True if a C pointer, False otherwise.
         """
-        if isinstance(a, (Nil, ObjectAddress)):
+        if isinstance(a, (Nil, ObjectAddress, PointerCast)):
             return True
         if isinstance(a, FunctionCall):
             a = a.funcdef.results[0].var
@@ -763,14 +760,15 @@ class CCodePrinter(CodePrinter):
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
             classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
+            class_scope = classDef.scope
             for method in classDef.methods:
                 if not method.is_inline:
-                    method.rename(classDef.name + ("__" + method.name if not method.name.startswith("__") else method.name))
+                    class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
                     funcs += f"{self.function_signature(method)};\n"
             for interface in classDef.interfaces:
                 for func in interface.functions:
                     if not func.is_inline:
-                        func.rename(classDef.name + ("__" + func.name if not func.name.startswith("__") else func.name))
+                        class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
                         funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
         funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
@@ -1489,22 +1487,32 @@ class CCodePrinter(CodePrinter):
     def _print_Allocate(self, expr):
         free_code = ''
         variable = expr.variable
-        #free the array if its already allocated and checking if its not null if the status is unknown
-        if  (expr.status == 'unknown'):
-            shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
-            free_code = f'if ({self._print(shape_var)} != NULL)\n'
-            free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
-        elif (expr.status == 'allocated'):
-            free_code += self._print(Deallocate(variable))
-        self.add_import(c_imports['ndarrays'])
-        shape = ", ".join(self._print(i) for i in expr.shape)
-        dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
-        shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
-        shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
-        is_view = 'false' if variable.on_heap else 'true'
-        order = "order_f" if expr.order == "F" else "order_c"
-        alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
-        return '{}{}'.format(free_code, alloc_code)
+        if variable.rank > 0:
+            #free the array if its already allocated and checking if its not null if the status is unknown
+            if  (expr.status == 'unknown'):
+                shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
+                free_code = f'if ({self._print(shape_var)} != NULL)\n'
+                free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
+            elif (expr.status == 'allocated'):
+                free_code += self._print(Deallocate(variable))
+            self.add_import(c_imports['ndarrays'])
+            shape = ", ".join(self._print(i) for i in expr.shape)
+            dtype = self.find_in_ndarray_type_registry(variable.dtype, variable.precision)
+            shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
+            shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
+            is_view = 'false' if variable.on_heap else 'true'
+            order = "order_f" if expr.order == "F" else "order_c"
+            alloc_code = f"{self._print(variable)} = array_create({variable.rank}, {shape_Assign}, {dtype}, {is_view}, {order});\n"
+            return '{}{}'.format(free_code, alloc_code)
+        elif variable.is_alias:
+            var_code = self._print(ObjectAddress(variable))
+            if expr.like:
+                declaration_type = self.get_declare_type(expr.like)
+                return f'{var_code} = malloc(sizeof({declaration_type}));\n'
+            else:
+                raise NotImplementedError(f"Allocate not implemented for {variable}")
+        else:
+            raise NotImplementedError(f"Allocate not implemented for {variable}")
 
     def _print_Deallocate(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
@@ -1513,9 +1521,13 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        if expr.variable.is_alias:
-            return f'free_pointer({variable_address});\n'
-        return f'free_array({variable_address});\n'
+        elif expr.variable.is_ndarray:
+            if expr.variable.is_alias:
+                return f'free_pointer({variable_address});\n'
+            else:
+                return f'free_array({variable_address});\n'
+        else:
+            return f'free({variable_address});\n'
 
     def _print_Slice(self, expr):
         start = self._print(expr.start)
@@ -1739,6 +1751,38 @@ class CCodePrinter(CodePrinter):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
 
+    def _print_NumpyAmax(self, expr):
+        '''
+        Convert a call to numpy.max to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amax_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amax_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amax_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amax_bool({name})'
+
+    def _print_NumpyAmin(self, expr):
+        '''
+        Convert a call to numpy.min to the equivalent function in C.
+        '''
+        dtype = expr.arg.dtype
+        prec  = expr.arg.precision
+        name  = self._print(expr.arg)
+        if isinstance(dtype, NativeInteger):
+            return f'numpy_amin_int{prec * 8}({name})'
+        elif isinstance(dtype, NativeFloat):
+            return f'numpy_amin_float{prec * 8}({name})'
+        elif isinstance(dtype, NativeComplex):
+            return f'numpy_amin_complex{prec * 16}({name})'
+        elif isinstance(dtype, NativeBool):
+            return f'numpy_amin_bool({name})'
+
     def _print_NumpyLinspace(self, expr):
         template = '({start} + {index}*{step})'
         if not isinstance(expr.endpoint, LiteralFalse):
@@ -1824,20 +1868,20 @@ class CCodePrinter(CodePrinter):
          # Ensure the correct syntax is used for pointers
         args = []
         for a, f in zip(expr.args, func.arguments):
-            a = a.value if a else Nil()
+            arg_val = a.value or Nil()
             f = f.var
             if self.is_c_pointer(f):
-                if isinstance(a, Variable):
-                    args.append(ObjectAddress(a))
-                elif not self.is_c_pointer(a):
+                if isinstance(arg_val, Variable):
+                    args.append(ObjectAddress(arg_val))
+                elif not self.is_c_pointer(arg_val):
                     tmp_var = self.scope.get_temporary_variable(f.dtype)
-                    assign = Assign(tmp_var, a)
+                    assign = Assign(tmp_var, arg_val)
                     self._additional_code += self._print(assign)
                     args.append(ObjectAddress(tmp_var))
                 else:
-                    args.append(a)
+                    args.append(arg_val)
             else :
-                args.append(a)
+                args.append(arg_val)
 
         args += self._temporary_args
         self._temporary_args = []
@@ -2247,6 +2291,13 @@ class CCodePrinter(CodePrinter):
                 return f'{obj_code[2:-1]}'
             else:
                 return obj_code
+
+    def _print_PointerCast(self, expr):
+        declare_type = self.get_declare_type(expr.cast_type)
+        if not self.is_c_pointer(expr.cast_type):
+            declare_type += '*'
+        var_code = self._print(ObjectAddress(expr.obj))
+        return f'(*({declare_type})({var_code}))'
 
     def _print_Comment(self, expr):
         comments = self._print(expr.text)

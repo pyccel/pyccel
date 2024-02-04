@@ -271,10 +271,8 @@ class SyntaxParser(BasicParser):
         """
         if isinstance(annotation, (tuple, list)):
             return UnionTypeAnnotation(*[self._treat_type_annotation(stmt, a) for a in annotation])
-        if isinstance(annotation, (PyccelSymbol, DottedName)):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[0], orders=[None], is_const=False)
-        elif isinstance(annotation, IndexedElement):
-            return SyntacticTypeAnnotation(dtypes=[annotation], ranks=[len(annotation.indices)], orders=[None], is_const=False)
+        if isinstance(annotation, (PyccelSymbol, DottedName, IndexedElement)):
+            return SyntacticTypeAnnotation(dtype=annotation)
         elif isinstance(annotation, LiteralString):
             try:
                 annotation = types_meta.model_from_str(annotation.python_value)
@@ -282,7 +280,7 @@ class SyntaxParser(BasicParser):
                 errors.report(f"Invalid header. {e.message}",
                         symbol = stmt, column = e.col,
                         severity='fatal')
-            annot = SyntacticTypeAnnotation.build_from_textx(annotation)
+            annot = annotation.expr
             if isinstance(stmt, PyccelAstNode):
                 annot.set_current_ast(stmt.python_ast)
             else:
@@ -394,24 +392,6 @@ class SyntaxParser(BasicParser):
     def _visit_str(self, stmt):
 
         return stmt
-
-    def _visit_Str(self, stmt):
-        val =  stmt.s
-        if isinstance(self._context[-2], ast.Expr):
-            return CommentBlock(val)
-        return LiteralString(val)
-
-    def _visit_Num(self, stmt):
-        val = stmt.n
-
-        if isinstance(val, int):
-            return LiteralInteger(val)
-        elif isinstance(val, float):
-            return LiteralFloat(val)
-        elif isinstance(val, complex):
-            return LiteralComplex(val.real, val.imag)
-        else:
-            raise NotImplementedError('Num type {} not recognised'.format(type(val)))
 
     def _visit_Assign(self, stmt):
 
@@ -538,24 +518,12 @@ class SyntaxParser(BasicParser):
             return LiteralComplex(stmt.value.real, stmt.value.imag)
 
         elif isinstance(stmt.value, str):
-            return self._visit_Str(stmt)
+            if isinstance(self._context[-2], ast.Expr):
+                return CommentBlock(stmt.value)
+            return LiteralString(stmt.value)
 
         else:
             raise NotImplementedError('Constant type {} not recognised'.format(type(stmt.value)))
-
-    def _visit_NameConstant(self, stmt):
-        if stmt.value is None:
-            return Nil()
-
-        elif stmt.value is True:
-            return LiteralTrue()
-
-        elif stmt.value is False:
-            return LiteralFalse()
-
-        else:
-            raise NotImplementedError("Unknown NameConstant : {}".format(stmt.value))
-
 
     def _visit_Name(self, stmt):
         name = PyccelSymbol(stmt.id)
@@ -1033,8 +1001,9 @@ class SyntaxParser(BasicParser):
             visited_i = self._visit(i)
             if isinstance(visited_i, FunctionDef):
                 methods.append(visited_i)
+                visited_i.arguments[0].bound_argument = True
             elif isinstance(visited_i, Pass):
-                return errors.report(UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS, symbol = stmt, severity='error')
+                continue
             elif isinstance(visited_i, AnnotatedPyccelSymbol):
                 attributes.append(visited_i)
             elif isinstance(visited_i, CommentBlock):
@@ -1042,8 +1011,6 @@ class SyntaxParser(BasicParser):
             else:
                 errors.report(f"{type(visited_i)} not currently supported in classes",
                         severity='error', symbol=visited_i)
-        for i in methods:
-            i.cls_name = name
         parent = [p for p in (self._visit(i) for i in stmt.bases) if p != 'object']
         self.exit_class_scope()
         expr = ClassDef(name=name, attributes=attributes,

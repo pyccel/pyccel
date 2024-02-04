@@ -5,11 +5,20 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1645 : Handle deprecated `ast` classes.
+-   #1649 : Add support for `np.min` in C code.
+-   #1621 : Add support for `np.max` in C code.
 -   #1571 : Add support for the function `tuple`.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   #1494 : Add support for functions returning class instances.
+-   #1495 : Add support for functions with class instance arguments.
+-   #1684 : Add support for classes without `__init__` functions.
+-   #1685 : Add support for `type()` function with class instance argument.
+-   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
+-   #1680 : Add support for `typing.Final`.
 
 ### Fixed
 
@@ -23,14 +32,27 @@ All notable changes to this project will be documented in this file.
 -   #1614 : Allow relative paths for custom compilation file.
 -   #1615 : Fixed infinite loop when passing slices while copying arrays.
 -   #1628 : Fixed segmentation fault when writing to optional scalars.
+-   #1554 : Fix exit statement in Fortran with Intel compiler.
+-   #1564 : Fixed installation problems on Python 3.12.
+-   #1259 : Fix bug causing problems with user editable installation.
+-   #1651 : Fix name collision resolution to include parent scopes.
+-   #1156 : Raise an error for variable name collisions with non-variable objects.
+-   #1507 : Fix problems with name collisions in class functions.
+-   Ensure `pyccel-init` calls the related function.
+-   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex` in Python translation.
 
 ### Changed
 
+-   #1672 : Make `icx` and `ifx` the default Intel compilers (Found in Intel oneAPI).
+-   #1644 : Stop printing the step of a range if that step is 1.
+-   #1638 : Migrate from `setuptools` to `hatch` for installation scripts.
+-   Don't raise a warning for an unnecessary specification of the order.
 -   \[INTERNALS\] #1593 : Rename `PyccelAstNode.fst` to the `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Use a setter instead of a method to update `PyccelAstNode.ast`.
 -   \[INTERNALS\] #1593 : Rename `BasicParser._current_fst_node` to the `BasicParser._current_ast_node`.
 -   \[INTERNALS\] #1390 : Remove dead code handling a `CodeBlock` in an assignment.
 -   \[INTERNALS\] #1582 : Remove the `HomogeneousTupleVariable` type.
+-   \[INTERNALS\] #1581 : Unify handling of string and Python annotations.
 
 ### Deprecated
 
@@ -39,6 +61,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] #1584 : Remove unused functions from `pyccel.ast.datatypes` : `is_iterable_datatype`, `is_with_construct_datatype`, `is_pyccel_datatype`.
 -   \[INTERNALS\] #1584 : Remove unused class from `pyccel.ast.core`: `ForIterator`.
 -   \[INTERNALS\] #1584 : Remove unused method from `pyccel.ast.core`: `ClassDef.get_attribute`.
+-   \[INTERNALS\] #1676 : Remove `DottedFunctionCall` from `pyccel.ast.core` (use `bound_argument` instead).
+-   \[INTERNALS\] #1683 : Remove unused redundant class from `pyccel.ast.datatypes`: `UnionType`.
 
 ## \[1.10.0\] - 2023-10-23
 
@@ -184,7 +208,7 @@ All notable changes to this project will be documented in this file.
 -   #1404 : Bug preventing printing of some functions in a `print()` call.
 -   #1302 : Raise error message in case of empty class.
 -   #1407 : Raise an error if file name matches a Python built-in module.
--   #929 : Allow optional variables when compiling with intel or nvidia.
+-   #929 : Allow optional variables when compiling with Intel or NVIDIA.
 -   #1117 : Allow non-contiguous arrays to be passed to Fortran code.
 -   #1415 : Fix incorrect handling of assignments augmented by function calls.
 -   #1418 : Fix `itertools.product` implementation.

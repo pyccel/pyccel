@@ -17,6 +17,7 @@ from .datatypes import (datatype, DataType,
                         NativeInteger, NativeBool, NativeFloat,
                         NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
+from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
@@ -558,8 +559,7 @@ class Variable(TypedAstNode):
             'cls_base':self.cls_base,
             }
 
-        apply = lambda func, args, kwargs: func(*args, **kwargs)
-        out =  (apply, (Variable, args, kwargs))
+        out =  (apply_pickle, (self.__class__, args, kwargs))
         return out
 
     def __getitem__(self, *args):
@@ -1060,3 +1060,7 @@ class AnnotatedPyccelSymbol(PyccelAstNode):
 
     def __str__(self):
         return f'{self.name} : {self.annotation}'
+
+    def __reduce_ex__(self, i):
+        return (self.__class__, (self.name, self.annotation))
+
