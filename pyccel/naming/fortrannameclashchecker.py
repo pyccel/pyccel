@@ -51,7 +51,7 @@ class FortranNameClashChecker(LanguageNameClashChecker):
         """ Indicate whether the proposed name causes any clashes
         """
         name = name.lower()
-        return any(name == k for k in self.keywords) or \
+        return name in self.keywords or \
                any(name == s.lower() for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
