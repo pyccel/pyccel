@@ -181,6 +181,7 @@ class Codegen(object):
         
         Getting the language that will be used (default language used is fortran),
         Then instantiating the codePrinter with the corresponding language.
+
         Parameters
         ----------
         **settings : dict
