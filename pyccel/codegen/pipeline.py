@@ -82,6 +82,8 @@ def execute_pyccel(fname, *,
         Indicates whether the pipeline should stop after the codegen stage. Default is False.
     verbose : bool, optional
         Indicates whether debugging messages should be printed. Default is False.
+    show_timings : bool, default=False
+        Show the time spent in each of Pyccel's internal stages.
     folder : str, optional
         Path to the working directory. Default is the folder containing the file to be translated.
     language : str, optional
