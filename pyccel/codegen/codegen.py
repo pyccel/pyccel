@@ -35,10 +35,10 @@ class Codegen(object):
 
     Parameters
     ----------
-    parser: pyccel parser
+    parser : BasicParser
         The Pyccel parser node.
-    name: str
-        name of the generated module or program.
+    name : str
+        Name of the generated module or program.
     """
 
     def __init__(self, parser, name):
