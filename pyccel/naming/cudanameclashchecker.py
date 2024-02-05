@@ -4,13 +4,17 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-Handles name clash problems in Ccuda
+Handles name clash problems in Ccuda.
+
+This modules contains the reserved names for the Cuda language or the internal function
+that are used by pyccel.
 """
 from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.strings import create_incremented_string
 
 class CudaNameClashChecker(metaclass = Singleton):
-    """ Class containing functions to help avoid problematic names in Ccuda
+    """
+    Class containing functions to help avoid problematic names in Ccuda.
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
     keywords = set(['auto', 'break', 'case', 'char', 'const', 'bool',
@@ -44,13 +48,15 @@ class CudaNameClashChecker(metaclass = Singleton):
         'cudaMallocManaged', 'cudaSynchronize'])
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
+        """
+        Indicate whether the proposed name causes any clashes
         """
         return any(name == k for k in self.keywords) or \
                any(name == s for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
-        """ Get the name that will be used in the fortran code
+        """
+        Get the name that will be used in the fortran code
         """
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             # Ignore magic methods

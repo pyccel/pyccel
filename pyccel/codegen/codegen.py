@@ -28,14 +28,20 @@ pyccel_stage = PyccelStage()
 
 class Codegen(object):
 
-    """Abstract class for code generator."""
+    """
+    Abstract class for code generator.
+
+    Handles the collect of statements, initiating the correct printer and Generating the files.
+    """
 
     def __init__(self, parser, name):
-        """Constructor for Codegen.
+        """
+        Constructor for Codegen.
 
+        Parameters
+        ----------
         parser: pyccel parser
-
-
+            The Pyccel parser node.
         name: str
             name of the generated module or program.
         """
@@ -137,7 +143,16 @@ class Codegen(object):
         return self._language
 
     def set_printer(self, **settings):
-        """ Set the current codeprinter instance"""
+        """
+        Set the current codeprinter instance
+        
+        Getting the language that will be used (default language used is fortran),
+        Then instantiating the codePrinter with the corresponding language.
+        Parameters
+        ----------
+        **settings : dict
+            Any additional arguments which are necessary for CCodePrinter.
+        """
         # Get language used (default language used is fortran)
         language = settings.pop('language', 'fortran')
 

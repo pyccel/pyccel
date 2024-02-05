@@ -123,8 +123,11 @@ class CudaCodePrinter(CCodePrinter):
         return preface + declaration
 
 def cucode(expr, filename, assign_to=None, **settings):
-    """Converts an expr to a string of cuda code
+    """
+    Converts an expr to a string of cuda code.
 
+    Parameters
+    ----------
     expr : Expr
         A pyccel expression to be converted.
     filename : str
