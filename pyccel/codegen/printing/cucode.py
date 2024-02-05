@@ -39,7 +39,7 @@ errors = Errors()
 
 # TODO: add examples
 
-__all__ = ["CudaCodePrinter", "cucode"]
+__all__ = ["CudaCodePrinter"]
 
 class CudaCodePrinter(CCodePrinter):
     """
@@ -121,32 +121,3 @@ class CudaCodePrinter(CCodePrinter):
         declaration = f'{declaration_type} {variable}{init};\n'
 
         return preface + declaration
-
-def cucode(expr, filename, assign_to=None, **settings):
-    """
-    Convert an expression to a string of CUDA code.
-
-    This function facilitates the transformation of Pyccel's abstract syntax tree (AST)
-    expressions into executable CUDA code strings.
-    It leverages the CudaCodePrinter for direct conversion.
-
-    Parameters
-    ----------
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing.
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    **settings : dict
-            Any additional arguments which are necessary for CCodePrinter.
-
-    Returns
-    -------
-    str
-        Return the cuda code of the expresion.
-    """
-    return CudaCodePrinter(filename, **settings).doprint(expr, assign_to)
