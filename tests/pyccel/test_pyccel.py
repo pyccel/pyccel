@@ -1142,15 +1142,13 @@ def test_time_execution_flag():
 
     cwd = get_abs_path("scripts")
 
-    pyccel_commands = "--language=fortran --time_execution"
-
     cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time_execution"]
     with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
                           stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
-        result, err = p.communicate()
+        result, _ = p.communicate()
 
     result_lines = result.split('\n')
     assert 'Timers' in result_lines[0]
-    assert 'Total' in result_lines[-1]
-    for l in result_lines[1:]:
+    assert 'Total' in result_lines[-2]
+    for l in result_lines[1:-1]:
         assert ' : ' in l
