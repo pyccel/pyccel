@@ -44,6 +44,32 @@ class Codegen(object):
             The Pyccel parser node.
         name: str
             name of the generated module or program.
+
+        Attributes
+        ----------
+        parser
+        name
+        imports
+        variables
+        body
+        routines
+        classes
+        interfaces
+        modules
+        is_program
+        ast
+        language
+
+        Methods
+        -------
+        set_printer()
+            Set the current codeprinter instance.
+        get_printer_imports()
+            return the imports of the current codeprinter
+        doprint()
+            Prints the code in the target language.
+        export(filename=None)
+            Export code in filename
         """
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
@@ -74,6 +100,7 @@ class Codegen(object):
 
     @property
     def parser(self):
+        """Returns The Parser."""
         return self._parser
 
     @property
@@ -144,7 +171,7 @@ class Codegen(object):
 
     def set_printer(self, **settings):
         """
-        Set the current codeprinter instance
+        Set the current codeprinter instance.
         
         Getting the language that will be used (default language used is fortran),
         Then instantiating the codePrinter with the corresponding language.
