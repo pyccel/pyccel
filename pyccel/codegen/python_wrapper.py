@@ -117,11 +117,11 @@ def create_shared_library(codegen,
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
-        bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
-        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
         bind_c_wrapping_time = time.time() - start_bind_c_wrapping
 
         start_bind_c_printing = time.time()
+        bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
+        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
         bind_c_printing_time = time.time() - start_bind_c_printing
@@ -143,6 +143,7 @@ def create_shared_library(codegen,
     #---------------------------------------
     #     Compile cwrapper from stdlib
     #---------------------------------------
+    start_compile_libs = time.time()
     cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
                                 extra_files = {'numpy_version.h' :
                                                 get_numpy_max_acceptable_version_file()})
@@ -150,7 +151,6 @@ def create_shared_library(codegen,
     cwrapper_lib = internal_libs["cwrapper"][1]
     cwrapper_lib.reset_folder(cwrapper_lib_dest_path)
 
-    start_compile_libs = time.time()
     # get the include folder path and library files
     recompile_object(cwrapper_lib,
                       compiler = wrapper_compiler,
@@ -167,7 +167,12 @@ def create_shared_library(codegen,
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper()
+
+    start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
+    wrapper_creation_time = time.time() - start_wrapper_creation
+
+    start_print_cwrapper = time.time()
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
@@ -175,7 +180,6 @@ def create_shared_library(codegen,
 
     codegen.ast.set_name(module_old_name)
 
-    start_print_cwrapper = time.time()
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
     print_cwrapper_time = time.time() - start_print_cwrapper
@@ -198,7 +202,7 @@ def create_shared_library(codegen,
                               verbose  = verbose)
 
             wrapper_compile_obj.add_dependencies(stdlib)
-    compile_libs_time += time.time() - start_compile_libs
+    compile_libs_time += (time.time() - start_compile_libs)
 
     #---------------------------------------
     #         Compile code
@@ -219,6 +223,7 @@ def create_shared_library(codegen,
 
     # Return absolute path of shared library
     timings = {'Dependency compilation' : compile_libs_time,
+               'Wrapper creation' : wrapper_creation_time,
                'Wrapper printing': print_cwrapper_time,
                'Wrapper compilation': compile_wrapper_time}
     if language == 'fortran':
