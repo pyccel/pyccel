@@ -121,7 +121,7 @@ class Bot:
         if commit:
             self._ref = commit
             if '/' in self._ref:
-                _, _, branch = self._ref.split('/')
+                _, _, branch = self._ref.split('/', 2)
                 branch_info = self._GAI.get_branch_details(branch)
                 self._ref = branch_info['commit']['sha']
         else:
