@@ -126,7 +126,7 @@ def cucode(expr, filename, assign_to=None, **settings):
     """
     Converts an expr to a string of cuda code.
 
-    Facilitates the transformation of Pyccel's abstract syntax tree (AST)
+    Facilitate the transformation of Pyccel's abstract syntax tree (AST)
     expressions into executable CUDA code strings.
     This function leverages the CudaCodePrinter for direct conversion,
     ensuring accurate and efficient code generation for GPU execution.
@@ -142,7 +142,7 @@ def cucode(expr, filename, assign_to=None, **settings):
         the expression is assigned. Can be a string, ``Symbol``,
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
-    settings : dict
+    **settings : dict
             Any additional arguments which are necessary for CCodePrinter.
 
     Returns
