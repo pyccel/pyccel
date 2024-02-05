@@ -10,7 +10,7 @@ from pyccel.ast.builtin_objects.list_functions import (ListPop)
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumeric,
+                        NativeComplex, NativeString, NativeNumericTypes,
                         NativeTuple, CustomDataType, NativeHomogeneousList)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
@@ -223,7 +223,7 @@ def get_cls_base(dtype, precision, container_type):
         return None
     if precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
-    elif isinstance(container_type, NumpyNDArrayType):
+    elif isinstance(container_type, (*NativeNumericTypes, NumpyNDArrayType)):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
