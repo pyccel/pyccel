@@ -4,9 +4,9 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 """
-This module provides tools for generating and handling CUDA code.
-It is designed to interface Pyccel's Abstract Syntax Tree (AST) with CUDA, enabling the direct
-translation of high-level Pyccel expressions into CUDA code.
+Provide tools for generating and handling CUDA code.
+This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CUDA,
+enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
@@ -43,11 +43,11 @@ __all__ = ["CudaCodePrinter", "cucode"]
 
 class CudaCodePrinter(CCodePrinter):
     """
-    A printer for printing code in Cuda.
+    Print code in CUDA format.
 
-    A printer to convert Pyccel's AST to strings of cuda code.
-    As for all printers the navigation of this file is done via _print_X
-    functions.
+    This printer converts Pyccel's Abstract Syntax Tree (AST) into strings of CUDA code.
+    Navigation through this file utilizes _print_X functions,
+    as is common with all printers.
 
     Parameters
     ----------
@@ -124,12 +124,11 @@ class CudaCodePrinter(CCodePrinter):
 
 def cucode(expr, filename, assign_to=None, **settings):
     """
-    Converts an expr to a string of cuda code.
+    Convert an expression to a string of CUDA code.
 
-    Facilitate the transformation of Pyccel's abstract syntax tree (AST)
+    This function facilitates the transformation of Pyccel's abstract syntax tree (AST)
     expressions into executable CUDA code strings.
-    This function leverages the CudaCodePrinter for direct conversion,
-    ensuring accurate and efficient code generation for GPU execution.
+    It leverages the CudaCodePrinter for direct conversion.
 
     Parameters
     ----------
