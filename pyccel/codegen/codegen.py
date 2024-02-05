@@ -32,6 +32,13 @@ class Codegen(object):
     Abstract class for code generator.
 
     Handles the collect of statements, initiating the correct printer and Generating the files.
+
+    Parameters
+    ----------
+    parser: pyccel parser
+        The Pyccel parser node.
+    name: str
+        name of the generated module or program.
     """
 
     def __init__(self, parser, name):
