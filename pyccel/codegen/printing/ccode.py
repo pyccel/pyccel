@@ -513,7 +513,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.find_in_dtype_registry(NativeInteger(), 8)        
+        declare_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
         dummy_array_name = self.scope.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
                 dtype = dtype,

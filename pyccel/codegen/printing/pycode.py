@@ -1136,8 +1136,10 @@ class PythonCodePrinter(CodePrinter):
         return f'const {annotation}'
 
     def _print_ListPop(self, expr):
-        args = ','.join(self._print(a) for a in expr.args[1:]) 
-        return "{}.{}({})".format(expr.args[0], expr.name, args)
+        args = ','.join(self._print(a) for a in expr.args[1:])
+        name = self._print(expr.args[0])
+        method = self._print(expr.name)
+        return f"{name}.{method}({args})"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
