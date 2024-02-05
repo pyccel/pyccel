@@ -11,6 +11,17 @@
 # include <stdint.h>
 # include <math.h>
 
+/* mapping the function array_fill to the correct type */
+# define array_fill(c, arr) _Generic((c), int64_t : _array_fill_int64,\
+                                        int32_t : _array_fill_int32,\
+                                        int16_t : _array_fill_int16,\
+                                        int8_t : _array_fill_int8,\
+                                        float : _array_fill_float,\
+                                        double : _array_fill_double,\
+                                        bool : _array_fill_bool,\
+                                        float complex : _array_fill_cfloat,\
+                                        double complex : _array_fill_cdouble)(c, arr)
+
 typedef enum e_slice_type { ELEMENT, RANGE } t_slice_type;
 
 typedef struct  s_slice
@@ -81,10 +92,8 @@ typedef struct  s_ndarray
             float           *nd_float;
             double          *nd_double;
             bool            *nd_bool;
-            #ifndef __NVCC__
             double complex  *nd_cdouble;
             float  complex  *nd_cfloat;
-            #endif
             };
     /* number of dimensions */
     int32_t                 nd;
@@ -112,17 +121,15 @@ typedef struct  s_ndarray
 void        stack_array_init(t_ndarray *arr);
 t_ndarray   array_create(int32_t nd, int64_t *shape,
         t_types type, bool is_view, t_order order);
-void        array_fill_int8(int8_t c, t_ndarray arr);
-void        array_fill_int16(int16_t c, t_ndarray arr);
-void        array_fill_int32(int32_t c, t_ndarray arr);
-void        array_fill_int64(int64_t c, t_ndarray arr);
-void        array_fill_float(float c, t_ndarray arr);
-void        array_fill_double(double c, t_ndarray arr);
-void        array_fill_bool(bool c, t_ndarray arr);
-#ifndef __NVCC__
-void        array_fill_cfloat(float complex c, t_ndarray arr);
-void        array_fill_cdouble(double complex c, t_ndarray arr);
-#endif
+void        _array_fill_int8(int8_t c, t_ndarray arr);
+void        _array_fill_int16(int16_t c, t_ndarray arr);
+void        _array_fill_int32(int32_t c, t_ndarray arr);
+void        _array_fill_int64(int64_t c, t_ndarray arr);
+void        _array_fill_float(float c, t_ndarray arr);
+void        _array_fill_double(double c, t_ndarray arr);
+void        _array_fill_bool(bool c, t_ndarray arr);
+void        _array_fill_cfloat(float complex c, t_ndarray arr);
+void        _array_fill_cdouble(double complex c, t_ndarray arr);
 
 /* slicing */
                 /* creating a Slice object */
@@ -157,10 +164,8 @@ int64_t            numpy_sum_int32(t_ndarray arr);
 int64_t            numpy_sum_int64(t_ndarray arr);
 float              numpy_sum_float32(t_ndarray arr);
 double             numpy_sum_float64(t_ndarray arr);
-#ifndef __NVCC__
 float complex      numpy_sum_complex64(t_ndarray arr);
 double complex     numpy_sum_complex128(t_ndarray arr);
-#endif
 
 /*numpy max/amax */
 
@@ -171,10 +176,8 @@ int64_t            numpy_amax_int32(t_ndarray arr);
 int64_t            numpy_amax_int64(t_ndarray arr);
 float              numpy_amax_float32(t_ndarray arr);
 double             numpy_amax_float64(t_ndarray arr);
-#ifndef __NVCC__
 float complex      numpy_amax_complex64(t_ndarray arr);
 double complex     numpy_amax_complex128(t_ndarray arr);
-#endif
 
 /* numpy min/amin */
 
@@ -185,9 +188,7 @@ int64_t            numpy_amin_int32(t_ndarray arr);
 int64_t            numpy_amin_int64(t_ndarray arr);
 float              numpy_amin_float32(t_ndarray arr);
 double             numpy_amin_float64(t_ndarray arr);
-#ifndef __NVCC__
 float complex      numpy_amin_complex64(t_ndarray arr);
 double complex     numpy_amin_complex128(t_ndarray arr);
-#endif
 
 #endif
