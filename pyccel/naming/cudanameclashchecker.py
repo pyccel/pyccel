@@ -40,7 +40,26 @@ class CudaNameClashChecker(LanguageNameClashChecker):
         'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
+        """
+        Indicate whether the proposed name causes any clashes.
+
+        Checks if a suggested name conflicts with predefined
+        keywords or specified symbols,returning true for a clash.
+        This method is crucial for maintaining namespace integrity and
+        preventing naming conflicts in code generation processes.
+
+        Parameters
+        ----------
+        name : str
+            The suggested name.
+        symbols : set
+            Symbols which should be considered as collisions.
+
+        Returns
+        -------
+        bool
+            True if the name is a collision.
+            False if the name is collision free.
         """
         return any(name == k for k in self.keywords) or \
                any(name == s for s in symbols)
