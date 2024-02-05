@@ -40,7 +40,7 @@ All notable changes to this project will be documented in this file.
 -   #1507 : Fix problems with name collisions in class functions.
 -   Ensure `pyccel-init` calls the related function.
 -   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex` in Python translation.
--   #1713 : Get Homebrew directory on macOS with `brew --prefix`.
+-   #1712 : Fix library path and OpenMP support for recent Apple chips by getting Homebrew directory with `brew --prefix`.
 
 ### Changed
 
