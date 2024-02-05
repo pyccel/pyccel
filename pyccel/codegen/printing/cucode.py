@@ -3,6 +3,11 @@
 # This file is part of Pyccel which is released under MIT License. See the LICENSE file or #
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
+"""
+This module provides tools for generating and handling CUDA code.
+It is designed to interface Pyccel's Abstract Syntax Tree (AST) with CUDA, enabling the direct
+translation of high-level Pyccel expressions into CUDA code.
+"""
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 
