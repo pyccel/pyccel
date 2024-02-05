@@ -1045,7 +1045,7 @@ int32_t test_array_fill_int64(void)
     int64_t c_value;
 
     x = array_create(2, m_1_shape, nd_int64, false, order_c);
-    array_fill_int64((int64_t)32, x);
+    array_fill((int64_t)32, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1069,7 +1069,7 @@ int32_t test_array_fill_int64_order_f(void)
     int64_t c_value;
 
     x = array_create(2, m_1_shape, nd_int64, false, order_f);
-    array_fill_int64((int64_t)64, x);
+    array_fill((int64_t)64, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1094,7 +1094,7 @@ int32_t test_array_fill_int32(void)
     int32_t c_value;
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
-    array_fill_int32((int32_t)32, x);
+    array_fill((int32_t)32, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1118,7 +1118,7 @@ int32_t test_array_fill_int32_order_f(void)
     int32_t c_value;
 
     x = array_create(2, m_1_shape, nd_int32, false, order_f);
-    array_fill_int32((int32_t)32, x);
+    array_fill((int32_t)32, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1143,7 +1143,7 @@ int32_t test_array_fill_int16(void)
     int16_t c_value;
 
     x = array_create(2, m_1_shape, nd_int16, false, order_c);
-    array_fill_int16((int16_t)32, x);
+    array_fill((int16_t)32, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1167,7 +1167,7 @@ int32_t test_array_fill_int16_order_f(void)
     int16_t c_value;
 
     x = array_create(2, m_1_shape, nd_int16, false, order_f);
-    array_fill_int16((int16_t)16, x);
+    array_fill((int16_t)16, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1191,7 +1191,7 @@ int32_t test_array_fill_int8(void)
     int8_t c_value;
 
     x = array_create(2, m_1_shape, nd_int8, false, order_c);
-    array_fill_int8((int8_t)32, x);
+    array_fill((int8_t)32, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1215,7 +1215,7 @@ int32_t test_array_fill_int8_order_f(void)
     int8_t c_value;
 
     x = array_create(2, m_1_shape, nd_int8, false, order_f);
-    array_fill_int8((int8_t)8, x);
+    array_fill((int8_t)8, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1239,7 +1239,7 @@ int32_t test_array_fill_double(void)
     double c_value;
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
-    array_fill_double(2., x);
+    array_fill(2., x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1263,7 +1263,7 @@ int32_t test_array_fill_double_order_f(void)
     double c_value;
 
     x = array_create(2, m_1_shape, nd_double, false, order_f);
-    array_fill_double(2., x);
+    array_fill(2., x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1287,7 +1287,7 @@ int32_t test_array_fill_cdouble(void)
     double complex c_value;
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
-    array_fill_cdouble(0.3+0.54*I, x);
+    array_fill(0.3+0.54*I, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1311,7 +1311,7 @@ int32_t test_array_fill_cdouble_order_f(void)
     double complex c_value;
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_f);
-    array_fill_cdouble(0.3+0.54*I, x);
+    array_fill(0.3+0.54*I, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 8;
@@ -1337,7 +1337,7 @@ int32_t test_array_zeros_double(void)
     double c_value;
 
     x = array_create(2, m_1_shape, nd_double, false, order_c);
-    array_fill_double(0, x);
+    array_fill(0, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1361,7 +1361,7 @@ int32_t test_array_zeros_int32(void)
     int32_t c_value;
 
     x = array_create(2, m_1_shape, nd_int32, false, order_c);
-    array_fill_int32(0, x);
+    array_fill(0, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
@@ -1385,7 +1385,7 @@ int32_t test_array_zeros_cdouble(void)
     double complex c_value;
 
     x = array_create(2, m_1_shape, nd_cdouble, false, order_c);
-    array_fill_cdouble(0, x);
+    array_fill(0, x);
     // testing the strides for index [3, 1]
     index = 3 * x.strides[0] + 1 * x.strides[1];
     c_index = 7;
