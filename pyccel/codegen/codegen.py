@@ -100,7 +100,6 @@ class Codegen(object):
 
     @property
     def parser(self):
-        """Returns The Parser."""
         return self._parser
 
     @property
