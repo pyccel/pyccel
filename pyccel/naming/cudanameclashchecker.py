@@ -14,18 +14,22 @@ from pyccel.utilities.strings import create_incremented_string
 
 class CudaNameClashChecker(metaclass = Singleton):
     """
-    Class containing functions to help avoid problematic names in Ccuda.
+    Class containing functions to help avoid problematic names in Fortran.
+
+    A class which provides functionalities to check or propose variable names and
+    verify that they do not cause name clashes. Name clashes may be due to
+    capitalisation (as Fortran is not case-sensitive), or due to the use of reserved
+    keywords.
     """
     # Keywords as mentioned on https://en.cppreference.com/w/c/keyword
-    keywords = set(['auto', 'break', 'case', 'char', 'const', 'bool',
+    keywords = set(['isign', 'fsign', 'csign', 'auto', 'break', 'case', 'char', 'const',
         'continue', 'default', 'do', 'double', 'else', 'enum',
-        'extern', 'float', 'for', 'goto', 'if', 'inline', 
-        'int', 'int8_t', 'int16_t', 'int32_t', 'int64_t',
+        'extern', 'float', 'for', 'goto', 'if', 'inline', 'int',
         'long', 'register', 'restrict', 'return', 'short', 'signed',
         'sizeof', 'static', 'struct', 'switch', 'typedef', 'union',
-        'unsigned', 'void', 'volatile', 'while', '_Alignas',
+        'unsigned', 'void', 'volatile', 'whie', '_Alignas',
         '_Alignof', '_Atomic', '_Bool', '_Complex', 'Decimal128',
-        '_Decimal32', '_Decimal64', '_Generic', '_Imaginary', '__global__',
+        '_Decimal32', '_Decimal64', '_Generic', '_Imaginary',
         '_Noreturn', '_Static_assert', '_Thread_local', 't_ndarray',
         'array_create', 'new_slice', 'array_slicing', 'alias_assign',
         'transpose_alias_assign', 'array_fill', 't_slice',
@@ -38,38 +42,53 @@ class CudaNameClashChecker(metaclass = Singleton):
         'GET_INDEX_FUNC_H2', 'GET_INDEX_FUNC', 'GET_INDEX',
         'INDEX', 'GET_ELEMENT', 'free_array', 'free_pointer',
         'get_index', 'numpy_to_ndarray_strides',
-        'numpy_to_ndarray_shape', 'get_size',
-        'cuda_free_array', 'cuda_free_pointer', 'cuda_array_create', 
-        'threadIdx', 'blockIdx', 'blockDim', 'gridDim', 
-        'cuda_array_fill_double', 'cuda_array_fill_int64', 
-        'cuda_array_fill_int32', 'cuda_array_fill_int8',
-        'cuda_array_arange_double', 'cuda_array_arange_int64', 
-        'cuda_array_arange_int32', 'cuda_array_arange_int8',
-        'cudaMallocManaged', 'cudaSynchronize'])
+        'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
 
     def has_clash(self, name, symbols):
         """
-        Indicate whether the proposed name causes any clashes
+        Indicate whether the proposed name causes any clashes.
+
+        Check if the name has any clash with the symbols or the keywords.
+
+        Parameters
+        ----------
+        name : str
+            The suggested name.
+        symbols : set
+            Symbols which should be considered as collisions.
+
+        Returns
+        -------
+        str
+            A new name which is collision free.
         """
         return any(name == k for k in self.keywords) or \
                any(name == s for s in symbols)
 
     def get_collisionless_name(self, name, symbols):
         """
-        Get the name that will be used in the fortran code
+        Get a valid name which doesn't collision with symbols or C keywords.
+
+        Find a new name based on the suggested name which will not cause
+        conflicts with C keywords, does not appear in the provided symbols,
+        and is a valid name in C code.
+
+        Parameters
+        ----------
+        name : str
+            The suggested name.
+        symbols : set
+            Symbols which should be considered as collisions.
+
+        Returns
+        -------
+        str
+            A new name which is collision free.
         """
         if len(name)>4 and all(name[i] == '_' for i in (0,1,-1,-2)):
             # Ignore magic methods
             return name
         if name[0] == '_':
             name = 'private'+name
-        prefix = name
-        coll_symbols = self.keywords.copy()
-        coll_symbols.update(s.lower() for s in symbols)
-        if prefix in coll_symbols:
-            counter = 1
-            new_name, counter = create_incremented_string(coll_symbols,
-                    prefix = prefix, counter = counter)
-            name = name+new_name[-5:]
-        return name
+        return self._get_collisionless_name(name, symbols)
 
