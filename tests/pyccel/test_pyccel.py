@@ -1130,7 +1130,27 @@ def test_reserved_file_name():
         execute_pyccel(fname=libname)
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
 
+#------------------------------------------------------------------------------
 def test_concatentation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
+
+#------------------------------------------------------------------------------
+def test_time_execution_flag():
+    test_file  = get_abs_path("scripts/runtest_funcs.py")
+
+    cwd = get_abs_path("scripts")
+
+    pyccel_commands = "--language=fortran --time_execution"
+
+    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time_execution"]
+    with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        result, err = p.communicate()
+
+    result_lines = result.split('\n')
+    assert 'Timers' in result_lines[0]
+    assert 'Total' in result_lines[-1]
+    for l in result_lines[1:]:
+        assert ' : ' in l
