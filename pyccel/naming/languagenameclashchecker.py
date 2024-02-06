@@ -38,9 +38,9 @@ class LanguageNameClashChecker(metaclass = Singleton):
         str
             A new name which is collision free.
         """
-        coll_symbols = self.keywords.copy()
-        coll_symbols.update(symbols)
-        if self.has_clash(name, coll_symbols): #pylint: disable=no-member
+        if self.has_clash(name, symbols): #pylint: disable=no-member
+            coll_symbols = self.keywords.copy()
+            coll_symbols.update(symbols)
             counter = 1
             name, counter = create_incremented_string(coll_symbols,
                     prefix = name, counter = counter, name_clash_checker = self)
