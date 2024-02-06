@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import NativeHomogeneousTuple
+from pyccel.ast.datatypes  import NativeHomogeneousTuple, NativeInhomogeneousTuple
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -239,7 +239,10 @@ class PythonCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_Variable(self, expr):
-        return self._print(expr.name)
+        if isinstance(expr.dtype, NativeInhomogeneousTuple):
+            return ', '.join([self._print(v) for v in expr])
+        else:
+            return self._print(expr.name)
 
     def _print_DottedVariable(self, expr):
         rhs_code = self._print_Variable(expr)

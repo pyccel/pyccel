@@ -186,7 +186,7 @@ def tuple_inhomogeneous_return():
     return ai
 
 def tuple_homogeneous_return():
-    ai = (7.5, 4.2, 8)
+    ai = (7.5, 4.2, 8.0)
     return ai
 
 def tuple_arg_unpacking():

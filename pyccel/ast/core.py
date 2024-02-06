@@ -2013,7 +2013,7 @@ class FunctionDefResult(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_var','_is_argument','_annotation')
+    __slots__ = ('_var','_annotation')
     _attribute_nodes = ('_var',)
 
     def __init__(self, var, *, annotation=None):
@@ -2021,12 +2021,10 @@ class FunctionDefResult(TypedAstNode):
         self._annotation = annotation
 
         if pyccel_stage == 'syntactic':
-            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol)):
+            if not isinstance(var, (PyccelSymbol, AnnotatedPyccelSymbol, PythonTuple, Nil)):
                 raise TypeError(f"Var must be a PyccelSymbol or an AnnotatedPyccelSymbol, not a {type(var)}")
-        elif not isinstance(var, Variable):
+        elif not isinstance(var, (Variable, PythonTuple, Nil)):
             raise TypeError(f"Var must be a Variable not a {type(var)}")
-        else:
-            self._is_argument = var.is_argument
 
         super().__init__()
 
@@ -2050,22 +2048,49 @@ class FunctionDefResult(TypedAstNode):
         """
         return self._annotation
 
-    @property
-    def is_argument(self):
-        """
-        Indicates if the result was declared as an argument.
-
-        Indicates if the result of the function was initially declared
-        as an argument of the same function. If this is the case then
-        the result may be printed simply as an inout argument.
-        """
-        return self._is_argument
-
     def __repr__(self):
         return 'FunctionDefResult({})'.format(repr(self.var))
 
     def __str__(self):
         return str(self.var)
+
+    def get_flat_variables(self):
+        def unpack(var):
+            if isinstance(var, Nil):
+                return []
+            elif isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+                return [var]
+            else:
+                new_list = []
+                for t in var:
+                    new_list.extend(unpack(t))
+                return new_list
+
+        var = self.var
+        if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            return [var]
+        else:
+            return unpack(var)
+
+    def get_any_variables(self):
+        def unpack(var):
+            if isinstance(var, Nil):
+                return []
+            elif isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+                return [var]
+            else:
+                new_list = []
+                if not isinstance(var, PythonTuple):
+                    new_list.append(var)
+                for t in var:
+                    new_list.extend(unpack(t))
+                return new_list
+
+        var = self.var
+        if isinstance(var, Variable) and not isinstance(var.dtype, NativeInhomogeneousTuple):
+            return [var]
+        else:
+            return unpack(var)
 
 class FunctionCall(TypedAstNode):
     """
@@ -2158,33 +2183,12 @@ class FunctionCall(TypedAstNode):
         self._funcdef    = func
         self._arguments  = args
         self._func_name  = func.name
-        n_results = len(func.results)
-        if n_results == 1:
-            self._dtype      = func.results[0].var.dtype
-            self._rank       = func.results[0].var.rank
-            self._shape      = func.results[0].var.shape
-            self._precision  = func.results[0].var.precision
-            self._order      = func.results[0].var.order
-            self._class_type = func.results[0].var.class_type
-        elif n_results == 0:
-            self._dtype      = NativeVoid()
-            self._rank       = 0
-            self._shape      = None
-            self._precision  = None
-            self._order      = None
-            self._class_type = NativeVoid()
-        else:
-            dtypes = [r.var.dtype for r in func.results]
-            if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple()
-            else:
-                dtype = NativeInhomogeneousTuple(*dtypes)
-            self._dtype      = dtype
-            self._rank       = 1
-            self._shape      = (LiteralInteger(n_results),)
-            self._precision  = None
-            self._order      = None
-            self._class_type = dtype
+        self._dtype      = func.results.var.dtype
+        self._rank       = func.results.var.rank
+        self._shape      = func.results.var.shape
+        self._precision  = func.results.var.precision
+        self._order      = func.results.var.order
+        self._class_type = func.results.var.class_type
 
         super().__init__()
 
@@ -2496,10 +2500,8 @@ class FunctionDef(ScopedAstNode):
 
         # results
 
-        if not iterable(results):
-            raise TypeError('results must be an iterable')
-        if not all(isinstance(r, FunctionDefResult) for r in results):
-            raise TypeError('results must be all be FunctionDefResults')
+        if not isinstance(results, FunctionDefResult):
+            results = FunctionDefResult(results)
 
         if cls_name:
 
@@ -2603,7 +2605,7 @@ class FunctionDef(ScopedAstNode):
         """
         local_vars = self.scope.variables.values()
         argument_vars = [a.var for a in self.arguments]
-        result_vars = [r.var for r in self.results]
+        result_vars = self.results.get_any_variables() + [self.results.var]
         return tuple(l for l in local_vars if l not in result_vars and l not in argument_vars)
 
     @property
@@ -2978,7 +2980,7 @@ class PyccelFunctionDef(FunctionDef):
                 issubclass(func_class, (PyccelInternalFunction, TypedAstNode))
         assert isinstance(argument_description, dict)
         arguments = ()
-        results = ()
+        results = FunctionDefResult(Nil())
         body = ()
         super().__init__(name, arguments, results, body, decorators=decorators)
         self._cls_name = func_class

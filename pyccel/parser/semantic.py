@@ -1109,9 +1109,10 @@ class SemanticParser(BasicParser):
             is_temp = False
 
         if isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable, NumpyNonZero)) or \
-                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and len(rhs.funcdef.results)>1):
+                ((isinstance(rhs, FunctionCall) and rhs.pyccel_staging != 'syntactic') and \
+                 isinstance(rhs.funcdef.results.var, PythonTuple)):
             if isinstance(rhs, FunctionCall):
-                iterable = [r.var for r in rhs.funcdef.results]
+                iterable = rhs.funcdef.results
             else:
                 iterable = rhs
             elem_vars = []
@@ -1139,9 +1140,11 @@ class SemanticParser(BasicParser):
             else:
                 d_lhs['memory_handling'] = d_lhs.get('memory_handling', False) or 'heap'
 
-            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, PythonTuple)):
+            if is_homogeneous and not (d_lhs['memory_handling'] == 'alias' and isinstance(rhs, (PythonTuple, InhomogeneousTupleVariable))):
                 lhs = Variable(dtype, name, **d_lhs, is_temp=is_temp)
             else:
+                if is_homogeneous:
+                    d_lhs['class_type'] = NativeInhomogeneousTuple(*([dtype]*int(d_lhs['shape'][0])))
                 lhs = InhomogeneousTupleVariable(elem_vars, name, **d_lhs, is_temp=is_temp)
 
         else:
@@ -1908,7 +1911,7 @@ class SemanticParser(BasicParser):
             init_func_body = If(IfSection(PyccelNot(init_var),
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
 
-            init_func = FunctionDef(init_func_name, [], [], [init_func_body],
+            init_func = FunctionDef(init_func_name, [], Nil(), [init_func_body],
                     global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
 
@@ -1932,7 +1935,7 @@ class SemanticParser(BasicParser):
                     import_free_calls+deallocs+[Assign(init_var, LiteralFalse())]))
                 # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(free_func_name)
-                free_func = FunctionDef(free_func_name, [], [], [free_func_body],
+                free_func = FunctionDef(free_func_name, [], Nil(), [free_func_body],
                                     global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
@@ -1973,7 +1976,7 @@ class SemanticParser(BasicParser):
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             args = [FunctionDefArgument(a) for a in args]
-                            results = [FunctionDefResult(r) for r in results]
+                            results = FunctionDefResult(results)
                             func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
 
                         if len(func_defs) == 1:
@@ -2904,12 +2907,9 @@ class SemanticParser(BasicParser):
 
         elif isinstance(rhs, FunctionCall):
             func = rhs.funcdef
-            results = func.results
+            results = func.results.var
             if results:
-                if len(results)==1:
-                    d_var = self._infer_type(results[0].var)
-                else:
-                    d_var = self._infer_type(PythonTuple(*[r.var for r in results]))
+                d_var = self._infer_type(results)
             elif expr.lhs.is_temp:
                 return rhs
             else:
@@ -3048,12 +3048,7 @@ class SemanticParser(BasicParser):
         else:
             lhs = self._visit(lhs)
 
-        if not isinstance(lhs, (list, tuple)):
-            lhs = [lhs]
-            if isinstance(d_var,dict):
-                d_var = [d_var]
-
-        if len(lhs) == 1:
+        if isinstance(lhs, (list, tuple)) and len(lhs) == 1:
             lhs = lhs[0]
 
         if isinstance(lhs, Variable):
@@ -3549,17 +3544,22 @@ class SemanticParser(BasicParser):
         if isinstance(f_name, DottedName):
             f_name = f_name.name[-1]
 
-        return_objs = self.scope.find(f_name, 'functions').results
+        return_objs = self.scope.find(f_name, 'functions').results.var
+        return_iter = return_objs if isinstance(return_objs, PythonTuple) else [return_objs]
         assigns     = []
-        for o,r in zip(return_objs, results):
-            v = o.var
+        for v,r in zip(return_iter, results):
             if not (isinstance(r, PyccelSymbol) and r == (v.name if isinstance(v, Variable) else v)):
                 a = self._visit(Assign(v, r, python_ast=expr.python_ast))
                 assigns.append(a)
                 if isinstance(a, ConstructorCall):
                     a.cls_variable.is_temp = False
 
-        results = [self._visit(i.var) for i in return_objs]
+        results = self._visit(return_objs)
+        if isinstance(results, Variable):
+            if isinstance(results.dtype, NativeInhomogeneousTuple):
+                results = [r for r in results]
+            else:
+                results = [results]
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
@@ -3661,8 +3661,8 @@ class SemanticParser(BasicParser):
                         self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
                 results = expr.results
-                if results and results[0].annotation:
-                    results = [self._visit(r) for r in expr.results]
+                if results.annotation:
+                    results = self._visit(expr.results)
 
                 # insert the FunctionDef into the scope
                 # to handle the case of a recursive function
@@ -3681,7 +3681,7 @@ class SemanticParser(BasicParser):
                 # to the body of the function
                 body.insert2body(*self._garbage_collector(body))
 
-                results = [self._visit(a) for a in results]
+                results = self._visit(results)
 
                 # Determine local and global variables
                 global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -3709,7 +3709,8 @@ class SemanticParser(BasicParser):
                 namespace_imports = self.scope.imports
                 self.exit_function_scope()
 
-                results_names = [i.var.name for i in results]
+                result_vars = results.get_flat_variables()
+                results_names = [i.name for i in result_vars]
 
                 # Find all nodes which can modify variables
                 assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
@@ -3730,8 +3731,8 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # Raise an error if one of the return arguments is an alias.
-                for r in results:
-                    if r.var.is_alias:
+                for r in result_vars:
+                    if r.is_alias:
                         errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
                             symbol=r, severity='error',
                             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
@@ -3903,7 +3904,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)
+            del_method = FunctionDef('__del__', [argument], Nil(), [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)
