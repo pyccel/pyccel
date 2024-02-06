@@ -1885,15 +1885,13 @@ class SemanticParser(BasicParser):
 
             # Update variable scope for temporaries
             to_remove = []
-            for v in self.scope.variables.values():
+            scope_variables = list(self.scope.variables.values())
+            for v in scope_variables:
                 if v.is_temp:
+                    self.scope.remove_variable(v)
                     init_scope.insert_variable(v)
                     to_remove.append(v)
-
-            # Remove in a second loop so the dictionary doesn't change during iteration
-            for v in to_remove:
-                self.scope.remove_variable(v)
-                variables.remove(v)
+                    variables.remove(v)
 
             # Get deallocations
             deallocs = self._garbage_collector(CodeBlock(init_func_body))
