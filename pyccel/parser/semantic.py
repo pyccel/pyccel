@@ -671,7 +671,7 @@ class SemanticParser(BasicParser):
 
         Indicate that a pointer is targetting a specific target by adding the pair
         to a dictionary in self._pointer_targets (the last dictionary in the list
-        should be used as this is the one for the current scope.
+        should be used as this is the one for the current scope).
 
         Parameters
         ----------
