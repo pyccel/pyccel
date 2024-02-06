@@ -1138,8 +1138,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_ListPop(self, expr):
         args = ','.join(self._print(a) for a in expr.args[1:])
         name = self._print(expr.args[0])
-        method = self._print(expr.name)
-        return f"{name}.{method}({args})"
+        return f"{name}.pop({args})"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
