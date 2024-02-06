@@ -8,14 +8,16 @@ Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
 """
 
+from pyccel.utilities.metaclasses import Singleton
+
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 from .basic     import PyccelAstNode, TypedAstNode
 
-from .datatypes import DataType, default_precision
+from .datatypes import DataType, default_precision, CustomDataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString
+from .datatypes import NativeBool, NativeString, NativeVoid
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
@@ -40,8 +42,10 @@ __all__ = (
     'PyInterface',
     'PyClassDef',
     'PyModule',
-    'PyccelPyObject',
     'PyccelPyClassType',
+    'PyccelPyObject',
+    'PyccelPyTypeObject',
+    'WrapperCustomDataType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
@@ -54,12 +58,13 @@ __all__ = (
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
+    'PyObject_TypeCheck',
 )
 
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(DataType):
+class PyccelPyObject(DataType, metaclass=Singleton):
     """
     Datatype representing a `PyObject`.
 
@@ -69,7 +74,7 @@ class PyccelPyObject(DataType):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(DataType):
+class PyccelPyClassType(DataType, metaclass=Singleton):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -78,6 +83,26 @@ class PyccelPyClassType(DataType):
     """
     __slots__ = ()
     _name = 'pyclasstype'
+
+class PyccelPyTypeObject(DataType, metaclass=Singleton):
+    """
+    Datatype representing a `PyTypeObject`.
+
+    Datatype representing a `PyTypeObject` which is the
+    class used to hold Python class objects in `Python.h`.
+    """
+    __slots__ = ()
+    _name = 'pytypeobject'
+
+class WrapperCustomDataType(CustomDataType):
+    """
+    Datatype representing a subclass of `PyObject`.
+
+    Datatype representing a subclass of `PyObject`. This is the
+    datatype of a class which is compatible with Python.
+    """
+    __slots__ = ()
+    _name = 'pycustomclasstype'
 
 #-------------------------------------------------------------------
 #                  Parsing and Building Classes
@@ -237,7 +262,10 @@ class PyBuildValueNode(TypedAstNode):
         self._flags = ''
         self._result_args = result_args
         for i in result_args:
-            self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
+            if isinstance(i.dtype, WrapperCustomDataType):
+                self._flags += 'O'
+            else:
+                self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
         super().__init__()
 
     @property
@@ -522,17 +550,30 @@ class PyClassDef(ClassDef):
         The name of the instance of the Python-compatible class definition
         structure. This object is necessary to add the class to the module.
 
+    scope : Scope
+        The scope for the class contents.
+
     **kwargs : dict
         See ClassDef.
-    """
-    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
 
-    def __init__(self, original_class, struct_name, type_name, **kwargs):
+    See Also
+    --------
+    ClassDef
+        The class from which PyClassDef inherits. This is also the object being
+        wrapped.
+    """
+    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
+                 '_new_func')
+
+    def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
-        super().__init__(original_class.name, **kwargs)
+        self._new_func = None
+        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
+        scope.insert_variable(variables[0])
+        super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
     def struct_name(self):
@@ -562,6 +603,38 @@ class PyClassDef(ClassDef):
         structure. This object is necessary to add the class to the module.
         """
         return self._type_object
+
+    @property
+    def original_class(self):
+        """
+        The class which is wrapped by this PyClassDef.
+
+        The original class which would be printed in pure C which is not
+        compatible with Python.
+        """
+        return self._original_class
+
+    def add_alloc_method(self, f):
+        """
+        Add the wrapper for `__new__` to the class definition.
+
+        Add the wrapper for `__new__` which allocates the memory for the class instance.
+
+        Parameters
+        ----------
+        f : PyFunctionDef
+            The wrapper for the `__new__` function.
+        """
+        self._new_func = f
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
@@ -692,6 +765,10 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
 
+PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
+            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')), FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
+            results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
+            body = [])
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

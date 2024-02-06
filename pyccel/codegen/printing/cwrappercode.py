@@ -9,10 +9,10 @@ from pyccel.codegen.printing.ccode import CCodePrinter
 from pyccel.ast.bind_c     import BindCPointer
 from pyccel.ast.bind_c     import BindCModule, BindCFunctionDef
 from pyccel.ast.core       import FunctionAddress, SeparatorComment
-from pyccel.ast.core       import Import, Module
+from pyccel.ast.core       import Import, Module, Declare
 from pyccel.ast.cwrapper   import PyBuildValueNode
-from pyccel.ast.cwrapper   import Py_None
-from pyccel.ast.cwrapper   import PyccelPyObject
+from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
+from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil
 from pyccel.ast.c_concepts import ObjectAddress
 
@@ -50,6 +50,7 @@ class CWrapperCodePrinter(CCodePrinter):
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
                       (PyccelPyObject() , 0) : 'PyObject',
+                      (PyccelPyTypeObject() , 0) : 'PyTypeObject',
                       (BindCPointer()   , 0) : 'void'}
 
     def __init__(self, filename, target_language, **settings):
@@ -84,7 +85,7 @@ class CWrapperCodePrinter(CCodePrinter):
         --------
         CCodePrinter.is_c_pointer : The extended function.
         """
-        if isinstance(a.dtype, PyccelPyObject):
+        if isinstance(a.dtype, (PyccelPyObject, PyccelPyTypeObject, WrapperCustomDataType)):
             return True
         elif isinstance(a, PyBuildValueNode):
             return True
@@ -341,22 +342,88 @@ class CWrapperCodePrinter(CCodePrinter):
         name = self.scope.get_python_name(expr.name)
         docstring = self._print(LiteralString('\n'.join(expr.docstring.comments))) \
                     if expr.docstring else '""'
-        class_code = ("typedef struct {\n"
+        attributes = ''.join(self._print(Declare(a.dtype, a)) for a in expr.attributes)
+        class_code = (f"struct {struct_name} {{\n"
                 "    PyObject_HEAD\n"
-                "    void* instance;\n"
-                f"}} {struct_name};\n")
+                + attributes +
+                "};\n")
+
+        original_scope = expr.original_class.scope
+        print_methods = expr.methods + (expr.new_func,) + expr.interfaces
+        functions = '\n'.join(self._print(f) for f in print_methods)
+        sig_methods = expr.methods + (expr.new_func,) + tuple(f for i in expr.interfaces for f in i.functions) + \
+                      tuple(i.interface_func for i in expr.interfaces)
+        function_sigs = ''.join(self.function_signature(f)+';\n' for f in sig_methods)
+        init_string = ''
+        del_string = ''
+        funcs = {}
+        for f in expr.methods:
+            py_name = self.get_python_name(original_scope, f.original_function)
+            if py_name == '__init__':
+                init_string = f"    .tp_init = (initproc) {f.name},\n"
+            elif py_name == '__del__':
+                del_string = f"    .tp_dealloc = (destructor) {f.name},\n"
+            else:
+                docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                                        if f.docstring else '""'
+                funcs[py_name] = (f.name, docstring)
+
+        for f in expr.interfaces:
+            py_name = self.get_python_name(original_scope, f.original_function)
+            docstring = self._print(LiteralString('\n'.join(f.docstring.comments))) \
+                                                    if f.docstring else '""'
+            funcs[py_name] = (f.name, docstring)
+
+        method_def_funcs = ''.join(('{\n'
+                                     f'"{name}",\n'
+                                     f'(PyCFunction){wrapper_name},\n'
+                                      'METH_VARARGS | METH_KEYWORDS,\n'
+                                     f'{doc_string}\n'
+                                     '},\n')
+                                     for name, (wrapper_name, doc_string) in funcs.items())
+
+        method_def_name = self.scope.get_new_name(f'{expr.name}_methods')
+        method_def = (f'static PyMethodDef {method_def_name}[] = {{\n'
+                        f'{method_def_funcs}'
+                        '{ NULL, NULL, 0, NULL}\n'
+                        '};\n')
 
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
                 f"    .tp_doc = PyDoc_STR({docstring}),\n"
-                f"    .tp_basicsize = sizeof({struct_name}),\n"
-                "    .tp_itemsize = 0,\n"
-                "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
-                "    .tp_new = PyType_GenericNew,\n"
+                f"    .tp_basicsize = sizeof(struct {struct_name}),\n"
+                 "    .tp_itemsize = 0,\n"
+                 "    .tp_flags = Py_TPFLAGS_DEFAULT,\n"
+                f"    .tp_new = {expr.new_func.name},\n"
+                f"{init_string}{del_string}"
+                f"    .tp_methods = {method_def_name},\n"
                 "};\n")
 
-        return class_code + '\n' + type_code
+        return class_code + '\n' + function_sigs + '\n' + method_def + '\n' + type_code + '\n' + functions
+
+    def _print_Allocate(self, expr):
+        variable = expr.variable
+        if isinstance(variable.dtype, WrapperCustomDataType):
+            class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
+
+            type_name = class_def.type_name
+            var_code = self._print(ObjectAddress(variable))
+            decl_type = self.get_declare_type(variable)
+            return f'{var_code} = ({decl_type}){type_name}.tp_alloc(&{type_name}, 0);\n'
+        else:
+            return CCodePrinter._print_Allocate(self, expr)
+
+    def _print_Deallocate(self, expr):
+        variable = expr.variable
+        if isinstance(variable.dtype, WrapperCustomDataType):
+            class_def = self.scope.find(variable.cls_base.original_class.name, 'classes')
+
+            type_name = class_def.type_name
+            var_code = self._print(ObjectAddress(variable))
+            return f'{type_name}.tp_free({var_code});\n'
+        else:
+            return CCodePrinter._print_Deallocate(self, expr)
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code

@@ -211,18 +211,19 @@ class Scope(object):
         """
         return self._locals['symbolic_functions']
 
-    def find(self, name, category = None, local_only = False):
+    def find(self, name, category = None, local_only = False, raise_if_missing = False):
         """
         Find and return the specified object in the scope.
 
         Find a specified object in the scope and return it.
         The object is identified by a string contianing its name.
-        If the object cannot be found then None is returned.
+        If the object cannot be found then None is returned unless
+        an error is requested.
 
         Parameters
         ----------
         name : str
-            The name of the object we are searching for.
+            The Python name of the object we are searching for.
         category : str, optional
             The type of object we are searching for.
             This must be one of the strings in Scope.categories.
@@ -231,6 +232,9 @@ class Scope(object):
             Indicates whether we should look for variables in the
             entire scope or whether we should limit ourselves to the
             local scope.
+        raise_if_missing : bool, default=False
+            Indicates whether an error should be raised if the object
+            cannot be found.
 
         Returns
         -------
@@ -246,7 +250,9 @@ class Scope(object):
 
         # Walk up the tree of Scope objects, until the root if needed
         if self.parent_scope and (self.is_loop or not local_only):
-            return self.parent_scope.find(name, category, local_only)
+            return self.parent_scope.find(name, category, local_only, raise_if_missing)
+        elif raise_if_missing:
+            raise RuntimeError(f"Can't find expected object {name} in scope")
         else:
             return None
 
@@ -350,7 +356,7 @@ class Scope(object):
         else:
             raise RuntimeError("Variable not found in scope")
 
-    def insert_class(self, cls):
+    def insert_class(self, cls, name = None):
         """
         Add a class to the current scope.
 
@@ -361,11 +367,16 @@ class Scope(object):
         ----------
         cls : ClassDef
             The class to be inserted into the current scope.
+
+        name : str, optional
+            The name under which the classes should be indexed in the scope.
+            This defaults to the name of the class.
         """
         if not isinstance(cls, ClassDef):
             raise TypeError('class must be of type ClassDef')
 
-        name = cls.name
+        if name is None:
+            name = cls.name
 
         if self.is_loop:
             self.parent_scope.insert_class(cls)
@@ -471,7 +482,7 @@ class Scope(object):
                 self.parent_scope.insert_symbol(symbol)
             elif symbol not in self._used_symbols:
                 collisionless_symbol = self.name_clash_checker.get_collisionless_name(symbol,
-                        self._used_symbols.values())
+                        self.all_used_symbols)
                 collisionless_symbol = PyccelSymbol(collisionless_symbol,
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
@@ -725,3 +736,24 @@ class Scope(object):
         """ Get map of new names to original python names
         """
         return self._original_symbol
+
+    def rename_function(self, o, name):
+        """
+        Rename a function that exists in the scope.
+
+        Rename a function that exists in the scope. This is done by
+        finding a new collisionless name, renaming the FunctionDef
+        instance, and updating the dictionary of symbols.
+
+        Parameters
+        ----------
+        o : FunctionDef
+            The object that should be renamed.
+
+        name : str
+            The suggested name for the new function.
+        """
+        newname = self.get_new_name(name)
+        python_name = self._original_symbol.pop(o.name)
+        o.rename(newname)
+        self._original_symbol[newname] = python_name

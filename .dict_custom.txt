@@ -64,8 +64,8 @@ Quickstart
 FST
 AST
 RedBaron
-intel
-nvidia
+Intel
+NVIDIA
 boolean
 booleans
 quicksort
@@ -104,3 +104,4 @@ destructor's
 Valgrind
 variadic
 subclasses
+oneAPI
