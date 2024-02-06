@@ -41,7 +41,7 @@ All notable changes to this project will be documented in this file.
 -   Ensure `pyccel-init` calls the related function.
 -   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex` in Python translation.
 -   #1687 : Pointers in tuples are deallocated.
--   #1586 : Raise an error for targets of class instances which go out of scope to early.
+-   #1586 : Raise an error for targets of class instances which go out of scope too early.
 
 ### Changed
 
