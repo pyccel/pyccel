@@ -5,14 +5,12 @@ class MyClass1:
     def __init__(self : 'MyClass1', param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
         self.param2 = param2
-        print(123456789)
 
 class MyClass2:
     def __init__(self : 'MyClass2', param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
         obj1 = MyClass1(param1, param2)
         self.param2 = np.sum(obj1.param2)
-        print(987654321)
 
 if __name__ == '__main__':
     p = np.ones(4)
