@@ -4,9 +4,7 @@ import numpy as np
 class MyClass:
     def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
-        my_param2 = param2[::2]
-        self.param2 = np.sum(my_param2)
-        print(123456789)
+        self.param2 = np.sum(param2[::2])
 
 
 if __name__ == '__main__':
