@@ -40,7 +40,23 @@ class CNameClashChecker(LanguageNameClashChecker):
         'numpy_to_ndarray_shape', 'get_size', 'order_f', 'order_c', 'array_copy_data'])
 
     def has_clash(self, name, symbols):
-        """ Indicate whether the proposed name causes any clashes
+        """
+        Indicate whether the proposed name causes any clashes.
+
+        Indicate whether the proposed name causes any clashes by comparing it with the
+        reserved keywords and the symbols which are already defined in the scope.
+
+        Parameters
+        ----------
+        name : str
+            The proposed name.
+        symbols : set of str
+            The symbols already used in the scope.
+
+        Returns
+        -------
+        bool
+            True if the name clashes with an existing name. False otherwise.
         """
         return name in self.keywords or name in symbols
 
