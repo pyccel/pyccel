@@ -58,10 +58,11 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
-from pyccel.ast.operators import PyccelMod
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
+from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -104,7 +105,6 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
-    'NumpyIsInf'  :'ieee_is_inf',
     'NumpyIsFinite':'ieee_is_finite',
     'NumpyIsNan'  :'ieee_is_nan',
 }
@@ -2653,6 +2653,12 @@ class FCodePrinter(CodePrinter):
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpyIsInf(self, expr):
+        code = PyccelAssociativeParenthesis(PyccelAnd(
+                    PyccelNot(NumpyIsFinite(expr.args[0])),
+                    PyccelNot(NumpyIsNan(expr.args[0]))))
+        return self._print(code)
 
     def _print_NumpySign(self, expr):
         """ Print the corresponding Fortran function for a call to Numpy.sign
