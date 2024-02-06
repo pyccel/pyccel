@@ -2,7 +2,7 @@
 import numpy as np
 
 class MyClass:
-    def __init__(self : 'MyClass', param1 : 'int', param2 : 'float[:]'):
+    def __init__(self, param1 : 'int', param2 : 'float[:]'):
         self.param1 = param1
         self.param2 = param2
         print("MyClass Object created!")
