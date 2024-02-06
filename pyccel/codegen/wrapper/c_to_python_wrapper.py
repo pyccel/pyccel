@@ -456,7 +456,7 @@ class CToPythonWrapper(Wrapper):
         counter must be incremented. This prevents them being deallocated if they go
         out of scope in Python. The class must then take care to decrement their
         reference counter when it is itself deallocated to prevent a memory leak.
-        The attribute `FucntionDefArgument.persistent_target` indicates whether an
+        The attribute `FunctionDefArgument.persistent_target` indicates whether an
         argument is a target inside the function. When it is true then additional code
         is added to the wrapper body. This code increments the reference counter for
         the argument and adds the object to a list of objects whose reference counter
