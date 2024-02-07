@@ -115,6 +115,7 @@ def execute_pyccel(fname, *,
         Specify the level of Conda warnings to display (choices: off, basic, verbose), Default is 'basic'.
     """
     start = time.time()
+    timers = {}
     if fname.endswith('.pyh'):
         syntax_only = True
         if verbose:
@@ -202,6 +203,7 @@ def execute_pyccel(fname, *,
     os.chdir(folder)
 
     start_syntax = time.time()
+    timers["Initialisation"] = start_syntax-start
     # Parse Python file
     try:
         parser = Parser(pymod_filepath)
@@ -218,10 +220,14 @@ def execute_pyccel(fname, *,
         handle_error('parsing (syntax)')
         raise PyccelSyntaxError('Syntax step failed')
 
-    end_syntax = time.time()
+    timers["Syntactic Stage"] = time.time() - start_syntax
 
     if syntax_only:
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print("-------------------- Timers -------------------------")
+            for n,t in timers.items():
+                print(f'{n:<30}: ',t)
         return
 
     start_semantic = time.time()
@@ -242,10 +248,14 @@ def execute_pyccel(fname, *,
         handle_error('annotation (semantic)')
         raise PyccelSemanticError('Semantic step failed')
 
-    end_semantic = time.time()
+    timers["Semantic Stage"] = time.time() - start_semantic
 
     if semantic_only:
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print("-------------------- Timers -------------------------")
+            for n,t in timers.items():
+                print(f'{n:<30}: ',t)
         return
 
     # -------------------------------------------------------------------------
@@ -270,7 +280,8 @@ def execute_pyccel(fname, *,
     if errors.has_errors():
         handle_error('code generation')
         raise PyccelCodegenError('Code generation failed')
-    end_codegen = time.time()
+
+    timers["Codegen Stage"] = time.time() - start_codegen
 
     if language == 'python':
         output_file = (output_name + '.py') if output_name else os.path.basename(fname)
@@ -282,6 +293,10 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print("-------------------- Timers -------------------------")
+            for n,t in timers.items():
+                print(f'{n:<30}: ',t)
         return
 
     compile_libs = [*libs, parser.metavars['libraries']] \
@@ -329,6 +344,10 @@ def execute_pyccel(fname, *,
         # Change working directory back to starting point
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
+        if show_timings:
+            print("-------------------- Timers -------------------------")
+            for n,t in timers.items():
+                print(f'{n:<30}: ',t)
         return
 
     deps = dict()
@@ -372,7 +391,6 @@ def execute_pyccel(fname, *,
         raise
 
 
-    end_compile_target_language = time.time()
     try:
         if codegen.is_program:
             prog_obj = CompileObj(file_name = prog_name,
@@ -383,7 +401,7 @@ def execute_pyccel(fname, *,
                     output_folder=pyccel_dirpath,
                     verbose=verbose)
 
-        end_compile_target_language = time.time()
+        timers["Compilation without wrapper"] = time.time() - start_compile_target_language
 
         # Create shared library
         generated_filepath, shared_lib_timers = create_shared_library(codegen,
@@ -441,11 +459,6 @@ def execute_pyccel(fname, *,
     end = time.time()
 
     if show_timings:
-        timers = {"Initialisation" : start_syntax-start,
-                  "Syntactic Stage": end_syntax - start_syntax,
-                  "Semantic Stage": end_semantic - start_semantic,
-                  "Codegen Stage": end_codegen - start_codegen,
-                  "Compilation without wrapper": end_compile_target_language - start_compile_target_language}
         timers.update(shared_lib_timers)
         timers['Total'] = end-start
         print("-------------------- Timers -------------------------")
