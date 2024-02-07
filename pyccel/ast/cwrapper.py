@@ -8,6 +8,8 @@ Module representing objects (functions/variables etc) required for the interface
 between Python code and C code (using Python/C Api and cwrapper.c).
 """
 
+from pyccel.utilities.metaclasses import Singleton
+
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
@@ -40,8 +42,9 @@ __all__ = (
     'PyInterface',
     'PyClassDef',
     'PyModule',
-    'PyccelPyObject',
     'PyccelPyClassType',
+    'PyccelPyObject',
+    'PyccelPyTypeObject',
     'WrapperCustomDataType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
@@ -61,7 +64,7 @@ __all__ = (
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(DataType):
+class PyccelPyObject(DataType, metaclass=Singleton):
     """
     Datatype representing a `PyObject`.
 
@@ -71,7 +74,7 @@ class PyccelPyObject(DataType):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(DataType):
+class PyccelPyClassType(DataType, metaclass=Singleton):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -80,6 +83,16 @@ class PyccelPyClassType(DataType):
     """
     __slots__ = ()
     _name = 'pyclasstype'
+
+class PyccelPyTypeObject(DataType, metaclass=Singleton):
+    """
+    Datatype representing a `PyTypeObject`.
+
+    Datatype representing a `PyTypeObject` which is the
+    class used to hold Python class objects in `Python.h`.
+    """
+    __slots__ = ()
+    _name = 'pytypeobject'
 
 class WrapperCustomDataType(CustomDataType):
     """
@@ -549,13 +562,15 @@ class PyClassDef(ClassDef):
         The class from which PyClassDef inherits. This is also the object being
         wrapped.
     """
-    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object')
+    __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
+                 '_new_func')
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
         self._struct_name = struct_name
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
+        self._new_func = None
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
         scope.insert_variable(variables[0])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
@@ -598,6 +613,28 @@ class PyClassDef(ClassDef):
         compatible with Python.
         """
         return self._original_class
+
+    def add_alloc_method(self, f):
+        """
+        Add the wrapper for `__new__` to the class definition.
+
+        Add the wrapper for `__new__` which allocates the memory for the class instance.
+
+        Parameters
+        ----------
+        f : PyFunctionDef
+            The wrapper for the `__new__` function.
+        """
+        self._new_func = f
+
+    @property
+    def new_func(self):
+        """
+        Get the wrapper for `__new__`.
+
+        Get the wrapper for `__new__` which allocates the memory for the class instance.
+        """
+        return self._new_func
 
 #-------------------------------------------------------------------
 #                      Python.h Constants
