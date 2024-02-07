@@ -481,6 +481,23 @@ class FortranToCWrapper(Wrapper):
                                 original_variable = expr)
 
     def _wrap_DottedVariable(self, expr):
+        """
+        Create all objects necessary to expose a class attribute to C.
+
+        Create the getter and setter functions which expose the class attribute
+        to C. Return these objects in a BindCClassProperty.
+
+        Parameters
+        ----------
+        expr : DottedVariable
+            The class attribute.
+
+        Returns
+        -------
+        BindCClassProperty
+            An object containing the getter and setter functions which expose
+            the class attribute to C.
+        """
         lhs = expr.lhs
         class_dtype = lhs.dtype
         # ----------------------------------------------------------------------------------

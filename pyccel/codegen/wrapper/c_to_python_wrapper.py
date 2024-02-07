@@ -1534,6 +1534,23 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_DottedVariable(self, expr):
         """
+        Create all objects necessary to expose a class attribute to C.
+
+        Create the getter and setter functions which expose the class attribute
+        to C. Return these objects in a PyGetSetDefElement.
+        See <https://docs.python.org/3/extending/newtypes_tutorial.html#providing-finer-control-over-data-attributes>
+        for more information about the necessary prototypes.
+
+        Parameters
+        ----------
+        expr : DottedVariable
+            The class attribute.
+
+        Returns
+        -------
+        PyGetSetDefElement
+            An object which contains the new getter and setter functions that should be
+            described in the array of PyGetSetDef objects.
         """
         lhs = expr.lhs
         class_type = lhs.cls_base
@@ -1634,6 +1651,24 @@ class CToPythonWrapper(Wrapper):
 
     def _wrap_BindCClassProperty(self, expr):
         """
+        Create a PyGetSetDefElement to expose a class attribute/property to Python.
+
+        Create getter and setter functions which are compatible with the expected prototype for
+        `PyGetSetDef` and which call the getter and setter functions contained in the
+        BindCClassProperty. The result is returned in a PyGetSetDefElement.
+        See <https://docs.python.org/3/extending/newtypes_tutorial.html#providing-finer-control-over-data-attributes>
+        for more information about the necessary prototypes.
+
+        Parameters
+        ----------
+        expr : BindCClassProperty
+            The object containing the getter and setter functions to be wrapped.
+
+        Returns
+        -------
+        PyGetSetDefElement
+            An object which contains the new getter and setter functions that should be
+            described in the array of PyGetSetDef objects.
         """
         class_type = expr.class_type
         name = expr.python_name
