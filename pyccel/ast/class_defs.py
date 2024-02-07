@@ -27,7 +27,7 @@ __all__ = ('BooleanClass',
 
 #=======================================================================================
 
-ComplexClass = ClassDef('complex',
+ComplexClass = ClassDef('complex', class_type = NativeComplex(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
@@ -39,7 +39,7 @@ ComplexClass = ClassDef('complex',
 
 #=======================================================================================
 
-FloatClass = ClassDef('float',
+FloatClass = ClassDef('float', class_type = NativeFloat(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -55,7 +55,7 @@ FloatClass = ClassDef('float',
 
 #=======================================================================================
 
-IntegerClass = ClassDef('integer',
+IntegerClass = ClassDef('integer', class_type = NativeInteger(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper': 'numpy_wrapper'}),
@@ -73,12 +73,12 @@ IntegerClass = ClassDef('integer',
 
 #=======================================================================================
 
-BooleanClass = ClassDef('boolean',
+BooleanClass = ClassDef('boolean', class_type = NativeBool(),
         superclasses=(IntegerClass,))
 
 #=======================================================================================
 
-StringClass = ClassDef('string',
+StringClass = ClassDef('string', class_type = NativeString(),
         methods=[
                 #capitalize
                 #casefold
@@ -129,7 +129,7 @@ StringClass = ClassDef('string',
 
 #=======================================================================================
 
-TupleClass = ClassDef('tuple',
+TupleClass = ClassDef('tuple', class_type = NativeTuple(),
         methods=[
             #index
             #count
@@ -137,7 +137,7 @@ TupleClass = ClassDef('tuple',
 
 #=======================================================================================
 
-NumpyArrayClass = ClassDef('numpy.ndarray',
+NumpyArrayClass = ClassDef('numpy.ndarray', class_type = NumpyNDArrayType(),
         methods=[
             PyccelFunctionDef('shape', func_class = NumpyShape,
                 decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
