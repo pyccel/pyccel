@@ -87,8 +87,11 @@ def create_shared_library(codegen,
 
     Returns
     -------
-    str
+    sharedlib_filepath : str
         The absolute path to the shared library which was created.
+
+    timings : dict
+        The time spent in the different parts of the library creation.
     """
 
     pyccel_stage.set_stage('cwrapper')
@@ -221,7 +224,6 @@ def create_shared_library(codegen,
     # Change working directory back to starting point
     os.chdir(base_dirpath)
 
-    # Return absolute path of shared library
     timings = {'Dependency compilation' : compile_libs_time,
                'Wrapper creation' : wrapper_creation_time,
                'Wrapper printing': print_cwrapper_time,
@@ -230,4 +232,6 @@ def create_shared_library(codegen,
         timings['Bind C wrapping'] = bind_c_wrapping_time
         timings['Bind C printing'] = bind_c_printing_time
         timings['Bind C compiling'] = bind_c_compiling_time
+
+    # Return absolute path of shared library
     return sharedlib_filepath, timings
