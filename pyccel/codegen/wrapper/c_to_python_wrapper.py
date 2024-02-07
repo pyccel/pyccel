@@ -466,7 +466,7 @@ class CToPythonWrapper(Wrapper):
         ----------
         func : FunctionDef
             The function being wrapped.
-        func_args : list of FunctionDefArguments
+        func_args : list[FunctionDefArgument] | list[Variable]
             The arguments passed by Python to the function (self, args, kwargs).
 
         Returns
@@ -476,7 +476,9 @@ class CToPythonWrapper(Wrapper):
             add references to the arguments.
         """
         body = []
-        class_arg_var = func_args[0].var
+        class_arg_var = func_args[0]
+        if isinstance(class_arg_var, FunctionDefArgument):
+            class_arg_var = class_arg_var.var
         class_scope = class_arg_var.cls_base.scope
         for a in func.arguments:
             if a.persistent_target:
@@ -1689,7 +1691,8 @@ class CToPythonWrapper(Wrapper):
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        getter_result = self.get_new_PyObject(f'{name}_obj')
+        getter_result = self.get_new_PyObject(f'{name}_obj',
+                                        dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
         self._python_object_map[get_val_arg] = getter_args[0]
         self._python_object_map[get_val_result] = getter_result
@@ -1708,6 +1711,8 @@ class CToPythonWrapper(Wrapper):
         else:
             call = Assign(c_results, FunctionCall(expr.getter, (class_obj,)))
 
+        if isinstance(getter_result.dtype, CustomDataType):
+            arg_code.append(Allocate(getter_result, shape=(), order=None, status='unallocated'))
         getter_body = [*arg_code,
                        call,
                        *res_wrapper,
@@ -1750,7 +1755,7 @@ class CToPythonWrapper(Wrapper):
 
         setter_body = [*arg_code,
                        FunctionCall(expr.setter, func_call_args),
-                       *self._save_referenced_objects(expr.setter, setter_args)
+                       *self._save_referenced_objects(expr.setter, setter_args),
                        Return((LiteralInteger(0, precision=-2),))]
         self.exit_scope()
 
