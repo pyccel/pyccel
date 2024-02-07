@@ -1632,7 +1632,7 @@ class CToPythonWrapper(Wrapper):
         setter_body = [*arg_wrapper,
                        AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
-                                                                                lhs = getter_args[0]),
+                                                                                lhs = setter_args[0]),
                                                           cast_type = lhs)),
                        update,
                        Return((LiteralInteger(0, precision=-2),))]
@@ -1750,6 +1750,7 @@ class CToPythonWrapper(Wrapper):
 
         setter_body = [*arg_code,
                        FunctionCall(expr.setter, func_call_args),
+                       *self._save_referenced_objects(expr.setter, setter_args)
                        Return((LiteralInteger(0, precision=-2),))]
         self.exit_scope()
 
