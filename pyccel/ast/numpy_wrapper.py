@@ -9,8 +9,10 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
+from pyccel.utilities.metaclasses import Singleton
+
 from .datatypes         import (NativeInteger, NativeFloat, NativeComplex,
-                                NativeBool, NativeGeneric, NativeVoid)
+                                NativeBool, NativeGeneric, NativeVoid, DataType)
 
 from .cwrapper          import PyccelPyObject
 
@@ -42,6 +44,15 @@ __all__ = (
     #-------OTHERS--------
     'get_numpy_max_acceptable_version_file'
 )
+class PyccelPyArrayObject(DataType, metaclass=Singleton):
+    """
+    Datatype representing a `PyArrayObject`.
+
+    Datatype representing a `PyArrayObject` which is the
+    class used to hold NumPy array objects in Python.
+    """
+    __slots__ = ()
+    _name = 'PyArrayObject'
 
 #-------------------------------------------------------------------
 #                      Numpy functions
@@ -124,6 +135,12 @@ array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
                            arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional=True))],
                            results   = [FunctionDefResult(Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1, class_type = NativeVoid()))])
+
+PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
+                            body      = [],
+                            arguments = [FunctionDefArgument(Variable(dtype=PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
+                                         FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'obj', memory_handling='alias'))],
+                            results   = [FunctionDefResult(Variable(dtype=NativeInteger(), name = 'd'))])
 
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA

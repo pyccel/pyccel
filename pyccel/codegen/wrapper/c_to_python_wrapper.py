@@ -31,7 +31,8 @@ from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, 
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
+from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
@@ -490,6 +491,48 @@ class CToPythonWrapper(Wrapper):
                              If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),
                                           [Return([self._error_exit_code])]))])
         return body
+
+    def _return_self_reference(self, self_obj, return_var, orig_var):
+        """
+        Get the code necessary to return an object which references a class instance.
+
+        Get the code necessary to return an object which references a class instance. This is necessary when wrapping
+        functions (or getters) which return attributes of a class. In the case of a scalar class attribute nothing
+        special needs to be done. However for more complex objects the class must not be deallocated before the
+        returned object is no longer needed. For arrays this is achieved using PyArray_SetBaseObject, to save the
+        reference. For class instances the self instance is added to the list of referenced objects saved in the
+        returned class.
+
+        Parameters
+        ----------
+        self_obj : Variable
+            A variable representing the class instance which must not be deallocated too early.
+        return_var : Variable
+            The variable which will be returned from the function.
+        orig_var : Variable
+            The variable which will be returned from the function as it appeared in the original code.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            Any nodes which must be printed to increase reference counts.
+        """
+        if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
+            return []
+        elif isinstance(orig_var.class_type, NumpyNDArrayType):
+            save_ref_call = FunctionCall(PyArray_SetBaseObject,
+                                    (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
+                                     ObjectAddress(PointerCast(self_obj, PyArray_SetBaseObject.arguments[1].var))))
+        elif isinstance(orig_var.dtype, CustomDataType):
+            ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
+            ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
+            save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(self_obj, ref_list))))
+        else:
+            raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
+
+        return [FunctionCall(Py_INCREF, (self_obj,)),
+                If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0)),
+                                  [Return([self._error_exit_code])]))]
 
     def _build_module_exec_function(self, expr):
         """
@@ -1591,8 +1634,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
 
-        if expr.rank != 0 or expr.dtype not in NativeNumeric:
-            body.append(FunctionCall(Py_INCREF, (getter_args[0],)))
+        body.extend(self._return_self_reference(getter_args[0], getter_result.var, expr))
 
         getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
@@ -1724,8 +1766,7 @@ class CToPythonWrapper(Wrapper):
             arg_code.append(Allocate(getter_result, shape=(), order=None, status='unallocated'))
 
         wrapped_var = expr.getter.original_function
-        if wrapped_var.rank != 0 or wrapped_var.dtype not in NativeNumeric:
-            res_wrapper.append(FunctionCall(Py_INCREF, (getter_args[0],)))
+        res_wrapper.extend(self._return_self_reference(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*arg_code,
                        call,
