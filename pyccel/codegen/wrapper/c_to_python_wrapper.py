@@ -11,12 +11,12 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef
-from pyccel.ast.builtins      import PythonTuple
+from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, For
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
@@ -24,6 +24,7 @@ from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplemen
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
+from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_Size, PyList_GetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
@@ -447,6 +448,47 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
+    def _save_referenced_objects(self, func, func_args):
+        """
+        Save any arguments passed to the wrapper which are then stored in pointers.
+
+        If arguments are saved into pointers (e.g. inside classes) then their reference
+        counter must be incremented. This prevents them being deallocated if they go
+        out of scope in Python. The class must then take care to decrement their
+        reference counter when it is itself deallocated to prevent a memory leak.
+        The attribute `FunctionDefArgument.persistent_target` indicates whether an
+        argument is a target inside the function. When it is true then additional code
+        is added to the wrapper body. This code increments the reference counter for
+        the argument and adds the object to a list of objects whose reference counter
+        must be decremented in the class destructor.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        func_args : list of FunctionDefArguments
+            The arguments passed by Python to the function (self, args, kwargs).
+
+        Returns
+        -------
+        list
+            A list of any expressions which should be added to the wrapper body to
+            add references to the arguments.
+        """
+        body = []
+        class_arg_var = func_args[0].var
+        class_scope = class_arg_var.cls_base.scope
+        for a in func.arguments:
+            if a.persistent_target:
+                ref_attribute = class_scope.find('referenced_objects', 'variables', raise_if_missing = True)
+                ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = class_arg_var)
+                python_arg = self._python_object_map[a]
+                append_call = FunctionCall(PyList_Append, (ref_list, python_arg))
+                body.extend([FunctionCall(Py_INCREF, (python_arg,)),
+                             If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),
+                                          [Return([self._error_exit_code])]))])
+        return body
+
     def _build_module_exec_function(self, expr):
         """
         Build the function that will be called when the module is first imported.
@@ -560,7 +602,12 @@ class CToPythonWrapper(Wrapper):
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
 
-        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated', like = self_var)]
+        # Get the list of referenced objects
+        ref_attribute = scope.find('referenced_objects', 'variables', raise_if_missing = True)
+        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = python_result_var)
+
+        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated', like = self_var),
+                AliasAssign(ref_list, FunctionCall(PyList_New, ()))]
 
         if func:
             body.append(AliasAssign(c_res, FunctionCall(func, ())))
@@ -602,11 +649,11 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
-        class_dtype = init_function.arguments[0].var.dtype
 
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
@@ -631,7 +678,7 @@ class CToPythonWrapper(Wrapper):
         original_c_args = init_function.arguments
 
         # Get the arguments of the PyFunctionDef
-        func_args, body = self._unpack_python_args(python_args, class_dtype)
+        func_args, body = self._unpack_python_args(python_args, cls_dtype)
         func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
@@ -643,6 +690,8 @@ class CToPythonWrapper(Wrapper):
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+
+        body.extend(self._save_referenced_objects(init_function, func_args))
 
         # Call the C-compatible function
         body.append(FunctionCall(init_function, func_call_args))
@@ -703,7 +752,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -716,12 +766,24 @@ class CToPythonWrapper(Wrapper):
         c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
 
         if isinstance(del_function, BindCFunctionDef):
-            body = [FunctionCall(del_function, [c_obj]),
-                    Deallocate(func_arg)]
+            body = [FunctionCall(del_function, [c_obj])]
         else:
             body = [FunctionCall(del_function, [c_obj]),
-                    Deallocate(c_obj),
-                    Deallocate(func_arg)]
+                    Deallocate(c_obj)]
+
+        # Get the list of referenced objects
+        ref_attribute = wrapper_scope.find('referenced_objects', 'variables', raise_if_missing = True)
+        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = func_arg)
+
+        n_refs = Variable(NativeInteger(), name = self.scope.get_new_name('n_refs'), precision = 8)
+        self.scope.insert_variable(n_refs)
+        iterator = self.scope.get_temporary_variable(NativeInteger())
+        for_scope = self.scope.create_new_loop_scope()
+        for_body = [FunctionCall(Py_DECREF, [FunctionCall(PyList_GetItem, (ref_list, iterator))])]
+        body.extend([Assign(n_refs, FunctionCall(PyList_Size, (ref_list,))),
+                     For(iterator, PythonRange(n_refs), for_body, for_scope),
+                     FunctionCall(Py_DECREF, (ref_list,)),
+                     Deallocate(func_arg)])
 
         self.exit_scope()
 
@@ -869,6 +931,7 @@ class CToPythonWrapper(Wrapper):
             class_dtype = possible_class_base[0].class_type
         else:
             class_dtype = None
+
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -1022,6 +1085,9 @@ class CToPythonWrapper(Wrapper):
                 body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
         c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
+
+        if class_dtype:
+            body.extend(self._save_referenced_objects(expr, func_args))
 
         # Call the C-compatible function
         n_c_results = len(c_results)
@@ -1273,7 +1339,6 @@ class CToPythonWrapper(Wrapper):
 
         name = self.scope.get_expected_name(orig_var.name)
 
-        body = []
         # Create a variable to store the C-compatible result.
         if orig_var.is_ndarray:
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
@@ -1290,6 +1355,8 @@ class CToPythonWrapper(Wrapper):
         # Cast from C to Python
         if not isinstance(orig_var.dtype, CustomDataType):
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
+        else:
+            body = [FunctionCall(Py_INCREF, (python_res,))]
 
         # Deallocate any unused memory
         if orig_var.rank:
@@ -1362,7 +1429,8 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            body.append(AliasAssign(attrib_var, c_res))
+            body.extend([AliasAssign(attrib_var, c_res),
+                         FunctionCall(Py_INCREF, (python_res,))])
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
