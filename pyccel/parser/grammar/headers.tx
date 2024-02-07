@@ -13,18 +13,6 @@ Statement:
   | InterfaceStmt
 ;
 
-TrailerSubscriptList: '[' args*=':' [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
-
-DataType: ID|STAR;
-
-VariableType: dtype=DataType (trailer=TrailerSubscriptList)?;
-
-FuncType: '('(results*=TypeHeader[','])?')' '('decs*=UnionTypeStmt[',']')';
-
-TypeHeader: FuncType|VariableType;
-UnionTypeStmt: (const?=Const) dtypes+=TypeHeader['|'] ;
-Const: 'const';
-
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
@@ -35,7 +23,7 @@ TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'method';
 Static: 'static';
-HeaderResults: 'results' '(' decs+=TypeHeader[','] ')'; 
+HeaderResults: 'results' '(' decs+=TypeHeader[','] ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;
 MetavarValues: BOOL|STRING;
@@ -78,6 +66,4 @@ FunctionMacroStmt:
 ;
 
 // ****************
-
-STAR: '*';
 

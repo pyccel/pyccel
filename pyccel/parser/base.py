@@ -142,8 +142,8 @@ class BasicParser(object):
 
         # represent the scope of a function
         self._scope = Scope()
-        self._current_class    = None
-        self._current_function = None
+        self._current_function_name = None
+        self._current_function = []
 
         # the following flags give us a status on the parsing stage
         self._syntax_done   = False
@@ -163,7 +163,7 @@ class BasicParser(object):
 
     def __setstate__(self, state):
         copy_slots = ('_code', '_fst', '_ast', '_metavars', '_scope', '_filename',
-                '_metavars', '_scope', '_current_class', '_current_function',
+                '_metavars', '_scope', '_current_function',
                 '_syntax_done', '_semantic_done', '_current_ast_node')
 
         self.__dict__.update({s : state[s] for s in copy_slots})
@@ -239,10 +239,6 @@ class BasicParser(object):
     @property
     def metavars(self):
         return self._metavars
-
-    @property
-    def current_class(self):
-        return self._current_class
 
     @property
     def current_function(self):

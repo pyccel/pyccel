@@ -21,7 +21,6 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefAr
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
-from pyccel.ast.builtins import python_builtin_datatypes_dict as python_builtin_datatypes
 
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
@@ -2503,7 +2502,7 @@ class FCodePrinter(CodePrinter):
 
         if value_true.dtype != value_false.dtype :
             try :
-                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
             except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
             value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
@@ -2776,7 +2775,7 @@ class FCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
-                cast_func = python_builtin_datatypes[str_dtype(expr.dtype)]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
                 args.append(self._print(cast_func(arg)))
             else:
                 args.append(self._print(arg))

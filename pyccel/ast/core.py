@@ -22,7 +22,7 @@ from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple
                         NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
                         NativeVoid)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision
+from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -59,8 +59,8 @@ __all__ = (
     'Declare',
     'Decorator',
     'Del',
-    'Duplicate',
     'DoConcurrent',
+    'Duplicate',
     'EmptyNode',
     'ErrorExit',
     'Exit',
@@ -75,8 +75,8 @@ __all__ = (
     'If',
     'IfSection',
     'Import',
-    'InlineFunctionDef',
     'InProgram',
+    'InlineFunctionDef',
     'Interface',
     'Iterable',
     'Module',
@@ -93,8 +93,6 @@ __all__ = (
     'SympyFunction',
     'While',
     'With',
-    'create_variable',
-    'create_incremented_string',
 )
 
 #==============================================================================
@@ -107,39 +105,6 @@ __all__ = (
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
-def apply(func, args, kwargs):return func(*args, **kwargs)
-
-#==============================================================================
-def create_variable(forbidden_names, prefix = None, counter = 1):
-    """This function takes a prefix and a counter and uses them to construct
-    a PyccelSymbol with a name of the form:
-            prefix_counter
-    Where counter is formatted to fill 4 characters
-    The new name is checked against a list of forbidden expressions. If the
-    constructed name is forbidden then the counter is incremented until a valid
-    name is found
-
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
-
-      Returns
-      ----------
-      name            : PyccelSymbol
-                        A PyccelSymbol with the incremented string name
-      counter         : int
-                        The expected value of the next name
-
-    """
-
-    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
-
-    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(PyccelAstNode):
@@ -697,7 +662,7 @@ class CodeBlock(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(body = self.body)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
     def set_current_ast(self, ast_node):
         """
@@ -1844,6 +1809,10 @@ class FunctionDefArgument(TypedAstNode):
         the case if the argument is the first argument of a method of a
         class.
 
+    persistent_target : bool, default: False
+        Indicate if the object passed as this argument becomes a target.
+        This argument will usually only be passed by the wrapper.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
@@ -1855,10 +1824,11 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_bound_argument')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False,
+            persistent_target = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1875,6 +1845,7 @@ class FunctionDefArgument(TypedAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._persistent_target = persistent_target
         self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
@@ -1953,6 +1924,21 @@ class FunctionDefArgument(TypedAstNode):
         modifying the inout flag.
         """
         self._inout = False
+
+    @property
+    def persistent_target(self):
+        """
+        Indicate if the object passed as this argument becomes a target.
+
+        Indicate if the object passed as this argument becomes a pointer target after
+        a call to the function associated with this argument. This may be the case
+        in class methods.
+        """
+        return self._persistent_target
+
+    @persistent_target.setter
+    def persistent_target(self, persistent_target):
+        self._persistent_target = persistent_target
 
     @property
     def bound_argument(self):
@@ -2820,7 +2806,7 @@ class FunctionDef(ScopedAstNode):
            and its arguments.
         """
         args, kwargs = self.__getnewargs__()
-        out = (apply, (self.__class__, args, kwargs))
+        out = (apply_pickle, (self.__class__, args, kwargs))
         return out
 
 
@@ -4090,13 +4076,15 @@ class EmptyNode(PyccelAstNode):
 
 
 class Comment(PyccelAstNode):
+    """
+    Represents a Comment in the code.
 
-    """Represents a Comment in the code.
+    Represents a Comment in the code.
 
     Parameters
     ----------
     text : str
-       the comment line
+       The comment line.
 
     Examples
     --------
@@ -4137,7 +4125,7 @@ class Comment(PyccelAstNode):
            and its arguments.
         """
         kwargs = dict(text = self.text)
-        return (apply, (self.__class__, (), kwargs))
+        return (apply_pickle, (self.__class__, (), kwargs))
 
 
 class SeparatorComment(Comment):

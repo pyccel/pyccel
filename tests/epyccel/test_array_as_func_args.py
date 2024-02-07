@@ -41,9 +41,9 @@ def test_array_real_1d_scalar_add(language):
 
     for t in float_types:
         size = randint(1, 30)
-        x1 = uniform(np.finfo(t).max / 2, size=size)
+        x1 = uniform(np.finfo(t).max / 2, size=size).astype(t)
         x2 = np.copy(x1)
-        a = uniform(np.finfo(t).max / 2)
+        a = uniform(np.finfo(t).max / 2, size=1).astype(t)[0]
 
         f1(x1, a, size)
         f2(x2, a, size)
@@ -104,9 +104,9 @@ def test_array_real_2d_scalar_add(language):
     for t in float_types:
         d1 = randint(1, 15)
         d2 = randint(1, 15)
-        x1 = uniform(np.finfo(t).max / 2, size=(d1, d2))
+        x1 = uniform(np.finfo(t).max / 2, size=(d1, d2)).astype(t)
         x2 = np.copy(x1)
-        a = uniform(np.finfo(t).max / 2)
+        a = uniform(np.finfo(t).max / 2, size=1).astype(t)[0]
 
         f1(x1, a, d1, d2)
         f2(x2, a, d1, d2)
