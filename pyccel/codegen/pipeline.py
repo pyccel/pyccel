@@ -225,9 +225,7 @@ def execute_pyccel(fname, *,
     if syntax_only:
         pyccel_stage.pyccel_finished()
         if show_timings:
-            print("-------------------- Timers -------------------------")
-            for n,t in timers.items():
-                print(f'{n:<30}: ',t)
+            print_timers(start, timers)
         return
 
     start_semantic = time.time()
@@ -253,9 +251,7 @@ def execute_pyccel(fname, *,
     if semantic_only:
         pyccel_stage.pyccel_finished()
         if show_timings:
-            print("-------------------- Timers -------------------------")
-            for n,t in timers.items():
-                print(f'{n:<30}: ',t)
+            print_timers(start, timers)
         return
 
     # -------------------------------------------------------------------------
@@ -294,9 +290,7 @@ def execute_pyccel(fname, *,
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if show_timings:
-            print("-------------------- Timers -------------------------")
-            for n,t in timers.items():
-                print(f'{n:<30}: ',t)
+            print_timers(start, timers)
         return
 
     compile_libs = [*libs, parser.metavars['libraries']] \
@@ -345,9 +339,7 @@ def execute_pyccel(fname, *,
         os.chdir(base_dirpath)
         pyccel_stage.pyccel_finished()
         if show_timings:
-            print("-------------------- Timers -------------------------")
-            for n,t in timers.items():
-                print(f'{n:<30}: ',t)
+            print_timers(start, timers)
         return
 
     deps = dict()
@@ -427,6 +419,8 @@ def execute_pyccel(fname, *,
         handle_error('shared library generation')
         raise
 
+    timers.update(shared_lib_timers)
+
     if errors.has_errors():
         handle_error('code generation (wrapping)')
         raise PyccelCodegenError('Code generation failed')
@@ -456,11 +450,24 @@ def execute_pyccel(fname, *,
     # Change working directory back to starting point
     os.chdir(base_dirpath)
     pyccel_stage.pyccel_finished()
-    end = time.time()
 
     if show_timings:
-        timers.update(shared_lib_timers)
-        timers['Total'] = end-start
-        print("-------------------- Timers -------------------------")
-        for n,t in timers.items():
-            print(f'{n:<30}: ',t)
+        print_timers(start, timers)
+
+def print_timers(start, timers):
+    """
+    Print the timers measured during the execution.
+
+    Print the timers measured during the execution.
+
+    Parameters
+    ----------
+    start : float
+        The start time for the execution
+    timers : dict
+        A dictionary containing the times measured.
+    """
+    timers['Total'] = time.time()-start
+    print("-------------------- Timers -------------------------")
+    for n,t in timers.items():
+        print(f'{n:<30}: ',t)
