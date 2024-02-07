@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 
 import os
+import time
 
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
@@ -86,9 +87,13 @@ def create_shared_library(codegen,
 
     Returns
     -------
-    str
+    sharedlib_filepath : str
         The absolute path to the shared library which was created.
+
+    timings : dict
+        The time spent in the different parts of the library creation.
     """
+    timings = {}
 
     pyccel_stage.set_stage('cwrapper')
 
@@ -112,15 +117,20 @@ def create_shared_library(codegen,
             accelerators = ('python',))
 
     if language == 'fortran':
+        start_bind_c_wrapping = time.time()
         # Construct static interface for passing array shapes and write it to file bind_c_MOD.f90
         wrapper = FortranToCWrapper()
         bind_c_mod = wrapper.wrap(codegen.ast)
+        timings['Bind C wrapping'] = time.time() - start_bind_c_wrapping
+
+        start_bind_c_printing = time.time()
         bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
         bind_c_filename = '{}.f90'.format(bind_c_mod.name)
-
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
+        timings['Bind C printing'] = time.time() - start_bind_c_printing
 
+        start_bind_c_compiling = time.time()
         bind_c_obj=CompileObj(file_name = bind_c_filename,
                 folder = pyccel_dirpath,
                 flags  = main_obj.flags,
@@ -129,6 +139,7 @@ def create_shared_library(codegen,
         src_compiler.compile_module(compile_obj=bind_c_obj,
                 output_folder=pyccel_dirpath,
                 verbose=verbose)
+        timings['Bind C wrapping'] = time.time() - start_bind_c_compiling
         c_ast = bind_c_mod
     else:
         c_ast = codegen.ast
@@ -136,6 +147,7 @@ def create_shared_library(codegen,
     #---------------------------------------
     #     Compile cwrapper from stdlib
     #---------------------------------------
+    start_compile_libs = time.time()
     cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
                                 extra_files = {'numpy_version.h' :
                                                 get_numpy_max_acceptable_version_file()})
@@ -147,6 +159,7 @@ def create_shared_library(codegen,
     recompile_object(cwrapper_lib,
                       compiler = wrapper_compiler,
                       verbose  = verbose)
+    timings['Dependency compilation'] = time.time() - start_compile_libs
 
     wrapper_compile_obj.add_dependencies(cwrapper_lib)
 
@@ -158,7 +171,12 @@ def create_shared_library(codegen,
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
     wrapper = CToPythonWrapper()
+
+    start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
+    timings['Wrapper creation'] = time.time() - start_wrapper_creation
+
+    start_print_cwrapper = time.time()
     wrapper_code = wrapper_codegen.doprint(cwrap_ast)
     #wrapper_code = wrapper_codegen.doprint(c_ast)
     if errors.has_errors():
@@ -168,10 +186,12 @@ def create_shared_library(codegen,
 
     with open(wrapper_filename, 'w') as f:
         f.writelines(wrapper_code)
+    timings['Wrapper printing'] = time.time() - start_print_cwrapper
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
     #--------------------------------------------------------
+    start_compile_libs = time.time()
     for lib_name in ("ndarrays", "cwrapper_ndarrays"):
         if lib_name in wrapper_codegen.get_additional_imports():
             stdlib_folder, stdlib = internal_libs[lib_name]
@@ -186,10 +206,12 @@ def create_shared_library(codegen,
                               verbose  = verbose)
 
             wrapper_compile_obj.add_dependencies(stdlib)
+    timings['Dependency compilation'] += (time.time() - start_compile_libs)
 
     #---------------------------------------
     #         Compile code
     #---------------------------------------
+    start_compile_wrapper = time.time()
     wrapper_compiler.compile_module(wrapper_compile_obj,
                                 output_folder = pyccel_dirpath,
                                 verbose = verbose)
@@ -198,9 +220,10 @@ def create_shared_library(codegen,
                                                     output_folder = pyccel_dirpath,
                                                     sharedlib_modname = sharedlib_modname,
                                                     verbose = verbose)
+    timings['Wrapper compilation'] = time.time() - start_compile_wrapper
 
     # Change working directory back to starting point
     os.chdir(base_dirpath)
 
     # Return absolute path of shared library
-    return sharedlib_filepath
+    return sharedlib_filepath, timings
