@@ -574,6 +574,24 @@ class BindCArrayVariable(Variable):
 
 class BindCClassProperty(PyccelAstNode):
     """
+    A class which wraps a class attribute.
+
+    A class which wraps a class attribute to make it accessible
+    from C. In the future this class will also be used to handle properties of
+    classes (i.e. functions marked with the `@property` decorator).
+
+    Parameters
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    class_type : Variable
+        The type of the class to which the attribute belongs.
+    docstring : LiteralString, optional
+        The docstring of the property.
     """
     __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_var')
     _attribute_nodes = ('_getter', '_setter')
@@ -611,15 +629,30 @@ class BindCClassProperty(PyccelAstNode):
 
     @property
     def class_var(self):
+        """
+        The type of the class to which the attribute belongs.
+
+        The type of the class to which the attribute belongs.
+        """
         return self._class_var
 
     @property
     def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
         return self._python_name
 
     @property
     def docstring(self):
-        self._docstring
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
+        return self._docstring
 
 # =======================================================================================
 

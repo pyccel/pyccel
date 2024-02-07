@@ -1635,8 +1635,7 @@ class CToPythonWrapper(Wrapper):
     def _wrap_BindCClassProperty(self, expr):
         """
         """
-        class_var = expr.class_var
-        class_type = class_var.dtype
+        class_type = expr.class_type
         name = expr.python_name
         # ----------------------------------------------------------------------------------
         #                        Create getter

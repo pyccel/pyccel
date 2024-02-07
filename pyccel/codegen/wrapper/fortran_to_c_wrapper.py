@@ -546,7 +546,7 @@ class FortranToCWrapper(Wrapper):
         setter = BindCFunctionDef(setter_name, setter_args, (), setter_body,
                                 original_function = expr, scope = setter_scope)
         return BindCClassProperty(lhs.cls_base.scope.get_python_name(expr.name),
-                                  getter, setter, lhs)
+                                  getter, setter, lhs.dtype)
 
     def _wrap_ClassDef(self, expr):
         """
