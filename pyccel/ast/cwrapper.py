@@ -743,7 +743,7 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects')]
+                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias')]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
@@ -1014,23 +1014,23 @@ PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
 
 PyList_New = FunctionDef(name = 'PyList_New',
                     arguments = [FunctionDefArgument(Variable(NativeInteger(), 'size'), value = LiteralInteger(0))],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'r'))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias'))],
                     body = [])
 
 PyList_Append = FunctionDef(name = 'PyList_Append',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list')),
-                                 FunctionDefArgument(Variable(PyccelPyObject(), 'item'))],
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=4))],
                     body = [])
 
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list')),
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(NativeInteger(), 'i', precision=8))],
-                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'item'))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
                     body = [])
 
 PyList_Size = FunctionDef(name = 'PyList_Size',
-                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list'))],
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
                     results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=8))],
                     body = [])
 
