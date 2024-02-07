@@ -1590,6 +1590,10 @@ class CToPythonWrapper(Wrapper):
                     *res_wrapper]
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
+
+        if expr.rank != 0 or expr.dtype not in NativeNumeric:
+            body.append(FunctionCall(Py_INCREF, (getter_args[0],)))
+
         getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
                                                                                 lhs = getter_args[0]),
@@ -1618,26 +1622,31 @@ class CToPythonWrapper(Wrapper):
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
-        class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
-        self.scope.insert_variable(class_obj)
+        if (expr.rank == 0 and expr.dtype in NativeNumeric) or expr.is_alias:
+            class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
+            self.scope.insert_variable(class_obj)
 
-        attrib = expr.clone(expr.name, lhs = class_obj)
-        arg_wrapper = self._wrap(new_set_val_arg)
-        new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
+            attrib = expr.clone(expr.name, lhs = class_obj)
+            arg_wrapper = self._wrap(new_set_val_arg)
+            new_set_val = self.scope.find(expr.name, category='variables', raise_if_missing = True)
 
-        if expr.memory_handling == 'alias':
-            update = AliasAssign(attrib, new_set_val)
+            if expr.memory_handling == 'alias':
+                update = AliasAssign(attrib, new_set_val)
+            else:
+                update = Assign(attrib, new_set_val)
+
+            # Cast the C variable into a Python variable
+            setter_body = [*arg_wrapper,
+                           AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
+                                                                                     new_class = DottedVariable,
+                                                                                    lhs = setter_args[0]),
+                                                              cast_type = lhs)),
+                           update,
+                           Return((LiteralInteger(0, precision=-2),))]
         else:
-            update = Assign(attrib, new_set_val)
-
-        # Cast the C variable into a Python variable
-        setter_body = [*arg_wrapper,
-                       AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
-                                                                                 new_class = DottedVariable,
-                                                                                lhs = setter_args[0]),
-                                                          cast_type = lhs)),
-                       update,
-                       Return((LiteralInteger(0, precision=-2),))]
+            setter_body = [FunctionCall(PyErr_SetString, [PyTypeError,
+                                        LiteralString("Can't reallocate memory via Python interface.")]),
+                        Return([self._error_exit_code])]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in setter_args]
@@ -1713,6 +1722,11 @@ class CToPythonWrapper(Wrapper):
 
         if isinstance(getter_result.dtype, CustomDataType):
             arg_code.append(Allocate(getter_result, shape=(), order=None, status='unallocated'))
+
+        wrapped_var = expr.getter.original_function
+        if wrapped_var.rank != 0 or wrapped_var.dtype not in NativeNumeric:
+            res_wrapper.append(FunctionCall(Py_INCREF, (getter_args[0],)))
+
         getter_body = [*arg_code,
                        call,
                        *res_wrapper,
@@ -1749,14 +1763,19 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[self_arg] = setter_args[0]
         self._python_object_map[set_val_arg] = setter_args[1]
 
-        arg_code = [l for a in original_args for l in self._wrap(a)]
+        if (wrapped_var.rank == 0 and wrapped_var.dtype in NativeNumeric) or wrapped_var.is_alias:
+            arg_code = [l for a in original_args for l in self._wrap(a)]
 
-        func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
+            func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
 
-        setter_body = [*arg_code,
-                       FunctionCall(expr.setter, func_call_args),
-                       *self._save_referenced_objects(expr.setter, setter_args),
-                       Return((LiteralInteger(0, precision=-2),))]
+            setter_body = [*arg_code,
+                           FunctionCall(expr.setter, func_call_args),
+                           *self._save_referenced_objects(expr.setter, setter_args),
+                           Return((LiteralInteger(0, precision=-2),))]
+        else:
+            setter_body = [FunctionCall(PyErr_SetString, [PyTypeError,
+                                        LiteralString("Can't reallocate memory via Python interface.")]),
+                        Return([self._error_exit_code])]
         self.exit_scope()
 
         args = [FunctionDefArgument(a) for a in setter_args]
