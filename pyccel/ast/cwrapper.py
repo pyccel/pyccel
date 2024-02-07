@@ -27,7 +27,7 @@ from .core      import Module, Interface, Declare
 
 from .internals import get_final_precision, PyccelInternalFunction
 
-from .literals  import LiteralString
+from .literals  import LiteralString, LiteralInteger
 
 from .variable  import Variable
 
@@ -742,8 +742,10 @@ class PyClassDef(ClassDef):
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
-        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
+        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
+                     Variable(PyccelPyObject(), 'referenced_objects')]
         scope.insert_variable(variables[0])
+        scope.insert_variable(variables[1])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
@@ -1009,6 +1011,29 @@ PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
                          FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
             results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
             body = [])
+
+PyList_New = FunctionDef(name = 'PyList_New',
+                    arguments = [FunctionDefArgument(Variable(NativeInteger(), 'size'), value = LiteralInteger(0))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'r'))],
+                    body = [])
+
+PyList_Append = FunctionDef(name = 'PyList_Append',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'item'))],
+                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=4))],
+                    body = [])
+
+PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list')),
+                                 FunctionDefArgument(Variable(NativeInteger(), 'i', precision=8))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'item'))],
+                    body = [])
+
+PyList_Size = FunctionDef(name = 'PyList_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list'))],
+                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=8))],
+                    body = [])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
