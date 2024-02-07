@@ -1634,7 +1634,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
 
-        body.extend(self._return_self_reference(getter_args[0], getter_result.var, expr))
+        body.extend(self._return_self_reference(getter_args[0], getter_result, expr))
 
         getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
