@@ -1,4 +1,4 @@
-# pylint: disable=missing-function-docstring, missing-module-docstring, unused-variable
+# pylint: disable=missing-function-docstring, missing-module-docstring
 
 #==============================================================================
 
@@ -19,7 +19,7 @@ def factorial(n : int):
 def fibonacci(n : int):
     x = 0
     y = 1
-    for i in range( n ):
+    for _ in range( n ):
         z = x+y
         x = y
         y = z
@@ -28,10 +28,10 @@ def fibonacci(n : int):
 # ...
 def double_loop(n : int):
     x = 0
-    for i in range( 3, 10 ):
+    for _ in range( 3, 10 ):
         x += 1
         y  = n*x
-        for j in range( 4, 15 ):
+        for _ in range( 4, 15 ):
             z = x-y
     return z
 
@@ -53,7 +53,7 @@ def factorial_2(n : int):
 def fibonacci_2(n : int):
     x = 0.
     y = 1.
-    for i in range( n ):
+    for _ in range( n ):
         z = x+y
         x = y
         y = z
@@ -62,10 +62,10 @@ def fibonacci_2(n : int):
 # ...
 def double_loop_2(n : int):
     x = 0.
-    for i in range( 3, 10 ):
+    for _ in range( 3, 10 ):
         x = x+1
         y  = n*x
-        for j in range( 4, 15 ):
+        for _ in range( 4, 15 ):
             z = x-y
     return z
 
