@@ -433,3 +433,28 @@ def get_final_precision(obj):
         The precision of the object to be used in the code.
     """
     return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
+
+def apply_pickle(class_type, args, kwargs):
+    """
+    Utility function which recreates a class instance for pickle.
+
+    Utility function which recreates a class instance for pickle. Pickle cannot
+    handle lambdas so this is necessary.
+
+    Parameters
+    ----------
+    class_type : type
+        The type being recreated.
+
+    args : tuple
+        The positional arguments to be passed to the constructor.
+
+    kwargs : dict
+        The keyword arguments to be passed to the constructor.
+
+    Returns
+    -------
+    class_type
+        An object of class_type built from the args and kwargs.
+    """
+    return class_type(*args, **kwargs)
