@@ -517,7 +517,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             Any nodes which must be printed to increase reference counts.
         """
-        if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
+        if not orig_var.is_alias:
             return []
         elif isinstance(orig_var.class_type, NumpyNDArrayType):
             save_ref_call = FunctionCall(PyArray_SetBaseObject,
@@ -531,7 +531,7 @@ class CToPythonWrapper(Wrapper):
             raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
 
         return [FunctionCall(Py_INCREF, (self_obj,)),
-                If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0)),
+                If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
                                   [Return([self._error_exit_code])]))]
 
     def _build_module_exec_function(self, expr):
