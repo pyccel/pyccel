@@ -104,6 +104,7 @@ def epyccel_seq(function_or_module, *,
                 wrapper_flags = None,
                 accelerators  = (),
                 verbose       = False,
+                time_execution  = False,
                 debug         = False,
                 includes      = (),
                 libdirs       = (),
@@ -138,6 +139,8 @@ def epyccel_seq(function_or_module, *,
         (currently supported: 'mpi', 'openmp', 'openacc').
     verbose : bool
         Print additional information (default: False).
+    time_execution : bool
+        Time the execution of Pyccel's internal stages.
     debug : bool, optional
         Enable debug mode.
     includes : tuple, optional
@@ -224,6 +227,7 @@ def epyccel_seq(function_or_module, *,
             # Generate shared library
             execute_pyccel(pymod_filename,
                            verbose       = verbose,
+                           show_timings  = time_execution,
                            language      = language,
                            compiler      = compiler,
                            fflags        = fflags,

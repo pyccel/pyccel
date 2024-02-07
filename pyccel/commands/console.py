@@ -131,6 +131,8 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
     group = parser.add_argument_group('Other options')
     group.add_argument('--verbose', action='store_true', \
                         help='enables verbose mode.')
+    group.add_argument('--time_execution', action='store_true', \
+                        help='prints the time spent in each section of the exection.')
     group.add_argument('--developer-mode', action='store_true', \
                         help='shows internal messages')
     group.add_argument('--export-compile-info', type=str, default = None, \
@@ -266,6 +268,7 @@ def pyccel(files=None, mpi=None, openmp=None, openacc=None, output_dir=None, com
                        semantic_only = args.semantic_only,
                        convert_only  = args.convert_only,
                        verbose       = args.verbose,
+                       show_timings  = args.time_execution,
                        language      = args.language,
                        compiler      = compiler,
                        fflags        = args.flags,

@@ -1175,3 +1175,20 @@ def test_class_imports(language):
 
     lang_out = get_lang_output(test_file, language)
     compare_pyth_fort_output(pyth_out, lang_out, float, language)
+
+#------------------------------------------------------------------------------
+def test_time_execution_flag():
+    test_file  = get_abs_path("scripts/runtest_funcs.py")
+
+    cwd = get_abs_path("scripts")
+
+    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time_execution"]
+    with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        result, _ = p.communicate()
+
+    result_lines = result.split('\n')
+    assert 'Timers' in result_lines[0]
+    assert 'Total' in result_lines[-2]
+    for l in result_lines[1:-1]:
+        assert ' : ' in l
