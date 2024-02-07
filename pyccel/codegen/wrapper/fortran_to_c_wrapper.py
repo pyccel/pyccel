@@ -538,6 +538,9 @@ class FortranToCWrapper(Wrapper):
 
         setter_args = (self._wrap(FunctionDefArgument(lhs, bound_argument = True)),
                        self._wrap(FunctionDefArgument(expr)))
+        if expr.is_alias:
+            setter_args[1].persistent_target = True
+
         self_obj = self._get_call_argument(setter_args[0])
         set_val = self._get_call_argument(setter_args[1])
 
