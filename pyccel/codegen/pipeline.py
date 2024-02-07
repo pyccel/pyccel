@@ -463,7 +463,7 @@ def print_timers(start, timers):
     Parameters
     ----------
     start : float
-        The start time for the execution
+        The start time for the execution.
     timers : dict
         A dictionary containing the times measured.
     """
