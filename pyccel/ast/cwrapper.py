@@ -644,16 +644,44 @@ class PyClassDef(ClassDef):
         return self._new_func
 
     def add_property(self, p):
+        """
+        Add a class property which has been wrapped.
+
+        Add a class property which has been wrapped.
+        """
         p.set_current_user_node(self)
         self._properties += (p,)
 
     @property
     def properties(self):
+        """
+        Get all wrapped class properties.
+
+        Get all wrapped class properties.
+        """
         return self._properties
 
 #-------------------------------------------------------------------
 
 class PyGetSetDefElement(PyccelAstNode):
+    """
+    A class representing a PyGetSetDef object.
+
+    A class representing an element of the list of PyGetSetDef objects
+    which are used to add attributes/properties to classes.
+    See <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>.
+
+    Properties
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    docstring : LiteralString
+        The docstring of the property.
+    """
     _attribute_nodes = ('_getter', '_setter', '_docstring')
     __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
     def __init__(self, python_name, getter, setter, docstring):
@@ -669,6 +697,11 @@ class PyGetSetDefElement(PyccelAstNode):
 
     @property
     def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
         return self._python_name
 
     @property
@@ -693,6 +726,11 @@ class PyGetSetDefElement(PyccelAstNode):
 
     @property
     def docstring(self):
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
         return self._docstring
 
 #-------------------------------------------------------------------
