@@ -593,9 +593,9 @@ class BindCClassProperty(PyccelAstNode):
     docstring : LiteralString, optional
         The docstring of the property.
     """
-    __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_var')
+    __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_type')
     _attribute_nodes = ('_getter', '_setter')
-    def __init__(self, python_name, getter, setter, class_var, docstring = None):
+    def __init__(self, python_name, getter, setter, class_type, docstring = None):
         if not isinstance(getter, BindCFunctionDef):
             raise TypeError("Getter should be a BindCFunctionDef")
         if not isinstance(setter, BindCFunctionDef):
@@ -603,7 +603,7 @@ class BindCClassProperty(PyccelAstNode):
         self._python_name = python_name
         self._getter = getter
         self._setter = setter
-        self._class_var = class_var
+        self._class_type = class_type
         self._docstring = docstring
         super().__init__()
 
@@ -628,13 +628,13 @@ class BindCClassProperty(PyccelAstNode):
         return self._setter
 
     @property
-    def class_var(self):
+    def class_type(self):
         """
         The type of the class to which the attribute belongs.
 
         The type of the class to which the attribute belongs.
         """
-        return self._class_var
+        return self._class_type
 
     @property
     def python_name(self):
