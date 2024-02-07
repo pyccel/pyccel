@@ -648,6 +648,11 @@ class PyClassDef(ClassDef):
         Add a class property which has been wrapped.
 
         Add a class property which has been wrapped.
+
+        Parameters
+        ----------
+        p : PyccelAstNode
+            The new wrapped property which is added to the class.
         """
         p.set_current_user_node(self)
         self._properties += (p,)
@@ -671,7 +676,7 @@ class PyGetSetDefElement(PyccelAstNode):
     which are used to add attributes/properties to classes.
     See <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>.
 
-    Properties
+    Parameters
     ----------
     python_name : str
         The name of the attribute/property in the original Python code.
