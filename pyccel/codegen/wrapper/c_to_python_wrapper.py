@@ -500,7 +500,7 @@ class CToPythonWrapper(Wrapper):
         """
         Get code for adding an object to the module.
 
-        This function creates the Ast nodes necessary to add an object to
+        This function creates the AST nodes necessary to add an object to
         the module. This includes the creation of the success check and
         the dereferencing of any objects used.
 
@@ -588,7 +588,7 @@ class CToPythonWrapper(Wrapper):
 
         ok_code = LiteralInteger(0)
 
-        # Save Capsule describing types (needed for dependant modules)
+        # Save Capsule describing types (needed for dependent modules)
         body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
         body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
 
