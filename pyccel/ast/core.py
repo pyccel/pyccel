@@ -2380,6 +2380,9 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
+    result_pointer_map : dict[FunctionDefResult,int]
+        A map connecting any pointer results to the index of the possible target arguments.
+
     docstring : str
         The doc string of the function.
 
@@ -2424,7 +2427,8 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external',
+                 '_result_pointer_map')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2448,6 +2452,7 @@ class FunctionDef(ScopedAstNode):
         is_external=False,
         functions=(),
         interfaces=(),
+        result_pointer_map={},
         docstring=None,
         scope=None):
 
@@ -2542,6 +2547,7 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
+        self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
 
@@ -2822,6 +2828,13 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_unused(self):
         return False
+
+    @property
+    def result_pointer_map(self):
+        """
+        A map connecting any pointer results to the index of the possible target arguments.
+        """
+        return self._result_pointer_map
 
 class InlineFunctionDef(FunctionDef):
     """
