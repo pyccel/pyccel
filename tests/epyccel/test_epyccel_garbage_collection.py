@@ -156,6 +156,57 @@ def test_return_class_pointer(language):
 
     assert ref_count_pyc == start_ref_count_pyc
 
+def test_return_unknown_class_pointer(language):
+    import classes.return_unknown_class_pointer as mod_pyt
+
+    mod = epyccel(mod_pyt, language=language)
+
+    a1 = mod.A(4)
+    a2 = mod.A(4)
+
+    start_ref_count_a1 = sys.getrefcount(a1)
+    start_ref_count_a2 = sys.getrefcount(a2)
+
+    a_ptr = mod.choose_A(a1, a2, True)
+
+    ref_count_a1 = sys.getrefcount(a1)
+    ref_count_a2 = sys.getrefcount(a2)
+
+    if language != 'python':
+        # We don't know what is referenced so both are referenced
+        assert ref_count_a1 == start_ref_count_a1+1
+        assert ref_count_a2 == start_ref_count_a2+1
+        assert ref_count_a1 == ref_count_a2
+    else:
+        assert ref_count_a1 > start_ref_count_a1
+
+    del a_ptr
+
+    ref_count_a1 = sys.getrefcount(a1)
+    ref_count_a2 = sys.getrefcount(a2)
+
+    assert ref_count_a1 == start_ref_count_a1
+    assert ref_count_a2 == start_ref_count_a2
+
+    a_ptr = mod.choose_A(a1, a2, False)
+
+    ref_count_a1 = sys.getrefcount(a1)
+    ref_count_a2 = sys.getrefcount(a2)
+
+    if language != 'python':
+        # We don't know what is referenced so both are referenced
+        assert ref_count_a1 == start_ref_count_a1+1
+        assert ref_count_a2 == start_ref_count_a2+1
+        assert ref_count_a1 == ref_count_a2
+
+    del a_ptr
+
+    ref_count_a1 = sys.getrefcount(a1)
+    ref_count_a2 = sys.getrefcount(a2)
+
+    assert ref_count_a1 == start_ref_count_a1
+    assert ref_count_a2 == start_ref_count_a2
+
 def test_return_class_array_pointer(language):
     import classes.classes_1 as mod_pyt
 
