@@ -146,6 +146,8 @@ PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                                  FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'obj', memory_handling='alias'))],
                                     results   = [FunctionDefResult(Variable(dtype=NativeInteger(), name = 'd'))])
 
+import_array = FunctionDef('import_array', (), (), ())
+
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')

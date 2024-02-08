@@ -106,3 +106,5 @@ Valgrind
 variadic
 subclasses
 oneAPI
+getter
+setter
