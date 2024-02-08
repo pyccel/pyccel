@@ -1,4 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring, missing-class-docstring
+import gc
 import sys
 import numpy as np
 from pyccel.epyccel import epyccel
@@ -154,3 +155,44 @@ def test_return_class_pointer(language):
     ref_count_pyc = sys.getrefcount(a_pyc)
 
     assert ref_count_pyc == start_ref_count_pyc
+
+def test_return_class_array_pointer(language):
+    import classes.classes_1 as mod_pyt
+
+    mod = epyccel(mod_pyt, language=language)
+
+    x = np.array([0.,0.,0.])
+
+    start_ref_count_x = sys.getrefcount(x)
+
+    p1 = mod.Point(x)
+
+    start_ref_count_p1 = sys.getrefcount(p1)
+
+    saved_ref_count_x = sys.getrefcount(x)
+
+    # p1 should reference x
+    assert saved_ref_count_x > start_ref_count_x
+
+    y = p1.get_x()
+
+    local_ref_count_p1 = sys.getrefcount(p1)
+
+    if language != 'python':
+        # y should reference p1
+        assert local_ref_count_p1 > start_ref_count_p1
+
+    del p1
+
+    local_ref_count_x = sys.getrefcount(x)
+
+    # p1 should still reference x as it is preserved for use by y
+    assert local_ref_count_x == saved_ref_count_x
+
+    del y
+    gc.collect()
+
+    ref_count_x = sys.getrefcount(x)
+
+    # All references should now be released
+    assert ref_count_x == start_ref_count_x
