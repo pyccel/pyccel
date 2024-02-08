@@ -31,7 +31,8 @@ from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, 
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
+from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
@@ -488,6 +489,48 @@ class CToPythonWrapper(Wrapper):
                              If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),
                                           [Return([self._error_exit_code])]))])
         return body
+
+
+    def _incref_return_pointer(self, ref_obj, return_var, orig_var):
+        """
+        Get the code necessary to return an object which references another.
+
+        Get the code necessary to return an object which references another Python object. This is necessary when
+        wrapping functions (or getters) which return pointers (e.g. attributes of a class). For these objects the
+        target must not be deallocated before the returned object is no longer needed. For arrays this is achieved
+        using PyArray_SetBaseObject, to save the reference. For class instances the self instance is added to the
+        list of referenced objects saved in the returned class.
+
+        Parameters
+        ----------
+        self_obj : Variable
+            A variable representing the class instance which must not be deallocated too early.
+        return_var : Variable
+            The variable which will be returned from the function.
+        orig_var : Variable
+            The variable which will be returned from the function as it appeared in the original code.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            Any nodes which must be printed to increase reference counts.
+        """
+        if not orig_var.is_alias:
+            return []
+        elif isinstance(orig_var.class_type, NumpyNDArrayType):
+            save_ref_call = FunctionCall(PyArray_SetBaseObject,
+                                    (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
+                                     ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
+        elif isinstance(orig_var.dtype, CustomDataType):
+            ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
+            ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
+            save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
+        else:
+            raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
+
+        return [FunctionCall(Py_INCREF, (ref_obj,)),
+                If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                                  [Return([self._error_exit_code])]))]
 
     def _build_module_exec_function(self, expr):
         """
@@ -1111,6 +1154,22 @@ class CToPythonWrapper(Wrapper):
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
+
+        for p_r, c_r in zip(python_result_variables, original_func.results):
+            arg_targets = expr.result_pointer_map.get(c_r, None)
+            n_targets = len(arg_targets)
+            if n_targets == 1:
+                collect_arg = self._python_object_map[python_args[arg_targets[0]]]
+                body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
+            elif n_targets > 1:
+                if isinstance(c_r.class_type, NumpyNDArrayType):
+                    errors.report((f"Can't determine the pointer target for the return object {c_r}. "
+                                "Please avoid calling this function to prevent accidental creation of dangling pointers."),
+                            symbol = original_func, severity='warning')
+                else:
+                    for t in arg_targets:
+                        collect_arg = self._python_object_map[python_args[t]]
+                        body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
 
         # Pack the Python compatible results of the function into one argument.
         n_py_results = len(python_result_variables)
