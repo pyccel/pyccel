@@ -504,7 +504,7 @@ class CToPythonWrapper(Wrapper):
 
         Parameters
         ----------
-        self_obj : Variable
+        ref_obj : Variable
             A variable representing the class instance which must not be deallocated too early.
         return_var : Variable
             The variable which will be returned from the function.
