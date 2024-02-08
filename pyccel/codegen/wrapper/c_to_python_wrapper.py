@@ -31,6 +31,7 @@ from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, 
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
+from pyccel.ast.literals      import LiteralTrue, LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
@@ -521,16 +522,18 @@ class CToPythonWrapper(Wrapper):
             save_ref_call = FunctionCall(PyArray_SetBaseObject,
                                     (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
                                      ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
+            return [FunctionCall(Py_INCREF, (ref_obj,)),
+                    If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                                      [Return([self._error_exit_code])]))]
         elif isinstance(orig_var.dtype, CustomDataType):
             ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
             ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
             save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
+            return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                                      [Return([self._error_exit_code])]))]
         else:
             raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
 
-        return [FunctionCall(Py_INCREF, (ref_obj,)),
-                If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
-                                  [Return([self._error_exit_code])]))]
 
     def _build_module_exec_function(self, expr):
         """
@@ -604,6 +607,43 @@ class CToPythonWrapper(Wrapper):
         return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
                 scope = func_scope, is_static=True)
 
+    def _allocate_class_instance(self, class_var, scope, is_alias):
+        """
+        Get all expressions necessary to allocate a new class description.
+
+        Get all expressions necessary to allocate a new class description, this includes allocating
+        the object itself, creating the list of referenced_objects and saving the alias status.
+
+        Parameters
+        ----------
+        class_var : Variable
+            The variable where the class instance is stored.
+
+        scope : Scope
+            The scope of the class (containing the class attributes).
+
+        is_alias : bool
+            A boolean indicating if an alias is being stored.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions necessary to allocate a new class description.
+        """
+        # Get the list of referenced objects
+        ref_attribute = scope.find('referenced_objects', 'variables', raise_if_missing = True)
+        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = class_var)
+
+        # Get alias attribute
+        attribute = scope.find('is_alias', 'variables', raise_if_missing = True)
+        alias_bool = attribute.clone(attribute.name, new_class = DottedVariable, lhs = class_var)
+
+        alias_val = LiteralTrue() if is_alias else LiteralFalse()
+
+        return [Allocate(class_var, shape=(), order=None, status='unallocated'),
+                AliasAssign(ref_list, FunctionCall(PyList_New, ())),
+                Assign(alias_bool, alias_val)]
+
     def _get_class_allocator(self, class_dtype, func = None):
         """
         Create the allocator for the class.
@@ -645,12 +685,7 @@ class CToPythonWrapper(Wrapper):
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
 
-        # Get the list of referenced objects
-        ref_attribute = scope.find('referenced_objects', 'variables', raise_if_missing = True)
-        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = python_result_var)
-
-        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated', like = self_var),
-                AliasAssign(ref_list, FunctionCall(PyList_New, ()))]
+        body = self._allocate_class_instance(python_result_var, scope, False)
 
         if func:
             body.append(AliasAssign(c_res, FunctionCall(func, ())))
@@ -808,24 +843,21 @@ class CToPythonWrapper(Wrapper):
         attribute = wrapper_scope.find('instance', 'variables')
         c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
 
+        attribute = wrapper_scope.find('is_alias', 'variables')
+        is_alias = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
+
         if isinstance(del_function, BindCFunctionDef):
             body = [FunctionCall(del_function, [c_obj])]
         else:
             body = [FunctionCall(del_function, [c_obj]),
                     Deallocate(c_obj)]
+        body = [If(IfSection(PyccelNot(is_alias), body))]
 
         # Get the list of referenced objects
         ref_attribute = wrapper_scope.find('referenced_objects', 'variables', raise_if_missing = True)
         ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = func_arg)
 
-        n_refs = Variable(NativeInteger(), name = self.scope.get_new_name('n_refs'), precision = 8)
-        self.scope.insert_variable(n_refs)
-        iterator = self.scope.get_temporary_variable(NativeInteger())
-        for_scope = self.scope.create_new_loop_scope()
-        for_body = [FunctionCall(Py_DECREF, [FunctionCall(PyList_GetItem, (ref_list, iterator))])]
-        body.extend([Assign(n_refs, FunctionCall(PyList_Size, (ref_list,))),
-                     For(iterator, PythonRange(n_refs), for_body, for_scope),
-                     FunctionCall(Py_DECREF, (ref_list,)),
+        body.extend([FunctionCall(Py_DECREF, (ref_list,)),
                      Deallocate(func_arg)])
 
         self.exit_scope()
@@ -1099,8 +1131,9 @@ class CToPythonWrapper(Wrapper):
 
         # Get the results of the PyFunctionDef
         python_result_variables = self._get_python_result_variables(python_results)
-        body.extend([Allocate(p, shape=(), order=None, status='unallocated') for p in python_result_variables
-                        if isinstance(p.dtype, CustomDataType)])
+        for p_r, c_r in zip(python_result_variables, original_func.results):
+            if isinstance(p_r.dtype, CustomDataType):
+                body.extend(self._allocate_class_instance(p_r, p_r.cls_base.scope, c_r.var.is_alias))
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
         body += [l for a in python_args for l in self._wrap(a)]
@@ -1123,11 +1156,9 @@ class CToPythonWrapper(Wrapper):
             c_result_names.append(r.var.name)
         c_results = [self.scope.find(n, category='variables', raise_if_missing = True) for n in c_result_names]
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
-            if isinstance(r, DottedVariable):
+            if isinstance(r, DottedVariable) and not o_r.var.is_alias:
                 self.scope.remove_variable(r, name=n)
                 body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
-        c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
-        c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
@@ -1137,8 +1168,14 @@ class CToPythonWrapper(Wrapper):
         if n_c_results == 0:
             body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
-            body.append(Assign(c_results[0], FunctionCall(expr, func_call_args)))
+            res = c_results[0]
+            if res.is_alias:
+                body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
+            else:
+                body.append(Assign(res, FunctionCall(expr, func_call_args)))
         else:
+            c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
+            c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
             body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
 
         # Deallocate the C equivalent of any array arguments
@@ -1415,7 +1452,7 @@ class CToPythonWrapper(Wrapper):
         if not isinstance(orig_var.dtype, CustomDataType):
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
         else:
-            body = [FunctionCall(Py_INCREF, (python_res,))]
+            body = []
 
         # Deallocate any unused memory
         if orig_var.rank:
@@ -1488,8 +1525,7 @@ class CToPythonWrapper(Wrapper):
             scope = python_res.cls_base.scope
             attribute = scope.find('instance', 'variables', raise_if_missing = True)
             attrib_var = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_res)
-            body.extend([AliasAssign(attrib_var, c_res),
-                         FunctionCall(Py_INCREF, (python_res,))])
+            body.append(AliasAssign(attrib_var, c_res))
 
         if orig_var.rank:
             body.append(Deallocate(c_res))
