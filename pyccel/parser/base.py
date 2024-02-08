@@ -71,15 +71,13 @@ def get_filename_from_import(module,input_folder=''):
 
     filename_pyh = '{}.pyh'.format(filename)
     filename_py  = '{}.py'.format(filename)
-    folders = input_folder.split(""".""")
-    for i in range(len(folders)):
-        poss_dirname      = os.path.join( *folders[:i+1] )
-        poss_filename_pyh = os.path.join( poss_dirname, filename_pyh )
-        poss_filename_py  = os.path.join( poss_dirname, filename_py  )
-        if is_valid_filename_pyh(poss_filename_pyh):
-            return os.path.abspath(poss_filename_pyh)
-        if is_valid_filename_py(poss_filename_py):
-            return os.path.abspath(poss_filename_py)
+
+    poss_filename_pyh = os.path.join( input_folder, filename_pyh )
+    poss_filename_py  = os.path.join( input_folder, filename_py  )
+    if is_valid_filename_pyh(poss_filename_pyh):
+        return os.path.abspath(poss_filename_pyh)
+    if is_valid_filename_py(poss_filename_py):
+        return os.path.abspath(poss_filename_py)
 
     source = module
     if len(module.split(""".""")) > 1:
