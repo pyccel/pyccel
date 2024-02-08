@@ -605,7 +605,6 @@ class SemanticParser(BasicParser):
                     continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
-        self._pointer_targets.pop()
         return deallocs
 
     def _check_pointer_targets(self, exceptions = ()):
@@ -3242,6 +3241,11 @@ class SemanticParser(BasicParser):
                     new_expr = AliasAssign(l, r)
                     if isinstance(r, (Variable, IndexedElement)):
                         self._indicate_pointer_target(l, r, expr)
+                    elif isinstance(r, FunctionCall):
+                        funcdef = r.funcdef
+                        target_r_idx = funcdef.result_pointer_map[funcdef.results[0]]
+                        for ti in target_r_idx:
+                            self._indicate_pointer_target(l, r.args[ti], expr)
                     else:
                         errors.report("Pointer cannot point at a temporary object",
                             severity='error', symbol=expr)
@@ -3850,11 +3854,22 @@ class SemanticParser(BasicParser):
                 # ...
 
                 # Raise an error if one of the return arguments is an alias.
+                pointer_targets = self._pointer_targets.pop()
+                result_pointer_map = {}
                 for r in results:
+                    t = pointer_targets.get(r.var, None)
                     if r.var.is_alias:
-                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                            symbol=r, severity='error',
-                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                        persistent_targets = []
+                        for target, _ in t:
+                            target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
+                            if target_argument_index != -1:
+                                persistent_targets.append(target_argument_index)
+                        if not persistent_targets:
+                            errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                                symbol=r, severity='error',
+                                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                        else:
+                            result_pointer_map[r] = persistent_targets
 
                 optional_inits = []
                 for a in arguments:
@@ -3874,6 +3889,7 @@ class SemanticParser(BasicParser):
                         'is_recursive':is_recursive,
                         'functions': sub_funcs,
                         'interfaces': func_interfaces,
+                        'result_pointer_map': result_pointer_map,
                         'docstring': docstring,
                         'scope': scope
                         }
