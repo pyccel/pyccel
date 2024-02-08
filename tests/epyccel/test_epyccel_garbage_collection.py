@@ -13,7 +13,6 @@ def test_return_pointer(language):
     x_pyt = np.ones(10)
 
     start_ref_count_pyc = sys.getrefcount(x_pyc)
-    start_ref_count_pyt = sys.getrefcount(x_pyt)
 
     y_pyc = f(x_pyc)
     y_pyt = return_pointer(x_pyt)
@@ -21,7 +20,6 @@ def test_return_pointer(language):
     ref_count_x_pyc = sys.getrefcount(x_pyc)
     ref_count_x_pyt = sys.getrefcount(x_pyt)
     ref_count_y_pyc = sys.getrefcount(y_pyc)
-    ref_count_y_pyt = sys.getrefcount(y_pyt)
 
     assert ref_count_x_pyc == ref_count_x_pyt
     assert ref_count_x_pyc == start_ref_count_pyc+1
@@ -52,9 +50,7 @@ def test_return_multiple_pointers(language):
     y_pyt = np.zeros(10)
 
     start_ref_count_x_pyc = sys.getrefcount(x_pyc)
-    start_ref_count_x_pyt = sys.getrefcount(x_pyt)
     start_ref_count_y_pyc = sys.getrefcount(y_pyc)
-    start_ref_count_y_pyt = sys.getrefcount(y_pyt)
 
     a_pyc, b_pyc = f(x_pyc, y_pyc)
     a_pyt, b_pyt = f(x_pyt, y_pyt)
@@ -104,7 +100,6 @@ def test_return_slice(language):
     x_pyt = np.ones(10)
 
     start_ref_count_pyc = sys.getrefcount(x_pyc)
-    start_ref_count_pyt = sys.getrefcount(x_pyt)
 
     y_pyc = f(x_pyc)
     y_pyt = return_pointer(x_pyt)
@@ -139,15 +134,12 @@ def test_return_class_pointer(language):
     a_pyt = mod_pyt.A(4)
 
     start_ref_count_pyc = sys.getrefcount(a_pyc)
-    start_ref_count_pyt = sys.getrefcount(a_pyt)
 
     a2_pyc = mod_pyc.examine_A(a_pyc)
     a2_pyt = mod_pyt.examine_A(a_pyt)
 
     ref_count_a_pyc = sys.getrefcount(a_pyc)
-    ref_count_a_pyt = sys.getrefcount(a_pyt)
     ref_count_a2_pyc = sys.getrefcount(a2_pyc)
-    ref_count_a2_pyt = sys.getrefcount(a2_pyt)
 
     if language != 'python':
         # a now referenced by a2
@@ -160,6 +152,5 @@ def test_return_class_pointer(language):
     del a2_pyt
 
     ref_count_pyc = sys.getrefcount(a_pyc)
-    ref_count_pyt = sys.getrefcount(a_pyt)
 
     assert ref_count_pyc == start_ref_count_pyc
