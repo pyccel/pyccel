@@ -125,6 +125,8 @@ array_get_data  = FunctionDef(name   = 'nd_data',
                            arguments = [FunctionDefArgument(Variable(dtype=NativeVoid(), name = 'o', is_optional=True))],
                            results   = [FunctionDefResult(Variable(dtype=NativeVoid(), name = 'v', memory_handling='alias', rank = 1, class_type = NativeVoid()))])
 
+import_array = FunctionDef('import_array', (), (), ())
+
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
 numpy_flag_own_data     = Variable(dtype=NativeInteger(),  name = 'NPY_ARRAY_OWNDATA')

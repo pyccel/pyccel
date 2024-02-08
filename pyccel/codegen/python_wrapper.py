@@ -7,6 +7,7 @@
 import os
 import time
 
+from pyccel.ast.core                        import ModuleHeader
 from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
@@ -108,8 +109,9 @@ def create_shared_library(codegen,
     if sharedlib_modname is None:
         sharedlib_modname = module_name
 
-    wrapper_filename_root = '{}_wrapper'.format(module_name)
-    wrapper_filename = '{}.c'.format(wrapper_filename_root)
+    wrapper_filename_root = f'{module_name}_wrapper'
+    wrapper_header_filename = f'{wrapper_filename_root}.h'
+    wrapper_filename = f'{wrapper_filename_root}.c'
     wrapper_compile_obj = CompileObj(wrapper_filename,
             pyccel_dirpath,
             flags        = wrapper_flags,
@@ -125,7 +127,8 @@ def create_shared_library(codegen,
 
         start_bind_c_printing = time.time()
         bind_c_code = fcode(bind_c_mod, bind_c_mod.name)
-        bind_c_filename = '{}.f90'.format(bind_c_mod.name)
+        bind_c_filename = f'{bind_c_mod.name}.f90'
+
         with open(bind_c_filename, 'w') as f:
             f.writelines(bind_c_code)
         timings['Bind C printing'] = time.time() - start_bind_c_printing
@@ -170,7 +173,7 @@ def create_shared_library(codegen,
     codegen.ast.set_name(sharedlib_modname)
     wrapper_codegen = CWrapperCodePrinter(codegen.parser.filename, language)
     Scope.name_clash_checker = name_clash_checkers['c']
-    wrapper = CToPythonWrapper()
+    wrapper = CToPythonWrapper(base_dirpath)
 
     start_wrapper_creation = time.time()
     cwrap_ast = wrapper.wrap(c_ast)
@@ -184,9 +187,14 @@ def create_shared_library(codegen,
 
     codegen.ast.set_name(module_old_name)
 
-    with open(wrapper_filename, 'w') as f:
+    with open(wrapper_filename, 'w', encoding="utf-8") as f:
         f.writelines(wrapper_code)
     timings['Wrapper printing'] = time.time() - start_print_cwrapper
+
+    wrapper_header_code = wrapper_codegen.doprint(ModuleHeader(cwrap_ast))
+
+    with open(wrapper_header_filename, 'w', encoding="utf-8") as f:
+        f.writelines(wrapper_header_code)
 
     #--------------------------------------------------------
     #  Compile cwrapper_ndarrays from stdlib (if necessary)
