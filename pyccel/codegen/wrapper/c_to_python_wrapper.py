@@ -1203,7 +1203,7 @@ class CToPythonWrapper(Wrapper):
                 collect_arg = self._python_object_map[python_args[arg_targets[0]]]
                 body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
             elif n_targets > 1:
-                if isinstance(c_r.class_type, NumpyNDArrayType):
+                if isinstance(c_r.var.class_type, NumpyNDArrayType):
                     errors.report((f"Can't determine the pointer target for the return object {c_r}. "
                                 "Please avoid calling this function to prevent accidental creation of dangling pointers."),
                             symbol = original_func, severity='warning')
