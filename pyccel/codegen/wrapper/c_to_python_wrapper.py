@@ -1172,7 +1172,9 @@ class CToPythonWrapper(Wrapper):
             body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
             res = c_results[0]
-            if original_func.results[0].var.is_alias:
+            if original_func.results[0].var.is_alias and not is_bind_c_function_def:
+                if isinstance(res, PointerCast):
+                    res = res.obj
                 body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
             else:
                 body.append(Assign(res, FunctionCall(expr, func_call_args)))
