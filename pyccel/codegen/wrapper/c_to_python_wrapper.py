@@ -1156,9 +1156,10 @@ class CToPythonWrapper(Wrapper):
             c_result_names.append(r.var.name)
         c_results = [self.scope.find(n, category='variables', raise_if_missing = True) for n in c_result_names]
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
-            if isinstance(r, DottedVariable) and not o_r.var.is_alias:
+            if isinstance(r, DottedVariable):
                 self.scope.remove_variable(r, name=n)
-                body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
+                if not o_r.var.is_alias:
+                    body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
 
         if class_dtype:
             body.extend(self._save_referenced_objects(expr, func_args))
