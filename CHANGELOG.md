@@ -19,6 +19,8 @@ All notable changes to this project will be documented in this file.
 -   #1685 : Add support for `type()` function with class instance argument.
 -   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
 -   #1680 : Add support for `typing.Final`.
+-   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
+-   #1659 : Add multi-file support for classes.
 
 ### Fixed
 
@@ -40,6 +42,10 @@ All notable changes to this project will be documented in this file.
 -   #1507 : Fix problems with name collisions in class functions.
 -   Ensure `pyccel-init` calls the related function.
 -   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex` in Python translation.
+-   #1712 : Fix library path and OpenMP support for recent Apple chips by getting Homebrew directory with `brew --prefix`.
+-   #1687 : Pointers in tuples are deallocated.
+-   #1586 : Raise an error for targets of class instances which go out of scope too early.
+-   #1717 : Fix a bug when handling paths with dots.
 
 ### Changed
 

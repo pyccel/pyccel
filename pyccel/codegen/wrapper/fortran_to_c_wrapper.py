@@ -339,7 +339,7 @@ class FortranToCWrapper(Wrapper):
 
         return BindCFunctionDefArgument(new_var, value = expr.value, original_arg_var = expr.var,
                 kwonly = expr.is_kwonly, annotation = expr.annotation, scope=self.scope,
-                wrapping_bound_argument = expr.bound_argument)
+                wrapping_bound_argument = expr.bound_argument, persistent_target = expr.persistent_target)
 
     def _wrap_FunctionDefResult(self, expr):
         """

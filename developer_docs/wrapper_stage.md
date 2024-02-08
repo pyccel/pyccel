@@ -359,11 +359,9 @@ int bind_c_f(void*, int64_t, int64_t, void*, int64_t*);
 
 ### Class module variables
 
-**Class module variables are not yet wrapped. This describes the future implementation**
+Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper prints a function which returns a pointer to the module variable.
 
-Unlike Fortran, C does not have classes in the language. The wrapper therefore cannot pass the class to C via a description. Instead the wrapper should print a function which returns a pointer to the module variable.
-
-Additionally the class method functions will be wrapped as described for functions. The attributes of the class will be exposed via wrapper functions.
+Additionally the class method functions are be wrapped as described for functions. The attributes of the class are be exposed via getter and setter wrapper functions.
 
 ## C To Python
 
@@ -699,3 +697,13 @@ int32_t tmp_exec_func(PyObject* mod)
     return INT64_C(0);
 }
 ```
+
+### Classes
+
+The wrapping of classes is described in detail at <https://docs.python.org/3/extending/newtypes_tutorial.html>.
+
+The class methods are wrapped similarly to normal functions. The main difference is that the first argument (`self`) is used and represents the class instance instead of the module instance.
+
+In order to wrap class attributes, a getter and a setter function are created. These are then linked to the class as described in the tutorial.
+
+Classes have an additional difficulty which is not present for module functions and variables. The difficulty is that they define a new type which may be imported and used in other modules. This difficulty is managed using capsules. Capsules are objects in the C-Python API which are designed to expose the API to other compiled Python libraries. The use of these capsules is described at <https://docs.python.org/3/extending/extending.html#using-capsules>.
