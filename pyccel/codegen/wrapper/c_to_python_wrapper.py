@@ -1194,7 +1194,7 @@ class CToPythonWrapper(Wrapper):
         body.extend(result_wrap)
 
         for p_r, c_r in zip(python_result_variables, original_func.results):
-            arg_targets = expr.result_pointer_map.get(c_r, None)
+            arg_targets = expr.result_pointer_map.get(c_r, ())
             n_targets = len(arg_targets)
             if n_targets == 1:
                 collect_arg = self._python_object_map[python_args[arg_targets[0]]]
