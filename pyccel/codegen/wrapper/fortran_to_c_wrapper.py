@@ -107,8 +107,12 @@ class FortranToCWrapper(Wrapper):
                 body += [AliasAssign(v, k.value) for k,v in array_args.items()]
                 args = [FunctionCallArgument(array_args[a], keyword=a.keyword) if a in array_args else a for a in args]
 
-            func_call = Assign(results[0], FunctionCall(func, args)) if len(results) == 1 else \
-                        Assign(results, FunctionCall(func, args))
+            if len(results) == 1:
+                res = results[0]
+                func_call = AliasAssign(res, FunctionCall(func, args)) if res.is_alias else \
+                            Assign(res, FunctionCall(func, args))
+            else:
+                func_call = Assign(results, FunctionCall(func, args))
             return body + [func_call]
 
     def _get_call_argument(self, bind_c_arg):
@@ -395,17 +399,21 @@ class FortranToCWrapper(Wrapper):
             # Save the shapes of the array
             self._additional_exprs.extend([Assign(result.shape[i], var.shape[i]) for i in range(var.rank)])
 
-            # Create an array variable which can be passed to CLocFunc
-            ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
-                                memory_handling='alias')
-            scope.insert_variable(ptr_var)
+            if not var.is_alias:
+                # Create an array variable which can be passed to CLocFunc
+                ptr_var = var.clone(scope.get_new_name(name+'_ptr'),
+                                    memory_handling='alias')
+                scope.insert_variable(ptr_var)
 
-            # Define the additional steps necessary to define and fill ptr_var
-            alloc = Allocate(ptr_var, shape=result.shape,
-                             order=var.order, status='unallocated')
-            copy = Assign(ptr_var, local_var)
-            c_loc = CLocFunc(ptr_var, bind_var)
-            self._additional_exprs.extend([alloc, copy, c_loc])
+                # Define the additional steps necessary to define and fill ptr_var
+                alloc = Allocate(ptr_var, shape=result.shape,
+                                 order=var.order, status='unallocated')
+                copy = Assign(ptr_var, local_var)
+                self._additional_exprs.extend([alloc, copy])
+            else:
+                ptr_var = var
+
+            self._additional_exprs.append(CLocFunc(ptr_var, bind_var))
 
             return result
         else:
