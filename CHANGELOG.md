@@ -20,6 +20,7 @@ All notable changes to this project will be documented in this file.
 -   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
 -   #1680 : Add support for `typing.Final`.
 -   Added a `--time_execution` flag to allow detailed investigation of critical sections of code.
+-   #1708 : Allow returning pointers from functions.
 
 ### Fixed
 
