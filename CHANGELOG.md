@@ -46,6 +46,7 @@ All notable changes to this project will be documented in this file.
 -   #1712 : Fix library path and OpenMP support for recent Apple chips by getting Homebrew directory with `brew --prefix`.
 -   #1687 : Pointers in tuples are deallocated.
 -   #1586 : Raise an error for targets of class instances which go out of scope too early.
+-   #1717 : Fix a bug when handling paths with dots.
 
 ### Changed
 
