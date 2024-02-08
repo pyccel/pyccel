@@ -38,6 +38,7 @@ from pyccel.errors.messages import PYCCEL_UNFOUND_IMPORTED_MODULE
 
 errors = Errors()
 error_mode = ErrorsMode()
+
 #==============================================================================
 
 strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
@@ -46,14 +47,33 @@ strip_ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]|[\n\t\r]')
 # Useful for very coarse version differentiation.
 
 #==============================================================================
+def get_filename_from_import(module, input_folder=''):
+    """
+    Get the absolute path of a module, searching in a given folder.
 
-
-def get_filename_from_import(module,input_folder=''):
-    """Returns a valid filename with absolute path, that corresponds to the
+    Return a valid filename with an absolute path, that corresponds to the
     definition of module.
     The priority order is:
         - header files (extension == pyh)
         - python files (extension == py)
+
+    Parameters
+    ----------
+    module : str | AsName
+        Name of the module of interest.
+
+    input_folder : str
+        Relative path of the folder which should be searched for the module.
+
+    Returns
+    -------
+    str
+        Absolute path of the given module.
+
+    Raises
+    ------
+    PyccelError
+        Error raised when the module cannot be found.
     """
 
     if (isinstance(module, AsName)):
@@ -108,10 +128,7 @@ def get_filename_from_import(module,input_folder=''):
     errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
-
-
 #==============================================================================
-
 class BasicParser(object):
     """
     Class for a basic parser.
@@ -276,7 +293,6 @@ class BasicParser(object):
     @property
     def blocking(self):
         return self._blocking
-
 
     def insert_function(self, func):
         """."""
@@ -536,9 +552,8 @@ class BasicParser(object):
         self._syntax_done   = parser.syntax_done
         self._semantic_done = parser.semantic_done
 
+
 #==============================================================================
-
-
 if __name__ == '__main__':
     import sys
 
