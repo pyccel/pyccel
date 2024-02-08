@@ -485,6 +485,8 @@ class CToPythonWrapper(Wrapper):
                 ref_attribute = class_scope.find('referenced_objects', 'variables', raise_if_missing = True)
                 ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = class_arg_var)
                 python_arg = self._python_object_map[a]
+                if not isinstance(python_arg.dtype, PyccelPyObject):
+                    python_arg = ObjectAddress(PointerCast(python_arg, PyList_Append.arguments[1].var))
                 append_call = FunctionCall(PyList_Append, (ref_list, python_arg))
                 body.extend([FunctionCall(Py_INCREF, (python_arg,)),
                              If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),

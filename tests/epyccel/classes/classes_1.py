@@ -13,7 +13,7 @@ class Point(object):
         self._x[:]   =  self._x + a
 
     def get_x(self : 'Point'):
-        return self._x[0]
+        return self._x
 
     def get_X(self : 'Point'):
         return self._X

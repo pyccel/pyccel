@@ -60,13 +60,13 @@ def test_classes_1(language):
     p1_py = mod.Point(x1)
     p1_l  = modnew.Point(x2)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
 
     p1_py.translate(a)
     p1_l.translate(a)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
@@ -85,7 +85,7 @@ def test_classes_1(language):
     p2_l.translate(a)
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.isclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p2_py.get_X() == p2_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
@@ -93,7 +93,7 @@ def test_classes_1(language):
     l_l  = modnew.Line(p1_l)
 
     assert p1_py.get_X() == p1_l.get_X()
-    assert l_py.get_x() == l_l.get_x()
+    assert np.allclose(l_py.get_x(), l_l.get_x())
 
 def test_classes_2(language):
     import classes.classes_2 as mod
