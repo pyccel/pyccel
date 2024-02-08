@@ -596,7 +596,6 @@ class SemanticParser(BasicParser):
 
         deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            self._check_pointer_targets()
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
@@ -3812,6 +3811,7 @@ class SemanticParser(BasicParser):
                 # it will add the necessary Deallocate nodes
                 # to the body of the function
                 body.insert2body(*self._garbage_collector(body))
+                self._check_pointer_targets(results)
 
                 results = [self._visit(a) for a in results]
 
@@ -3865,7 +3865,7 @@ class SemanticParser(BasicParser):
                 pointer_targets = self._pointer_targets.pop()
                 result_pointer_map = {}
                 for r in results:
-                    t = pointer_targets.get(r.var, None)
+                    t = pointer_targets.get(r.var, ())
                     if r.var.is_alias:
                         persistent_targets = []
                         for target, _ in t:
@@ -4067,6 +4067,7 @@ class SemanticParser(BasicParser):
                     self._pointer_targets.append({})
                     self._allocs[-1].update(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
+                    self._pointer_targets.pop()
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))
                 method.body = [condition]
