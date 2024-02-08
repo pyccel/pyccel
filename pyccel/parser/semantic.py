@@ -689,9 +689,13 @@ class SemanticParser(BasicParser):
         elif isinstance(target, DottedVariable):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
-            self._pointer_targets[-1].setdefault(pointer, []).append((target.base, expr))
-        else:
+            self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, Variable):
+            target.is_target = True
             self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
+        else:
+            errors.report("Pointer cannot point at a temporary object",
+                severity='error', symbol=expr)
 
     def _infer_type(self, expr):
         """
@@ -3239,16 +3243,20 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
-                    if isinstance(r, (Variable, IndexedElement)):
-                        self._indicate_pointer_target(l, r, expr)
-                    elif isinstance(r, FunctionCall):
+                    if isinstance(r, FunctionCall):
                         funcdef = r.funcdef
                         target_r_idx = funcdef.result_pointer_map[funcdef.results[0]]
                         for ti in target_r_idx:
-                            self._indicate_pointer_target(l, r.args[ti], expr)
+                            self._indicate_pointer_target(l, r.args[ti].value, expr)
                     else:
-                        errors.report("Pointer cannot point at a temporary object",
-                            severity='error', symbol=expr)
+                        self._indicate_pointer_target(l, r, expr)
+
+                elif isinstance(r, FunctionCall):
+                    funcdef = r.funcdef
+                    for li, res in zip(l, funcdef.results):
+                        target_r_idx = funcdef.result_pointer_map[res]
+                        for ti in target_r_idx:
+                            self._indicate_pointer_target(li, r.args[ti].value, expr)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
