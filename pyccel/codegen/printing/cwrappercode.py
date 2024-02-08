@@ -439,8 +439,8 @@ class CWrapperCodePrinter(CCodePrinter):
         decs = ''.join(self._print(d) for d in expr.declarations)
         body = self._print(expr.body)
         return ''.join([f'PyMODINIT_FUNC {expr.name}(void)\n{{\n',
-                *decs,
-                *body,
+                decs,
+                body,
                 '}\n'])
 
     def _print_Allocate(self, expr):
