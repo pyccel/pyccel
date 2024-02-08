@@ -125,7 +125,7 @@ def get_filename_from_import(module, input_folder=''):
         return filename_py
 
     errors = Errors()
-    errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
+    raise errors.report(PYCCEL_UNFOUND_IMPORTED_MODULE, symbol=module,
                   severity='fatal')
 
 #==============================================================================
