@@ -3254,7 +3254,7 @@ class SemanticParser(BasicParser):
                 elif isinstance(r, FunctionCall):
                     funcdef = r.funcdef
                     for li, res in zip(l, funcdef.results):
-                        target_r_idx = funcdef.result_pointer_map[res]
+                        target_r_idx = funcdef.result_pointer_map.get(res, ())
                         for ti in target_r_idx:
                             self._indicate_pointer_target(li, r.args[ti].value, expr)
 
