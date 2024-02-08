@@ -2381,7 +2381,7 @@ class FunctionDef(ScopedAstNode):
         A list of interfaces defined within this function.
 
     result_pointer_map : dict[FunctionDefResult,int]
-        A map connecting any pointer results to the index of the possible target arguments.
+        A dictionary connecting any pointer results to the index of the possible target arguments.
 
     docstring : str
         The doc string of the function.
@@ -2832,7 +2832,11 @@ class FunctionDef(ScopedAstNode):
     @property
     def result_pointer_map(self):
         """
-        A map connecting any pointer results to the index of the possible target arguments.
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
+        A dictionary whose keys are FunctionDefResult objects and whose values are a list of
+        integers. The integers specifiy the position of the argument which is a target of the
+        FunctionDefResult.
         """
         return self._result_pointer_map
 
