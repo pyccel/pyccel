@@ -1571,6 +1571,8 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(lhs, InhomogeneousTupleVariable):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
+        if isinstance(rhs, FunctionCall):
+            return self._print(rhs)
 
         # TODO improve
         op = '=>'
