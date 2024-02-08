@@ -31,7 +31,7 @@ from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, 
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.literals      import LiteralTrue, LiteralFalse
+from pyccel.ast.literals      import LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
 from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
