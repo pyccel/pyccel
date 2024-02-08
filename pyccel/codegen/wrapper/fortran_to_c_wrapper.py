@@ -262,7 +262,7 @@ class FortranToCWrapper(Wrapper):
         self.exit_scope()
 
         func = BindCFunctionDef(name, func_arguments, func_results, body, scope=func_scope, original_function = expr,
-                docstring = expr.docstring)
+                docstring = expr.docstring, result_pointer_map = expr.result_pointer_map)
 
         self.scope.functions[name] = func
 
