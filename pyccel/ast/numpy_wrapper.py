@@ -32,7 +32,7 @@ errors = Errors()
 
 __all__ = (
     #--------- DATATYPES ---------
-    'PyccelPyArrayObject'
+    'PyccelPyArrayObject',
     #------- CAST FUNCTIONS ------
     'pyarray_to_ndarray',
     #-------CHECK FUNCTIONS ------
