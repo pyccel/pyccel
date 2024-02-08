@@ -6,7 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_objects.list_functions import (ListAppend)
+from pyccel.ast.builtin_objects.list_functions import ListAppend
 
 
 from .builtins  import PythonImag, PythonReal, PythonConjugate
