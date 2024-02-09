@@ -58,7 +58,7 @@ def test_append_multiple(language):
 )
 def test_append_list(language):
     def f():
-        a = [1, 2, 3]
+        a = [[1, 2, 3]]
         a.append([4, 5, 6])
         return a
 
@@ -98,7 +98,7 @@ def test_append_range(language):
 )
 def test_append_range_list(language):
     def f():
-        a = [1, 2, 3]
+        a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
         return a
