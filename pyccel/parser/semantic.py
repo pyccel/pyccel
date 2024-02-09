@@ -1110,10 +1110,13 @@ class SemanticParser(BasicParser):
 
             try:
                 new_expr = func(*args, **kwargs)
-            except TypeError:
-                errors.report(UNRECOGNISED_FUNCTION_CALL,
-                        symbol = expr,
-                        severity = 'fatal')
+            except TypeError as e:
+                message = str(e)
+                if not message:
+                    message = UNRECOGNISED_FUNCTION_CALL
+                errors.report(message,
+                                symbol = expr,
+                                severity = 'fatal')
 
             return new_expr
         else:
