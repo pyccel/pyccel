@@ -7,7 +7,7 @@
 The List container has a number of built-in methods that are 
 always available.
 
-In this module we implement List methods.
+This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
