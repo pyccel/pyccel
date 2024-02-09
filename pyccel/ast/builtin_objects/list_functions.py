@@ -29,8 +29,11 @@ class ListAppend(PyccelInternalFunction):
 
     Parameters
     ----------
-    *args : iterable
-        The arguments passed to the function call.
+    lst_bound_arg : TypedAstNode
+        The variable representing the list.
+    
+    new_elem : TypedAstNode
+        The argument passed to append() method.
     """
     __slots__ = ("_lst_bound_arg", "_append_arg")
     _dtype = NativeVoid()
@@ -61,17 +64,17 @@ class ListAppend(PyccelInternalFunction):
     @property
     def list_variable(self):
         """
-        Get the variable name representing the list
+        Get the variable name representing the list.
 
-        Get the variable name representing the list
+        Get the variable name representing the list.
         """
         return self._lst_bound_arg
 
     @property
     def append_argument(self):
         """
-        Get the argument which is passed to append()
+        Get the argument which is passed to append().
 
-        Get the argument which is passed to append()
+        Get the argument which is passed to append().
         """
         return self._append_arg
