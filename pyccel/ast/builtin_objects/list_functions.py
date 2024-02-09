@@ -55,7 +55,7 @@ class ListAppend(PyccelInternalFunction):
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
         self._lst_bound_arg = lst_bound_arg.name
-        self._append_arg = new_elem.python_value
+        self._append_arg = new_elem
         super().__init__()
 
     @property
@@ -75,4 +75,3 @@ class ListAppend(PyccelInternalFunction):
         Get the argument which is passed to append()
         """
         return self._append_arg
-    
