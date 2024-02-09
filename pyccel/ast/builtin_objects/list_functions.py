@@ -32,7 +32,7 @@ class ListAppend(PyccelInternalFunction):
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ()
+    __slots__ = ("_lst_bound_arg", "_append_arg")
     _dtype = NativeVoid()
     _shape = None
     _order = None
@@ -42,7 +42,6 @@ class ListAppend(PyccelInternalFunction):
     name = 'append'
 
     def __init__(self, lst_bound_arg, new_elem) -> None:
-        super().__init__(new_elem)
         list_precision = get_final_precision(lst_bound_arg)
         check = (getattr(lst_bound_arg, 'order', None) == getattr(new_elem, 'order', None))
         conditions = (
@@ -54,4 +53,25 @@ class ListAppend(PyccelInternalFunction):
         )
         is_homogeneous = lst_bound_arg.dtype is not NativeGeneric() and conditions
         if not is_homogeneous:
-            raise NotImplementedError("Expecting an arg of the same type as the elements of the list")
+            raise TypeError("Expecting an argument of the same type as the elements of the list")
+        self._lst_bound_arg = lst_bound_arg.name
+        self._append_arg = new_elem.python_value
+        super().__init__()
+
+    @property
+    def list_variable(self):
+        """
+        Get the variable name representing the list
+
+        Get the variable name representing the list
+        """
+        return self._lst_bound_arg
+
+    @property
+    def append_argument(self):
+        """
+        Get the argument which is passed to append()
+
+        Get the argument which is passed to append()
+        """
+        return self._append_arg
