@@ -289,7 +289,9 @@ class Bot:
             return []
         else:
             check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and c['conclusion'] != 'cancelled']
+            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and \
+                                                                  c['conclusion'] != 'cancelled' and \
+                                                                  c['name'] not in ('coverage',)]
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
             already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
             success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
@@ -417,7 +419,7 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel'):
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/'))  #pylint: disable=unnecessary-lambda-assignment
                                                     and f.endswith('.py') and f != 'pyccel/version.py'
                                                     for f in diff)
@@ -436,6 +438,8 @@ class Bot:
                                                     and f != 'pyccel/version.py') or f == 'pyproject.toml'
                                                     or f.startswith('install_scripts/')
                                                     for f in diff)
+        elif key in ('coverage',):
+            has_relevant_change = lambda diff: True
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
