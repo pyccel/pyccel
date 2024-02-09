@@ -45,12 +45,11 @@ class ListAppend(PyccelInternalFunction):
     name = 'append'
 
     def __init__(self, lst_bound_arg, new_elem) -> None:
-        list_precision = get_final_precision(lst_bound_arg)
         check = (getattr(lst_bound_arg, 'order', None) == getattr(new_elem, 'order', None))
         conditions = (
             new_elem.dtype is not NativeGeneric() and
             lst_bound_arg.dtype == new_elem.dtype and
-            list_precision == get_final_precision(new_elem) and
+            lst_bound_arg.precision == new_elem.precision and
             lst_bound_arg.rank - 1 == new_elem.rank and
             (check if check else (lst_bound_arg.class_type == new_elem.class_type))
         )
