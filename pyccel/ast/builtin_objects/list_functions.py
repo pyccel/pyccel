@@ -11,7 +11,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
-from pyccel.ast.internals import PyccelInternalFunction, get_final_precision
+from pyccel.ast.internals import PyccelInternalFunction
 
 
 class ListAppend(PyccelInternalFunction):
