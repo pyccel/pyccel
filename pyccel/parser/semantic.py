@@ -234,6 +234,10 @@ class SemanticParser(BasicParser):
         # used to store variables if optional parameters are changed
         self._optional_params = {}
 
+        # used to link pointers to their targets. This is important for classes which may
+        # contain persistent pointers
+        self._pointer_targets = []
+
         #
         self._code = parser._code
         # ...
@@ -302,13 +306,13 @@ class SemanticParser(BasicParser):
         errors = Errors()
         if self.filename:
             errors.set_target(self.filename, 'file')
-        errors.set_parser_stage('semantic')
 
         # then we treat the current file
 
         ast = self.ast
 
-        self._allocs.append([])
+        self._allocs.append(set())
+        self._pointer_targets.append({})
         # we add the try/except to allow the parser to find all possible errors
         pyccel_stage.set_stage('semantic')
         ast = self._visit(ast)
@@ -332,7 +336,8 @@ class SemanticParser(BasicParser):
         a `if __name__ == '__main__':` block). It is assumed that
         the current namespace is the module namespace.
         """
-        self._allocs.append([])
+        self._allocs.append(set())
+        self._pointer_targets.append({})
         self._module_namespace = self.scope
         self.scope = self._program_namespace
 
@@ -590,6 +595,7 @@ class SemanticParser(BasicParser):
 
         deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
+            self._check_pointer_targets()
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
@@ -598,7 +604,94 @@ class SemanticParser(BasicParser):
                     continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
+        self._pointer_targets.pop()
         return deallocs
+
+    def _check_pointer_targets(self, exceptions = ()):
+        """
+        Check that all pointer targets to be deallocated are not needed beyond this scope.
+
+        At the end of a scope (function/module/class) the objects contained within it are
+        deallocated. However some objects may persist beyond the scope. For example a
+        class instance persists after a call to a class method, and the arguments of a
+        function persist after a call to that function. If one of these persistent objects
+        contains a pointer then it is important that the target of that pointer has the
+        same lifetime. The target must not be deallocated at the end of the function if
+        the pointer persists.
+
+        This function checks through self._pointer_targets[-1] which is the dictionary
+        describing the association of pointers to targets in this scope. First it removes
+        all pointers which are deallocated at the end of this context. Next it checks if
+        any of the objects which will be deallocated are present amongst the targets for
+        the scope. If this is the case then an error is raised. Finally it loops through
+        the remaining pointer/target pairs and ensures that any arguments which are targets
+        are marked as such.
+
+        Parameters
+        ----------
+        exceptions : tuple of Variables
+            A list of objects in `_allocs` which are to be ignored (variables appearing
+            in a return statement).
+        """
+        for i in self._allocs[-1]:
+            if isinstance(i, DottedVariable):
+                if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                    continue
+            if i in exceptions:
+                continue
+            self._pointer_targets[-1].pop(i, None)
+        targets = {t[0]:t[1] for target_list in self._pointer_targets[-1].values() for t in target_list}
+        for i in self._allocs[-1]:
+            if isinstance(i, DottedVariable):
+                if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
+                    continue
+            if i in exceptions:
+                continue
+            if i in targets:
+                errors.report(f"Variable {i} goes out of scope but may be the target of a pointer which is still required",
+                        severity='error', symbol=targets[i])
+
+        if self._current_function:
+            func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
+            current_func = self.scope.functions[func_name]
+            arg_vars = {a.var:a for a in current_func.arguments}
+
+            for p, t_list in self._pointer_targets[-1].items():
+                if p in arg_vars and arg_vars[p].bound_argument:
+                    for t,_ in t_list:
+                        if t.is_argument:
+                            argument_objects = t.get_direct_user_nodes(lambda x: isinstance(x, FunctionDefArgument))
+                            assert len(argument_objects) == 1
+                            argument_objects[0].persistent_target = True
+
+    def _indicate_pointer_target(self, pointer, target, expr):
+        """
+        Indicate that a pointer is targetting a specific target.
+
+        Indicate that a pointer is targetting a specific target by adding the pair
+        to a dictionary in self._pointer_targets (the last dictionary in the list
+        should be used as this is the one for the current scope).
+
+        Parameters
+        ----------
+        pointer : Variable
+            The variable which is pointing at something.
+
+        target : Variable | IndexedElement
+            The object being pointed at by the pointer.
+
+        expr : PyccelAstNode
+            The expression where the pointer was created (used for clear error
+            messages).
+        """
+        if isinstance(pointer, DottedVariable):
+            self._indicate_pointer_target(pointer.lhs, target, expr)
+        elif isinstance(target, DottedVariable):
+            self._indicate_pointer_target(pointer, target.lhs, expr)
+        elif isinstance(target, IndexedElement):
+            self._pointer_targets[-1].setdefault(pointer, []).append((target.base, expr))
+        else:
+            self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
 
     def _infer_type(self, expr):
         """
@@ -1059,6 +1152,17 @@ class SemanticParser(BasicParser):
 
             new_expr = FunctionCall(func, args, self._current_function)
 
+            for a, f_a in zip(new_expr.args, func_args):
+                if f_a.persistent_target:
+                    assert is_method
+                    val = a.value
+                    if isinstance(val, Variable):
+                        a.value.is_target = True
+                        self._indicate_pointer_target(args[0].value, a.value, expr)
+                    else:
+                        errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
+                                severity='error', symbol=expr)
+
             if None in new_expr.args:
                 errors.report("Too few arguments passed in function call",
                         symbol = expr,
@@ -1335,24 +1439,26 @@ class SemanticParser(BasicParser):
                                 else:
                                     new_expressions.append(Allocate(a,
                                         shape=a.alloc_shape, order=a.order, status=status))
-                                    # Add memory deallocation for array variables
-                                    self._allocs[-1].append(a)
                             args = new_args
                     else:
                         new_expressions.append(Allocate(lhs, shape=lhs.alloc_shape, order=lhs.order, status=status))
                 # ...
 
                 # ...
-                # Add memory deallocation for array variables
-                if lhs.is_ndarray and not lhs.on_stack:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
-                # ...
-
-                # Add memory deallocation for class constructor
-                if isinstance(lhs.dtype, CustomDataType) and not lhs.is_alias:
-                    # Create Deallocate node
-                    self._allocs[-1].append(lhs)
+                # Add memory deallocation
+                if isinstance(lhs.dtype, CustomDataType) or not lhs.on_stack:
+                    if isinstance(lhs, InhomogeneousTupleVariable):
+                        args = [v for v in lhs.get_vars() if v.rank>0]
+                        new_args = []
+                        while len(args) > 0:
+                            for a in args:
+                                if isinstance(a, InhomogeneousTupleVariable):
+                                    new_args.extend(v for v in a.get_vars() if v.rank>0)
+                                else:
+                                    self._allocs[-1].add(a)
+                            args = new_args
+                    else:
+                        self._allocs[-1].add(lhs)
                 # ...
 
                 # We cannot allow the definition of a stack array in a loop
@@ -1885,15 +1991,13 @@ class SemanticParser(BasicParser):
 
             # Update variable scope for temporaries
             to_remove = []
-            for v in self.scope.variables.values():
+            scope_variables = list(self.scope.variables.values())
+            for v in scope_variables:
                 if v.is_temp:
+                    self.scope.remove_variable(v)
                     init_scope.insert_variable(v)
                     to_remove.append(v)
-
-            # Remove in a second loop so the dictionary doesn't change during iteration
-            for v in to_remove:
-                self.scope.remove_variable(v)
-                variables.remove(v)
+                    variables.remove(v)
 
             # Get deallocations
             deallocs = self._garbage_collector(CodeBlock(init_func_body))
@@ -2769,12 +2873,20 @@ class SemanticParser(BasicParser):
             self._check_argument_compatibility(args, method.arguments,
                             expr, method.is_elemental)
 
-            expr = ConstructorCall(method, args, cls_variable)
-            self._allocs[-1].append(cls_variable)
-            #if len(stmts) > 0:
-            #    stmts.append(expr)
-            #    return CodeBlock(stmts)
-            return expr
+            new_expr = ConstructorCall(method, args, cls_variable)
+
+            for a, f_a in zip(new_expr.args, method.arguments):
+                if f_a.persistent_target:
+                    val = a.value
+                    if isinstance(val, Variable):
+                        a.value.is_target = True
+                        self._indicate_pointer_target(cls_variable, a.value, expr.get_user_nodes(Assign)[0])
+                    else:
+                        errors.report(f"{val} cannot be passed to class constructor call as target. Please create a temporary variable.",
+                                severity='error', symbol=expr)
+
+            self._allocs[-1].add(cls_variable)
+            return new_expr
         else:
 
             # first we check if it is a macro, in this case, we will create
@@ -3127,6 +3239,11 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
+                    if isinstance(r, (Variable, IndexedElement)):
+                        self._indicate_pointer_target(l, r, expr)
+                    else:
+                        errors.report("Pointer cannot point at a temporary object",
+                            severity='error', symbol=expr)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
@@ -3563,6 +3680,7 @@ class SemanticParser(BasicParser):
 
         # add the Deallocate node before the Return node and eliminating the Deallocate nodes
         # the arrays that will be returned.
+        self._check_pointer_targets(results)
         code = assigns + [Deallocate(i) for i in self._allocs[-1] if i not in results]
         if code:
             expr  = Return(results, CodeBlock(code))
@@ -3671,7 +3789,8 @@ class SemanticParser(BasicParser):
                 self.insert_function(recursive_func_obj)
 
                 # Create a new list that store local variables for each FunctionDef to handle nested functions
-                self._allocs.append([])
+                self._allocs.append(set())
+                self._pointer_targets.append({})
 
                 # we annotate the body
                 body = self._visit(expr.body)
@@ -3919,8 +4038,9 @@ class SemanticParser(BasicParser):
                         attribute.append(attr)
                 if attribute:
                     # Create a new list that store local attributes
-                    self._allocs.append([])
-                    self._allocs[-1].extend(attribute)
+                    self._allocs.append(set())
+                    self._pointer_targets.append({})
+                    self._allocs[-1].update(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))

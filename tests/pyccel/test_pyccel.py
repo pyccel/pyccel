@@ -808,6 +808,9 @@ def test_basic_header():
                                         "scripts/classes/class_headers.py",
                                         "scripts/classes/pep526.py",
                                         "scripts/classes/class_variables.py",
+                                        "scripts/classes/class_temporary_in_constructor.py",
+                                        "scripts/classes/class_with_non_target_array_arg.py",
+                                        "scripts/classes/class_pointer.py",
                                         ] )
 def test_classes( test_file , language):
     pyccel_test(test_file, language=language)
@@ -1130,7 +1133,62 @@ def test_reserved_file_name():
         execute_pyccel(fname=libname)
     assert str(exc_info.value) == f"File called {libname} has the same name as a Python built-in package and can't be imported from Python. See #1402"
 
+#------------------------------------------------------------------------------
 def test_concatentation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
+    )
+)
+def test_class_imports(language):
+    cwd = get_abs_path('project_class_imports')
+
+    test_file = get_abs_path('project_class_imports/runtest.py')
+
+    pyth_out = get_python_output(test_file, cwd)
+
+    compile_file = get_abs_path('project_class_imports/project/basics/Point_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out1 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out1, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/project/basics/Line_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out2 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out2, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/project/shapes/Square_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out3 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out3, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/runtest.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    lang_out = get_lang_output(test_file, language)
+    compare_pyth_fort_output(pyth_out, lang_out, float, language)
+
+#------------------------------------------------------------------------------
+def test_time_execution_flag():
+    test_file  = get_abs_path("scripts/runtest_funcs.py")
+
+    cwd = get_abs_path("scripts")
+
+    cmd = [shutil.which("pyccel"), test_file, "--language=fortran", "--time_execution"]
+    with subprocess.Popen(cmd, universal_newlines=True, cwd=cwd,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE) as p:
+        result, _ = p.communicate()
+
+    result_lines = result.split('\n')
+    assert 'Timers' in result_lines[0]
+    assert 'Total' in result_lines[-2]
+    for l in result_lines[1:-1]:
+        assert ' : ' in l
