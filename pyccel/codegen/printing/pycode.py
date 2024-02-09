@@ -847,10 +847,10 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListAppend(self, expr):
         method_name = expr.name
-        dotted_var = self._print(expr.args[0])
-        method_args = self._print(expr.args[1])
+        list_var = self._print(expr.list_variable)
+        append_arg = self._print(expr.append_argument)
 
-        return f"{dotted_var}.{method_name}({method_args})\n"
+        return f"{list_var}.{method_name}({append_arg})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
