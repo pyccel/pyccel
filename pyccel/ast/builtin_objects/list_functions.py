@@ -4,6 +4,13 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
+    """
+    The List container has a number of built-in methods that are 
+    always available.
+
+    This module contains objects which describe these methods within Pyccel's AST.
+    """
+
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.datatypes import NativeHomogeneousList
 
@@ -11,7 +18,7 @@ class ListPop(PyccelInternalFunction) :
     """
     Represents a call to the .pop() method.
     
-    Represents a call to the .pop() method wich 
+    Represents a call to the .pop() method which
     removes the item at the specified index. 
     The method also returns the removed item.
 
@@ -20,7 +27,7 @@ class ListPop(PyccelInternalFunction) :
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ('_dtype','_precision',)
+    __slots__ = ('_dtype','_precision', '_index','_name')
     _rank = 0
     _order = None
     _shape = None
