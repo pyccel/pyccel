@@ -75,3 +75,4 @@ class ListAppend(PyccelInternalFunction):
         Get the argument which is passed to append()
         """
         return self._append_arg
+ 
