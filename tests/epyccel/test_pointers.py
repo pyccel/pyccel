@@ -5,6 +5,7 @@ import numpy as np
 
 from pyccel.epyccel import epyccel
 from modules import pointers as pointers_module
+from modules import return_pointers
 
 pointers_funcs = [(f, getattr(pointers_module,f)) for f in pointers_module.__all__ if inspect.isfunction(getattr(pointers_module,f))]
 
@@ -41,3 +42,21 @@ def test_pointers(test_func, language):
     python_out = f1()
     pyccel_out = f2()
     compare_python_pyccel(python_out, pyccel_out)
+
+def test_return_pointers(language):
+    f1 = return_pointers.return_ambiguous_pointer_to_argument
+    f2 = epyccel( f1 , language=language)
+
+    x = np.array([1,2,3,4])
+    y = x.copy()
+
+    python_out = f1(x)
+    pyccel_out = f2(y)
+
+    compare_python_pyccel(python_out, pyccel_out)
+
+    assert python_out is x
+    if language == 'python':
+        assert pyccel_out is y
+    else:
+        assert pyccel_out.base is y
