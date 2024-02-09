@@ -2380,7 +2380,7 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
-    result_pointer_map : dict[FunctionDefResult,int]
+    result_pointer_map : dict[FunctionDefResult, list[int]]
         A dictionary connecting any pointer results to the index of the possible target arguments.
 
     docstring : str
