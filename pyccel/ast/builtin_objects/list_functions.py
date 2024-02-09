@@ -14,13 +14,13 @@ class ListPop(PyccelInternalFunction) :
     Represents a call to the .pop() method wich 
     removes the item at the specified index. 
     The method also returns the removed item.
-    
+
     Parameters
     ----------
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ('_dtype','_precision','_index','_name')
+    __slots__ = ('_dtype','_precision',)
     _rank = 0
     _order = None
     _shape = None
@@ -39,16 +39,16 @@ class ListPop(PyccelInternalFunction) :
     @property
     def args(self):
         """
-        Arguments of the Pop method
+        Argument of the Pop method
 
-        index of element to pop
+        The current index value for the element to be popped
         """
         return self._index
     @property
     def name(self):
         """
-        Name of the object contain the list
-        
+        Provide the name of the list as the return value
+
         """
         return self._name
         

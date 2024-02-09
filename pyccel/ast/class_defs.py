@@ -9,6 +9,7 @@ This module contains all types which define a python class which is automaticall
 from pyccel.ast.builtin_objects.list_functions import (ListPop)
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
+from .c_concepts import CStackArray
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumericTypes,
                         NativeTuple, CustomDataType, NativeHomogeneousList)
@@ -178,6 +179,10 @@ NumpyArrayClass = ClassDef('numpy.ndarray', class_type = NumpyNDArrayType(),
                 decorators = {'numpy_wrapper': 'numpy_wrapper'}),
         ]
 )
+
+#=======================================================================================
+
+StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
 
 #=======================================================================================
 
