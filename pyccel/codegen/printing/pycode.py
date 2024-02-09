@@ -1136,8 +1136,10 @@ class PythonCodePrinter(CodePrinter):
         return f'const {annotation}'
 
     def _print_ListPop(self, expr):
-        args = ','.join(self._print(a) for a in expr.args[1:])
-        name = self._print(expr.args[0])
+        args = ""
+        if expr.args:
+            args = self._print(expr.args)
+        name = self._print(expr.name)
         return f"{name}.pop({args})"
 
 #==============================================================================

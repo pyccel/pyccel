@@ -19,6 +19,7 @@ def test_pop_last_element(language) :
         a = [1,3,45]
         return a.pop()
     re = epyccel(po, language = language)
+    assert isinstance(po(), type(re()))
     assert po() == re()
 
 @pytest.mark.parametrize( 'language', (
@@ -38,6 +39,7 @@ def test_pop_specific_index(language) :
         a = [1j,3j,45j]
         return a.pop(1)
     re = epyccel(po, language = language)
+    assert isinstance(po(), type(re()))
     assert po() == re()
 
 @pytest.mark.parametrize( 'language', (
@@ -57,6 +59,7 @@ def test_pop_negative_index(language) :
         a = [1j,3j,45j]
         return a.pop(-1)
     re = epyccel(po, language = language)
+    assert isinstance(po(), type(re()))
     assert po() == re()
 
 @pytest.mark.parametrize( 'language', (
@@ -77,4 +80,5 @@ def test_pop_2(language) :
         a.pop()
         return a.pop(-1)
     re = epyccel(po, language = language)
+    assert isinstance(po(), type(re()))
     assert po() == re()
