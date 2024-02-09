@@ -24,9 +24,10 @@ class ListPop(PyccelInternalFunction) :
 
     Parameters
     ----------
-    name : 
-        the name of the list.
-    index_elemnt :
+    name : TypedAstNode
+        The name of the list.
+
+    index_elemnt : TypedAstNode
         The current index value for the element to be popped.
     """
     __slots__ = ('_dtype','_precision', '_index','_list_variable')
@@ -48,15 +49,17 @@ class ListPop(PyccelInternalFunction) :
     @property
     def args(self):
         """
-        Argument of the Pop method
+        The current index value for the element to be popped.
 
-        The current index value for the element to be popped
+        The current index value for the element to be popped.
         """
         return self._index
 
     @property
     def list_variable(self):
         """
-        Provide the name of the list as the return value
+        Provide the name of the list as the return value.
+        
+        Provide the name of the list as the return value.
         """
         return self._list_variable
