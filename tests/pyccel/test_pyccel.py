@@ -239,7 +239,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
         f_output = '\n'.join(f_output_split[1:])
         assert(p_list==f_list)
     elif dtype is complex:
-        rx = re.compile('[-0-9.eEj+]+')
+        rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?j?')
         p, p_output = get_value(p_output, rx, complex)
         if p.imag == 0:
             p2, p_output = get_value(p_output, rx, complex)
@@ -250,7 +250,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
                 f2, f_output = get_value(f_output, rx, complex)
                 f = f+f2
         else:
-            rx = re.compile('[-0-9.eE+]+')
+            rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?')
             f, f_output  = get_value(f_output, rx, float)
             f2, f_output = get_value(f_output, rx, float)
             f = f+f2*1j
@@ -263,13 +263,13 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
         assert(p==f)
 
     elif dtype is float:
-        rx = re.compile('[-0-9.eE+]+')
+        rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, float)
         f, f_output = get_value(f_output, rx, float)
         assert(np.isclose(p, f))
 
     elif dtype is int:
-        rx = re.compile('[-0-9eE+]+')
+        rx = re.compile('-?[0-9]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, int)
         f, f_output = get_value(f_output, rx, int)
         assert(p==f)
