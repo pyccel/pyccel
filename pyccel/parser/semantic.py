@@ -689,8 +689,16 @@ class SemanticParser(BasicParser):
         elif isinstance(target, IndexedElement):
             self._indicate_pointer_target(pointer, target.base, expr)
         elif isinstance(target, Variable):
-            target.is_target = True
-            self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
+            if target.is_alias:
+                try:
+                    sub_targets = self._pointer_targets[-1][target]
+                except KeyError:
+                    errors.report("Pointer cannot point at a non-local pointer\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='error', symbol=expr)
+                self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
+            else:
+                target.is_target = True
+                self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
         else:
             errors.report("Pointer cannot point at a temporary object",
                 severity='error', symbol=expr)
