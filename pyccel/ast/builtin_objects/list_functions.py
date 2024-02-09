@@ -27,7 +27,7 @@ class ListPop(PyccelInternalFunction) :
     *args : iterable
         The arguments passed to the function call.
     """
-    __slots__ = ('_dtype','_precision', '_index','_name')
+    __slots__ = ('_dtype','_precision', '_index','_list_variable')
     _rank = 0
     _order = None
     _shape = None
@@ -39,7 +39,7 @@ class ListPop(PyccelInternalFunction) :
         else:
             super().__init__(name)
         self._index = index_elemnt
-        self._name = name
+        self._list_variable = name
         self._dtype = name.dtype
         self._precision = name.precision
 
@@ -51,11 +51,12 @@ class ListPop(PyccelInternalFunction) :
         The current index value for the element to be popped
         """
         return self._index
+
     @property
-    def name(self):
+    def list_variable(self):
         """
         Provide the name of the list as the return value
 
         """
-        return self._name
+        return self._list_variable
         

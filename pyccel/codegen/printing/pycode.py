@@ -1140,7 +1140,7 @@ class PythonCodePrinter(CodePrinter):
         args = ""
         if expr.args:
             args = self._print(expr.args)
-        name = self._print(expr.name)
+        name = self._print(expr.list_variable)
         return f"{name}.pop({args})"
 
 #==============================================================================
