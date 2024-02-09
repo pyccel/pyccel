@@ -175,6 +175,7 @@ def execute_pyccel(fname, *,
 
     if conda_warnings not in ('off', 'basic', 'verbose'):
         raise ValueError("conda warnings accept {off, basic,verbose}")
+
     if language is None:
         language = 'fortran'
 

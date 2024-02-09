@@ -249,6 +249,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_FunctionDefArgument(self, expr):
         name = self._print(expr.name)
         default = ''
+
         if expr.annotation:
             type_annotation = f"'{self._print(expr.annotation)}'"
         else:

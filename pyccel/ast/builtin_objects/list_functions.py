@@ -4,12 +4,12 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-    """
-    The List container has a number of built-in methods that are 
-    always available.
+"""
+The List container has a number of built-in methods that are 
+always available.
 
-    This module contains objects which describe these methods within Pyccel's AST.
-    """
+This module contains objects which describe these methods within Pyccel's AST.
+"""
 
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.datatypes import NativeHomogeneousList

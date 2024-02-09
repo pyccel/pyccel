@@ -322,6 +322,7 @@ class SyntaxParser(BasicParser):
         # TODO - add settings to Errors
         #      - line and column
         #      - blocking errors
+
         cls = type(stmt)
         syntax_method = '_visit_' + cls.__name__
         if hasattr(self, syntax_method):

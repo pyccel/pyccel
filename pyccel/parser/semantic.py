@@ -302,6 +302,7 @@ class SemanticParser(BasicParser):
 
         # TODO - add settings to Errors
         #      - filename
+
         errors = Errors()
         if self.filename:
             errors.set_target(self.filename, 'file')
@@ -726,6 +727,7 @@ class SemanticParser(BasicParser):
                 'order'    : expr.order,
                 'class_type' : expr.class_type,
             }
+
         if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
             d_var['class_type'     ] = expr.class_type
@@ -737,6 +739,7 @@ class SemanticParser(BasicParser):
             d_var['cls_base'       ] = TupleClass
             d_var['memory_handling'] = 'heap'
             return d_var
+
         elif isinstance(expr, PythonList):
             d_var['cls_base'       ] = ListClass
             d_var['memory_handling'] = 'heap'
@@ -773,6 +776,7 @@ class SemanticParser(BasicParser):
             return d_var
 
         elif isinstance(expr, TypedAstNode):
+
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
             d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
             return d_var
@@ -1917,6 +1921,7 @@ class SemanticParser(BasicParser):
 
         if getattr(expr,'python_ast', None) is not None:
             self._current_ast_node = expr.python_ast
+
         classes = type(expr).__mro__
         for cls in classes:
             annotation_method = '_visit_' + cls.__name__
@@ -2491,6 +2496,7 @@ class SemanticParser(BasicParser):
 
 
     def _visit_DottedName(self, expr):
+
         var = self.check_for_variable(_get_name(expr))
         if var:
             return var
@@ -2553,6 +2559,7 @@ class SemanticParser(BasicParser):
         if isinstance(first, ClassDef):
             errors.report("Static class methods are not yet supported", symbol=expr,
                     severity='fatal')
+
         d_var = self._infer_type(first)
         dtype = d_var['datatype']
         cls_base = get_cls_base(dtype, d_var['precision'], d_var['class_type'])
@@ -2569,6 +2576,7 @@ class SemanticParser(BasicParser):
                 args = [self._visit(i) for i in args]
                 args = macro.apply(args)
                 return FunctionCall(master, args, self._current_function)
+
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             method = cls_base.get_method(rhs_name)
             if cls_base.name == 'numpy.ndarray':
@@ -2806,6 +2814,7 @@ class SemanticParser(BasicParser):
             pass
 
         func     = self.scope.find(name, 'functions')
+
         # Check for specialised method
         if isinstance(func, PyccelFunctionDef):
             annotation_method = '_visit_' + func.cls_name.__name__
@@ -3000,6 +3009,7 @@ class SemanticParser(BasicParser):
         elif isinstance(rhs, FunctionDef):
 
             # case of lambdify
+
             rhs = rhs.rename(expr.lhs.name)
             for i in rhs.body:
                 i.set_current_ast(python_ast)
