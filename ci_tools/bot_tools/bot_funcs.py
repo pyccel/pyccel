@@ -418,20 +418,17 @@ class Bot:
         bool
             True if the test should be run, False otherwise.
         """
-        print("Checking : ", name)
+        print("Checking : ", name, key)
         if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/'))  #pylint: disable=unnecessary-lambda-assignment
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) #pylint: disable=unnecessary-lambda-assignment
                                                     and f.endswith('.py') and f != 'pyccel/version.py'
                                                     for f in diff)
-        elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
-                                                    and f != 'pyccel/version.py' for f in diff)
-        elif key in ('pylint'):
+        elif key in ('pylint',):
             has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('docs'):
+        elif key in ('pyccel_lint','docs'):
             has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' #pylint: disable=unnecessary-lambda-assignment
                                                     for f in diff)
-        elif key in ('spelling'):
+        elif key in ('spelling',):
             has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
@@ -439,12 +436,13 @@ class Bot:
                                                     or f.startswith('install_scripts/')
                                                     for f in diff)
         elif key in ('coverage',):
-            has_relevant_change = lambda diff: True
+            has_relevant_change = lambda diff: True #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
         for c in commit_log:
             diff = self.get_diff(c)
+            print("Diff found : ", diff)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
                 return True
@@ -857,7 +855,7 @@ class Bot:
             base_commit = self._base
         assert bool(base_commit)
         cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
-        print(cmd)
+        print(''.join(cmd))
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
