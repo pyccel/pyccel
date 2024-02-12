@@ -22,6 +22,7 @@ All notable changes to this project will be documented in this file.
 -   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
 -   #1659 : Add multi-file support for classes.
 -   #1708 : Allow returning pointers to arguments from functions.
+-   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
 
 ### Fixed
 
