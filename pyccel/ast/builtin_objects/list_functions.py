@@ -29,13 +29,13 @@ class ListAppend(PyccelInternalFunction):
 
     Parameters
     ----------
-    lst_bound_arg : Variable
+    list_variable : Variable
         The variable representing the list.
     
     new_elem : Variable
         The argument passed to append() method.
     """
-    __slots__ = ("_lst_bound_arg", "_append_arg")
+    __slots__ = ("_list_variable", "_append_arg")
     _dtype = NativeVoid()
     _shape = None
     _order = None
@@ -44,28 +44,28 @@ class ListAppend(PyccelInternalFunction):
     _class_type = NativeHomogeneousList()
     name = 'append'
 
-    def __init__(self, lst_bound_arg, new_elem) -> None:
+    def __init__(self, list_variable, new_elem) -> None:
         conditions = (
             new_elem.dtype is not NativeGeneric() and
-            lst_bound_arg.dtype == new_elem.dtype and
-            lst_bound_arg.precision == new_elem.precision and
-            lst_bound_arg.rank - 1 == new_elem.rank
+            list_variable.dtype == new_elem.dtype and
+            list_variable.precision == new_elem.precision and
+            list_variable.rank - 1 == new_elem.rank
         )
-        is_homogeneous = lst_bound_arg.dtype is not NativeGeneric() and conditions
+        is_homogeneous = list_variable.dtype is not NativeGeneric() and conditions
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._lst_bound_arg = lst_bound_arg.name
+        self._list_variable = list_variable
         self._append_arg = new_elem
         super().__init__()
 
     @property
-    def list_name(self):
+    def list_variable(self):
         """
-        Get the variable name representing the list.
+        Get the variable representing the list.
 
-        Get the variable name representing the list.
+        Get the variable representing the list.
         """
-        return self._lst_bound_arg
+        return self._list_variable
 
     @property
     def append_argument(self):
