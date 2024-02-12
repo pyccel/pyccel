@@ -525,9 +525,7 @@ class CToPythonWrapper(Wrapper):
         list[PyccelAstNode]
             Any nodes which must be printed to increase reference counts.
         """
-        if not orig_var.is_alias:
-            return []
-        elif isinstance(orig_var.class_type, NumpyNDArrayType):
+        if isinstance(orig_var.class_type, NumpyNDArrayType):
             save_ref_call = FunctionCall(PyArray_SetBaseObject,
                                     (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
                                      ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
@@ -540,8 +538,10 @@ class CToPythonWrapper(Wrapper):
             save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
             return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
                                       [Return([self._error_exit_code])]))]
+        elif orig_var.class_type in NativeNumeric:
+            return []
         else:
-            raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
+            raise NotImplementedError(f"Unsure how to preserve references for attribute of type {type(orig_var.class_type)}")
 
     def _add_object_to_mod(self, module_var, obj, name, initialised):
         """
