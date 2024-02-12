@@ -22,6 +22,7 @@ from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, Py
 from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
+from pyccel.ast.cwrapper      import PyAttributeError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
@@ -1880,7 +1881,7 @@ class CToPythonWrapper(Wrapper):
                            update,
                            Return((LiteralInteger(0, precision=-2),))]
         else:
-            setter_body = [FunctionCall(PyErr_SetString, [PyTypeError,
+            setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
                                         LiteralString("Can't reallocate memory via Python interface.")]),
                         Return([self._error_exit_code])]
         self.exit_scope()
@@ -2008,7 +2009,7 @@ class CToPythonWrapper(Wrapper):
                            *self._save_referenced_objects(expr.setter, setter_args),
                            Return((LiteralInteger(0, precision=-2),))]
         else:
-            setter_body = [FunctionCall(PyErr_SetString, [PyTypeError,
+            setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
                                         LiteralString("Can't reallocate memory via Python interface.")]),
                         Return([self._error_exit_code])]
         self.exit_scope()
