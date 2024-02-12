@@ -29,10 +29,10 @@ class ListAppend(PyccelInternalFunction):
 
     Parameters
     ----------
-    lst_bound_arg : TypedAstNode
+    lst_bound_arg : Variable
         The variable representing the list.
     
-    new_elem : TypedAstNode
+    new_elem : Variable
         The argument passed to append() method.
     """
     __slots__ = ("_lst_bound_arg", "_append_arg")
