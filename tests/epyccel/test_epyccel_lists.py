@@ -116,7 +116,7 @@ def test_append_range_list(language):
         pytest.param("python", marks = pytest.mark.python)
     ]
 )
-def test_append_range_list(language):
+def test_append_range_tuple(language):
     def f():
         a = [[1, 2, 3]]
         for i in range(0, 1000):
