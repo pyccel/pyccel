@@ -283,7 +283,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     + attributes +
                     "};\n")
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
-                          tuple(i.interface_func for i in c.interfaces)
+                          tuple(i.interface_func for i in c.interfaces) + \
+                          tuple(getset for p in c.properties for getset in (p.getter, p.setter))
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
             macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
