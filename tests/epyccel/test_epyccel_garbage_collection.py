@@ -247,3 +247,27 @@ def test_return_class_array_pointer(language):
 
     # All references should now be released
     assert ref_count_x == start_ref_count_x
+
+def test_getter(language):
+    import classes.array_attribute as mod_pyt
+
+    mod = epyccel(mod_pyt, language=language)
+
+    a = mod.A(10)
+
+    b = a.x
+
+    if language != 'python':
+        assert b.base is a
+
+    del a
+
+    gc.collect()
+
+    a_x_elem = b[0]
+
+    if language != 'python':
+        c = b.base.x
+
+        np.array_equiv(b, c)
+
