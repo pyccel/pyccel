@@ -45,13 +45,11 @@ class ListAppend(PyccelInternalFunction):
     name = 'append'
 
     def __init__(self, lst_bound_arg, new_elem) -> None:
-        check = (getattr(lst_bound_arg, 'order', None) == getattr(new_elem, 'order', None))
         conditions = (
             new_elem.dtype is not NativeGeneric() and
             lst_bound_arg.dtype == new_elem.dtype and
             lst_bound_arg.precision == new_elem.precision and
-            lst_bound_arg.rank - 1 == new_elem.rank and
-            (check if check else (lst_bound_arg.class_type == new_elem.class_type))
+            lst_bound_arg.rank - 1 == new_elem.rank
         )
         is_homogeneous = lst_bound_arg.dtype is not NativeGeneric() and conditions
         if not is_homogeneous:
@@ -61,7 +59,7 @@ class ListAppend(PyccelInternalFunction):
         super().__init__()
 
     @property
-    def list_variable(self):
+    def list_name(self):
         """
         Get the variable name representing the list.
 
