@@ -743,9 +743,11 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias')]
+                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
+                     Variable(NativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
+        scope.insert_variable(variables[2])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
