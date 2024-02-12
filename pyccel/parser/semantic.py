@@ -735,14 +735,6 @@ class SemanticParser(BasicParser):
             d_var['is_target'      ] = expr.is_target
             return d_var
 
-        elif isinstance(expr, PythonTuple):
-            d_var['cls_base'       ] = TupleClass
-            d_var['memory_handling'] = 'heap'
-            return d_var
-        elif isinstance(expr, PythonList):
-            d_var['cls_base'       ] = ListClass
-            d_var['memory_handling'] = 'heap'
-            return d_var
         elif isinstance(expr, Concatenate):
             d_var['cls_base'      ] = TupleClass
             if any(getattr(a, 'on_heap', False) for a in expr.args):
