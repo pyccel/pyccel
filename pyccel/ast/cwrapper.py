@@ -60,7 +60,6 @@ __all__ = (
     'Py_True',
     'Py_False',
     'Py_None',
-    'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',

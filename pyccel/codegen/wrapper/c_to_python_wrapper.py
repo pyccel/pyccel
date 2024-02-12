@@ -1827,7 +1827,7 @@ class CToPythonWrapper(Wrapper):
         else:
             body = [Assign(new_res_val, attrib), *res_wrapper]
 
-        body.extend(self._return_self_reference(getter_args[0], getter_result, expr))
+        body.extend(self._incref_return_pointer(getter_args[0], getter_result, expr))
 
         getter_body = [AliasAssign(class_obj, PointerCast(class_ptr_attrib.clone(class_ptr_attrib.name,
                                                                                  new_class = DottedVariable,
@@ -1959,7 +1959,7 @@ class CToPythonWrapper(Wrapper):
             arg_code.append(Allocate(getter_result, shape=(), order=None, status='unallocated'))
 
         wrapped_var = expr.getter.original_function
-        res_wrapper.extend(self._return_self_reference(getter_args[0], getter_result, wrapped_var))
+        res_wrapper.extend(self._incref_return_pointer(getter_args[0], getter_result, wrapped_var))
 
         getter_body = [*arg_code,
                        call,

@@ -453,7 +453,7 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_getset = {property_def_name},\n"
                 "};\n")
 
-        return method_def + '\n' + type_code + '\n' + functions
+        return '\n'.join((method_def, property_def, type_code, functions))
 
     def _print_PyModInitFunc(self, expr):
         decs = ''.join(self._print(d) for d in expr.declarations)
