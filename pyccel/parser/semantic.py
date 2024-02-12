@@ -58,7 +58,7 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass,get_cls_base
+from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import str_dtype, DataType
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
