@@ -75,7 +75,7 @@ def test_classes_1(language):
 
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.allclose(p2_py.get_x(), p2_l.get_x())
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     print(p2_py.get_x(), p2_l.get_x())
     assert p2_py.get_X() == p2_l.get_X()
 
@@ -93,7 +93,7 @@ def test_classes_1(language):
     l_l  = modnew.Line(p1_l)
 
     assert p1_py.get_X() == p1_l.get_X()
-    assert np.allclose(l_py.get_x(), l_l.get_x())
+    assert np.allclose(l_py.get_x(), l_l.get_x(), rtol=RTOL, atol=ATOL)
 
 def test_classes_2(language):
     import classes.classes_2 as mod
