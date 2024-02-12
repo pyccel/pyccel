@@ -21,7 +21,7 @@ All notable changes to this project will be documented in this file.
 -   #1680 : Add support for `typing.Final`.
 -   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
 -   #1659 : Add multi-file support for classes.
--   #1708 : Allow returning pointers from functions.
+-   #1708 : Allow returning pointers to arguments from functions.
 
 ### Fixed
 
