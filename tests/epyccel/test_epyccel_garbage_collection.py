@@ -271,6 +271,8 @@ def test_getter(language):
 
     a_x_elem = b[0]
 
+    assert a_x_elem == 1
+
     if language != 'python':
         c = b.base.x
 
