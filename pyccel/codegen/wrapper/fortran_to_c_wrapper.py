@@ -618,7 +618,11 @@ class FortranToCWrapper(Wrapper):
             for f in i.functions:
                 self._wrap(f)
         interfaces = [self._wrap(i) for i in expr.interfaces]
-        properties = [self._wrap(v) for v in expr.attributes if not v.is_private]
+
+        # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
+        pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
+        properties = [self._wrap(v if isinstance(v, DottedVariable) else v.clone(v.name, new_class = DottedVariable, lhs=pseudo_self)) \
+                        for v in expr.attributes if not v.is_private]
         return BindCClassDef(expr, new_func = new_method, methods = methods,
                              interfaces = interfaces, attributes = properties,
                              docstring = expr.docstring, class_type = expr.class_type)

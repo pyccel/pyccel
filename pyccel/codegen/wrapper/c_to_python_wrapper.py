@@ -10,7 +10,7 @@ which creates an interface exposing C code to Python.
 import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
-from pyccel.ast.bind_c        import BindCClassDef
+from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
@@ -2076,9 +2076,15 @@ class CToPythonWrapper(Wrapper):
         else:
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
+        # Pseudo-self variable is useful for pre-defined attributes which are not DottedVariables
+        pseudo_self = Variable(expr.class_type, 'self', cls_base = expr)
         for a in expr.attributes:
             if bound_class or not a.is_private:
-                wrapped_class.add_property(self._wrap(a))
+                if isinstance(a, (DottedVariable, BindCClassProperty)):
+                    wrapped_class.add_property(self._wrap(a))
+                else:
+                    wrapped_class.add_property(self._wrap(a.clone(a.name, new_class = DottedVariable,
+                                                            lhs=pseudo_self)))
 
         return wrapped_class
 
