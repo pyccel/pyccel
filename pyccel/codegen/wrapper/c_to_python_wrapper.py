@@ -1876,6 +1876,7 @@ class CToPythonWrapper(Wrapper):
                                                                                      new_class = DottedVariable,
                                                                                     lhs = setter_args[0]),
                                                               cast_type = lhs)),
+                           *self._incref_return_pointer(setter_args[1], setter_args[0], expr.lhs),
                            update,
                            Return((LiteralInteger(0, precision=-2),))]
         else:
