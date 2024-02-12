@@ -2,24 +2,24 @@
 # coding: utf-8
 
 class Point(object):
-    def __init__(self : 'Point', x : 'float[:]'):
+    def __init__(self, x : 'float[:]'):
         self._X = 10
         self._x = x
 
-    def __del__(self : 'Point'):
+    def __del__(self):
         pass
 
-    def translate(self : 'Point', a : 'float[:]'):
+    def translate(self, a : 'float[:]'):
         self._x[:]   =  self._x + a
 
-    def get_x(self : 'Point'):
+    def get_x(self):
         return self._x
 
-    def get_X(self : 'Point'):
+    def get_X(self):
         return self._X
 
 class Line(object):
-    def __init__(self : 'Line', l : Point):
+    def __init__(self, l : Point):
         self.l = l
         self.l._X = 11
 
