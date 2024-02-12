@@ -12,7 +12,6 @@ All notable changes to this project will be documented in this file.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
--   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
@@ -21,6 +20,9 @@ All notable changes to this project will be documented in this file.
 -   #1680 : Add support for `typing.Final`.
 -   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
 -   #1659 : Add multi-file support for classes.
+-   #1708 : Allow returning pointers to arguments from functions.
+-   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
 
 ### Fixed
 
