@@ -11,33 +11,38 @@ import warnings
 from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFunctionDefArgument
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef
-from pyccel.ast.builtins      import PythonTuple
+from pyccel.ast.builtins      import PythonTuple, PythonRange
+from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
-from pyccel.ast.core          import FunctionAddress, Declare, ClassDef
-from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords
-from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef
+from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, For, AsName
+from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
+from pyccel.ast.cwrapper      import PyArg_ParseTupleNode, Py_None, PyClassDef, PyModInitFunc
 from pyccel.ast.cwrapper      import py_to_c_registry, check_type_registry, PyBuildValueNode
 from pyccel.ast.cwrapper      import PyErr_SetString, PyTypeError, PyNotImplementedError
 from pyccel.ast.cwrapper      import C_to_Python, PyFunctionDef, PyInterface
 from pyccel.ast.cwrapper      import PyModule_AddObject, Py_DECREF, PyObject_TypeCheck
 from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataType
-from pyccel.ast.cwrapper      import PyccelPyTypeObject
-from pyccel.ast.c_concepts    import ObjectAddress, PointerCast
+from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_Size, PyList_GetItem, PyList_SetItem
+from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
+from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString
+from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
 from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
 from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.internals     import get_final_precision
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray
+from pyccel.ast.literals      import LiteralFalse
+from pyccel.ast.numpyext      import NumpyNDArrayType
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
 from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
 from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
 from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
 from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
-from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq
-from pyccel.ast.operators     import PyccelLt
-from pyccel.ast.variable      import Variable, DottedVariable
+from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
+from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
+from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
 from pyccel.parser.scope      import Scope
 from pyccel.errors.errors     import Errors
 from pyccel.errors.messages   import PYCCEL_RESTRICTION_TODO
@@ -45,7 +50,7 @@ from .wrapper                 import Wrapper
 
 errors = Errors()
 
-cwrapper_ndarray_import = Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))
+cwrapper_ndarray_imports = [Import('cwrapper_ndarrays', Module('cwrapper_ndarrays', (), ()))]
 
 class CToPythonWrapper(Wrapper):
     """
@@ -53,14 +58,22 @@ class CToPythonWrapper(Wrapper):
 
     A class which provides all necessary functions for wrapping different AST
     objects such that the resulting AST is Python-compatible.
+
+    Parameters
+    ----------
+    file_location : str
+        The folder where the translated code is located and where the generated .so file will
+        be located.
     """
-    def __init__(self):
+    def __init__(self, file_location):
         # A map used to find the Python-compatible Variable equivalent to an object in the AST
         self._python_object_map = {}
         # Indicate if arrays were wrapped.
         self._wrapping_arrays = False
         # The object that should be returned to indicate an error
         self._error_exit_code = Nil()
+
+        self._file_location = file_location
         super().__init__()
 
     def get_new_PyObject(self, name, dtype = None, is_temp = False):
@@ -91,14 +104,11 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            try:
-                var = Variable(dtype=self._python_object_map[dtype],
-                                name=self.scope.get_new_name(name),
-                                memory_handling='alias',
-                                cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
-                                is_temp=is_temp)
-            except KeyError as e:
-                raise NotImplementedError("Can't return an object whose type was imported. See #1650") from e
+            var = Variable(dtype=self._python_object_map[dtype],
+                            name=self.scope.get_new_name(name),
+                            memory_handling='alias',
+                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
+                            is_temp=is_temp)
         else:
             var = Variable(dtype=PyccelPyObject(),
                             name=self.scope.get_new_name(name),
@@ -265,7 +275,7 @@ class CToPythonWrapper(Wrapper):
             try :
                 cast_function = check_type_registry[(dtype, prec)]
             except KeyError:
-                errors.report(f"Can't check the type of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
@@ -274,12 +284,12 @@ class CToPythonWrapper(Wrapper):
 
             func_call = FunctionCall(func, [py_obj])
         else:
-            dtype = str(dtype)
+            np_dtype = str(dtype)
             prec  = get_final_precision(arg)
             try :
-                type_ref = numpy_dtype_registry[(dtype, prec)]
+                type_ref = numpy_dtype_registry[(np_dtype, prec)]
             except KeyError:
-                errors.report(f"Can't check the type of an array of {dtype}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of an array of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
 
             # order flag
@@ -296,7 +306,7 @@ class CToPythonWrapper(Wrapper):
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
 
         if raise_error:
-            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
+            message = LiteralString(f"Expected an argument of type {dtype.name} for argument {arg.name}")
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
@@ -447,7 +457,126 @@ class CToPythonWrapper(Wrapper):
 
         return function
 
-    def _build_module_exec_function(self, expr):
+    def _save_referenced_objects(self, func, func_args):
+        """
+        Save any arguments passed to the wrapper which are then stored in pointers.
+
+        If arguments are saved into pointers (e.g. inside classes) then their reference
+        counter must be incremented. This prevents them being deallocated if they go
+        out of scope in Python. The class must then take care to decrement their
+        reference counter when it is itself deallocated to prevent a memory leak.
+        The attribute `FunctionDefArgument.persistent_target` indicates whether an
+        argument is a target inside the function. When it is true then additional code
+        is added to the wrapper body. This code increments the reference counter for
+        the argument and adds the object to a list of objects whose reference counter
+        must be decremented in the class destructor.
+
+        Parameters
+        ----------
+        func : FunctionDef
+            The function being wrapped.
+        func_args : list of FunctionDefArguments
+            The arguments passed by Python to the function (self, args, kwargs).
+
+        Returns
+        -------
+        list
+            A list of any expressions which should be added to the wrapper body to
+            add references to the arguments.
+        """
+        body = []
+        class_arg_var = func_args[0].var
+        class_scope = class_arg_var.cls_base.scope
+        for a in func.arguments:
+            if a.persistent_target:
+                ref_attribute = class_scope.find('referenced_objects', 'variables', raise_if_missing = True)
+                ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = class_arg_var)
+                python_arg = self._python_object_map[a]
+                if not isinstance(python_arg.dtype, PyccelPyObject):
+                    python_arg = ObjectAddress(PointerCast(python_arg, PyList_Append.arguments[1].var))
+                append_call = FunctionCall(PyList_Append, (ref_list, python_arg))
+                body.extend([If(IfSection(PyccelEq(append_call, PyccelUnarySub(LiteralInteger(1))),
+                                          [Return([self._error_exit_code])]))])
+        return body
+
+    def _incref_return_pointer(self, ref_obj, return_var, orig_var):
+        """
+        Get the code necessary to return an object which references another.
+
+        Get the code necessary to return an object which references another Python object. This is necessary when
+        wrapping functions (or getters) which return pointers (e.g. attributes of a class). For these objects the
+        target must not be deallocated before the returned object is no longer needed. For arrays this is achieved
+        using PyArray_SetBaseObject, to save the reference. For class instances the self instance is added to the
+        list of referenced objects saved in the returned class.
+
+        Parameters
+        ----------
+        ref_obj : Variable
+            A variable representing the class instance which must not be deallocated too early.
+        return_var : Variable
+            The variable which will be returned from the function.
+        orig_var : Variable
+            The variable which will be returned from the function as it appeared in the original code.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            Any nodes which must be printed to increase reference counts.
+        """
+        if not orig_var.is_alias:
+            return []
+        elif isinstance(orig_var.class_type, NumpyNDArrayType):
+            save_ref_call = FunctionCall(PyArray_SetBaseObject,
+                                    (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
+                                     ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
+            return [FunctionCall(Py_INCREF, (ref_obj,)),
+                    If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                                      [Return([self._error_exit_code])]))]
+        elif isinstance(orig_var.dtype, CustomDataType):
+            ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
+            ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
+            save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
+            return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                                      [Return([self._error_exit_code])]))]
+        else:
+            raise NotImplementedError("Unsure how to preserve references for attribute of type {type(expr.class_type)}")
+
+    def _add_object_to_mod(self, module_var, obj, name, initialised):
+        """
+        Get code for adding an object to the module.
+
+        This function creates the AST nodes necessary to add an object to
+        the module. This includes the creation of the success check and
+        the dereferencing of any objects used.
+
+        Parameters
+        ----------
+        module_var : Variable
+            The variable containing the PyObject* which describes the module.
+
+        obj : Variable
+            The variable containing the PyObject* which should be added to the module.
+
+        name : str
+            The name by which the object will be known in Pyccel.
+
+        initialised : list[Variable]
+            A list of the variables which have had their reference counter incremented
+            and must therefore decrement their counter if an error is raised.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            The code which adds the object to the module.
+        """
+        add_expr = PyModule_AddObject(module_var, LiteralString(name), obj)
+        if_expr = If(IfSection(PyccelLt(add_expr, LiteralInteger(0)),
+                        [FunctionCall(Py_DECREF, [i]) for i in initialised] +
+                        [Return([self._error_exit_code])]))
+        initialised.append(obj)
+        return [if_expr, FunctionCall(Py_INCREF, (obj,))]
+
+    def _build_module_init_function(self, expr, imports):
         """
         Build the function that will be called when the module is first imported.
 
@@ -460,44 +589,78 @@ class CToPythonWrapper(Wrapper):
         expr : Module
             The module of interest.
 
+        imports : list of Import
+            A list of any imports that will appear in the PyModule.
+
         Returns
         -------
-        FunctionDef
+        PyModInitFunc
             The initialisation function.
         """
+
+        mod_name = getattr(expr, 'original_module', expr).name
         # Initialise the scope
-        func_name = self.scope.get_new_name(expr.name+'_exec_func')
+        func_name = self.scope.get_new_name(f'PyInit_{mod_name}')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
         for v in expr.variables:
             func_scope.insert_symbol(v.name)
 
+        n_classes = len(expr.classes)
+
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
-        result_var = self.scope.get_temporary_variable('int', precision=4)
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
+                                    class_type = CStackArray(), cls_base = StackArrayClass)
+        self.scope.insert_variable(API_var)
+        capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
+
+        module_def_name = self.scope.get_new_name(f'{mod_name}_module')
+        body = [AliasAssign(module_var, PyModule_Create(module_def_name)),
+                If(IfSection(PyccelIs(module_var, Nil()), [Return([self._error_exit_code])]))]
+
+        initialised = [module_var]
+
+        # Save classes to the module variable
+        for i,c in enumerate(expr.classes):
+            wrapped_class = self._python_object_map[c]
+            type_object = wrapped_class.type_object
+
+            API_elem = IndexedElement(API_var, i)
+            body.append(AliasAssign(API_elem, PointerCast(ObjectAddress(type_object), API_elem)))
+
+        ok_code = LiteralInteger(0)
+
+        # Save Capsule describing types (needed for dependent modules)
+        body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
+        body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
+
+        body.append(FunctionCall(import_array, ()))
+        import_funcs = [i.source_module.import_func for i in imports if isinstance(i.source_module, PyModule)]
+        for i_func in import_funcs:
+            body.append(If(IfSection(PyccelLt(FunctionCall(i_func, ()), ok_code),
+                            [FunctionCall(Py_DECREF, [i]) for i in initialised] +
+                            [Return([self._error_exit_code])])))
 
         # Call the initialisation function
         if expr.init_func:
-            body = [FunctionCall(expr.init_func, [])]
-        else:
-            body = []
+            body.append(FunctionCall(expr.init_func, []))
 
         # Save classes to the module variable
-        for c in expr.classes:
+        for i,c in enumerate(expr.classes):
             wrapped_class = self._python_object_map[c]
             type_object = wrapped_class.type_object
             class_name = wrapped_class.name
 
             ready_type = FunctionCall(PyType_Ready, (type_object,))
             if_expr = If(IfSection(PyccelLt(ready_type, LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
+                            [FunctionCall(Py_DECREF, [i]) for i in initialised] +
+                            [Return([self._error_exit_code])]))
             body.append(if_expr)
-            body.append(FunctionCall(Py_INCREF, (type_object,)))
-            add_expr = PyModule_AddObject(module_var, LiteralString(class_name), type_object)
-            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
-            body.append(if_expr)
+
+            body.extend(self._add_object_to_mod(module_var, type_object, class_name, initialised))
 
         # Save module variables to the module variable
         for v in expr.variables:
@@ -506,18 +669,113 @@ class CToPythonWrapper(Wrapper):
             body.extend(self._wrap(v))
             wrapped_var = self._python_object_map[v]
             name = getattr(v, 'indexed_name', v.name)
-            var_name = LiteralString(self.scope.get_python_name(name))
-            add_expr = PyModule_AddObject(module_var, var_name, wrapped_var)
-            if_expr = If(IfSection(PyccelLt(add_expr,LiteralInteger(0)),
-                            [Return([PyccelUnarySub(LiteralInteger(1))])]))
-            body.append(if_expr)
+            var_name = self.scope.get_python_name(name)
+            body.extend(self._add_object_to_mod(module_var, wrapped_var, var_name, initialised))
 
-        body.append(Return([LiteralInteger(0)]))
+        body.append(Return([module_var]))
 
         self.exit_scope()
 
-        return FunctionDef(func_name, [FunctionDefArgument(module_var)], [FunctionDefResult(result_var)], body,
-                scope = func_scope, is_static=True)
+        return PyModInitFunc(func_name, body, [API_var], func_scope)
+
+    def _build_module_import_function(self, expr):
+        """
+        Build the function that will be called in order to use the module from another module.
+
+        Build the function that will be called when the module is first imported.
+        This function must import the capsule created in the module initialisation.
+        In order for this to work from any folder the `sys.path` list is modified to include
+        the folder where the file is located (currently this is done by temporarily modifying
+        an element of the list as the stable C-Python API doesn't contain any functions for
+        reducing the size of lists).
+        See <https://docs.python.org/3/extending/extending.html>
+        for more details.
+
+        Parameters
+        ----------
+        expr : Module
+            The module of interest.
+
+        Returns
+        -------
+        API_var : Variable
+            The variable which contains the data extracted from the capsule.
+
+        import_func : FunctionDef
+            The import function.
+        """
+        mod_name = getattr(expr, 'original_module', expr).name
+        # Initialise the scope
+        func_name = self.scope.get_new_name(f'{mod_name}_import')
+
+        API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
+        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (None,),
+                                    class_type = CStackArray(), cls_base = StackArrayClass,
+                                    memory_handling = 'alias')
+        self.scope.insert_variable(API_var)
+
+        func_scope = self.scope.new_child_scope(func_name)
+        self.scope = func_scope
+
+        ok_code = LiteralInteger(0, precision=-2)
+        error_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+
+        # Create variables to temporarily modify the Python path so the file will be discovered
+        current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
+        stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
+
+        body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
+                AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, precision=-2)])),
+                FunctionCall(Py_INCREF, [stash_path]),
+                FunctionCall(PyList_SetItem, [current_path,
+                                              LiteralInteger(0, precision=-2),
+                                              FunctionCall(PyUnicode_FromString, [LiteralString(self._file_location)])]),
+                AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
+                FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, precision=-2), stash_path]),
+                Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
+
+        result = func_scope.get_temporary_variable(NativeInteger(), precision=-2)
+        self.exit_scope()
+        import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
+
+        return API_var, import_func
+
+    def _allocate_class_instance(self, class_var, scope, is_alias):
+        """
+        Get all expressions necessary to allocate a new class description.
+
+        Get all expressions necessary to allocate a new class description, this includes allocating
+        the object itself, creating the list of referenced_objects and saving the alias status.
+
+        Parameters
+        ----------
+        class_var : Variable
+            The variable where the class instance is stored.
+
+        scope : Scope
+            The scope of the class (containing the class attributes).
+
+        is_alias : bool
+            A boolean indicating if an alias is being stored.
+
+        Returns
+        -------
+        list[PyccelAstNode]
+            A list of expressions necessary to allocate a new class description.
+        """
+        # Get the list of referenced objects
+        ref_attribute = scope.find('referenced_objects', 'variables', raise_if_missing = True)
+        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = class_var)
+
+        # Get alias attribute
+        attribute = scope.find('is_alias', 'variables', raise_if_missing = True)
+        alias_bool = attribute.clone(attribute.name, new_class = DottedVariable, lhs = class_var)
+
+        alias_val = LiteralTrue() if is_alias else LiteralFalse()
+
+        return [Allocate(class_var, shape=(), order=None, status='unallocated'),
+                AliasAssign(ref_list, FunctionCall(PyList_New, ())),
+                Assign(alias_bool, alias_val)]
 
     def _get_class_allocator(self, class_dtype, func = None):
         """
@@ -560,7 +818,7 @@ class CToPythonWrapper(Wrapper):
         attribute = scope.find('instance', 'variables', raise_if_missing = True)
         c_res = attribute.clone(attribute.name, new_class = DottedVariable, lhs = python_result_var)
 
-        body = [Allocate(python_result_var, shape=(), order=None, status='unallocated', like = self_var)]
+        body = self._allocate_class_instance(python_result_var, scope, False)
 
         if func:
             body.append(AliasAssign(c_res, FunctionCall(func, ())))
@@ -602,11 +860,11 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to create the class instance.
         """
         original_func = getattr(init_function, 'original_function', init_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
         self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
-        class_dtype = init_function.arguments[0].var.dtype
 
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
@@ -631,7 +889,7 @@ class CToPythonWrapper(Wrapper):
         original_c_args = init_function.arguments
 
         # Get the arguments of the PyFunctionDef
-        func_args, body = self._unpack_python_args(python_args, class_dtype)
+        func_args, body = self._unpack_python_args(python_args, cls_dtype)
         func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
@@ -643,6 +901,8 @@ class CToPythonWrapper(Wrapper):
 
         # Get the arguments and results which should be used to call the c-compatible function
         func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in original_c_args]
+
+        body.extend(self._save_referenced_objects(init_function, func_args))
 
         # Call the C-compatible function
         body.append(FunctionCall(init_function, func_call_args))
@@ -703,7 +963,8 @@ class CToPythonWrapper(Wrapper):
             A function that can be called to destroy the class instance.
         """
         original_func = getattr(del_function, 'original_function', del_function)
-        func_name = self.scope.get_new_name(original_func.name+'_wrapper')
+        original_name = original_func.cls_name or original_func.name
+        func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
@@ -715,13 +976,22 @@ class CToPythonWrapper(Wrapper):
         attribute = wrapper_scope.find('instance', 'variables')
         c_obj = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
 
+        attribute = wrapper_scope.find('is_alias', 'variables')
+        is_alias = attribute.clone(attribute.name, new_class = DottedVariable, lhs = func_arg)
+
         if isinstance(del_function, BindCFunctionDef):
-            body = [FunctionCall(del_function, [c_obj]),
-                    Deallocate(func_arg)]
+            body = [FunctionCall(del_function, [c_obj])]
         else:
             body = [FunctionCall(del_function, [c_obj]),
-                    Deallocate(c_obj),
-                    Deallocate(func_arg)]
+                    Deallocate(c_obj)]
+        body = [If(IfSection(PyccelNot(is_alias), body))]
+
+        # Get the list of referenced objects
+        ref_attribute = wrapper_scope.find('referenced_objects', 'variables', raise_if_missing = True)
+        ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = func_arg)
+
+        body.extend([FunctionCall(Py_DECREF, (ref_list,)),
+                     Deallocate(func_arg)])
 
         self.exit_scope()
 
@@ -756,6 +1026,9 @@ class CToPythonWrapper(Wrapper):
         mod_scope = Scope(used_symbols = scope.local_used_symbols.copy(), original_symbols = scope.python_names.copy())
         self.scope = mod_scope
 
+        imports = [self._wrap(i) for i in getattr(expr, 'original_module', expr).imports]
+        imports = [i for i in imports if i]
+
         # Wrap classes
         classes = [self._wrap(i) for i in expr.classes]
 
@@ -772,17 +1045,19 @@ class CToPythonWrapper(Wrapper):
         # Wrap interfaces
         interfaces = [self._wrap(i) for i in expr.interfaces]
 
-        exec_func = self._build_module_exec_function(expr)
+        init_func = self._build_module_init_function(expr, imports)
+
+        API_var, import_func = self._build_module_import_function(expr)
 
         self.exit_scope()
 
-        imports = [cwrapper_ndarray_import] if self._wrapping_arrays else []
+        imports += cwrapper_ndarray_imports if self._wrapping_arrays else []
         if not isinstance(expr, BindCModule):
             imports.append(Import(expr.name, expr))
         original_mod = getattr(expr, 'original_module', expr)
-        return PyModule(original_mod.name, [], funcs, imports = imports,
+        return PyModule(original_mod.name, [API_var], funcs, imports = imports,
                         interfaces = interfaces, classes = classes, scope = mod_scope,
-                        init_func = exec_func)
+                        init_func = init_func, import_func = import_func)
 
     def _wrap_BindCModule(self, expr):
         """
@@ -869,6 +1144,7 @@ class CToPythonWrapper(Wrapper):
             class_dtype = possible_class_base[0].class_type
         else:
             class_dtype = None
+
 
         # Add the variables to the expected symbols in the scope
         for a in getattr(example_func, 'bind_c_arguments', example_func.arguments):
@@ -993,8 +1269,9 @@ class CToPythonWrapper(Wrapper):
 
         # Get the results of the PyFunctionDef
         python_result_variables = self._get_python_result_variables(python_results)
-        body.extend([Allocate(p, shape=(), order=None, status='unallocated') for p in python_result_variables
-                        if isinstance(p.dtype, CustomDataType)])
+        for p_r, c_r in zip(python_result_variables, original_func.results):
+            if isinstance(p_r.dtype, CustomDataType):
+                body.extend(self._allocate_class_instance(p_r, p_r.cls_base.scope, c_r.var.is_alias))
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
         body += [l for a in python_args for l in self._wrap(a)]
@@ -1019,16 +1296,26 @@ class CToPythonWrapper(Wrapper):
         for n, r, o_r in zip(c_result_names, c_results, original_c_results):
             if isinstance(r, DottedVariable):
                 self.scope.remove_variable(r, name=n)
-                body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
+                if not o_r.var.is_alias:
+                    body.append(Allocate(r, shape=(), order=None, status='unallocated', like=o_r.var))
         c_results = [ObjectAddress(r) if r.dtype is BindCPointer() else r for r in c_results]
         c_results = [PointerCast(r, cast_type = o_r.var) if isinstance(r, DottedVariable) else r for r,o_r in zip(c_results, original_c_results)]
+
+        if class_dtype:
+            body.extend(self._save_referenced_objects(expr, func_args))
 
         # Call the C-compatible function
         n_c_results = len(c_results)
         if n_c_results == 0:
             body.append(FunctionCall(expr, func_call_args))
         elif n_c_results == 1:
-            body.append(Assign(c_results[0], FunctionCall(expr, func_call_args)))
+            res = c_results[0]
+            if original_func.results[0].var.is_alias and not is_bind_c_function_def:
+                if isinstance(res, PointerCast):
+                    res = res.obj
+                body.append(AliasAssign(res, FunctionCall(expr, func_call_args)))
+            else:
+                body.append(Assign(res, FunctionCall(expr, func_call_args)))
         else:
             body.append(Assign(c_results, FunctionCall(expr, func_call_args)))
 
@@ -1045,6 +1332,22 @@ class CToPythonWrapper(Wrapper):
                 else:
                     body.append(Deallocate(v))
         body.extend(result_wrap)
+
+        for p_r, c_r in zip(python_result_variables, original_func.results):
+            arg_targets = expr.result_pointer_map.get(c_r, ())
+            n_targets = len(arg_targets)
+            if n_targets == 1:
+                collect_arg = self._python_object_map[python_args[arg_targets[0]]]
+                body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
+            elif n_targets > 1:
+                if isinstance(c_r.var.class_type, NumpyNDArrayType):
+                    errors.report((f"Can't determine the pointer target for the return object {c_r}. "
+                                "Please avoid calling this function to prevent accidental creation of dangling pointers."),
+                            symbol = original_func, severity='warning')
+                else:
+                    for t in arg_targets:
+                        collect_arg = self._python_object_map[python_args[t]]
+                        body.extend(self._incref_return_pointer(collect_arg, p_r, c_r.var))
 
         # Pack the Python compatible results of the function into one argument.
         n_py_results = len(python_result_variables)
@@ -1273,7 +1576,6 @@ class CToPythonWrapper(Wrapper):
 
         name = self.scope.get_expected_name(orig_var.name)
 
-        body = []
         # Create a variable to store the C-compatible result.
         if orig_var.is_ndarray:
             # An array is a pointer to ensure the shape is freed but the data is passed through to NumPy
@@ -1290,6 +1592,8 @@ class CToPythonWrapper(Wrapper):
         # Cast from C to Python
         if not isinstance(orig_var.dtype, CustomDataType):
             body = [AliasAssign(python_res, FunctionCall(C_to_Python(c_res), [c_res]))]
+        else:
+            body = []
 
         # Deallocate any unused memory
         if orig_var.rank:
@@ -1512,3 +1816,45 @@ class CToPythonWrapper(Wrapper):
             wrapped_class.add_alloc_method(self._get_class_allocator(orig_cls_dtype))
 
         return wrapped_class
+
+    def _wrap_Import(self, expr):
+        """
+        Examine an Import statement and collect any relevant objects.
+
+        Examine an Import statement used in the module being wrapped. If it imports a class
+        from a module then a PyClassDef is added to the scope imports to ensure that its
+        description is available for functions wishing to use this type for an argument
+        or return value.
+
+        Parameters
+        ----------
+        expr : Import
+            The import found in the module being wrapped.
+
+        Returns
+        -------
+        Import | None
+            The import needed in the wrapper, or None if none is necessary.
+        """
+        # Imports do not use collision handling as there is not enough context available.
+        # This should be fixed when stub files and proper pickling is added
+        import_wrapper = False
+        for as_name in expr.target:
+            t = as_name.object
+            if isinstance(t, ClassDef):
+                name = t.name
+                struct_name = f'Py{name}Object'
+                dtype = DataTypeFactory(struct_name, BaseClass=WrapperCustomDataType)()
+                type_name = f'Py{name}Type'
+                wrapped_class = PyClassDef(t, struct_name, type_name, Scope(), class_type = dtype)
+                self._python_object_map[t] = wrapped_class
+                self._python_object_map[t.class_type] = dtype
+                self.scope.imports['classes'][t.name] = wrapped_class
+                import_wrapper = True
+
+        if import_wrapper:
+            wrapper_name = f'{expr.source}_wrapper'
+            mod_spoof = PyModule(expr.source_module.name.name, (), (), scope = Scope())
+            return Import(wrapper_name, AsName(mod_spoof, expr.source), mod = mod_spoof)
+        else:
+            return None

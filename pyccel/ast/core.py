@@ -59,8 +59,8 @@ __all__ = (
     'Declare',
     'Decorator',
     'Del',
-    'Duplicate',
     'DoConcurrent',
+    'Duplicate',
     'EmptyNode',
     'ErrorExit',
     'Exit',
@@ -75,8 +75,8 @@ __all__ = (
     'If',
     'IfSection',
     'Import',
-    'InlineFunctionDef',
     'InProgram',
+    'InlineFunctionDef',
     'Interface',
     'Iterable',
     'Module',
@@ -93,8 +93,6 @@ __all__ = (
     'SympyFunction',
     'While',
     'With',
-    'create_variable',
-    'create_incremented_string',
 )
 
 #==============================================================================
@@ -107,38 +105,6 @@ __all__ = (
 #      - add a new Idx that uses Variable instead of Symbol
 
 #==============================================================================
-
-#==============================================================================
-def create_variable(forbidden_names, prefix = None, counter = 1):
-    """This function takes a prefix and a counter and uses them to construct
-    a PyccelSymbol with a name of the form:
-            prefix_counter
-    Where counter is formatted to fill 4 characters
-    The new name is checked against a list of forbidden expressions. If the
-    constructed name is forbidden then the counter is incremented until a valid
-    name is found
-
-      Parameters
-      ----------
-      forbidden_exprs : Set
-                        A set of all the values which are not valid solutions to this problem
-      prefix          : str
-                        The prefix used to begin the string
-      counter         : int
-                        The expected value of the next name
-
-      Returns
-      ----------
-      name            : PyccelSymbol
-                        A PyccelSymbol with the incremented string name
-      counter         : int
-                        The expected value of the next name
-
-    """
-
-    name, counter = create_incremented_string(forbidden_names, prefix, counter = counter)
-
-    return PyccelSymbol(name, is_temp=True), counter
 
 
 class AsName(PyccelAstNode):
@@ -1843,6 +1809,10 @@ class FunctionDefArgument(TypedAstNode):
         the case if the argument is the first argument of a method of a
         class.
 
+    persistent_target : bool, default: False
+        Indicate if the object passed as this argument becomes a target.
+        This argument will usually only be passed by the wrapper.
+
     See Also
     --------
     FunctionDef : The class where these objects will be stored.
@@ -1854,10 +1824,11 @@ class FunctionDefArgument(TypedAstNode):
     >>> n
     n
     """
-    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_bound_argument')
+    __slots__ = ('_name','_var','_kwonly','_annotation','_value','_inout', '_persistent_target', '_bound_argument')
     _attribute_nodes = ('_value','_var')
 
-    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False):
+    def __init__(self, name, *, value = None, kwonly=False, annotation=None, bound_argument = False,
+            persistent_target = False):
         if isinstance(name, (Variable, FunctionAddress)):
             self._var  = name
             self._name = name.name
@@ -1874,6 +1845,7 @@ class FunctionDefArgument(TypedAstNode):
         self._value      = value
         self._kwonly     = kwonly
         self._annotation = annotation
+        self._persistent_target = persistent_target
         self._bound_argument = bound_argument
 
         if isinstance(name, Variable):
@@ -1952,6 +1924,21 @@ class FunctionDefArgument(TypedAstNode):
         modifying the inout flag.
         """
         self._inout = False
+
+    @property
+    def persistent_target(self):
+        """
+        Indicate if the object passed as this argument becomes a target.
+
+        Indicate if the object passed as this argument becomes a pointer target after
+        a call to the function associated with this argument. This may be the case
+        in class methods.
+        """
+        return self._persistent_target
+
+    @persistent_target.setter
+    def persistent_target(self, persistent_target):
+        self._persistent_target = persistent_target
 
     @property
     def bound_argument(self):
@@ -2393,6 +2380,9 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
+    result_pointer_map : dict[FunctionDefResult, list[int]]
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
     docstring : str
         The doc string of the function.
 
@@ -2437,7 +2427,8 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external',
+                 '_result_pointer_map')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2461,6 +2452,7 @@ class FunctionDef(ScopedAstNode):
         is_external=False,
         functions=(),
         interfaces=(),
+        result_pointer_map={},
         docstring=None,
         scope=None):
 
@@ -2555,6 +2547,7 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
+        self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
 
@@ -2706,6 +2699,15 @@ class FunctionDef(ScopedAstNode):
         return False
 
     @property
+    def is_static(self):
+        """
+        Indicates if the function is static.
+
+        Indicates if the function is static.
+        """
+        return self._is_static
+
+    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
@@ -2835,6 +2837,17 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_unused(self):
         return False
+
+    @property
+    def result_pointer_map(self):
+        """
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
+        A dictionary whose keys are FunctionDefResult objects and whose values are a list of
+        integers. The integers specify the position of the argument which is a target of the
+        FunctionDefResult.
+        """
+        return self._result_pointer_map
 
 class InlineFunctionDef(FunctionDef):
     """
@@ -3315,7 +3328,7 @@ class ClassDef(ScopedAstNode):
         if isinstance(name, str):
             name = PyccelSymbol(name)
         else:
-            raise TypeError('Function name must be PyccelSymbol or string')
+            raise TypeError('Class name must be PyccelSymbol or string')
 
         # attributes
 
