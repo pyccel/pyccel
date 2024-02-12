@@ -847,7 +847,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListAppend(self, expr):
         method_name = expr.name
-        list_var = self._print(expr.list_variable)
+        list_var = self._print(expr.list_name)
         append_arg = self._print(expr.append_argument)
 
         return f"{list_var}.{method_name}({append_arg})\n"
