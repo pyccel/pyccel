@@ -105,3 +105,23 @@ def test_append_range_list(language):
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="append() not implemented in c"),
+            pytest.mark.c]),
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason="append() not implemented in fortran"),
+            pytest.mark.fortran]),
+        pytest.param("python", marks = pytest.mark.python)
+    ]
+)
+def test_append_range_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(0, 1000):
+            a.append((i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
