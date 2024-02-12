@@ -2844,7 +2844,7 @@ class FunctionDef(ScopedAstNode):
         A dictionary connecting any pointer results to the index of the possible target arguments.
 
         A dictionary whose keys are FunctionDefResult objects and whose values are a list of
-        integers. The integers specifiy the position of the argument which is a target of the
+        integers. The integers specify the position of the argument which is a target of the
         FunctionDefResult.
         """
         return self._result_pointer_map
