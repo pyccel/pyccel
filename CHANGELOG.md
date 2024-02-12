@@ -12,7 +12,6 @@ All notable changes to this project will be documented in this file.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
--   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
@@ -20,7 +19,11 @@ All notable changes to this project will be documented in this file.
 -   #1605 : Add support for methods and interfaces in classes (including `__init__` and `__del__`).
 -   #1618 : Add support for class instance attributes.
 -   #1680 : Add support for `typing.Final`.
--   Added a `--time_execution` flag to allow detailed investigation of critical sections of code.
+-   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
+-   #1659 : Add multi-file support for classes.
+-   #1708 : Allow returning pointers to arguments from functions.
+-   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
 
 ### Fixed
 
@@ -45,6 +48,7 @@ All notable changes to this project will be documented in this file.
 -   #1712 : Fix library path and OpenMP support for recent Apple chips by getting Homebrew directory with `brew --prefix`.
 -   #1687 : Pointers in tuples are deallocated.
 -   #1586 : Raise an error for targets of class instances which go out of scope too early.
+-   #1717 : Fix a bug when handling paths with dots.
 
 ### Changed
 

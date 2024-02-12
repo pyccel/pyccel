@@ -239,7 +239,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
         f_output = '\n'.join(f_output_split[1:])
         assert(p_list==f_list)
     elif dtype is complex:
-        rx = re.compile('[-0-9.eEj]+')
+        rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?j?')
         p, p_output = get_value(p_output, rx, complex)
         if p.imag == 0:
             p2, p_output = get_value(p_output, rx, complex)
@@ -250,7 +250,7 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
                 f2, f_output = get_value(f_output, rx, complex)
                 f = f+f2
         else:
-            rx = re.compile('[-0-9.eE]+')
+            rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?')
             f, f_output  = get_value(f_output, rx, float)
             f2, f_output = get_value(f_output, rx, float)
             f = f+f2*1j
@@ -263,13 +263,13 @@ def compare_pyth_fort_output_by_type( p_output, f_output, dtype=float, language=
         assert(p==f)
 
     elif dtype is float:
-        rx = re.compile('[-0-9.eE]+')
+        rx = re.compile('-?[0-9.]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, float)
         f, f_output = get_value(f_output, rx, float)
         assert(np.isclose(p, f))
 
     elif dtype is int:
-        rx = re.compile('[-0-9eE]+')
+        rx = re.compile('-?[0-9]+([eE][+-]?[0-9]+)?')
         p, p_output = get_value(p_output, rx, int)
         f, f_output = get_value(f_output, rx, int)
         assert(p==f)
@@ -1138,6 +1138,43 @@ def test_concatentation():
     pyccel_test("scripts/concatenation.py",
                 language = 'fortran',
                 output_dtype=[int]*15+[str])
+
+#------------------------------------------------------------------------------
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c)
+    )
+)
+def test_class_imports(language):
+    cwd = get_abs_path('project_class_imports')
+
+    test_file = get_abs_path('project_class_imports/runtest.py')
+
+    pyth_out = get_python_output(test_file, cwd)
+
+    compile_file = get_abs_path('project_class_imports/project/basics/Point_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out1 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out1, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/project/basics/Line_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out2 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out2, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/project/shapes/Square_mod.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    out3 = get_python_output(test_file, cwd)
+    compare_pyth_fort_output(pyth_out, out3, float, 'python')
+
+    compile_file = get_abs_path('project_class_imports/runtest.py')
+    compile_pyccel(cwd, compile_file, f"--language={language} --verbose")
+
+    lang_out = get_lang_output(test_file, language)
+    compare_pyth_fort_output(pyth_out, lang_out, float, language)
 
 #------------------------------------------------------------------------------
 def test_time_execution_flag():

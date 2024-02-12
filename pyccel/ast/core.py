@@ -2380,6 +2380,9 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
+    result_pointer_map : dict[FunctionDefResult, list[int]]
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
     docstring : str
         The doc string of the function.
 
@@ -2424,7 +2427,8 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external',
+                 '_result_pointer_map')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2448,6 +2452,7 @@ class FunctionDef(ScopedAstNode):
         is_external=False,
         functions=(),
         interfaces=(),
+        result_pointer_map={},
         docstring=None,
         scope=None):
 
@@ -2542,6 +2547,7 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
+        self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
 
@@ -2693,6 +2699,15 @@ class FunctionDef(ScopedAstNode):
         return False
 
     @property
+    def is_static(self):
+        """
+        Indicates if the function is static.
+
+        Indicates if the function is static.
+        """
+        return self._is_static
+
+    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
@@ -2822,6 +2837,17 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_unused(self):
         return False
+
+    @property
+    def result_pointer_map(self):
+        """
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
+        A dictionary whose keys are FunctionDefResult objects and whose values are a list of
+        integers. The integers specify the position of the argument which is a target of the
+        FunctionDefResult.
+        """
+        return self._result_pointer_map
 
 class InlineFunctionDef(FunctionDef):
     """
@@ -3302,7 +3328,7 @@ class ClassDef(ScopedAstNode):
         if isinstance(name, str):
             name = PyccelSymbol(name)
         else:
-            raise TypeError('Function name must be PyccelSymbol or string')
+            raise TypeError('Class name must be PyccelSymbol or string')
 
         # attributes
 
