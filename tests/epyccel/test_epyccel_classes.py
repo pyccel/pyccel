@@ -275,7 +275,7 @@ def test_class_out(language):
 
     if language != 'python':
         with pytest.raises(AttributeError):
-            p_l.x[:] = np.ones(6)
+            p_l.x = np.ones(6)
 
 def test_ptr_in_class(language):
     import classes.ptr_in_class as mod
