@@ -1138,8 +1138,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListPop(self, expr):
         args = ""
-        if expr.args:
-            args = self._print(expr.args)
+        if expr.pop_index:
+            args = self._print(expr.pop_index)
         name = self._print(expr.list_variable)
         return f"{name}.pop({args})"
 
