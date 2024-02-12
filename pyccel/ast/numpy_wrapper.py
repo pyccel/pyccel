@@ -46,17 +46,7 @@ __all__ = (
     'PyArray_SetBaseObject',
     #-------OTHERS--------
     'get_numpy_max_acceptable_version_file',
-    'PyccelPyArrayObject'
 )
-class PyccelPyArrayObject(DataType, metaclass=Singleton):
-    """
-    Datatype representing a `PyArrayObject`.
-
-    Datatype representing a `PyArrayObject` which is the
-    class used to hold NumPy array objects in Python.
-    """
-    __slots__ = ()
-    _name = 'PyArrayObject'
 
 class PyccelPyArrayObject(DataType, metaclass=Singleton):
     """
