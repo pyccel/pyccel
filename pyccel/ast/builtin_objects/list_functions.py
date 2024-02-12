@@ -27,7 +27,7 @@ class ListPop(PyccelInternalFunction) :
     name : TypedAstNode
         The name of the list.
 
-    index_elemnt : TypedAstNode
+    index_element : TypedAstNode
         The current index value for the element to be popped.
     """
     __slots__ = ('_dtype','_precision', '_index','_list_variable')
