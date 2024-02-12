@@ -49,18 +49,6 @@ def test_class_function(modnew):
     c = modnew.C()
     assert c.get_3() == 3
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Argument reference count not increased. See #1586"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Argument reference count not increased. See #1586"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_classes_1(language):
     import classes.classes_1 as mod
     modnew = epyccel(mod, language = language)
@@ -72,13 +60,13 @@ def test_classes_1(language):
     p1_py = mod.Point(x1)
     p1_l  = modnew.Point(x2)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
 
     p1_py.translate(a)
     p1_l.translate(a)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
@@ -87,7 +75,7 @@ def test_classes_1(language):
 
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.allclose(p2_py.get_x(), p2_l.get_x())
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     print(p2_py.get_x(), p2_l.get_x())
     assert p2_py.get_X() == p2_l.get_X()
 
@@ -97,15 +85,15 @@ def test_classes_1(language):
     p2_l.translate(a)
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.isclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p2_py.get_X() == p2_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
     l_py = mod.Line(p1_py)
-    l_l  = mod.Line(p1_l)
+    l_l  = modnew.Line(p1_l)
 
     assert p1_py.get_X() == p1_l.get_X()
-    assert l_py.get_x() == l_l.get_x()
+    assert np.allclose(l_py.get_x(), l_l.get_x(), rtol=RTOL, atol=ATOL)
 
 def test_classes_2(language):
     import classes.classes_2 as mod
