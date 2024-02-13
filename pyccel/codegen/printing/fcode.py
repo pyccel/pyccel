@@ -1812,6 +1812,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
+        if expr.functions[0].is_inline:
+            return ''
+
         name = self._print(expr.name)
         if all(isinstance(f, FunctionAddress) for f in expr.functions):
             funcs = expr.functions

@@ -9,24 +9,18 @@ import inspect
 import importlib
 import sys
 import os
-import string
-import random
+
 from filelock import FileLock, Timeout
 
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
+from pyccel.parser.utilities  import random_string
 from pyccel.codegen.pipeline import execute_pyccel
 from pyccel.errors.errors import ErrorsMode
 
-__all__ = ['random_string', 'get_source_function', 'epyccel_seq', 'epyccel']
+__all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 
-#==============================================================================
-random_selector = random.SystemRandom()
-
-def random_string( n ):
-    chars    = string.ascii_lowercase + string.digits
-    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 def get_source_function(func):

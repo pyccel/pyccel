@@ -5,13 +5,19 @@
 #------------------------------------------------------------------------------------------#
 
 """This file contains different utilities for the Parser."""
+import os
+import random
+import string
 
 from sympy import srepr
-import os
 
 from pyccel.ast.variable       import DottedName
 from pyccel.parser.extend_tree import CommentLine
 from pyccel.ast.internals      import PyccelSymbol
+
+__all__ = ('pyccel_external_lib', 'random_string', 'read_file', 'is_valid_filename_py',
+            'is_valid_filename_pyh', 'header_statement', 'accelerator_statement',
+            'get_module_name', 'view_tree', 'get_default_path')
 
 pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.lapack": "pyccel.stdlib.external.lapack",
@@ -19,6 +25,13 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
                        "fitpack"            : "pyccel.stdlib.internal.fitpack",
                        "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
+
+#==============================================================================
+random_selector = random.SystemRandom()
+
+def random_string( n ):
+    chars    = string.ascii_lowercase + string.digits
+    return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
 #==============================================================================
 

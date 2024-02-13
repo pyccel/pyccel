@@ -979,7 +979,8 @@ class SyntaxParser(BasicParser):
                imports=imports,
                decorators=decorators,
                docstring=docstring,
-               scope=scope)
+               scope=scope,
+               is_annotated=False)
 
         return func
 

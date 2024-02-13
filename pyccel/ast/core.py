@@ -2112,29 +2112,23 @@ class FunctionCall(TypedAstNode):
         if not isinstance(args, (tuple, list)):
             raise TypeError('args must be a list or tuple')
 
-        # add the missing argument in the case of optional arguments
+        # Sort and add the missing call arguments to match the arguments in the function definition
         f_args = func.arguments
-        if not len(args) == len(f_args):
-            # Collect dict of keywords and values (initialised as default)
-            f_args_dict = {a.name: (a.name, a.value) if a.has_default \
-                    else None for a in f_args}
-            keyword_args = []
-            for i,a in enumerate(args):
-                if a.keyword is None:
-                    # Replace default positional arguments with provided arguments
-                    f_args_dict[f_args[i].name] = a
-                else:
-                    keyword_args = args[i:]
-                    break
-
-            for a in keyword_args:
-                # Replace default arguments with provided keyword arguments
-                f_args_dict[a.keyword] = a
-
-            args = [FunctionCallArgument(keyword=a[0], value=a[1]) if isinstance(a, tuple) else a for a in f_args_dict.values()]
+        input_args = [a for a in args if a.keyword is None]
+        nargs = len(input_args)
+        for ka in f_args[nargs:]:
+            key = ka.name
+            relevant_args = [a for a in args[nargs:] if a.keyword == key]
+            n_relevant_args = len(relevant_args)
+            assert n_relevant_args <= 1
+            if n_relevant_args == 0 and ka.has_default:
+                input_args.append(ka.default_call_arg)
+            elif n_relevant_args == 1:
+                input_args.append(relevant_args[0])
+        args = input_args
 
         # Handle function as argument
-        arg_vals = [None if a is None else a.value for a in args]
+        arg_vals = [a.value for a in args]
         args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 
@@ -2424,7 +2418,7 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external')
+                 '_functions','_interfaces','_docstring', '_is_external','_is_annotated', '_syntactic_node')
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2449,7 +2443,9 @@ class FunctionDef(ScopedAstNode):
         functions=(),
         interfaces=(),
         docstring=None,
-        scope=None):
+        scope=None,
+        is_annotated=None,
+        syntactic_node=None):
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2542,7 +2538,9 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
-        self._docstring      = docstring
+        self._docstring       = docstring
+        self._is_annotated    = is_annotated
+        self._syntactic_node  = syntactic_node
         super().__init__(scope)
 
     @property
@@ -2700,6 +2698,24 @@ class FunctionDef(ScopedAstNode):
         Indicates if the function is static.
         """
         return self._is_static
+
+    @property
+    def is_annotated(self):
+        """
+        Indicates if the function is annotated.
+        """
+        return self._is_annotated
+
+    @is_annotated.setter
+    def is_annotated(self, is_annotated):
+        self._is_annotated = is_annotated
+
+    @property
+    def syntactic_node(self):
+        """
+        The syntactic node that is not annotated.
+        """
+        return self._syntactic_node
 
     @property
     def functions(self):
@@ -3016,7 +3032,7 @@ class Interface(PyccelAstNode):
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
-    __slots__ = ('_name','_functions','_is_argument')
+    __slots__ = ('_name','_functions','_is_argument', '_syntactic_node')
     _attribute_nodes = ('_functions',)
 
     def __init__(
@@ -3024,6 +3040,7 @@ class Interface(PyccelAstNode):
         name,
         functions,
         is_argument = False,
+        syntactic_node=None,
         ):
 
         if not isinstance(name, str):
@@ -3033,6 +3050,7 @@ class Interface(PyccelAstNode):
         self._name = name
         self._functions = functions
         self._is_argument = is_argument
+        self._syntactic_node = syntactic_node
         super().__init__()
 
     @property
@@ -3051,6 +3069,13 @@ class Interface(PyccelAstNode):
         return self._is_argument
 
     @property
+    def syntactic_node(self):
+        """
+        The syntactic node that is not annotated.
+        """
+        return self._syntactic_node
+
+    @property
     def docstring(self):
         """
         The docstring of the function.
@@ -3058,6 +3083,13 @@ class Interface(PyccelAstNode):
         The docstring of the interface function.
         """
         return self._functions[0].docstring
+
+    @property
+    def is_annotated(self):
+        """
+         flag to check if the node is annotated.
+        """
+        return self._functions[0].is_annotated
 
     def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
