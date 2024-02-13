@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+### Fixed
+
+### Changed
+
+### Deprecated
+
 ## \[1.11.1\] - 2024-02-13
 
 ### Fixed
