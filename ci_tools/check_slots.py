@@ -3,7 +3,6 @@
 import argparse
 import importlib
 import inspect
-import os
 import pathlib
 import sys
 import json
@@ -93,8 +92,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Get ast modules
-    ast_folder = os.path.dirname(ast.__file__)
-    ast_modules = ['.'.join(f.parts)[:-3] for f in folder.rglob('*.py') if f.parts[-1] != '__init__.py']
+    ast_folder = pathlib.Path(ast.__file__)
+    ast_modules = ['.'.join(f.parts)[:-3] for f in ast_folder.rglob('*.py') if f.parts[-1] != '__init__.py']
 
     # Prepare error collection
     missing_all = []
