@@ -24,7 +24,7 @@ class ListPop(PyccelInternalFunction) :
 
     Parameters
     ----------
-    name : TypedAstNode
+    last_variable : TypedAstNode
         The name of the list.
 
     index_element : TypedAstNode
