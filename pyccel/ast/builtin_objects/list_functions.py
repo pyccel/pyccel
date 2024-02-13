@@ -24,7 +24,7 @@ class ListPop(PyccelInternalFunction) :
 
     Parameters
     ----------
-    last_variable : TypedAstNode
+    list_variable : TypedAstNode
         The name of the list.
 
     index_element : TypedAstNode
@@ -36,15 +36,15 @@ class ListPop(PyccelInternalFunction) :
     _shape = None
     _class_type = NativeHomogeneousList()
     name = 'pop'
-    def __init__(self, last_variable, index_element=None):
+    def __init__(self, list_variable, index_element=None):
         if index_element:
-            super().__init__(last_variable, index_element)
+            super().__init__(list_variable, index_element)
         else:
-            super().__init__(last_variable)
+            super().__init__(list_variable)
         self._index = index_element
-        self._list_variable = last_variable
-        self._dtype = last_variable.dtype
-        self._precision = last_variable.precision
+        self._list_variable = list_variable
+        self._dtype = list_variable.dtype
+        self._precision = list_variable.precision
 
     @property
     def pop_index(self):
