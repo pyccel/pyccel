@@ -595,7 +595,6 @@ class SemanticParser(BasicParser):
 
         deallocs = []
         if len(expr.body)>0 and not isinstance(expr.body[-1], Return):
-            self._check_pointer_targets()
             for i in self._allocs[-1]:
                 if isinstance(i, DottedVariable):
                     if isinstance(i.lhs.dtype, CustomDataType) and self._current_function != '__del__':
@@ -604,7 +603,6 @@ class SemanticParser(BasicParser):
                     continue
                 deallocs.append(Deallocate(i))
         self._allocs.pop()
-        self._pointer_targets.pop()
         return deallocs
 
     def _check_pointer_targets(self, exceptions = ()):
@@ -653,7 +651,7 @@ class SemanticParser(BasicParser):
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
-            current_func = self.scope.functions[func_name]
+            current_func = self.scope.find(func_name, 'functions')
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
@@ -689,9 +687,21 @@ class SemanticParser(BasicParser):
         elif isinstance(target, DottedVariable):
             self._indicate_pointer_target(pointer, target.lhs, expr)
         elif isinstance(target, IndexedElement):
-            self._pointer_targets[-1].setdefault(pointer, []).append((target.base, expr))
+            self._indicate_pointer_target(pointer, target.base, expr)
+        elif isinstance(target, Variable):
+            if target.is_alias:
+                try:
+                    sub_targets = self._pointer_targets[-1][target]
+                except KeyError:
+                    errors.report("Pointer cannot point at a non-local pointer\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='error', symbol=expr)
+                self._pointer_targets[-1].setdefault(pointer, []).extend((t[0], expr) for t in sub_targets)
+            else:
+                target.is_target = True
+                self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
         else:
-            self._pointer_targets[-1].setdefault(pointer, []).append((target, expr))
+            errors.report("Pointer cannot point at a temporary object",
+                severity='error', symbol=expr)
 
     def _infer_type(self, expr):
         """
@@ -3284,11 +3294,13 @@ class SemanticParser(BasicParser):
 
                 if is_pointer_i:
                     new_expr = AliasAssign(l, r)
-                    if isinstance(r, (Variable, IndexedElement)):
-                        self._indicate_pointer_target(l, r, expr)
+                    if isinstance(r, FunctionCall):
+                        funcdef = r.funcdef
+                        target_r_idx = funcdef.result_pointer_map[funcdef.results[0]]
+                        for ti in target_r_idx:
+                            self._indicate_pointer_target(l, r.args[ti].value, expr)
                     else:
-                        errors.report("Pointer cannot point at a temporary object",
-                            severity='error', symbol=expr)
+                        self._indicate_pointer_target(l, r, expr)
 
                 elif new_expr.is_symbolic_alias:
                     new_expr = SymbolicAssign(l, r)
@@ -3879,7 +3891,11 @@ class SemanticParser(BasicParser):
             # to the body of the function
             body.insert2body(*self._garbage_collector(body))
 
-            results = [self._visit(a) for a in results]
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
+            body.insert2body(*self._garbage_collector(body))
+            self._check_pointer_targets(results)
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
@@ -3931,13 +3947,23 @@ class SemanticParser(BasicParser):
                 if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
                     a.make_const()
             # ...
-
             # Raise an error if one of the return arguments is an alias.
+            pointer_targets = self._pointer_targets.pop()
+            result_pointer_map = {}
             for r in results:
+                t = pointer_targets.get(r.var, ())
                 if r.var.is_alias:
-                    errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                        symbol=r, severity='error',
-                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                    persistent_targets = []
+                    for target, _ in t:
+                        target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
+                        if target_argument_index != -1:
+                            persistent_targets.append(target_argument_index)
+                    if not persistent_targets:
+                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                            symbol=r, severity='error',
+                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
+                    else:
+                        result_pointer_map[r] = persistent_targets
 
             optional_inits = []
             for a in arguments:
@@ -3957,11 +3983,12 @@ class SemanticParser(BasicParser):
                     'is_recursive':is_recursive,
                     'functions': sub_funcs,
                     'interfaces': func_interfaces,
+                    'result_pointer_map': result_pointer_map,
                     'docstring': docstring,
                     'scope': scope,
-                    'is_annotated':True,
+                     'is_annotated':True,
                     'syntactic_node':expr,
-                    }
+            }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
                 global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
@@ -4094,9 +4121,9 @@ class SemanticParser(BasicParser):
                 methods.pop(i)
 
                 # create a new attribute to check allocation
-                deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
                 deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
-                deallocater = DottedVariable(lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+                                             dtype = NativeBool(), is_private=True)
                 cls.add_new_attribute(deallocater)
                 deallocater_assign = Assign(deallocater, LiteralFalse())
                 init_func.body.insert2body(deallocater_assign, back=False)
@@ -4134,6 +4161,7 @@ class SemanticParser(BasicParser):
                     self._pointer_targets.append({})
                     self._allocs[-1].update(attribute)
                     method.body.insert2body(*self._garbage_collector(method.body))
+                    self._pointer_targets.pop()
                 condition = If(IfSection(PyccelNot(deallocater),
                                 [method.body]+[Assign(deallocater, LiteralTrue())]))
                 method.body = [condition]

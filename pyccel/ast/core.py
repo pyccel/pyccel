@@ -2374,6 +2374,9 @@ class FunctionDef(ScopedAstNode):
     interfaces : list, tuple
         A list of interfaces defined within this function.
 
+    result_pointer_map : dict[FunctionDefResult, list[int]]
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
     docstring : str
         The doc string of the function.
 
@@ -2418,7 +2421,9 @@ class FunctionDef(ScopedAstNode):
                  '_global_vars','_cls_name','_is_static','_imports',
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
-                 '_functions','_interfaces','_docstring', '_is_external','_is_annotated', '_syntactic_node')
+                 '_functions','_interfaces','_docstring', '_is_external',
+                 ,'_is_annotated', '_syntactic_node', '_result_pointer_map')
+
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
 
@@ -2442,6 +2447,7 @@ class FunctionDef(ScopedAstNode):
         is_external=False,
         functions=(),
         interfaces=(),
+        result_pointer_map={},
         docstring=None,
         scope=None,
         is_annotated=None,
@@ -2538,9 +2544,10 @@ class FunctionDef(ScopedAstNode):
         self._is_external     = is_external
         self._functions       = functions
         self._interfaces      = interfaces
-        self._docstring       = docstring
+        self._result_pointer_map = result_pointer_map
         self._is_annotated    = is_annotated
-        self._syntactic_node  = syntactic_node
+        self._syntactic_node  = syntactic_node    
+        self._docstring      = docstring
         super().__init__(scope)
 
     @property
@@ -2847,6 +2854,17 @@ class FunctionDef(ScopedAstNode):
     @property
     def is_unused(self):
         return False
+
+    @property
+    def result_pointer_map(self):
+        """
+        A dictionary connecting any pointer results to the index of the possible target arguments.
+
+        A dictionary whose keys are FunctionDefResult objects and whose values are a list of
+        integers. The integers specify the position of the argument which is a target of the
+        FunctionDefResult.
+        """
+        return self._result_pointer_map
 
 class InlineFunctionDef(FunctionDef):
     """

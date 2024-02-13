@@ -52,6 +52,7 @@ __all__ = (
     'PyBuildValueNode',
     'PyCapsule_New',
     'PyCapsule_Import',
+    'PyGetSetDefElement',
     'PyModule_Create',
     'PyModule_AddObject',
     'PyModInitFunc',
@@ -69,6 +70,7 @@ __all__ = (
     'PyList_SetItem',
     'PyErr_Occurred',
     'PyErr_SetString',
+    'PyAttributeError',
     'PyNotImplementedError',
     'PyTypeError',
     'PyObject_TypeCheck',
@@ -734,7 +736,7 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func')
+                 '_new_func', '_properties')
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -742,10 +744,13 @@ class PyClassDef(ClassDef):
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
+        self._properties = ()
         variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
-                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias')]
+                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
+                     Variable(NativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
+        scope.insert_variable(variables[2])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
@@ -808,6 +813,101 @@ class PyClassDef(ClassDef):
         Get the wrapper for `__new__` which allocates the memory for the class instance.
         """
         return self._new_func
+
+    def add_property(self, p):
+        """
+        Add a class property which has been wrapped.
+
+        Add a class property which has been wrapped.
+
+        Parameters
+        ----------
+        p : PyccelAstNode
+            The new wrapped property which is added to the class.
+        """
+        p.set_current_user_node(self)
+        self._properties += (p,)
+
+    @property
+    def properties(self):
+        """
+        Get all wrapped class properties.
+
+        Get all wrapped class properties.
+        """
+        return self._properties
+
+#-------------------------------------------------------------------
+
+class PyGetSetDefElement(PyccelAstNode):
+    """
+    A class representing a PyGetSetDef object.
+
+    A class representing an element of the list of PyGetSetDef objects
+    which are used to add attributes/properties to classes.
+    See <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>.
+
+    Parameters
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    docstring : LiteralString
+        The docstring of the property.
+    """
+    _attribute_nodes = ('_getter', '_setter', '_docstring')
+    __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
+    def __init__(self, python_name, getter, setter, docstring):
+        if not isinstance(getter, PyFunctionDef):
+            raise TypeError("Getter should be a PyFunctionDef")
+        if not isinstance(setter, PyFunctionDef):
+            raise TypeError("Setter should be a PyFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self._docstring = docstring
+        super().__init__()
+
+    @property
+    def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
+        return self._python_name
+
+    @property
+    def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
+        return self._getter
+
+    @property
+    def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
+        return self._setter
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
+        return self._docstring
 
 #-------------------------------------------------------------------
 class PyModInitFunc(FunctionDef):
@@ -966,7 +1066,7 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling, new_class = Variable))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
@@ -1005,6 +1105,7 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
+PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),

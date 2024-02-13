@@ -1937,7 +1937,7 @@ class CCodePrinter(CodePrinter):
 
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
+            last_assign = expr.stmt.get_attribute_nodes((Assign, AliasAssign), excluded_nodes=FunctionCall)
             deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
             vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
@@ -1945,7 +1945,7 @@ class CCodePrinter(CodePrinter):
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
                 code = ''+self._print(expr.stmt)
-            elif isinstance(last_assign[-1], AugAssign):
+            elif isinstance(last_assign[-1], (AugAssign, AliasAssign)):
                 last_assign[-1].lhs.is_temp = False
                 code = ''+self._print(expr.stmt)
             else:

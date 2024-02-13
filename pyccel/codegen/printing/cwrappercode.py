@@ -15,6 +15,7 @@ from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Imp
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
+from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.errors.errors  import Errors
@@ -49,6 +50,7 @@ class CWrapperCodePrinter(CCodePrinter):
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
                       (PyccelPyObject() , 0) : 'PyObject',
+                      (PyccelPyArrayObject() , 0) : 'PyArrayObject',
                       (PyccelPyTypeObject() , 0) : 'PyTypeObject',
                       (BindCPointer()   , 0) : 'void'}
 
@@ -281,7 +283,8 @@ class CWrapperCodePrinter(CCodePrinter):
                     + attributes +
                     "};\n")
             sig_methods = c.methods + (c.new_func,) + tuple(f for i in c.interfaces for f in i.functions) + \
-                          tuple(i.interface_func for i in c.interfaces)
+                          tuple(i.interface_func for i in c.interfaces) + \
+                          tuple(getset for p in c.properties for getset in (p.getter, p.setter))
             function_signatures += '\n'+''.join(self.function_signature(f)+';\n' for f in sig_methods)
             macro_defs += f'#define {type_name} (*(PyTypeObject*){API_var.name}[{i}])\n'
 
@@ -385,7 +388,10 @@ class CWrapperCodePrinter(CCodePrinter):
                     if expr.docstring else '""'
 
         original_scope = expr.original_class.scope
-        print_methods = expr.methods + (expr.new_func,) + expr.interfaces
+        getters = tuple(p.getter for p in expr.properties)
+        setters = tuple(p.setter for p in expr.properties)
+        print_methods = expr.methods + (expr.new_func,) + expr.interfaces + \
+                         getters + setters
         functions = '\n'.join(self._print(f) for f in print_methods)
         init_string = ''
         del_string = ''
@@ -407,6 +413,15 @@ class CWrapperCodePrinter(CCodePrinter):
                                                     if f.docstring else '""'
             funcs[py_name] = (f.name, docstring)
 
+        property_definitions = ''.join(('{\n'
+                                        f'"{p.python_name}",\n'
+                                        f'(getter) {p.getter.name},\n'
+                                        f'(setter) {p.setter.name},\n'
+                                        f'{self._print(p.docstring)},\n'
+                                        'NULL\n'
+                                        '},\n') for p in expr.properties)
+        property_definitions += '{ NULL }\n'
+
         method_def_funcs = ''.join(('{\n'
                                      f'"{name}",\n'
                                      f'(PyCFunction){wrapper_name},\n'
@@ -421,6 +436,11 @@ class CWrapperCodePrinter(CCodePrinter):
                         '{ NULL, NULL, 0, NULL}\n'
                         '};\n')
 
+        property_def_name = self.scope.get_new_name(f'{expr.name}_properties')
+        property_def = (f'static PyGetSetDef {property_def_name}[] = {{\n'
+                        f'{property_definitions}'
+                        '};\n')
+
         type_code = (f"static PyTypeObject {type_name} = {{\n"
                 "    PyVarObject_HEAD_INIT(NULL, 0)\n"
                 f"    .tp_name = \"{self._module_name}.{name}\",\n"
@@ -431,9 +451,10 @@ class CWrapperCodePrinter(CCodePrinter):
                 f"    .tp_new = {expr.new_func.name},\n"
                 f"{init_string}{del_string}"
                 f"    .tp_methods = {method_def_name},\n"
+                f"    .tp_getset = {property_def_name},\n"
                 "};\n")
 
-        return method_def + '\n' + type_code + '\n' + functions
+        return '\n'.join((method_def, property_def, type_code, functions))
 
     def _print_PyModInitFunc(self, expr):
         decs = ''.join(self._print(d) for d in expr.declarations)
