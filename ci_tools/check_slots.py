@@ -92,8 +92,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Get ast modules
-    ast_folder = pathlib.Path(ast.__file__)
-    ast_modules = ['.'.join(f.parts)[:-3] for f in ast_folder.rglob('*.py') if f.parts[-1] != '__init__.py']
+    ast_folder = pathlib.Path(ast.__file__).parent
+    ast_modules = ['.'.join(f.relative_to(ast_folder).parts)[:-3] for f in ast_folder.rglob('*.py') if f.parts[-1] != '__init__.py']
 
     # Prepare error collection
     missing_all = []
