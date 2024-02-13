@@ -229,6 +229,12 @@ def test_temp_array_in_loop(language):
     assert np.array_equal(c_py, c_ep)
     assert np.array_equal(d_py, d_ep)
 
+def test_less_than_100(language):
+    f1 = loops.less_than_100
+    f2 = epyccel( f1, language = language )
+
+    assert f1(10) == f2(10)
+    assert f1(101) == f2(101)
 
 ##==============================================================================
 ## CLEAN UP GENERATED FILES AFTER RUNNING TESTS
