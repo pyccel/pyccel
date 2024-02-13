@@ -25,12 +25,13 @@ All notable changes to this project will be documented in this file.
 -   #1605 : Add support for methods and interfaces in classes (including `__init__` and `__del__`).
 -   #1618 : Add support for class instance attributes.
 -   #1680 : Add support for `typing.Final`.
--   #1529 : Add Python support for list method `append()`
+-   #1689 : Add Python support for list method `append()`
 -   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
 -   #1659 : Add multi-file support for classes.
 -   #1708 : Allow returning pointers to arguments from functions.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
+-   #1692 : Add Python support for list method `insert()`
 
 ### Fixed
 
