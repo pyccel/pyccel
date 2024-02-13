@@ -36,15 +36,15 @@ class ListPop(PyccelInternalFunction) :
     _shape = None
     _class_type = NativeHomogeneousList()
     name = 'pop'
-    def __init__(self, name, index_element=None):
+    def __init__(self, last_variable, index_element=None):
         if index_element:
-            super().__init__(name, index_element)
+            super().__init__(last_variable, index_element)
         else:
-            super().__init__(name)
+            super().__init__(last_variable)
         self._index = index_element
-        self._list_variable = name
-        self._dtype = name.dtype
-        self._precision = name.precision
+        self._list_variable = last_variable
+        self._dtype = last_variable.dtype
+        self._precision = last_variable.precision
 
     @property
     def pop_index(self):
