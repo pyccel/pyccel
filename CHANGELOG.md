@@ -1,17 +1,11 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## \[UNRELEASED\]
-
-### Added
+## \[1.11.1\] - 2024-02-13
 
 ### Fixed
 
 -   #1724 : Fix returns in for loops
-
-### Changed
-
-### Deprecated
 
 ## \[1.11.0\] - 2024-02-12
 
