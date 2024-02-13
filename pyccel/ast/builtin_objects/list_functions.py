@@ -102,6 +102,7 @@ class ListInsert(PyccelInternalFunction):
         The argument passed to insert() method.
     """
     __slots__ = ("_index", "_list_variable", "_insert_arg")
+    _attribute_nodes = ("_index", "_list_variable", "_insert_arg")
     _dtype = NativeVoid()
     _shape = None
     _order = None
