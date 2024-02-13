@@ -2422,7 +2422,7 @@ class FunctionDef(ScopedAstNode):
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_docstring', '_is_external',
-                 ,'_is_annotated', '_syntactic_node', '_result_pointer_map')
+                 '_is_annotated', '_syntactic_node', '_result_pointer_map')
 
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')

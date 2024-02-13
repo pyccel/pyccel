@@ -3890,12 +3890,9 @@ class SemanticParser(BasicParser):
             # it will add the necessary Deallocate nodes
             # to the body of the function
             body.insert2body(*self._garbage_collector(body))
-
-            # Calling the Garbage collecting,
-            # it will add the necessary Deallocate nodes
-            # to the body of the function
-            body.insert2body(*self._garbage_collector(body))
             self._check_pointer_targets(results)
+
+            results = [self._visit(a) for a in results]
 
             # Determine local and global variables
             global_vars = list(self.get_variables(self.scope.parent_scope))
