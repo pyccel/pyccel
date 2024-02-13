@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     # Get ast modules
     ast_folder = os.path.dirname(ast.__file__)
-    ast_modules = [mod[:-3] for mod in os.listdir(ast_folder) if mod != '__init__.py' and mod.endswith('.py')]
+    ast_modules = ['.'.join(f.parts)[:-3] for f in folder.rglob('*.py') if f.parts[-1] != '__init__.py']
 
     # Prepare error collection
     missing_all = []
