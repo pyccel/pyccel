@@ -75,3 +75,78 @@ class ListAppend(PyccelInternalFunction):
         Get the argument which is passed to append().
         """
         return self._append_arg
+
+class ListInsert(PyccelInternalFunction):
+    """
+    Represents a call to the .insert() method.
+
+    Represents a call to the .insert() method of an object with a list type,
+    which inserts a given element at a given index in a list. This method returns `None`.
+    The insert method is called as follows:
+
+    >>> a = [2, 3, 4]
+    >>> a.insert(1, 1)
+    >>> print(a)
+    [1, 2, 3, 4]
+
+    Parameters
+    ----------
+    index:  TypedAstNode
+        The index value for the element to be added
+
+    list_variable : Variable
+        The variable representing the list.
+    
+    new_elem : Variable
+        The argument passed to insert() method.
+    """
+    __slots__ = ("_index", "_list_variable", "_insert_arg")
+    _dtype = NativeVoid()
+    _shape = None
+    _order = None
+    _rank = 0
+    _precision = -1
+    _class_type = NativeHomogeneousList()
+    name = 'insert'
+
+    def __init__(self, list_variable, index, new_elem) -> None:
+        conditions = (
+            new_elem.dtype is not NativeGeneric() and
+            list_variable.dtype == new_elem.dtype and
+            list_variable.precision == new_elem.precision and
+            list_variable.rank - 1 == new_elem.rank
+        )
+        is_homogeneous = list_variable.dtype is not NativeGeneric() and conditions
+        if not is_homogeneous:
+            raise TypeError("Expecting an argument of the same type as the elements of the list")
+        self._index = index
+        self._list_variable = list_variable
+        self._insert_arg = new_elem
+        super().__init__()
+
+    @property
+    def index(self):
+        """
+        Index in which the element will be added
+
+        Index in which the element will be added
+        """
+        return self._index
+
+    @property
+    def list_variable(self):
+        """
+        Get the variable representing the list.
+
+        Get the variable representing the list.
+        """
+        return self._list_variable
+
+    @property
+    def insert_argument(self):
+        """
+        Get the argument which is passed to insert().
+
+        Get the argument which is passed to insert().
+        """
+        return self._insert_arg
