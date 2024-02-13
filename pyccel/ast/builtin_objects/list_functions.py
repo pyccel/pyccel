@@ -36,6 +36,7 @@ class ListAppend(PyccelInternalFunction):
         The argument passed to append() method.
     """
     __slots__ = ("_list_variable", "_append_arg")
+    _attribute_nodes = ("_list_variable", "_append_arg")
     _dtype = NativeVoid()
     _shape = None
     _order = None
