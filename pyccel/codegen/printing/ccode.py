@@ -944,6 +944,17 @@ class CCodePrinter(CodePrinter):
         if source in import_dict: # pylint: disable=consider-using-get
             source = import_dict[source]
 
+        if expr.source_module:
+            for classDef in expr.source_module.classes:
+                class_scope = classDef.scope
+                for method in classDef.methods:
+                    if not method.is_inline:
+                        class_scope.rename_function(method, f"{classDef.name}__{method.name.lstrip('__')}")
+                for interface in classDef.interfaces:
+                    for func in interface.functions:
+                        if not func.is_inline:
+                            class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
+
         if source is None:
             return ''
         if expr.source in c_library_headers:
@@ -1263,8 +1274,9 @@ class CCodePrinter(CodePrinter):
             init    = ''
 
         external = 'extern ' if expr.external else ''
+        static = 'static ' if expr.static else ''
 
-        declaration = f'{external}{declaration_type} {variable}{init};\n'
+        declaration = f'{static}{external}{declaration_type} {variable}{init};\n'
 
         return preface + declaration
 
@@ -1327,10 +1339,12 @@ class CCodePrinter(CodePrinter):
         if self._additional_args :
             self._additional_args.pop()
 
+        static = 'static ' if expr.is_static else ''
+
         if isinstance(expr, FunctionAddress):
-            return f'{ret_type} (*{name})({arg_code})'
+            return f'{static}{ret_type} (*{name})({arg_code})'
         else:
-            return f'{ret_type} {name}({arg_code})'
+            return f'{static}{ret_type} {name}({arg_code})'
 
     def _print_IndexedElement(self, expr):
         base = expr.base
@@ -1956,7 +1970,7 @@ class CCodePrinter(CodePrinter):
 
         if expr.stmt:
             # get Assign nodes from the CodeBlock object expr.stmt.
-            last_assign = expr.stmt.get_attribute_nodes(Assign, excluded_nodes=FunctionCall)
+            last_assign = expr.stmt.get_attribute_nodes((Assign, AliasAssign), excluded_nodes=FunctionCall)
             deallocate_nodes = expr.stmt.get_attribute_nodes(Deallocate, excluded_nodes=(Assign,))
             vars_in_deallocate_nodes = [i.variable for i in deallocate_nodes]
 
@@ -1964,7 +1978,7 @@ class CCodePrinter(CodePrinter):
             # the user assigns a variable to an object contains IndexedElement object.
             if not last_assign:
                 code = ''+self._print(expr.stmt)
-            elif isinstance(last_assign[-1], AugAssign):
+            elif isinstance(last_assign[-1], (AugAssign, AliasAssign)):
                 last_assign[-1].lhs.is_temp = False
                 code = ''+self._print(expr.stmt)
             else:
@@ -2321,7 +2335,10 @@ class CCodePrinter(CodePrinter):
         declare_type = self.get_declare_type(expr.cast_type)
         if not self.is_c_pointer(expr.cast_type):
             declare_type += '*'
-        var_code = self._print(ObjectAddress(expr.obj))
+        obj = expr.obj
+        if not isinstance(obj, ObjectAddress):
+            obj = ObjectAddress(expr.obj)
+        var_code = self._print(obj)
         return f'(*({declare_type})({var_code}))'
 
     def _print_Comment(self, expr):
