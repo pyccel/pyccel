@@ -3236,7 +3236,8 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.wrapper_function)
 
     def _print_BindCClassDef(self, expr):
-        funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions]]
+        funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions],
+                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
 

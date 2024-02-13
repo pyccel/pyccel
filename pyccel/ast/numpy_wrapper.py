@@ -45,7 +45,7 @@ __all__ = (
     'array_get_f_step',
     'PyArray_SetBaseObject',
     #-------OTHERS--------
-    'get_numpy_max_acceptable_version_file'
+    'get_numpy_max_acceptable_version_file',
 )
 
 class PyccelPyArrayObject(DataType, metaclass=Singleton):
