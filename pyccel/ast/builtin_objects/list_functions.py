@@ -42,7 +42,7 @@ class ListPop(PyccelInternalFunction) :
         self._list_variable = list_variable
         self._dtype = list_variable.dtype
         self._precision = list_variable.precision
-        super.__init__()
+        super().__init__()
 
     @property
     def pop_index(self):
