@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+-   #1724 : Fix returns in for loops
+
+### Changed
+
+### Deprecated
+
+## \[1.11.0\] - 2024-02-12
+
+### Added
+
 -   #1645 : Handle deprecated `ast` classes.
 -   #1649 : Add support for `np.min` in C code.
 -   #1621 : Add support for `np.max` in C code.
