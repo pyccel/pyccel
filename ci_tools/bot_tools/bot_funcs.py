@@ -855,17 +855,19 @@ class Bot:
             base_commit = self._base
         assert bool(base_commit)
         cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
-        print(''.join(cmd))
+        print(' '.join(cmd))
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            with subprocess.Popen(cmd + ['--', f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
                 n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
+            else:
+                print(err)
         return {f:l for f,l in diff.items() if l is not None}
 
     def accept_coverage_fix(self, comment_thread):
