@@ -16,6 +16,7 @@ deallocate
 deallocated
 deallocation
 deallocations
+deallocating
 conda
 PyPI
 CentOS
@@ -105,3 +106,5 @@ Valgrind
 variadic
 subclasses
 oneAPI
+getter
+setter

@@ -147,7 +147,6 @@ class Codegen(object):
         # instantiate codePrinter
         code_printer = printer_registry[language]
         errors = Errors()
-        errors.set_parser_stage('codegen')
         # set the code printer
         self._printer = code_printer(self.parser.filename, **settings)
 

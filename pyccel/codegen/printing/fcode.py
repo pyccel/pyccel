@@ -1571,6 +1571,8 @@ class FCodePrinter(CodePrinter):
 
         if isinstance(lhs, InhomogeneousTupleVariable):
             return self._print(CodeBlock([AliasAssign(l, r) for l,r in zip(lhs,rhs)]))
+        if isinstance(rhs, FunctionCall):
+            return self._print(rhs)
 
         # TODO improve
         op = '=>'
@@ -2968,7 +2970,7 @@ class FCodePrinter(CodePrinter):
             f_name = f_name.replace(k, m)
         args   = expr.args
         func_results  = [r.var for r in func.results]
-        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
+        parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, (Assign, AliasAssign)))
         is_function =  len(func_results) == 1 and func_results[0].rank == 0
 
         if func.arguments and func.arguments[0].bound_argument:
@@ -3013,7 +3015,7 @@ class FCodePrinter(CodePrinter):
                 # If func body is unknown then we may not know result names
                 use_names = (len(func.body.body) != 0)
                 if use_names:
-                    results_strs = ['{} = {}'.format(self._print(n), self._print(r))
+                    results_strs = [f'{self._print(n)} = {self._print(r)}'
                             for n,r in lhs_vars.items()]
                 else:
                     results_strs = [self._print(r) for r in lhs_vars.values()]
@@ -3024,7 +3026,7 @@ class FCodePrinter(CodePrinter):
             for var in results:
                 self.scope.insert_variable(var)
 
-            results_strs = ['{} = {}'.format(self._print(n), self._print(r)) \
+            results_strs = [f'{self._print(n)} = {self._print(r)}' \
                             for n,r in zip(func_results, results)]
 
         else:
@@ -3036,12 +3038,11 @@ class FCodePrinter(CodePrinter):
             else:
                 code = self._handle_inline_func_call(expr)
         else:
-            args_strs = ['{}'.format(self._print(a)) for a in args if not isinstance(a.value, Nil)]
+            args_strs = [self._print(a) for a in args if not isinstance(a.value, Nil)]
             args_code = ', '.join(args_strs+results_strs)
-            code = '{name}({args})'.format( name = f_name,
-                                            args = args_code )
+            code = f'{f_name}({args_code})'
             if not is_function:
-                code = 'call {}\n'.format(code)
+                code = f'call {code}\n'
 
         if not parent_assign:
             if is_function or len(func_results) == 0:
@@ -3053,7 +3054,11 @@ class FCodePrinter(CodePrinter):
                 else:
                     return self._print(tuple(results))
         elif is_function:
-            return '{0} = {1}\n'.format(self._print(results[0]), code)
+            result_code = self._print(results[0])
+            if isinstance(parent_assign[0], AliasAssign):
+                return f'{result_code} => {code}\n'
+            else:
+                return f'{result_code} = {code}\n'
         else:
             return code
 
@@ -3231,7 +3236,8 @@ class FCodePrinter(CodePrinter):
         return self._print(expr.wrapper_function)
 
     def _print_BindCClassDef(self, expr):
-        funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions]]
+        funcs = [expr.new_func, *expr.methods, *[f for i in expr.interfaces for f in i.functions],
+                 *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
 
