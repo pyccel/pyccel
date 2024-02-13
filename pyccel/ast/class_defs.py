@@ -138,7 +138,7 @@ StringClass = ClassDef('string', class_type = NativeString(),
 ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
         methods=[
             PyccelFunctionDef('append', func_class = ListAppend,
-                decorators = {'property': 'property'}),
+                decorators = {}),
         ])
 
 #=======================================================================================
