@@ -31,20 +31,18 @@ class ListPop(PyccelInternalFunction) :
         The current index value for the element to be popped.
     """
     __slots__ = ('_dtype','_precision', '_index','_list_variable')
+    _attribute_nodes = ('_index','_list_variable')
     _rank = 0
     _order = None
     _shape = None
     _class_type = NativeHomogeneousList()
     name = 'pop'
     def __init__(self, list_variable, index_element=None):
-        if index_element:
-            super().__init__(list_variable, index_element)
-        else:
-            super().__init__(list_variable)
         self._index = index_element
         self._list_variable = list_variable
         self._dtype = list_variable.dtype
         self._precision = list_variable.precision
+        super.__init__()
 
     @property
     def pop_index(self):
