@@ -651,7 +651,7 @@ class SemanticParser(BasicParser):
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
-            current_func = self.scope.functions[func_name]
+            current_func = self.scope.find(func_name, 'functions')
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
