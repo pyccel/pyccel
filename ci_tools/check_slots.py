@@ -4,6 +4,7 @@ import argparse
 import importlib
 import inspect
 import os
+import pathlib
 import sys
 import json
 from pyccel import ast
