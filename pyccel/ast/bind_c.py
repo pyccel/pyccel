@@ -18,6 +18,7 @@ from pyccel.ast.variable import Variable
 __all__ = (
     'BindCArrayVariable',
     'BindCClassDef',
+    'BindCClassProperty',
     'BindCFunctionDef',
     'BindCFunctionDefArgument',
     'BindCFunctionDefResult',
@@ -569,6 +570,90 @@ class BindCArrayVariable(Variable):
         the shape.
         """
         return self._wrapper_function
+
+# =======================================================================================
+
+class BindCClassProperty(PyccelAstNode):
+    """
+    A class which wraps a class attribute.
+
+    A class which wraps a class attribute to make it accessible
+    from C. In the future this class will also be used to handle properties of
+    classes (i.e. functions marked with the `@property` decorator).
+
+    Parameters
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    class_type : Variable
+        The type of the class to which the attribute belongs.
+    docstring : LiteralString, optional
+        The docstring of the property.
+    """
+    __slots__ = ('_getter', '_setter', '_python_name', '_docstring', '_class_type')
+    _attribute_nodes = ('_getter', '_setter')
+    def __init__(self, python_name, getter, setter, class_type, docstring = None):
+        if not isinstance(getter, BindCFunctionDef):
+            raise TypeError("Getter should be a BindCFunctionDef")
+        if not isinstance(setter, BindCFunctionDef):
+            raise TypeError("Setter should be a BindCFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self._class_type = class_type
+        self._docstring = docstring
+        super().__init__()
+
+    @property
+    def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
+        return self._getter
+
+    @property
+    def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
+        return self._setter
+
+    @property
+    def class_type(self):
+        """
+        The type of the class to which the attribute belongs.
+
+        The type of the class to which the attribute belongs.
+        """
+        return self._class_type
+
+    @property
+    def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
+        return self._python_name
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
+        return self._docstring
 
 # =======================================================================================
 
