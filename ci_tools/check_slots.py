@@ -3,7 +3,7 @@
 import argparse
 import importlib
 import inspect
-import os
+import pathlib
 import sys
 import json
 from pyccel import ast
@@ -92,8 +92,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Get ast modules
-    ast_folder = os.path.dirname(ast.__file__)
-    ast_modules = [mod[:-3] for mod in os.listdir(ast_folder) if mod != '__init__.py' and mod.endswith('.py')]
+    ast_folder = pathlib.Path(ast.__file__).parent
+    ast_modules = ['.'.join(f.relative_to(ast_folder).parts)[:-3] for f in ast_folder.rglob('*.py') if f.parts[-1] != '__init__.py']
 
     # Prepare error collection
     missing_all = []
