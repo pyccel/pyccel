@@ -3748,8 +3748,12 @@ class SemanticParser(BasicParser):
     def _visit_FunctionDef(self, expr, annotate=False, function_call=None):
 
         if not annotate:
+            name = self.scope.get_expected_name(expr.name)
             self.insert_function(expr)
             return EmptyNode()
+
+        if not expr.is_annotated and self.scope.find(expr.name, 'functions'):
+            self.scope.functions.pop(expr.name)
 
         name            = self.scope.get_expected_name(expr.name)
         decorators      = expr.decorators
@@ -3814,7 +3818,6 @@ class SemanticParser(BasicParser):
 
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-
         for tmpl_idx in range(n_templates):
             if is_interface:
                 name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
@@ -4132,7 +4135,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit(i)
+            self._visit_FunctionDef(i, annotate=True)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
