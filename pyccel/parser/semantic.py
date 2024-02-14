@@ -1990,6 +1990,11 @@ class SemanticParser(BasicParser):
             else:
                 init_func_body.append(b)
 
+        for f in self.scope.functions.copy().values():
+            if not f.is_annotated and not isinstance(f, InlineFunctionDef):
+                assert isinstance(f, FunctionDef)
+                self._visit_FunctionDef(f, annotate=True)
+
         variables = self.get_variables(self.scope)
         init_func = None
         free_func = None
@@ -2066,10 +2071,6 @@ class SemanticParser(BasicParser):
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
-        for f in self.scope.functions.copy().values():
-            if not f.is_annotated and not isinstance(f, InlineFunctionDef):
-                assert isinstance(f, FunctionDef)
-                self._visit_FunctionDef(f, annotate=True)
 
         funcs = []
         interfaces = []
