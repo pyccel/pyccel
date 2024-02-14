@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
+-   \[INTERNALS\] Removed unused `NativeSymbol`.
+
 ## \[1.11.1\] - 2024-02-13
 
 ### Fixed
