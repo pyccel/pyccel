@@ -852,6 +852,13 @@ class PythonCodePrinter(CodePrinter):
 
         return f"{list_var}.{method_name}({append_arg})\n"
 
+    def _print_ListExtend(self, expr):
+        method_name = expr.name
+        list_var = self._print(expr.list_variable)
+        extend_arg = self._print(expr.extend_argument)
+
+        return f"{list_var}.{method_name}({extend_arg})\n"
+
     def _print_ListInsert(self, expr):
         method_name = expr.name
         index = self._print(expr.index)
