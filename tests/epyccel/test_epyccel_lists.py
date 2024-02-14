@@ -6,16 +6,20 @@
 import pytest
 from pyccel.epyccel import epyccel
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
+@pytest.fixture( params=[
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
+            pytest.mark.skip(reason="list methods not implemented in fortran"),
             pytest.mark.fortran]),
+        pytest.param("c", marks = [
+            pytest.mark.skip(reason="list methods not implemented in c"),
+            pytest.mark.c]),
         pytest.param("python", marks = pytest.mark.python)
-    ]
+    ],
+    scope = "module"
 )
+def language(request):
+    return request.param
+
 def test_append_basic(language):
     def f():
         a = [1, 2, 3]
@@ -25,16 +29,6 @@ def test_append_basic(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_append_multiple(language):
     def f():
         a = [1, 2, 3]
@@ -46,16 +40,6 @@ def test_append_multiple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_append_list(language):
     def f():
         a = [[1, 2, 3]]
@@ -65,16 +49,6 @@ def test_append_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_append_range(language):
     def f():
         a = [1, 2, 3]
@@ -86,16 +60,6 @@ def test_append_range(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_append_range_list(language):
     def f():
         a = [[1, 2, 3]]
@@ -106,16 +70,6 @@ def test_append_range_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="append() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="append() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_append_range_tuple(language):
     def f():
         a = [[1, 2, 3]]

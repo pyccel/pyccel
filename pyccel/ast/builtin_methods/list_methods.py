@@ -46,13 +46,13 @@ class ListAppend(PyccelInternalFunction):
     name = 'append'
 
     def __init__(self, list_variable, new_elem) -> None:
-        conditions = (
+        is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
+            list_variable.dtype is not NativeGeneric() and
             list_variable.dtype == new_elem.dtype and
             list_variable.precision == new_elem.precision and
             list_variable.rank - 1 == new_elem.rank
         )
-        is_homogeneous = list_variable.dtype is not NativeGeneric() and conditions
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
         self._list_variable = list_variable
