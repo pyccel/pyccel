@@ -91,12 +91,98 @@ iso_c_binding_shortcut_mapping = {
 }
 
 #==============================================================================
-
-class DataType(metaclass=ArgumentSingleton):
+class PrimitiveType(metaclass=Singleton):
     """
-    Base class representing native datatypes.
+    Base class representing types of datatypes.
 
-    The base class from which all data types must inherit.
+    The base class representing the category of datatype to which a FixedSizeType
+    may belong (e.g. integer, floating point).
+    """
+    __slots__ = ()
+    _name = '__UNDEFINED__'
+
+    @property
+    def name(self):
+        """
+        Get the name of the type.
+
+        Get the name of the type.
+        """
+        return self._name
+
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
+
+class PyccelBooleanType(PrimitiveType):
+    """
+    Class representing a boolean datatype.
+
+    Class representing a boolean datatype.
+    """
+    __slots__ = ()
+    _name = 'boolean'
+
+class PyccelIntegerType(PrimitiveType):
+    """
+    Class representing an integer datatype.
+
+    Class representing an integer datatype.
+    """
+    __slots__ = ()
+    _name = 'integer'
+
+class PyccelFloatingPointType(PrimitiveType):
+    """
+    Class representing a boolean datatype.
+
+    Class representing a boolean datatype.
+    """
+    __slots__ = ()
+    _name = 'floating point'
+
+class PyccelComplexType(PrimitiveType):
+    """
+    Class representing a complex datatype.
+
+    Class representing a complex datatype.
+    """
+    __slots__ = ()
+    _name = 'complex'
+
+class PyccelCharacterType(PrimitiveType):
+    """
+    Class representing a character datatype.
+
+    Class representing a character datatype.
+    """
+    __slots__ = ()
+    _name = 'character'
+
+NumericPrimitiveTypes = (PyccelBooleanType(), PyccelIntegerType(),
+                         PyccelFloatingPointType(), PyccelComplexType())
+
+#==============================================================================
+
+class PyccelType(metaclass=ArgumentSingleton):
+    """
+    Base class representing the type of an object.
+
+    Base class representing the type of an object from which all
+    types must inherit. A type must contain enough information to
+    describe the declaration type in a low-level language.
 
     Parameters
     ----------
@@ -118,100 +204,151 @@ class DataType(metaclass=ArgumentSingleton):
         """
         return self._name
 
-    def __str__(self):
-        return str(self.name).lower()
+#==============================================================================
 
-    def __repr__(self):
-        return str(self.__class__.__name__)+'()'
-
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
-
-class NativeBool(DataType, metaclass=Singleton):
+class FixedSizeType(PyccelType, metaclass=Singleton):
     """
-    Class representing a boolean datatype.
+    Base class representing a built-in scalar datatype.
 
-    Class representing a boolean datatype.
+    The base class representing a built-in scalar datatype which can be
+    represented in memory. E.g. int32, int64.
+    """
+    __slots__ = ()
+
+    @property
+    def primitive_type(self):
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
+        return self._primitive_type # pylint: disable=no-member
+
+    @property
+    def precision(self):
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
+        return self._precision # pylint: disable=no-member
+
+class PythonNativeBool(FixedSizeType):
+    """
+    Class representing Python's native boolean type.
+
+    Class representing Python's native boolean type.
     """
     __slots__ = ()
     _name = 'bool'
+    _primitive_type = PyccelBooleanType()
+    _precision = -1
 
     @lru_cache
     def __add__(self, other):
-        if other in NativeNumeric:
+        if isinstance(other, PythonNativeNumericTypes):
             return other
         else:
             return NotImplemented
 
-class NativeInteger(DataType, metaclass=Singleton):
+class PythonNativeInt(FixedSizeType):
     """
-    Class representing an integer datatype.
+    Class representing Python's native integer type.
 
-    Class representing an integer datatype.
+    Class representing Python's native integer type.
     """
     __slots__ = ()
     _name = 'int'
+    _primitive_type = PyccelIntegerType()
+    _precision = -1
 
     @lru_cache
     def __add__(self, other):
-        if other in NativeNumeric:
-            if other is NativeBool():
-                return self
-            else:
-                return other
+        if isinstance(other, PythonNativeBool):
+            return self
+        elif isinstance(other, PythonNativeNumericTypes):
+            return other
         else:
             return NotImplemented
 
-class NativeFloat(DataType, metaclass=Singleton):
+class PythonNativeFloat(FixedSizeType):
     """
-    Class representing a float datatype.
+    Class representing Python's native floating point type.
 
-    Class representing a float datatype.
+    Class representing Python's native floating point type.
     """
     __slots__ = ()
     _name = 'float'
+    _primitive_type = PyccelFloatingPointType()
+    _precision = -1
 
     @lru_cache
     def __add__(self, other):
-        if other in NativeNumeric:
-            if other is NativeComplex():
-                return other
-            else:
-                return self
-        else:
-            return NotImplemented
-
-class NativeComplex(DataType, metaclass=Singleton):
-    """
-    Class representing a complex datatype.
-
-    Class representing a complex datatype.
-    """
-    __slots__ = ()
-    _name = 'complex'
-
-    @lru_cache
-    def __add__(self, other):
-        if other in NativeNumeric:
+        if isinstance(other, PythonNativeComplex):
+            return other
+        elif isinstance(other, PythonNativeNumericTypes):
             return self
         else:
             return NotImplemented
 
-NativeNumeric = (NativeBool(), NativeInteger(), NativeFloat(), NativeComplex())
-NativeNumericTypes = (NativeBool, NativeInteger, NativeFloat, NativeComplex)
+class PythonNativeComplex(FixedSizeType):
+    """
+    Class representing Python's native complex type.
+
+    Class representing Python's native complex type.
+    """
+    __slots__ = ()
+    _name = 'complex'
+    _primitive_type = PyccelComplexType()
+    _precision = -1
+
+    @lru_cache
+    def __add__(self, other):
+        if other in PythonNativeNumericTypes:
+            return self
+        else:
+            return NotImplemented
+
+class VoidType(FixedSizeType):
+    """
+    Class representing a void datatype.
+
+    Class representing a void datatype. This class is especially useful
+    in the C-Python wrapper when a `void*` type is needed to collect
+    pointers from Fortran.
+    """
+    __slots__ = ()
+    _name = 'void'
+    _primitive_type = None
+    _precision = -1
+
+class GenericType(FixedSizeType):
+    """
+    Class representing a generic datatype.
+
+    Class representing a generic datatype. This datatype is
+    useful for describing the type of an empty container (list/tuple/etc)
+    or an argument which can accept any type (e.g. MPI arguments).
+    """
+    __slots__ = ()
+    _name = 'Generic'
+    _primitive_type = None
+    _precision = -1
+
+    @lru_cache
+    def __add__(self, other):
+        return other
+
+PythonNativeNumericTypes = (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
+                            PythonNativeComplex)
 
 class NativeString(DataType, metaclass=Singleton):
     """
@@ -228,17 +365,6 @@ class NativeString(DataType, metaclass=Singleton):
             return self
         else:
             return NotImplemented
-
-class NativeVoid(DataType, metaclass=Singleton):
-    """
-    Class representing a void datatype.
-
-    Class representing a void datatype. This class is especially useful
-    in the C-Python wrapper when a `void*` type is needed to collect
-    pointers from Fortran.
-    """
-    __slots__ = ()
-    _name = 'void'
 
 class NativeTuple(DataType):
     """
@@ -331,16 +457,6 @@ class NativeHomogeneousList(DataType, metaclass = Singleton):
         else:
             return NotImplemented
 
-class NativeSymbol(DataType, metaclass=Singleton):
-    """
-    Class representing a symbol datatype.
-
-    Class representing a symbol datatype. This **may** be useful for
-    the sympy decorator and other symbolic manipulations.
-    """
-    __slots__ = ()
-    _name = 'Symbol'
-
 class CustomDataType(DataType, metaclass=Singleton):
     """
     Class from which user-defined types inherit.
@@ -349,21 +465,6 @@ class CustomDataType(DataType, metaclass=Singleton):
     base class when a user defines their own type using classes.
     """
     __slots__ = ()
-
-class NativeGeneric(DataType, metaclass = Singleton):
-    """
-    Class representing a generic datatype.
-
-    Class representing a generic datatype. This datatype is
-    useful for describing the type of an empty container (list/tuple/etc)
-    or an argument which can accept any type (e.g. MPI arguments).
-    """
-    __slots__ = ()
-    _name = 'Generic'
-
-    @lru_cache
-    def __add__(self, other):
-        return other
 
 # ...
 
