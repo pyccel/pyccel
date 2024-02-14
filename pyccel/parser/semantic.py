@@ -1004,6 +1004,12 @@ class SemanticParser(BasicParser):
         """
         args  = []
         for arg in arguments:
+            a = self._visit(arg.value)
+            if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_annotated:
+                print(type(a))
+                old_scope = self.scope
+                self._visit_FunctionDef(a, annotate=True)
+                self._scope = old_scope
             a = self._visit(arg)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
@@ -2849,6 +2855,7 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr)
 
         args = self._handle_function_args(expr.args)
+
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
@@ -3753,7 +3760,7 @@ class SemanticParser(BasicParser):
             self.insert_function(expr)
             return EmptyNode()
 
-        if not expr.is_annotated and self.scope.find(expr.name, 'functions'):
+        if not expr.is_annotated and expr.name in self.scope.functions:
             self.scope.functions.pop(expr.name)
 
         name            = self.scope.get_expected_name(expr.name)
@@ -3798,7 +3805,7 @@ class SemanticParser(BasicParser):
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
-            if isinstance(a.annotation, UnionTypeAnnotation):
+            if isinstance(a.annotation, UnionTypeAnnotation) and len(a.annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in a.annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
@@ -3816,7 +3823,6 @@ class SemanticParser(BasicParser):
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
@@ -3894,7 +3900,7 @@ class SemanticParser(BasicParser):
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
             for i in sub_funcs:
                 if not i.is_annotated and not isinstance(i, InlineFunctionDef):
-                    self._visit(i, annotate=True)
+                    self._visit_FunctionDef(i, annotate=True)
 
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes

@@ -30,6 +30,7 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
 random_selector = random.SystemRandom()
 
 def random_string( n ):
+    """ Generate a random string. """
     chars    = string.ascii_lowercase + string.digits
     return ''.join( random_selector.choice( chars ) for _ in range(n) )
 
