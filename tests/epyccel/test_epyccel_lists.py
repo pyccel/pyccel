@@ -80,16 +80,6 @@ def test_append_range_tuple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_basic(language):
     def f():
         a = [1, 2, 3]
@@ -99,16 +89,6 @@ def test_insert_basic(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_multiple(language):
     def f():
         a = [1, 2, 3]
@@ -120,16 +100,6 @@ def test_insert_multiple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_list(language):
     def f():
         a = [[1, 2, 3]]
@@ -139,16 +109,6 @@ def test_insert_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_range(language):
     def f():
         a = [1, 2, 3]
@@ -159,16 +119,6 @@ def test_insert_range(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_range_list(language):
     def f():
         a = [[1, 2, 3]]
@@ -179,21 +129,51 @@ def test_insert_range_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="insert() not implemented in c"),
-            pytest.mark.c]),
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="insert() not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("python", marks = pytest.mark.python)
-    ]
-)
 def test_insert_range_tuple(language):
     def f():
         a = [[1, 2, 3]]
         for i in range(4, 1000):
             a.insert(i, (i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_extend_basic(language):
+    def f():
+        a = [1, 2, 3]
+        b = [4, 5, 6]
+        a.extend(b)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_extend_multiple(language):
+    def f():
+        a = [1, 2, 3]
+        a.extend([4, 5])
+        a.extend([6, 7, 8, 9])
+        a.extend([10])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_extend_nested_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        a.extend([[4, 5, 6]])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_extend_tuple_with_list(language):
+    def f():
+        a = [1, 2, 3]
+        b = (4, 5, 6)
+        a.extend(b)
         return a
 
     epyc_f = epyccel(f, language=language)
