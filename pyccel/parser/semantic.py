@@ -3890,6 +3890,12 @@ class SemanticParser(BasicParser):
             # we annotate the body
             body = self._visit(expr.body)
 
+            # Annotate the remaining functions
+            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+            for i in sub_funcs:
+                if not i.is_annotated and not isinstance(i, InlineFunctionDef):
+                    self._visit(i, annotate=True)
+
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
             # to the body of the function
@@ -3914,11 +3920,6 @@ class SemanticParser(BasicParser):
             # check if the function is recursive if it was called on the same scope
             if func_ and func_.is_recursive and not is_inline:
                 is_recursive = True
-
-            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
-            for i in sub_funcs:
-                if not i.is_annotated and not isinstance(i, InlineFunctionDef):
-                    self._visit(i, annotate=True)
 
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
 
