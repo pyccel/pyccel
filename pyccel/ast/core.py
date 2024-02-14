@@ -3883,9 +3883,9 @@ class Declare(PyccelAstNode):
     --------
     >>> from pyccel.ast.core import Declare, Variable
     >>> Declare(Variable('int', 'n'))
-    Declare((n,), None)
+    Declare(n, None)
     >>> Declare(Variable('float', 'x'), intent='out')
-    Declare((x,), out)
+    Declare(x, out)
     """
     __slots__ = ('_variable','_intent','_value',
                  '_static','_passed_from_dotted', '_external',
