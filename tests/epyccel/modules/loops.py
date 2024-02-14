@@ -248,3 +248,10 @@ def temp_array_in_loop(a : 'int[:]', b : 'int[:]'):
         d2[:] = np.abs(b - a)
     return d1, d2
 
+def less_than_100(n : int):
+    for i in range(100):
+        if i > n:
+            return True
+    return False
+
+

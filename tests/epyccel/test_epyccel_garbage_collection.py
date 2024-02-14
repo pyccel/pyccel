@@ -247,3 +247,70 @@ def test_return_class_array_pointer(language):
 
     # All references should now be released
     assert ref_count_x == start_ref_count_x
+
+def test_getter(language):
+    import classes.array_attribute as mod_pyt
+
+    mod = epyccel(mod_pyt, language=language)
+
+    a = mod.A(10)
+
+    start_ref_count_a = sys.getrefcount(a)
+
+    b = a.x
+
+    ref_count_a = sys.getrefcount(a)
+
+    if language != 'python':
+        assert b.base is a
+        assert ref_count_a == start_ref_count_a+1
+
+    del a
+
+    gc.collect()
+
+    a_x_elem = b[0]
+
+    assert a_x_elem == 1
+
+    if language != 'python':
+        c = b.base.x
+
+        np.array_equiv(b, c)
+
+def test_setter(language):
+    import classes.ptr_in_class as mod_pyt
+
+    mod = epyccel(mod_pyt, language=language)
+
+    target1 = np.ones(10)
+
+    start_ref_count_target = sys.getrefcount(target1)
+
+    cls = mod.A(target1)
+
+    ref_count_target = sys.getrefcount(target1)
+
+    assert ref_count_target == start_ref_count_target + 1
+
+    target2 = np.ones(10)
+
+    cls.x = target2
+
+    ref_count_target1 = sys.getrefcount(target1)
+    ref_count_target2 = sys.getrefcount(target2)
+
+    if language == 'python':
+        assert ref_count_target1 == start_ref_count_target
+        assert ref_count_target2 == start_ref_count_target+1
+    else:
+        assert ref_count_target1 == start_ref_count_target + 1
+        assert ref_count_target2 == start_ref_count_target + 1
+
+    del cls
+
+    ref_count_target1 = sys.getrefcount(target1)
+    ref_count_target2 = sys.getrefcount(target2)
+
+    assert ref_count_target1 == start_ref_count_target
+    assert ref_count_target2 == start_ref_count_target
