@@ -1207,7 +1207,10 @@ class Module(ScopedAstNode):
 
     @property
     def declarations(self):
-        """ Returns the declarations of the variables
+        """
+        Get the declarations of all variables in the module.
+
+        Get the declarations of all variables in the module.
         """
         return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
@@ -3762,24 +3765,25 @@ class FuncAddressDeclare(PyccelAstNode):
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):
+    """
+    Represents a variable declaration in the code.
 
-    """Represents a variable declaration in the code.
+    Represents a variable declaration in the translated code.
 
     Parameters
     ----------
-    variable(s)
-        A single variable or an iterable of Variables. If iterable, all
-        Variables must be of the same type.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: TypedAstNode
-        variable value
-    static: bool
+    variable : Variable
+        A single variable which should be declared.
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : TypedAstNode, optional
+        The initialisation value of the variable.
+    static : bool, default=False
         True for a static declaration of an array.
-    external: bool
-        True for a function declared through a header
-    module_variable : bool
-        True for a variable which belongs to a module
+    external : bool, default=False
+        True for a function declared through a header.
+    module_variable : bool, default=False
+        True for a variable which belongs to a module.
 
     Examples
     --------
