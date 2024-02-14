@@ -3887,7 +3887,7 @@ class Declare(PyccelAstNode):
     >>> Declare(Variable('float', 'x'), intent='out')
     Declare((x,), out)
     """
-    __slots__ = ('_dtype','_variable','_intent','_value',
+    __slots__ = ('_variable','_intent','_value',
                  '_static','_passed_from_dotted', '_external',
                  '_module_variable')
     _attribute_nodes = ('_variable', '_value')
