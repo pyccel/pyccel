@@ -46,7 +46,6 @@ __all__ = (
     'Assert',
     'Assign',
     'AugAssign',
-    'Block',
     'Break',
     'ClassDef',
     'CodeBlock',
@@ -980,103 +979,6 @@ class With(ScopedAstNode):
     @property
     def body(self):
         return self._body
-
-    @property
-    def block(self):
-        """
-        Get the code block for the with block.
-
-        Get the code block created by calling the enter method followed by
-        the code in the with block and finally the exit method.
-
-        Returns
-        -------
-        Block
-            The code block.
-        """
-        methods = self.test.cls_base.methods
-        for i in methods:
-            if str(i.name) == '__enter__':
-                start = i
-            elif str(i.name) == '__exit__':
-                end   = i
-        start = FunctionCall(start,[])
-        end   = FunctionCall(end  ,[])
-
-        # TODO check if enter is empty or not first
-
-        body = start.body.body
-        body += self.body.body
-        body +=  end.body.body
-        return Block('with', [], body, scope=self.scope)
-
-
-# TODO add a name to a block?
-
-class Block(ScopedAstNode):
-
-    """Represents a block in the code. A block consists of the following inputs
-
-    Parameters
-    ----------
-    variables: list
-        list of the variables that appear in the block.
-
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
-    body: list
-        a list of statements
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign, Block
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x')
-    >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
-    Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
-    """
-    __slots__ = ('_name','_variables','_body')
-    _attribute_nodes = ('_variables','_body')
-
-    def __init__(
-        self,
-        name,
-        variables,
-        body,
-        scope = None):
-        if not isinstance(name, str):
-            raise TypeError('name must be of type str')
-        if not iterable(variables):
-            raise TypeError('variables must be an iterable')
-        for var in variables:
-            if not isinstance(var, Variable):
-                raise TypeError('Only a Variable instance is allowed.')
-        if iterable(body):
-            body = CodeBlock(body)
-        elif not isinstance(body, CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
-        self._name = name
-        self._variables = variables
-        self._body = body
-        super().__init__(scope)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def body(self):
-        return self._body
-
-    @property
-    def declarations(self):
-        return [Declare(i) for i in self.variables]
-
 
 
 class Module(ScopedAstNode):

@@ -1866,26 +1866,6 @@ class FCodePrinter(CodePrinter):
   #      self.exit_scope()
   #      return ''
 
-    def _print_Block(self, expr):
-        self.set_scope(expr.scope)
-
-        decs=[Declare(v) for v in expr.variables]
-        body = expr.body
-
-        body_code = self._print(body)
-        prelude   = ''.join(self._print(i) for i in decs)
-
-        self.exit_scope()
-
-        #case of no local variables
-        if len(decs) == 0:
-            return body_code
-
-        return ('{name} : Block\n'
-                '{prelude}\n'
-                 '{body}\n'
-                'end Block {name}\n').format(name=expr.name, prelude=prelude, body=body_code)
-
     def _print_FunctionAddress(self, expr):
         return expr.name
 
