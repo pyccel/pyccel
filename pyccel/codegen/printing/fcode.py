@@ -1411,7 +1411,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         # ... ignored declarations
-        if isinstance(expr.dtype, NativeSymbol):
+        var = expr.variable
+        expr_dtype      = var.dtype
+        if isinstance(expr_dtype, NativeSymbol):
             return ''
 
         # meta-variables
@@ -1425,8 +1427,6 @@ class FCodePrinter(CodePrinter):
 
         # ... TODO improve
         # Group the variables by intent
-        var = expr.variable
-        expr_dtype      = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
@@ -1446,7 +1446,7 @@ class FCodePrinter(CodePrinter):
         # ...
 
         # ... print datatype
-        if isinstance(expr.dtype, CustomDataType):
+        if isinstance(expr_dtype, CustomDataType):
             name   = expr_dtype.__class__.__name__
             prefix = expr_dtype.prefix
             alias  = expr_dtype.alias
@@ -1935,7 +1935,7 @@ class FCodePrinter(CodePrinter):
                         args_decs[v] = dec
                 else:
                     if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout', passed_from_dotted = True)
+                        dec = Declare(arg_var, intent='inout')
                     elif arg.inout:
                         dec = Declare(arg_var, intent='inout')
                     else:

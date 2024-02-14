@@ -3794,7 +3794,7 @@ class Declare(PyccelAstNode):
     Declare(x, out)
     """
     __slots__ = ('_variable','_intent','_value',
-                 '_static','_passed_from_dotted', '_external',
+                 '_static', '_external',
                  '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
@@ -3804,7 +3804,6 @@ class Declare(PyccelAstNode):
         intent=None,
         value=None,
         static=False,
-        passed_from_dotted = False,
         external = False,
         module_variable = False
         ):
@@ -3818,9 +3817,6 @@ class Declare(PyccelAstNode):
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
 
-        if not isinstance(passed_from_dotted, bool):
-            raise TypeError('Expecting a boolean for passed_from_dotted attribute')
-
         if not isinstance(external, bool):
             raise TypeError('Expecting a boolean for external attribute')
 
@@ -3831,7 +3827,6 @@ class Declare(PyccelAstNode):
         self._intent = intent
         self._value = value
         self._static = static
-        self._passed_from_dotted = passed_from_dotted
         self._external = external
         self._module_variable = module_variable
         super().__init__()
@@ -3851,12 +3846,6 @@ class Declare(PyccelAstNode):
     @property
     def static(self):
         return self._static
-
-    @property
-    def passed_from_dotted(self):
-        """ Argument is the lhs of a DottedFunction
-        """
-        return self._passed_from_dotted
 
     @property
     def external(self):
