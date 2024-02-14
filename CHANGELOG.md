@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+### Changed
+
+### Deprecated
+
+## \[1.11.1\] - 2024-02-13
+
+### Fixed
+
+-   #1724 : Fix returns in for loops
+
+## \[1.11.0\] - 2024-02-12
+
+### Added
+
 -   #1645 : Handle deprecated `ast` classes.
 -   #1649 : Add support for `np.min` in C code.
 -   #1621 : Add support for `np.max` in C code.
@@ -16,7 +32,8 @@ All notable changes to this project will be documented in this file.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
 -   #1685 : Add support for `type()` function with class instance argument.
--   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
+-   #1605 : Add support for methods and interfaces in classes (including `__init__` and `__del__`).
+-   #1618 : Add support for class instance attributes.
 -   #1680 : Add support for `typing.Final`.
 -   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
 -   #1659 : Add multi-file support for classes.

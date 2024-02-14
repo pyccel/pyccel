@@ -651,7 +651,7 @@ class SemanticParser(BasicParser):
 
         if self._current_function:
             func_name = self._current_function.name[-1] if isinstance(self._current_function, DottedName) else self._current_function
-            current_func = self.scope.functions[func_name]
+            current_func = self.scope.find(func_name, 'functions')
             arg_vars = {a.var:a for a in current_func.arguments}
 
             for p, t_list in self._pointer_targets[-1].items():
@@ -4027,9 +4027,9 @@ class SemanticParser(BasicParser):
                 methods.pop(i)
 
                 # create a new attribute to check allocation
-                deallocater_rhs = Variable(NativeBool(), self.scope.get_new_name('is_freed'))
                 deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
-                deallocater = DottedVariable(lhs = deallocater_lhs, name = deallocater_rhs.name, dtype = deallocater_rhs.dtype)
+                deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
+                                             dtype = NativeBool(), is_private=True)
                 cls.add_new_attribute(deallocater)
                 deallocater_assign = Assign(deallocater, LiteralFalse())
                 init_func.body.insert2body(deallocater_assign, back=False)
