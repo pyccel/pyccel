@@ -3904,8 +3904,6 @@ class Declare(PyccelAstNode):
         ):
         if not isinstance(variable, Variable):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
-        if variable.dtype != dtype:
-            raise ValueError('All variables must have the same dtype')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
