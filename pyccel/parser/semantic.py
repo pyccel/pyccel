@@ -1926,7 +1926,6 @@ class SemanticParser(BasicParser):
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
-                print(internal_datatypes, type(internal_datatypes))
                 for u in internal_datatypes.type_list:
                     rank = u.rank+1
                     order = None if rank == 1 else 'C'
