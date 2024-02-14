@@ -1075,7 +1075,7 @@ class Block(ScopedAstNode):
 
     @property
     def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
+        return [Declare(i) for i in self.variables]
 
 
 
@@ -1307,7 +1307,7 @@ class Module(ScopedAstNode):
     def declarations(self):
         """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v, module_variable=True) \
+        return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
 
     @property
@@ -3865,8 +3865,6 @@ class Declare(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : DataType
-        The type for the declaration.
     variable(s)
         A single variable or an iterable of Variables. If iterable, all
         Variables must be of the same type.
@@ -3884,10 +3882,10 @@ class Declare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare('int', Variable('int', 'n'))
-    Declare(NativeInteger(), (n,), None)
-    >>> Declare('float', Variable('float', 'x'), intent='out')
-    Declare(NativeFloat(), (x,), out)
+    >>> Declare(Variable('int', 'n'))
+    Declare((n,), None)
+    >>> Declare(Variable('float', 'x'), intent='out')
+    Declare((x,), out)
     """
     __slots__ = ('_dtype','_variable','_intent','_value',
                  '_static','_passed_from_dotted', '_external',
@@ -3896,7 +3894,6 @@ class Declare(PyccelAstNode):
 
     def __init__(
         self,
-        dtype,
         variable,
         intent=None,
         value=None,
@@ -3905,11 +3902,6 @@ class Declare(PyccelAstNode):
         external = False,
         module_variable = False
         ):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
         if not isinstance(variable, Variable):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
         if variable.dtype != dtype:
@@ -3931,7 +3923,6 @@ class Declare(PyccelAstNode):
         if not isinstance(module_variable, bool):
             raise TypeError('Expecting a boolean for module_variable attribute')
 
-        self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
@@ -3940,10 +3931,6 @@ class Declare(PyccelAstNode):
         self._external = external
         self._module_variable = module_variable
         super().__init__()
-
-    @property
-    def dtype(self):
-        return self._dtype
 
     @property
     def variable(self):

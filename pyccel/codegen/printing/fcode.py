@@ -432,7 +432,7 @@ class FCodePrinter(CodePrinter):
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
                 i = Variable(f.results[0].var.dtype, name=str(key))
-                dec = Declare(i.dtype, i, external=True)
+                dec = Declare(i, external=True)
                 decs[i] = dec
 
         return decs
@@ -553,7 +553,7 @@ class FCodePrinter(CodePrinter):
         #  - user-defined variables (available in Program.variables)
         #  - pyccel-generated variables added to Scope when printing 'expr.body'
         variables = self.scope.variables.values()
-        decs = ''.join(self._print_Declare(Declare(v.dtype, v)) for v in variables)
+        decs = ''.join(self._print(Declare(v)) for v in variables)
 
         # Detect if we are using mpi4py
         # TODO should we find a better way to do this?
@@ -1421,12 +1421,12 @@ class FCodePrinter(CodePrinter):
         # ...
 
         if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         # ... TODO improve
         # Group the variables by intent
         var = expr.variable
-        expr_dtype = expr.dtype
+        expr_dtype      = var.dtype
         rank            = var.rank
         shape           = var.alloc_shape
         is_const        = var.is_const
@@ -1869,10 +1869,7 @@ class FCodePrinter(CodePrinter):
     def _print_Block(self, expr):
         self.set_scope(expr.scope)
 
-        decs=[]
-        for i in expr.variables:
-            dec = Declare(i.dtype, i)
-            decs += [dec]
+        decs=[Declare(v) for v in expr.variables]
         body = expr.body
 
         body_code = self._print(body)
@@ -1929,7 +1926,7 @@ class FCodePrinter(CodePrinter):
         if len(out_args) != 1 or out_args[0].rank > 0:
             func_type = 'subroutine'
             for result in out_args:
-                args_decs[result] = Declare(result.dtype, result, intent='out')
+                args_decs[result] = Declare(result, intent='out')
 
             functions = expr.functions
 
@@ -1941,7 +1938,7 @@ class FCodePrinter(CodePrinter):
 
             func_end = 'result({0})'.format(result.name)
 
-            args_decs[result] = Declare(result.dtype, result)
+            args_decs[result] = Declare(result)
             out_args = []
         # ...
 
@@ -1952,17 +1949,17 @@ class FCodePrinter(CodePrinter):
                     for b_arg,inout in zip(arg.get_all_function_def_arguments(), arg.inout):
                         v = b_arg.var
                         if inout:
-                            dec = Declare(v.dtype, v, intent='inout')
+                            dec = Declare(v, intent='inout')
                         else:
-                            dec = Declare(v.dtype, v, intent='in')
+                            dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
                     if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var.dtype, arg_var, intent='inout', passed_from_dotted = True)
+                        dec = Declare(arg_var, intent='inout', passed_from_dotted = True)
                     elif arg.inout:
-                        dec = Declare(arg_var.dtype, arg_var, intent='inout')
+                        dec = Declare(arg_var, intent='inout')
                     else:
-                        dec = Declare(arg_var.dtype, arg_var, intent='in')
+                        dec = Declare(arg_var, intent='in')
                     args_decs[arg_var] = dec
 
         # treat case of pure function
@@ -2005,7 +2002,7 @@ class FCodePrinter(CodePrinter):
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
         for i in expr.local_vars:
-            dec = Declare(i.dtype, i)
+            dec = Declare(i)
             decs[i] = dec
 
         decs.update(self._get_external_declarations())
@@ -2015,7 +2012,7 @@ class FCodePrinter(CodePrinter):
         vars_to_print = self.scope.variables.values()
         for v in vars_to_print:
             if (v not in expr.local_vars) and (v not in results) and (v not in arguments):
-                decs[v] = Declare(v.dtype,v)
+                decs[v] = Declare(v)
         prelude += ''.join(self._print(i) for i in decs.values())
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
@@ -2068,7 +2065,7 @@ class FCodePrinter(CodePrinter):
         self.set_current_class(name)
         base = None # TODO: add base in ClassDef
 
-        decs = ''.join(self._print(Declare(i.dtype, i)) for i in expr.attributes)
+        decs = ''.join(self._print(Declare(i)) for i in expr.attributes)
 
         aliases = []
         names   = []
