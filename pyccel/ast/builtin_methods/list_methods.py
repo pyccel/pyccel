@@ -152,3 +152,66 @@ class ListInsert(PyccelInternalFunction):
         Get the argument which is passed to insert().
         """
         return self._insert_arg
+
+class ListExtend(PyccelInternalFunction):
+    """
+    Represents a call to the .extend() method.
+
+    Represents a call to the .extend() method of an object with a list type,
+    which adds an element to the end of the list. This method returns `None`.
+    The extend method is called as follows:
+
+    >>> a = [1]
+    >>> a.extend(2)
+    >>> print(a)
+    [1, 2]
+
+    Parameters
+    ----------
+    list_variable : Variable
+        The variable representing the list.
+    
+    new_elem : Variable
+        The argument passed to extend() method.
+    """
+    __slots__ = ("_list_variable", "_extend_arg")
+    _attribute_nodes = ("_list_variable", "_extend_arg")
+    _dtype = NativeVoid()
+    _shape = None
+    _order = None
+    _rank = 0
+    _precision = -1
+    _class_type = NativeHomogeneousList()
+    name = 'extend'
+
+    def __init__(self, list_variable, new_elem) -> None:
+        is_homogeneous = (
+            new_elem.dtype is not NativeGeneric() and
+            list_variable.dtype is not NativeGeneric() and
+            list_variable.dtype == new_elem.dtype and
+            list_variable.precision == new_elem.precision and
+            list_variable.rank == new_elem.rank
+        )
+        if not is_homogeneous:
+            raise TypeError("Expecting an argument of the same type as the elements of the list")
+        self._list_variable = list_variable
+        self._extend_arg = new_elem
+        super().__init__()
+
+    @property
+    def list_variable(self):
+        """
+        Get the variable representing the list.
+
+        Get the variable representing the list.
+        """
+        return self._list_variable
+
+    @property
+    def extend_argument(self):
+        """
+        Get the argument which is passed to extend().
+
+        Get the argument which is passed to extend().
+        """
+        return self._extend_arg
