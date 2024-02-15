@@ -8,11 +8,16 @@ Provide tools for generating and handling CUDA code.
 This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CUDA,
 enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
+from itertools import chain
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 
 from pyccel.ast.variable    import InhomogeneousTupleVariable
+from pyccel.ast.variable import Variable
+
 from pyccel.ast.core        import Declare, Import, Module
+from pyccel.ast.core      import SeparatorComment
+
 
 from pyccel.errors.errors   import Errors
 
@@ -121,3 +126,68 @@ class CudaCodePrinter(CCodePrinter):
         declaration = f'{declaration_type} {variable}{init};\n'
 
         return preface + declaration
+    def _print_FunctionDef(self, expr):
+        if expr.is_inline:
+            return ''
+        self.set_scope(expr.scope)
+
+        # Extract the function arguments and results variables
+        arguments = [a.var for a in expr.arguments]
+        results = [r.var for r in expr.results]
+
+        # Append the results to additional arguments list if there is more than one result
+        if len(expr.results) > 1:
+            self._additional_args.append(results)
+
+        # Print the function body
+        body = self._print(expr.body)
+
+        # Collect the local variables (excluding function arguments and results)
+        decs = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+
+        # Declare the single result, if applicable
+        if len(results) == 1:
+            res = results[0]
+            if isinstance(res, Variable) and not res.is_temp:
+                decs += [Declare(res.dtype, res)]
+            elif not isinstance(res, Variable):
+                raise NotImplementedError(f"Can't return {type(res)} from a function")
+
+        # Declare the remaining variables in the function scope
+        decs += [Declare(v.dtype,v) for v in self.scope.variables.values() if v not in chain(expr.local_vars, results,  arguments)]
+
+        # Generate the code for the declarations
+        decs = ''.join(self._print(i) for i in decs)
+
+        # Print a separator comment
+        sep = self._print(SeparatorComment(40))
+
+        # Remove the additional arguments list if it exists
+        if self._additional_args:
+            self._additional_args.pop()
+
+        # Add the imports to the code
+        for i in expr.imports:
+            self.add_import(i)
+
+        # Generate the code for the docstring, if exists
+        docstring = self._print(expr.docstring) if expr.docstring else ''
+    
+        # Check if the 'kernel' decorator is present and set the CUDA decorator accordingly
+        cuda_decorater = ''
+        if 'kernel' in expr.decorators:
+            cuda_decorater = "__global__ "
+
+        # Assemble the different parts of the function definition
+        parts = [sep,
+             cuda_decorater,
+             docstring,
+             '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
+             decs,
+             body,
+             '}\n',
+             sep]
+
+        self.exit_scope()
+
+        return ''.join(p for p in parts if p)
