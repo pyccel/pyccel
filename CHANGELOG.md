@@ -18,8 +18,8 @@ All notable changes to this project will be documented in this file.
 
 ### Deprecated
 
--   \[INTERNALS\] Remove unnecessary `dtype` parameter from `Declare`.
--   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `Declare`.
+-   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
+-   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unused `ast.core.Block` class.
 
 ## \[1.11.1\] - 2024-02-13
