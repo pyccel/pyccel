@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 -   #1689 : Add Python support for list method `append()`
 -   #1692 : Add Python support for list method `insert()`
+-   #1575 : Add support for homogeneous tuple type annotations on variables.
 
 ### Fixed
 
@@ -51,7 +52,6 @@ All notable changes to this project will be documented in this file.
 -   #1708 : Allow returning pointers to arguments from functions.
 -   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
--   #1692 : Add Python support for list method `insert()`
 
 ### Fixed
 
