@@ -14,6 +14,9 @@ from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousLis
 from pyccel.ast.internals import PyccelInternalFunction
 
 
+__all__ = ('ListAppend',)
+
+
 class ListAppend(PyccelInternalFunction):
     """
     Represents a call to the .append() method.
