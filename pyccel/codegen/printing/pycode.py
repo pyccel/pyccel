@@ -1143,6 +1143,11 @@ class PythonCodePrinter(CodePrinter):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
 
+    def _print_ListPop(self, expr):
+        args = self._print(expr.pop_index) if expr.pop_index else ""
+        name = self._print(expr.list_variable)
+        return f"{name}.pop({args})"
+
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):
     """ Converts an expr to a string of Python code
