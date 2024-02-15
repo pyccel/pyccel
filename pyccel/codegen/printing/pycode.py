@@ -845,6 +845,13 @@ class PythonCodePrinter(CodePrinter):
 
         return "{}({})".format(name, arg)
 
+    def _print_ListAppend(self, expr):
+        method_name = expr.name
+        list_var = self._print(expr.list_variable)
+        append_arg = self._print(expr.append_argument)
+
+        return f"{list_var}.{method_name}({append_arg})\n"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''
@@ -1137,9 +1144,7 @@ class PythonCodePrinter(CodePrinter):
         return f'const {annotation}'
 
     def _print_ListPop(self, expr):
-        args = ""
-        if expr.pop_index:
-            args = self._print(expr.pop_index)
+        args = self._print(expr.pop_index) if expr.pop_index else ""
         name = self._print(expr.list_variable)
         return f"{name}.pop({args})"
 

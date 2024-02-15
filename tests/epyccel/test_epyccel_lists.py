@@ -2,17 +2,19 @@
 import pytest
 from  pyccel.epyccel import epyccel
 
-@pytest.mark.parametrize( 'language', (
+@pytest.fixture( params=[
         pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in fortran"),
+            pytest.mark.skip(reason="list methods not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.xfail(reason="Function in function not implemented in C"),
-            pytest.mark.c]
-        ),
+            pytest.mark.skip(reason="list methods not implemented in c"),
+            pytest.mark.c]),
         pytest.param("python", marks = pytest.mark.python)
-    )
+    ],
+    scope = "module"
 )
+def language(request):
+    return request.param
 
 def test_pop_last_element(language) :
     def pop_last_element():
@@ -24,17 +26,6 @@ def test_pop_last_element(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 
 def test_pop_specific_index(language) :
     def pop_specific_index():
@@ -46,18 +37,6 @@ def test_pop_specific_index(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
-
 def test_pop_negative_index(language) :
     def pop_negative_index():
         a = [1j,3j,45j]
@@ -67,18 +46,6 @@ def test_pop_negative_index(language) :
     pyccel_result = epyc_negative_index()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
-
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in fortran"),
-            pytest.mark.fortran]),
-        pytest.param("c", marks = [
-            pytest.mark.xfail(reason="method pop for list not implemented in C"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 
 def test_pop_2(language) :
     def pop_2():
@@ -90,3 +57,63 @@ def test_pop_2(language) :
     pyccel_result = pop_2_epyc()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+
+def test_append_basic(language):
+    def f():
+        a = [1, 2, 3]
+        a.append(4)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_append_multiple(language):
+    def f():
+        a = [1, 2, 3]
+        a.append(4)
+        a.append(5)
+        a.append(6)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_append_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        a.append([4, 5, 6])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_append_range(language):
+    def f():
+        a = [1, 2, 3]
+        for i in range(0, 1000):
+            a.append(i)
+        a.append(1000)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_append_range_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(0, 1000):
+            a.append([i, i + 1])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_append_range_tuple(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(0, 1000):
+            a.append((i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()

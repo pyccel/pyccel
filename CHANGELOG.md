@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1529 : Add Python support for list method `append()`
 -   #1690 : Add support for `pop()` method of list class
 
 ### Fixed

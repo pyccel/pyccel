@@ -6,7 +6,9 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_objects.list_functions import ListPop
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop
+
+
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
@@ -135,6 +137,8 @@ StringClass = ClassDef('string', class_type = NativeString(),
 
 ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
         methods=[
+            PyccelFunctionDef('append', func_class = ListAppend,
+                decorators = {}),
             PyccelFunctionDef('pop', func_class = ListPop,
                 decorators = {}),
         ])
