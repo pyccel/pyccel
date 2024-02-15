@@ -17,43 +17,37 @@ from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
 __all__ = (
-#
-# --------- CLASSES -----------
-#
-    'CustomDataType',
-    'DataType',
-    'NativeBool',
-    'NativeComplex',
-    'NativeFloat',
-    'NativeGeneric',
-    'NativeInhomogeneousTuple',
-    'NativeInteger',
-    'NativeHomogeneousList',
-    'NativeHomogeneousTuple',
-    'NativeString',
-    'NativeSymbol',
-    'NativeTuple',
-    'NativeVoid',
-    'DataTypeFactory',
-#
-# --------- FUNCTIONS -----------
-#
-    'datatype',
-    'str_dtype',
-#
-# --------- VARIABLES -----------
-#
-    'Bool',
-    'Cmplx',
-    'Generic',
-    'Int',
-    'Float',
-    'String',
-    'Void',
-	'NativeNumeric',
-#    '_Symbol',
-    'default_precision',
-    'dtype_and_precision_registry',
+        # ------------ Super classes ------------
+        'PyccelType',
+        'PrimitiveType',
+        'FixedSizeType',
+        'ContainerType',
+        # ------------ Primitive types ------------
+        'PyccelBooleanType',
+        'PyccelIntegerType',
+        'PyccelFloatingPointType',
+        'PyccelComplexType',
+        'PyccelCharacterType'
+        # ------------ Fixed size types ------------
+        'FixedSizeNumericType',
+        'PythonNativeBool',
+        'PythonNativeInt',
+        'PythonNativeFloat',
+        'VoidType',
+        'GenericType',
+        'CharType',
+        # ------------ Container types ------------
+        'TupleType',
+        'HomogeneousContainerType',
+        'ComplexType',
+        'StringType',
+        'HomogeneousTupleType',
+        'HomogeneousListType',
+        'CustomDataType',
+        'InhomogeneousTupleType',
+        'DictType',
+        # ---------- Functions -------------------
+        'DataTypeFactory',
 )
 
 #==============================================================================
@@ -293,24 +287,6 @@ class PythonNativeFloat(FixedSizeNumericType):
         else:
             return NotImplemented
 
-class PythonNativeComplex(FixedSizeNumericType):
-    """
-    Class representing Python's native complex type.
-
-    Class representing Python's native complex type.
-    """
-    __slots__ = ()
-    _name = 'complex'
-    _primitive_type = PyccelComplexType()
-    _precision = -1
-
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, FixedSizeNumericType):
-            return self
-        else:
-            return NotImplemented
-
 class VoidType(FixedSizeType):
     """
     Class representing a void datatype.
@@ -371,7 +347,7 @@ class ContainerType(PyccelType):
 
 #==============================================================================
 
-class NativeTuple:
+class TupleType:
     """
     Base class representing tuple datatypes.
 
@@ -407,7 +383,28 @@ class HomogeneousContainerType(PyccelType):
     def __str__(self):
         return f'{self._name}[{self._element_type}]'
 
-class NativeString(HomogeneousContainerType, metaclass=Singleton):
+class ComplexType(HomogeneousContainerType):
+    """
+    Class representing Python's native complex type.
+
+    Class representing Python's native complex type.
+    """
+    __slots__ = ()
+    _name = 'complex'
+    _element_type = PyccelComplexType()
+
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, FixedSizeNumericType):
+            return self
+        else:
+            return NotImplemented
+
+    @property
+    def element_type(self):
+        return PythonNativeFloat()
+
+class StringType(HomogeneousContainerType, metaclass=Singleton):
     """
     Class representing Python's native string type.
 
@@ -427,7 +424,7 @@ class NativeString(HomogeneousContainerType, metaclass=Singleton):
     def __str__(self):
         return 'str'
 
-class NativeHomogeneousTuple(HomogeneousContainerType, NativeTuple, metaclass = Singleton):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Singleton):
     """
     Class representing the homogeneous tuple type.
 
@@ -447,7 +444,7 @@ class NativeHomogeneousTuple(HomogeneousContainerType, NativeTuple, metaclass = 
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, NativeTuple):
+        if isinstance(other, TupleType):
             return self
         else:
             return NotImplemented
@@ -455,7 +452,7 @@ class NativeHomogeneousTuple(HomogeneousContainerType, NativeTuple, metaclass = 
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
 
-class NativeHomogeneousList(HomogeneousContainerType, metaclass = Singleton):
+class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing the homogeneous list type.
 
@@ -487,7 +484,7 @@ class CustomDataType(ContainerType, metaclass=Singleton):
     """
     __slots__ = ()
 
-class NativeInhomogeneousTuple(ContainerType, NativeTuple):
+class InhomogeneousTupleType(ContainerType, TupleType):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -519,7 +516,7 @@ class NativeInhomogeneousTuple(ContainerType, NativeTuple):
     def __len__(self):
         return len(self._element_types)
 
-class NativeMap(ContainerType):
+class DictType(ContainerType):
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'
 
