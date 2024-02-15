@@ -413,29 +413,25 @@ class FCodePrinter(CodePrinter):
         self.set_scope(scope)
         return code
 
-    def _get_external_declarations(self):
+    def _get_external_declarations(self, decs):
         """
         Find external functions and declare their result type.
 
         Look for any external functions in the local imports from
         the scope and use their definitions to create declarations
-        from the results. These declarations are stored in a
-        dictionary whose keys are the result variable which will
-        be declared.
+        from the results. These declarations are stored in the list
+        passed as argument.
 
-        Returns
-        -------
-        dict
-            The declarations necessary to use the external function.
+        Parameters
+        ----------
+        decs : list
+            The list where the declarations necessary to use the external
+            functions will be stored.
         """
-        decs = {}
         for key,f in self.scope.imports['functions'].items():
             if isinstance(f, FunctionDef) and f.is_external:
-                i = Variable(f.results[0].var.dtype, name=str(key))
-                dec = Declare(i, external=True)
-                decs[i] = dec
-
-        return decs
+                v = f.results[0].var.clone(str(key))
+                decs.append(Declare(v, external=True))
 
     def _calculate_class_names(self, expr):
         """
@@ -1972,25 +1968,15 @@ class FCodePrinter(CodePrinter):
         sig_parts = self.function_signature(expr, name)
         bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
-        decs = OrderedDict()
         functions = [f for f in expr.functions if not f.is_inline]
         func_interfaces = '\n'.join(self._print(i) for i in expr.interfaces)
         body_code = self._print(expr.body)
         docstring = self._print(expr.docstring) if expr.docstring else ''
 
-        for i in expr.local_vars:
-            dec = Declare(i)
-            decs[i] = dec
+        decs = [Declare(v) for v in expr.local_vars]
+        self._get_external_declarations(decs)
 
-        decs.update(self._get_external_declarations())
-
-        arguments = [a.var for a in expr.arguments]
-        results = [a.var for a in expr.results]
-        vars_to_print = self.scope.variables.values()
-        for v in vars_to_print:
-            if (v not in expr.local_vars) and (v not in results) and (v not in arguments):
-                decs[v] = Declare(v)
-        prelude += ''.join(self._print(i) for i in decs.values())
+        prelude += ''.join(self._print(i) for i in decs)
         if len(functions)>0:
             functions_code = '\n'.join(self._print(i) for  i in functions)
             body_code = body_code +'\ncontains\n' + functions_code
