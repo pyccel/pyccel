@@ -95,8 +95,8 @@ class ListInsert(PyccelInternalFunction):
 
     Parameters
     ----------
-    index:  TypedAstNode
-        The index value for the element to be added
+    index : TypedAstNode
+        The index value for the element to be added.
 
     list_variable : Variable
         The variable representing the list.
@@ -132,9 +132,9 @@ class ListInsert(PyccelInternalFunction):
     @property
     def index(self):
         """
-        Index in which the element will be added
+        Index in which the element will be added.
 
-        Index in which the element will be added
+        Index in which the element will be added.
         """
         return self._index
 
