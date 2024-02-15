@@ -12,7 +12,7 @@ from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import NativeInteger, default_precision
+from .datatypes import PythonNativeInt
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -85,8 +85,7 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _dtype = NativeInteger()
-    _precision = -1
+    _dtype = PythonNativeInt()
     _rank  = 0
     _shape = None
     _order = None
@@ -133,8 +132,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _dtype = NativeInteger()
-    _precision = -1
+    _dtype = PythonNativeInt()
     _rank  = 0
     _shape = None
     _order = None
@@ -383,56 +381,6 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
-
-def max_precision(objs : list, allow_native : bool = True):
-    """
-    Return the largest precision amongst the objects in the list.
-
-    Return the largest precision amongst the objects in the list.
-
-    Parameters
-    ----------
-    objs : list
-       A list of TypedAstNodes.
-
-    allow_native : bool, default=True
-        Allow the final result to be a native precision (i.e. -1).
-
-    Returns
-    -------
-    int
-        The largest precision found.
-    """
-    if allow_native and all(o.precision == -1 for o in objs):
-        return -1
-    else:
-        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
-        if ndarray_list:
-            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
-        return max(get_final_precision(o) for o in objs)
-
-
-def get_final_precision(obj):
-    """
-    Get the usable precision of an object.
-
-    Get the usable precision of an object. I.e. the precision that you
-    can use to print, e.g. 8 instead of -1 for a default precision float.
-
-    If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned.
-
-    Parameters
-    ----------
-    obj : TypedAstNode
-        The object whose precision we want to investigate.
-
-    Returns
-    -------
-    int
-        The precision of the object to be used in the code.
-    """
-    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
 
 def apply_pickle(class_type, args, kwargs):
     """
