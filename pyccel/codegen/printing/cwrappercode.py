@@ -277,7 +277,7 @@ class CWrapperCodePrinter(CCodePrinter):
         for i,c in enumerate(mod.classes):
             struct_name = c.struct_name
             type_name = c.type_name
-            attributes = ''.join(self._print(Declare(a.dtype, a)) for a in c.attributes)
+            attributes = ''.join(self._print(Declare(a)) for a in c.attributes)
             classes.append(f"struct {struct_name} {{\n"
                     "    PyObject_HEAD\n"
                     + attributes +
@@ -290,7 +290,7 @@ class CWrapperCodePrinter(CCodePrinter):
 
         class_code = '\n'.join(classes)
 
-        static_import_decs = self._print(Declare(API_var.dtype, API_var, static=True))
+        static_import_decs = self._print(Declare(API_var, static=True))
         import_func = self._print(mod.import_func)
 
         header_id = f'{name.upper()}_WRAPPER'
