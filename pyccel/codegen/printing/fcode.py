@@ -490,10 +490,10 @@ class FCodePrinter(CodePrinter):
         decs += '\n'.join(c[0] for c in class_decs_and_methods)
         # ...
 
-        decs += ''.join(self._print(i) for i in expr.declarations)
+        declarations = list(expr.declarations)
         # look for external functions and declare their result type
-        external_decs = self._get_external_declarations()
-        decs += ''.join(self._print(i) for i in external_decs.values())
+        self._get_external_declarations(declarations)
+        decs += ''.join(self._print(d) for d in declarations)
 
         # ... TODO add other elements
         private_funcs = [f.name for f in expr.funcs if f.is_private]
