@@ -944,7 +944,7 @@ class PyModInitFunc(FunctionDef):
 
         Returns the declarations of the variables.
         """
-        return [Declare(v.dtype, v, static=(v in self._static_vars)) \
+        return [Declare(v, static=(v in self._static_vars)) \
                 for v in self.scope.variables.values()]
 
 #-------------------------------------------------------------------

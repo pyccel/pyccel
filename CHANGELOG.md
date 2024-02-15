@@ -6,12 +6,21 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1529 : Add Python support for list method `append()`
+-   #1575 : Add support for homogeneous tuple type annotations on variables.
 
 ### Fixed
+
+-   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
+-   #1182 : Fix tuples containing objects with different ranks.
+-   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
 
 ### Changed
 
 ### Deprecated
+
+-   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
+-   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
+-   \[INTERNALS\] Remove unused `ast.core.Block` class.
 
 ## \[1.11.1\] - 2024-02-13
 
