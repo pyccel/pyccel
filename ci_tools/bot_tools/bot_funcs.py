@@ -290,15 +290,15 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
             return []
         else:
-            check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and \
-                                                                  c['conclusion'] != 'cancelled' and \
-                                                                  c['name'] not in ('coverage',)]
+            check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
+            already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
+                                                                            c['conclusion'] != 'cancelled' and \
+                                                                            n != 'coverage']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
-            success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
+            already_programmed = {c["name"]:c for c in check_runs.values() if c['status'] == 'queued'}
+            success_names = [n for n,c in check_runs.items() if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
-            states = [c['conclusion'] for c in check_runs if c['status'] == 'completed']
+            states = []
 
             if not force_run:
                 # Get a list of all commits on this branch
@@ -317,6 +317,7 @@ class Bot:
                 pv = python_version or default_python_versions[t]
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
+                    states.append(check_runs[t]['conclusion'])
                     continue
                 name = f"{test_names[t]} {key}"
                 if not force_run and not self.is_test_required(commit_log, name, t, states):
@@ -332,8 +333,8 @@ class Bot:
                 if all(d in success_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
-                        print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                        print([r['details_url'] for r in check_runs.values() if r['conclusion'] == "success"])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs.values() if r['conclusion'] == "success" and '(' in r['name']]
                     print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
             return states
@@ -555,6 +556,7 @@ class Bot:
                 _, err = p.communicate()
             print(err)
 
+            print(states)
             if all(s == 'success' for s in states):
                 self.mark_as_ready(False)
 
