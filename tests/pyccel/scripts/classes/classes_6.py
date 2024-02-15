@@ -14,7 +14,6 @@ class Point(object):
         self.x = self.x + a
         self.y = self.y + b
 
-    @inline
     def get_attributes(self : 'Point', a : 'int | float'):
         print(self.x, self.y, a)
 

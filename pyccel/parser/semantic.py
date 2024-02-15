@@ -1006,10 +1006,7 @@ class SemanticParser(BasicParser):
         for arg in arguments:
             a = self._visit(arg.value)
             if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_annotated:
-                print(type(a))
-                old_scope = self.scope
-                self._visit_FunctionDef(a, annotate=True)
-                self._scope = old_scope
+                self._annotate_the_called_function_def(a, annotate=True)
             a = self._visit(arg)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
@@ -1150,7 +1147,6 @@ class SemanticParser(BasicParser):
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
 
             func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
-
             if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
@@ -1202,6 +1198,31 @@ class SemanticParser(BasicParser):
                 input_args.append(relevant_args[0])
 
         return input_args
+
+    def _annotate_the_called_function_def(self, func, annotate=True, function_call=None):
+        old_scope            = self._scope
+        old_current_function = self._current_function
+        names = []
+        sc = func.scope
+        while sc.parent_scope is not None:
+            sc = sc.parent_scope
+            if not sc.is_loop:
+                names.append(sc.name)
+        names.reverse()
+
+        if len(names) == 0:
+            self._current_function = None
+        else:
+            self._current_function = DottedName(*names) if len(names)>1 else names[0]
+
+        self._scope = func.scope.parent_scope
+        self._visit_FunctionDef(func, annotate=annotate, function_call=function_call)
+        user_nodes = func._user_nodes
+        func       = self.scope.find(func.name, 'functions')
+        func._user_nodes.extend(user_nodes)
+        self._scope = old_scope
+        self._current_function = old_current_function
+        return func
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
@@ -1996,6 +2017,15 @@ class SemanticParser(BasicParser):
             else:
                 init_func_body.append(b)
 
+        if program_body:
+            self.change_to_program_scope()
+            prog_scope = self.scope
+            self.change_to_module_scope()
+            for f in prog_scope.functions:
+                if prog_scope.functions[f].is_annotated:
+                    if not self.scope.functions[f].is_annotated:
+                        self.insert_function(prog_scope.functions[f])
+
         for f in self.scope.functions.copy().values():
             if not f.is_annotated and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
@@ -2077,7 +2107,6 @@ class SemanticParser(BasicParser):
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
-
         funcs = []
         interfaces = []
         for f in self.scope.functions.values():
@@ -2149,6 +2178,7 @@ class SemanticParser(BasicParser):
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])
                 program_body = [import_init, *program_body]
+
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
                 program_body = [*program_body, import_free]
@@ -2160,7 +2190,6 @@ class SemanticParser(BasicParser):
                             scope=self._program_namespace)
 
             mod.program = program
-
         return mod
 
     def _visit_PythonTuple(self, expr):
@@ -2870,25 +2899,16 @@ class SemanticParser(BasicParser):
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
 
             if not func.is_annotated and not is_inline:
-                old_scope = self._scope
-                self._visit_FunctionDef(func, annotate=True)
-                self._scope = old_scope
-                func  = self.scope.find(name, 'functions')
+                func = self._annotate_the_called_function_def(func, annotate=True)
             elif not func.is_annotated and is_inline:
-                old_scope = self._scope
-                self._visit_FunctionDef(func, annotate=True, function_call=args)
-                self._scope = old_scope
-                func  = self.scope.find(name, 'functions')
+                func = self._annotate_the_called_function_def(func, annotate=True, function_call=args)
             elif func.is_annotated and is_inline and isinstance(func, Interface):
                 is_compatible = []
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, error=False)
                     is_compatible.append(fl)
                 if not any(is_compatible):
-                    old_scope = self._scope
-                    self._visit_FunctionDef(func.syntactic_node, annotate=True, function_call=args)
-                    self._scope = old_scope
-                    func  = self.scope.find(name, 'functions')
+                    func = self._annotate_the_called_function_def(func.syntactic_code, annotate=True, function_call=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -2960,8 +2980,7 @@ class SemanticParser(BasicParser):
                 func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
-            else:
-                func = self.scope.find(name, 'functions')
+
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -3641,6 +3660,7 @@ class SemanticParser(BasicParser):
             self.change_to_program_scope()
         else:
             cond = self._visit(expr.condition)
+
         body = self._visit(expr.body)
         if prog_check:
             # Calling the Garbage collecting,
@@ -3756,14 +3776,14 @@ class SemanticParser(BasicParser):
     def _visit_FunctionDef(self, expr, annotate=False, function_call=None):
 
         if not annotate:
-            name = self.scope.get_expected_name(expr.name)
             self.insert_function(expr)
             return EmptyNode()
 
-        if not expr.is_annotated and expr.name in self.scope.functions:
-            self.scope.functions.pop(expr.name)
+        name = self.scope.get_expected_name(expr.name)
 
-        name            = self.scope.get_expected_name(expr.name)
+        if not expr.is_annotated and name in self.scope.functions:
+            self.scope.functions.pop(name)
+
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []
@@ -4028,7 +4048,6 @@ class SemanticParser(BasicParser):
         if len(funcs) == 1 and not is_interface:
             funcs = funcs[0]
             self.insert_function(funcs)
-
         else:
             for f in funcs:
                 self.insert_function(f)

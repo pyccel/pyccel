@@ -15,7 +15,7 @@ from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
+from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate, InlineFunctionDef
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, For, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
@@ -1037,6 +1037,7 @@ class CToPythonWrapper(Wrapper):
 
         # Wrap functions
         funcs_to_wrap = [f for f in expr.funcs if f not in (expr.init_func, expr.free_func)]
+        funcs_to_wrap = [f for f in funcs_to_wrap if f.is_annotated or not f.is_inline]
 
         # Add any functions removed by the Fortran printer
         removed_functions = getattr(expr, 'removed_functions', None)

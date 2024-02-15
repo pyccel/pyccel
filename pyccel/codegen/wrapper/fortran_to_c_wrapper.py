@@ -13,7 +13,7 @@ from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, C_F_Pointer
 from pyccel.ast.bind_c import CLocFunc, BindCModule, BindCVariable
 from pyccel.ast.bind_c import BindCArrayVariable, BindCClassDef, DeallocatePointer
 from pyccel.ast.bind_c import BindCClassProperty
-from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
+from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument, InlineFunctionDef
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
@@ -172,7 +172,8 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = expr.funcs
+        funcs_to_wrap = [f for f in expr.funcs if f.is_annotated]
+
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
             init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]

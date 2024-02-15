@@ -53,7 +53,7 @@ class Scope(object):
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
-    __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
+    __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter','_original_symbol', '_dotted_symbols')
 
@@ -62,10 +62,11 @@ class Scope(object):
             'macros','templates','headers','decorators',
             'cls_constructs')
 
-    def __init__(self, *, decorators = (), is_loop = False,
+    def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
                     original_symbols = None):
 
+        self._name    = None
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}
@@ -127,11 +128,16 @@ class Scope(object):
         if ps is not self:
             raise ValueError("A child of {} cannot have a parent {}".format(self, ps))
 
-        child = Scope(**kwargs, parent_scope = self)
+        child = Scope(name=name, **kwargs, parent_scope = self)
 
         self.add_son(name, child)
 
         return child
+
+    @property
+    def name(self):
+        """ the name of the scope."""
+        return self._name
 
     @property
     def imports(self):

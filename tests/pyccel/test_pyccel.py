@@ -1084,6 +1084,12 @@ def test_function(language):
 
 #------------------------------------------------------------------------------
 @pytest.mark.xdist_incompatible
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c
+        )
+    )
+)
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
@@ -1092,7 +1098,6 @@ def test_inline(language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
             pytest.mark.c]

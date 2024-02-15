@@ -341,7 +341,7 @@ class FCodePrinter(CodePrinter):
 
         # Create new local variables to ensure there are no name collisions
         new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
-                            for v in func.local_vars]
+                            for v in func.scope.variables.values()]
         for v in new_local_vars:
             self.scope.insert_variable(v)
 
@@ -405,10 +405,18 @@ class FCodePrinter(CodePrinter):
         self._additional_imports.update(func.imports)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
+            sc  = self.scope
+            imp = True
+            while sc.parent_scope is not None:
+                if mod.scope is sc.parent_scope:
+                    imp = False
+                sc = sc.parent_scope
+
+            if imp:
+                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                    for v in (*func.global_vars, *func.global_funcs)]))
+                for v in (*func.global_vars, *func.global_funcs):
+                    self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -520,6 +528,7 @@ class FCodePrinter(CodePrinter):
         func_strings += [c[1] for c in class_decs_and_methods]
         if expr.funcs:
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.funcs]
+
         if isinstance(expr, BindCModule):
             func_strings += [''.join([sep, self._print(i), sep]) for i in expr.variable_wrappers]
         body = '\n'.join(func_strings)
