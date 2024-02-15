@@ -1926,12 +1926,9 @@ class FCodePrinter(CodePrinter):
             arg_var = arg.var
             if isinstance(arg_var, Variable):
                 if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
-                    for b_arg,inout in zip(arg.get_all_function_def_arguments(), arg.inout):
+                    for b_arg in arg.get_all_function_def_arguments():
                         v = b_arg.var
-                        if inout:
-                            dec = Declare(v, intent='inout')
-                        else:
-                            dec = Declare(v, intent='in')
+                        dec = Declare(v, intent='in')
                         args_decs[v] = dec
                 else:
                     if i == 0 and expr.cls_name:
