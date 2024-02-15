@@ -169,6 +169,9 @@ class PyccelType(metaclass=ArgumentSingleton):
     types must inherit. A type must contain enough information to
     describe the declaration type in a low-level language.
 
+    Types contain an addition operators. The operator indicates the type that
+    is expected when calling an arithmetic operator on objects of these types.
+
     Parameters
     ----------
     *args : tuple
@@ -242,7 +245,9 @@ class PythonNativeBool(FixedSizeNumericType):
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, FixedSizeNumericType):
+        if isinstance(other, PythonNativeBool):
+            return PythonNativeInt()
+        elif isinstance(other, FixedSizeNumericType):
             return other
         else:
             return NotImplemented
@@ -414,13 +419,6 @@ class StringType(HomogeneousContainerType, metaclass=Singleton):
     _name = 'str'
     _element_type = PyccelCharacterType()
 
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, NativeString):
-            return self
-        else:
-            return NotImplemented
-
     def __str__(self):
         return 'str'
 
@@ -442,13 +440,6 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
 
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, TupleType):
-            return self
-        else:
-            return NotImplemented
-
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
 
@@ -465,13 +456,6 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
-
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, NativeHomogeneousList):
-            return self
-        else:
-            return NotImplemented
 
 #==============================================================================
 
