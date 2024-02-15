@@ -95,11 +95,11 @@ class ListInsert(PyccelInternalFunction):
 
     Parameters
     ----------
-    index : TypedAstNode
-        The index value for the element to be added.
-
     list_variable : Variable
         The variable representing the list.
+
+    index : TypedAstNode
+        The index value for the element to be added.
     
     new_elem : Variable
         The argument passed to insert() method.
