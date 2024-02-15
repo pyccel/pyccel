@@ -230,7 +230,7 @@ def get_cls_base(dtype, precision, container_type):
     """
     if isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
-    if precision in (-1, 0, None) and container_type is dtype:
+    elif precision in (-1, 0, None) and container_type is dtype:
         return literal_classes[dtype]
     elif isinstance(container_type, (*NativeNumericTypes, NumpyNDArrayType)):
         return NumpyArrayClass

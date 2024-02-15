@@ -10,6 +10,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
+-   #1182 : Fix tuples containing objects with different ranks.
+-   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
+
 ### Changed
 
 ### Deprecated
