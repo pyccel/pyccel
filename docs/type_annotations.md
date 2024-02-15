@@ -12,12 +12,16 @@ def fun(arg1: type1, arg2: type2, ..., argN: typeN) -> return_type:
 
 The only compulsory annotations are argument annotations, and result annotations in the case of recursive functions.
 
+## Scalar Values
+
 For scalar variables Pyccel supports the following data types:
 
 -   built-in data types: `bool`, `int`, `float`, `complex`
 -   NumPy integer types: `int8`, `int16`, `int32`, `int64`
 -   NumPy real types: `float32`, `float64`, `double`
 -   NumPy complex types: `complex64`, `complex128`
+
+## NumPy Arrays
 
 Unfortunately, NumPy does not yet provide mypy compatible type annotations which provide sufficient information for Pyccel. As a result we also support the use of string annotations:
 ```python
@@ -34,6 +38,15 @@ So `arr[:]` means that the array `arr` has 1 dimension, `arr[:,:]` means that it
 In general string type hints must be used to provide Pyccel with information about the number of dimensions.
 
 :warning: When running Pyccel in interactive mode with `epyccel` anything imported before the function being translated is not copied into the file which will be translated. Using non-string types here is therefore likely to generate errors as the necessary imports for these objects will be missing.
+
+## Tuples
+
+Currently tuples are supported locally in Pyccel but cannot be passed as arguments or returned. The implementation of the type annotations (as a first step to adding the missing support) is in progress. Currently homogeneous tuple type annotations are supported for local variables. Internally we handle homogeneous tuples as thought they were NumPy arrays. When creating multiple dimensional tuples it is therefore important to ensure that all objects have compatible sizes otherwise they will be handled as inhomogeneous tuples.
+
+To declare a homogeneous tuple the syntax is as follows:
+```python
+a : tuple[int,...] = (1,2,3,4)
+```
 
 ## Handling multiple types
 

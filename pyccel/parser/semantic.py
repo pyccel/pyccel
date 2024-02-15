@@ -23,7 +23,7 @@ from sympy import ceiling
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -79,7 +79,7 @@ from pyccel.ast.itertoolsext import Product
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
 from pyccel.ast.literals import LiteralInteger, LiteralFloat
 from pyccel.ast.literals import Nil, LiteralString, LiteralImaginaryUnit
-from pyccel.ast.literals import Literal, convert_to_literal
+from pyccel.ast.literals import Literal, convert_to_literal, LiteralEllipsis
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
@@ -967,16 +967,22 @@ class SemanticParser(BasicParser):
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
 
-        if getattr(val, 'is_homogeneous', True):
+        if isinstance(val.class_type, NativeHomogeneousTuple):
             return Duplicate(val, length)
         else:
             if isinstance(length, LiteralInteger):
                 length = length.python_value
             else:
-                errors.report("Cannot create inhomogeneous tuple of unknown size",
-                    symbol=Duplicate(val, length),
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='fatal')
+                symbol_map = {}
+                used_symbols = {}
+                sympy_length = pyccel_to_sympy(length, symbol_map, used_symbols)
+                if isinstance(sympy_length, sp_Integer):
+                    length = int(sympy_length)
+                else:
+                    errors.report("Cannot create inhomogeneous tuple of unknown size",
+                        symbol=Duplicate(val, length),
+                        bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                        severity='fatal')
             if isinstance(val, InhomogeneousTupleVariable):
                 return PythonTuple(*(val.get_vars()*length))
             else:
@@ -1574,13 +1580,19 @@ class SemanticParser(BasicParser):
             new_expressions.append(Deallocate(var))
 
         elif str(dtype) != str(var.dtype) or \
-                internal_precision != get_final_precision(var):
+                internal_precision != get_final_precision(var) or \
+                d_var['class_type'] != var.class_type:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
                 result_dtype = str(tmp_result.dtype)
                 result_precision = get_final_precision(tmp_result)
                 raise_error = (str(var.dtype) != result_dtype or \
                         get_final_precision(var) != result_precision)
+            elif str(dtype) == str(var.dtype) and \
+                    internal_precision == get_final_precision(var) and \
+                    var.rank == 0:
+                # Don't complain about non-numpy and numpy scalars
+                raise_error = False
             else:
                 raise_error = True
 
@@ -1593,11 +1605,14 @@ class SemanticParser(BasicParser):
                 try:
                     d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
                 except KeyError:
-                    d2 = str(var.dtype)
+                    d2 = str(dtype)
+
+                c1 = d1 if var.class_type == var.dtype else f"{var.class_type}[{d1}]"
+                c2 = d2 if d_var['class_type'] == dtype else f"{d_var['class_type']}[{d2}]"
 
                 name = var.name
                 rhs_str = str(rhs)
-                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(d1, d2),
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(c1, c2),
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
@@ -1894,8 +1909,39 @@ class SemanticParser(BasicParser):
                 prec = default_precision[dtype]
             return VariableTypeAnnotation(dtype, class_type, prec, rank)
 
+        if not any(isinstance(a, Slice) for a in args):
+            if isinstance(base, PyccelFunctionDef):
+                dtype_cls = base.cls_name
+            else:
+                raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='fatal', symbol=expr)
+            rank = 1
+            if len(args) == 2 and args[1] is LiteralEllipsis():
+                syntactic_annotation = args[0]
+                if not isinstance(syntactic_annotation, SyntacticTypeAnnotation):
+                    syntactic_annotation = SyntacticTypeAnnotation(dtype=syntactic_annotation)
+                internal_datatypes = self._visit(syntactic_annotation)
+                type_annotations = []
+                if dtype_cls is PythonTupleFunction:
+                    class_type = NativeHomogeneousTuple()
+                elif dtype_cls is PythonList:
+                    class_type = NativeHomogeneousList()
+                else:
+                    raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
+                            severity='fatal', symbol=expr)
+                for u in internal_datatypes.type_list:
+                    rank = u.rank+1
+                    order = None if rank == 1 else 'C'
+                    type_annotations.append(VariableTypeAnnotation(u.datatype, class_type,
+                        u.precision, rank, order, u.is_const))
+                return UnionTypeAnnotation(*type_annotations)
+            else:
+                raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,
+                        severity='fatal', symbol=expr)
+
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
+
 
     #====================================================
     #                 _visit functions
@@ -2863,13 +2909,15 @@ class SemanticParser(BasicParser):
                 errors.report(UNDEFINED_INIT_METHOD, symbol=name,
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
+            dtype = method.arguments[0].var.class_type
             cls_def = method.arguments[0].var.cls_base
-            d_var = {'datatype': method.arguments[0].var.class_type,
+            d_var = {'datatype': dtype,
                     'memory_handling':'stack',
                     'shape' : None,
                     'rank' : 0,
                     'is_target' : False,
-                    'cls_base' : cls_def}
+                    'cls_base' : cls_def,
+                    'class_type' : dtype}
             new_expression = []
 
             lhs = expr.get_user_nodes(Assign)[0].lhs
@@ -3059,6 +3107,8 @@ class SemanticParser(BasicParser):
                     d_var['rank'           ] = arg.rank
                     d_var['memory_handling'] = arg.memory_handling
                     d_var['order'          ] = arg.order
+                    d_var['class_type'     ] = arg.class_type
+                    d_var['cls_base'       ] = arg.cls_base
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs)
@@ -3524,6 +3574,9 @@ class SemanticParser(BasicParser):
         else:
             d_var['order'] = None
         d_var['shape'] = shape
+        cls_type = NativeHomogeneousList()
+        d_var['class_type'] = cls_type
+        d_var['cls_base'] = get_cls_base(dtype, d_var['precision'], cls_type)
 
         # ...
         # TODO [YG, 30.10.2020]:
