@@ -16,10 +16,10 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import PythonNativeComplex, GenericType
-from .datatypes import NativeHomogeneousTuple, NativeInhomogeneousTuple
-from .datatypes import NativeHomogeneousList, NativeTuple
-from .internals import PyccelInternalFunction, Slice, get_final_precision
+from .datatypes import ComplexType, GenericType
+from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
+from .datatypes import HomogeneousListType, TupleType
+from .internals import PyccelInternalFunction, Slice
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -75,11 +75,11 @@ class PythonComplexProperty(PyccelInternalFunction):
         The object which the property is called from.
     """
     __slots__ = ()
-    _dtype = PythonNativeComplex()
+    _dtype = ComplexType()
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeFloat()
+    _class_type = PythonNativeFloat()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -107,9 +107,9 @@ class PythonReal(PythonComplexProperty):
     __slots__ = ()
     name = 'real'
     def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
+        if isinstance(arg.dtype, PythonNativeBool):
             return PythonInt(arg)
-        elif not isinstance(arg.dtype, NativeComplex):
+        elif not isinstance(arg.dtype, ComplexType):
             return arg
         else:
             return super().__new__(cls)
@@ -136,7 +136,7 @@ class PythonImag(PythonComplexProperty):
     __slots__ = ()
     name = 'imag'
     def __new__(cls, arg):
-        if arg.dtype is not NativeComplex():
+        if arg.dtype is not ComplexType():
             return convert_to_literal(0, dtype = arg.dtype)
         else:
             return super().__new__(cls)
@@ -164,17 +164,17 @@ class PythonConjugate(PyccelInternalFunction):
         conjugate function.
     """
     __slots__ = ()
-    _dtype = PythonNativeComplex()
+    _dtype = ComplexType()
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeComplex()
+    _class_type = ComplexType()
     name = 'conjugate'
 
     def __new__(cls, arg):
-        if arg.dtype is NativeBool():
+        if arg.dtype is PythonNativeBool():
             return PythonInt(arg)
-        elif arg.dtype is not NativeComplex():
+        elif arg.dtype is not ComplexType():
             return arg
         else:
             return super().__new__(cls)
@@ -209,7 +209,7 @@ class PythonBool(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeBool()
+    _class_type = PythonNativeBool()
 
     def __new__(cls, arg):
         if getattr(arg, 'is_optional', None):
@@ -250,11 +250,11 @@ class PythonComplex(PyccelInternalFunction):
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
 
-    _dtype = PythonNativeComplex()
+    _dtype = ComplexType()
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeComplex()
+    _class_type = ComplexType()
     _real_cast = PythonReal
     _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
@@ -285,13 +285,13 @@ class PythonComplex(PyccelInternalFunction):
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
 
-        if arg0.dtype is NativeComplex() and arg1.dtype is NativeComplex():
+        if arg0.dtype is ComplexType() and arg1.dtype is ComplexType():
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = arg0.dtype is NativeComplex() and \
+        self._is_cast = arg0.dtype is ComplexType() and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
@@ -302,12 +302,12 @@ class PythonComplex(PyccelInternalFunction):
         else:
             self._internal_var = None
 
-            if arg0.dtype is NativeComplex() and \
+            if arg0.dtype is ComplexType() and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
                 self._real_part = self._real_cast(arg0)
                 self._imag_part = PyccelAdd(self._imag_cast(arg0), arg1)
-            elif arg1.dtype is NativeComplex():
+            elif arg1.dtype is ComplexType():
                 if isinstance(arg0, Literal) and arg0.python_value == 0:
                     # second arg is complex. First arg is 0
                     self._real_part = PyccelUnarySub(self._imag_cast(arg1))
@@ -416,7 +416,7 @@ class PythonFloat(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeFloat()
+    _class_type = PythonNativeFloat()
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
@@ -460,7 +460,7 @@ class PythonInt(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInteger()
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
@@ -511,8 +511,8 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
         arg0 = args[0]
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
+        is_homogeneous = arg0.dtype is not GenericType() and \
+                         all(a.dtype is not GenericType() and \
                              arg0.dtype == a.dtype and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
@@ -525,12 +525,12 @@ class PythonTuple(TypedAstNode):
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
             self._rank  = len(self._shape)
 
-            self._class_type = NativeHomogeneousTuple()
+            self._class_type = HomogeneousTupleType()
 
         else:
             max_rank = max(a.rank for a in args)
             self._rank       = max_rank + 1
-            self._dtype      = NativeInhomogeneousTuple(*[a.dtype for a in args])
+            self._dtype      = InhomogeneousTupleType(*[a.dtype for a in args])
             self._class_type = self._dtype
             if self._rank == 1:
                 self._shape     = (LiteralInteger(len(args)), )
@@ -648,7 +648,7 @@ class PythonLen(PyccelInternalFunction):
     _rank      = 0
     _shape     = None
     _order     = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInteger()
 
     def __new__(cls, arg):
         if not getattr(arg, 'is_homogeneous', False):
@@ -691,7 +691,7 @@ class PythonList(TypedAstNode):
     """
     __slots__ = ('_args','_dtype','_rank','_shape','_order')
     _attribute_nodes = ('_args',)
-    _class_type = NativeHomogeneousList()
+    _class_type = HomogeneousListType()
 
     def __init__(self, *args):
         self._args = args
@@ -705,8 +705,8 @@ class PythonList(TypedAstNode):
             self._order = None
             return
         arg0 = args[0]
-        is_homogeneous = arg0.dtype is not NativeGeneric() and \
-                         all(a.dtype is not NativeGeneric() and \
+        is_homogeneous = arg0.dtype is not GenericType() and \
+                         all(a.dtype is not GenericType() and \
                              arg0.dtype == a.dtype and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
@@ -996,7 +996,7 @@ class PythonSum(PyccelInternalFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError(f'Unknown type of {type(arg)}.' )
         self._dtype = arg.dtype
-        if isinstance(arg.class_type, (NativeHomogeneousList, NativeTuple)):
+        if isinstance(arg.class_type, (HomogeneousListType, TupleType)):
             self._class_type = arg.dtype
         else:
             self._class_type = arg.class_type
@@ -1042,7 +1042,7 @@ class PythonMax(PyccelInternalFunction):
             raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
-        if isinstance(x.class_type, (NativeHomogeneousList, NativeTuple)):
+        if isinstance(x.class_type, (HomogeneousListType, TupleType)):
             self._class_type = x.dtype
         else:
             self._class_type = x.class_type
@@ -1079,7 +1079,7 @@ class PythonMin(PyccelInternalFunction):
             raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
-        if isinstance(x.class_type, (NativeHomogeneousList, NativeTuple)):
+        if isinstance(x.class_type, (HomogeneousListType, TupleType)):
             self._class_type = x.dtype
         else:
             self._class_type = x.class_type
@@ -1184,7 +1184,7 @@ class PythonType(PyccelAstNode):
 
         class_type = self._obj.class_type
 
-        precision = prec * (16 if self.dtype is NativeComplex() else 8)
+        precision = prec * (16 if self.dtype is ComplexType() else 8)
         if class_type != self.dtype:
             return LiteralString(f"<class '{class_type}' ({dtype}{precision})>")
         else:

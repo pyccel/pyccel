@@ -89,7 +89,7 @@ class PyccelArraySize(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -136,7 +136,7 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):
         if not isinstance(arg, TypedAstNode):
@@ -234,11 +234,11 @@ class Slice(PyccelAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
-        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
+        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, PythonNativeInt)):
             raise TypeError('Slice start must be Integer or None')
-        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
+        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, PythonNativeInt)):
             raise TypeError('Slice stop must be Integer or None')
-        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
+        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, PythonNativeInt)):
             raise TypeError('Slice step must be Integer or None')
         if slice_type not in (Slice.Range, Slice.Element):
             raise TypeError('Slice type must be Range (1) or Element (0)')
