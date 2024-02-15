@@ -69,6 +69,7 @@ __all__ = [
         'tuple_inhomogeneous_3',
         'test_tuple_homogeneous',
         'test_tuple_inhomogeneous',
+        'tuple_different_ranks',
         ]
 
 def homogenous_tuple_int():
@@ -439,3 +440,7 @@ def test_tuple_inhomogeneous():
     b = ( 42, True, 3.14)
     a = tuple(b)
     return a[0], a[1], a[2], len(a)
+
+def tuple_different_ranks():
+    a = (1,(2,3))
+    return a[0], a[1][0], a[1][1]

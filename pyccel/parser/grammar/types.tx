@@ -4,11 +4,13 @@ Const: 'const';
 TypeHeader: FuncType|Type;
 
 Slice: ':';
+Ellipsis: '...';
+IndexType: Slice | Ellipsis | Type;
 Type: dtype=DataType (trailer=TrailerSubscriptList)?;
-TrailerSubscriptList: '[' args*=Slice [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
+TrailerSubscriptList: '[' args*=IndexType [','] ']'  ( '(' 'order' '=' order = ID ')' )?;
 
 FuncType: '('(results*=TypeHeader[','])?')' '('args*=UnionTypeStmt[',']')';
 
-DataType: ID|STAR;
+DataType: ID|STAR|Ellipsis;
 STAR: '*';
 
