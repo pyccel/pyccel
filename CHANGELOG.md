@@ -5,8 +5,8 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
--   #1529 : Add Python support for list method `append()`
--   #1529 : Add Python support for list method `insert()`
+-   #1689 : Add Python support for list method `append()`
+-   #1692 : Add Python support for list method `insert()`
 
 ### Fixed
 
