@@ -17,7 +17,7 @@ from pyccel.ast.headers   import construct_macro, MacroFunction, MacroVariable
 from pyccel.ast.core      import FunctionDefArgument, EmptyNode
 from pyccel.ast.variable  import DottedName
 from pyccel.ast.literals  import LiteralString, LiteralInteger, LiteralFloat
-from pyccel.ast.literals  import LiteralTrue, LiteralFalse
+from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralEllipsis
 from pyccel.ast.internals import PyccelSymbol, Slice
 from pyccel.ast.variable  import AnnotatedPyccelSymbol, IndexedElement
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, FunctionTypeAnnotation, UnionTypeAnnotation
@@ -119,10 +119,14 @@ class Type(BasicStmt):
         PyccelAstNode
             The Pyccel object being described.
         """
-        if s == ':':
+        if isinstance(s, Type):
+            return s.expr
+        elif s == ':':
             return Slice(None, None)
+        elif s == '...':
+            return LiteralEllipsis()
         else:
-            raise NotImplementedError("Unrecognised type trailer argument")
+            raise NotImplementedError(f"Unrecognised type trailer argument : {s}")
 
 class FuncType(BasicStmt):
     """
