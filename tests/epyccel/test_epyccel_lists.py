@@ -93,8 +93,8 @@ def test_insert_multiple(language):
     def f():
         a = [1, 2, 3]
         a.insert(4, 4)
-        a.insert(5, 5)
-        a.insert(6, 6)
+        a.insert(2, 5)
+        a.insert(1, 6)
         return a
 
     epyc_f = epyccel(f, language=language)
@@ -103,7 +103,7 @@ def test_insert_multiple(language):
 def test_insert_list(language):
     def f():
         a = [[1, 2, 3]]
-        a.insert(2, [4, 5, 6])
+        a.insert(1, [4, 5, 6])
         return a
 
     epyc_f = epyccel(f, language=language)
@@ -113,7 +113,7 @@ def test_insert_range(language):
     def f():
         a = [1, 2, 3]
         for i in range(4, 1000):
-            a.insert(i ,i)
+            a.insert(i - 1 ,i)
         return a
 
     epyc_f = epyccel(f, language=language)
@@ -134,6 +134,23 @@ def test_insert_range_tuple(language):
         a = [[1, 2, 3]]
         for i in range(4, 1000):
             a.insert(i, (i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_user_defined_objects(language):
+    def f():
+        class A:
+            pass
+        a = A()
+        b = A()
+        c = A()
+        d = A()
+        e = A()
+        lst = [a, b, c]
+        lst.insert(0, d)
+        lst.insert(1, e)
         return a
 
     epyc_f = epyccel(f, language=language)
