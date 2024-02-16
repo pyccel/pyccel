@@ -851,7 +851,7 @@ class PythonCodePrinter(CodePrinter):
         append_arg = self._print(expr.append_argument)
 
         return f"{list_var}.{method_name}({append_arg})\n"
-    
+
     def _print_ListPop(self, expr):
         args = self._print(expr.pop_index) if expr.pop_index else ""
         name = self._print(expr.list_variable)
