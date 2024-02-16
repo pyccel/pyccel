@@ -126,8 +126,8 @@ def test_clear_1(language):
         a.clear()
         return a
 
-    epyc_last_element = epyccel(clear_1, language = language)
-    pyccel_result = epyc_last_element()
+    epyc_clear_1 = epyccel(clear_1, language = language)
+    pyccel_result = epyc_clear_1()
     python_result = clear_1()
     assert python_result == pyccel_result
 
@@ -138,8 +138,8 @@ def test_clear_2(language):
         a.clear()
         return a
 
-    epyc_last_element = epyccel(clear_2, language = language)
-    pyccel_result = epyc_last_element()
+    epyc_clear_2 = epyccel(clear_2, language = language)
+    pyccel_result = epyc_clear_2()
     python_result = clear_2()
     assert python_result == pyccel_result
 
@@ -150,7 +150,7 @@ def test_clear_3(language):
         a.clear()
         return a
 
-    epyc_last_element = epyccel(clear_3, language = language)
-    pyccel_result = epyc_last_element()
+    epyc_clear_3 = epyccel(clear_3, language = language)
+    pyccel_result = epyc_clear_3()
     python_result = clear_3()
     assert python_result == pyccel_result
