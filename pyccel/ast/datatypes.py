@@ -193,13 +193,9 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
     @property
     def primitive_type(self):
         """
-        Precision of the datatype of the object.
+        The datatype category of the object.
 
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
+        The datatype category of the object (e.g. integer, floating point).
         """
         return self._primitive_type # pylint: disable=no-member
 
@@ -378,15 +374,20 @@ class HomogeneousContainerType(PyccelType):
     __slots__ = ()
 
     @property
+    def primitive_type(self):
+        """
+        The datatype category of elements of the object.
+
+        The datatype category of elements of the object (e.g. integer, floating point).
+        """
+        return self.element_type.primitive_type
+
+    @property
     def element_type(self):
         """
-        Precision of the datatype of the object.
+        The type of elements of the object.
 
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
+        The PyccelType describing an element of the container.
         """
         return self._element_type # pylint: disable=no-member
 

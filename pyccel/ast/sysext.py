@@ -7,7 +7,7 @@
 """
 from .core import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
-from .datatypes import NativeVoid
+from .datatypes import VoidType
 from .internals import LiteralInteger
 
 __all__ = (
@@ -29,8 +29,7 @@ class SysExit(PyccelInternalFunction):
     """
     __slots__ = ()
     name      = 'exit'
-    _dtype     = NativeVoid()
-    _precision = -1
+    _dtype     = VoidType()
     _rank      = 0
     _shape     = None
     _order     = None
