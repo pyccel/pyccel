@@ -36,7 +36,7 @@ class ListAppend(PyccelInternalFunction):
     list_variable : Variable
         The variable representing the list.
     
-    new_elem : Variable
+    new_elem : TypedAstNode
         The argument passed to append() method.
     """
     __slots__ = ("_list_variable", "_append_arg")
@@ -102,7 +102,7 @@ class ListInsert(PyccelInternalFunction):
     index : TypedAstNode
         The index value for the element to be added.
     
-    new_elem : Variable
+    new_elem : TypedAstNode
         The argument passed to insert() method.
     """
     __slots__ = ("_index", "_list_variable", "_insert_arg")
