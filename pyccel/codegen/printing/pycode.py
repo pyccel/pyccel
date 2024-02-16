@@ -852,6 +852,15 @@ class PythonCodePrinter(CodePrinter):
 
         return f"{list_var}.{method_name}({append_arg})\n"
 
+    def _print_ListPop(self, expr):
+        args = self._print(expr.pop_index) if expr.pop_index else ""
+        name = self._print(expr.list_variable)
+        return f"{name}.pop({args})"
+
+    def _print_ListClear(self, expr):
+        name = self._print(expr.list_variable)
+        return f"{name}.clear()\n"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''
@@ -1142,11 +1151,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_TypingFinal(self, expr):
         annotation = self._print(expr.arg)
         return f'const {annotation}'
-
-    def _print_ListPop(self, expr):
-        args = self._print(expr.pop_index) if expr.pop_index else ""
-        name = self._print(expr.list_variable)
-        return f"{name}.pop({args})"
 
 #==============================================================================
 def pycode(expr, assign_to=None, **settings):

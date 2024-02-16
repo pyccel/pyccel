@@ -117,3 +117,40 @@ def test_append_range_tuple(language):
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
+
+def test_clear_1(language):
+
+    def clear_1():
+        a = [1, 2, 3]
+        a.clear()
+        return a
+
+    epyc_clear_1 = epyccel(clear_1, language = language)
+    pyccel_result = epyc_clear_1()
+    python_result = clear_1()
+    assert python_result == pyccel_result
+
+def test_clear_2(language):
+
+    def clear_2():
+        a = []
+        a.clear()
+        return a
+
+    epyc_clear_2 = epyccel(clear_2, language = language)
+    pyccel_result = epyc_clear_2()
+    python_result = clear_2()
+    assert python_result == pyccel_result
+
+def test_clear_3(language):
+
+    def clear_3():
+        a = [[1, 2, 3]]
+        a.clear()
+        return a
+
+    epyc_clear_3 = epyccel(clear_3, language = language)
+    pyccel_result = epyc_clear_3()
+    python_result = clear_3()
+    assert python_result == pyccel_result
