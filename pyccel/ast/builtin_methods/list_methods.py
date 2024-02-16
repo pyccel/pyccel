@@ -15,8 +15,8 @@ from pyccel.ast.internals import PyccelInternalFunction
 
 
 __all__ = ('ListAppend',
-           'ListPop',
-           'ListClear'
+           'ListClear',
+           'ListPop'
            )
 
 
