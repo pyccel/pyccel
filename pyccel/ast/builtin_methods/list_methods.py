@@ -147,8 +147,8 @@ class ListClear(PyccelInternalFunction) :
     list_variable : TypedAstNode
         The name of the list.
     """
-    __slots__ = ('_list_variable')
-    _attribute_nodes = ('_list_variable')
+    __slots__ = ('_list_variable',)
+    _attribute_nodes = ('_list_variable',)
     _dtype = NativeVoid()
     _precision = -1
     _rank = 0
