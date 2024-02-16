@@ -566,8 +566,9 @@ class CCodePrinter(CodePrinter):
             else:
                 args.append(a.value)
 
+        # Create new local variables to ensure there are no name collisions
         new_local_vars = [self.scope.get_temporary_variable(v) \
-                            for v in func.scope.variables.values()]
+                            for v in func.local_vars]
 
         parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign))
         if parent_assign:
@@ -612,10 +613,18 @@ class CCodePrinter(CodePrinter):
 
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self.add_import(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
+            sc  = self.scope
+            imp = True
+            while sc.parent_scope is not None:
+                if mod.scope is sc.parent_scope:
+                    imp = False
+                sc = sc.parent_scope
+
+            if imp:
+                self.add_import(Import(mod.name, [AsName(v, v.name) \
+                    for v in (*func.global_vars, *func.global_funcs)]))
+                for v in (*func.global_vars, *func.global_funcs):
+                    self.scope.insert_symbol(v.name)
 
         for b in body.body:
             if isinstance(b, ScopedAstNode):

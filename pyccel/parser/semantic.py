@@ -3779,11 +3779,10 @@ class SemanticParser(BasicParser):
             self.insert_function(expr)
             return EmptyNode()
 
-        name = self.scope.get_expected_name(expr.name)
+        if not expr.is_annotated and expr.name in self.scope.functions:
+            self.scope.functions.pop(expr.name)
 
-        if not expr.is_annotated and name in self.scope.functions:
-            self.scope.functions.pop(name)
-
+        name            = self.scope.get_expected_name(expr.name)
         decorators      = expr.decorators
         funcs           = []
         sub_funcs       = []

@@ -2917,12 +2917,12 @@ class InlineFunctionDef(FunctionDef):
                         else a for a in args)
 
         # Replace the arguments in the code
-        self.body.substitute(self._orig_args+tuple(self.scope.variables.values()), self._new_args+self._new_local_vars, invalidate=False)
+        self.body.substitute(self._orig_args+self.local_vars, self._new_args+self._new_local_vars, invalidate=False)
 
     def swap_out_args(self):
         """ Modify the body of the function by reinstating the original arguments and local variables
         """
-        self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+tuple(self.scope.variables.values()), invalidate=False)
+        self.body.substitute(self._new_args+self._new_local_vars, self._orig_args+self.local_vars, invalidate=False)
         self._new_args = None
         self._new_local_vars = None
 

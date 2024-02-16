@@ -341,7 +341,7 @@ class FCodePrinter(CodePrinter):
 
         # Create new local variables to ensure there are no name collisions
         new_local_vars = [v.clone(self.scope.get_new_name(v.name)) \
-                            for v in func.scope.variables.values()]
+                            for v in func.local_vars]
         for v in new_local_vars:
             self.scope.insert_variable(v)
 
