@@ -14,7 +14,10 @@ from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousLis
 from pyccel.ast.internals import PyccelInternalFunction
 
 
-__all__ = ('ListAppend','ListPop')
+__all__ = ('ListAppend',
+           'ListPop',
+           'ListClear'
+           )
 
 
 class ListAppend(PyccelInternalFunction):
@@ -130,3 +133,39 @@ class ListPop(PyccelInternalFunction) :
         """
         return self._list_variable
 
+#==============================================================================
+class ListClear(PyccelInternalFunction) :
+    """
+    Represents a call to the .clear() method.
+    
+    Represents a call to the .clear() method which deletes all elements from a list, 
+    effectively turning it into an empty list.
+    Note that the .clear() method doesn't return any value.
+
+    Parameters
+    ----------
+    list_variable : TypedAstNode
+        The name of the list.
+    """
+    __slots__ = ('_list_variable')
+    _attribute_nodes = ('_list_variable')
+    _dtype = NativeVoid()
+    _precision = -1
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = NativeHomogeneousList()
+    name = 'clear'
+
+    def __init__(self, list_variable):
+        self._list_variable = list_variable
+        super().__init__()
+
+    @property
+    def list_variable(self):
+        """
+        Provide the name of the list as the return value.
+
+        Provide the name of the list as the return value.
+        """
+        return self._list_variable
