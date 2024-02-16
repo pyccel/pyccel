@@ -1147,7 +1147,7 @@ class PythonCodePrinter(CodePrinter):
         args = self._print(expr.pop_index) if expr.pop_index else ""
         name = self._print(expr.list_variable)
         return f"{name}.pop({args})"
-    
+
     def _print_ListClear(self, expr):
         name = self._print(expr.list_variable)
         return f"{name}.clear()\n"

@@ -120,6 +120,7 @@ def test_append_range_tuple(language):
 
 
 def test_clear_1(language):
+
     def clear_1():
         a = [1, 2, 3]
         a.clear()
@@ -131,7 +132,7 @@ def test_clear_1(language):
     assert python_result == pyccel_result
 
 def test_clear_2(language):
-        
+
     def clear_2():
         a = []
         a.clear()
@@ -143,7 +144,7 @@ def test_clear_2(language):
     assert python_result == pyccel_result
 
 def test_clear_3(language):
-        
+
     def clear_3():
         a = [[1, 2, 3]]
         a.clear()
