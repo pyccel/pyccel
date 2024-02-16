@@ -858,7 +858,7 @@ class PythonCodePrinter(CodePrinter):
         list_var = self._print(expr.list_variable)
         insert_arg = self._print(expr.insert_argument)
 
-        return f"{list_var}.{method_name}({index},{insert_arg})\n"
+        return f"{list_var}.{method_name}({index}, {insert_arg})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
