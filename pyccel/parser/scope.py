@@ -66,7 +66,7 @@ class Scope(object):
                     parent_scope = None, used_symbols = None,
                     original_symbols = None):
 
-        self._name    = None
+        self._name    = name
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}

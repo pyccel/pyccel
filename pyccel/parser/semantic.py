@@ -1215,7 +1215,7 @@ class SemanticParser(BasicParser):
         sc = func.scope
         while sc.parent_scope is not None:
             sc = sc.parent_scope
-            if not sc.is_loop:
+            if not sc.name is None:
                 names.append(sc.name)
         names.reverse()
 
@@ -1224,7 +1224,10 @@ class SemanticParser(BasicParser):
         else:
             self._current_function = DottedName(*names) if len(names)>1 else names[0]
 
-        self._scope = func.scope.parent_scope
+        while len(names) > 0:
+            sc = sc.sons_scopes[names[0]]
+            names = names[1:]
+        self._scope = sc
         self._visit_FunctionDef(func, annotate=annotate, function_call=function_call)
         user_nodes = func._user_nodes
         func       = self.scope.find(func.name, 'functions')
