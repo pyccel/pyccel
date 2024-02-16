@@ -26,7 +26,6 @@ __all__ = (
         'PyccelBooleanType',
         'PyccelIntegerType',
         'PyccelFloatingPointType',
-        'PyccelComplexType',
         'PyccelCharacterType'
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
@@ -49,6 +48,8 @@ __all__ = (
         'DictType',
         # ---------- Functions -------------------
         'DataTypeFactory',
+        # ---------- Utility variables -----------
+        'PythonNativeComplex'
 )
 
 #==============================================================================
@@ -141,15 +142,6 @@ class PyccelFloatingPointType(PrimitiveType):
     """
     __slots__ = ()
     _name = 'floating point'
-
-class PyccelComplexType(PrimitiveType):
-    """
-    Class representing a complex datatype.
-
-    Class representing a complex datatype.
-    """
-    __slots__ = ()
-    _name = 'complex'
 
 class PyccelCharacterType(PrimitiveType):
     """
@@ -407,9 +399,14 @@ class ComplexType(HomogeneousContainerType):
 
     Class representing Python's native complex type.
     """
-    __slots__ = ()
+    __slots__ = ('_element_type',)
     _name = 'complex'
-    _element_type = PyccelComplexType()
+
+    def __init__(self, float_type):
+        assert isinstance(float_type, FixedSizeType)
+        assert float_type.primitive_type is PyccelFloatingPointType()
+        self._element_type = float_type
+        super().__init__()
 
     @lru_cache
     def __add__(self, other):
@@ -418,9 +415,15 @@ class ComplexType(HomogeneousContainerType):
         else:
             return NotImplemented
 
-    @property
-    def element_type(self):
-        return PythonNativeFloat()
+    def __str__(self):
+        float_name = str(self._element_type)
+        start = float_name[:5]
+        end = float_name[5:]
+        if start == 'float':
+            prec = int(end)*2 if end else ''
+            return f'complex{prec}'
+        else:
+            return f'complex[{float_name}]'
 
 class StringType(HomogeneousContainerType, metaclass=Singleton):
     """
@@ -579,6 +582,10 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
     dtype_and_precision_registry[name] = (newclass(), 0)
 
     return newclass
+
+#==============================================================================
+
+PythonNativeComplex = ComplexType(PythonNativeFloat())
 
 #dtype_and_precision_registry = { 'float' : (Float, -1),
 #                                 'double' : (Float, -1),

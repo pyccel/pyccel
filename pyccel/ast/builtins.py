@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import ComplexType, GenericType
+from .datatypes import ComplexType, GenericType, PythonNativeComplex
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, TupleType
 from .internals import PyccelInternalFunction, Slice
@@ -75,11 +75,11 @@ class PythonComplexProperty(PyccelInternalFunction):
         The object which the property is called from.
     """
     __slots__ = ()
-    _dtype = ComplexType()
+    _dtype = PythonNativeComplex
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = PythonNativeFloat()
+    _class_type = PythonNativeComplex
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -136,7 +136,7 @@ class PythonImag(PythonComplexProperty):
     __slots__ = ()
     name = 'imag'
     def __new__(cls, arg):
-        if arg.dtype is not ComplexType():
+        if not isinstance(arg.dtype, ComplexType):
             return convert_to_literal(0, dtype = arg.dtype)
         else:
             return super().__new__(cls)
@@ -164,17 +164,17 @@ class PythonConjugate(PyccelInternalFunction):
         conjugate function.
     """
     __slots__ = ()
-    _dtype = ComplexType()
+    _dtype = PythonNativeComplex
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = ComplexType()
+    _class_type = PythonNativeComplex
     name = 'conjugate'
 
     def __new__(cls, arg):
         if arg.dtype is PythonNativeBool():
             return PythonInt(arg)
-        elif arg.dtype is not ComplexType():
+        elif not isinstance(arg.dtype, ComplexType):
             return arg
         else:
             return super().__new__(cls)
@@ -250,11 +250,11 @@ class PythonComplex(PyccelInternalFunction):
     __slots__ = ('_real_part', '_imag_part', '_internal_var', '_is_cast')
     name = 'complex'
 
-    _dtype = ComplexType()
+    _dtype = PythonNativeComplex
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = ComplexType()
+    _class_type = PythonNativeComplex
     _real_cast = PythonReal
     _imag_cast = PythonImag
     _attribute_nodes = ('_real_part', '_imag_part', '_internal_var')
@@ -285,13 +285,13 @@ class PythonComplex(PyccelInternalFunction):
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
 
-        if arg0.dtype is ComplexType() and arg1.dtype is ComplexType():
+        if isinstance(arg0.dtype, ComplexType) and isinstance(arg1.dtype, ComplexType):
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = arg0.dtype is ComplexType() and \
+        self._is_cast = isinstance(arg0.dtype, ComplexType) and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
@@ -302,12 +302,12 @@ class PythonComplex(PyccelInternalFunction):
         else:
             self._internal_var = None
 
-            if arg0.dtype is ComplexType() and \
+            if isinstance(arg0.dtype, ComplexType) and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
                 self._real_part = self._real_cast(arg0)
                 self._imag_part = PyccelAdd(self._imag_cast(arg0), arg1)
-            elif arg1.dtype is ComplexType():
+            elif isinstance(arg1.dtype, ComplexType):
                 if isinstance(arg0, Literal) and arg0.python_value == 0:
                     # second arg is complex. First arg is 0
                     self._real_part = PyccelUnarySub(self._imag_cast(arg1))
@@ -1179,16 +1179,12 @@ class PythonType(PyccelAstNode):
         printed by Python to describe this type. This string can
         then be easily printed in each language.
         """
-        dtype = self.dtype.name
-        return LiteralString(f"<class '{dtype}'>")
-
         class_type = self._obj.class_type
 
-        precision = prec * (16 if self.dtype is ComplexType() else 8)
         if class_type != self.dtype:
-            return LiteralString(f"<class '{class_type}' ({dtype}{precision})>")
+            return LiteralString(f"<class '{class_type}' ({dtype})>")
         else:
-            return LiteralString(f"<class 'numpy.{dtype}{precision}'>")
+            return LiteralString(f"<class 'numpy.{dtype}'>")
 
 #==============================================================================
 

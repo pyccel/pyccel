@@ -946,11 +946,11 @@ math_functions = [PyccelFunctionDef(v.name, v) for k, v in globals().copy().item
 # Constants
 #==============================================================================
 math_constants = {
-    'e'  : Constant('float', 'e'  , value=math.e  ),
-    'pi' : Constant('float', 'pi' , value=math.pi ),
-    'inf': Constant('float', 'inf', value=math.inf),
-    'nan': Constant('float', 'nan', value=math.nan),
-    'tau': Constant('float', 'tau', value=2.*math.pi),
+    'e'  : Constant(PythonNativeFloat(), 'e'  , value=math.e  ),
+    'pi' : Constant(PythonNativeFloat(), 'pi' , value=math.pi ),
+    'inf': Constant(PythonNativeFloat(), 'inf', value=math.inf),
+    'nan': Constant(PythonNativeFloat(), 'nan', value=math.nan),
+    'tau': Constant(PythonNativeFloat(), 'tau', value=2.*math.pi),
 }
 
 math_mod = Module('math',

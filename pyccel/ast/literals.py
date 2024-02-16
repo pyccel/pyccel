@@ -8,7 +8,7 @@ from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import GenericType, PythonNativeInt, PythonNativeBool
-from .datatypes import PythonNativeFloat, ComplexType, StringType
+from .datatypes import PythonNativeFloat, ComplexType, StringType, PythonNativeComplex
 
 __all__ = (
     'convert_to_literal',
@@ -214,10 +214,9 @@ class LiteralComplex(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_real_part','_imag_part', '_dtype')
-    _class_type = ComplexType()
+    __slots__   = ('_real_part','_imag_part', '_dtype', '_class_type')
 
-    def __new__(cls, real, imag, dtype = ComplexType()):
+    def __new__(cls, real, imag, dtype = PythonNativeComplex):
         if cls is LiteralImaginaryUnit:
             return super().__new__(cls)
         real_part = cls._collect_python_val(real)
@@ -227,12 +226,13 @@ class LiteralComplex(Literal):
         else:
             return super().__new__(cls)
 
-    def __init__(self, real, imag, dtype = ComplexType()):
+    def __init__(self, real, imag, dtype = PythonNativeComplex):
         self._real_part = LiteralFloat(self._collect_python_val(real),
                                        dtype = dtype.element_type)
         self._imag_part = LiteralFloat(self._collect_python_val(imag),
                                        dtype = dtype.element_type)
         self._dtype = dtype
+        self._class_type = dtype
         super().__init__()
 
     @staticmethod
@@ -284,10 +284,10 @@ class LiteralImaginaryUnit(LiteralComplex):
         The exact type of the literal.
     """
     __slots__ = ()
-    def __new__(cls, *, dtype = ComplexType()):
+    def __new__(cls, *, dtype = PythonNativeComplex):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self, real = 0, imag = 1, dtype = ComplexType()):
+    def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex):
         super().__init__(0, 1, dtype)
 
     @property
@@ -419,7 +419,7 @@ def convert_to_literal(value, dtype = None):
         elif isinstance(value, float):
             dtype = PythonNativeFloat()
         elif isinstance(value, complex):
-            dtype = ComplexType()
+            dtype = PythonNativeComplex
         elif isinstance(value, bool):
             dtype = PythonNativeBool()
         elif isinstance(value, str):
