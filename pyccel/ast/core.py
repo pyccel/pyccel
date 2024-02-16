@@ -46,7 +46,6 @@ __all__ = (
     'Assert',
     'Assign',
     'AugAssign',
-    'Block',
     'Break',
     'ClassDef',
     'CodeBlock',
@@ -327,8 +326,6 @@ class Assign(PyccelAstNode):
         ):
         if isinstance(lhs, (tuple, list)):
             lhs = PythonTuple(*lhs)
-        if isinstance(rhs, (tuple, list)):
-            rhs = PythonTuple(*rhs)
         self._lhs = lhs
         self._rhs = rhs
         self._status = status
@@ -981,103 +978,6 @@ class With(ScopedAstNode):
     def body(self):
         return self._body
 
-    @property
-    def block(self):
-        """
-        Get the code block for the with block.
-
-        Get the code block created by calling the enter method followed by
-        the code in the with block and finally the exit method.
-
-        Returns
-        -------
-        Block
-            The code block.
-        """
-        methods = self.test.cls_base.methods
-        for i in methods:
-            if str(i.name) == '__enter__':
-                start = i
-            elif str(i.name) == '__exit__':
-                end   = i
-        start = FunctionCall(start,[])
-        end   = FunctionCall(end  ,[])
-
-        # TODO check if enter is empty or not first
-
-        body = start.body.body
-        body += self.body.body
-        body +=  end.body.body
-        return Block('with', [], body, scope=self.scope)
-
-
-# TODO add a name to a block?
-
-class Block(ScopedAstNode):
-
-    """Represents a block in the code. A block consists of the following inputs
-
-    Parameters
-    ----------
-    variables: list
-        list of the variables that appear in the block.
-
-    declarations: list
-        list of declarations of the variables that appear in the block.
-
-    body: list
-        a list of statements
-
-    Examples
-    --------
-    >>> from pyccel.ast.core import Variable, Assign, Block
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x')
-    >>> Block([n, x], [Assign(x,2.*n + 1.), Assign(n, n + 1)])
-    Block([n, x], [x := 1.0 + 2.0*n, n := 1 + n])
-    """
-    __slots__ = ('_name','_variables','_body')
-    _attribute_nodes = ('_variables','_body')
-
-    def __init__(
-        self,
-        name,
-        variables,
-        body,
-        scope = None):
-        if not isinstance(name, str):
-            raise TypeError('name must be of type str')
-        if not iterable(variables):
-            raise TypeError('variables must be an iterable')
-        for var in variables:
-            if not isinstance(var, Variable):
-                raise TypeError('Only a Variable instance is allowed.')
-        if iterable(body):
-            body = CodeBlock(body)
-        elif not isinstance(body, CodeBlock):
-            raise TypeError('body must be an iterable or a CodeBlock')
-        self._name = name
-        self._variables = variables
-        self._body = body
-        super().__init__(scope)
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def variables(self):
-        return self._variables
-
-    @property
-    def body(self):
-        return self._body
-
-    @property
-    def declarations(self):
-        return [Declare(i.dtype, i) for i in self.variables]
-
-
 
 class Module(ScopedAstNode):
     """
@@ -1305,9 +1205,12 @@ class Module(ScopedAstNode):
 
     @property
     def declarations(self):
-        """ Returns the declarations of the variables
         """
-        return [Declare(i.dtype, i, value=v, module_variable=True) \
+        Get the declarations of all variables in the module.
+
+        Get the declarations of all variables in the module.
+        """
+        return [Declare(i, value=v, module_variable=True) \
                 for i,v in zip(self.variables, self._variable_inits)]
 
     @property
@@ -3895,60 +3798,50 @@ class FuncAddressDeclare(PyccelAstNode):
 
 # ARA : issue-999 add is_external for external function exported through header files
 class Declare(PyccelAstNode):
+    """
+    Represents a variable declaration in the code.
 
-    """Represents a variable declaration in the code.
+    Represents a variable declaration in the translated code.
 
     Parameters
     ----------
-    dtype : DataType
-        The type for the declaration.
-    variable(s)
-        A single variable or an iterable of Variables. If iterable, all
-        Variables must be of the same type.
-    intent: None, str
-        one among {'in', 'out', 'inout'}
-    value: TypedAstNode
-        variable value
-    static: bool
+    variable : Variable
+        A single variable which should be declared.
+    intent : str, optional
+        One among {'in', 'out', 'inout'}.
+    value : TypedAstNode, optional
+        The initialisation value of the variable.
+    static : bool, default=False
         True for a static declaration of an array.
-    external: bool
-        True for a function declared through a header
-    module_variable : bool
-        True for a variable which belongs to a module
+    external : bool, default=False
+        True for a function declared through a header.
+    module_variable : bool, default=False
+        True for a variable which belongs to a module.
 
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare('int', Variable('int', 'n'))
-    Declare(NativeInteger(), (n,), None)
-    >>> Declare('float', Variable('float', 'x'), intent='out')
-    Declare(NativeFloat(), (x,), out)
+    >>> Declare(Variable('int', 'n'))
+    Declare(n, None)
+    >>> Declare(Variable('float', 'x'), intent='out')
+    Declare(x, out)
     """
-    __slots__ = ('_dtype','_variable','_intent','_value',
-                 '_static','_passed_from_dotted', '_external',
+    __slots__ = ('_variable','_intent','_value',
+                 '_static', '_external',
                  '_module_variable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
         self,
-        dtype,
         variable,
         intent=None,
         value=None,
         static=False,
-        passed_from_dotted = False,
         external = False,
         module_variable = False
         ):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
-
         if not isinstance(variable, Variable):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
-        if variable.dtype != dtype:
-            raise ValueError('All variables must have the same dtype')
 
         if intent:
             if not intent in ['in', 'out', 'inout']:
@@ -3957,28 +3850,19 @@ class Declare(PyccelAstNode):
         if not isinstance(static, bool):
             raise TypeError('Expecting a boolean for static attribute')
 
-        if not isinstance(passed_from_dotted, bool):
-            raise TypeError('Expecting a boolean for passed_from_dotted attribute')
-
         if not isinstance(external, bool):
             raise TypeError('Expecting a boolean for external attribute')
 
         if not isinstance(module_variable, bool):
             raise TypeError('Expecting a boolean for module_variable attribute')
 
-        self._dtype = dtype
         self._variable = variable
         self._intent = intent
         self._value = value
         self._static = static
-        self._passed_from_dotted = passed_from_dotted
         self._external = external
         self._module_variable = module_variable
         super().__init__()
-
-    @property
-    def dtype(self):
-        return self._dtype
 
     @property
     def variable(self):
@@ -3995,12 +3879,6 @@ class Declare(PyccelAstNode):
     @property
     def static(self):
         return self._static
-
-    @property
-    def passed_from_dotted(self):
-        """ Argument is the lhs of a DottedFunction
-        """
-        return self._passed_from_dotted
 
     @property
     def external(self):

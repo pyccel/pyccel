@@ -1,3 +1,7 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-if __name__ == "__main__":
-    a = (1, [1, 2, 3])
+
+import numpy as np
+a = [1,2,3]
+b = np.int32(4)
+a.append(b)
+
