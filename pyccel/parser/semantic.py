@@ -1164,7 +1164,7 @@ class SemanticParser(BasicParser):
                 return self._visit(tmp_var)
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-
+            print(args, func_args)
             if not len(args) > len(func_args):
                 args     = self._sort_function_call_args(func_args, args)
                 new_expr = FunctionCall(func, args, self._current_function)
@@ -3883,9 +3883,14 @@ class SemanticParser(BasicParser):
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
-            if isinstance(a.annotation, UnionTypeAnnotation) and len(a.annotation)>1:
+            if isinstance(a.annotation, UnionTypeAnnotation):
+                annotation = [aa.type_list if isinstance(aa, UnionTypeAnnotation) else [aa] for aa in a.annotation]
+                annotation = [aa for a in annotation for aa in a]
+            else:
+                annotation = [a.annotation]
+            if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
-                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in a.annotation])
+                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
                 var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb)

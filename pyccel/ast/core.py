@@ -2015,23 +2015,29 @@ class FunctionCall(TypedAstNode):
         if not isinstance(args, (tuple, list)):
             raise TypeError('args must be a list or tuple')
 
-        # Sort and add the missing call arguments to match the arguments in the function definition
+        # add the missing argument in the case of optional arguments
         f_args = func.arguments
-        input_args = [a for a in args if a.keyword is None]
-        nargs = len(input_args)
-        for ka in f_args[nargs:]:
-            key = ka.name
-            relevant_args = [a for a in args[nargs:] if a.keyword == key]
-            n_relevant_args = len(relevant_args)
-            assert n_relevant_args <= 1
-            if n_relevant_args == 0 and ka.has_default:
-                input_args.append(ka.default_call_arg)
-            elif n_relevant_args == 1:
-                input_args.append(relevant_args[0])
-        args = input_args
+        if not len(args) == len(f_args):
+            # Collect dict of keywords and values (initialised as default)
+            f_args_dict = {a.name: (a.name, a.value) if a.has_default \
+                    else None for a in f_args}
+            keyword_args = []
+            for i,a in enumerate(args):
+                if a.keyword is None:
+                    # Replace default positional arguments with provided arguments
+                    f_args_dict[f_args[i].name] = a
+                else:
+                    keyword_args = args[i:]
+                    break
+
+            for a in keyword_args:
+                # Replace default arguments with provided keyword arguments
+                f_args_dict[a.keyword] = a
+
+            args = [FunctionCallArgument(keyword=a[0], value=a[1]) if isinstance(a, tuple) else a for a in f_args_dict.values()]
 
         # Handle function as argument
-        arg_vals = [a.value for a in args]
+        arg_vals = [None if a is None else a.value for a in args]
         args = [FunctionCallArgument(FunctionAddress(av.name, av.arguments, av.results), keyword=a.keyword)
                 if isinstance(av, FunctionDef) else a for a, av in zip(args, arg_vals)]
 

@@ -59,7 +59,8 @@ def local_overide_1(x : 'O', y : 'O'):
 def tmplt_tmplt_1(x : 'z', y : 'z', z : 'R'):
     return x + y + z
 
-def array_elem1(x:'int64 [:]|float64[:]'):
+#$ header function array_elem1(int64 [:]|float64[:])
+def array_elem1(x):
     return x[0]
 
 @template('k', types='int')
