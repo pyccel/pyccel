@@ -178,18 +178,11 @@ def test_insert_range_tuple(language):
     assert f() == epyc_f()
 
 def test_insert_user_defined_objects(language):
-    def f():
-        class A:
-            pass
-        a = A()
-        b = A()
-        c = A()
-        d = A()
-        e = A()
-        lst = [a, b, c]
-        lst.insert(0, d)
-        lst.insert(1, e)
-        return a
+    import modules.list_user_defined_objs as mod
 
-    epyc_f = epyccel(f, language=language)
-    assert f() == epyc_f()
+    modnew = epyccel(mod, language=language)
+    python_list = mod.fn()
+    accelerated_list = modnew.fn()
+    assert len(python_list) == len(accelerated_list)
+    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
+        assert python_elem.x == accelerated_elem.x
