@@ -15,7 +15,7 @@ from pyccel.ast.builtins      import PythonTuple, PythonRange
 from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
-from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate, InlineFunctionDef
+from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
 from pyccel.ast.core          import Import, Module, AugAssign, CommentBlock
 from pyccel.ast.core          import FunctionAddress, Declare, ClassDef, For, AsName
 from pyccel.ast.cwrapper      import PyModule, PyccelPyObject, PyArgKeywords, PyModule_Create
