@@ -15,9 +15,9 @@ from pyccel.ast.datatypes  import NativeHomogeneousTuple
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
-from pyccel.ast.numpyext   import numpy_target_swap
-from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
+#from pyccel.ast.numpyext   import numpy_target_swap
+#from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
+#from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
 from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod

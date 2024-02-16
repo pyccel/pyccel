@@ -37,8 +37,8 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-from pyccel.ast.numpyext import NumpyFull, NumpyArray
-from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
+#from pyccel.ast.numpyext import NumpyFull, NumpyArray
+#from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
 
 from pyccel.ast.utilities import expand_to_loops
 

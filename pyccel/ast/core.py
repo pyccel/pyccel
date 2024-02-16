@@ -18,11 +18,11 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 
 from .c_concepts import PointerCast
 
-from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
-                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
-                        NativeVoid)
+from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
+                        PythonNativeBool, InhomogeneousTupleType,
+                        VoidType)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision, apply_pickle
+from .internals import PyccelSymbol, PyccelInternalFunction, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -201,12 +201,11 @@ class Duplicate(TypedAstNode):
     length : TypedAstNode
         The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_val', '_length','_dtype','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
         self._dtype      = val.dtype
-        self._precision  = val.precision
         self._rank       = val.rank
         self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
         self._order      = val.order
@@ -243,12 +242,11 @@ class Concatenate(TypedAstNode):
     arg2 : TypedAstNodes
            The second tuple.
     """
-    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_args','_dtype','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
         self._dtype      = arg1.dtype
-        self._precision  = arg1.precision
         self._rank       = arg1.rank
         shape_addition   = arg2.shape[0]
         self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
@@ -388,12 +386,12 @@ class Assign(PyccelAstNode):
         lhs = self.lhs
         rhs = self.rhs
         if isinstance(lhs, Variable):
-            return isinstance(lhs.dtype, NativeSymbol)
+            return isinstance(lhs.dtype, SymbolicType)
         elif isinstance(lhs, PyccelSymbol):
             if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
-                return isinstance(rhs.dtype, NativeSymbol)
+                return isinstance(rhs.dtype, SymbolicType)
             elif isinstance(rhs, PyccelSymbol):
                 return True
 
@@ -906,7 +904,7 @@ class While(ScopedAstNode):
     def __init__(self, test, body, scope = None):
 
         if pyccel_stage == 'semantic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
@@ -2033,7 +2031,7 @@ class FunctionDefResult(TypedAstNode):
         The result annotation providing dtype information.
 
         The annotation which provides all information about the data
-        types, precision, etc, necessary to fully define the result.
+        types, rank, etc, necessary to fully define the result.
         """
         return self._annotation
 
@@ -2073,7 +2071,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_dtype','_precision','_shape','_rank','_order','_class_type')
+                 '_dtype','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2150,26 +2148,23 @@ class FunctionCall(TypedAstNode):
             self._dtype      = func.results[0].var.dtype
             self._rank       = func.results[0].var.rank
             self._shape      = func.results[0].var.shape
-            self._precision  = func.results[0].var.precision
             self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._dtype      = NativeVoid()
+            self._dtype      = VoidType()
             self._rank       = 0
             self._shape      = None
-            self._precision  = None
             self._order      = None
-            self._class_type = NativeVoid()
+            self._class_type = VoidType()
         else:
             dtypes = [r.var.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple()
+                dtype = HomogeneousTupleType(dtypes[0])
             else:
-                dtype = NativeInhomogeneousTuple(*dtypes)
+                dtype = InhomogeneousTupleType(*dtypes)
             self._dtype      = dtype
             self._rank       = 1
             self._shape      = (LiteralInteger(n_results),)
-            self._precision  = None
             self._order      = None
             self._class_type = dtype
 
@@ -3076,22 +3071,14 @@ class Interface(PyccelAstNode):
         """
         return self._functions[0].docstring
 
-    def point(self, args, use_final_precision = False):
+    def point(self, args):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
-        if use_final_precision:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and get_final_precision(call_arg) == \
-                        get_final_precision(func_arg)
-        else:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and call_arg.precision == func_arg.precision
+        type_match = lambda dtype1, dtype2, call_arg, func_arg: \
+                (dtype1 in dtype2 or dtype2 in dtype1) \
+                and (call_arg.rank == func_arg.rank)
 
 
         j = -1
@@ -3101,8 +3088,8 @@ class Interface(PyccelAstNode):
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
                 call_arg = y.value
-                dtype1 = str_dtype(call_arg.dtype)
-                dtype2 = str_dtype(func_arg.dtype)
+                dtype1 = str(call_arg.dtype)
+                dtype2 = str(func_arg.dtype)
                 found = found and type_match(dtype1, dtype2, call_arg, func_arg)
             if found:
                 break
@@ -3285,7 +3272,7 @@ class ClassDef(ScopedAstNode):
     scope : Scope
         The scope for the class contents.
 
-    class_type : DataType
+    class_type : PyccelType
         The data type associated with this class.
 
     Examples
@@ -3358,8 +3345,8 @@ class ClassDef(ScopedAstNode):
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
 
-            if not isinstance(class_type, DataType):
-                raise TypeError("class_type must be a DataType")
+            if not isinstance(class_type, PyccelType):
+                raise TypeError("class_type must be a PyccelType")
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3424,9 +3411,9 @@ class ClassDef(ScopedAstNode):
     @property
     def class_type(self):
         """
-        The DataType of an object of the described class.
+        The PyccelType of an object of the described class.
 
-        The DataType of an object of the described class.
+        The PyccelType of an object of the described class.
         """
         return self._class_type
 
@@ -3865,7 +3852,7 @@ class Declare(PyccelAstNode):
 
     Parameters
     ----------
-    dtype : DataType
+    dtype : PyccelType
         The type for the declaration.
     variable(s)
         A single variable or an iterable of Variables. If iterable, all
@@ -3905,10 +3892,7 @@ class Declare(PyccelAstNode):
         external = False,
         module_variable = False
         ):
-        if isinstance(dtype, str):
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
+        assert isinstance(dtype, PyccelType)
 
         if not isinstance(variable, Variable):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
@@ -4265,7 +4249,7 @@ class Assert(PyccelAstNode):
 
     def __init__(self, test):
         if pyccel_stage != 'syntactic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
         self._test = test
         super().__init__()
@@ -4318,7 +4302,7 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not NativeBool():
+        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
             cond = PythonBool(cond)
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
@@ -4412,12 +4396,11 @@ class InProgram(TypedAstNode):
     other words, a class representing the boolean:
     `__name__ == '__main__'`
     """
-    _dtype = NativeBool()
-    _precision = -1
+    _dtype = PythonNativeBool()
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeBool()
+    _class_type = PythonNativeBool()
     _attribute_nodes = ()
     __slots__ = ()
 

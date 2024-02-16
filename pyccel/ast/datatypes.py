@@ -35,6 +35,7 @@ __all__ = (
         'PythonNativeFloat',
         'VoidType',
         'GenericType',
+        'SymbolicType',
         'CharType',
         # ------------ Container types ------------
         'TupleType',
@@ -319,6 +320,18 @@ class GenericType(FixedSizeType):
     @lru_cache
     def __add__(self, other):
         return other
+
+class SymbolicType(FixedSizeType):
+    """
+    Class representing the datatype of a placeholder symbol.
+
+    Class representing the datatype of a placeholder symbol. This type should
+    be used for objects which will not appear in the generated code but are
+    used to identify objects (e.g. Type aliases).
+    """
+    __slots__ = ()
+    _name = 'Symbolic'
+    _primitive_type = None
 
 class CharType(FixedSizeType):
     """

@@ -13,10 +13,8 @@ from pyccel.errors.errors   import Errors
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
-from .datatypes import (datatype, DataType,
-                        NativeInteger, NativeBool, NativeFloat,
-                        NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
-from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
+from .datatypes import PyccelType
+from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
@@ -45,15 +43,15 @@ class Variable(TypedAstNode):
 
     Parameters
     ----------
-    dtype : str, DataType
-        The type of the variable. Can be either a DataType,
+    dtype : str, PyccelType
+        The type of the variable. Can be either a PyccelType,
         or a str (bool, int, float).
 
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
 
-    class_type : DataType
+    class_type : PyccelType
         The Python type of the variable. In the case of scalars this is equivalent to
         the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
         this is the type of the container.
@@ -89,9 +87,6 @@ class Variable(TypedAstNode):
         Used for arrays. Indicates whether the data is stored in C or Fortran format in memory.
         See order_docs.md in the developer docs for more details.
 
-    precision : str, default: 0
-        Precision of the data type.
-
     is_argument : bool, default: False
         Indicates if object is the argument of a function.
 
@@ -116,7 +111,7 @@ class Variable(TypedAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_temp','_dtype','_precision',
+            '_cls_base', '_is_argument', '_is_temp','_dtype',
             '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
@@ -135,7 +130,6 @@ class Variable(TypedAstNode):
         shape=None,
         cls_base=None,
         order=None,
-        precision=0,
         is_argument=False,
         is_temp =False,
         allows_negative_indexes=False
@@ -188,11 +182,8 @@ class Variable(TypedAstNode):
         self._is_temp        = is_temp
 
         # ------------ TypedAstNode Properties ---------------
-        if isinstance(dtype, str) or str(dtype) == '*':
-
-            dtype = datatype(dtype)
-        elif not isinstance(dtype, DataType):
-            raise TypeError('datatype must be an instance of DataType.')
+        if not isinstance(dtype, PyccelType):
+            raise TypeError('datatype must be an instance of PyccelType.')
 
         if not isinstance(rank, int):
             raise TypeError('rank must be an instance of int.')
@@ -211,12 +202,6 @@ class Variable(TypedAstNode):
         elif rank > 1:
             assert order in ('C', 'F')
 
-        if not precision:
-            if isinstance(dtype, (NativeInteger, NativeFloat, NativeComplex, NativeBool)):
-                precision = -1
-        if not isinstance(precision,int) and precision is not None:
-            raise TypeError('precision must be an integer or None.')
-
         if rank > 0 and class_type is None:
             raise TypeError("Multi-dimensional object requires a container type")
         elif class_type is None:
@@ -229,7 +214,6 @@ class Variable(TypedAstNode):
         self._dtype = dtype
         self._rank  = rank
         self._shape = self.process_shape(shape)
-        self._precision = precision
         self._class_type = class_type
         if self._rank < 2:
             self._order = None
@@ -462,11 +446,7 @@ class Variable(TypedAstNode):
             1. have a rank > 0
             2. dtype is one among {int, bool, float, complex}
         """
-
-        if self.rank == 0:
-            return False
-        return isinstance(self.dtype, (NativeInteger, NativeBool,
-                          NativeFloat, NativeComplex))
+        return isinstance(self.class_type, NumpyNDArrayType) and self.rank != 0
 
     def __str__(self):
         return str(self.name)
@@ -488,7 +468,6 @@ class Variable(TypedAstNode):
         print('>>> Variable')
         print( '  name               = {}'.format(self.name))
         print( '  dtype              = {}'.format(self.dtype))
-        print( '  precision          = {}'.format(get_final_precision(self)))
         print( '  rank               = {}'.format(self.rank))
         print( '  order              = {}'.format(self.order))
         print( '  memory_handling    = {}'.format(self.memory_handling))
@@ -497,14 +476,6 @@ class Variable(TypedAstNode):
         print( '  is_target          = {}'.format(self.is_target))
         print( '  is_optional        = {}'.format(self.is_optional))
         print( '<<<')
-
-    def use_exact_precision(self):
-        """
-        Change precision from default python precision to
-        equivalent numpy precision
-        """
-        if not self._is_argument:
-            self._precision = get_final_precision(self)
 
     def clone(self, name, new_class = None, **kwargs):
         """
@@ -683,7 +654,7 @@ class InhomogeneousTupleVariable(Variable):
         The name of the variable.
     *args : tuple
         See Variable.
-    class_type : DataType
+    class_type : PyccelType
         The Python type of the variable. In the case of scalars this is equivalent to
         the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
         this is the type of the container.
@@ -862,7 +833,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
+    __slots__ = ('_label', '_indices','_dtype','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(self, base, *indices):
@@ -878,7 +849,6 @@ class IndexedElement(TypedAstNode):
             return
 
         self._dtype = base.dtype
-        self._precision = base.precision
 
         shape = base.shape
         rank  = base.rank

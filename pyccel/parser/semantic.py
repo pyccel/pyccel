@@ -83,11 +83,11 @@ from pyccel.ast.literals import Literal, convert_to_literal
 
 from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, MathCos
 
-from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
-from pyccel.ast.numpyext import NumpyWhere, NumpyArray
-from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
-from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpyext import DtypePrecisionToCastFunction, NumpyNDArrayType
+#from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
+#from pyccel.ast.numpyext import NumpyWhere, NumpyArray
+#from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
+#from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
+#from pyccel.ast.numpyext import DtypePrecisionToCastFunction, NumpyNDArrayType
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,

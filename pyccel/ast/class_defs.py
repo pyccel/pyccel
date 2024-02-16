@@ -11,10 +11,10 @@ from .c_concepts import CStackArray
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumeric,
                         NativeTuple, CustomDataType)
-from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray, NumpyNDArrayType)
+#from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
+#                        NumpyImag, NumpyReal, NumpyTranspose,
+#                        NumpyConjugate, NumpySize, NumpyResultType,
+#                        NumpyArray, NumpyNDArrayType)
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -138,36 +138,36 @@ TupleClass = ClassDef('tuple', class_type = NativeTuple(),
 
 #=======================================================================================
 
-NumpyArrayClass = ClassDef('numpy.ndarray', class_type = NumpyNDArrayType(),
-        methods=[
-            PyccelFunctionDef('shape', func_class = NumpyShape,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('size', func_class = NumpySize,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('T', func_class = NumpyTranspose,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('transpose', func_class = NumpyTranspose,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('sum', func_class = NumpySum,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('min', func_class = NumpyAmin,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('max', func_class = NumpyAmax,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('imag', func_class = NumpyImag,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('real', func_class = NumpyReal,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('conj', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('dtype', func_class = NumpyResultType,
-                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
-            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
-                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
-        ]
-)
+#NumpyArrayClass = ClassDef('numpy.ndarray', class_type = NumpyNDArrayType(),
+#        methods=[
+#            PyccelFunctionDef('shape', func_class = NumpyShape,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('size', func_class = NumpySize,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('T', func_class = NumpyTranspose,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('transpose', func_class = NumpyTranspose,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('sum', func_class = NumpySum,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('min', func_class = NumpyAmin,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('max', func_class = NumpyAmax,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('imag', func_class = NumpyImag,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('real', func_class = NumpyReal,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('conj', func_class = NumpyConjugate,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('conjugate', func_class = NumpyConjugate,
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('dtype', func_class = NumpyResultType,
+#                decorators = {'property': 'property', 'numpy_wrapper': 'numpy_wrapper'}),
+#            PyccelFunctionDef('copy', func_class = NumpyArray, argument_description = {'self': None, 'order':'C'},
+#                decorators = {'numpy_wrapper': 'numpy_wrapper'}),
+#        ]
+#)
 
 #=======================================================================================
 

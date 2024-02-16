@@ -460,7 +460,7 @@ class PythonInt(PyccelInternalFunction):
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = PythonNativeInteger()
+    _class_type = PythonNativeInt()
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
@@ -648,7 +648,7 @@ class PythonLen(PyccelInternalFunction):
     _rank      = 0
     _shape     = None
     _order     = None
-    _class_type = PythonNativeInteger()
+    _class_type = PythonNativeInt()
 
     def __new__(cls, arg):
         if not getattr(arg, 'is_homogeneous', False):
@@ -689,9 +689,8 @@ class PythonList(TypedAstNode):
     FunctionalFor
         The `[]` function when it describes a comprehension.
     """
-    __slots__ = ('_args','_dtype','_rank','_shape','_order')
+    __slots__ = ('_args','_dtype','_rank','_shape','_order', '_class_type')
     _attribute_nodes = ('_args',)
-    _class_type = HomogeneousListType()
 
     def __init__(self, *args):
         self._args = args
@@ -721,6 +720,7 @@ class PythonList(TypedAstNode):
         else:
             raise TypeError("Can't create an inhomogeneous list")
 
+        self._class_type = HomogeneousListType(self.dtype)
         self._order = None if self._rank < 2 else 'C'
 
     def __iter__(self):

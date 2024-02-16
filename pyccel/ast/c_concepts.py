@@ -9,7 +9,7 @@ Module representing object address.
 
 from pyccel.utilities.metaclasses import Singleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import DataType
+from .datatypes import ContainerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
@@ -20,7 +20,7 @@ __all__ = ('CMacro',
 
 #------------------------------------------------------------------------------
 
-class CStackArray(DataType, metaclass=Singleton):
+class CStackArray(ContainerType, metaclass=Singleton):
     """
     A data type representing an array allocated on the stack.
 
