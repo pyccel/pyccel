@@ -8,7 +8,7 @@
 import math
 
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.variable  import Constant
 
@@ -107,9 +107,8 @@ class MathFunctionFloat(MathFunctionBase):
     """
     __slots__ = ()
     name = 'float'
-    _dtype = NativeFloat()
-    _precision = -1
-    _class_type = NativeFloat()
+    _dtype = PythonNativeFloat()
+    _class_type = PythonNativeFloat()
 
 
 class MathFunctionInt(MathFunctionBase):
@@ -126,9 +125,8 @@ class MathFunctionInt(MathFunctionBase):
     """
     __slots__ = ()
     name = 'int'
-    _dtype = NativeInteger()
-    _precision = -1
-    _class_type = NativeInteger()
+    _dtype = PythonNativeInt()
+    _class_type = PythonNativeInt()
 
 
 class MathFunctionBool(MathFunctionBase):
@@ -145,9 +143,8 @@ class MathFunctionBool(MathFunctionBase):
     """
     __slots__ = ()
     name = 'bool'
-    _dtype = NativeBool()
-    _precision = -1
-    _class_type = NativeBool()
+    _dtype = PythonNativeBool()
+    _class_type = PythonNativeBool()
 
 #==============================================================================
 # Functions that return one value
