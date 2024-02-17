@@ -2455,7 +2455,7 @@ class FunctionDef(ScopedAstNode):
         self._interfaces      = interfaces
         self._result_pointer_map = result_pointer_map
         self._is_annotated    = is_annotated
-        self._syntactic_node  = syntactic_node    
+        self._syntactic_node  = syntactic_node
         self._docstring      = docstring
         super().__init__(scope)
 

@@ -1208,6 +1208,7 @@ class SemanticParser(BasicParser):
         return input_args
 
     def _annotate_the_called_function_def(self, func, annotate=True, function_call=None):
+        """ Annotate the called FunctionDef."""
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
@@ -1228,9 +1229,9 @@ class SemanticParser(BasicParser):
             names = names[1:]
         self._scope = sc
         self._visit_FunctionDef(func, annotate=annotate, function_call=function_call)
-        user_nodes = func._user_nodes
+        user_nodes = func.get_all_user_nodes()
         func       = self.scope.find(func.name, 'functions')
-        func._user_nodes.extend(user_nodes)
+        func.get_all_user_nodes().extend(user_nodes)
         self._scope = old_scope
         self._current_function = old_current_function
         return func
