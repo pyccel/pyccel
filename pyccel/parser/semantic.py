@@ -1076,7 +1076,7 @@ class SemanticParser(BasicParser):
                     or isinstance(f_arg, FunctionAddress)
                     or f_arg.dtype is NativeGeneric()):
                 continue
-            
+
             err_msgs = []
             # Check for compatibility
             if incompatible(i_arg, f_arg):
