@@ -2448,6 +2448,8 @@ class SemanticParser(BasicParser):
 
         if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), NativeTuple)):
             args = args[0]
+        elif len(args) == 1 and isinstance(args[0], LiteralEllipsis):
+            args = [Slice(None, None, None)]*var.rank
 
         elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
             n_exprs = None
@@ -2959,7 +2961,7 @@ class SemanticParser(BasicParser):
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, error=False)
                     is_compatible.append(fl)
                 if not any(is_compatible):
-                    func = self._annotate_the_called_function_def(func.syntactic_code, annotate=True, function_call=args)
+                    func = self._annotate_the_called_function_def(func.syntactic_node, annotate=True, function_call=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3907,6 +3909,7 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
+
         for tmpl_idx in range(n_templates):
             if is_interface:
                 name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
@@ -3930,7 +3933,6 @@ class SemanticParser(BasicParser):
 
             arguments = [i for a in new_expr_args for i in self._visit(a)]
             arg_dict  = {a.name:a.var for a in arguments}
-
             annotated_args.append(arguments)
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
