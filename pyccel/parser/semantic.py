@@ -1076,27 +1076,24 @@ class SemanticParser(BasicParser):
                     or isinstance(f_arg, FunctionAddress)
                     or f_arg.dtype is NativeGeneric()):
                 continue
+            
+            err_msgs = []
             # Check for compatibility
             if incompatible(i_arg, f_arg):
                 expected  = self.get_type_description(f_arg, not elemental)
                 type_name = self.get_type_description(i_arg, not elemental)
                 received  = f'{i_arg} ({type_name})'
-
-                if not error:
-                    return False
-
-                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr, expected),
-                        symbol = expr,
-                        severity='fatal')
+                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr, expected)]
 
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
+                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr, order=f_arg.order)]
 
-                if not error:
-                    return False
+            if error and len(err_msgs)>0:
+                for ms in err_msgs:
+                    errors.report(ms, symbol = expr, severity='fatal')
 
-                errors.report(INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr, order=f_arg.order),
-                        symbol = expr,
-                        severity='fatal')
+            elif not error and len(err_msgs)>0:
+                return False
 
         return True
 
@@ -3875,7 +3872,12 @@ class SemanticParser(BasicParser):
         for t,v in templates.items():
             templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
 
-        unpack = lambda ann:ann.type_list if isinstance(ann, UnionTypeAnnotation) else [ann]
+        def unpack(ann):
+            if isinstance(ann, UnionTypeAnnotation):
+                return ann.type_list
+            else:
+                return [ann]
+
         # Filter out unused templates
         templatable_args = [unpack(a.annotation) for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
         arg_annotations  = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
