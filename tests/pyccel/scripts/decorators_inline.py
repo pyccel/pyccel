@@ -1,8 +1,13 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.decorators import inline
+from pyccel.decorators import inline,template
 
 pi = 3.14159
+
+@inline
+@template(name='T', types=['int', 'float'])
+def add(a:'T',b:'T'):
+    return a+b
 
 @inline
 def get_powers(s : int):
@@ -45,3 +50,5 @@ if __name__ == '__main__':
     arr = np.empty(4)
     fill_pi(arr)
     print(arr)
+    print(add(1,2))
+    print(add(1.,2.))

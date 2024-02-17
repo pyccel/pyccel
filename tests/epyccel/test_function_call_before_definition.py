@@ -1,6 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
-import numpy as np
 import modules.function_call_before_definition as mod1
 import modules.function_call_before_definition_2 as mod2
 

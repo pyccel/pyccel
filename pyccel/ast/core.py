@@ -2622,10 +2622,6 @@ class FunctionDef(ScopedAstNode):
         """
         return self._is_annotated
 
-    @is_annotated.setter
-    def is_annotated(self, is_annotated):
-        self._is_annotated = is_annotated
-
     @property
     def syntactic_node(self):
         """
