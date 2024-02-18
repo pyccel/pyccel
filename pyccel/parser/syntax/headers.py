@@ -99,6 +99,12 @@ class Type(BasicStmt):
         order = None
         if self.trailer:
             args = [self.handle_trailer_arg(a) for a in self.trailer.args]
+            if len(args) == 1 and isinstance(args[0], Slice) and args[0].start is not None:
+                a = args[0]
+                dtypes = [IndexedElement(dtype, *((Slice(None, None),)*i)) for i in range(a.start.python_value, a.stop.python_value+1)]
+                order = self.trailer.order
+                return UnionTypeAnnotation(*[SyntacticTypeAnnotation(dt, order) for dt in dtypes])
+
             dtype = IndexedElement(dtype, *args)
             order = self.trailer.order
         return SyntacticTypeAnnotation(dtype, order)
@@ -125,6 +131,8 @@ class Type(BasicStmt):
             return Slice(None, None)
         elif s == '...':
             return LiteralEllipsis()
+        elif type(s).__name__ == 'Range':
+            return Slice(s.s,s.e)
         else:
             raise NotImplementedError(f"Unrecognised type trailer argument : {s}")
 
@@ -680,6 +688,7 @@ def parse(filename=None, stmts=None):
 #=========================================================================================================
 #=========================================================================================================
 if __name__ == '__main__':
+    print(parse(stmts='#$ header variable x float [1:10]'))
     print(parse(stmts='#$ header variable x :: int'))
     print(parse(stmts='#$ header variable x float [:, :]'))
     print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
