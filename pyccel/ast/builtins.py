@@ -525,7 +525,7 @@ class PythonTuple(TypedAstNode):
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
             self._rank  = len(self._shape)
 
-            self._class_type = HomogeneousTupleType()
+            self._class_type = HomogeneousTupleType(self._dtype)
 
         else:
             max_rank = max(a.rank for a in args)
