@@ -53,40 +53,6 @@ __all__ = (
 )
 
 #==============================================================================
-iso_c_binding = {
-    "integer" : {
-        1  : 'C_INT8_T',
-        2  : 'C_INT16_T',
-        4  : 'C_INT32_T',
-        8  : 'C_INT64_T',
-        16 : 'C_INT128_T'}, #no supported yet
-    "real"    : {
-        4  : 'C_FLOAT',
-        8  : 'C_DOUBLE',
-        16 : 'C_LONG_DOUBLE'},
-    "complex" : {
-        4  : 'C_FLOAT_COMPLEX',
-        8  : 'C_DOUBLE_COMPLEX',
-        16 : 'C_LONG_DOUBLE_COMPLEX'},
-    "logical" : {
-        -1 : "C_BOOL"}
-}
-iso_c_binding_shortcut_mapping = {
-    'C_INT8_T'              : 'i8',
-    'C_INT16_T'             : 'i16',
-    'C_INT32_T'             : 'i32',
-    'C_INT64_T'             : 'i64',
-    'C_INT128_T'            : 'i128',
-    'C_FLOAT'               : 'f32',
-    'C_DOUBLE'              : 'f64',
-    'C_LONG_DOUBLE'         : 'f128',
-    'C_FLOAT_COMPLEX'       : 'c32',
-    'C_DOUBLE_COMPLEX'      : 'c64',
-    'C_LONG_DOUBLE_COMPLEX' : 'c128',
-    'C_BOOL'                : 'b1'
-}
-
-#==============================================================================
 class PrimitiveType(metaclass=Singleton):
     """
     Base class representing types of datatypes.
@@ -416,6 +382,19 @@ class ComplexType(HomogeneousContainerType):
         else:
             return NotImplemented
 
+    @property
+    def precision(self):
+        """
+        Precision of the datatype of the object.
+
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
+        return self._element_type.precision
+
     def __str__(self):
         float_name = str(self._element_type)
         start = float_name[:5]
@@ -439,7 +418,7 @@ class StringType(HomogeneousContainerType, metaclass=Singleton):
     def __str__(self):
         return 'str'
 
-class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Singleton):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     """
     Class representing the homogeneous tuple type.
 
@@ -460,7 +439,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Sing
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
 
-class HomogeneousListType(HomogeneousContainerType, metaclass = Singleton):
+class HomogeneousListType(HomogeneousContainerType):
     """
     Class representing the homogeneous list type.
 
