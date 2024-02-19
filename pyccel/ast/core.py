@@ -2281,6 +2281,45 @@ class ConstructorCall(FunctionCall):
         """
         return self._cls_variable
 
+class kernelCall(FunctionCall):
+    """
+    Represents a kernel function call in the code.
+    # Example of a method call with array-like indexing: a[c, b]()
+    
+    
+    Parameters
+    ==========
+    numBlocks        : NativeInteger
+                   The number of blocks
+                   
+    tpblock          : NativeInteger
+                   The number of threads per block
+                   
+    func             : FunctionDef
+                   The definition of the function being called
+                   
+    args             : tuple
+                   The arguments being passed to the function
+    """
+    _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock')
+    __slots__ = ('numBlocks','tpblock','func', 'args')
+    
+    def __init__(self, func, args, numBlocks, tpblock,current_function=None)
+        super().__init__(func, args, current_function)
+        self.numBlocks = numBlocks
+        self.tpblock = tpblock
+
+    @property
+    def numBlocks(self)
+        """The number of blocks in the kernel being called
+        """
+        return self.numBlocks
+    
+    def tpblock(self)
+        """ The number of threads per block
+        """
+        return self.tpblock
+        
 
 class Return(PyccelAstNode):
 
