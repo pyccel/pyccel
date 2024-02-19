@@ -170,7 +170,7 @@ StringClass = ClassDef('string', class_type = StringType(),
 
 #=======================================================================================
 
-#StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
+StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
 
 #=======================================================================================
 
