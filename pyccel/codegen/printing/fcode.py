@@ -1673,20 +1673,20 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        #if isinstance(rhs, NumpyRand):
-        #    return 'call random_number({0})\n'.format(self._print(expr.lhs))
+        if isinstance(rhs, NumpyRand):
+            return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
-        #if isinstance(rhs, NumpyEmpty):
-        #    return ''
+        if isinstance(rhs, NumpyEmpty):
+            return ''
 
-        #if isinstance(rhs, NumpyNonZero):
-        #    code = ''
-        #    lhs = expr.lhs
-        #    for i,e in enumerate(rhs.elements):
-        #        l_c = self._print(lhs[i])
-        #        e_c = self._print(e)
-        #        code += '{0} = {1}\n'.format(l_c,e_c)
-        #    return code
+        if isinstance(rhs, NumpyNonZero):
+            code = ''
+            lhs = expr.lhs
+            for i,e in enumerate(rhs.elements):
+                l_c = self._print(lhs[i])
+                e_c = self._print(e)
+                code += '{0} = {1}\n'.format(l_c,e_c)
+            return code
 
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
