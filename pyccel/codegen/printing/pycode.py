@@ -215,8 +215,8 @@ class PythonCodePrinter(CodePrinter):
             dtype = self._get_numpy_name(init_dtype.cls_name)
         else:
             dtype = self._print(expr.dtype)
-            if expr.precision != -1:
-                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[expr.dtype.name][expr.precision])
+            if isinstance(expr.dtype, NumpyNumericType):
+                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[expr.dtype])
         return f"dtype = {dtype}"
 
     def _print_Header(self, expr):
@@ -447,13 +447,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         name = 'int'
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         name = 'float'
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
@@ -465,7 +465,7 @@ class PythonCodePrinter(CodePrinter):
             return '{}({}, {})'.format(name, self._print(expr.real), self._print(expr.imag))
 
     def _print_NumpyComplex(self, expr):
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         else:
             name = 'complex'
@@ -897,13 +897,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Literal(self, expr):
         dtype = expr.dtype
-        precision = expr.precision
 
-        if not isinstance(expr, (LiteralInteger, LiteralFloat, LiteralComplex)) or \
-                precision == -1:
-            return repr(expr.python_value)
-        else:
-            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
+        if isinstance(expr.dtype, NumpyNumericType):
+            cast_func = DtypePrecisionToCastFunction[dtype]
             type_name = cast_func.__name__.lower()
             is_numpy  = type_name.startswith('numpy')
             cast_name = cast_func.name
@@ -913,6 +909,8 @@ class PythonCodePrinter(CodePrinter):
                         source = 'numpy',
                         target = AsName(cast_func, cast_name))
             return '{}({})'.format(name, repr(expr.python_value))
+        else:
+            return repr(expr.python_value)
 
     def _print_Print(self, expr):
         args = []
