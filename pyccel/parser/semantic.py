@@ -61,6 +61,7 @@ from pyccel.ast.core import Assert
 #from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 from pyccel.ast.class_defs import get_cls_base
 
+from pyccel.ast.datatypes import CustomDataType
 #from pyccel.ast.datatypes import str_dtype, DataType
 #from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 #from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
@@ -711,7 +712,6 @@ class SemanticParser(BasicParser):
         Create a dictionary describing all the type information that can be
         inferred about the expression `expr`. This includes information about:
         - `datatype`
-        - `precision`
         - `rank`
         - `shape`
         - `order`
@@ -732,7 +732,6 @@ class SemanticParser(BasicParser):
         """
         d_var = {
                 'datatype' : expr.dtype,
-                'precision': expr.precision,
                 'shape'    : expr.shape,
                 'rank'     : expr.rank,
                 'order'    : expr.order,
@@ -1025,8 +1024,7 @@ class SemanticParser(BasicParser):
                        Default : True
         """
         dtype = var.dtype
-        prec  = get_final_precision(var)
-        descr = f'{dtype}{(prec * 2 if isinstance(dtype, NativeComplex) else prec) * 8 if prec else ""}'
+        descr = str(dtype)
         if include_rank and var.rank>0:
             dims = ','.join(':'*var.rank)
             descr += f'[{dims}]'
@@ -1049,12 +1047,10 @@ class SemanticParser(BasicParser):
         """
         if elemental:
             def incompatible(i_arg, f_arg):
-                return (i_arg.dtype is not f_arg.dtype or \
-                        get_final_precision(i_arg) != get_final_precision(f_arg))
+                return i_arg.dtype is not f_arg.dtype
         else:
             def incompatible(i_arg, f_arg):
-                return (i_arg.dtype is not f_arg.dtype or \
-                        get_final_precision(i_arg) != get_final_precision(f_arg) or
+                return (i_arg.dtype is not f_arg.dtype or
                         i_arg.rank != f_arg.rank)
 
         # Compare each set of arguments
@@ -1536,9 +1532,6 @@ class SemanticParser(BasicParser):
             If is_augassign is False, this value is not used.
         """
 
-        precision = d_var.get('precision', 0)
-        internal_precision = default_precision[dtype] if precision == -1 else precision
-
         # TODO improve check type compatibility
         if not hasattr(var, 'dtype'):
             name = var.name
@@ -1571,25 +1564,21 @@ class SemanticParser(BasicParser):
             # to remove memory leaks
             new_expressions.append(Deallocate(var))
 
-        elif str(dtype) != str(var.dtype) or \
-                internal_precision != get_final_precision(var):
+        elif dtype != var.dtype:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
-                result_dtype = str(tmp_result.dtype)
-                result_precision = get_final_precision(tmp_result)
-                raise_error = (str(var.dtype) != result_dtype or \
-                        get_final_precision(var) != result_precision)
+                raise_error = var.dtype != tmp_result.dtype
             else:
                 raise_error = True
 
             if raise_error:
                 # Get type name from cast function (handles precision implicitly)
                 try:
-                    d1 = DtypePrecisionToCastFunction[var.dtype.name][var.precision].name
+                    d1 = DtypePrecisionToCastFunction[var.dtype].name
                 except KeyError:
                     d1 = str(var.dtype)
                 try:
-                    d2 = DtypePrecisionToCastFunction[dtype.name][precision].name
+                    d2 = DtypePrecisionToCastFunction[dtype].name
                 except KeyError:
                     d2 = str(var.dtype)
 
@@ -1682,9 +1671,6 @@ class SemanticParser(BasicParser):
                     status=status))
             elif isinstance(var.dtype, CustomDataType) and not var.is_alias:
                 new_expressions.append(Deallocate(var))
-
-        if var.precision == -1 and precision != var.precision:
-            var.use_exact_precision()
 
     def _assign_GeneratorComprehension(self, lhs_name, expr):
         """
@@ -1875,7 +1861,6 @@ class SemanticParser(BasicParser):
         if all(isinstance(a, Slice) for a in args):
             if isinstance(base, VariableTypeAnnotation):
                 dtype = base.datatype
-                prec = base.precision
                 class_type = base.class_type
                 if class_type is dtype:
                     class_type = NumpyNDArrayType()
@@ -1885,12 +1870,9 @@ class SemanticParser(BasicParser):
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
                 dtype = dtype_cls.static_dtype()
-                prec = dtype_cls.static_precision()
                 class_type = NumpyNDArrayType()
             rank = len(args)
-            if prec == -1:
-                prec = default_precision[dtype]
-            return VariableTypeAnnotation(dtype, class_type, prec, rank)
+            return VariableTypeAnnotation(dtype, class_type, rank)
 
         raise errors.report("Unrecognised type slice",
                 severity='fatal', symbol=expr)
@@ -2074,14 +2056,14 @@ class SemanticParser(BasicParser):
                         func_defs = []
                         for v in headers:
                             types = [self._visit(d).type_list[0] for d in v.dtypes]
-                            args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
+                            args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 is_const = t.is_const, is_optional = False,
                                 cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
-                            results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
+                            results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
                                 is_const = t.is_const, is_optional = False,
@@ -2192,11 +2174,8 @@ class SemanticParser(BasicParser):
         for v in arg:
             if isinstance(v, Variable):
                 dtype = v.dtype
-                prec = v.precision
-                if isinstance(value, Literal) and \
-                        value.dtype is dtype and \
-                        value.precision != prec:
-                    value = convert_to_literal(value.python_value, dtype, prec)
+                if isinstance(value, Literal) and value.dtype is dtype:
+                    value = convert_to_literal(value.python_value, dtype)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
                                         value = value, kwonly = kwonly, annotation = expr.annotation))
@@ -2450,7 +2429,7 @@ class SemanticParser(BasicParser):
                 rank  = t.rank
                 class_type = t.class_type
                 cls_base = get_cls_base(dtype, class_type) or self.scope.find(class_type.name, 'classes')
-                v = var_class(dtype, name, precision = prec, cls_base = cls_base,
+                v = var_class(dtype, name, cls_base = cls_base,
                         shape = None, rank = rank, order = t.order, class_type = t.class_type,
                         is_const = t.is_const, is_optional = False,
                         memory_handling = array_memory_handling if rank > 0 else 'stack',
@@ -2476,11 +2455,10 @@ class SemanticParser(BasicParser):
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
             dtype = dtype_cls.static_dtype()
-            prec = dtype_cls.static_precision()
             class_type = dtype_cls.static_class_type()
             if not isinstance(class_type, DataType):
                 class_type = dtype
-            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, class_type, prec, 0, None))
+            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, class_type, 0, None))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if visited_dtype.rank > 1:
                 visited_dtype.order = order or visited_dtype.order or 'C'
@@ -2490,10 +2468,9 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
             dtype = self.get_class_construct(visited_dtype.name)
-            prec = 0
             rank = 0
             order = None
-            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, prec, rank, order))
+            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, rank, order))
         elif isinstance(visited_dtype, DataType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
         else:
