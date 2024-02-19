@@ -134,7 +134,7 @@ class ListInsert(PyccelInternalFunction):
     The insert method is called as follows:
 
     >>> a = [2, 3, 4]
-    >>> a.insert(1, 1)
+    >>> a.insert(0, 1)
     >>> print(a)
     [1, 2, 3, 4]
 
