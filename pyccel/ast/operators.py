@@ -16,7 +16,7 @@ from ..errors.errors        import Errors, PyccelSemanticError
 from .basic                 import TypedAstNode
 
 from .datatypes             import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes             import ComplexType, StringType
+from .datatypes             import ComplexType, StringType, FixedSizeNumericType
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
 from .literals              import Nil, NilArgument
@@ -519,9 +519,9 @@ class PyccelBinaryOperator(PyccelOperator):
         For numeric types the rank and shape is determined according
         to numpy broadcasting rules where possible
         """
-        strs = [a for a in args if a.dtype is NativeString()]
+        strs = [a for a in args if isinstance(a.dtype, StringType)]
         if strs:
-            other = [a for a in args if a.dtype in (NativeInteger(), NativeBool(), NativeFloat(), NativeComplex())]
+            other = [a for a in args if isinstance(a.dtype, FixedSizeNumericType)]
             assert len(other) == 0
             rank  = 0
             shape = None
@@ -1327,10 +1327,8 @@ class IfTernaryOperator(PyccelOperator):
             return
         if isinstance(value_true , Nil) or isinstance(value_false, Nil):
             errors.report('None is not implemented for Ternary Operator', severity='fatal')
-        if isinstance(value_true , NativeString) or isinstance(value_false, NativeString):
-            errors.report('String is not implemented for Ternary Operator', severity='fatal')
         if value_true.dtype != value_false.dtype:
-            if value_true.dtype not in NativeNumeric or value_false.dtype not in NativeNumeric:
+            if not (isinstance(value_true.dtype, FixedSizeNumericType) and isinstance(value_false.dtype, FixedSizeNumericType)):
                 errors.report('The types are incompatible in IfTernaryOperator', severity='fatal')
         if value_false.rank != value_true.rank :
             errors.report('Ternary Operator results should have the same rank', severity='fatal')
@@ -1364,12 +1362,12 @@ class IfTernaryOperator(PyccelOperator):
         class_type : DataType
             The Python type of the object.
         """
-        if arg1.dtype is arg2.dtype and arg1.class_type is arg2.class_type:
-            return arg1.dtype, arg1.class_type
+        if value_true.dtype is value_false.dtype and value_true.class_type is value_false.class_type:
+            return value_true.dtype, value_true.class_type
 
         try:
-            dtype = arg1.dtype + arg2.dtype
-            class_type = arg1.class_type + arg2.class_type
+            dtype = value_true.dtype + value_false.dtype
+            class_type = value_true.class_type + value_false.class_type
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
 
