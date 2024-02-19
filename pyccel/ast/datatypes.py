@@ -165,6 +165,22 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         """
         return self._primitive_type # pylint: disable=no-member
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
+
 class FixedSizeNumericType(FixedSizeType):
     """
     Base class representing a built-in scalar numeric datatype.
@@ -360,6 +376,22 @@ class HomogeneousContainerType(PyccelType):
     def __str__(self):
         return f'{self._name}[{self._element_type}]'
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, (self.element_type,))
+
 class ComplexType(HomogeneousContainerType):
     """
     Class representing Python's native complex type.
@@ -370,7 +402,7 @@ class ComplexType(HomogeneousContainerType):
     _name = 'complex'
 
     def __init__(self, float_type):
-        assert isinstance(float_type, FixedSizeType)
+        assert isinstance(float_type, FixedSizeNumericType)
         assert float_type.primitive_type is PyccelFloatingPointType()
         self._element_type = float_type
         super().__init__()
@@ -379,6 +411,8 @@ class ComplexType(HomogeneousContainerType):
     def __add__(self, other):
         if isinstance(other, FixedSizeNumericType):
             return self
+        elif isinstance(other, ComplexType):
+            return ComplexType(self.element_type + other.element_type)
         else:
             return NotImplemented
 
@@ -405,6 +439,22 @@ class ComplexType(HomogeneousContainerType):
         else:
             return f'complex[{float_name}]'
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
+
 class StringType(HomogeneousContainerType, metaclass=Singleton):
     """
     Class representing Python's native string type.
@@ -417,6 +467,22 @@ class StringType(HomogeneousContainerType, metaclass=Singleton):
 
     def __str__(self):
         return 'str'
+
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
 
 class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     """
@@ -464,6 +530,22 @@ class CustomDataType(ContainerType, metaclass=Singleton):
     """
     __slots__ = ()
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, ())
+
 class InhomogeneousTupleType(ContainerType, TupleType):
     """
     Class representing the inhomogeneous tuple type.
@@ -496,6 +578,22 @@ class InhomogeneousTupleType(ContainerType, TupleType):
     def __len__(self):
         return len(self._element_types)
 
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, tuple(*self._element_types))
+
 class DictType(ContainerType):
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'
@@ -507,6 +605,22 @@ class DictType(ContainerType):
 
     def __str__(self):
         return f'map[{self._index_type.name}, {self._value_type.name}]'
+
+    def __reduce__(self):
+        """
+        Function called during pickling.
+
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        return (self.__class__, (self._index_type, self._value_type))
 
 #==============================================================================
 
