@@ -32,10 +32,11 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import SymbolicType, StringType
+from pyccel.ast.c_concepts import CNativeInt
+
+from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat, ComplexType
-from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -178,6 +179,37 @@ type_to_print_format = {
         ('tuple'):  '*'
 }
 
+#==============================================================================
+iso_c_binding = {
+    PyccelIntegerType() : {
+        1  : 'C_INT8_T',
+        2  : 'C_INT16_T',
+        4  : 'C_INT32_T',
+        8  : 'C_INT64_T',
+        16 : 'C_INT128_T'}, #no supported yet
+    PyccelFloatingPointType() : {
+        4  : 'C_FLOAT',
+        8  : 'C_DOUBLE',
+        16 : 'C_LONG_DOUBLE'},
+    PyccelBooleanType() : {
+        -1 : "C_BOOL"}
+}
+
+iso_c_binding_shortcut_mapping = {
+    'C_INT8_T'              : 'i8',
+    'C_INT16_T'             : 'i16',
+    'C_INT32_T'             : 'i32',
+    'C_INT64_T'             : 'i64',
+    'C_INT128_T'            : 'i128',
+    'C_FLOAT'               : 'f32',
+    'C_DOUBLE'              : 'f64',
+    'C_LONG_DOUBLE'         : 'f128',
+    'C_FLOAT_COMPLEX'       : 'c32',
+    'C_DOUBLE_COMPLEX'      : 'c64',
+    'C_LONG_DOUBLE_COMPLEX' : 'c128',
+    'C_BOOL'                : 'b1'
+}
+
 inc_keyword = (r'do\b', r'if\b',
                r'else\b', r'type\b\s*[^\(]',
                r'(elemental )?(pure )?(recursive )?((subroutine)|(function))\b',
@@ -289,8 +321,13 @@ class FCodePrinter(CodePrinter):
         """
         Prints the kind(precision) of a literal value or its shortcut if possible
         """
-        precision = get_final_precision(expr)
-        constant_name = iso_c_binding[self._print(expr.dtype)][precision]
+        dtype = expr.dtype
+        if isinstance(dtype, ComplexType):
+            elem_type = dtype.element_type
+            constant_name = f'{iso_c_binding[elem_type.primitive_type][elem_type.precision]}_COMPLEX'
+        else:
+            constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
+
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
             self._constantImports.setdefault('ISO_C_Binding', set())\
@@ -1459,6 +1496,9 @@ class FCodePrinter(CodePrinter):
             else:
                 name = alias
             dtype = f'{sig}({name})'
+        elif isinstance(expr_dtype, FixedSizeNumericType):
+            dtype = self._print(expr_dtype.primitive_type)
+            dtype += f'({self.print_kind(var)})'
         else:
             dtype = self._print(expr_dtype)
 
@@ -1471,8 +1511,6 @@ class FCodePrinter(CodePrinter):
             elif isinstance(expr_dtype, BindCPointer):
                 dtype = 'type(c_ptr)'
                 self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
-            else:
-                dtype += '({0})'.format(self.print_kind(expr.variable))
 
         code_value = ''
         if expr.value:
@@ -1635,20 +1673,20 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs, (PythonRange, Product)):
             return ''
 
-        if isinstance(rhs, NumpyRand):
-            return 'call random_number({0})\n'.format(self._print(expr.lhs))
+        #if isinstance(rhs, NumpyRand):
+        #    return 'call random_number({0})\n'.format(self._print(expr.lhs))
 
-        if isinstance(rhs, NumpyEmpty):
-            return ''
+        #if isinstance(rhs, NumpyEmpty):
+        #    return ''
 
-        if isinstance(rhs, NumpyNonZero):
-            code = ''
-            lhs = expr.lhs
-            for i,e in enumerate(rhs.elements):
-                l_c = self._print(lhs[i])
-                e_c = self._print(e)
-                code += '{0} = {1}\n'.format(l_c,e_c)
-            return code
+        #if isinstance(rhs, NumpyNonZero):
+        #    code = ''
+        #    lhs = expr.lhs
+        #    for i,e in enumerate(rhs.elements):
+        #        l_c = self._print(lhs[i])
+        #        e_c = self._print(e)
+        #        code += '{0} = {1}\n'.format(l_c,e_c)
+        #    return code
 
         if isinstance(rhs, ConstructorCall):
             func = rhs.func
@@ -1775,19 +1813,19 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
 
-    def _print_NativeBool(self, expr):
+    def _print_PyccelBoolType(self, expr):
         return 'logical'
 
-    def _print_NativeInteger(self, expr):
+    def _print_PyccelIntegerType(self, expr):
         return 'integer'
 
-    def _print_NativeFloat(self, expr):
+    def _print_PyccelFloatingPointType(self, expr):
         return 'real'
 
-    def _print_NativeComplex(self, expr):
+    def _print_ComplexType(self, expr):
         return 'complex'
 
-    def _print_NativeString(self, expr):
+    def _print_StringType(self, expr):
         return 'character(len=280)'
         #TODO fix improve later
 
@@ -1818,7 +1856,7 @@ class FCodePrinter(CodePrinter):
         else:
             funcs = [f for f in expr.functions if f is \
                     expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
-                        for i,a in enumerate(f.arguments)], use_final_precision = True)]
+                        for i,a in enumerate(f.arguments)])]
 
         if expr.is_argument:
             funcs_sigs = []
@@ -2502,7 +2540,7 @@ class FCodePrinter(CodePrinter):
 
         if value_true.dtype != value_false.dtype :
             try :
-                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype]
             except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
             value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
@@ -2726,7 +2764,7 @@ class FCodePrinter(CodePrinter):
             self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
             return f'numpy_sign({arg_code})'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
             abs_result = self._print(cast_func(PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
@@ -2775,7 +2813,7 @@ class FCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
-                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype]
                 args.append(self._print(cast_func(arg)))
             else:
                 args.append(self._print(arg))
@@ -3252,8 +3290,6 @@ def fcode(expr, filename, assign_to=None, **settings):
         the expression is assigned. Can be a string, ``Symbol``,
         ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
         line-wrapping, or for expressions that generate multi-line statements.
-    precision : integer, optional
-        The precision for numbers such as pi [default=15].
     user_functions : dict, optional
         A dictionary where keys are ``FunctionClass`` instances and values are
         their string representations. Alternatively, the dictionary value can
