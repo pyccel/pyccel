@@ -23,7 +23,7 @@ from sympy import ceiling
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint
+from pyccel.ast.builtins import PythonPrint, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -89,7 +89,7 @@ from pyccel.ast.mathext  import math_constants, MathSqrt, MathAtan2, MathSin, Ma
 #from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 #from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 #from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
-#from pyccel.ast.numpyext import DtypePrecisionToCastFunction, NumpyNDArrayType
+#from pyccel.ast.numpyext import NumpyNDArrayType
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,

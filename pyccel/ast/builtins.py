@@ -1188,6 +1188,32 @@ class PythonType(PyccelAstNode):
 
 #==============================================================================
 
+DtypePrecisionToCastFunction = {
+        PythonNativeBool() : PythonBool,
+        PythonNativeInt() : PythonInt,
+        PythonNativeFloat() : PythonFloat,
+        ComplexType(PythonNativeFloat()) : PythonComplex,
+#    'int' : {
+#       -1 : PythonInt,
+#        1 : NumpyInt8,
+#        2 : NumpyInt16,
+#        4 : NumpyInt32,
+#        8 : NumpyInt64},
+#    'float' : {
+#       -1 : PythonFloat,
+#        4 : NumpyFloat32,
+#        8 : NumpyFloat64},
+#    'complex' : {
+#       -1 : PythonComplex,
+#        4 : NumpyComplex64,
+#        8 : NumpyComplex128,},
+#    'bool':  {
+#       -1 : PythonBool,
+#        4 : NumpyBool}
+}
+
+#==============================================================================
+
 builtin_functions_dict = {
     'abs'      : PythonAbs,
     'bool'     : PythonBool,

@@ -19,7 +19,7 @@ from pyccel.ast.basic import TypedAstNode
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonAbs
 
 from pyccel.ast.core import FunctionDef, InlineFunctionDef
@@ -56,7 +56,6 @@ from pyccel.ast.mathext  import math_constants
 #from pyccel.ast.numpyext import NumpyNewArray
 #from pyccel.ast.numpyext import NumpyNonZero
 #from pyccel.ast.numpyext import NumpySign
-#from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators import PyccelMod
