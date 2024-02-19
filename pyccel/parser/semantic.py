@@ -58,22 +58,23 @@ from pyccel.ast.core import Decorator
 from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
-from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+#from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+from pyccel.ast.class_defs import get_cls_base
 
-from pyccel.ast.datatypes import str_dtype, DataType
-from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
-from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
-from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
-                                  NativeFloat, NativeString, NativeInhomogeneousTuple,
-                                  NativeGeneric, NativeComplex, NativeTuple,
-                                  NativeVoid, NativeHomogeneousTuple)
+#from pyccel.ast.datatypes import str_dtype, DataType
+#from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
+#from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
+#from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
+#                                  NativeFloat, NativeString, NativeInhomogeneousTuple,
+#                                  NativeGeneric, NativeComplex, NativeTuple,
+#                                  NativeVoid, NativeHomogeneousTuple)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
 from pyccel.ast.headers import FunctionHeader, MethodHeader, Header
 from pyccel.ast.headers import MacroFunction, MacroVariable
 
-from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol, get_final_precision
+from pyccel.ast.internals import PyccelInternalFunction, Slice, PyccelSymbol
 from pyccel.ast.itertoolsext import Product
 
 from pyccel.ast.literals import LiteralTrue, LiteralFalse
@@ -403,7 +404,7 @@ class SemanticParser(BasicParser):
             try:
                 class_def = prefix.cls_base
             except AttributeError:
-                class_def = get_cls_base(prefix.dtype, prefix.precision, prefix.class_type) or \
+                class_def = get_cls_base(prefix.dtype, prefix.class_type) or \
                             self.scope.find(prefix.class_type.name, 'classes')
 
             attr_name = name.name[-1]
@@ -784,7 +785,7 @@ class SemanticParser(BasicParser):
         elif isinstance(expr, TypedAstNode):
 
             d_var['memory_handling'] = 'heap' if expr.rank > 0 else 'stack'
-            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.precision, expr.class_type)
+            d_var['cls_base'   ] = get_cls_base(expr.dtype, expr.class_type)
             return d_var
 
         else:
@@ -2446,10 +2447,9 @@ class SemanticParser(BasicParser):
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
                 dtype = t.datatype
-                prec  = t.precision
                 rank  = t.rank
                 class_type = t.class_type
-                cls_base = get_cls_base(dtype, prec, class_type) or self.scope.find(class_type.name, 'classes')
+                cls_base = get_cls_base(dtype, class_type) or self.scope.find(class_type.name, 'classes')
                 v = var_class(dtype, name, precision = prec, cls_base = cls_base,
                         shape = None, rank = rank, order = t.order, class_type = t.class_type,
                         is_const = t.is_const, is_optional = False,
@@ -2568,7 +2568,7 @@ class SemanticParser(BasicParser):
 
         d_var = self._infer_type(first)
         dtype = d_var['datatype']
-        cls_base = get_cls_base(dtype, d_var['precision'], d_var['class_type'])
+        cls_base = get_cls_base(dtype, d_var['class_type'])
         if cls_base is None:
             cls_base = self.scope.find(dtype.name, 'classes')
 

@@ -12,7 +12,7 @@ from pyccel.ast.bind_c        import BindCFunctionDef, BindCPointer, BindCFuncti
 from pyccel.ast.bind_c        import BindCModule, BindCVariable, BindCFunctionDefResult
 from pyccel.ast.bind_c        import BindCClassDef, BindCClassProperty
 from pyccel.ast.builtins      import PythonTuple, PythonRange
-from pyccel.ast.class_defs    import StackArrayClass
+#from pyccel.ast.class_defs    import StackArrayClass
 from pyccel.ast.core          import Interface, If, IfSection, Return, FunctionCall
 from pyccel.ast.core          import FunctionDef, FunctionDefArgument, FunctionDefResult
 from pyccel.ast.core          import Assign, AliasAssign, Deallocate, Allocate
@@ -30,17 +30,16 @@ from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_Size, PyL
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
 from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
-from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import NativeNumeric
-from pyccel.ast.internals     import get_final_precision
+from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
+#from pyccel.ast.datatypes     import NativeNumeric
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
-from pyccel.ast.numpyext      import NumpyNDArrayType
-from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
-from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
-from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
-from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
+#from pyccel.ast.numpyext      import NumpyNDArrayType
+#from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
+#from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
+#from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+#from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
+#from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
@@ -737,7 +736,7 @@ class CToPythonWrapper(Wrapper):
                 FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, precision=-2), stash_path]),
                 Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
 
-        result = func_scope.get_temporary_variable(NativeInteger(), precision=-2)
+        result = func_scope.get_temporary_variable(PythonNativeInt(), precision=-2)
         self.exit_scope()
         import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
 
@@ -896,7 +895,7 @@ class CToPythonWrapper(Wrapper):
         func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
-        python_result_variable = Variable(NativeInteger(), self.scope.get_new_name(),
+        python_result_variable = Variable(PythonNativeInt(), self.scope.get_new_name(),
                                           precision = -2, is_temp = True)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
@@ -1430,7 +1429,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
-                    kwargs['dtype'] = NativeVoid()
+                    kwargs['dtype'] = VoidType()
 
             arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
                                     **kwargs)
@@ -1661,7 +1660,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(c_res, orig_var_name)
 
             body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
-            body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
+            body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
             c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             self.scope.insert_variable(c_res, var_name)
@@ -1744,10 +1743,10 @@ class CToPythonWrapper(Wrapper):
         v = expr.original_variable
 
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
+        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape = [self.scope.get_temporary_variable(NativeInteger(),
+        shape = [self.scope.get_temporary_variable(PythonNativeInt(),
                 v.name+'_size') for _ in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
         var_wrapper = expr.wrapper_function
@@ -1759,7 +1758,7 @@ class CToPythonWrapper(Wrapper):
                 name = v.name, memory_handling = 'alias')
         alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
+        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
                 memory_handling = 'alias', lhs=nd_var), var)
 
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
@@ -1805,7 +1804,7 @@ class CToPythonWrapper(Wrapper):
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
-                       getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
         getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
@@ -1852,8 +1851,8 @@ class CToPythonWrapper(Wrapper):
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
-                       setter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(NativeInteger(), precision=-2))]
+                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(PythonNativeInt(), precision=-2))]
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
@@ -1936,7 +1935,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         getter_result = self.get_new_PyObject(f'{name}_obj',
                                         dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
@@ -1993,8 +1992,8 @@ class CToPythonWrapper(Wrapper):
 
         setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(NativeInteger(), precision=-2))]
+                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(PythonNativeInt(), precision=-2))]
 
         self._python_object_map[self_arg] = setter_args[0]
         self._python_object_map[set_val_arg] = setter_args[1]

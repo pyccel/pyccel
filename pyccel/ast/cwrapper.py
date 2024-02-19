@@ -17,21 +17,21 @@ from .basic     import PyccelAstNode
 
 from .bind_c    import BindCPointer
 
-from .datatypes import DataType, default_precision, CustomDataType
-from .datatypes import NativeInteger, NativeFloat, NativeComplex
-from .datatypes import NativeBool, NativeString, NativeVoid
+from .datatypes import FixedSizeType, ContainerType, CustomDataType
+from .datatypes import PythonNativeInt, PythonNativeFloat, ComplexType
+from .datatypes import PythonNativeBool, StringType, VoidType
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
 from .core      import Module, Interface, Declare
 
-from .internals import get_final_precision, PyccelInternalFunction
+from .c_concepts import ObjectAddress, CNativeInt
+
+from .internals import PyccelInternalFunction
 
 from .literals  import LiteralString, LiteralInteger
 
 from .variable  import Variable
-
-from .c_concepts import ObjectAddress
 
 
 errors = Errors()
@@ -79,7 +79,7 @@ __all__ = (
 #-------------------------------------------------------------------
 #                        Python DataTypes
 #-------------------------------------------------------------------
-class PyccelPyObject(DataType, metaclass=Singleton):
+class PyccelPyObject(FixedSizeType, metaclass=Singleton):
     """
     Datatype representing a `PyObject`.
 
@@ -89,7 +89,7 @@ class PyccelPyObject(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyobject'
 
-class PyccelPyClassType(DataType, metaclass=Singleton):
+class PyccelPyClassType(FixedSizeType, metaclass=Singleton):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -99,7 +99,7 @@ class PyccelPyClassType(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pyclasstype'
 
-class PyccelPyTypeObject(DataType, metaclass=Singleton):
+class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     """
     Datatype representing a `PyTypeObject`.
 
@@ -109,7 +109,7 @@ class PyccelPyTypeObject(DataType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pytypeobject'
 
-class WrapperCustomDataType(CustomDataType):
+class WrapperCustomDataType(ContainerType):
     """
     Datatype representing a subclass of `PyObject`.
 
@@ -268,7 +268,6 @@ class PyBuildValueNode(PyccelInternalFunction):
     _attribute_nodes = ('_result_args',)
     _dtype = PyccelPyObject
     _rank = 0
-    _precision = 0
     _shape = ()
     _class_type = PyccelPyObject
     _order = None
@@ -280,7 +279,7 @@ class PyBuildValueNode(PyccelInternalFunction):
             if isinstance(i.dtype, WrapperCustomDataType):
                 self._flags += 'O'
             else:
-                self._flags += pytype_parse_registry[(i.dtype, get_final_precision(i))]
+                self._flags += pytype_parse_registry[i.dtype]
         super().__init__()
 
     @property
@@ -311,11 +310,11 @@ class PyModule_AddObject(PyccelInternalFunction):
     """
     __slots__ = ('_mod_name','_name','_var')
     _attribute_nodes = ('_name','_var')
-    _dtype = NativeInteger()
-    _precision = 4
+    _dtype = PythonNativeInt()
+    #_precision = 4
     _rank = 0
     _shape = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, mod_name, name, variable):
         if not isinstance(name, LiteralString):
@@ -364,7 +363,6 @@ class PyModule_Create(PyccelInternalFunction):
     __slots__ = ('_module_def_name',)
     _attribute_nodes = ()
     _dtype = PyccelPyObject()
-    _precision = 0
     _rank = 0
     _shape = ()
     _order = None
@@ -408,7 +406,6 @@ class PyCapsule_New(PyccelInternalFunction):
     __slots__ = ('_capsule_name', '_API_var')
     _attribute_nodes = ('_API_var',)
     _dtype = PyccelPyObject()
-    _precision = 0
     _rank = 0
     _shape = ()
     _order = None
@@ -460,7 +457,6 @@ class PyCapsule_Import(PyccelInternalFunction):
     __slots__ = ('_capsule_name',)
     _attribute_nodes = ()
     _dtype = BindCPointer()
-    _precision = 0
     _rank = 0
     _shape = ()
     _order = None
@@ -529,7 +525,7 @@ class PyModule(Module):
         self._declarations = declarations
         if import_func is None:
             self._import_func = FunctionDef(f'{name}_import', (),
-                            (FunctionDefResult(Variable(NativeInteger(), '_', precision=-2, is_temp=True)),), ())
+                            (FunctionDefResult(Variable(CNativeInt(), '_', is_temp=True)),), ())
         else:
             self._import_func = import_func
         super().__init__(name, *args, init_func = init_func, **kwargs)
@@ -745,9 +741,9 @@ class PyClassDef(ClassDef):
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
         self._properties = ()
-        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
+        variables = [Variable(VoidType(), 'instance', memory_handling='alias'),
                      Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
-                     Variable(NativeBool(), 'is_alias')]
+                     Variable(PythonNativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
         scope.insert_variable(variables[1])
         scope.insert_variable(variables[2])
@@ -974,32 +970,32 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
 PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
-                        results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
+                        results = [FunctionDefResult(Variable(PythonNativeInt(), '_'))])
 
 # https://docs.python.org/3/c-api/sys.html#PySys_GetObject
 PySys_GetObject = FunctionDef(name = 'PySys_GetObject',
                         body = [],
-                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        arguments = [FunctionDefArgument(Variable(dtype=StringType(), name='_'))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
 # https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FromString
 PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
                         body = [],
-                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        arguments = [FunctionDefArgument(Variable(dtype=StringType(), name='_'))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
 # https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2))],
+                                     FunctionDefArgument(Variable(dtype=CNativeInt(), name='i'))],
                         results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
 
 # https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
 PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
-                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2)),
+                                     FunctionDefArgument(Variable(dtype=CNativeInt(), name='i')),
                                      FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='new_item', memory_handling='alias'))],
                         results = [])
 
@@ -1007,17 +1003,19 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
-    (NativeInteger(), 4)       : 'i',
-    (NativeInteger(), 8)       : 'l',
-    (NativeInteger(), 2)       : 'h',
-    (NativeInteger(), 1)       : 'b',
-    (NativeFloat(), 8)         : 'd',
-    (NativeFloat(), 4)         : 'f',
-    (NativeComplex(), 4)       : 'O',
-    (NativeComplex(), 8)       : 'O',
-    (NativeBool(), -1)         : 'p',
-    (NativeString(), 0)        : 's',
-    (PyccelPyObject(), 0)      : 'O',
+    #(PythonNativeInt(), 4)       : 'i',
+    #(PythonNativeInt(), 8)       : 'l',
+    #(PythonNativeInt(), 2)       : 'h',
+    #(PythonNativeInt(), 1)       : 'b',
+    PythonNativeFloat() : 'd',
+    #(PythonNativeFloat(), 8)         : 'd',
+    #(PythonNativeFloat(), 4)         : 'f',
+    ComplexType(PythonNativeFloat()) : 'O',
+    #(NativeComplex(), 4)       : 'O',
+    #(NativeComplex(), 8)       : 'O',
+    PythonNativeBool()         : 'p',
+    StringType()        : 's',
+    PyccelPyObject()      : 'O',
     }
 
 #-------------------------------------------------------------------
@@ -1026,15 +1024,18 @@ pytype_parse_registry = {
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
-    (NativeBool(), -1)     : 'PyBool_to_Bool',
-    (NativeInteger(), 1)   : 'PyInt8_to_Int8',
-    (NativeInteger(), 2)   : 'PyInt16_to_Int16',
-    (NativeInteger(), 4)   : 'PyInt32_to_Int32',
-    (NativeInteger(), 8)   : 'PyInt64_to_Int64',
-    (NativeFloat(), 4)     : 'PyFloat_to_Float',
-    (NativeFloat(), 8)     : 'PyDouble_to_Double',
-    (NativeComplex(), 4)   : 'PyComplex_to_Complex64',
-    (NativeComplex(), 8)   : 'PyComplex_to_Complex128'}
+    PythonNativeBool()     : 'PyBool_to_Bool',
+    #(PythonNativeInt(), 1)   : 'PyInt8_to_Int8',
+    #(PythonNativeInt(), 2)   : 'PyInt16_to_Int16',
+    #(PythonNativeInt(), 4)   : 'PyInt32_to_Int32',
+    #(PythonNativeInt(), 8)   : 'PyInt64_to_Int64',
+    #(PythonNativeFloat(), 4)     : 'PyFloat_to_Float',
+    #(PythonNativeFloat(), 8)     : 'PyDouble_to_Double',
+    PythonNativeFloat()     : 'PyDouble_to_Double',
+    #(NativeComplex(), 4)   : 'PyComplex_to_Complex64',
+    #(NativeComplex(), 8)   : 'PyComplex_to_Complex128',
+    ComplexType(PythonNativeFloat())   : 'PyComplex_to_Complex128',
+    }
 
 def C_to_Python(c_object):
     """
@@ -1059,7 +1060,7 @@ def C_to_Python(c_object):
         memory_handling = 'stack'
     else:
         try :
-            cast_function = c_to_py_registry[(c_object.dtype, c_object.precision)]
+            cast_function = c_to_py_registry[c_object.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_object.dtype,severity='fatal')
         memory_handling = 'alias'
@@ -1073,18 +1074,19 @@ def C_to_Python(c_object):
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 c_to_py_registry = {
-    (NativeBool(), -1)     : 'Bool_to_PyBool',
-    (NativeInteger(), -1)  : 'Int'+str(default_precision[NativeInteger()]*8)+'_to_PyLong',
-    (NativeInteger(), 1)   : 'Int8_to_NumpyLong',
-    (NativeInteger(), 2)   : 'Int16_to_NumpyLong',
-    (NativeInteger(), 4)   : 'Int32_to_NumpyLong',
-    (NativeInteger(), 8)   : 'Int64_to_NumpyLong',
-    (NativeFloat(), 4)     : 'Float_to_NumpyDouble',
-    (NativeFloat(), 8)     : 'Double_to_NumpyDouble',
-    (NativeFloat(), -1)    : 'Double_to_PyDouble',
-    (NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
-    (NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
-    (NativeComplex(), -1)  : 'Complex128_to_PyComplex'}
+    PythonNativeBool()     : 'Bool_to_PyBool',
+    PythonNativeInt()  : 'Int'+str(PythonNativeInt()._precision*8)+'_to_PyLong',
+    #(PythonNativeInt(), 1)   : 'Int8_to_NumpyLong',
+    #(PythonNativeInt(), 2)   : 'Int16_to_NumpyLong',
+    #(PythonNativeInt(), 4)   : 'Int32_to_NumpyLong',
+    #(PythonNativeInt(), 8)   : 'Int64_to_NumpyLong',
+    PythonNativeFloat()    : 'Double_to_PyDouble',
+    #(PythonNativeFloat(), 4)     : 'Float_to_NumpyDouble',
+    #(PythonNativeFloat(), 8)     : 'Double_to_NumpyDouble',
+    ComplexType(PythonNativeFloat())  : 'Complex128_to_PyComplex',
+    #(NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
+    #(NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
+    }
 
 
 #-------------------------------------------------------------------
@@ -1100,7 +1102,7 @@ PyErr_Occurred = FunctionDef(name      = 'PyErr_Occurred',
 PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
               body      = [],
               arguments = [FunctionDefArgument(Variable(dtype = PyccelPyObject(), name = 'o')),
-                           FunctionDefArgument(Variable(dtype = NativeString(), name = 's'))],
+                           FunctionDefArgument(Variable(dtype = StringType(), name = 's'))],
               results   = [])
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
@@ -1110,43 +1112,44 @@ PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
             arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),
                          FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
-            results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
+            results = [FunctionDefResult(Variable(PythonNativeBool(), 'r'))],
             body = [])
 
 PyList_New = FunctionDef(name = 'PyList_New',
-                    arguments = [FunctionDefArgument(Variable(NativeInteger(), 'size'), value = LiteralInteger(0))],
+                    arguments = [FunctionDefArgument(Variable(PythonNativeInt(), 'size'), value = LiteralInteger(0))],
                     results = [FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias'))],
                     body = [])
 
 PyList_Append = FunctionDef(name = 'PyList_Append',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
                                  FunctionDefArgument(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=4))],
+                    results = [FunctionDefResult(Variable(CNativeInt(), 'i'))],
                     body = [])
 
 PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
-                                 FunctionDefArgument(Variable(NativeInteger(), 'i', precision=8))],
+                                 FunctionDefArgument(Variable(PythonNativeInt(), 'i'))],
                     results = [FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
                     body = [])
 
 PyList_Size = FunctionDef(name = 'PyList_Size',
                     arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
-                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=8))],
+                    results = [FunctionDefResult(Variable(PythonNativeInt(), 'i'))],
                     body = [])
 
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
-    (NativeBool(), -1)     : 'PyIs_Bool',
-    (NativeInteger(), -1)  : 'PyIs_NativeInt',
-    (NativeInteger(), 1)   : 'PyIs_Int8',
-    (NativeInteger(), 2)   : 'PyIs_Int16',
-    (NativeInteger(), 4)   : 'PyIs_Int32',
-    (NativeInteger(), 8)   : 'PyIs_Int64',
-    (NativeFloat(), -1)    : 'PyIs_NativeFloat',
-    (NativeFloat(), 4)     : 'PyIs_Float',
-    (NativeFloat(), 8)     : 'PyIs_Double',
-    (NativeComplex(), -1)  : 'PyIs_NativeComplex',
-    (NativeComplex(), 4)   : 'PyIs_Complex64',
-    (NativeComplex(), 8)   : 'PyIs_Complex128'}
+    PythonNativeBool()     : 'PyIs_Bool',
+    PythonNativeInt()  : 'PyIs_NativeInt',
+    #(PythonNativeInt(), 1)   : 'PyIs_Int8',
+    #(PythonNativeInt(), 2)   : 'PyIs_Int16',
+    #(PythonNativeInt(), 4)   : 'PyIs_Int32',
+    #(PythonNativeInt(), 8)   : 'PyIs_Int64',
+    PythonNativeFloat()    : 'PyIs_PythonNativeFloat',
+    #(PythonNativeFloat(), 4)     : 'PyIs_Float',
+    #(PythonNativeFloat(), 8)     : 'PyIs_Double',
+    ComplexType(PythonNativeFloat())  : 'PyIs_NativeComplex',
+    #(NativeComplex(), 4)   : 'PyIs_Complex64',
+    #(NativeComplex(), 8)   : 'PyIs_Complex128'
+    }

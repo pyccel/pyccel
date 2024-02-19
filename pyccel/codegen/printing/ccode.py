@@ -25,11 +25,11 @@ from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelLt, Py
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeComplex, NativeVoid
-from pyccel.ast.datatypes import NativeFloat, NativeTuple, datatype, default_precision
-from pyccel.ast.datatypes import CustomDataType, NativeString, NativeHomogeneousTuple
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, ComplexType, VoidType
+from pyccel.ast.datatypes import PythonNativeFloat, TupleType
+from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 
-from pyccel.ast.internals import Slice, PrecomputedCode, get_final_precision, PyccelArrayShapeElement
+from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralImaginaryUnit, LiteralFloat
 from pyccel.ast.literals  import LiteralString, LiteralInteger, Literal
@@ -48,7 +48,7 @@ from pyccel.ast.variable import DottedName
 from pyccel.ast.variable import DottedVariable
 from pyccel.ast.variable import InhomogeneousTupleVariable
 
-from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast
+from pyccel.ast.c_concepts import ObjectAddress, CMacro, CStringExpression, PointerCast, CNativeInt
 
 from pyccel.codegen.printing.codeprinter import CodePrinter
 
@@ -252,40 +252,45 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    dtype_registry = {(NativeFloat(),8)   : 'double',
-                      (NativeFloat(),4)   : 'float',
-                      (NativeComplex(),8) : 'double complex',
-                      (NativeComplex(),4) : 'float complex',
-                      (NativeInteger(),4)     : 'int32_t',
-                      (NativeInteger(),8)     : 'int64_t',
-                      (NativeInteger(),2)     : 'int16_t',
-                      (NativeInteger(),1)     : 'int8_t',
-                      (NativeInteger(),-2)    : 'int',
-                      (NativeBool(),-1) : 'bool',
-                      (NativeVoid(), 0) : 'void',
+    dtype_registry = {PythonNativeFloat()   : 'double',
+                      ComplexType(PythonNativeFloat()) : 'double complex',
+                      CNativeInt()    : 'int',
+                      PythonNativeBool() : 'bool',
+                      VoidType() : 'void',
+                      #(NativeFloat(),8)   : 'double',
+                      #(NativeFloat(),4)   : 'float',
+                      #(NativeComplex(),8) : 'double complex',
+                      #(NativeComplex(),4) : 'float complex',
+                      #(NativeInteger(),4)     : 'int32_t',
+                      #(NativeInteger(),8)     : 'int64_t',
+                      #(NativeInteger(),2)     : 'int16_t',
+                      #(NativeInteger(),1)     : 'int8_t',
+                      #(NativeBool(),-1) : 'bool',
+                      #(VoidType(), 0) : 'void',
                       }
 
-    ndarray_type_registry = {
-                      (NativeFloat(),8)   : 'nd_double',
-                      (NativeFloat(),4)   : 'nd_float',
-                      (NativeComplex(),8) : 'nd_cdouble',
-                      (NativeComplex(),4) : 'nd_cfloat',
-                      (NativeInteger(),8)     : 'nd_int64',
-                      (NativeInteger(),4)     : 'nd_int32',
-                      (NativeInteger(),2)     : 'nd_int16',
-                      (NativeInteger(),1)     : 'nd_int8',
-                      (NativeBool(),-1)   : 'nd_bool'}
+    ndarray_type_registry = {}
+                      #(NativeFloat(),8)   : 'nd_double',
+                      #(NativeFloat(),4)   : 'nd_float',
+                      #(NativeComplex(),8) : 'nd_cdouble',
+                      #(NativeComplex(),4) : 'nd_cfloat',
+                      #(NativeInteger(),8)     : 'nd_int64',
+                      #(NativeInteger(),4)     : 'nd_int32',
+                      #(NativeInteger(),2)     : 'nd_int16',
+                      #(NativeInteger(),1)     : 'nd_int8',
+                      #(NativeBool(),-1)   : 'nd_bool'}
 
-    type_to_format = {(NativeFloat(),8)   : '%.12lf',
-                      (NativeFloat(),4)   : '%.12f',
-                      (NativeComplex(),8) : '(%.12lf + %.12lfj)',
-                      (NativeComplex(),4) : '(%.12f + %.12fj)',
-                      (NativeInteger(),4)     : '%d',
-                      (NativeInteger(),8)     : LiteralString("%") + CMacro('PRId64'),
-                      (NativeInteger(),2)     : LiteralString("%") + CMacro('PRId16'),
-                      (NativeInteger(),1)     : LiteralString("%") + CMacro('PRId8'),
-                      (NativeBool(),-1)   : '%s',
-                      (NativeString(), 0) : '%s'}
+    type_to_format = {
+            #(NativeFloat(),8)   : '%.12lf',
+                      #(NativeFloat(),4)   : '%.12f',
+                      #(NativeComplex(),8) : '(%.12lf + %.12lfj)',
+                      #(NativeComplex(),4) : '(%.12f + %.12fj)',
+                      #(NativeInteger(),4)     : '%d',
+                      #(NativeInteger(),8)     : LiteralString("%") + CMacro('PRId64'),
+                      #(NativeInteger(),2)     : LiteralString("%") + CMacro('PRId16'),
+                      #(NativeInteger(),1)     : LiteralString("%") + CMacro('PRId8'),
+                      #(NativeBool(),-1)   : '%s',
+                      (StringType(), 0) : '%s'}
 
     def __init__(self, filename, prefix_module = None):
 
@@ -450,7 +455,7 @@ class CCodePrinter(CodePrinter):
                 operations += f"{declare_dtype} {dummy_array_name}[] = {subset_str};\n"
 
                 copy_to_data = self._print(copy_to_data_var)
-                type_size = self._print(DottedVariable(NativeVoid(), 'type_size', lhs=copy_to))
+                type_size = self._print(DottedVariable(VoidType(), 'type_size', lhs=copy_to))
                 operations += f"memcpy(&{copy_to_data}[{offset_str}], {dummy_array_name}, {lenSubset} * {type_size});\n"
 
                 i += lenSubset
@@ -1066,7 +1071,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(f, PythonType):
                 f = f.print_string
 
-            if isinstance(f, FunctionCall) and isinstance(f.dtype, NativeTuple):
+            if isinstance(f, FunctionCall) and isinstance(f.dtype, TupleType):
                 tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
@@ -1314,7 +1319,7 @@ class CCodePrinter(CodePrinter):
             arg_vars.extend(result_vars)
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         else:
-            ret_type = self.find_in_dtype_registry(NativeVoid(), 0)
+            ret_type = self.find_in_dtype_registry(VoidType(), 0)
 
         name = expr.name
         if not arg_vars:
@@ -1501,7 +1506,7 @@ class CCodePrinter(CodePrinter):
         if variable.rank > 0:
             #free the array if its already allocated and checking if its not null if the status is unknown
             if  (expr.status == 'unknown'):
-                shape_var = DottedVariable(NativeVoid(), 'shape', lhs = variable)
+                shape_var = DottedVariable(VoidType(), 'shape', lhs = variable)
                 free_code = f'if ({self._print(shape_var)} != NULL)\n'
                 free_code += "{{\n{}}}\n".format(self._print(Deallocate(variable)))
             elif (expr.status == 'allocated'):
@@ -2055,7 +2060,7 @@ class CCodePrinter(CodePrinter):
         prefix_code = ''
         lhs = expr.lhs
         rhs = expr.rhs
-        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, NativeTuple):
+        if isinstance(rhs, FunctionCall) and isinstance(rhs.dtype, TupleType):
             self._temporary_args = [ObjectAddress(a) for a in lhs]
             return prefix_code+'{};\n'.format(self._print(rhs))
         # Inhomogenous tuples are unravelled and therefore do not exist in the c printer

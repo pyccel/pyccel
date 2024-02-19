@@ -8,7 +8,7 @@ import os
 import time
 
 from pyccel.ast.core                        import ModuleHeader
-from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
+#from pyccel.ast.numpy_wrapper               import get_numpy_max_acceptable_version_file
 from pyccel.codegen.printing.fcode          import fcode
 from pyccel.codegen.printing.cwrappercode   import CWrapperCodePrinter
 from pyccel.codegen.wrapper.fortran_to_c_wrapper   import FortranToCWrapper
@@ -151,9 +151,9 @@ def create_shared_library(codegen,
     #     Compile cwrapper from stdlib
     #---------------------------------------
     start_compile_libs = time.time()
-    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath,
-                                extra_files = {'numpy_version.h' :
-                                                get_numpy_max_acceptable_version_file()})
+    cwrapper_lib_dest_path = copy_internal_library('cwrapper', pyccel_dirpath)#,
+                                #extra_files = {'numpy_version.h' :
+                                #                get_numpy_max_acceptable_version_file()})
 
     cwrapper_lib = internal_libs["cwrapper"][1]
     cwrapper_lib.reset_folder(cwrapper_lib_dest_path)

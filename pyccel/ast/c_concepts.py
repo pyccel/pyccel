@@ -9,7 +9,7 @@ Module representing object address.
 
 from pyccel.utilities.metaclasses import Singleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import ContainerType
+from .datatypes import ContainerType, FixedSizeNumericType, PyccelIntegerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
@@ -17,6 +17,18 @@ __all__ = ('CMacro',
            'CStringExpression',
            'ObjectAddress',
            'PointerCast')
+
+#------------------------------------------------------------------------------
+
+class CNativeInt(FixedSizeNumericType):
+    """
+    Class representing C's native integer type.
+
+    Class representing C's native integer type.
+    """
+    __slots__ = ()
+    _name = 'int'
+    _primitive_type = PyccelIntegerType()
 
 #------------------------------------------------------------------------------
 

@@ -32,15 +32,13 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
+from pyccel.ast.datatypes import SymbolicType, StringType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat, ComplexType
 from pyccel.ast.datatypes import iso_c_binding
 from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeNumeric
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
-from pyccel.ast.internals import get_final_precision
 
 from pyccel.ast.itertoolsext import Product
 
@@ -701,7 +699,7 @@ class FCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 loop_scope = self.scope.create_new_loop_scope()
-                for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
+                for_index = self.scope.get_temporary_variable(PythonNativeInt(), name='i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
                 print_body = [FunctionCallArgument(f[for_index])]
@@ -927,7 +925,7 @@ class FCodePrinter(CodePrinter):
         prec = self.print_kind(expr)
 
         dtype = var.dtype
-        if dtype is NativeString():
+        if isinstance(dtype, StringType):
             return 'len({})'.format(self._print(var))
         elif var.rank == 1:
             return 'size({}, kind={})'.format(self._print(var), prec)
@@ -1250,7 +1248,7 @@ class FCodePrinter(CodePrinter):
 
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
-        if arg.dtype is NativeInteger():
+        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
             return '({})'.format(arg_code)
 
         prec = expr.precision
@@ -1411,7 +1409,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         # ... ignored declarations
-        if isinstance(expr.dtype, NativeSymbol):
+        if isinstance(expr.dtype, SymbolicType):
             return ''
 
         # meta-variables
@@ -1465,7 +1463,7 @@ class FCodePrinter(CodePrinter):
             dtype = self._print(expr_dtype)
 
         # ...
-            if isinstance(expr_dtype, NativeString):
+            if isinstance(expr_dtype, StringType):
 
                 if intent_in:
                     dtype = dtype[:9] +'(len =*)'
@@ -1675,7 +1673,7 @@ class FCodePrinter(CodePrinter):
             return 'call {0}({1})\n'.format(rhs_code, code_args)
 
         if (isinstance(expr.lhs, Variable) and
-              expr.lhs.dtype == NativeSymbol()):
+              isinstance(expr.lhs.dtype, SymbolicType)):
             return ''
 
         # Right-hand side code
@@ -2523,7 +2521,7 @@ class FCodePrinter(CodePrinter):
         return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
-        if expr.dtype is NativeString():
+        if isinstance(expr.dtype, StringType):
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
             args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
@@ -2541,7 +2539,7 @@ class FCodePrinter(CodePrinter):
         return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(a.dtype in (NativeBool(), NativeInteger()) for a in expr.args):
+        if all(isinstance(a.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args

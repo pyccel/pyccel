@@ -17,7 +17,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.datatypes import NativeNumeric, CustomDataType
+from pyccel.ast.datatypes import CustomDataType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul

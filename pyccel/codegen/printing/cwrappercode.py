@@ -15,7 +15,7 @@ from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Imp
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
-from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
+#from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.errors.errors  import Errors
@@ -49,10 +49,10 @@ class CWrapperCodePrinter(CCodePrinter):
             Any additional arguments which are necessary for CCodePrinter.
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
-                      (PyccelPyObject() , 0) : 'PyObject',
-                      (PyccelPyArrayObject() , 0) : 'PyArrayObject',
-                      (PyccelPyTypeObject() , 0) : 'PyTypeObject',
-                      (BindCPointer()   , 0) : 'void'}
+                      PyccelPyObject() : 'PyObject',
+                      #(PyccelPyArrayObject() , 0) : 'PyArrayObject',
+                      PyccelPyTypeObject() : 'PyTypeObject',
+                      BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)

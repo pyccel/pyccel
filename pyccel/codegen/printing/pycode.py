@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import NativeHomogeneousTuple
+from pyccel.ast.datatypes  import HomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -36,7 +36,7 @@ errors = Errors()
 # The keys are modules from which the target is imported
 # The values are a dictionary whose keys are object aliases and whose values
 # are the names used in pyccel
-import_object_swap = { 'numpy': numpy_target_swap}
+import_object_swap = {}# 'numpy': numpy_target_swap}
 import_target_swap = {
         'numpy' : {'double'     : 'float64',
                    'prod'       : 'product',
@@ -292,7 +292,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, NativeHomogeneousTuple):
+            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, HomogeneousTupleType):
                 indices = ']['.join(i for i in indices)
             else:
                 indices = ','.join(i for i in indices)

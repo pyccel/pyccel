@@ -250,7 +250,7 @@ class PythonNativeInt(FixedSizeNumericType):
     __slots__ = ()
     _name = 'int'
     _primitive_type = PyccelIntegerType()
-    _precision = -1
+    _precision = numpy.dtype(int).alignment
 
     @lru_cache
     def __add__(self, other):
@@ -270,7 +270,7 @@ class PythonNativeFloat(FixedSizeNumericType):
     __slots__ = ()
     _name = 'float'
     _primitive_type = PyccelFloatingPointType()
-    _precision = -1
+    _precision = 8
 
     @lru_cache
     def __add__(self, other):
