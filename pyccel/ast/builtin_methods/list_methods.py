@@ -50,7 +50,7 @@ class ListAppend(PyccelInternalFunction):
     _order = None
     _rank = 0
     _precision = -1
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'append'
 
     def __init__(self, list_variable, new_elem) -> None:
@@ -107,7 +107,7 @@ class ListClear(PyccelInternalFunction) :
     _rank = 0
     _order = None
     _shape = None
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'clear'
 
     def __init__(self, list_variable):
@@ -156,7 +156,7 @@ class ListInsert(PyccelInternalFunction):
     _order = None
     _rank = 0
     _precision = -1
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'insert'
 
     def __init__(self, list_variable, index, new_elem) -> None:
