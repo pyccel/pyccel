@@ -19,7 +19,7 @@ from pyccel.utilities.stage import PyccelStage
 from .basic          import TypedAstNode
 from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
                              PythonComplex, PythonReal, PythonImag, PythonList,
-                             PythonType, PythonConjugate)
+                             PythonType, PythonConjugate, DtypePrecisionToCastFunction)
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
@@ -34,6 +34,8 @@ from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, Litera
 from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
+from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
+from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyNDArrayType
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .variable       import Variable, Constant
 
@@ -97,7 +99,6 @@ __all__ = (
     'NumpyInt64',
     'NumpyLinspace',
     'NumpyMatmul',
-    'NumpyNDArrayType',
     'NumpyNewArray',
     'NumpyMod',
     'NumpyNonZero',
@@ -117,26 +118,6 @@ __all__ = (
     'NumpyZerosLike',
     'NumpyShape',
 )
-
-class NumpyNDArrayType(DataType, metaclass=Singleton):
-    """
-    Class representing the NumPy ND array type.
-
-    Class representing the NumPy ND array type.
-    """
-    __slots__ = ()
-    name = 'numpy.ndarray'
-
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, (*NativeNumericTypes, NumpyNDArrayType)):
-            return self
-        else:
-            raise NotImplementedError(f"Can't combine {self} and {other}")
-
-    @lru_cache
-    def __radd__(self, other):
-        return self.__add__(other)
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
@@ -434,26 +415,6 @@ class NumpyComplex128(NumpyComplex):
     __slots__ = ()
     _precision = dtype_registry['complex128'][1]
     name = 'complex128'
-
-DtypePrecisionToCastFunction = {
-    'int' : {
-       -1 : PythonInt,
-        1 : NumpyInt8,
-        2 : NumpyInt16,
-        4 : NumpyInt32,
-        8 : NumpyInt64},
-    'float' : {
-       -1 : PythonFloat,
-        4 : NumpyFloat32,
-        8 : NumpyFloat64},
-    'complex' : {
-       -1 : PythonComplex,
-        4 : NumpyComplex64,
-        8 : NumpyComplex128,},
-    'bool':  {
-       -1 : PythonBool,
-        4 : NumpyBool}
-}
 
 #=======================================================================================
 
@@ -2291,6 +2252,19 @@ class NumpySize(PyccelInternalFunction):
             return a.shape[axis.python_value]
 
         return PyccelArrayShapeElement(a, axis)
+
+#==============================================================================
+
+DtypePrecisionToCastFunction.update({
+    NumpyInt8Type() : NumpyInt8(),
+    NumpyInt16Type() : NumpyInt16(),
+    NumpyInt32Type() : NumpyInt32(),
+    NumpyInt64Type() : NumpyInt64(),
+    NumpyFloat32Type() : NumpyFloat32(),
+    NumpyFloat64Type() : NumpyFloat64(),
+    ComplexType(NumpyFloat32Type()) : NumpyComplex64(),
+    ComplexType(NumpyFloat64Type()) : NumpyComplex128(),
+    })
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
