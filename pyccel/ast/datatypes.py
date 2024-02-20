@@ -680,36 +680,6 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 #==============================================================================
 
 PythonNativeComplex = ComplexType(PythonNativeFloat())
-
-#dtype_and_precision_registry = { 'float' : (Float, -1),
-#                                 'double' : (Float, -1),
-#                                 'real' : (Float, -1),
-#                                 'float32' : (Float,4),
-#                                 'float64' : (Float,8),
-#                                 'f4' : (Float,4),
-#                                 'f8' : (Float,8),
-#                                 'complex' : (Cmplx, -1),
-#                                 'complex64' : (Cmplx,4),
-#                                 'complex128' : (Cmplx,8),
-#                                 'c8' : (Cmplx,4),
-#                                 'c16' : (Cmplx,8),
-#                                 'int8' :(Int,1),
-#                                 'int16' : (Int,2),
-#                                 'int32' : (Int,4),
-#                                 'int64' : (Int,8),
-#                                 'i1' :(Int,1),
-#                                 'i2' : (Int,2),
-#                                 'i4' : (Int,4),
-#                                 'i8' : (Int,8),
-#                                 'int'  :(Int, -1),
-#                                 'integer' : (Int,-1),
-#                                 'bool' :(Bool,-1),
-#                                 'b1' :(Bool,-1),
-#                                 'void' : (Void, 0),
-#                                 'symbol' : (_Symbol, 0),
-#                                 '*' : (Generic, 0),
-#                                 'str' : (String, 0),
-#                                 }
 #
 #default_precision = {Float : 8,
 #                     Int : numpy.dtype(int).alignment,

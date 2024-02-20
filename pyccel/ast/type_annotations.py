@@ -24,6 +24,8 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
+#==============================================================================
+
 class VariableTypeAnnotation(PyccelAstNode):
     """
     A class which describes a type annotation on a variable.
@@ -157,6 +159,8 @@ class VariableTypeAnnotation(PyccelAstNode):
     def __repr__(self):
         return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
 
+#==============================================================================
+
 class FunctionTypeAnnotation(PyccelAstNode):
     """
     A class which describes a type annotation on a function address.
@@ -238,6 +242,8 @@ class FunctionTypeAnnotation(PyccelAstNode):
             raise TypeError("Is const value should be a boolean")
         self._is_const = val
 
+#==============================================================================
+
 class UnionTypeAnnotation(PyccelAstNode):
     """
     A class which holds multiple possible type annotations.
@@ -290,6 +296,8 @@ class UnionTypeAnnotation(PyccelAstNode):
 
     def __str__(self):
         return '|'.join(str(t) for t in self._type_annotations)
+
+#==============================================================================
 
 class SyntacticTypeAnnotation(PyccelAstNode):
     """
@@ -348,3 +356,18 @@ class SyntacticTypeAnnotation(PyccelAstNode):
                     self.order == o.order
         else:
             return False
+
+#==============================================================================
+
+typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
+                        'double'  : PythonNativeFloat(),
+                        'real'    : PythonNativeFloat(),
+                        'complex' : ComplexType(PythonNativeFloat()),
+                        'int'     : PythonNativeInt(),
+                        'integer' : PythonNativeInt(),
+                        'bool'    : PythonNativeBool(),
+                        'b1'      : PythonNativeBool(),
+                        'void'    : VoidType(),
+                        '*'       : GenericType(),
+                        'str'     : PythonNativeString(),
+                        }
