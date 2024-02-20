@@ -10,8 +10,7 @@ They also have specific rules to determine the dtype, precision, rank, shape
 """
 from .builtins     import PythonInt
 from .datatypes    import PyccelBooleanType, PyccelIntegerType
-from .datatypes    import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes    import ComplexType, StringType, GenericType
+from .datatypes    import PythonNativeBool, PythonNativeInt, GenericType
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
@@ -124,12 +123,12 @@ class PyccelBitOperator(PyccelOperator):
             The precision of the result of the operation.
         """
         try:
-            dtype = sum((a.dtype for a in args), start=NativeGeneric())
-            class_type = sum((a.class_type for a in args), start=NativeGeneric())
+            dtype = sum((a.dtype for a in args), start=GenericType())
+            class_type = sum((a.class_type for a in args), start=GenericType())
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
-        assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
         return dtype, class_type
 
     def _set_shape_rank(self):
@@ -223,12 +222,12 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         precision : int
             The precision of the result of the operator.
         """
-        assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        assert all(isinstance(getattr(a.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType)) for a in args)
         if all(a.dtype.primitive_type is PyccelBooleanType() for a in args):
             dtype = PythonNativeBool()
         else:
             dtype = PythonNativeInt()
-        return dtype, precision
+        return dtype
 
 #==============================================================================
 
