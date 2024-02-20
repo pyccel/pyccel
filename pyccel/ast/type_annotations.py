@@ -254,7 +254,8 @@ class UnionTypeAnnotation(PyccelAstNode):
 
     def __init__(self, *type_annotations):
         annots = [ti for t in type_annotations for ti in (t.type_list if isinstance(t, UnionTypeAnnotation) else [t])]
-        self._type_annotations = tuple(set(annots))
+        # Strip out repeats
+        self._type_annotations = tuple({a: None for a in annots}.keys())
 
         super().__init__()
 

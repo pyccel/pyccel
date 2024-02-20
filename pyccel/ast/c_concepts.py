@@ -59,9 +59,9 @@ class ObjectAddress(TypedAstNode):
 
     Examples
     --------
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a')))
     '&a'
-    >>> CCodePrinter._print(ObjectAddress(Variable('int','a', memory_handling='alias')))
+    >>> CCodePrinter._print(ObjectAddress(Variable(PythonNativeInt(),'a', memory_handling='alias')))
     'a'
     """
 

@@ -296,6 +296,7 @@ class Assign(PyccelAstNode):
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign
@@ -304,7 +305,7 @@ class Assign(PyccelAstNode):
     x := y
     >>> Assign(x, 0)
     x := 0
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> Assign(x, A)
     x := A
     >>> Assign(A[0,1], x)
@@ -706,8 +707,8 @@ class AliasAssign(PyccelAstNode):
     >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x', rank=1, shape=[n])
+    >>> n = Variable(PythonNativeInt(), 'n')
+    >>> x = Variable(PythonNativeInt(), 'x', rank=1, shape=[n])
     >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
     """
@@ -815,8 +816,8 @@ class AugAssign(Assign):
     --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import AugAssign
-    >>> s = Variable('int', 's')
-    >>> t = Variable('int', 't')
+    >>> s = Variable(PythonNativeInt(), 's')
+    >>> t = Variable(PythonNativeInt(), 't')
     >>> AugAssign(s, '+', 2 * t + 1)
     s += 1 + 2*t
     """
@@ -1025,12 +1026,12 @@ class Module(ScopedAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1273,12 +1274,12 @@ class ModuleHeader(PyccelAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1560,7 +1561,7 @@ class For(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, For
     >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
@@ -2298,8 +2299,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, FunctionDef
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [FunctionDefArgument(x)]
     >>> results     = [FunctionDefResult(y)]
     >>> body        = [Assign(y,PyccelAdd(x,LiteralInteger(1)))]
@@ -2313,8 +2314,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -3043,8 +3044,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
     >>> # we can also Declare a FunctionAddress
@@ -3182,12 +3183,12 @@ class ClassDef(ScopedAstNode):
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3689,8 +3690,8 @@ class FuncAddressDeclare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3773,9 +3774,9 @@ class Declare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare(Variable('int', 'n'))
+    >>> Declare(Variable(PythonNativeInt(), 'n'))
     Declare(n, None)
-    >>> Declare(Variable('float', 'x'), intent='out')
+    >>> Declare(Variable(PythonNativeFloat(), 'x'), intent='out')
     Declare(x, out)
     """
     __slots__ = ('_variable','_intent','_value',
@@ -3918,7 +3919,7 @@ class Del(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), memory_handling='heap')
+    >>> x = Variable(PythonNativeFloat(), 'x', rank=2, shape=(10,2), memory_handling='heap')
     >>> Del([x])
     Del([x])
     """
