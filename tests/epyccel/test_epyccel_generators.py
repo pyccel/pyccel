@@ -147,7 +147,8 @@ def test_nested_generators1(language):
 
 def test_nested_generators2(language):
     def f(a : 'float[:,:,:,:]'):
-        return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)),0.)
+        from numpy import float64
+        return min(min(sum(min(max(a[i,k,o,l]*l for i in range(5)) for k in range(5)) for o in range(5)) for l in range(5)), float64(0.))
 
     x = randint(0, 50, size=(5,5,5,5)).astype(float)
 
