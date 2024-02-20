@@ -61,6 +61,7 @@ __all__ = (
     'Del',
     'Duplicate',
     'DoConcurrent',
+    'kernelCall'
     'EmptyNode',
     'ErrorExit',
     'Exit',
@@ -2301,24 +2302,24 @@ class kernelCall(FunctionCall):
     args             : tuple
                    The arguments being passed to the function
     """
+    __slots__ = ('_numBlocks','_tpblock','_func', '_args')
     _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock')
-    __slots__ = ('numBlocks','tpblock','func', 'args')
     
-    def __init__(self, func, args, numBlocks, tpblock,current_function=None)
+    def __init__(self, func, args, numBlocks, tpblock,current_function=None):
+        self._numBlocks = numBlocks
+        self._tpblock = tpblock
         super().__init__(func, args, current_function)
-        self.numBlocks = numBlocks
-        self.tpblock = tpblock
 
     @property
-    def numBlocks(self)
+    def numBlocks(self):
         """The number of blocks in the kernel being called
         """
-        return self.numBlocks
-    
-    def tpblock(self)
+        return self._numBlocks
+    @property
+    def tpblock(self):
         """ The number of threads per block
         """
-        return self.tpblock
+        return self._tpblock
         
 
 class Return(PyccelAstNode):

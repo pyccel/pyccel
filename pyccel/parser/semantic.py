@@ -750,7 +750,7 @@ class SemanticParser(BasicParser):
                     return self._visit(var[indices[0]][indices[1:]])
             else:
                 var_type = type(var)
-                errors.report(f"Can't index {var_type}", symbol=expr,
+                errors.report(f"Can't index  {var_type}", symbol=expr,
                     severity='fatal')
 
         indices = tuple(indices)

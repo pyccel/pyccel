@@ -41,6 +41,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
+from pyccel.ast.core import kernelCall
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -1084,11 +1085,10 @@ class SyntaxParser(BasicParser):
         elif isinstance(func,IndexedElement):
             if(len(func.indices) != 2):
                 raise NotImplementedError
-            # Need to build the kernel call in the core to handle the kernel function call
-            # func = kernelCall
+            func = kernelCall(func.base, args, func.indices[0], func.indices[1])
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
-
+        
         return func
 
     def _visit_keyword(self, stmt):
