@@ -149,7 +149,6 @@ class PyccelType(metaclass=ArgumentSingleton):
         Any keyword arguments required by the class.
     """
     __slots__ = ()
-    _name = '__UNDEFINED__'
 
     def __str__(self):
         return self._name
