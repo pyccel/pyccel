@@ -226,17 +226,8 @@ class PythonCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
 
-    def _print_NativeBool(self, expr):
-        return 'bool'
-
-    def _print_NativeInteger(self, expr):
-        return 'int'
-
-    def _print_NativeFloat(self, expr):
-        return 'float'
-
-    def _print_NativeComplex(self, expr):
-        return 'complex'
+    def _print_FixedSizeType(self, expr):
+        return str(expr)
 
     def _print_Variable(self, expr):
         return self._print(expr.name)
