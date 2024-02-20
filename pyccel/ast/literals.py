@@ -10,7 +10,7 @@ from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import GenericType, PythonNativeInt, PythonNativeBool
 from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
 from .datatypes import PyccelIntegerType, PyccelFloatingPointType, PyccelBooleanType
-from .datatypes import PyccelComplexType
+from .datatypes import PyccelComplexType, FixedSizeNumericType
 
 __all__ = (
     'convert_to_literal',
@@ -430,7 +430,7 @@ def convert_to_literal(value, dtype = None):
     if isinstance(dtype, StringType):
         return LiteralString(value)
 
-    assert isinstance(dtype, FixedSizeType)
+    assert isinstance(dtype, FixedSizeNumericType)
 
     primitive_type = dtype.primitive_type
     if isinstance(primitive_type, PyccelIntegerType):
