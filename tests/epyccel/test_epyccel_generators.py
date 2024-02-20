@@ -121,8 +121,8 @@ def test_expression1(language):
     )
 )
 def test_expression2(language):
-    def f(b : 'int[:]'):
-        def incr(x : int):
+    def f(b : 'int64[:]'):
+        def incr(x : 'int64'):
             y = x + 1
             return y
         n = b.shape[0]
