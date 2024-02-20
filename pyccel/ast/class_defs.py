@@ -12,8 +12,8 @@ from .datatypes import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                         ComplexType, StringType, TupleType, CustomDataType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray, NumpyNDArrayType)
+                        NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
+from .numpytypes import NumpyNumericType, NumpyNDArrayType
 
 __all__ = ('BooleanClass',
         'IntegerClass',
@@ -213,7 +213,7 @@ def get_cls_base(dtype, container_type):
         return literal_classes[dtype]
     elif isinstance(dtype, CustomDataType) and container_type is dtype:
         return None
-    elif dtype in NativeNumeric or isinstance(container_type, NumpyNDArrayType):
+    elif isinstance(container_type, (NumpyNDArrayType, NumpyNumericType)):
         return NumpyArrayClass
     elif isinstance(container_type, NativeTuple):
         return TupleClass
