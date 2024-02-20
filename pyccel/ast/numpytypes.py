@@ -9,6 +9,7 @@
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, ComplexType
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from .type_annotations import typenames_to_dtypes
 
 __all__ = (
         'NumpyInt8Type',
@@ -31,6 +32,25 @@ numpy_precision_map = {
         (PyccelFloatingPointType(), 4): NumpyFloat32Type(),
         (PyccelFloatingPointType(), 8): NumpyFloat64Type(),
         }
+
+typenames_to_dtypes.update({
+    'int8' : NumpyInt8Type(),
+    'int16' : NumpyInt16Type(),
+    'int32' : NumpyInt32Type(),
+    'int64' : NumpyInt64Type(),
+    'i1' : NumpyInt8Type(),
+    'i2' : NumpyInt16Type(),
+    'i4' : NumpyInt32Type(),
+    'i8' : NumpyInt64Type(),
+    'float32' : NumpyFloat32Type(),
+    'float64' : NumpyFloat32Type(),
+    'f4' : NumpyFloat32Type(),
+    'f8' : NumpyFloat32Type(),
+    'complex64' : ComplexType(NumpyFloat32Type()),
+    'complex128' : ComplexType(NumpyFloat64Type()),
+    'c8' : ComplexType(NumpyFloat32Type()),
+    'c16' : ComplexType(NumpyFloat64Type()),
+    })
 
 #==============================================================================
 
@@ -77,6 +97,7 @@ class NumpyInt8Type(NumpyNumericType):
     Class representing NumPy's int8 type.
     """
     __slots__ = ()
+    _name = 'int8'
     _primitive_type = PyccelIntegerType()
     _precision = 1
 
@@ -87,6 +108,7 @@ class NumpyInt16Type(NumpyNumericType):
     Class representing NumPy's int16 type.
     """
     __slots__ = ()
+    _name = 'int16'
     _primitive_type = PyccelIntegerType()
     _precision = 2
 
@@ -97,6 +119,7 @@ class NumpyInt32Type(NumpyNumericType):
     Class representing NumPy's int32 type.
     """
     __slots__ = ()
+    _name = 'int32'
     _primitive_type = PyccelIntegerType()
     _precision = 4
 
@@ -107,6 +130,7 @@ class NumpyInt64Type(NumpyNumericType):
     Class representing NumPy's int64 type.
     """
     __slots__ = ()
+    _name = 'int64'
     _primitive_type = PyccelIntegerType()
     _precision = 8
 
@@ -119,6 +143,7 @@ class NumpyFloat32Type(NumpyNumericType):
     Class representing NumPy's float32 type.
     """
     __slots__ = ()
+    _name = 'float32'
     _primitive_type = PyccelFloatingPointType()
     _precision = 4
 
@@ -129,6 +154,7 @@ class NumpyFloat64Type(NumpyNumericType):
     Class representing NumPy's float64 type.
     """
     __slots__ = ()
+    _name = 'float64'
     _primitive_type = PyccelFloatingPointType()
     _precision = 8
 
