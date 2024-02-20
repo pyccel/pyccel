@@ -6,7 +6,7 @@
 Module handling all Python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
-They also have specific rules to determine the dtype, precision, rank, shape
+They also have specific rules to determine the dtype, rank, shape
 """
 from .builtins     import PythonInt
 from .datatypes    import PyccelBooleanType, PyccelIntegerType
@@ -46,7 +46,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
     def _calculate_dtype(self, arg):
         """
-        Get the dtype and precision.
+        Get the dtype.
 
         Arguments must be integers or booleans. Any booleans are cast
         to integers.
@@ -58,17 +58,14 @@ class PyccelInvert(PyccelUnaryOperator):
 
         Returns
         -------
-        dtype : DataType
+        DataType
             The  datatype of the result of the operation.
-        precision : integer
-            The precision of the result of the operation.
         """
         dtype = PythonNativeInt()
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
 
         self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
-        precision = arg.precision
-        return dtype, precision, dtype
+        return dtype, dtype
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
@@ -101,12 +98,12 @@ class PyccelBitOperator(PyccelOperator):
 
     def _calculate_dtype(self, *args):
         """
-        Get the dtype and precision.
+        Get the dtype.
 
         If one argument is a string then all arguments must be strings.
 
-        If the arguments are numeric then the dtype and precision
-        match the broadest type and the largest precision.
+        If the arguments are numeric then the dtype
+        match the broadest type.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
@@ -117,10 +114,8 @@ class PyccelBitOperator(PyccelOperator):
 
         Returns
         -------
-        dtype : DataType
+        DataType
             The  datatype of the result of the operation.
-        precision : integer
-            The precision of the result of the operation.
         """
         try:
             dtype = sum((a.dtype for a in args), start=GenericType())
@@ -203,9 +198,9 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     __slots__ = ()
     def _handle_integer_type(self, args):
         """
-        Set dtype and precision when the result is an integer.
+        Set dtype when the result is an integer.
 
-        Calculate the dtype and precision of the result from the arguments in
+        Calculate the dtype of the result from the arguments in
         the case where the result is an integer, ie. when the arguments are all
         booleans or integers.
 
@@ -216,11 +211,8 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
 
         Returns
         -------
-        dtype : DataType
+        DataType
             The datatype of the result of the operator.
-
-        precision : int
-            The precision of the result of the operator.
         """
         assert all(isinstance(getattr(a.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType)) for a in args)
         if all(a.dtype.primitive_type is PyccelBooleanType() for a in args):
