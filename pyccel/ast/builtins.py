@@ -1189,10 +1189,10 @@ class PythonType(PyccelAstNode):
 #==============================================================================
 
 DtypePrecisionToCastFunction = {
-        PythonNativeBool() : PythonBool,
-        PythonNativeInt() : PythonInt,
+        PythonNativeBool()  : PythonBool,
+        PythonNativeInt()   : PythonInt,
         PythonNativeFloat() : PythonFloat,
-        ComplexType(PythonNativeFloat()) : PythonComplex,
+        PythonNativeComplex : PythonComplex,
 }
 
 #==============================================================================
