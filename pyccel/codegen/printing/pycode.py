@@ -876,6 +876,10 @@ class PythonCodePrinter(CodePrinter):
         name = self._print(expr.list_variable)
         return f"{name}.clear()\n"
 
+    def _print_ListReverse(self, expr):
+        name = self._print(expr.list_variable)
+        return f"{name}.reverse()\n"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''
