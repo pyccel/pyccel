@@ -14,9 +14,14 @@ from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousLis
 from pyccel.ast.internals import PyccelInternalFunction
 
 
-__all__ = ('ListAppend','ListInsert','ListExtend',)
+__all__ = ('ListAppend',
+           'ListClear',
+           'ListExtend',
+           'ListInsert',
+           'ListPop',
+           )
 
-
+#=======================================================================================
 class ListAppend(PyccelInternalFunction):
     """
     Represents a call to the .append() method.
@@ -35,7 +40,7 @@ class ListAppend(PyccelInternalFunction):
     list_variable : Variable
         The variable representing the list.
     
-    new_elem : Variable
+    new_elem : TypedAstNode
         The argument passed to append() method.
     """
     __slots__ = ("_list_variable", "_append_arg")
@@ -45,7 +50,7 @@ class ListAppend(PyccelInternalFunction):
     _order = None
     _rank = 0
     _precision = -1
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'append'
 
     def __init__(self, list_variable, new_elem) -> None:
@@ -80,6 +85,94 @@ class ListAppend(PyccelInternalFunction):
         """
         return self._append_arg
 
+#=======================================================================================
+class ListPop(PyccelInternalFunction) :
+    """
+    Represents a call to the .pop() method.
+    
+    Represents a call to the .pop() method which
+    removes the item at the specified index. 
+    The method also returns the removed item.
+
+    Parameters
+    ----------
+    list_variable : TypedAstNode
+        The name of the list.
+
+    index_element : TypedAstNode
+        The current index value for the element to be popped.
+    """
+    __slots__ = ('_dtype','_precision', '_index','_list_variable')
+    _attribute_nodes = ('_index','_list_variable')
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = NativeHomogeneousList()
+    name = 'pop'
+
+    def __init__(self, list_variable, index_element=None):
+        self._index = index_element
+        self._list_variable = list_variable
+        self._dtype = list_variable.dtype
+        self._precision = list_variable.precision
+        super().__init__()
+
+    @property
+    def pop_index(self):
+        """
+        The current index value for the element to be popped.
+
+        The current index value for the element to be popped.
+        """
+        return self._index
+
+    @property
+    def list_variable(self):
+        """
+        Provide the name of the list as the return value.
+        
+        Provide the name of the list as the return value.
+        """
+        return self._list_variable
+
+#=======================================================================================
+class ListClear(PyccelInternalFunction) :
+    """
+    Represents a call to the .clear() method.
+    
+    Represents a call to the .clear() method which deletes all elements from a list, 
+    effectively turning it into an empty list.
+    Note that the .clear() method doesn't return any value.
+
+    Parameters
+    ----------
+    list_variable : TypedAstNode
+        The name of the list.
+    """
+    __slots__ = ('_list_variable',)
+    _attribute_nodes = ('_list_variable',)
+    _dtype = NativeVoid()
+    _precision = -1
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = NativeVoid()
+    name = 'clear'
+
+    def __init__(self, list_variable):
+        self._list_variable = list_variable
+        super().__init__()
+
+    @property
+    def list_variable(self):
+        """
+        Provide the name of the list as the return value.
+
+        Provide the name of the list as the return value.
+        """
+        return self._list_variable
+
+#=======================================================================================
 class ListInsert(PyccelInternalFunction):
     """
     Represents a call to the .insert() method.
@@ -89,7 +182,7 @@ class ListInsert(PyccelInternalFunction):
     The insert method is called as follows:
 
     >>> a = [2, 3, 4]
-    >>> a.insert(1, 1)
+    >>> a.insert(0, 1)
     >>> print(a)
     [1, 2, 3, 4]
 
@@ -101,7 +194,7 @@ class ListInsert(PyccelInternalFunction):
     index : TypedAstNode
         The index value for the element to be added.
     
-    new_elem : Variable
+    new_elem : TypedAstNode
         The argument passed to insert() method.
     """
     __slots__ = ("_index", "_list_variable", "_insert_arg")
@@ -111,7 +204,7 @@ class ListInsert(PyccelInternalFunction):
     _order = None
     _rank = 0
     _precision = -1
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'insert'
 
     def __init__(self, list_variable, index, new_elem) -> None:
@@ -156,6 +249,7 @@ class ListInsert(PyccelInternalFunction):
         """
         return self._insert_arg
 
+#=======================================================================================
 class ListExtend(PyccelInternalFunction):
     """
     Represents a call to the .extend() method.

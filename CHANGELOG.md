@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 -   #1689 : Add Python support for list method `append()`
 -   #1692 : Add Python support for list method `insert()`
 -   #1694 : Add Python support for list method `extend()`
+-   #1690 : Add Python support for list method `pop()`
+-   #1691 : Add Python support for list method `clear()`
 -   #1575 : Add support for homogeneous tuple type annotations on variables.
 
 ### Fixed

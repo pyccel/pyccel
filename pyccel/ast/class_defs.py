@@ -6,7 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListExtend
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
 
 from .builtins  import PythonImag, PythonReal, PythonConjugate
@@ -140,6 +140,10 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
             PyccelFunctionDef('append', func_class = ListAppend,
                 decorators = {}),
             PyccelFunctionDef('insert', func_class = ListInsert,
+                decorators = {}),
+            PyccelFunctionDef('pop', func_class = ListPop,
+                decorators = {}),
+            PyccelFunctionDef('clear', func_class = ListClear,
                 decorators = {}),
             PyccelFunctionDef('extend', func_class = ListExtend,
                 decorators = {}),
