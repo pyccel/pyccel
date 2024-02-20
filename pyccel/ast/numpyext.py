@@ -36,7 +36,7 @@ from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
-from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
+from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .type_annotations import typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant

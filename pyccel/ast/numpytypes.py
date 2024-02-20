@@ -222,4 +222,7 @@ numpy_precision_map = {
         (PyccelFloatingPointType(), 4) : NumpyFloat32Type(),
         (PyccelFloatingPointType(), 8) : NumpyFloat64Type(),
         (PyccelFloatingPointType(), 16): NumpyFloat128Type(),
+        (PyccelComplexType(), 4) : NumpyComplex64Type(),
+        (PyccelComplexType(), 8) : NumpyComplex128Type(),
+        (PyccelComplexType(), 16): NumpyComplex256Type(),
         }
