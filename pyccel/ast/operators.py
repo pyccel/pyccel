@@ -15,8 +15,10 @@ from ..errors.errors        import Errors, PyccelSemanticError
 
 from .basic                 import TypedAstNode
 
-from .datatypes             import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes             import ComplexType, StringType, FixedSizeNumericType
+from .datatypes             import PythonNativeBool, PythonNativeFloat
+from .datatypes             import StringType, FixedSizeNumericType
+from .datatypes             import PyccelBooleanType, PyccelIntegerType
+
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
 from .literals              import Nil, NilArgument
@@ -846,9 +848,9 @@ class PyccelDiv(PyccelArithmeticOperator):
         dtype, class_type = super(PyccelDiv, cls)._calculate_dtype(arg1, arg2)
 
         if dtype.primitive_type in (PyccelIntegerType(), PyccelBooleanType()):
-            dtype = NativeFloat()
+            dtype = PythonNativeFloat()
             if class_type.primitive_type in (PyccelIntegerType(), PyccelBooleanType()):
-                class_type = NativeFloat()
+                class_type = PythonNativeFloat()
         return dtype, class_type
 
     def __repr__(self):
@@ -1369,7 +1371,7 @@ class IfTernaryOperator(PyccelOperator):
             dtype = value_true.dtype + value_false.dtype
             class_type = value_true.class_type + value_false.class_type
         except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
+            raise TypeError(f'Cannot determine the type of ({value_true}, {value_false})') #pylint: disable=raise-missing-from
 
         return dtype, class_type
 
