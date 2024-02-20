@@ -303,7 +303,7 @@ class CToPythonWrapper(Wrapper):
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
 
         if raise_error:
-            message = LiteralString(f"Expected an argument of type {dtype.name} for argument {arg.name}")
+            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
@@ -377,7 +377,7 @@ class CToPythonWrapper(Wrapper):
             # Get the relevant typed arguments from the original functions
             interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
             # Get the type key
-            interface_types = [(a.dtype, a.rank, a.order) for a in interface_args]
+            interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
             type_to_example_arg = dict(zip(interface_types, interface_args))
             # Get a list of unique keys
