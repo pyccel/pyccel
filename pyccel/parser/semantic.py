@@ -4039,7 +4039,7 @@ class SemanticParser(BasicParser):
         init_func = None
 
         if not any(method.name == '__init__' for method in methods):
-            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
+            argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__init__')
             scope = self.create_new_function_scope('__init__')
             init_func = FunctionDef('__init__', [argument], (), [], cls_name=cls.name, scope=scope)
