@@ -849,8 +849,9 @@ class PyccelDiv(PyccelArithmeticOperator):
 
         if dtype.primitive_type in (PyccelIntegerType(), PyccelBooleanType()):
             dtype = PythonNativeFloat()
-            if class_type.primitive_type in (PyccelIntegerType(), PyccelBooleanType()):
+            if isinstance(class_type, FixedSizeNumericType):
                 class_type = PythonNativeFloat()
+
         return dtype, class_type
 
     def __repr__(self):

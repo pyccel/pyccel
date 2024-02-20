@@ -733,7 +733,6 @@ class SemanticParser(BasicParser):
         dict
             Dictionary containing all the type information which was inferred.
         """
-        print(expr, type(expr))
         d_var = {
                 'datatype' : expr.dtype,
                 'shape'    : expr.shape,
@@ -1054,7 +1053,7 @@ class SemanticParser(BasicParser):
         """
         if elemental:
             def incompatible(i_arg, f_arg):
-                return i_arg.dtype is not f_arg.dtype
+                return i_arg.dtype != f_arg.dtype
         else:
             def incompatible(i_arg, f_arg):
                 return (i_arg.dtype is not f_arg.dtype or
