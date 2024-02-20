@@ -12,7 +12,6 @@ import numpy as np
 from pyccel.utilities.metaclasses import Singleton
 
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
-from .datatypes         import ComplexType
 
 from .cwrapper          import PyccelPyObject
 
@@ -25,6 +24,7 @@ from .literals          import LiteralInteger
 
 from .numpytypes        import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes        import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
+from .numpytypes        import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from .numpytypes        import NumpyNDArrayType
 
 from .variable          import Variable
@@ -215,9 +215,9 @@ numpy_dtype_registry = {NumpyInt8Type()       : numpy_num_to_type[numpy_int_type
                         NumpyFloat32Type()    : numpy_float_type,
                         NumpyFloat64Type()    : numpy_double_type,
                         NumpyFloat128Type()   : numpy_longdouble_type,
-                        ComplexType(NumpyFloat32Type())  : numpy_cfloat_type,
-                        ComplexType(NumpyFloat64Type())  : numpy_cdouble_type,
-                        ComplexType(NumpyFloat128Type()) : numpy_clongdouble_type}
+                        NumpyComplex64Type()  : numpy_cfloat_type,
+                        NumpyComplex128Type() : numpy_cdouble_type,
+                        NumpyComplex256Type() : numpy_clongdouble_type}
 
 # Needed to check for numpy arguments type
 Numpy_Bool_ref       = Variable(dtype=VoidType(),  name = 'Bool')
@@ -231,14 +231,14 @@ Numpy_Complex64_ref  = Variable(dtype=VoidType(),  name = 'Complex64')
 Numpy_Complex128_ref = Variable(dtype=VoidType(),  name = 'Complex128')
 
 numpy_type_check_registry = {
-    NumpyInt8Type()                 : Numpy_Int8_ref,
-    NumpyInt16Type()                : Numpy_Int16_ref,
-    NumpyInt32Type()                : Numpy_Int32_ref,
-    NumpyInt64Type()                : Numpy_Int64_ref,
-    NumpyFloat32Type()              : Numpy_Float_ref,
-    NumpyFloat64Type()              : Numpy_Double_ref,
-    ComplexType(NumpyFloat32Type()) : Numpy_Complex64_ref,
-    ComplexType(NumpyFloat64Type()) : Numpy_Complex128_ref,
+    NumpyInt8Type()       : Numpy_Int8_ref,
+    NumpyInt16Type()      : Numpy_Int16_ref,
+    NumpyInt32Type()      : Numpy_Int32_ref,
+    NumpyInt64Type()      : Numpy_Int64_ref,
+    NumpyFloat32Type()    : Numpy_Float_ref,
+    NumpyFloat64Type()    : Numpy_Double_ref,
+    NumpyComplex64Type()  : Numpy_Complex64_ref,
+    NumpyComplex128Type() : Numpy_Complex128_ref,
 }
 
 # helpers

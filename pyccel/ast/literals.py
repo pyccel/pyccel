@@ -8,7 +8,9 @@ from pyccel.utilities.metaclasses import Singleton
 
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import GenericType, PythonNativeInt, PythonNativeBool
-from .datatypes import PythonNativeFloat, ComplexType, StringType, PythonNativeComplex
+from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
+from .datatypes import PyccelIntegerType, PyccelFloatingPointType, PyccelBooleanType
+from .datatypes import PyccelComplexType
 
 __all__ = (
     'convert_to_literal',
@@ -76,11 +78,11 @@ class LiteralTrue(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_dtype',)
-    _class_type = PythonNativeBool()
+    __slots__ = ('_dtype', '_class_type')
 
     def __init__(self, dtype = PythonNativeBool()):
         self._dtype = dtype
+        self._class_type = dtype
         super().__init__()
 
     @property
@@ -104,11 +106,11 @@ class LiteralFalse(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_dtype',)
-    _class_type = PythonNativeBool()
+    __slots__ = ('_dtype', '_class_type')
 
     def __init__(self, dtype = PythonNativeBool()):
         self._dtype = dtype
+        self._class_type = dtype
         super().__init__()
 
     @property
@@ -135,8 +137,7 @@ class LiteralInteger(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_dtype')
-    _class_type = PythonNativeInt()
+    __slots__   = ('_value', '_dtype', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeInt()):
         assert(value >= 0)
@@ -144,6 +145,7 @@ class LiteralInteger(Literal):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self._value = value
         self._dtype = dtype
+        self._class_type = dtype
         super().__init__()
 
     @property
@@ -173,8 +175,7 @@ class LiteralFloat(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_dtype')
-    _class_type = PythonNativeFloat()
+    __slots__   = ('_value', '_dtype', '_class_type')
 
     def __init__(self, value, *, dtype = PythonNativeFloat()):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -184,6 +185,7 @@ class LiteralFloat(Literal):
         else:
             self._value = float(value)
         self._dtype = dtype
+        self._class_type = dtype
         super().__init__()
 
     @property
@@ -216,7 +218,7 @@ class LiteralComplex(Literal):
     """
     __slots__   = ('_real_part','_imag_part', '_dtype', '_class_type')
 
-    def __new__(cls, real, imag, dtype = PythonNativeComplex):
+    def __new__(cls, real, imag, dtype = PythonNativeComplex()):
         if cls is LiteralImaginaryUnit:
             return super().__new__(cls)
         real_part = cls._collect_python_val(real)
@@ -226,7 +228,7 @@ class LiteralComplex(Literal):
         else:
             return super().__new__(cls)
 
-    def __init__(self, real, imag, dtype = PythonNativeComplex):
+    def __init__(self, real, imag, dtype = PythonNativeComplex()):
         self._real_part = LiteralFloat(self._collect_python_val(real),
                                        dtype = dtype.element_type)
         self._imag_part = LiteralFloat(self._collect_python_val(imag),
@@ -284,10 +286,10 @@ class LiteralImaginaryUnit(LiteralComplex):
         The exact type of the literal.
     """
     __slots__ = ()
-    def __new__(cls, *, dtype = PythonNativeComplex):
+    def __new__(cls, *, dtype = PythonNativeComplex()):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex):
+    def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex()):
         super().__init__(0, 1, dtype)
 
     @property
@@ -419,7 +421,7 @@ def convert_to_literal(value, dtype = None):
         elif isinstance(value, float):
             dtype = PythonNativeFloat()
         elif isinstance(value, complex):
-            dtype = PythonNativeComplex
+            dtype = PythonNativeComplex()
         elif isinstance(value, bool):
             dtype = PythonNativeBool()
         elif isinstance(value, str):
@@ -430,8 +432,6 @@ def convert_to_literal(value, dtype = None):
     # Resolve any datatypes which don't inherit from FixedSizeType
     if isinstance(dtype, StringType):
         return LiteralString(value)
-    elif isinstance(dtype, ComplexType):
-        literal_val = LiteralComplex(value.real, value.imag, dtype)
 
     assert isinstance(dtype, FixedSizeType)
 
@@ -443,6 +443,8 @@ def convert_to_literal(value, dtype = None):
             literal_val = PyccelUnarySub(LiteralInteger(-value, dtype))
     elif isinstance(primitive_type, PyccelFloatingPointType):
         literal_val = LiteralFloat(value, dtype)
+    elif isinstance(primitive_type, PyccelComplexType):
+        literal_val = LiteralComplex(value, dtype)
     elif isinstance(primitive_type, PyccelBooleanType):
         if value:
             literal_val = LiteralTrue(dtype)

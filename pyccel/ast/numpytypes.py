@@ -10,8 +10,8 @@ from functools import lru_cache
 
 from pyccel.utilities.stage   import PyccelStage
 
-from .datatypes import FixedSizeNumericType, HomogeneousContainerType, ComplexType
-from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from .datatypes import FixedSizeNumericType, HomogeneousContainerType
+from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 
 __all__ = (
         'NumpyInt8Type',
@@ -26,7 +26,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-primitive_type_precedence = [PyccelBooleanType(), PyccelIntegerType(), PyccelFloatingPointType()]
+primitive_type_precedence = [PyccelBooleanType(), PyccelIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
 
 #==============================================================================
 
@@ -42,8 +42,6 @@ class NumpyNumericType(FixedSizeNumericType):
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
-        elif isinstance(other, ComplexType):
-            return ComplexType(self + other.element_type)
         elif isinstance(other, FixedSizeNumericType):
             primitive_dtype = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
                                                             primitive_type_precedence.index(other.primitive_type))]
@@ -56,8 +54,6 @@ class NumpyNumericType(FixedSizeNumericType):
     def __radd__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
-        elif isinstance(other, ComplexType):
-            return ComplexType(self + other.element_type)
         elif isinstance(other, FixedSizeNumericType):
             primitive_dtype = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
                                                             primitive_type_precedence.index(other.primitive_type))]
@@ -147,6 +143,41 @@ class NumpyFloat128Type(NumpyNumericType):
 
 #==============================================================================
 
+class NumpyComplex64Type(NumpyNumericType):
+    """
+    Class representing NumPy's complex64 type.
+
+    Class representing NumPy's complex64 type.
+    """
+    __slots__ = ()
+    _name = 'complex64'
+    _primitive_type = PyccelComplexType()
+    _precision = 4
+
+class NumpyComplex128Type(NumpyNumericType):
+    """
+    Class representing NumPy's complex128 type.
+
+    Class representing NumPy's complex128 type.
+    """
+    __slots__ = ()
+    _name = 'complex128'
+    _primitive_type = PyccelComplexType()
+    _precision = 8
+
+class NumpyComplex256Type(NumpyNumericType):
+    """
+    Class representing NumPy's complex256 type.
+
+    Class representing NumPy's complex256 type.
+    """
+    __slots__ = ()
+    _name = 'complex256'
+    _primitive_type = PyccelComplexType()
+    _precision = 16
+
+#==============================================================================
+
 class NumpyNDArrayType(HomogeneousContainerType):
     """
     Class representing the NumPy ND array type.
@@ -166,13 +197,9 @@ class NumpyNDArrayType(HomogeneousContainerType):
     def __add__(self, other):
         if isinstance(other, self.element_type):
             return self
-        elif isinstance(other, ComplexType):
-            return NumpyNDArrayType(other)
         elif isinstance(other, NumpyNumericType):
             elem_type = self.element_type
-            if isinstance(elem_type, ComplexType):
-                return self
-            elif primitive_type_precedence.index(elem_type.primitive_type) > primitive_type_precedence.index(other.primitive_type):
+            if primitive_type_precedence.index(elem_type.primitive_type) > primitive_type_precedence.index(other.primitive_type):
                 return self
             else:
                 return NumpyNDArrayType(other)

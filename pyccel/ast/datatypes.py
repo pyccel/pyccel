@@ -26,12 +26,14 @@ __all__ = (
         'PyccelBooleanType',
         'PyccelIntegerType',
         'PyccelFloatingPointType',
+        'PyccelComplexType',
         'PyccelCharacterType'
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
         'PythonNativeBool',
         'PythonNativeInt',
         'PythonNativeFloat',
+        'PythonNativeComplex',
         'VoidType',
         'GenericType',
         'SymbolicType',
@@ -39,7 +41,6 @@ __all__ = (
         # ------------ Container types ------------
         'TupleType',
         'HomogeneousContainerType',
-        'ComplexType',
         'StringType',
         'HomogeneousTupleType',
         'HomogeneousListType',
@@ -48,8 +49,6 @@ __all__ = (
         'DictType',
         # ---------- Functions -------------------
         'DataTypeFactory',
-        # ---------- Utility variables -----------
-        'PythonNativeComplex'
 )
 
 #==============================================================================
@@ -102,12 +101,21 @@ class PyccelIntegerType(PrimitiveType):
 
 class PyccelFloatingPointType(PrimitiveType):
     """
-    Class representing a boolean datatype.
+    Class representing a floating point datatype.
 
-    Class representing a boolean datatype.
+    Class representing a floating point datatype.
     """
     __slots__ = ()
     _name = 'floating point'
+
+class PyccelComplexType(PrimitiveType):
+    """
+    Class representing a complex datatype.
+
+    Class representing a complex datatype.
+    """
+    __slots__ = ()
+    _name = 'complex'
 
 class PyccelCharacterType(PrimitiveType):
     """
@@ -183,9 +191,9 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
 
 class FixedSizeNumericType(FixedSizeType):
     """
-    Base class representing a built-in scalar numeric datatype.
+    Base class representing a scalar numeric datatype.
 
-    The base class representing a built-in scalar numeric datatype which can be
+    The base class representing a scalar numeric datatype which can be
     represented in memory. E.g. int32, int64.
     """
     __slots__ = ()
@@ -203,7 +211,14 @@ class FixedSizeNumericType(FixedSizeType):
         """
         return self._precision # pylint: disable=no-member
 
-class PythonNativeBool(FixedSizeNumericType):
+class PythonNativeNumericTypes(FixedSizeNumericType):
+    """
+    Base class representing a built-in scalar numeric datatype.
+
+    Base class representing a built-in scalar numeric datatype.
+    """
+
+class PythonNativeBool(PythonNativeNumericTypes):
     """
     Class representing Python's native boolean type.
 
@@ -218,12 +233,12 @@ class PythonNativeBool(FixedSizeNumericType):
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeInt()
-        elif isinstance(other, FixedSizeNumericType):
+        elif isinstance(other, PythonNativeNumericTypes):
             return other
         else:
             return NotImplemented
 
-class PythonNativeInt(FixedSizeNumericType):
+class PythonNativeInt(PythonNativeNumericTypes):
     """
     Class representing Python's native integer type.
 
@@ -238,12 +253,12 @@ class PythonNativeInt(FixedSizeNumericType):
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
-        elif isinstance(other, FixedSizeNumericType):
+        elif isinstance(other, PythonNativeNumericTypes):
             return other
         else:
             return NotImplemented
 
-class PythonNativeFloat(FixedSizeNumericType):
+class PythonNativeFloat(PythonNativeNumericTypes):
     """
     Class representing Python's native floating point type.
 
@@ -258,7 +273,25 @@ class PythonNativeFloat(FixedSizeNumericType):
     def __add__(self, other):
         if isinstance(other, PythonNativeComplex):
             return other
-        elif isinstance(other, FixedSizeNumericType):
+        elif isinstance(other, PythonNativeNumericTypes):
+            return self
+        else:
+            return NotImplemented
+
+class PythonNativeComplex(PythonNativeNumericTypes):
+    """
+    Class representing Python's native complex type.
+
+    Class representing Python's native complex type.
+    """
+    __slots__ = ('_element_type',)
+    _name = 'complex'
+    _primitive_type = PyccelComplexType()
+    _precision = 8
+
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, PythonNativeNumericTypes):
             return self
         else:
             return NotImplemented
@@ -391,69 +424,6 @@ class HomogeneousContainerType(PyccelType):
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, (self.element_type,))
-
-class ComplexType(HomogeneousContainerType):
-    """
-    Class representing Python's native complex type.
-
-    Class representing Python's native complex type.
-    """
-    __slots__ = ('_element_type',)
-    _name = 'complex'
-
-    def __init__(self, float_type):
-        assert isinstance(float_type, FixedSizeNumericType)
-        assert float_type.primitive_type is PyccelFloatingPointType()
-        self._element_type = float_type
-        super().__init__()
-
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, FixedSizeNumericType):
-            return self
-        elif isinstance(other, ComplexType):
-            return ComplexType(self.element_type + other.element_type)
-        else:
-            return NotImplemented
-
-    @property
-    def precision(self):
-        """
-        Precision of the datatype of the object.
-
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
-        """
-        return self._element_type.precision
-
-    def __str__(self):
-        float_name = str(self._element_type)
-        start = float_name[:5]
-        end = float_name[5:]
-        if start == 'float':
-            prec = int(end)*2 if end else ''
-            return f'complex{prec}'
-        else:
-            return f'complex[{float_name}]'
-
-    def __reduce__(self):
-        """
-        Function called during pickling.
-
-        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
-        This function is necessary to ensure that DataTypes remain singletons.
-
-        Returns
-        -------
-        callable
-            A callable to create the object.
-        args
-            A tuple containing any arguments to be passed to the callable.
-        """
-        return (self.__class__, ())
 
 class StringType(HomogeneousContainerType, metaclass=Singleton):
     """
@@ -678,8 +648,6 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
     return newclass
 
 #==============================================================================
-
-PythonNativeComplex = ComplexType(PythonNativeFloat())
 #
 #default_precision = {Float : 8,
 #                     Int : numpy.dtype(int).alignment,

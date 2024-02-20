@@ -9,8 +9,8 @@ import cmath
 
 from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
-from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, ComplexType
-from pyccel.ast.datatypes import PythonNativeComplex
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
+from pyccel.ast.datatypes import PyccelComplexType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
@@ -75,11 +75,11 @@ class CmathFunctionComplex(MathFunctionBase):
         The expression passed as argument to the function.
     """
     __slots__ = ()
-    _dtype = PythonNativeComplex
+    _dtype = PythonNativeComplex()
     _shape = None
     _rank  = 0
     _order = None
-    _class_type = PythonNativeComplex
+    _class_type = PythonNativeComplex()
 
     def __init__(self, z : 'TypedAstNode'):
         super().__init__(z)
@@ -356,7 +356,7 @@ class CmathIsfinite(CmathFunctionBool):
     __slots__ = ()
     name = 'isfinite'
     def __new__(cls, z):
-        if not isinstance(z.dtype, ComplexType):
+        if not isinstance(z.dtype.primitive, PyccelComplexType):
             return MathIsfinite(z)
         else:
             return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
@@ -377,7 +377,7 @@ class CmathIsinf   (CmathFunctionBool):
     __slots__ = ()
     name = 'isinf'
     def __new__(cls, z):
-        if not isinstance(z.dtype, ComplexType):
+        if not isinstance(z.dtype.primitive, PyccelComplexType):
             return MathIsinf(z)
         else:
             return PyccelOr(MathIsinf(PythonImag(z)), MathIsinf(PythonReal(z)))
@@ -398,7 +398,7 @@ class CmathIsnan   (CmathFunctionBool):
     __slots__ = ()
     name = 'isnan'
     def __new__(cls, z):
-        if not isinstance(z.dtype, ComplexType):
+        if not isinstance(z.dtype.primitive, PyccelComplexType):
             return MathIsnan(z)
         else:
             return PyccelOr(MathIsnan(PythonImag(z)), MathIsnan(PythonReal(z)))
@@ -461,11 +461,11 @@ class CmathRect(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'rect'
-    _dtype = PythonNativeComplex
+    _dtype = PythonNativeComplex()
     _shape = None
     _rank  = 0
     _order = None
-    _class_type = PythonNativeComplex
+    _class_type = PythonNativeComplex()
     def __init__(self, r, phi):
         super().__init__(r, phi)
 
@@ -479,8 +479,8 @@ cmath_functions = [PyccelFunctionDef(v.name, v) for v in
             CmathPolar, CmathRect, CmathSin, CmathSinh, CmathSqrt, CmathTan, CmathTanh)]
 
 cmath_constants = { **math_constants,
-    'infj': Constant(PythonNativeComplex, 'infj', value=cmath.infj),
-    'nanj': Constant(PythonNativeComplex, 'nanj', value=cmath.nanj),
+    'infj': Constant(PythonNativeComplex(), 'infj', value=cmath.infj),
+    'nanj': Constant(PythonNativeComplex(), 'nanj', value=cmath.nanj),
     }
 
 cmath_mod = Module('cmath',

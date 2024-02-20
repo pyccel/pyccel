@@ -1010,7 +1010,7 @@ pytype_parse_registry = {
     PythonNativeFloat() : 'd',
     #(PythonNativeFloat(), 8)         : 'd',
     #(PythonNativeFloat(), 4)         : 'f',
-    PythonNativeComplex : 'O',
+    PythonNativeComplex() : 'O',
     #(NativeComplex(), 4)       : 'O',
     #(NativeComplex(), 8)       : 'O',
     PythonNativeBool()         : 'p',
@@ -1034,7 +1034,7 @@ py_to_c_registry = {
     PythonNativeFloat()     : 'PyDouble_to_Double',
     #(NativeComplex(), 4)   : 'PyComplex_to_Complex64',
     #(NativeComplex(), 8)   : 'PyComplex_to_Complex128',
-    PythonNativeComplex   : 'PyComplex_to_Complex128',
+    PythonNativeComplex()   : 'PyComplex_to_Complex128',
     }
 
 def C_to_Python(c_object):
@@ -1083,7 +1083,7 @@ c_to_py_registry = {
     PythonNativeFloat()    : 'Double_to_PyDouble',
     #(PythonNativeFloat(), 4)     : 'Float_to_NumpyDouble',
     #(PythonNativeFloat(), 8)     : 'Double_to_NumpyDouble',
-    PythonNativeComplex  : 'Complex128_to_PyComplex',
+    PythonNativeComplex()  : 'Complex128_to_PyComplex',
     #(NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
     #(NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
     }
@@ -1149,7 +1149,7 @@ check_type_registry = {
     PythonNativeFloat()    : 'PyIs_PythonNativeFloat',
     #(PythonNativeFloat(), 4)     : 'PyIs_Float',
     #(PythonNativeFloat(), 8)     : 'PyIs_Double',
-    PythonNativeComplex  : 'PyIs_NativeComplex',
+    PythonNativeComplex()  : 'PyIs_NativeComplex',
     #(NativeComplex(), 4)   : 'PyIs_Complex64',
     #(NativeComplex(), 8)   : 'PyIs_Complex128'
     }

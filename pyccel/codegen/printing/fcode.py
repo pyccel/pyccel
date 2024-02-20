@@ -34,9 +34,9 @@ from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
 from pyccel.ast.c_concepts import CNativeInt
 
-from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat, ComplexType
+from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from pyccel.ast.datatypes import CustomDataType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -185,11 +185,15 @@ iso_c_binding = {
         2  : 'C_INT16_T',
         4  : 'C_INT32_T',
         8  : 'C_INT64_T',
-        16 : 'C_INT128_T'}, #no supported yet
+        16 : 'C_INT128_T'}, #not supported yet
     PyccelFloatingPointType() : {
         4  : 'C_FLOAT',
         8  : 'C_DOUBLE',
-        16 : 'C_LONG_DOUBLE'},
+        16 : 'C_LONG_DOUBLE'}, #not supported yet
+    PyccelComplexType() : {
+        4  : 'C_FLOAT_COMPLEX',
+        8  : 'C_DOUBLE_COMPLEX',
+        16 : 'C_LONG_DOUBLE_COMPLEX'}, #not supported yet
     PyccelBooleanType() : {
         -1 : "C_BOOL"}
 }
@@ -321,11 +325,7 @@ class FCodePrinter(CodePrinter):
         Prints the kind(precision) of a literal value or its shortcut if possible
         """
         dtype = expr.dtype
-        if isinstance(dtype, ComplexType):
-            elem_type = dtype.element_type
-            constant_name = f'{iso_c_binding[elem_type.primitive_type][elem_type.precision]}_COMPLEX'
-        else:
-            constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
+        constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
 
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:

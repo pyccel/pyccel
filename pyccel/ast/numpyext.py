@@ -23,8 +23,8 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
-from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat, ComplexType
-from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
+from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType
 
 from .internals      import PyccelInternalFunction, Slice
@@ -36,6 +36,7 @@ from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
+from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .type_annotations import typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant
@@ -121,23 +122,23 @@ __all__ = (
 )
 
 dtype_registry.update({
-    'int8' : NumpyInt8Type(),
-    'int16' : NumpyInt16Type(),
-    'int32' : NumpyInt32Type(),
-    'int64' : NumpyInt64Type(),
-    'i1' : NumpyInt8Type(),
-    'i2' : NumpyInt16Type(),
-    'i4' : NumpyInt32Type(),
-    'i8' : NumpyInt64Type(),
-    'float32' : NumpyFloat32Type(),
-    'float64' : NumpyFloat64Type(),
-    'float128' : NumpyFloat128Type(),
-    'f4' : NumpyFloat32Type(),
-    'f8' : NumpyFloat64Type(),
-    'complex64' : ComplexType(NumpyFloat32Type()),
-    'complex128' : ComplexType(NumpyFloat64Type()),
-    'c8' : ComplexType(NumpyFloat32Type()),
-    'c16' : ComplexType(NumpyFloat64Type()),
+    'int8'       : NumpyInt8Type(),
+    'int16'      : NumpyInt16Type(),
+    'int32'      : NumpyInt32Type(),
+    'int64'      : NumpyInt64Type(),
+    'i1'         : NumpyInt8Type(),
+    'i2'         : NumpyInt16Type(),
+    'i4'         : NumpyInt32Type(),
+    'i8'         : NumpyInt64Type(),
+    'float32'    : NumpyFloat32Type(),
+    'float64'    : NumpyFloat64Type(),
+    'float128'   : NumpyFloat128Type(),
+    'f4'         : NumpyFloat32Type(),
+    'f8'         : NumpyFloat64Type(),
+    'complex64'  : NumpyComplex64Type(),
+    'complex128' : NumpyComplex128Type(),
+    'c8'         : NumpyComplex64Type(),
+    'c16'        : NumpyComplex128Type(),
     })
 
 #=======================================================================================
@@ -427,14 +428,14 @@ class NumpyComplex64(NumpyComplex):
     """ Represents a call to numpy.complex64() function.
     """
     __slots__ = ()
-    _dtype = ComplexType(NumpyFloat32Type())
+    _dtype = NumpyComplex64Type()
     name = 'complex64'
 
 class NumpyComplex128(NumpyComplex):
     """ Represents a call to numpy.complex128() function.
     """
     __slots__ = ()
-    _dtype = ComplexType(NumpyFloat64Type())
+    _dtype = NumpyComplex128Type()
     name = 'complex128'
 
 #=======================================================================================
@@ -1497,7 +1498,7 @@ class NumpyNorm(PyccelInternalFunction):
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
         arg_dtype = arg.dtype
-        if not (isinstance(arg_dtype, ComplexType) or isinstance(arg_dtype.primitive_type, PyccelFloatingPointType)):
+        if not isinstance(arg_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
             arg = NumpyFloat64(arg)
             self._dtype = NumpyFloat64Type()
         else:
@@ -1600,7 +1601,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             The argument passed to the function.
         """
         x_dtype
-        if not (isinstance(x_dtype, ComplexType) or isinstance(x_dtype.primitive_type, PyccelFloatingPointType)):
+        if not isinstance(x_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
             self._dtype = NumpyFloat64Type()
         else:
             self._dtype = numpy_precision_map[(PyccelFloatingPointType(), x_dtype.precision)]
@@ -1768,10 +1769,11 @@ class NumpyAbs(NumpyUfuncUnary):
     __slots__ = ()
     name = 'abs'
     def _set_dtype(self, x):
-        if isinstance(x, ComplexType):
-            dtype = x.dtype.element_type
+        x_dtype = x.dtype
+        if isinstance(x_dtype.primitive_type, PyccelComplexType):
+            dtype = x_dtype.element_type
         else:
-            dtype = x.dtype
+            dtype = x_dtype
         self._dtype = process_dtype(dtype)
 
 class NumpyFloor(NumpyUfuncUnary):
@@ -2198,14 +2200,14 @@ class NumpySize(PyccelInternalFunction):
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
-    NumpyInt8Type() : NumpyInt8,
-    NumpyInt16Type() : NumpyInt16,
-    NumpyInt32Type() : NumpyInt32,
-    NumpyInt64Type() : NumpyInt64,
-    NumpyFloat32Type() : NumpyFloat32,
-    NumpyFloat64Type() : NumpyFloat64,
-    ComplexType(NumpyFloat32Type()) : NumpyComplex64,
-    ComplexType(NumpyFloat64Type()) : NumpyComplex128,
+    NumpyInt8Type()       : NumpyInt8,
+    NumpyInt16Type()      : NumpyInt16,
+    NumpyInt32Type()      : NumpyInt32,
+    NumpyInt64Type()      : NumpyInt64,
+    NumpyFloat32Type()    : NumpyFloat32,
+    NumpyFloat64Type()    : NumpyFloat64,
+    NumpyComplex64Type()  : NumpyComplex64,
+    NumpyComplex128Type() : NumpyComplex128,
     })
 
 #==============================================================================

@@ -9,7 +9,7 @@ from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
 from .datatypes import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
-                        ComplexType, StringType, TupleType, CustomDataType)
+                        PythonNativeComplex, StringType, TupleType, CustomDataType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -27,7 +27,7 @@ __all__ = ('BooleanClass',
 
 #=======================================================================================
 
-ComplexClass = ClassDef('complex', class_type = ComplexType(PythonNativeFloat()),
+ComplexClass = ClassDef('complex', class_type = PythonNativeComplex(),
         methods=[
             PyccelFunctionDef('imag', func_class = PythonImag,
                 decorators={'property':'property', 'numpy_wrapper':'numpy_wrapper'}),
@@ -175,11 +175,11 @@ StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
 #=======================================================================================
 
 literal_classes = {
-        PythonNativeBool()               : BooleanClass,
-        PythonNativeInt()                : IntegerClass,
-        PythonNativeFloat()              : FloatClass,
-        ComplexType(PythonNativeFloat()) : ComplexClass,
-        StringType()                     : StringClass
+        PythonNativeBool()    : BooleanClass,
+        PythonNativeInt()     : IntegerClass,
+        PythonNativeFloat()   : FloatClass,
+        PythonNativeComplex() : ComplexClass,
+        StringType()          : StringClass
 }
 
 #=======================================================================================
