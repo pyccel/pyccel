@@ -330,6 +330,11 @@ class ListReverse(PyccelInternalFunction) :
     
     reverse() method does not return any value but reverses the objects of the list in place.
 
+    >>> a = [1, 2, 3]
+    >>> a.reverse()
+    >>> print(a)
+    [3, 2, 1]
+
     Parameters
     ----------
     list_variable : Variable
