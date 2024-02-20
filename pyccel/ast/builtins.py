@@ -1147,7 +1147,7 @@ class PythonType(PyccelAstNode):
     obj : TypedAstNode
           The object whose type we wish to investigate.
     """
-    __slots__ = ('_dtype''_obj')
+    __slots__ = ('_dtype','_obj')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):

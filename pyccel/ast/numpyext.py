@@ -323,7 +323,7 @@ class NumpyReal(PythonReal):
     __slots__ = ('_dtype','_rank','_shape','_order','_class_type')
     name = 'real'
     def __new__(cls, arg):
-        if isinstance(arg.dtype, NativeBool):
+        if isinstance(arg.dtype, PythonNativeBool):
             return NumpyInt(arg)
         else:
             return super().__new__(cls, arg)
@@ -363,7 +363,7 @@ class NumpyImag(PythonImag):
     name = 'imag'
     def __new__(cls, arg):
 
-        if not isinstance(arg.dtype, NativeComplex):
+        if not isinstance(arg.dtype.primitive_type, PyccelComplexType):
             dtype = PythonNativeInt() if isinstance(arg.dtype, PythonNativeBool) else arg.dtype
             if arg.rank == 0:
                 return convert_to_literal(0, dtype)
@@ -818,7 +818,7 @@ class NumpyMatmul(PyccelInternalFunction):
 
         args      = (a, b)
         type_info = NumpyResultType(*args)
-        self._dtype = type_info.dtype
+        self._dtype = process_dtype(type_info.dtype)
 
         if not (a.shape is None or b.shape is None):
 
@@ -841,7 +841,7 @@ class NumpyMatmul(PyccelInternalFunction):
         else:
             self._order = None if self._rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
 
     @property
     def a(self):
@@ -948,7 +948,7 @@ class NumpyLinspace(NumpyNewArray):
         elif endpoint is False:
             self._endpoint = LiteralFalse()
         else:
-            if not isinstance(endpoint.dtype, NativeBool):
+            if not isinstance(endpoint.dtype, PythonNativeBool):
                 errors.report(WRONG_LINSPACE_ENDPOINT, symbol=endpoint, severity="fatal")
             self._endpoint = endpoint
 
@@ -1054,7 +1054,7 @@ class NumpyWhere(PyccelInternalFunction):
 
         args      = (x, y)
         type_info = NumpyResultType(*args)
-        self._dtype = type_info.dtype
+        self._dtype = process_dtype(type_info.dtype)
 
         shape = broadcast(x.shape, y.shape)
         shape = broadcast(condition.shape, shape)
@@ -1063,7 +1063,7 @@ class NumpyWhere(PyccelInternalFunction):
         self._rank  = len(shape)
         self._order = None if self._rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
         super().__init__(condition, x, y)
 
     @property
@@ -1109,11 +1109,11 @@ class NumpyRand(PyccelInternalFunction):
         self._shape = None if self._rank == 0 else args
         self._order = None if self._rank < 2 else 'C'
         if self.rank == 0:
-            self._dtype = NumpyFloat64()
+            self._dtype = PythonNativeFloat()
             self._class_Type = self._dtype
         else:
-            self._dtype = PythonNativeFloat()
-            self._class_type = NumpyNDArrayType()
+            self._dtype = NumpyFloat64()
+            self._class_type = NumpyNDArrayType(self._dtype)
 
 #==============================================================================
 class NumpyRandint(PyccelInternalFunction):
@@ -1149,12 +1149,13 @@ class NumpyRandint(PyccelInternalFunction):
         if size is None:
             self._dtype = PythonNativeInt()
             self._rank = 0
+            self._class_type = self._dtype
         else:
             self._dtype = NumpyInt64()
             self._rank = len(self.shape)
+            self._class_type = NumpyNDArrayType(self._dtype)
         self._order   = None if self._rank < 2 else 'C'
         self._rand    = NumpyRand() if size is None else NumpyRand(*size)
-        self._class_type = NumpyNDArrayType()
         self._low     = low
         self._high    = high
         super().__init__()
@@ -1512,7 +1513,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = None
             self._order = None
             self._rank  = 0
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
 
     @property
     def arg(self):
@@ -1580,7 +1581,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1633,7 +1634,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_dtype(x1, x2)
         self._set_shape_rank(x1, x2)
         self._set_order(x1, x2)
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
 
     def _set_shape_rank(self, x1, x2):
         self._shape = broadcast(x1.shape, x2.shape)
@@ -1806,8 +1807,8 @@ class NumpyMod(NumpyUfuncBinary):
 
     def __init__(self, x1, x2):
         super().__init__(x1, x2)
-        x1 = NumpyInt(x1) if isinstance(x1.dtype, NativeBool) else x1
-        x2 = NumpyInt(x2) if isinstance(x2.dtype, NativeBool) else x2
+        x1 = NumpyInt(x1) if isinstance(x1.dtype, PythonNativeBool) else x1
+        x2 = NumpyInt(x2) if isinstance(x2.dtype, PythonNativeBool) else x2
         self._args = (x1, x2)
 
     def _set_shape_rank(self, x1, x2):
@@ -2093,7 +2094,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
         An array for which the non-zero elements should be counted.
     axis : int, optional
         The dimension along which the non-zero elements are counted.
-    keepdims : NativeBool
+    keepdims : LiteralTrue | LiteralFalse
         Indicates if output arrays should have the same number of dimensions
         as arg.
     """
@@ -2118,18 +2119,19 @@ class NumpyCountNonZero(PyccelInternalFunction):
             else:
                 self._shape = (LiteralInteger(1),)*a.rank
         else:
-            self._dtype = PythonNativeInt()
             if axis is not None:
+                self._dtype = NumpyInt64Type()
                 self._shape = list(a.shape)
                 self._shape.pop(axis.python_value)
                 self._rank  = a.rank-1
                 self._order = a.order if a.rank>2 else None
+                self._class_type = NumpyNDArrayType(self._dtype)
             else:
+                self._dtype = PythonNativeInt()
                 self._rank  = 0
                 self._shape = None
                 self._order = None
-
-        self._class_type = NumpyNDArrayType()
+                self._class_type = self._dtype
 
         self._arr = a
         self._axis = axis

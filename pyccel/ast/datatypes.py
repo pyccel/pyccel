@@ -567,7 +567,7 @@ class InhomogeneousTupleType(ContainerType, TupleType):
         args
             A tuple containing any arguments to be passed to the callable.
         """
-        return (self.__class__, tuple(*self._element_types))
+        return (self.__class__, tuple(self._element_types))
 
 class DictType(ContainerType):
     __slots__ = ('_index_type', '_value_type')

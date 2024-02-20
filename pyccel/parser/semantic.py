@@ -64,7 +64,7 @@ from pyccel.ast.class_defs import get_cls_base
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, CustomDataType
+from pyccel.ast.datatypes import DataTypeFactory, CustomDataType, PyccelFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
 #from pyccel.ast.datatypes import (NativeInteger,
 #                                  NativeFloat, NativeString,
@@ -1024,8 +1024,7 @@ class SemanticParser(BasicParser):
                        Indicates whether rank information should be included
                        Default : True
         """
-        dtype = var.dtype
-        descr = str(dtype)
+        descr = str(var.class_type)
         if include_rank and var.rank>0:
             dims = ','.join(':'*var.rank)
             descr += f'[{dims}]'
@@ -1865,6 +1864,7 @@ class SemanticParser(BasicParser):
                 dtype = base.datatype
                 class_type = base.class_type
                 if class_type is dtype:
+                    dtype = numpy_process_dtype(dtype)
                     class_type = NumpyNDArrayType(dtype)
                 if base.rank != 0:
                     raise errors.report("Can't index a vector type",
@@ -2061,13 +2061,13 @@ class SemanticParser(BasicParser):
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 is_const = t.is_const, is_optional = False,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(numpy_process_dtype(t.datatype)),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(numpy_process_dtype(t.datatype)),
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
@@ -2682,7 +2682,7 @@ class SemanticParser(BasicParser):
             mul1, mul2 = arg.value.args
             mul1_syn, mul2_syn = expr.args[0].value.args
             is_abs = False
-            if mul1 is mul2 and mul1.dtype in (NativeInteger(), NativeFloat()):
+            if mul1 is mul2 and isinstance(mul1.dtype.primitive_type, (PyccelIntegerType, PyccelFloatingPointType)):
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')
@@ -2717,7 +2717,7 @@ class SemanticParser(BasicParser):
         elif isinstance(arg.value, PyccelPow):
             base, exponent = arg.value.args
             base_syn, _ = expr.args[0].value.args
-            if exponent == 2 and base.dtype in (NativeInteger(), NativeFloat()):
+            if exponent == 2 and isinstance(base.dtype.primitive_type, (PyccelIntegerType, PyccelFloatingPointType)):
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')
