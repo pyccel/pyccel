@@ -215,7 +215,7 @@ def get_cls_base(dtype, container_type):
         return None
     elif isinstance(container_type, (NumpyNDArrayType, NumpyNumericType)):
         return NumpyArrayClass
-    elif isinstance(container_type, NativeTuple):
+    elif isinstance(container_type, TupleType):
         return TupleClass
     else:
         raise NotImplementedError(f"No class definition found for type {container_type}")

@@ -3501,6 +3501,7 @@ class SemanticParser(BasicParser):
             d_var['order'] = None
         d_var['shape'] = shape
         d_var['class_type'] = HomogeneousListType(dtype)
+        d_var['cls_base'] = get_cls_base(dtype, HomogeneousListType(dtype))
 
         # ...
         # TODO [YG, 30.10.2020]:
