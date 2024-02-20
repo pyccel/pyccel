@@ -63,6 +63,18 @@ class NumpyNumericType(FixedSizeNumericType):
         else:
             return NotImplemented
 
+    def __eq__(self, other):
+        if other is self:
+            return True
+        elif isinstance(other, NumpyNumericType):
+            return False
+        elif isinstance(other, FixedSizeNumericType):
+            return other.primitive_type == self.primitive_type and \
+                    other.precision == self.precision
+
+    def __hash__(self):
+        return hash(f"numpy.{self}")
+
 class NumpyInt8Type(NumpyNumericType):
     """
     Class representing NumPy's int8 type.
@@ -190,7 +202,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
 
     def __init__(self, dtype):
         if pyccel_stage == 'semantic':
-            assert isinstance(dtype, NumpyNumericType)
+            assert isinstance(dtype, (NumpyNumericType, PythonNativeBool))
         self._element_type = dtype
         super().__init__()
 
