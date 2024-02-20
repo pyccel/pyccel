@@ -875,12 +875,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListClear(self, expr):
         method_name = self._print(expr.name)
-        name = self._print(expr.list_variable)
-        return f"{name}.{method_name}()\n"
+        list_var = self._print(expr.list_variable)
+        return f"{list_var}.{method_name}()\n"
 
     def _print_ListReverse(self, expr):
-        name = self._print(expr.list_variable)
-        return f"{name}.reverse()\n"
+        method_name = self._print(expr.name)
+        list_var = self._print(expr.list_variable)
+        return f"{list_var}.{method_name}()\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
