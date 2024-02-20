@@ -402,15 +402,12 @@ def convert_to_literal(value, dtype = None):
     dtype : DataType
         The datatype of the Python value.
         Default : Matches type of 'value'.
-    precision : int
-        The precision of the value in the generated code.
-        Default : Python precision (see default_precision).
 
     Returns
     -------
     Literal
         The Python value 'value' expressed as a literal
-        with the specified dtype and precision.
+        with the specified dtype.
     """
     from .operators import PyccelUnarySub # Imported here to avoid circular import
 

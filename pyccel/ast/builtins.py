@@ -279,7 +279,7 @@ class PythonComplex(PyccelInternalFunction):
             else:
                 imag_part += arg1.python_value
 
-            return LiteralComplex(real_part, imag_part, precision = cls._precision)
+            return LiteralComplex(real_part, imag_part, dtype = cls._dtype)
 
 
         # Split arguments depending on their type to ensure that the arguments are
@@ -419,10 +419,10 @@ class PythonFloat(PyccelInternalFunction):
     _class_type = PythonNativeFloat()
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat) and arg.precision == cls._precision:
+        if isinstance(arg, LiteralFloat) and arg.dtype == cls._dtype:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
-            return LiteralFloat(arg.python_value, precision = cls._precision)
+            return LiteralFloat(arg.python_value, dtype = cls._dtype)
         return super().__new__(cls)
 
     def __init__(self, arg):
@@ -464,7 +464,7 @@ class PythonInt(PyccelInternalFunction):
 
     def __new__(cls, arg):
         if isinstance(arg, LiteralInteger):
-            return LiteralInteger(arg.python_value, precision = cls._precision)
+            return LiteralInteger(arg.python_value, dtype = cls._dtype)
         else:
             return super().__new__(cls)
 
@@ -587,7 +587,7 @@ class PythonTuple(TypedAstNode):
         """
         Indicates whether the tuple is homogeneous or inhomogeneous.
 
-        Indicates whether all elements of the tuple have the same dtype, precision,
+        Indicates whether all elements of the tuple have the same dtype,
         rank, etc (homogenous) or if these values can vary (inhomogeneous).
         """
         return self._is_homogeneous
@@ -748,7 +748,7 @@ class PythonList(TypedAstNode):
         """
         Indicates whether the list is homogeneous or inhomogeneous.
 
-        Indicates whether all elements of the list have the same dtype, precision,
+        Indicates whether all elements of the list have the same dtype,
         rank, etc (homogenous) or if these values can vary (inhomogeneous). Lists
         are always homogeneous.
         """
@@ -1038,7 +1038,7 @@ class PythonMax(PyccelInternalFunction):
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
-            types = ', '.join('{xi.dtype}({xi.precision})' for xi in x)
+            types = ', '.join(str(xi.dtype) for xi in x)
             raise PyccelError("Cannot determine final dtype of 'max' call with arguments of different "
                              f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
@@ -1075,7 +1075,7 @@ class PythonMin(PyccelInternalFunction):
         elif not isinstance(x, (PythonTuple, PythonList)):
             raise TypeError(f'Unknown type of {type(x)}.' )
         if not x.is_homogeneous:
-            types = ', '.join(f'{xi.dtype}({xi.precision})' for xi in x)
+            types = ', '.join(str(xi.dtype) for xi in x)
             raise PyccelError("Cannot determine final dtype of 'min' call with arguments of different "
                               f"types ({types}). Please cast arguments to the desired dtype")
         self._dtype     = x.dtype
