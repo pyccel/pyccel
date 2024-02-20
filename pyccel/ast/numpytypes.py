@@ -10,8 +10,9 @@ from functools import lru_cache
 
 from pyccel.utilities.stage   import PyccelStage
 
-from .datatypes import FixedSizeNumericType, HomogeneousContainerType
+from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PythonNativeNumericTypes
 
 __all__ = (
         'NumpyInt8Type',
@@ -195,7 +196,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, self.element_type):
+        if isinstance(other, PythonNativeNumericTypes):
             return self
         elif isinstance(other, NumpyNumericType):
             elem_type = self.element_type

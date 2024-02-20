@@ -30,6 +30,7 @@ __all__ = (
         'PyccelCharacterType'
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
+        'PythonNativeNumericTypes',
         'PythonNativeBool',
         'PythonNativeInt',
         'PythonNativeFloat',

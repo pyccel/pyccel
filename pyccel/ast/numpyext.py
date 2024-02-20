@@ -540,7 +540,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
     def __init__(self, *args, init_dtype = None):
         self._init_dtype = init_dtype
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(self._dtype)
 
         super().__init__(*args)
 
