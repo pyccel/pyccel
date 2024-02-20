@@ -1443,7 +1443,7 @@ class FCodePrinter(CodePrinter):
         # ... ignored declarations
         var = expr.variable
         expr_dtype      = var.dtype
-        if isinstance(expr.dtype, SymbolicType):
+        if isinstance(expr_dtype, SymbolicType):
             return ''
 
         # meta-variables

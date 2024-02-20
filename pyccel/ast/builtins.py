@@ -521,7 +521,7 @@ class PythonTuple(TypedAstNode):
                      if a.shape is not None else None for a in args)
         is_homogeneous = len(dtypes) == 1 and len(class_types) == 1 and len(ranks) == 1 and \
                          len(orders) == 1 and len(shapes) == 1 and \
-                         NativeGeneric() not in dtypes
+                         GenericType() not in dtypes
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
                             not isinstance(a.dtype, NativeHomogeneousTuple) for a in args)
 
