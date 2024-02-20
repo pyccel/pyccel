@@ -507,17 +507,18 @@ def process_dtype(dtype):
         dtype =  dtype.dtype
 
     elif isinstance(dtype, PyccelFunctionDef):
-        dtype = dtype.cls_name.static_dtype
+        dtype = dtype.cls_name.static_dtype()
+
+    elif isinstance(dtype, (LiteralString, str)):
+        try:
+            dtype = dtype_registry[str(dtype)]
+        except KeyError:
+            raise TypeError(f'Unknown type of {dtype}.')
 
     if isinstance(dtype, NumpyNumericType):
         return dtype
     if isinstance(dtype, FixedSizeNumericType):
         return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
-    elif isinstance(dtype, (LiteralString, str)):
-        try:
-            return dtype_registry[str(dtype)]
-        except KeyError:
-            raise TypeError(f'Unknown type of {dtype}.')
     else:
         raise TypeError(f'Unknown type of {dtype}.')
 
@@ -738,7 +739,7 @@ class NumpySum(PyccelInternalFunction):
     arg : list , tuple , PythonTuple, PythonList, Variable
         The argument passed to the sum function.
     """
-    __slots__ = ('_dtype''_class_type')
+    __slots__ = ('_dtype', '_class_type')
     name = 'sum'
     _rank  = 0
     _shape = None
@@ -748,7 +749,7 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        if isinstance(arg.dtype, NativeBool):
+        if isinstance(arg.dtype.primitive_type, PyccelBooleanType):
             self._dtype = NumpyInt64Type()
         else:
             self._dtype = process_dtype(arg.dtype)
