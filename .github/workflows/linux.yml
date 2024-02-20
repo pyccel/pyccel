@@ -79,14 +79,14 @@ jobs:
         shell: bash
       - name: Coverage install
         uses: ./.github/actions/coverage_install
-      - name: Fortran/C tests with pytest
-        id: f_c_pytest
-        timeout-minutes: 60
-        uses: ./.github/actions/pytest_run
       - name: Python tests with pytest
         id: python_pytest
         timeout-minutes: 20
         uses: ./.github/actions/pytest_run_python
+      - name: Fortran/C tests with pytest
+        id: f_c_pytest
+        timeout-minutes: 60
+        uses: ./.github/actions/pytest_run
       - name: Parallel tests with pytest
         id: parallel
         timeout-minutes: 20
