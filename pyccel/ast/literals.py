@@ -425,7 +425,7 @@ def convert_to_literal(value, dtype = None):
         elif isinstance(value, str):
             dtype = StringType()
         else:
-            raise TypeError('Unknown type')
+            raise TypeError(f'Unknown type of object {value}')
 
     # Resolve any datatypes which don't inherit from FixedSizeType
     if isinstance(dtype, StringType):
@@ -449,6 +449,6 @@ def convert_to_literal(value, dtype = None):
         else:
             literal_val = LiteralFalse(dtype)
     else:
-        raise TypeError('Unknown type')
+        raise TypeError(f'Unknown type {dtype}')
 
     return literal_val
