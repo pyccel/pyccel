@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function pdf(double[:,:],int,int,double,double,double[:,:],double,double,double)
+#$ header function pdf(float[:,:],int,int,float,float,float[:,:],float,float,float)
 def pdf ( density , x_range , y_range , x_center , y_center , w2D, r50 , b , a) :
     from numpy import sqrt, pi, sum as np_sum
     for x in range ( x_range ) :
