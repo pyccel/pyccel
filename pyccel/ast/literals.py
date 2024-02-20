@@ -177,7 +177,7 @@ class LiteralFloat(Literal):
     """
     __slots__   = ('_value', '_dtype', '_class_type')
 
-    def __init__(self, value, *, dtype = PythonNativeFloat()):
+    def __init__(self, value, dtype = PythonNativeFloat()):
         if not isinstance(value, (int, float, LiteralFloat)):
             raise TypeError("A LiteralFloat can only be created with an integer or a float")
         if isinstance(value, LiteralFloat):

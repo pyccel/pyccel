@@ -61,15 +61,16 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 from pyccel.ast.class_defs import get_cls_base
 
-from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType
-from pyccel.ast.datatypes import PyccelIntegerType
+from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
+from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType
+from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 #from pyccel.ast.datatypes import str_dtype, DataType
 #from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 #from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
-#from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
-#                                  NativeFloat, NativeString, NativeInhomogeneousTuple,
-#                                  NativeGeneric, NativeComplex, TupleType,
-#                                  NativeVoid, NativeHomogeneousTuple)
+#from pyccel.ast.datatypes import (NativeInteger,
+#                                  NativeFloat, NativeString, InhomogeneousTupleType,
+#                                  GenericType, NativeComplex, TupleType,
+#                                  VoidType, NativeHomogeneousTuple)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -90,6 +91,7 @@ from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
+from pyccel.ast.numpyext import process_dtype as numpy_process_dtype
 
 from pyccel.ast.numpytypes import NumpyNDArrayType
 
@@ -743,7 +745,7 @@ class SemanticParser(BasicParser):
         if isinstance(expr, Variable):
             d_var['memory_handling'] = expr.memory_handling
             d_var['class_type'     ] = expr.class_type
-            d_var['cls_base'       ] = expr.cls_base or self.scope.find(expr.dtype.name, 'classes')
+            d_var['cls_base'       ] = expr.cls_base or self.scope.find(str(expr.dtype), 'classes')
             d_var['is_target'      ] = expr.is_target
             return d_var
 
@@ -962,7 +964,7 @@ class SemanticParser(BasicParser):
         """
         # Arguments have been visited in PyccelMul
 
-        if not isinstance(val.class_type, (TupleType, NativeHomogeneousList)):
+        if not isinstance(val.class_type, (TupleType, HomogeneousListType)):
             errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
@@ -1060,7 +1062,7 @@ class SemanticParser(BasicParser):
             # Ignore types which cannot be compared
             if (i_arg is Nil()
                     or isinstance(f_arg, FunctionAddress)
-                    or f_arg.dtype is NativeGeneric()):
+                    or f_arg.dtype is GenericType()):
                 continue
             # Check for compatibility
             if incompatible(i_arg, f_arg):
@@ -1115,7 +1117,7 @@ class SemanticParser(BasicParser):
 
             try:
                 new_expr = func(*args, **kwargs)
-            except TypeError:
+            except TypeError as e:
                 errors.report(UNRECOGNISED_FUNCTION_CALL,
                         symbol = expr,
                         severity = 'fatal')
@@ -1236,7 +1238,7 @@ class SemanticParser(BasicParser):
                     self._ensure_target( r, elem_d_lhs )
                 if elem_d_lhs_ref is None:
                     elem_d_lhs_ref = elem_d_lhs.copy()
-                    is_homogeneous = elem_d_lhs['datatype'] is not NativeGeneric()
+                    is_homogeneous = elem_d_lhs['datatype'] is not GenericType()
                 elif elem_d_lhs != elem_d_lhs_ref:
                     is_homogeneous = False
 
@@ -1696,7 +1698,7 @@ class SemanticParser(BasicParser):
         loop = expr.loops
         nlevels = 0
         # Create throw-away variable to help obtain result type
-        index   = Variable('int',self.scope.get_new_name('to_delete'), is_temp=True)
+        index   = Variable(PythonNativeInt(),self.scope.get_new_name('to_delete'), is_temp=True)
         self.scope.insert_variable(index)
         new_expr = []
         while isinstance(loop, For):
@@ -1869,8 +1871,8 @@ class SemanticParser(BasicParser):
                             severity='fatal', symbol=expr)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
-                dtype = dtype_cls.static_dtype()
-                class_type = NumpyNDArrayType()
+                dtype = numpy_process_dtype(dtype_cls.static_dtype())
+                class_type = NumpyNDArrayType(dtype)
             rank = len(args)
             return VariableTypeAnnotation(dtype, class_type, rank)
 
@@ -1967,7 +1969,7 @@ class SemanticParser(BasicParser):
 
         if not all(isinstance(l, comment_types) for l in init_func_body):
             # If there are any initialisation statements then create an initialisation function
-            init_var = Variable(NativeBool(), self.scope.get_new_name('initialised'),
+            init_var = Variable(PythonNativeBool(), self.scope.get_new_name('initialised'),
                                 is_private=True)
             init_func_name = self.scope.get_new_name(name_suffix+'__init')
             # Ensure that the function is correctly defined within the namespaces
@@ -2357,7 +2359,7 @@ class SemanticParser(BasicParser):
             if name == 'real':
                 var = numpy_funcs['float']
             elif name == '*':
-                return NativeGeneric()
+                return GenericType()
 
         if var is None:
             if name == '_':
@@ -2606,8 +2608,8 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (TupleType, NativeHomogeneousList)):
-            is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
+        if isinstance(args[0].class_type, (TupleType, HomogeneousListType)):
+            is_inhomogeneous = any(isinstance(a.class_type, InhomogeneousTupleType) for a in args)
             if is_inhomogeneous:
                 def get_vars(a):
                     if isinstance(a, InhomogeneousTupleVariable):
@@ -2633,9 +2635,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (TupleType, NativeHomogeneousList)):
+        if isinstance(args[0].class_type, (TupleType, HomogeneousListType)):
             expr_new = self._create_Duplicate(args[0], args[1])
-        elif isinstance(args[1].class_type, (TupleType, NativeHomogeneousList)):
+        elif isinstance(args[1].class_type, (TupleType, HomogeneousListType)):
             expr_new = self._create_Duplicate(args[1], args[0])
         else:
             expr_new = self._create_PyccelOperator(expr, args)
@@ -2735,8 +2737,8 @@ class SemanticParser(BasicParser):
         z = arg.value
         x = PythonReal(z)
         y = PythonImag(z)
-        x_var = self.scope.get_temporary_variable(z, dtype=NativeFloat())
-        y_var = self.scope.get_temporary_variable(z, dtype=NativeFloat())
+        x_var = self.scope.get_temporary_variable(z, dtype=PythonNativeFloat())
+        y_var = self.scope.get_temporary_variable(z, dtype=PythonNativeFloat())
         self._additional_exprs[-1].append(Assign(x_var, x))
         self._additional_exprs[-1].append(Assign(y_var, y))
         r = MathSqrt(PyccelAdd(PyccelMul(x_var,x_var), PyccelMul(y_var,y_var)))
@@ -2916,7 +2918,7 @@ class SemanticParser(BasicParser):
                 rhs = genexp.lhs
         elif isinstance(rhs, IfTernaryOperator):
             value_true  = self._visit(rhs.value_true)
-            if value_true.rank > 0 or value_true.dtype is NativeString():
+            if value_true.rank > 0 or value_true.dtype is StringType():
                 # Temporarily deactivate type checks to construct syntactic assigns
                 pyccel_stage.set_stage('syntactic')
                 assign_true  = Assign(lhs, rhs.value_true, python_ast = python_ast)
@@ -3038,7 +3040,7 @@ class SemanticParser(BasicParser):
             d_var  = self._infer_type(rhs)
             if d_var['memory_handling'] == 'alias' and not isinstance(lhs, IndexedElement):
                 rhs = rhs.internal_var
-        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, NativeVoid):
+        elif isinstance(rhs, PyccelInternalFunction) and isinstance(rhs.dtype, VoidType):
             if expr.lhs.is_temp:
                 return rhs
             else:
@@ -3177,7 +3179,7 @@ class SemanticParser(BasicParser):
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
                 if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(TupleType, NativeHomogeneousList)) \
+                        and isinstance(r.class_type,(TupleType, HomogeneousListType)) \
                         and not isinstance(r, FunctionCall):
                     new_lhs.extend(l)
                     new_rhs.extend(r)
@@ -3273,7 +3275,7 @@ class SemanticParser(BasicParser):
         iterator = expr.target
 
         if iterable.num_loop_counters_required:
-            indices = [Variable('int', self.scope.get_new_name(), is_temp=True)
+            indices = [Variable(PythonNativeInt(), self.scope.get_new_name(), is_temp=True)
                         for i in range(iterable.num_loop_counters_required)]
             iterable.set_loop_counter(*indices)
         else:
@@ -3359,7 +3361,7 @@ class SemanticParser(BasicParser):
             i += 1
             a     = self._visit(body.iterable)
             if isinstance(a, PythonRange):
-                var   = self._create_variable(var, 'int', start, {})
+                var   = self._create_variable(var, PythonNativeInt(), start, {})
                 dvar  = self._infer_type(var)
                 stop  = a.stop
                 start = a.start
@@ -3484,7 +3486,7 @@ class SemanticParser(BasicParser):
 
         dtype = d_var['datatype']
 
-        if dtype is NativeGeneric():
+        if dtype is GenericType():
             errors.report(LIST_OF_TUPLES,
                           bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                           severity='fatal')
@@ -3498,6 +3500,7 @@ class SemanticParser(BasicParser):
         else:
             d_var['order'] = None
         d_var['shape'] = shape
+        d_var['class_type'] = HomogeneousListType(dtype)
 
         # ...
         # TODO [YG, 30.10.2020]:
@@ -3605,7 +3608,7 @@ class SemanticParser(BasicParser):
 
     def _visit_IfTernaryOperator(self, expr):
         value_true  = self._visit(expr.value_true)
-        if value_true.rank > 0 or value_true.dtype is NativeString():
+        if value_true.rank > 0 or value_true.dtype is StringType():
             lhs = PyccelSymbol(self.scope.get_new_name(), is_temp=True)
             # Temporarily deactivate type checks to construct syntactic assigns
             pyccel_stage.set_stage('syntactic')
@@ -4006,7 +4009,7 @@ class SemanticParser(BasicParser):
                 # create a new attribute to check allocation
                 deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
                 deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
-                                             dtype = NativeBool(), is_private=True)
+                                             dtype = PythonNativeBool(), is_private=True)
                 cls.add_new_attribute(deallocater)
                 deallocater_assign = Assign(deallocater, LiteralFalse())
                 init_func.body.insert2body(deallocater_assign, back=False)
@@ -4096,8 +4099,8 @@ class SemanticParser(BasicParser):
             elif IsClass == PyccelIsNot:
                 return LiteralTrue()
 
-        if (isinstance(var1.dtype, NativeBool) and
-            isinstance(var2.dtype, NativeBool)):
+        if (isinstance(var1.dtype, PythonNativeBool) and
+            isinstance(var2.dtype, PythonNativeBool)):
             return IsClass(var1, var2)
 
         lst = [NativeString(), NativeComplex(), NativeFloat(), NativeInteger()]
