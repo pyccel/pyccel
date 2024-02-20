@@ -337,8 +337,8 @@ class ListReverse(PyccelInternalFunction) :
 
     Parameters
     ----------
-    list_variable : Variable
-        The name of the list.
+    list_variable : TypedAstNode
+        The list object which the method is called from.
     """
     __slots__ = ('_list_variable',)
     _attribute_nodes = ('_list_variable',)
