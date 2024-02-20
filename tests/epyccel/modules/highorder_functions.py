@@ -145,7 +145,7 @@ def test_float_float_int_2():
     x = high_float_float_int_2(f7, f4, f3)
     return x
 
-def euler (dydt: '()(float, const float[:], float[:])',
+def euler (dydt: '()(float64, const float[:], float[:])',
            t0: 'float', t1: 'float', y0: 'float[:]', n: int,
            t: 'float[:]', y: 'float[:,:]'):
 
@@ -173,7 +173,6 @@ def euler_test ( t0: 'float', t1 : 'float', y0: 'float[:]', n: int ):
 
     m = len ( y0 )
 
-    t = [t0+(t1-t0)*i/n for i in range(n+1)]
     t = linspace ( t0, t1, n + 1 )
     y = zeros ( ( n + 1, m ) )
 
