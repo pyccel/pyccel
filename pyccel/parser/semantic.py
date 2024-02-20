@@ -61,13 +61,14 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 from pyccel.ast.class_defs import get_cls_base
 
-from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType
+from pyccel.ast.datatypes import PyccelIntegerType
 #from pyccel.ast.datatypes import str_dtype, DataType
 #from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
 #from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
 #from pyccel.ast.datatypes import (NativeInteger, NativeBool, NativeHomogeneousList,
 #                                  NativeFloat, NativeString, NativeInhomogeneousTuple,
-#                                  NativeGeneric, NativeComplex, NativeTuple,
+#                                  NativeGeneric, NativeComplex, TupleType,
 #                                  NativeVoid, NativeHomogeneousTuple)
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
@@ -89,7 +90,8 @@ from pyccel.ast.numpyext import NumpyMatmul, numpy_funcs
 from pyccel.ast.numpyext import NumpyWhere, NumpyArray
 from pyccel.ast.numpyext import NumpyTranspose, NumpyConjugate
 from pyccel.ast.numpyext import NumpyNewArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpyext import NumpyNDArrayType
+
+from pyccel.ast.numpytypes import NumpyNDArrayType
 
 from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Construct,
                             OMP_TaskLoop_Construct, OMP_Sections_Construct, Omp_End_Clause,
@@ -903,11 +905,9 @@ class SemanticParser(BasicParser):
                 severity='error')
 
         for arg in var[indices].indices:
-            if not isinstance(arg, Slice) and not \
-                (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
-                errors.report(INVALID_INDICES, symbol=var[indices],
-                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                severity='error')
+            if not isinstance(arg, Slice) and not (hasattr(arg, 'dtype') and
+                    isinstance(getattr(arg.dtype, 'primitive_type', None), PyccelIntegerType)):
+                errors.report(INVALID_INDICES, symbol=expr, severity='error')
         return var[indices]
 
     def _create_PyccelOperator(self, expr, visited_args):
@@ -950,7 +950,7 @@ class SemanticParser(BasicParser):
         ----------
         val : PyccelAstNode
             The tuple object. This object should have a class type which inherits from
-            NativeTuple.
+            TupleType.
 
         length : LiteralInteger | TypedAstNode
             The number of times the tuple is duplicated.
@@ -962,7 +962,7 @@ class SemanticParser(BasicParser):
         """
         # Arguments have been visited in PyccelMul
 
-        if not isinstance(val.class_type, (NativeTuple, NativeHomogeneousList)):
+        if not isinstance(val.class_type, (TupleType, NativeHomogeneousList)):
             errors.report("Unexpected Duplicate", symbol=Duplicate(val, length),
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
@@ -1863,7 +1863,7 @@ class SemanticParser(BasicParser):
                 dtype = base.datatype
                 class_type = base.class_type
                 if class_type is dtype:
-                    class_type = NumpyNDArrayType()
+                    class_type = NumpyNDArrayType(dtype)
                 if base.rank != 0:
                     raise errors.report("Can't index a vector type",
                             severity='fatal', symbol=expr)
@@ -2320,10 +2320,10 @@ class SemanticParser(BasicParser):
         # TODO check consistency of indices with shape/rank
         args = [self._visit(idx) for idx in expr.indices]
 
-        if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), NativeTuple)):
+        if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), TupleType)):
             args = args[0]
 
-        elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
+        elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
             n_exprs = None
             for a in args:
                 if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
@@ -2456,7 +2456,7 @@ class SemanticParser(BasicParser):
             dtype_cls = visited_dtype.cls_name
             dtype = dtype_cls.static_dtype()
             class_type = dtype_cls.static_class_type()
-            if not isinstance(class_type, DataType):
+            if not isinstance(class_type, PyccelType):
                 class_type = dtype
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype, class_type, 0, None))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
@@ -2606,7 +2606,7 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelAdd(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
+        if isinstance(args[0].class_type, (TupleType, NativeHomogeneousList)):
             is_inhomogeneous = any(isinstance(a.class_type, NativeInhomogeneousTuple) for a in args)
             if is_inhomogeneous:
                 def get_vars(a):
@@ -2633,9 +2633,9 @@ class SemanticParser(BasicParser):
 
     def _visit_PyccelMul(self, expr):
         args = [self._visit(a) for a in expr.args]
-        if isinstance(args[0].class_type, (NativeTuple, NativeHomogeneousList)):
+        if isinstance(args[0].class_type, (TupleType, NativeHomogeneousList)):
             expr_new = self._create_Duplicate(args[0], args[1])
-        elif isinstance(args[1].class_type, (NativeTuple, NativeHomogeneousList)):
+        elif isinstance(args[1].class_type, (TupleType, NativeHomogeneousList)):
             expr_new = self._create_Duplicate(args[1], args[0])
         else:
             expr_new = self._create_PyccelOperator(expr, args)
@@ -3177,7 +3177,7 @@ class SemanticParser(BasicParser):
             for l,r in zip(lhs, rhs):
                 # Split assign (e.g. for a,b = 1,c)
                 if isinstance(l, (PythonTuple, InhomogeneousTupleVariable)) \
-                        and isinstance(r.class_type,(NativeTuple, NativeHomogeneousList)) \
+                        and isinstance(r.class_type,(TupleType, NativeHomogeneousList)) \
                         and not isinstance(r, FunctionCall):
                     new_lhs.extend(l)
                     new_rhs.extend(r)
