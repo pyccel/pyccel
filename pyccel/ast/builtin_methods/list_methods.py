@@ -19,6 +19,7 @@ __all__ = ('ListAppend',
            'ListExtend',
            'ListInsert',
            'ListPop',
+           'ListReverse',
            )
 
 #=======================================================================================
@@ -313,3 +314,38 @@ class ListExtend(PyccelInternalFunction):
         Get the argument which is passed to extend().
         """
         return self._extend_arg
+
+#=======================================================================================
+class ListReverse(PyccelInternalFunction) :
+    """
+    Represents a call to the .reverse() method.
+    
+    reverse() method does not return any value but reverses the objects of the list in place.
+
+    Parameters
+    ----------
+    list_variable : Variable
+        The name of the list.
+    """
+    __slots__ = ('_list_variable',)
+    _attribute_nodes = ('_list_variable',)
+    _dtype = NativeVoid()
+    _precision = None
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = NativeVoid()
+    name = 'reverse'
+
+    def __init__(self, list_variable):
+        self._list_variable = list_variable
+        super().__init__()
+
+    @property
+    def list_variable(self):
+        """
+        Provide the name of the list as the return value.
+
+        Provide the name of the list as the return value.
+        """
+        return self._list_variable
