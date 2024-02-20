@@ -37,8 +37,8 @@ class ListAppend(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : Variable
-        The variable representing the list.
+    list_variable : TypedAstNode
+        The list object which the method is called from.
     
     new_elem : TypedAstNode
         The argument passed to append() method.
@@ -94,10 +94,13 @@ class ListPop(PyccelInternalFunction) :
     removes the item at the specified index. 
     The method also returns the removed item.
 
+    >>> [1, 2].pop()
+    2
+
     Parameters
     ----------
     list_variable : TypedAstNode
-        The name of the list.
+        The list object which the method is called from.
 
     index_element : TypedAstNode
         The current index value for the element to be popped.
@@ -129,9 +132,9 @@ class ListPop(PyccelInternalFunction) :
     @property
     def list_variable(self):
         """
-        Provide the name of the list as the return value.
-        
-        Provide the name of the list as the return value.
+        Get the variable representing the list.
+
+        Get the variable representing the list.
         """
         return self._list_variable
 
@@ -144,10 +147,15 @@ class ListClear(PyccelInternalFunction) :
     effectively turning it into an empty list.
     Note that the .clear() method doesn't return any value.
 
+    >>> a = [1, 2]
+    >>> a.clear()
+    >>> print(a)
+    []
+
     Parameters
     ----------
     list_variable : TypedAstNode
-        The name of the list.
+        The list object which the method is called from.
     """
     __slots__ = ('_list_variable',)
     _attribute_nodes = ('_list_variable',)
@@ -166,9 +174,9 @@ class ListClear(PyccelInternalFunction) :
     @property
     def list_variable(self):
         """
-        Provide the name of the list as the return value.
+        Get the variable representing the list.
 
-        Provide the name of the list as the return value.
+        Get the variable representing the list.
         """
         return self._list_variable
 
@@ -188,8 +196,8 @@ class ListInsert(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : Variable
-        The variable representing the list.
+    list_variable : TypedAstNode
+        The list object which the method is called from.
 
     index : TypedAstNode
         The index value for the element to be added.
@@ -266,8 +274,8 @@ class ListExtend(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : Variable
-        The variable representing the list.
+    list_variable : TypedAstNode
+        The list object which the method is called from.
     
     new_elem : Variable
         The argument passed to extend() method.
