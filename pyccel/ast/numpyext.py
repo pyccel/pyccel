@@ -25,7 +25,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
-from .datatypes      import HomogeneousTupleType, FixedSizeNumericType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -461,7 +461,7 @@ class NumpyResultType(PyccelInternalFunction):
     name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
-        self._dtype = sum(a.dtype for a in arrays_and_dtypes)
+        self._dtype = sum((a.dtype for a in arrays_and_dtypes), start=GenericType())
         self._class_type = self._dtype
 
         super().__init__(*arrays_and_dtypes)
@@ -515,7 +515,7 @@ def process_dtype(dtype):
         except KeyError:
             raise TypeError(f'Unknown type of {dtype}.')
 
-    if isinstance(dtype, NumpyNumericType):
+    if isinstance(dtype, (NumpyNumericType, PythonNativeBool)):
         return dtype
     if isinstance(dtype, FixedSizeNumericType):
         return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
