@@ -260,7 +260,7 @@ class ListExtend(PyccelInternalFunction):
     The extend method is called as follows:
 
     >>> a = [1]
-    >>> a.extend(2)
+    >>> a.extend([2])
     >>> print(a)
     [1, 2]
 
@@ -279,7 +279,7 @@ class ListExtend(PyccelInternalFunction):
     _order = None
     _rank = 0
     _precision = -1
-    _class_type = NativeHomogeneousList()
+    _class_type = NativeVoid()
     name = 'extend'
 
     def __init__(self, list_variable, new_elem) -> None:
