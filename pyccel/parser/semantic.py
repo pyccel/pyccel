@@ -733,6 +733,7 @@ class SemanticParser(BasicParser):
         dict
             Dictionary containing all the type information which was inferred.
         """
+        print(expr, type(expr))
         d_var = {
                 'datatype' : expr.dtype,
                 'shape'    : expr.shape,
@@ -968,7 +969,7 @@ class SemanticParser(BasicParser):
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                 severity='fatal')
 
-        if isinstance(val.class_type, NativeHomogeneousTuple):
+        if isinstance(val.class_type, HomogeneousTupleType):
             return Duplicate(val, length)
         else:
             if isinstance(length, LiteralInteger):
@@ -1786,7 +1787,7 @@ class SemanticParser(BasicParser):
 
         if isinstance(expr, FunctionalSum):
             if isinstance(dtype, PythonNativeBool):
-                val = LiteralInteger(0)
+                val = LiteralInteger(0, dtype)
             else:
                 val = convert_to_literal(0, dtype)
         elif isinstance(expr, FunctionalMin):
@@ -1906,17 +1907,17 @@ class SemanticParser(BasicParser):
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
                 if dtype_cls is PythonTupleFunction:
-                    class_type = HomogeneousTupleType()
+                    class_type = HomogeneousTupleType
                 elif dtype_cls is PythonList:
-                    class_type = HomogeneousListType()
+                    class_type = HomogeneousListType
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
                 for u in internal_datatypes.type_list:
                     rank = u.rank+1
                     order = None if rank == 1 else 'C'
-                    type_annotations.append(VariableTypeAnnotation(u.datatype, class_type,
-                        u.precision, rank, order, u.is_const))
+                    type_annotations.append(VariableTypeAnnotation(u.datatype, class_type(u.datatype),
+                        rank, order, u.is_const))
                 return UnionTypeAnnotation(*type_annotations)
             else:
                 raise errors.report("Cannot handle non-homogenous type index\n"+PYCCEL_RESTRICTION_TODO,

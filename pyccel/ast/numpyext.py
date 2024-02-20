@@ -462,7 +462,8 @@ class NumpyResultType(PyccelInternalFunction):
     name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
-        self._dtype = sum((a.dtype for a in arrays_and_dtypes), start=GenericType())
+        dtypes = [a.cls_name.static_dtype() if isinstance(a, PyccelFunctionDef) else a.dtype for a in arrays_and_dtypes]
+        self._dtype = sum(dtypes, start=GenericType())
         self._class_type = self._dtype
 
         super().__init__(*arrays_and_dtypes)
@@ -1126,9 +1127,9 @@ class NumpyRand(PyccelInternalFunction):
         self._order = None if self._rank < 2 else 'C'
         if self.rank == 0:
             self._dtype = PythonNativeFloat()
-            self._class_Type = self._dtype
+            self._class_type = self._dtype
         else:
-            self._dtype = NumpyFloat64()
+            self._dtype = NumpyFloat64Type()
             self._class_type = NumpyNDArrayType(self._dtype)
 
 #==============================================================================
@@ -1615,7 +1616,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         x : TypedAstNode
             The argument passed to the function.
         """
-        x_dtype
+        x_dtype = x.dtype
         if not isinstance(x_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
             self._dtype = NumpyFloat64Type()
         else:
@@ -1669,8 +1670,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         x2 : TypedAstNode
             The second argument passed to the function.
         """
-        if x1.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) or \
-           x2.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) :
+        if x1.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) or \
+           x2.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) :
             self._dtype = NumpyFloat64Type()
         else:
             arg_dtype = x1.dtype + x2.dtype
@@ -2134,6 +2135,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
                 self._shape[axis.python_value] = LiteralInteger(1)
             else:
                 self._shape = (LiteralInteger(1),)*a.rank
+            self._class_type = NumpyNDArrayType(self._dtype) if self._rank else self._dtype
         else:
             if axis is not None:
                 self._dtype = NumpyInt64Type()

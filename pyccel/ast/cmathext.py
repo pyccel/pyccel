@@ -356,7 +356,7 @@ class CmathIsfinite(CmathFunctionBool):
     __slots__ = ()
     name = 'isfinite'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
             return MathIsfinite(z)
         else:
             return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
@@ -377,7 +377,7 @@ class CmathIsinf   (CmathFunctionBool):
     __slots__ = ()
     name = 'isinf'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
             return MathIsinf(z)
         else:
             return PyccelOr(MathIsinf(PythonImag(z)), MathIsinf(PythonReal(z)))
@@ -398,7 +398,7 @@ class CmathIsnan   (CmathFunctionBool):
     __slots__ = ()
     name = 'isnan'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
             return MathIsnan(z)
         else:
             return PyccelOr(MathIsnan(PythonImag(z)), MathIsnan(PythonReal(z)))

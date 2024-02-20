@@ -702,6 +702,7 @@ class PythonList(TypedAstNode):
             self._rank  = 0
             self._shape = None
             self._order = None
+            self._class_type = HomogeneousListType(self.dtype)
             return
         arg0 = args[0]
         is_homogeneous = arg0.dtype is not GenericType() and \
