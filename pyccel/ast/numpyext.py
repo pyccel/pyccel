@@ -25,7 +25,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
-from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -598,11 +598,8 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
-        is_array = isinstance(arg, Variable) and arg.is_ndarray
-
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not (is_homogeneous_tuple or is_array or isinstance(arg, PythonList)):
+        if not isinstance(arg.class_type, HomogeneousContainerType):
             raise TypeError('we only accept homogeneous arguments')
 
         if not isinstance(order, (LiteralString, str)):
@@ -925,7 +922,7 @@ class NumpyLinspace(NumpyNewArray):
         if not num:
             num = LiteralInteger(50)
 
-        if num.rank != 0 or not isinstance(num.dtype, NativeInteger):
+        if num.rank != 0 or not isinstance(getattr(num.dtype, 'primitive_type', None), PyccelIntegerType):
             raise TypeError('Expecting positive integer num argument.')
 
         if any(not isinstance(arg, TypedAstNode) for arg in (start, stop, num)):
@@ -937,12 +934,12 @@ class NumpyLinspace(NumpyNewArray):
         else:
             args      = (start, stop)
             type_info = NumpyResultType(*args)
-            if type_info.dtype is NativeInteger():
-                self._dtype     = NumpyFloat64Type()()
+            if type_info.dtype.primitive_type is PyccelIntegerType():
+                self._dtype     = NumpyFloat64Type()
             else:
                 self._dtype = type_info.dtype
 
-        self._index = Variable('int', 'linspace_index')
+        self._index = Variable(PythonNativeInt(), 'linspace_index')
         self._start = start
         self._stop  = stop
         self._num  = num
