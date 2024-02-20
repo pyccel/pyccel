@@ -272,3 +272,33 @@ def test_extend_user_defined_objects(language):
     assert len(python_list) == len(accelerated_list)
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
+
+def test_reverse(language):
+    def f():
+        a = [1, 2, 3]
+        a.reverse()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_multiple_reverse(language):
+    def f():
+        a = [1, 2, 3]
+        a.reverse()
+        a.reverse()
+        a.reverse()
+        a.reverse()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_reverse_empty_list(language):
+    def f():
+        a = []
+        a.reverse()
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
