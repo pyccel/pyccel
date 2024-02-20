@@ -846,21 +846,21 @@ class PythonCodePrinter(CodePrinter):
         return "{}({})".format(name, arg)
 
     def _print_ListAppend(self, expr):
-        method_name = expr.name
+        method_name = self._print(expr.name)
         list_var = self._print(expr.list_variable)
         append_arg = self._print(expr.append_argument)
 
         return f"{list_var}.{method_name}({append_arg})\n"
 
     def _print_ListExtend(self, expr):
-        method_name = expr.name
+        method_name = self._print(expr.name)
         list_var = self._print(expr.list_variable)
         extend_arg = self._print(expr.extend_argument)
 
         return f"{list_var}.{method_name}({extend_arg})\n"
 
     def _print_ListInsert(self, expr):
-        method_name = expr.name
+        method_name = self._print(expr.name)
         index = self._print(expr.index)
         list_var = self._print(expr.list_variable)
         insert_arg = self._print(expr.insert_argument)
@@ -868,13 +868,15 @@ class PythonCodePrinter(CodePrinter):
         return f"{list_var}.{method_name}({index}, {insert_arg})\n"
 
     def _print_ListPop(self, expr):
+        method_name = self._print(expr.name)
         args = self._print(expr.pop_index) if expr.pop_index else ""
-        name = self._print(expr.list_variable)
-        return f"{name}.pop({args})"
+        list_var = self._print(expr.list_variable)
+        return f"{list_var}.{method_name}({args})"
 
     def _print_ListClear(self, expr):
+        method_name = self._print(expr.name)
         name = self._print(expr.list_variable)
-        return f"{name}.clear()\n"
+        return f"{name}.{method_name}()\n"
 
     def _print_ListReverse(self, expr):
         name = self._print(expr.list_variable)

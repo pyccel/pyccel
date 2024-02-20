@@ -278,7 +278,7 @@ class ListExtend(PyccelInternalFunction):
     list_variable : TypedAstNode
         The list object which the method is called from.
     
-    new_elem : Variable
+    new_elem : TypedAstNode
         The argument passed to extend() method.
     """
     __slots__ = ("_list_variable", "_extend_arg")
