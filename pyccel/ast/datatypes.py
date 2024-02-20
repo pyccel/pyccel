@@ -297,6 +297,10 @@ class PythonNativeComplex(PythonNativeNumericTypes):
         else:
             return NotImplemented
 
+    @property
+    def element_type(self):
+        return PythonNativeFloat()
+
 class VoidType(FixedSizeType):
     """
     Class representing a void datatype.

@@ -167,6 +167,10 @@ class NumpyComplex64Type(NumpyNumericType):
     _primitive_type = PyccelComplexType()
     _precision = 4
 
+    @property
+    def element_type(self):
+        return NumpyFloat32Type()
+
 class NumpyComplex128Type(NumpyNumericType):
     """
     Class representing NumPy's complex128 type.
@@ -178,6 +182,10 @@ class NumpyComplex128Type(NumpyNumericType):
     _primitive_type = PyccelComplexType()
     _precision = 8
 
+    @property
+    def element_type(self):
+        return NumpyFloat64Type()
+
 class NumpyComplex256Type(NumpyNumericType):
     """
     Class representing NumPy's complex256 type.
@@ -188,6 +196,10 @@ class NumpyComplex256Type(NumpyNumericType):
     _name = 'complex256'
     _primitive_type = PyccelComplexType()
     _precision = 16
+
+    @property
+    def element_type(self):
+        return NumpyFloat128Type()
 
 #==============================================================================
 
