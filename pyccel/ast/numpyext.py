@@ -2322,7 +2322,7 @@ class NumpyIsNan(NumpyUfuncBase):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    x : TypedAstNode
         A Pyccel expression or array to be checked for NaN values.
 
     See Also
@@ -2330,21 +2330,24 @@ class NumpyIsNan(NumpyUfuncBase):
     numpy.isnan :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'isnan'
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._arg = arg
-        self._shape = arg.shape
-        self._rank  = arg.rank
-        self._order = arg.order
+    def __init__(self, x):
+        super().__init__(x)
+        self._shape = x.shape
+        self._rank  = x.rank
+        self._order = x.order
         if self._rank:
             self._class_type = NumpyNDArrayType()
         else:
             self._class_type = NativeBool()
+
+    @property
+    def arg(self):
+        return self._args[0]
 
 class NumpyIsInf(NumpyUfuncBase):
     """ 
@@ -2356,7 +2359,7 @@ class NumpyIsInf(NumpyUfuncBase):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    x : TypedAstNode
         A Pyccel expression or array to be checked for infinity values.
 
     See Also
@@ -2364,21 +2367,24 @@ class NumpyIsInf(NumpyUfuncBase):
     numpy.isinf :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'isinf'
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._arg = arg
-        self._shape = arg.shape
-        self._rank  = arg.rank
-        self._order = arg.order
+    def __init__(self, x):
+        super().__init__(x)
+        self._shape = x.shape
+        self._rank  = x.rank
+        self._order = x.order
         if self._rank:
             self._class_type = NumpyNDArrayType()
         else:
             self._class_type = NativeBool()
+
+    @property
+    def arg(self):
+        return self._args[0]
 
 class NumpyIsFinite(NumpyUfuncBase):
     """ 
@@ -2390,7 +2396,7 @@ class NumpyIsFinite(NumpyUfuncBase):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    x : TypedAstNode
         A Pyccel expression or array to be checked for finiteness.
 
     See Also
@@ -2398,21 +2404,24 @@ class NumpyIsFinite(NumpyUfuncBase):
     numpy.isfinite :
         See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
     """
-    __slots__ = ('_arg',)
+    __slots__ = ()
     name = 'isfinite'
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, arg):
-        super().__init__(arg)
-        self._arg = arg
-        self._shape = arg.shape
-        self._rank  = arg.rank
-        self._order = arg.order
+    def __init__(self, x):
+        super().__init__(x)
+        self._shape = x.shape
+        self._rank  = x.rank
+        self._order = x.order
         if self._rank:
             self._class_type = NumpyNDArrayType()
         else:
             self._class_type = NativeBool()
+
+    @property
+    def arg(self):
+        return self._args[0]
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following

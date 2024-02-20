@@ -2667,8 +2667,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyIsInf(self, expr):
         code = PyccelAssociativeParenthesis(PyccelAnd(
-                    PyccelNot(NumpyIsFinite(expr.args[0])),
-                    PyccelNot(NumpyIsNan(expr.args[0]))))
+                    PyccelNot(NumpyIsFinite(expr.arg)),
+                    PyccelNot(NumpyIsNan(expr.arg))))
         return self._print(code)
 
     def _print_NumpySign(self, expr):

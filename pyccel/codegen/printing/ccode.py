@@ -1632,8 +1632,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args[0]
-        code_arg = self._print(arg)
+        code_arg = self._print(expr.arg)
         return f"isfinite({code_arg})"
 
     def _print_NumpyIsInf(self, expr):
@@ -1642,8 +1641,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args[0]
-        code_arg = self._print(arg)
+        code_arg = self._print(expr.arg)
         return f"isinf({code_arg})"
 
     def _print_NumpyIsNan(self, expr):
@@ -1652,8 +1650,7 @@ class CCodePrinter(CodePrinter):
         """
 
         self.add_import(c_imports['numpy_c'])
-        arg = expr.args[0]
-        code_arg = self._print(arg)
+        code_arg = self._print(expr.arg)
         return f"isnan({code_arg})"
 
     def _print_MathFunctionBase(self, expr):
