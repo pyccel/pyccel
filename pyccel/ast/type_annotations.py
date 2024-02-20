@@ -47,9 +47,6 @@ class VariableTypeAnnotation(PyccelAstNode):
         the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
         this is the type of the container.
 
-    precision : int
-        The precision of the internal datatype.
-
     rank : int
         The rank of the variable.
 
@@ -59,14 +56,13 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_datatype', '_class_type', '_precision', '_rank',
+    __slots__ = ('_datatype', '_class_type', '_rank',
                  '_order', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, datatype : 'DataType', class_type : 'DataType', precision : int = -1,
+    def __init__(self, datatype : 'DataType', class_type : 'DataType',
             rank : int = 0, order : str = None, is_const : bool = False):
         self._datatype = datatype
         self._class_type = class_type
-        self._precision = precision
         self._rank = rank
         self._order = order
         self._is_const = is_const
@@ -93,16 +89,6 @@ class VariableTypeAnnotation(PyccelAstNode):
         this is the type of the container.
         """
         return self._class_type
-
-    @property
-    def precision(self):
-        """
-        Get the precision of the object.
-
-        Get the precision of the object. For objects with rank>0 this is the
-        precision of one of the elements of the object.
-        """
-        return self._precision
 
     @property
     def rank(self):
@@ -147,21 +133,25 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = val
 
     def __hash__(self):
-        return hash((self.datatype, self.class_type, self.precision, self.rank, self.order))
+        return hash((self.datatype, self.class_type, self.rank, self.order))
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
             return self.datatype == other.datatype and \
                    self.class_type == other.class_type and \
-                   self.precision == other.precision and \
                    self.rank == other.rank and \
                    self.order == other.order
         else:
             return False
 
     def __repr__(self):
-        return f"{self._datatype}{self._precision}[{self._rank}]({self._order})"
+        dtype = str(self._datatype)
+        if self._rank:
+            dtype += '['+','.join(':'*self._rank)+']'
+        if self._order:
+            dtype += '(order = {self._order})'
+        return dtype
 
 #==============================================================================
 
