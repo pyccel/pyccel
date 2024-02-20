@@ -26,7 +26,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import PythonNativeFloat, TupleType
+from pyccel.ast.datatypes import PythonNativeFloat, TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 
@@ -40,6 +40,9 @@ from pyccel.ast.mathext  import math_constants
 
 from pyccel.ast.numpyext import NumpyFull, NumpyArray
 from pyccel.ast.numpyext import NumpyReal, NumpyImag, NumpyFloat, NumpySize
+
+from pyccel.ast.numpytypes import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
+from pyccel.ast.numpytypes import NumpyFloat32Type, NumpyFloat64Type, NumpyComplex64Type, NumpyComplex128Type
 
 from pyccel.ast.utilities import expand_to_loops
 
@@ -253,23 +256,29 @@ class CCodePrinter(CodePrinter):
         'tabwidth': 4,
     }
 
-    dtype_registry = {PythonNativeFloat() : 'double',
-                      CNativeInt()    : 'int',
+    dtype_registry = {CNativeInt()    : 'int',
                       VoidType() : 'void',
-                      #(NativeFloat(),8)   : 'double',
-                      #(NativeFloat(),4)   : 'float',
+                      (PyccelComplexType(),8) : 'double complex',
+                      (PyccelComplexType(),4) : 'float complex',
+                      (PyccelFloatingPointType(),8)   : 'double',
+                      (PyccelFloatingPointType(),4)   : 'float',
+                      (PyccelIntegerType(),4)     : 'int32_t',
+                      (PyccelIntegerType(),8)     : 'int64_t',
+                      (PyccelIntegerType(),2)     : 'int16_t',
+                      (PyccelIntegerType(),1)     : 'int8_t',
+                      (PyccelBooleanType(),-1) : 'bool',
                       }
 
-    ndarray_type_registry = {}
-                      #(NativeFloat(),8)   : 'nd_double',
-                      #(NativeFloat(),4)   : 'nd_float',
-                      #(NativeComplex(),8) : 'nd_cdouble',
-                      #(NativeComplex(),4) : 'nd_cfloat',
-                      #(NativeInteger(),8)     : 'nd_int64',
-                      #(NativeInteger(),4)     : 'nd_int32',
-                      #(NativeInteger(),2)     : 'nd_int16',
-                      #(NativeInteger(),1)     : 'nd_int8',
-                      #(NativeBool(),-1)   : 'nd_bool'}
+    ndarray_type_registry = {
+                      NumpyFloat64Type()    : 'nd_double',
+                      NumpyFloat32Type()    : 'nd_float',
+                      NumpyComplex128Type() : 'nd_cdouble',
+                      NumpyComplex64Type()  : 'nd_cfloat',
+                      NumpyInt64Type()      : 'nd_int64',
+                      NumpyInt32Type()      : 'nd_int32',
+                      NumpyInt16Type()      : 'nd_int16',
+                      NumpyInt8Type()       : 'nd_int8',
+                      PythonNativeBool()    : 'nd_bool'}
 
     type_to_format = {(PyccelFloatingPointType(),8) : '%.12lf',
                       (PyccelFloatingPointType(),4) : '%.12f',
@@ -506,7 +515,7 @@ class CCodePrinter(CodePrinter):
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
-        declare_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
+        declare_dtype = self.find_in_dtype_registry(PythonNativeInt())
 
         dummy_array_name = self.scope.get_new_name('array_dummy')
         buffer_array = "{dtype} {name}[{size}];\n".format(
@@ -1127,24 +1136,27 @@ class CCodePrinter(CodePrinter):
         str
             The code which declares the datatype in C.
         """
-        if isinstance(getattr(dtype, 'primitive_type', None), PyccelComplexType):
-            self.add_import(c_imports['complex'])
-            return '{self.find_in_dtype_registry(dtype.element_type)} complex'
-        elif isinstance(dtype, PythonNativeBool):
-            self.add_import(c_imports['stdbool'])
-            return 'bool'
+        if isinstance(dtype, FixedSizeNumericType):
+            primitive_type = dtype.primitive_type
+            if isinstance(primitive_type, PyccelComplexType):
+                self.add_import(c_imports['complex'])
+                return '{self.find_in_dtype_registry(dtype.element_type)} complex'
+            elif isinstance(primitive_type, PyccelIntegerType):
+                self.add_import(c_imports['stdint'])
+            elif isinstance(dtype, PythonNativeBool):
+                self.add_import(c_imports['stdbool'])
+                return 'bool'
+
+            key = (primitive_type, dtype.precision)
+        else:
+            key = dtype
 
         try :
-            return self.dtype_registry[dtype]
+            return self.dtype_registry[key]
         except KeyError:
-            if dtype.primitive_type is PyccelIntegerType():
-                self.add_import(c_imports['stdint'])
-                bits = dtype.precision*8
-                return f'int{bits}_t'
-            else:
-                errors.report(PYCCEL_RESTRICTION_TODO,
-                        symbol = dtype,
-                        severity='fatal')
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
+                    symbol = dtype,
+                    severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype):
         """
@@ -1307,7 +1319,7 @@ class CCodePrinter(CodePrinter):
             arg_vars.extend(result_vars)
             self._additional_args.append(result_vars) # Ensure correct result for is_c_pointer
         else:
-            ret_type = self.find_in_dtype_registry(VoidType(), 0)
+            ret_type = self.find_in_dtype_registry(VoidType())
 
         name = expr.name
         if not arg_vars:
@@ -1367,7 +1379,7 @@ class CCodePrinter(CodePrinter):
                             Slice.Element)
                 inds = [self._print(i) for i in inds]
                 return "array_slicing(%s, %s, %s)" % (base_name, expr.rank, ", ".join(inds))
-            inds = [self._cast_to(i, NativeInteger(), 8).format(self._print(i)) for i in inds]
+            inds = [self._cast_to(i, NumpyInt64Type()).format(self._print(i)) for i in inds]
         else:
             raise NotImplementedError(expr)
         return "GET_ELEMENT(%s, %s, %s)" % (base_name, dtype, ", ".join(inds))
@@ -1500,7 +1512,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['ndarrays'])
             shape = ", ".join(self._print(i) for i in expr.shape)
             dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            shape_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
+            shape_dtype = self.find_in_dtype_registry(NumpyInt64Type())
             shape_Assign = "("+ shape_dtype +"[]){" + shape + "}"
             is_view = 'false' if variable.on_heap else 'true'
             order = "order_f" if expr.order == "F" else "order_c"
