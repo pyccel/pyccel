@@ -1770,7 +1770,7 @@ class SemanticParser(BasicParser):
                 e.loops[-1].scope.update_parent_scope(loop.scope, is_loop = True)
 
         if isinstance(expr, FunctionalSum):
-            if isinstance(dtype, NativePythonBool):
+            if isinstance(dtype, PythonNativeBool):
                 val = LiteralInteger(0)
             else:
                 val = convert_to_literal(0, dtype)
@@ -2061,13 +2061,13 @@ class SemanticParser(BasicParser):
                             args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
                                 is_const = t.is_const, is_optional = False,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype),
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
                             types = [self._visit(d).type_list[0] for d in v.results]
                             results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'),
                                 shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
+                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(t.datatype),
                                 is_const = t.is_const, is_optional = False,
                                 memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
 
@@ -2176,7 +2176,7 @@ class SemanticParser(BasicParser):
         for v in arg:
             if isinstance(v, Variable):
                 dtype = v.dtype
-                if isinstance(value, Literal) and value.dtype is dtype:
+                if isinstance(value, Literal) and value is not Nil():
                     value = convert_to_literal(value.python_value, dtype)
                 clone_var = v.clone(v.name, is_optional = is_optional, is_argument = True)
                 args.append(FunctionDefArgument(clone_var, bound_argument = bound_argument,
@@ -3754,7 +3754,6 @@ class SemanticParser(BasicParser):
                         original_symbols = expr.scope.python_names.copy())
 
                 if len(arguments)>0 and arguments[0].bound_argument:
-                    print(arguments[0].var.class_type.name, cls_name)
                     if arguments[0].var.class_type.name != cls_name:
                         errors.report('Class method self argument does not have the expected type',
                                 severity='error', symbol=arguments[0])

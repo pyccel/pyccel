@@ -419,7 +419,7 @@ class PythonFloat(PyccelInternalFunction):
     _class_type = PythonNativeFloat()
 
     def __new__(cls, arg):
-        if isinstance(arg, LiteralFloat) and arg.dtype == cls._dtype:
+        if isinstance(arg, LiteralFloat) and arg.dtype is cls._dtype:
             return arg
         if isinstance(arg, (LiteralInteger, LiteralFloat)):
             return LiteralFloat(arg.python_value, dtype = cls._dtype)

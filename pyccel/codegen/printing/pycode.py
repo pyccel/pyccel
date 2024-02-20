@@ -889,7 +889,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Literal(self, expr):
         dtype = expr.dtype
 
-        if isinstance(expr.dtype, NumpyNumericType):
+        if isinstance(dtype, NumpyNumericType):
             cast_func = DtypePrecisionToCastFunction[dtype]
             type_name = cast_func.__name__.lower()
             is_numpy  = type_name.startswith('numpy')

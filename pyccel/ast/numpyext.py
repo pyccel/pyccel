@@ -935,9 +935,9 @@ class NumpyLinspace(NumpyNewArray):
             args      = (start, stop)
             type_info = NumpyResultType(*args)
             if type_info.dtype.primitive_type is PyccelIntegerType():
-                self._dtype     = NumpyFloat64Type()
+                self._dtype = NumpyFloat64Type()
             else:
-                self._dtype = type_info.dtype
+                self._dtype = process_dtype(type_info.dtype)
 
         self._index = Variable(PythonNativeInt(), 'linspace_index')
         self._start = start
