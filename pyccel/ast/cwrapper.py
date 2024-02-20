@@ -20,6 +20,7 @@ from .bind_c    import BindCPointer
 from .datatypes import FixedSizeType, ContainerType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
+from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
@@ -1024,17 +1025,15 @@ pytype_parse_registry = {
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
-    PythonNativeBool()     : 'PyBool_to_Bool',
-    #(PythonNativeInt(), 1)   : 'PyInt8_to_Int8',
-    #(PythonNativeInt(), 2)   : 'PyInt16_to_Int16',
-    #(PythonNativeInt(), 4)   : 'PyInt32_to_Int32',
-    #(PythonNativeInt(), 8)   : 'PyInt64_to_Int64',
-    #(PythonNativeFloat(), 4)     : 'PyFloat_to_Float',
-    #(PythonNativeFloat(), 8)     : 'PyDouble_to_Double',
-    PythonNativeFloat()     : 'PyDouble_to_Double',
-    #(NativeComplex(), 4)   : 'PyComplex_to_Complex64',
-    #(NativeComplex(), 8)   : 'PyComplex_to_Complex128',
-    PythonNativeComplex()   : 'PyComplex_to_Complex128',
+    (PyccelBooleanType(), -1)      : 'PyBool_to_Bool',
+    (PyccelIntegerType(), 1)       : 'PyInt8_to_Int8',
+    (PyccelIntegerType(), 2)       : 'PyInt16_to_Int16',
+    (PyccelIntegerType(), 4)       : 'PyInt32_to_Int32',
+    (PyccelIntegerType(), 8)       : 'PyInt64_to_Int64',
+    (PyccelFloatingPointType(), 4) : 'PyFloat_to_Float',
+    (PyccelFloatingPointType(), 8) : 'PyDouble_to_Double',
+    (PyccelComplexType(), 4)       : 'PyComplex_to_Complex64',
+    (PyccelComplexType(), 8)       : 'PyComplex_to_Complex128',
     }
 
 def C_to_Python(c_object):
@@ -1076,16 +1075,8 @@ def C_to_Python(c_object):
 c_to_py_registry = {
     PythonNativeBool()     : 'Bool_to_PyBool',
     PythonNativeInt()  : 'Int'+str(PythonNativeInt()._precision*8)+'_to_PyLong',
-    #(PythonNativeInt(), 1)   : 'Int8_to_NumpyLong',
-    #(PythonNativeInt(), 2)   : 'Int16_to_NumpyLong',
-    #(PythonNativeInt(), 4)   : 'Int32_to_NumpyLong',
-    #(PythonNativeInt(), 8)   : 'Int64_to_NumpyLong',
     PythonNativeFloat()    : 'Double_to_PyDouble',
-    #(PythonNativeFloat(), 4)     : 'Float_to_NumpyDouble',
-    #(PythonNativeFloat(), 8)     : 'Double_to_NumpyDouble',
     PythonNativeComplex()  : 'Complex128_to_PyComplex',
-    #(NativeComplex(), 4)   : 'Complex64_to_NumpyComplex',
-    #(NativeComplex(), 8)   : 'Complex128_to_NumpyComplex',
     }
 
 
@@ -1140,16 +1131,8 @@ PyList_Size = FunctionDef(name = 'PyList_Size',
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {
-    PythonNativeBool()     : 'PyIs_Bool',
-    PythonNativeInt()  : 'PyIs_NativeInt',
-    #(PythonNativeInt(), 1)   : 'PyIs_Int8',
-    #(PythonNativeInt(), 2)   : 'PyIs_Int16',
-    #(PythonNativeInt(), 4)   : 'PyIs_Int32',
-    #(PythonNativeInt(), 8)   : 'PyIs_Int64',
-    PythonNativeFloat()    : 'PyIs_PythonNativeFloat',
-    #(PythonNativeFloat(), 4)     : 'PyIs_Float',
-    #(PythonNativeFloat(), 8)     : 'PyIs_Double',
-    PythonNativeComplex()  : 'PyIs_NativeComplex',
-    #(NativeComplex(), 4)   : 'PyIs_Complex64',
-    #(NativeComplex(), 8)   : 'PyIs_Complex128'
+    PythonNativeBool()    : 'PyIs_Bool',
+    PythonNativeInt()     : 'PyIs_NativeInt',
+    PythonNativeFloat()   : 'PyIs_NativeFloat',
+    PythonNativeComplex() : 'PyIs_NativeComplex',
     }

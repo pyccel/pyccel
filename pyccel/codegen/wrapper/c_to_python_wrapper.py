@@ -283,9 +283,8 @@ class CToPythonWrapper(Wrapper):
 
             func_call = FunctionCall(func, [py_obj])
         else:
-            np_dtype = str(dtype)
             try :
-                type_ref = numpy_dtype_registry[np_dtype]
+                type_ref = numpy_dtype_registry[dtype]
             except KeyError:
                 errors.report(f"Can't check the type of an array of {dtype}\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
@@ -365,7 +364,7 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
-        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+        type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
 
         # Initialise the argument_type_flags
         argument_type_flags = {func : 0 for func in funcs}
@@ -1159,7 +1158,7 @@ class CToPythonWrapper(Wrapper):
         # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
 
-        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+        type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
         self.scope.insert_variable(type_indicator)
 
         self.exit_scope()
@@ -1463,7 +1462,7 @@ class CToPythonWrapper(Wrapper):
             cast.append(AliasAssign(arg_var, cast_c_res))
         elif arg_var.rank == 0:
             try :
-                cast_function = py_to_c_registry[dtype]
+                cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
             except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
             cast_func = FunctionDef(name = cast_function,

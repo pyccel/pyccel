@@ -1140,7 +1140,7 @@ class CCodePrinter(CodePrinter):
             primitive_type = dtype.primitive_type
             if isinstance(primitive_type, PyccelComplexType):
                 self.add_import(c_imports['complex'])
-                return '{self.find_in_dtype_registry(dtype.element_type)} complex'
+                return f'{self.find_in_dtype_registry(dtype.element_type)} complex'
             elif isinstance(primitive_type, PyccelIntegerType):
                 self.add_import(c_imports['stdint'])
             elif isinstance(dtype, PythonNativeBool):

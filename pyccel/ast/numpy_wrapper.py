@@ -13,7 +13,7 @@ from pyccel.utilities.metaclasses import Singleton
 
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
 
-from .cwrapper          import PyccelPyObject
+from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry
 
 from .core              import FunctionDef, FunctionCall
 from .core              import FunctionDefArgument, FunctionDefResult
@@ -240,6 +240,29 @@ numpy_type_check_registry = {
     NumpyComplex64Type()  : Numpy_Complex64_ref,
     NumpyComplex128Type() : Numpy_Complex128_ref,
 }
+
+check_type_registry.update({
+    NumpyInt8Type()       : 'PyIs_Int8',
+    NumpyInt16Type()      : 'PyIs_Int16',
+    NumpyInt32Type()      : 'PyIs_Int32',
+    NumpyInt64Type()      : 'PyIs_Int64',
+    NumpyFloat32Type()    : 'PyIs_Float',
+    NumpyFloat64Type()    : 'PyIs_Double',
+    NumpyComplex64Type()  : 'PyIs_Complex64',
+    NumpyComplex128Type() : 'PyIs_Complex128'
+    })
+
+c_to_py_registry.update({
+    NumpyInt8Type()       : 'Int8_to_NumpyLong',
+    NumpyInt16Type()      : 'Int16_to_NumpyLong',
+    NumpyInt32Type()      : 'Int32_to_NumpyLong',
+    NumpyInt64Type()      : 'Int64_to_NumpyLong',
+    NumpyFloat32Type()    : 'Float_to_NumpyDouble',
+    NumpyFloat64Type()    : 'Double_to_NumpyDouble',
+    NumpyComplex64Type()  : 'Complex64_to_NumpyComplex',
+    NumpyComplex128Type() : 'Complex128_to_NumpyComplex'
+    })
+
 
 # helpers
 def array_type_check(py_variable, c_variable, raise_error):
