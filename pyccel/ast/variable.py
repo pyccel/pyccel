@@ -183,11 +183,8 @@ class Variable(TypedAstNode):
         self._is_temp        = is_temp
 
         # ------------ TypedAstNode Properties ---------------
-        if not isinstance(dtype, PyccelType):
-            raise TypeError('datatype must be an instance of PyccelType.')
-
-        if not isinstance(rank, int):
-            raise TypeError('rank must be an instance of int.')
+        assert isinstance(dtype, PyccelType)
+        assert isinstance(rank, int)
 
         if rank == 0:
             assert shape is None
