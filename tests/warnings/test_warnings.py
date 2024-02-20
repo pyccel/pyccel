@@ -82,7 +82,8 @@ def test_cwrapper_warnings(f, language):
         epyccel(f, language='c')
 
 @pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
-def test_bind_c_warnings(f, language):
+@pytest.mark.fortran
+def test_bind_c_warnings(f):
     with pytest.warns(UserWarning):
         epyccel(f, language='fortran')
 

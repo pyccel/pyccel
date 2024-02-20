@@ -749,7 +749,7 @@ class CCodePrinter(CodePrinter):
             if classDef.docstring is not None:
                 classes += self._print(classDef.docstring)
             classes += f"struct {classDef.name} {{\n"
-            classes += ''.join(self._print(Declare(var.dtype,var)) for var in classDef.attributes)
+            classes += ''.join(self._print(Declare(var)) for var in classDef.attributes)
             class_scope = classDef.scope
             for method in classDef.methods:
                 if not method.is_inline:
@@ -1249,7 +1249,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Declare(self, expr):
         if isinstance(expr.variable, InhomogeneousTupleVariable):
-            return ''.join(self._print_Declare(Declare(v.dtype,v,intent=expr.intent, static=expr.static)) for v in expr.variable)
+            return ''.join(self._print_Declare(Declare(v,intent=expr.intent, static=expr.static)) for v in expr.variable)
 
         declaration_type = self.get_declare_type(expr.variable)
         variable = self._print(expr.variable.name)
@@ -1827,15 +1827,15 @@ class CCodePrinter(CodePrinter):
             self._additional_args.append(results)
 
         body  = self._print(expr.body)
-        decs  = [Declare(i.dtype, i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
+        decs  = [Declare(i) if isinstance(i, Variable) else FuncAddressDeclare(i) for i in expr.local_vars]
 
         if len(results) == 1 :
             res = results[0]
             if isinstance(res, Variable) and not res.is_temp:
-                decs += [Declare(res.dtype, res)]
+                decs += [Declare(res)]
             elif not isinstance(res, Variable):
                 raise NotImplementedError(f"Can't return {type(res)} from a function")
-        decs += [Declare(v.dtype,v) for v in self.scope.variables.values() \
+        decs += [Declare(v) for v in self.scope.variables.values() \
                 if v not in chain(expr.local_vars, results, arguments)]
         decs  = ''.join(self._print(i) for i in decs)
 
@@ -2359,7 +2359,7 @@ class CCodePrinter(CodePrinter):
         self.set_scope(expr.scope)
         body  = self._print(expr.body)
         variables = self.scope.variables.values()
-        decs = ''.join(self._print(Declare(v.dtype, v)) for v in variables)
+        decs = ''.join(self._print(Declare(v)) for v in variables)
 
         imports = [*expr.imports, *self._additional_imports.values()]
         imports = ''.join(self._print(i) for i in imports)

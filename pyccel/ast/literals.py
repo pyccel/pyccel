@@ -16,6 +16,7 @@ __all__ = (
     'convert_to_literal',
     'Literal',
     'LiteralComplex',
+    'LiteralEllipsis',
     'LiteralFalse',
     'LiteralFloat',
     'LiteralImaginaryUnit',
@@ -386,6 +387,28 @@ class NilArgument(PyccelAstNode):
 
     def __bool__(self):
         return False
+
+#------------------------------------------------------------------------------
+
+class LiteralEllipsis(Literal, metaclass=Singleton):
+    """
+    Class representing an Ellipsis object in the code.
+
+    Class representing the Python value Ellipsis in the code.
+    """
+    __slots__ = ()
+
+    def __str__(self):
+        return '...'
+
+    @property
+    def python_value(self):
+        """
+        Get the Python literal represented by this instance.
+
+        Get the Python literal represented by this instance.
+        """
+        return ...
 
 #------------------------------------------------------------------------------
 

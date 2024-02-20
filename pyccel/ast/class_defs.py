@@ -5,11 +5,16 @@
 """
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
+
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListPop, ListClear
+
+
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
 from .datatypes import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
-                        PythonNativeComplex, StringType, TupleType, CustomDataType)
+                        PythonNativeComplex, StringType, TupleType, CustomDataType,
+                        HomogeneousListType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -22,6 +27,7 @@ __all__ = ('BooleanClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
+        'ListClass',
         'literal_classes',
         'get_cls_base')
 
@@ -129,6 +135,18 @@ StringClass = ClassDef('string', class_type = StringType(),
 
 #=======================================================================================
 
+ListClass = ClassDef('list',
+        methods=[
+            PyccelFunctionDef('append', func_class = ListAppend,
+                decorators = {}),
+            PyccelFunctionDef('pop', func_class = ListPop,
+                decorators = {}),
+            PyccelFunctionDef('clear', func_class = ListClear,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple',
         methods=[
             #index
@@ -184,18 +202,15 @@ literal_classes = {
 
 #=======================================================================================
 
-def get_cls_base(dtype, container_type):
+def get_cls_base(class_type):
     """
     Determine the base class of an object.
 
-    From the dtype and rank, determine the base class of an object.
+    From the type, determine the base class of an object.
 
     Parameters
     ----------
-    dtype : DataType
-        The data type of the object.
-
-    container_type : DataType
+    class_type : DataType
         The Python type of the object. If this is different to the dtype then
         the object is a container.
 
@@ -209,14 +224,16 @@ def get_cls_base(dtype, container_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if dtype in literal_classes:
-        return literal_classes[dtype]
-    elif isinstance(dtype, CustomDataType) and container_type is dtype:
+    if isinstance(class_type, CustomDataType) and class_type is class_type:
         return None
-    elif isinstance(container_type, (NumpyNDArrayType, NumpyNumericType)):
+    elif class_type in literal_classes:
+        return literal_classes[class_type]
+    elif isinstance(class_type, (NumpyNumericType, NumpyNDArrayType)):
         return NumpyArrayClass
-    elif isinstance(container_type, TupleType):
+    elif isinstance(class_type, TupleType):
         return TupleClass
+    elif isinstance(class_type, NativeHomogeneousList):
+        return ListClass
     else:
-        raise NotImplementedError(f"No class definition found for type {container_type}")
+        raise NotImplementedError(f"No class definition found for type {class_type}")
 

@@ -1080,7 +1080,7 @@ class CToPythonWrapper(Wrapper):
         pymod = self._wrap_Module(expr)
 
         # Add declarations for C-compatible variables
-        decs = [Declare(v.dtype, v.clone(v.name.lower()), module_variable=True, external = True) \
+        decs = [Declare(v.clone(v.name.lower()), module_variable=True, external = True) \
                                     for v in expr.variables if not v.is_private and isinstance(v, BindCVariable)]
         pymod.declarations = decs
 

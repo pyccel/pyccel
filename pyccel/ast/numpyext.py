@@ -26,6 +26,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
+from .datatypes      import InhomogeneousTupleType
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -39,7 +40,7 @@ from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Typ
 from .numpytypes     import NumpyComplex64Type, NumpyComplex128Type, NumpyComplex256Type, numpy_precision_map
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .type_annotations import typenames_to_dtypes as dtype_registry
-from .variable       import Variable, Constant
+from .variable       import Variable, Constant, IndexedElement
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -595,11 +596,18 @@ class NumpyArray(NumpyNewArray):
 
     def __init__(self, arg, dtype=None, order='K', ndmin=None):
 
-        if not isinstance(arg, (PythonTuple, PythonList, Variable)):
+        if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
+        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
+        # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
+        if isinstance(arg.class_type, NativeInhomogeneousTuple):
+            if not isinstance(arg, PythonTuple):
+                arg = PythonTuple(*arg)
+            is_homogeneous_tuple = arg.is_homogeneous
+
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
-        if not isinstance(arg.class_type, HomogeneousContainerType):
+        if not (is_homogeneous_tuple or isinstance(arg.class_type, HomogeneousContainerType)):
             raise TypeError('we only accept homogeneous arguments')
 
         if not isinstance(order, (LiteralString, str)):
@@ -615,13 +623,21 @@ class NumpyArray(NumpyNewArray):
 
         init_dtype = dtype
 
-        # Verify dtype and get precision
-        if dtype is None:
-            dtype = arg.dtype
+        if isinstance(arg.dtype, NativeInhomogeneousTuple):
+            # If pseudo-inhomogeneous due to pointers, extract underlying dtype
+            if dtype is None:
+                dtype = arg[0].dtype
+            dtype = process_dtype(dtype)
 
-        dtype = process_dtype(dtype)
+            shape = (LiteralInteger(len(arg)), *process_shape(False, arg[0].shape))
+        else:
+            # Verify dtype and get precision
+            if dtype is None:
+                dtype = arg.dtype
+            dtype = process_dtype(dtype)
 
-        shape = process_shape(False, arg.shape)
+            shape = process_shape(False, arg.shape)
+
         rank  = len(shape)
 
         if ndmin and ndmin>rank:
@@ -905,7 +921,7 @@ class NumpyLinspace(NumpyNewArray):
       endpoint : bool, optional
            If True, stop is the last sample. Otherwise, it is not included. Default is True.
 
-      dtype : str, DataType
+      dtype : str, PyccelType
            The type of the output array. If dtype is not given, the data type is calculated
            from start and stop, the calculated dtype will never be an integer.
     """
