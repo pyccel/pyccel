@@ -636,19 +636,18 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 
         BaseClass.__init__(self)
 
+    assert isinstance(argname, (list, tuple))
     def class_name_func(self):
         if argname: 
-            param = ', '.join(getattr(self, a).name for a in argname)
+            param = ', '.join(str(getattr(self, a)) for a in argname)
             return f'{self._name}[{param}]'
         else:
             return f'{self._name}'
 
     newclass = type(f'Pyccel{name}', (BaseClass,),
                     {"__init__": class_init_func,
-                     "name": class_name_func,
+                     "name": property(class_name_func),
                      "_name": name})
-
-    dtype_and_precision_registry[name] = (newclass(), 0)
 
     return newclass
 

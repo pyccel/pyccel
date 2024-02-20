@@ -1982,7 +1982,7 @@ class NumpyConjugate(PythonConjugate):
         self._order = arg.order
         self._rank  = self.internal_var.rank
         self._shape = process_shape(self._rank == 0, self.internal_var.shape)
-        self._class_type = NumpyNDArrayType()
+        self._class_type = NumpyNDArrayType(arg.dtype)
 
     @property
     def is_elemental(self):

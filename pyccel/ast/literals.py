@@ -244,7 +244,7 @@ class LiteralComplex(Literal):
         elif isinstance(arg, (int, float)):
             return arg
         else:
-            raise TypeError("LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat")
+            raise TypeError(f"LiteralComplex argument must be an int/float/LiteralInt/LiteralFloat not a {type(arg)}")
 
     @property
     def real(self):
@@ -441,7 +441,7 @@ def convert_to_literal(value, dtype = None):
     elif isinstance(primitive_type, PyccelFloatingPointType):
         literal_val = LiteralFloat(value, dtype)
     elif isinstance(primitive_type, PyccelComplexType):
-        literal_val = LiteralComplex(value, dtype)
+        literal_val = LiteralComplex(value.real, value.imag, dtype)
     elif isinstance(primitive_type, PyccelBooleanType):
         if value:
             literal_val = LiteralTrue(dtype)

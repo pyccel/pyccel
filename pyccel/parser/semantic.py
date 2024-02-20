@@ -62,15 +62,14 @@ from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 from pyccel.ast.class_defs import get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
-from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType
+from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-#from pyccel.ast.datatypes import str_dtype, DataType
-#from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
-#from pyccel.ast.datatypes import default_precision, dtype_and_precision_registry
+from pyccel.ast.datatypes import DataTypeFactory, CustomDataType
+from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
 #from pyccel.ast.datatypes import (NativeInteger,
-#                                  NativeFloat, NativeString, InhomogeneousTupleType,
-#                                  GenericType, NativeComplex, TupleType,
-#                                  VoidType, NativeHomogeneousTuple)
+#                                  NativeFloat, NativeString,
+#                                  NativeComplex,
+#                                  )
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -106,7 +105,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
 
 from pyccel.ast.type_annotations import VariableTypeAnnotation, UnionTypeAnnotation, SyntacticTypeAnnotation
-from pyccel.ast.type_annotations import FunctionTypeAnnotation
+from pyccel.ast.type_annotations import FunctionTypeAnnotation, typenames_to_dtypes
 
 from pyccel.ast.typingext import TypingFinal
 
@@ -504,7 +503,7 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        DataType
+        PyccelType
             The datatype for the class.
 
         Raises
@@ -1197,7 +1196,7 @@ class SemanticParser(BasicParser):
         name : str
             The name of the new variable.
 
-        dtype : DataType
+        dtype : PyccelType
             The data type of the new variable.
 
         rhs : Variable
@@ -1424,7 +1423,7 @@ class SemanticParser(BasicParser):
                 # ...
                 # Add memory allocation if needed
                 array_declared_in_function = (isinstance(rhs, FunctionCall) and not isinstance(rhs.funcdef, PyccelFunctionDef) \
-                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, NativeHomogeneousTuple)) or arr_in_multirets
+                                            and not getattr(rhs.funcdef, 'is_elemental', False) and not isinstance(lhs.class_type, HomogeneousTupleType)) or arr_in_multirets
                 if lhs.on_heap and not array_declared_in_function:
                     if self.scope.is_loop:
                         # Array defined in a loop may need reallocation at every cycle
@@ -1519,8 +1518,8 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        dtype : DataType
-            The inferred DataType.
+        dtype : PyccelType
+            The inferred PyccelType.
         d_var : dict
             The inferred information about the variable. Usually created by the _infer_type function.
         var : Variable
@@ -1771,9 +1770,10 @@ class SemanticParser(BasicParser):
                 e.loops[-1].scope.update_parent_scope(loop.scope, is_loop = True)
 
         if isinstance(expr, FunctionalSum):
-            val = LiteralInteger(0)
-            if str_dtype(dtype) in ['float', 'complex']:
-                val = LiteralFloat(0.0)
+            if isinstance(dtype, NativePythonBool):
+                val = LiteralInteger(0)
+            else:
+                val = convert_to_literal(0, dtype)
         elif isinstance(expr, FunctionalMin):
             val = math_constants['inf']
         elif isinstance(expr, FunctionalMax):
@@ -2473,7 +2473,7 @@ class SemanticParser(BasicParser):
             rank = 0
             order = None
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, rank, order))
-        elif isinstance(visited_dtype, DataType):
+        elif isinstance(visited_dtype, PyccelType):
             return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
@@ -2616,7 +2616,7 @@ class SemanticParser(BasicParser):
                         return a.get_vars()
                     elif isinstance(a, PythonTuple):
                         return a.args
-                    elif isinstance(a.class_type, NativeHomogeneousTuple):
+                    elif isinstance(a.class_type, HomogeneousTupleType):
                         n_vars = a.shape[0]
                         if not isinstance(a.shape[0], (LiteralInteger, int)):
                             errors.report("Can't create an inhomogeneous tuple using a homogeneous tuple of unknown size",
@@ -3111,7 +3111,7 @@ class SemanticParser(BasicParser):
                     new_lhs.append( self._assign_lhs_variable(l, d, r, new_expressions, isinstance(expr, AugAssign),arr_in_multirets=r.rank>0 ) )
                 lhs = PythonTuple(*new_lhs)
 
-            elif isinstance(rhs.class_type, NativeHomogeneousTuple):
+            elif isinstance(rhs.class_type, HomogeneousTupleType):
                 new_lhs = []
                 d_var = self._infer_type(rhs[0])
                 new_rhs = []
@@ -3695,7 +3695,7 @@ class SemanticParser(BasicParser):
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
         if cls_name:
-            bound_class = self.scope.find(cls_name, 'classes')
+            bound_class = self.scope.find(cls_name, 'classes', raise_if_missing = True)
 
         not_used = [d for d in decorators if d not in def_decorators.__all__]
         if len(not_used) >= 1:
@@ -3754,7 +3754,8 @@ class SemanticParser(BasicParser):
                         original_symbols = expr.scope.python_names.copy())
 
                 if len(arguments)>0 and arguments[0].bound_argument:
-                    if arguments[0].var.cls_base.name != cls_name:
+                    print(arguments[0].var.class_type.name, cls_name)
+                    if arguments[0].var.class_type.name != cls_name:
                         errors.report('Class method self argument does not have the expected type',
                                 severity='error', symbol=arguments[0])
                     for s in expr.scope.dotted_symbols:
@@ -3924,7 +3925,7 @@ class SemanticParser(BasicParser):
 
         def is_symbolic(var):
             return isinstance(var, Variable) \
-                and isinstance(var.dtype, NativeSymbol)
+                and isinstance(var.dtype, SymbolType)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
@@ -3956,8 +3957,9 @@ class SemanticParser(BasicParser):
         name = self.scope.get_expected_name(expr.name)
 
         #  create a new Datatype for the current class
-        dtype = DataTypeFactory(name, '_name')
-        self.scope.cls_constructs[name] = dtype()
+        dtype = DataTypeFactory(name)()
+        typenames_to_dtypes[name] = dtype
+        self.scope.cls_constructs[name] = dtype
 
         parent = self._find_superclasses(expr)
 
@@ -3978,7 +3980,7 @@ class SemanticParser(BasicParser):
         docstring = self._visit(expr.docstring) if expr.docstring else expr.docstring
 
         cls = ClassDef(name, attributes, [], superclasses=parent, scope=scope,
-                docstring = docstring, class_type = dtype())
+                docstring = docstring, class_type = dtype)
         self.scope.parent_scope.insert_class(cls)
 
         methods = list(expr.methods)
@@ -4007,7 +4009,7 @@ class SemanticParser(BasicParser):
                 methods.pop(i)
 
                 # create a new attribute to check allocation
-                deallocater_lhs = Variable(cls.name, 'self', cls_base = cls, is_argument=True)
+                deallocater_lhs = Variable(dtype, 'self', cls_base = cls, is_argument=True)
                 deallocater = DottedVariable(lhs = deallocater_lhs, name = self.scope.get_new_name('is_freed'),
                                              dtype = PythonNativeBool(), is_private=True)
                 cls.add_new_attribute(deallocater)
@@ -4024,7 +4026,7 @@ class SemanticParser(BasicParser):
             self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
-            argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
+            argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
             del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)
