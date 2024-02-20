@@ -486,7 +486,7 @@ class PyccelBinaryOperator(PyccelOperator):
         If one argument is a string then all arguments must be strings
 
         If the arguments are numeric then the dtype and class type
-        match the broadest type and the largest precision
+        match the broadest type
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
@@ -659,7 +659,7 @@ class PyccelAdd(PyccelArithmeticOperator):
         If one argument is a string then all arguments must be strings
 
         If the arguments are numeric then the dtype and class type
-        match the broadest type and the largest precision
+        match the broadest type
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
@@ -827,7 +827,7 @@ class PyccelDiv(PyccelArithmeticOperator):
         If one argument is a string then all arguments must be strings
 
         If the arguments are numeric then the dtype and class type
-        match the broadest type and the largest precision
+        match the broadest type
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
@@ -1319,7 +1319,7 @@ class IfTernaryOperator(PyccelOperator):
     >>> IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     IfTernaryOperator(PyccelGt(n > 1),  5,  2)
     """
-    __slots__ = ('_dtype','_precision','_shape','_rank','_order','_class_type')
+    __slots__ = ('_dtype','_shape','_rank','_order','_class_type')
     _precedence = 3
 
     def __init__(self, cond, value_true, value_false):
