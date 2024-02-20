@@ -35,11 +35,11 @@ from pyccel.ast.datatypes     import FixedSizeNumericType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
-#from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
-#from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
-#from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
-#from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
-#from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
+from pyccel.ast.numpy_wrapper import pyarray_to_ndarray, PyArray_SetBaseObject, import_array
+from pyccel.ast.numpy_wrapper import array_get_data, array_get_dim
+from pyccel.ast.numpy_wrapper import array_get_c_step, array_get_f_step
+from pyccel.ast.numpy_wrapper import numpy_dtype_registry, numpy_flag_f_contig, numpy_flag_c_contig
+from pyccel.ast.numpy_wrapper import pyarray_check, is_numpy_array, no_order_check
 from pyccel.ast.operators     import PyccelNot, PyccelIsNot, PyccelUnarySub, PyccelEq, PyccelIs
 from pyccel.ast.operators     import PyccelLt, IfTernaryOperator
 from pyccel.ast.variable      import Variable, DottedVariable, IndexedElement
@@ -637,7 +637,7 @@ class CToPythonWrapper(Wrapper):
         body.append(AliasAssign(capsule_obj, PyCapsule_New(API_var, self.scope.get_python_name(mod_name))))
         body.extend(self._add_object_to_mod(module_var, capsule_obj, '_C_API', initialised))
 
-        #body.append(FunctionCall(import_array, ()))
+        body.append(FunctionCall(import_array, ()))
         import_funcs = [i.source_module.import_func for i in imports if isinstance(i.source_module, PyModule)]
         for i_func in import_funcs:
             body.append(If(IfSection(PyccelLt(FunctionCall(i_func, ()), ok_code),

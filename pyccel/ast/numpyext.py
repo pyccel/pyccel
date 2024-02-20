@@ -35,7 +35,7 @@ from .literals       import LiteralTrue, LiteralFalse
 from .literals       import Nil
 from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
-from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyNDArrayType
+from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type, NumpyNDArrayType
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
 from .type_annotations import typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant
@@ -130,9 +130,10 @@ dtype_registry.update({
     'i4' : NumpyInt32Type(),
     'i8' : NumpyInt64Type(),
     'float32' : NumpyFloat32Type(),
-    'float64' : NumpyFloat32Type(),
+    'float64' : NumpyFloat64Type(),
+    'float128' : NumpyFloat128Type(),
     'f4' : NumpyFloat32Type(),
-    'f8' : NumpyFloat32Type(),
+    'f8' : NumpyFloat64Type(),
     'complex64' : ComplexType(NumpyFloat32Type()),
     'complex128' : ComplexType(NumpyFloat64Type()),
     'c8' : ComplexType(NumpyFloat32Type()),

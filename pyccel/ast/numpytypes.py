@@ -8,6 +8,8 @@
 """
 from functools import lru_cache
 
+from pyccel.utilities.stage   import PyccelStage
+
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, ComplexType
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
 
@@ -21,6 +23,8 @@ __all__ = (
         'NumpyNDArrayType',
         'NumpyNumericType',
         )
+
+pyccel_stage = PyccelStage()
 
 primitive_type_precedence = [PyccelBooleanType(), PyccelIntegerType(), PyccelFloatingPointType()]
 
@@ -130,6 +134,17 @@ class NumpyFloat64Type(NumpyNumericType):
     _primitive_type = PyccelFloatingPointType()
     _precision = 8
 
+class NumpyFloat128Type(NumpyNumericType):
+    """
+    Class representing NumPy's float128 type.
+
+    Class representing NumPy's float128 type.
+    """
+    __slots__ = ()
+    _name = 'float128'
+    _primitive_type = PyccelFloatingPointType()
+    _precision = 16
+
 #==============================================================================
 
 class NumpyNDArrayType(HomogeneousContainerType):
@@ -142,7 +157,8 @@ class NumpyNDArrayType(HomogeneousContainerType):
     name = 'numpy.ndarray'
 
     def __init__(self, dtype):
-        assert isinstance(dtype, NumpyNumericType)
+        if pyccel_stage == 'semantic':
+            assert isinstance(dtype, NumpyNumericType)
         self._element_type = dtype
         super().__init__()
 
@@ -176,6 +192,7 @@ numpy_precision_map = {
         (PyccelIntegerType(), 2): NumpyInt16Type(),
         (PyccelIntegerType(), 4): NumpyInt32Type(),
         (PyccelIntegerType(), 8): NumpyInt64Type(),
-        (PyccelFloatingPointType(), 4): NumpyFloat32Type(),
-        (PyccelFloatingPointType(), 8): NumpyFloat64Type(),
+        (PyccelFloatingPointType(), 4) : NumpyFloat32Type(),
+        (PyccelFloatingPointType(), 8) : NumpyFloat64Type(),
+        (PyccelFloatingPointType(), 16): NumpyFloat128Type(),
         }

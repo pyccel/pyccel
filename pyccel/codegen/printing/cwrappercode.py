@@ -15,7 +15,7 @@ from pyccel.ast.cwrapper   import PyBuildValueNode, PyCapsule_New, PyCapsule_Imp
 from pyccel.ast.cwrapper   import Py_None, WrapperCustomDataType
 from pyccel.ast.cwrapper   import PyccelPyObject, PyccelPyTypeObject
 from pyccel.ast.literals   import LiteralString, Nil, LiteralInteger
-#from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
+from pyccel.ast.numpy_wrapper import PyccelPyArrayObject
 from pyccel.ast.c_concepts import ObjectAddress
 
 from pyccel.errors.errors  import Errors
@@ -50,7 +50,7 @@ class CWrapperCodePrinter(CCodePrinter):
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
                       PyccelPyObject() : 'PyObject',
-                      #(PyccelPyArrayObject() , 0) : 'PyArrayObject',
+                      PyccelPyArrayObject() : 'PyArrayObject',
                       PyccelPyTypeObject() : 'PyTypeObject',
                       BindCPointer()  : 'void'}
 
