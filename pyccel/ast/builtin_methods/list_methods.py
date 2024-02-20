@@ -49,7 +49,7 @@ class ListAppend(PyccelInternalFunction):
     _shape = None
     _order = None
     _rank = 0
-    _precision = -1
+    _precision = None
     _class_type = NativeVoid()
     name = 'append'
 
@@ -152,7 +152,7 @@ class ListClear(PyccelInternalFunction) :
     __slots__ = ('_list_variable',)
     _attribute_nodes = ('_list_variable',)
     _dtype = NativeVoid()
-    _precision = -1
+    _precision = None
     _rank = 0
     _order = None
     _shape = None
@@ -203,7 +203,7 @@ class ListInsert(PyccelInternalFunction):
     _shape = None
     _order = None
     _rank = 0
-    _precision = -1
+    _precision = None
     _class_type = NativeVoid()
     name = 'insert'
 
@@ -278,7 +278,7 @@ class ListExtend(PyccelInternalFunction):
     _shape = None
     _order = None
     _rank = 0
-    _precision = -1
+    _precision = None
     _class_type = NativeVoid()
     name = 'extend'
 
