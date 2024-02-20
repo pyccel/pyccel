@@ -263,7 +263,7 @@ def test_extend_tuple_with_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_insert_user_defined_objects(language):
+def test_extend_user_defined_objects(language):
     import modules.list_user_defined_objs2 as mod
 
     modnew = epyccel(mod, language=language)
