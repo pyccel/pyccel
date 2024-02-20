@@ -232,7 +232,7 @@ def get_cls_base(class_type):
         return NumpyArrayClass
     elif isinstance(class_type, TupleType):
         return TupleClass
-    elif isinstance(class_type, NativeHomogeneousList):
+    elif isinstance(class_type, HomogeneousListType):
         return ListClass
     else:
         raise NotImplementedError(f"No class definition found for type {class_type}")

@@ -19,7 +19,7 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PyccelComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, TupleType
-from .internals import PyccelInternalFunction, Slice
+from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
@@ -523,7 +523,7 @@ class PythonTuple(TypedAstNode):
                          len(orders) == 1 and len(shapes) == 1 and \
                          GenericType() not in dtypes
         contains_pointers = any(isinstance(a, (Variable, IndexedElement)) and a.rank>0 and \
-                            not isinstance(a.dtype, NativeHomogeneousTuple) for a in args)
+                            not isinstance(a.dtype, HomogeneousTupleType) for a in args)
 
         self._is_homogeneous = is_homogeneous
         if is_homogeneous and not contains_pointers:

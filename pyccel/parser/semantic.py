@@ -1576,10 +1576,8 @@ class SemanticParser(BasicParser):
         elif dtype != var.dtype or d_var['class_type'] != var.class_type:
             if is_augassign:
                 tmp_result = PyccelAdd(var, rhs)
-                result_dtype = str(tmp_result.dtype)
-                result_precision = get_final_precision(tmp_result)
-                raise_error = (str(var.dtype) != result_dtype or \
-                        get_final_precision(var) != result_precision)
+                result_dtype = tmp_result.dtype
+                raise_error = var.dtype != result_dtype
             elif dtype == var.dtype and var.rank == 0:
                 # Don't complain about non-numpy and numpy scalars
                 raise_error = False
@@ -1908,9 +1906,9 @@ class SemanticParser(BasicParser):
                 internal_datatypes = self._visit(syntactic_annotation)
                 type_annotations = []
                 if dtype_cls is PythonTupleFunction:
-                    class_type = NativeHomogeneousTuple()
+                    class_type = HomogeneousTupleType()
                 elif dtype_cls is PythonList:
-                    class_type = NativeHomogeneousList()
+                    class_type = HomogeneousListType()
                 else:
                     raise errors.report(f"Unknown annotation base {base}\n"+PYCCEL_RESTRICTION_TODO,
                             severity='fatal', symbol=expr)
@@ -3553,7 +3551,7 @@ class SemanticParser(BasicParser):
         else:
             d_var['order'] = None
         d_var['shape'] = shape
-        cls_type = NativeHomogeneousList()
+        cls_type = HomogeneousListType(dtype)
         d_var['class_type'] = cls_type
         d_var['cls_base'] = get_cls_base(cls_type)
 

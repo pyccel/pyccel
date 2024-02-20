@@ -599,9 +599,9 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable, IndexedElement)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
+        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
         # Inhomogeneous tuples can contain homogeneous data if it is inhomogeneous due to pointers
-        if isinstance(arg.class_type, NativeInhomogeneousTuple):
+        if isinstance(arg.class_type, InhomogeneousTupleType):
             if not isinstance(arg, PythonTuple):
                 arg = PythonTuple(*arg)
             is_homogeneous_tuple = arg.is_homogeneous
@@ -623,7 +623,7 @@ class NumpyArray(NumpyNewArray):
 
         init_dtype = dtype
 
-        if isinstance(arg.dtype, NativeInhomogeneousTuple):
+        if isinstance(arg.dtype, InhomogeneousTupleType):
             # If pseudo-inhomogeneous due to pointers, extract underlying dtype
             if dtype is None:
                 dtype = arg[0].dtype
