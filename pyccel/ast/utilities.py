@@ -26,8 +26,8 @@ from .literals      import LiteralInteger, Nil
 from .mathext       import math_mod
 from .sysext        import sys_mod
 
-#from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
-#                            NumpyTranspose, NumpyLinspace)
+from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod,
+                            NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
 from .scipyext      import scipy_mod
 from .typingext     import typing_mod
@@ -81,7 +81,7 @@ pyccel_mod = Module('pyccel',(),(),
 builtin_import_registry = Module('__main__',
         (),(),
         imports = [
-            #Import('numpy', numpy_mod),
+            Import('numpy', numpy_mod),
             Import('scipy', scipy_mod),
             Import('itertools', itertools_mod),
             Import('cmath', cmath_mod),

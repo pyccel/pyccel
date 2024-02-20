@@ -49,13 +49,13 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.mathext  import math_constants
 
-#from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
-#from pyccel.ast.numpyext import NumpyFloat, NumpyBool
-#from pyccel.ast.numpyext import NumpyReal, NumpyImag
-#from pyccel.ast.numpyext import NumpyRand
-#from pyccel.ast.numpyext import NumpyNewArray
-#from pyccel.ast.numpyext import NumpyNonZero
-#from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpyEmpty, NumpyInt32
+from pyccel.ast.numpyext import NumpyFloat, NumpyBool
+from pyccel.ast.numpyext import NumpyReal, NumpyImag
+from pyccel.ast.numpyext import NumpyRand
+from pyccel.ast.numpyext import NumpyNewArray
+from pyccel.ast.numpyext import NumpyNonZero
+from pyccel.ast.numpyext import NumpySign
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
 from pyccel.ast.operators import PyccelMod

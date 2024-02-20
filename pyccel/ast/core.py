@@ -3340,7 +3340,7 @@ class ClassDef(ScopedAstNode):
 
         if not iterable(superclasses):
             raise TypeError('superclasses must be iterable')
-        if pyccel_stage != 'syntactic':
+        if pyccel_stage.current_stage and pyccel_stage != 'syntactic':
             for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')

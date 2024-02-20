@@ -6,10 +6,10 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing types from the numpy module understood by pyccel
 """
+from functools import lru_cache
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, ComplexType
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
-from .type_annotations import typenames_to_dtypes
 
 __all__ = (
         'NumpyInt8Type',
@@ -23,34 +23,6 @@ __all__ = (
         )
 
 primitive_type_precedence = [PyccelBooleanType(), PyccelIntegerType(), PyccelFloatingPointType()]
-
-numpy_precision_map = {
-        (PyccelIntegerType(), 1): NumpyInt8Type(),
-        (PyccelIntegerType(), 2): NumpyInt16Type(),
-        (PyccelIntegerType(), 4): NumpyInt32Type(),
-        (PyccelIntegerType(), 8): NumpyInt64Type(),
-        (PyccelFloatingPointType(), 4): NumpyFloat32Type(),
-        (PyccelFloatingPointType(), 8): NumpyFloat64Type(),
-        }
-
-typenames_to_dtypes.update({
-    'int8' : NumpyInt8Type(),
-    'int16' : NumpyInt16Type(),
-    'int32' : NumpyInt32Type(),
-    'int64' : NumpyInt64Type(),
-    'i1' : NumpyInt8Type(),
-    'i2' : NumpyInt16Type(),
-    'i4' : NumpyInt32Type(),
-    'i8' : NumpyInt64Type(),
-    'float32' : NumpyFloat32Type(),
-    'float64' : NumpyFloat32Type(),
-    'f4' : NumpyFloat32Type(),
-    'f8' : NumpyFloat32Type(),
-    'complex64' : ComplexType(NumpyFloat32Type()),
-    'complex128' : ComplexType(NumpyFloat64Type()),
-    'c8' : ComplexType(NumpyFloat32Type()),
-    'c16' : ComplexType(NumpyFloat64Type()),
-    })
 
 #==============================================================================
 
@@ -160,18 +132,19 @@ class NumpyFloat64Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType, metaclass=Singleton):
+class NumpyNDArrayType(HomogeneousContainerType):
     """
     Class representing the NumPy ND array type.
 
     Class representing the NumPy ND array type.
     """
-    __slots__ = ()
+    __slots__ = ('_element_type',)
     name = 'numpy.ndarray'
 
     def __init__(self, dtype):
         assert isinstance(dtype, NumpyNumericType)
-        super().__init__(dtype)
+        self._element_type = dtype
+        super().__init__()
 
     @lru_cache
     def __add__(self, other):
@@ -188,10 +161,21 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass=Singleton):
             else:
                 return NumpyNDArrayType(other)
         elif isinstance(other, NumpyNDArrayType):
-            return NumpyNDArrayType(self.element_type+other.element_type
+            return NumpyNDArrayType(self.element_type+other.element_type)
         else:
             return NotImplemented
 
     @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
+
+#==============================================================================
+
+numpy_precision_map = {
+        (PyccelIntegerType(), 1): NumpyInt8Type(),
+        (PyccelIntegerType(), 2): NumpyInt16Type(),
+        (PyccelIntegerType(), 4): NumpyInt32Type(),
+        (PyccelIntegerType(), 8): NumpyInt64Type(),
+        (PyccelFloatingPointType(), 4): NumpyFloat32Type(),
+        (PyccelFloatingPointType(), 8): NumpyFloat64Type(),
+        }

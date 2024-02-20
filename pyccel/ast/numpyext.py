@@ -23,10 +23,11 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
-from .datatypes      import PythonNativeBool, PythonNativeInt, FixedSizeNumericType, ComplexType
+from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat, ComplexType
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType
+from .datatypes      import HomogeneousTupleType, FixedSizeNumericType
 
-from .internals      import PyccelInternalFunction, Slice, get_final_precision
+from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
 
 from .literals       import LiteralInteger, LiteralFloat, LiteralComplex, LiteralString, convert_to_literal
@@ -36,7 +37,7 @@ from .mathext        import MathCeil
 from .numpytypes     import NumpyNumericType, NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes     import NumpyFloat32Type, NumpyFloat64Type, NumpyNDArrayType
 from .operators      import broadcast, PyccelMinus, PyccelDiv, PyccelMul, PyccelAdd
-from .type_annotations import dtype_and_precision_registry as dtype_registry
+from .type_annotations import typenames_to_dtypes as dtype_registry
 from .variable       import Variable, Constant
 
 errors = Errors()
@@ -118,6 +119,25 @@ __all__ = (
     'NumpyZerosLike',
     'NumpyShape',
 )
+
+dtype_registry.update({
+    'int8' : NumpyInt8Type(),
+    'int16' : NumpyInt16Type(),
+    'int32' : NumpyInt32Type(),
+    'int64' : NumpyInt64Type(),
+    'i1' : NumpyInt8Type(),
+    'i2' : NumpyInt16Type(),
+    'i4' : NumpyInt32Type(),
+    'i8' : NumpyInt64Type(),
+    'float32' : NumpyFloat32Type(),
+    'float64' : NumpyFloat32Type(),
+    'f4' : NumpyFloat32Type(),
+    'f8' : NumpyFloat32Type(),
+    'complex64' : ComplexType(NumpyFloat32Type()),
+    'complex128' : ComplexType(NumpyFloat64Type()),
+    'c8' : ComplexType(NumpyFloat32Type()),
+    'c16' : ComplexType(NumpyFloat64Type()),
+    })
 
 #=======================================================================================
 def process_shape(is_scalar, shape):
@@ -575,7 +595,7 @@ class NumpyArray(NumpyNewArray):
         if not isinstance(arg, (PythonTuple, PythonList, Variable)):
             raise TypeError('Unknown type of  %s.' % type(arg))
 
-        is_homogeneous_tuple = isinstance(arg.class_type, NativeHomogeneousTuple)
+        is_homogeneous_tuple = isinstance(arg.class_type, HomogeneousTupleType)
         is_array = isinstance(arg, Variable) and arg.is_ndarray
 
         # TODO: treat inhomogenous lists and tuples when they have mixed ordering
@@ -759,13 +779,9 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
-        self._arg = NumpyInt(self._arg) if (isinstance(arg.dtype, NativeBool) or \
-                    (isinstance(arg.dtype, NativeInteger) and get_final_precision(self._arg) < default_precision[NativeInteger()]))\
+        self._arg = NumpyInt64(self._arg) if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) \
                     else self._arg
-        if isinstance(arg.dtype, NativeBool):
-            self._dtype = NumpyInt64Type()
-        else:
-            self._dtype = process_dtype(arg.dtype)
+        self._dtype = process_dtype(self._arg.dtype)
         self._class_type = self._dtype
 
     @property
@@ -1170,7 +1186,7 @@ class NumpyFull(NumpyNewArray):
     shape : TypedAstNode
         Shape of the new array, e.g., ``(2, 3)`` or ``2``.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
 
     fill_value : TypedAstNode
         Fill value.
@@ -1304,7 +1320,7 @@ class NumpyFullLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
 
     See Also
     --------
@@ -1348,7 +1364,7 @@ class NumpyEmptyLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
 
     See Also
     --------
@@ -1394,7 +1410,7 @@ class NumpyOnesLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
 
     See Also
     --------
@@ -1439,7 +1455,7 @@ class NumpyZerosLike(PyccelInternalFunction):
     shape : PythonTuple of TypedAstNode
         Overrides the shape of the array.
         For a 1D array this is either a `LiteralInteger` or an expression.
-        For a ND array this is a `TypedAstNode` with the class type NativeHomogeneousTuple.
+        For a ND array this is a `TypedAstNode` with the class type HomogeneousTupleType.
 
     See Also
     --------
@@ -1480,7 +1496,7 @@ class NumpyNorm(PyccelInternalFunction):
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
         arg_dtype = arg.dtype
-        if not (isinstance(arg_dtype, ComplexType) or isinstance(arg_dtype.primitive_type, PyccelFloatingPointType):
+        if not (isinstance(arg_dtype, ComplexType) or isinstance(arg_dtype.primitive_type, PyccelFloatingPointType)):
             arg = NumpyFloat64(arg)
             self._dtype = NumpyFloat64Type()
         else:
@@ -1583,7 +1599,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             The argument passed to the function.
         """
         x_dtype
-        if not (isinstance(x_dtype, ComplexType) or isinstance(x_dtype.primitive_type, PyccelFloatingPointType):
+        if not (isinstance(x_dtype, ComplexType) or isinstance(x_dtype.primitive_type, PyccelFloatingPointType)):
             self._dtype = NumpyFloat64Type()
         else:
             self._dtype = numpy_precision_map[(PyccelFloatingPointType(), x_dtype.precision)]
@@ -2038,7 +2054,7 @@ class NumpyNonZero(PyccelInternalFunction):
     _dtype = NumpyInt64Type()
     _rank  = 2
     _order = 'C'
-    _class_type = NativeHomogeneousTuple(NumpyNDArrayType(NumpyInt64Type()))
+    _class_type = HomogeneousTupleType(NumpyNDArrayType(NumpyInt64Type()))
 
     def __init__(self, a):
         if (a.rank > 1):
@@ -2181,14 +2197,14 @@ class NumpySize(PyccelInternalFunction):
 #==============================================================================
 
 DtypePrecisionToCastFunction.update({
-    NumpyInt8Type() : NumpyInt8(),
-    NumpyInt16Type() : NumpyInt16(),
-    NumpyInt32Type() : NumpyInt32(),
-    NumpyInt64Type() : NumpyInt64(),
-    NumpyFloat32Type() : NumpyFloat32(),
-    NumpyFloat64Type() : NumpyFloat64(),
-    ComplexType(NumpyFloat32Type()) : NumpyComplex64(),
-    ComplexType(NumpyFloat64Type()) : NumpyComplex128(),
+    NumpyInt8Type() : NumpyInt8,
+    NumpyInt16Type() : NumpyInt16,
+    NumpyInt32Type() : NumpyInt32,
+    NumpyInt64Type() : NumpyInt64,
+    NumpyFloat32Type() : NumpyFloat32,
+    NumpyFloat64Type() : NumpyFloat64,
+    ComplexType(NumpyFloat32Type()) : NumpyComplex64,
+    ComplexType(NumpyFloat64Type()) : NumpyComplex128,
     })
 
 #==============================================================================
@@ -2204,7 +2220,7 @@ numpy_random_mod = Module('random', (),
      PyccelFunctionDef('randint', NumpyRandint)])
 
 numpy_constants = {
-        'pi': Constant('float', 'pi', value=numpy.pi),
+        'pi': Constant(PythonNativeFloat(), 'pi', value=numpy.pi),
     }
 
 numpy_funcs = {

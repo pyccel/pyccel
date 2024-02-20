@@ -19,6 +19,7 @@ from .internals import apply_pickle
 from .literals  import LiteralInteger, Nil
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
+from .numpytypes import NumpyNDArrayType
 
 errors = Errors()
 pyccel_stage = PyccelStage()
@@ -446,7 +447,7 @@ class Variable(TypedAstNode):
             1. have a rank > 0
             2. dtype is one among {int, bool, float, complex}
         """
-        return isinstance(self.class_type, NumpyNDArrayType) and self.rank != 0
+        return isinstance(self.class_type, NumpyNDArrayType)
 
     def __str__(self):
         return str(self.name)

@@ -13,6 +13,9 @@ from .basic import PyccelAstNode
 
 from .core import FunctionDefArgument
 
+from .datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat, ComplexType
+from .datatypes import VoidType, GenericType, StringType
+
 from .variable import DottedName, AnnotatedPyccelSymbol, IndexedElement
 
 __all__ = (
@@ -20,6 +23,7 @@ __all__ = (
         'SyntacticTypeAnnotation',
         'VariableTypeAnnotation',
         'UnionTypeAnnotation',
+        'typenames_to_dtypes',
         )
 
 pyccel_stage = PyccelStage()
@@ -369,5 +373,5 @@ typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
                         'b1'      : PythonNativeBool(),
                         'void'    : VoidType(),
                         '*'       : GenericType(),
-                        'str'     : PythonNativeString(),
+                        'str'     : StringType(),
                         }
