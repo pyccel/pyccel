@@ -154,7 +154,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
     Class representing the NumPy ND array type.
     """
     __slots__ = ('_element_type',)
-    name = 'numpy.ndarray'
+    _name = 'numpy.ndarray'
 
     def __init__(self, dtype):
         if pyccel_stage == 'semantic':
