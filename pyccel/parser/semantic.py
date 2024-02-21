@@ -1068,7 +1068,32 @@ class SemanticParser(BasicParser):
                             expr, func.is_elemental)
             return new_expr
     def _handle_kernel(self, expr, func, args, **settings):
-        return  KernelCall(func, args, expr.numBlocks, expr.tpblock)
+        
+        """
+        Create the node representing the kernel function call.
+
+        Create a FunctionCall or an instance of a PyccelInternalFunction
+        from the function information and arguments.
+        Parameters
+        ----------
+        expr : PyccelAstNode
+               The expression where this call is found (used for error output).
+
+        func : FunctionDef instance, Interface instance or PyccelInternalFunction type
+               The function being called.
+
+        args : tuple
+               The arguments passed to the function.
+
+        **settings : dict
+            The settings passed to _visit functions.
+
+        Returns
+        -------
+        FunctionCall/PyccelInternalFunction
+        """
+        new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock)
+        return new_expr
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
         Create a new variable.
