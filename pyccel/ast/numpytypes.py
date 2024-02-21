@@ -106,7 +106,7 @@ class NumpyIntType(NumpyNumericType):
         else:
             return NotImplemented
 
-class NumpyInt8Type(NumpyNumericType):
+class NumpyInt8Type(NumpyIntType):
     """
     Class representing NumPy's int8 type.
 
@@ -116,7 +116,7 @@ class NumpyInt8Type(NumpyNumericType):
     _name = 'int8'
     _precision = 1
 
-class NumpyInt16Type(NumpyNumericType):
+class NumpyInt16Type(NumpyIntType):
     """
     Class representing NumPy's int16 type.
 
@@ -126,7 +126,7 @@ class NumpyInt16Type(NumpyNumericType):
     _name = 'int16'
     _precision = 2
 
-class NumpyInt32Type(NumpyNumericType):
+class NumpyInt32Type(NumpyIntType):
     """
     Class representing NumPy's int32 type.
 
@@ -136,7 +136,7 @@ class NumpyInt32Type(NumpyNumericType):
     _name = 'int32'
     _precision = 4
 
-class NumpyInt64Type(NumpyNumericType):
+class NumpyInt64Type(NumpyIntType):
     """
     Class representing NumPy's int64 type.
 

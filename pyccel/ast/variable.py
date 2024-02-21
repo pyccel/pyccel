@@ -444,7 +444,7 @@ class Variable(TypedAstNode):
             1. have a rank > 0
             2. dtype is one among {int, bool, float, complex}
         """
-        return isinstance(self.class_type, NumpyNDArrayType)
+        return isinstance(self.class_type, NumpyNDArrayType) and self.rank > 0
 
     def __str__(self):
         return str(self.name)
