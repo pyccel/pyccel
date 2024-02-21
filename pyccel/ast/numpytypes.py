@@ -247,7 +247,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
         if isinstance(other, FixedSizeNumericType):
             comparison_type = pyccel_type_to_original_type[other]()
         elif isinstance(other, NumpyNDArrayType):
-            comparison_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
+            comparison_type = np.zeros(1, dtype = pyccel_type_to_original_type[other.element_type])
         else:
             return NotImplemented
         result_type = original_type_to_pyccel_type[np.result_type(test_type, comparison_type).type]
@@ -308,5 +308,5 @@ numpy_type_to_original_type = {
 
 pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
-
+original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
 
