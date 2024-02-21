@@ -505,10 +505,16 @@ class PyccelBinaryOperator(PyccelOperator):
             The Python type of the object.
         """
         try:
-            dtype = arg1.dtype + arg2.dtype
             class_type = arg1.class_type + arg2.class_type
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
+
+        if isinstance(class_type, ContainerType):
+            dtype = class_type.element_type
+        else:
+            dtype = class_type
+
+        print(cls, arg1.class_type, arg1, arg2, class_type)
 
         return dtype, class_type
 
@@ -950,7 +956,17 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
             The Python type of the object.
         """
         dtype = PythonNativeBool()
-        return dtype, dtype
+        possible_class_types = set(a.class_type for a in args \
+                        if isinstance(a.class_type, ContainerType))
+        if len(possible_class_types) == 0:
+            class_type = dtype
+        elif len(possible_class_types) == 1:
+            cls = type(possible_class_types.pop())
+            class_type = cls(dtype)
+        else:
+            raise NotImplementedError("Can't deduce type for comparison operator"
+                                      " with multiple containers {', '.join(args)}")
+        return dtype, class_type
 
 #==============================================================================
 
