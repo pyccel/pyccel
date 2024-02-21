@@ -66,10 +66,7 @@ from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringT
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, CustomDataType, PyccelFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
-#from pyccel.ast.datatypes import (NativeInteger,
-#                                  NativeFloat, NativeString,
-#                                  NativeComplex,
-#                                  )
+from pyccel.ast.datatypes import PyccelComplexType, FixedSizeNumericType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -2807,7 +2804,7 @@ class SemanticParser(BasicParser):
     def _visit_CmathPhase(self, expr):
         arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
         var = arg.value
-        if var.dtype is not NativeComplex():
+        if not isinstance(var.dtype.primitive_type, PyccelComplexType):
             return LiteralFloat(0.0)
         else:
             self.insert_import('math', AsName(MathAtan2, 'atan2'))
@@ -4157,8 +4154,7 @@ class SemanticParser(BasicParser):
             isinstance(var2.dtype, PythonNativeBool)):
             return IsClass(var1, var2)
 
-        lst = [NativeString(), NativeComplex(), NativeFloat(), NativeInteger()]
-        if (var1.dtype in lst):
+        if isinstance(var1.class_type, (StringType, FixedSizeNumericType)):
             errors.report(PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, symbol=expr,
                 severity='error')
             return IsClass(var1, var2)
