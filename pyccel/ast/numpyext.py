@@ -26,7 +26,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType
+from .datatypes      import InhomogeneousTupleType, ContainerType
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -462,9 +462,11 @@ class NumpyResultType(PyccelInternalFunction):
     name = 'result_type'
 
     def __init__(self, *arrays_and_dtypes):
-        dtypes = [a.cls_name.static_dtype() if isinstance(a, PyccelFunctionDef) else a.dtype for a in arrays_and_dtypes]
-        self._dtype = sum(dtypes, start=GenericType())
-        self._class_type = self._dtype
+        types = [a.cls_name.static_dtype() if isinstance(a, PyccelFunctionDef) else a.class_type for a in arrays_and_dtypes]
+        self._class_type = sum(types, start=GenericType())
+        if isinstance(self._class_type, ContainerType):
+            self._class_type = self._class_type.element_type
+        self._dtype = self._class_type
 
         super().__init__(*arrays_and_dtypes)
 
