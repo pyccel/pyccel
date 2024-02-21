@@ -29,6 +29,7 @@ from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import PythonNativeFloat, TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import HomogeneousContainerType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
@@ -1232,7 +1233,7 @@ class CCodePrinter(CodePrinter):
         rank  = expr.rank
 
         if rank > 0:
-            if expr.is_ndarray or isinstance(expr.class_type, HomogeneousTupleType):
+            if expr.is_ndarray or isinstance(expr.class_type, HomogeneousContainerType):
                 if expr.rank > 15:
                     errors.report(UNSUPPORTED_ARRAY_RANK, symbol=expr, severity='fatal')
                 self.add_import(c_imports['ndarrays'])
@@ -1376,12 +1377,12 @@ class CCodePrinter(CodePrinter):
         if isinstance(base.class_type, NumpyNDArrayType):
             #set dtype to the C struct types
             dtype = self.find_in_ndarray_type_registry(expr.dtype)
-        elif isinstance(base.class_type, HomogeneousTupleType):
+        elif isinstance(base.class_type, HomogeneousContainerType):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(expr.dtype.primitive_type, expr.dtype.precision)])
         else:
             raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
         base_name = self._print(base)
-        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, HomogeneousTupleType):
+        if getattr(base, 'is_ndarray', False) or isinstance(base.class_type, HomogeneousContainerType):
             if expr.rank > 0:
                 #managing the Slice input
                 for i , ind in enumerate(inds):
@@ -1528,7 +1529,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(variable.class_type, NumpyNDArrayType):
                 #set dtype to the C struct types
                 dtype = self.find_in_ndarray_type_registry(variable.dtype)
-            elif isinstance(variable.class_type, HomogeneousTupleType):
+            elif isinstance(variable.class_type, HomogeneousContainerType):
                 dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(variable.dtype.primitive_type, variable.dtype.precision)])
             else:
                 raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
@@ -1555,7 +1556,7 @@ class CCodePrinter(CodePrinter):
         if isinstance(expr.variable.dtype, CustomDataType):
             Pyccel__del = expr.variable.cls_base.scope.find('__del__').name
             return f"{Pyccel__del}({variable_address});\n"
-        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousTupleType)):
+        elif isinstance(expr.variable.class_type, (NumpyNDArrayType, HomogeneousContainerType)):
             if expr.variable.is_alias:
                 return f'free_pointer({variable_address});\n'
             else:
