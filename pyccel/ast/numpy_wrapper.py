@@ -208,7 +208,8 @@ numpy_int_type_precision_map = {
         4 : np.dtype(np.int32).num,
         8 : np.dtype(np.int64).num}
 
-numpy_dtype_registry = {NumpyInt8Type()       : numpy_num_to_type[numpy_int_type_precision_map[1]],
+numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
+                        NumpyInt8Type()       : numpy_num_to_type[numpy_int_type_precision_map[1]],
                         NumpyInt16Type()      : numpy_num_to_type[numpy_int_type_precision_map[2]],
                         NumpyInt32Type()      : numpy_num_to_type[numpy_int_type_precision_map[4]],
                         NumpyInt64Type()      : numpy_num_to_type[numpy_int_type_precision_map[8]],
@@ -290,10 +291,10 @@ def array_type_check(py_variable, c_variable, raise_error):
     rank     = c_variable.rank
     flag     = no_order_check
     try :
-        type_ref = numpy_dtype_registry[var.dtype]
+        type_ref = numpy_dtype_registry[c_variable.dtype]
     except KeyError:
         return errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol = dtype,
+                symbol = c_variable.dtype,
                 severity='fatal')
     # order flag
     if rank > 1:

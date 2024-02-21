@@ -16,7 +16,7 @@ from ..errors.errors        import Errors, PyccelSemanticError
 from .basic                 import TypedAstNode
 
 from .datatypes             import PythonNativeBool, PythonNativeFloat
-from .datatypes             import StringType, FixedSizeNumericType
+from .datatypes             import StringType, FixedSizeNumericType, ContainerType
 from .datatypes             import PyccelBooleanType, PyccelIntegerType
 
 
@@ -848,9 +848,11 @@ class PyccelDiv(PyccelArithmeticOperator):
         dtype, class_type = super(PyccelDiv, cls)._calculate_dtype(arg1, arg2)
 
         if dtype.primitive_type in (PyccelIntegerType(), PyccelBooleanType()):
-            dtype = PythonNativeFloat()
-            if isinstance(class_type, FixedSizeNumericType):
-                class_type = PythonNativeFloat()
+            class_type = class_type.switch_basic_type(PythonNativeFloat())
+            if isinstance(class_type, ContainerType):
+                dtype = class_type.element_type
+            else:
+                dtype = class_type
 
         return dtype, class_type
 

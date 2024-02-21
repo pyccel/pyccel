@@ -44,10 +44,10 @@ class NumpyNumericType(FixedSizeNumericType):
         if isinstance(other, PythonNativeBool):
             return self
         elif isinstance(other, FixedSizeNumericType):
-            primitive_dtype = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
+            primitive_type = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
                                                             primitive_type_precedence.index(other.primitive_type))]
             precision = max(self.precision, other.precision)
-            return numpy_precision_map[(primitive_dtype, precision)]
+            return numpy_precision_map[(primitive_type, precision)]
         else:
             return NotImplemented
 
@@ -56,10 +56,10 @@ class NumpyNumericType(FixedSizeNumericType):
         if isinstance(other, PythonNativeBool):
             return self
         elif isinstance(other, FixedSizeNumericType):
-            primitive_dtype = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
+            primitive_type = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
                                                             primitive_type_precedence.index(other.primitive_type))]
             precision = max(self.precision, other.precision)
-            return numpy_precision_map[(primitive_dtype, precision)]
+            return numpy_precision_map[(primitive_type, precision)]
         else:
             return NotImplemented
 
@@ -236,6 +236,12 @@ class NumpyNDArrayType(HomogeneousContainerType):
     @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
+
+    def switch_basic_type(self, new_type):
+        assert isinstance(new_type, FixedSizeNumericType)
+        new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
+        cls = type(self)
+        return cls(self.element_type.switch_basic_type(new_type))
 
 #==============================================================================
 

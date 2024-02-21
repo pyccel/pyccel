@@ -153,6 +153,9 @@ class PyccelType(metaclass=ArgumentSingleton):
     def __str__(self):
         return self._name
 
+    def switch_basic_type(self, new_type):
+        raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
+
 #==============================================================================
 
 class FixedSizeType(PyccelType, metaclass=Singleton):
@@ -188,6 +191,10 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, ())
+
+    def switch_basic_type(self, new_type):
+        assert isinstance(new_type, FixedSizeType)
+        return new_type
 
 class FixedSizeNumericType(FixedSizeType):
     """
@@ -383,7 +390,7 @@ class TupleType:
 
 #==============================================================================
 
-class HomogeneousContainerType(PyccelType):
+class HomogeneousContainerType(ContainerType):
     """
     Base class representing a datatype which contains multiple elements of a given type.
 
@@ -428,6 +435,11 @@ class HomogeneousContainerType(PyccelType):
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, (self.element_type,))
+
+    def switch_basic_type(self, new_type):
+        assert isinstance(new_type, FixedSizeType)
+        cls = type(self)
+        return cls(self.element_type.switch_basic_type(new_type))
 
 class StringType(HomogeneousContainerType, metaclass=Singleton):
     """

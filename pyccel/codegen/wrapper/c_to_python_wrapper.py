@@ -535,7 +535,7 @@ class CToPythonWrapper(Wrapper):
             save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
             return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, dtype=CNativeInt())),
                                       [Return([self._error_exit_code])]))]
-        elif orig_var.class_type in NativeNumeric:
+        elif isinstance(orig_var.class_type, FixedSizeNumericType):
             return []
         else:
             raise NotImplementedError(f"Unsure how to preserve references for attribute of type {type(orig_var.class_type)}")
@@ -1852,7 +1852,7 @@ class CToPythonWrapper(Wrapper):
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
-        if (expr.rank == 0 and expr.dtype in NativeNumeric) or expr.is_alias:
+        if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
             self.scope.insert_variable(class_obj)
 
@@ -1993,7 +1993,7 @@ class CToPythonWrapper(Wrapper):
         self._python_object_map[self_arg] = setter_args[0]
         self._python_object_map[set_val_arg] = setter_args[1]
 
-        if (wrapped_var.rank == 0 and wrapped_var.dtype in NativeNumeric) or wrapped_var.is_alias:
+        if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
             arg_code = [l for a in original_args for l in self._wrap(a)]
 
             func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]

@@ -425,7 +425,7 @@ class CCodePrinter(CodePrinter):
         num_elements = len(flattened_list)
         # Get the offset variable if it is needed
         if num_elements != 1 and not all(v.rank == 0 for v in flattened_list):
-            offset_var = self.scope.get_temporary_variable(PythonNativeInteger(), 'offset')
+            offset_var = self.scope.get_temporary_variable(PythonNativeInt(), 'offset')
             operations += self._print(Assign(offset_var, LiteralInteger(0)))
         else:
             offset_var = LiteralInteger(0)
@@ -653,8 +653,8 @@ class CCodePrinter(CodePrinter):
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PyccelIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInteger())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInteger())
+            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
+            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
             assign2 = Assign(arg2, arg[1])
             self._additional_code += self._print(assign1)
@@ -671,8 +671,8 @@ class CCodePrinter(CodePrinter):
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
         elif arg.dtype.primitive_type is PyccelIntegerType() and len(arg) == 2:
-            arg1 = self.scope.get_temporary_variable(PythonNativeInteger())
-            arg2 = self.scope.get_temporary_variable(PythonNativeInteger())
+            arg1 = self.scope.get_temporary_variable(PythonNativeInt())
+            arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
             assign2 = Assign(arg2, arg[1])
             self._additional_code += self._print(assign1)
@@ -684,7 +684,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PythonNativeInteger) \
+        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PythonNativeInt) \
                 or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
@@ -1001,7 +1001,7 @@ class CCodePrinter(CodePrinter):
             The code which should be printed in the arguments of the generated
             print expression to print the object.
         """
-        if isinstance(var.dtype, FixedSizeType):
+        if isinstance(var.dtype, FixedSizeNumericType):
             primitive_type = var.dtype.primitive_type
             if isinstance(primitive_type, PyccelComplexType):
                 _, real_part = self.get_print_format_and_arg(NumpyReal(var))
@@ -1011,7 +1011,7 @@ class CCodePrinter(CodePrinter):
                 return self.get_print_format_and_arg(IfTernaryOperator(var, LiteralString("True"), LiteralString("False")))
             else:
                 try:
-                    arg_format = self.type_to_format[(primitive_type, var.precision)]
+                    arg_format = self.type_to_format[(primitive_type, var.dtype.precision)]
                 except KeyError:
                     errors.report(f"Printing {var.dtype} type is not supported currently", severity='fatal')
                 arg = self._print(var)
@@ -1101,7 +1101,7 @@ class CCodePrinter(CodePrinter):
                     code += formatted_args_to_printf(args_format, args, sep)
                     args_format = []
                     args = []
-                for_index = self.scope.get_temporary_variable(PythonNativeInteger(), name = 'i')
+                for_index = self.scope.get_temporary_variable(PythonNativeInt(), name = 'i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify = True)
                 for_range = PythonRange(max_index)
                 print_body = [ FunctionCallArgument(f[for_index]) ]
