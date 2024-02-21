@@ -520,7 +520,12 @@ class CCodePrinter(CodePrinter):
         """
         var = expr
         dtype = self.find_in_dtype_registry(var.dtype)
-        np_dtype = self.find_in_ndarray_type_registry(var.dtype)
+        if isinstance(var.class_type, NumpyNDArrayType):
+            np_dtype = self.find_in_ndarray_type_registry(var.dtype)
+        elif isinstance(var.class_type, HomogeneousContainerType):
+            np_dtype = self.find_in_ndarray_type_registry(numpy_precision_map[(var.dtype.primitive_type, var.dtype.precision)])
+        else:
+            raise NotImplementedError(f"Don't know how to index {expr.class_type} type")
         shape = ", ".join(self._print(i) for i in var.alloc_shape)
         tot_shape = self._print(functools.reduce(
             lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
