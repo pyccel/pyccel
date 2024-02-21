@@ -75,6 +75,37 @@ class NumpyNumericType(FixedSizeNumericType):
     def __hash__(self):
         return hash(f"numpy.{self}")
 
+#==============================================================================
+
+class NumpyIntType(NumpyNumericType):
+    """
+    Super class representing NumPy's integer types.
+
+    Super class representing NumPy's integer types.
+    """
+    __slots__ = ()
+    _primitive_type = PyccelIntegerType()
+
+    @lru_cache
+    def __and__(self, other):
+        if isinstance(other, PythonNativeBool):
+            return self
+        elif isinstance(other, FixedSizeNumericType):
+            precision = max(self.precision, other.precision)
+            return numpy_precision_map[(self._primitive_type, precision)]
+        else:
+            return NotImplemented
+
+    @lru_cache
+    def __rand__(self, other):
+        if isinstance(other, PythonNativeBool):
+            return self
+        elif isinstance(other, FixedSizeNumericType):
+            precision = max(self.precision, other.precision)
+            return numpy_precision_map[(self._primitive_type, precision)]
+        else:
+            return NotImplemented
+
 class NumpyInt8Type(NumpyNumericType):
     """
     Class representing NumPy's int8 type.
@@ -83,7 +114,6 @@ class NumpyInt8Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'int8'
-    _primitive_type = PyccelIntegerType()
     _precision = 1
 
 class NumpyInt16Type(NumpyNumericType):
@@ -94,7 +124,6 @@ class NumpyInt16Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'int16'
-    _primitive_type = PyccelIntegerType()
     _precision = 2
 
 class NumpyInt32Type(NumpyNumericType):
@@ -105,7 +134,6 @@ class NumpyInt32Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'int32'
-    _primitive_type = PyccelIntegerType()
     _precision = 4
 
 class NumpyInt64Type(NumpyNumericType):
@@ -116,7 +144,6 @@ class NumpyInt64Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'int64'
-    _primitive_type = PyccelIntegerType()
     _precision = 8
 
 #==============================================================================
@@ -246,6 +273,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
 #==============================================================================
 
 numpy_precision_map = {
+        (PyccelBooleanType(), -1): PythonNativeBool(),
         (PyccelIntegerType(), 1): NumpyInt8Type(),
         (PyccelIntegerType(), 2): NumpyInt16Type(),
         (PyccelIntegerType(), 4): NumpyInt32Type(),

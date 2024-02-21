@@ -137,8 +137,11 @@ class PyccelType(metaclass=ArgumentSingleton):
     types must inherit. A type must contain enough information to
     describe the declaration type in a low-level language.
 
-    Types contain an addition operators. The operator indicates the type that
+    Types contain an addition operator. The operator indicates the type that
     is expected when calling an arithmetic operator on objects of these types.
+
+    Where applicable, types also contain an and operator. The operator indicates the type that
+    is expected when calling a bitwise operator on objects of these types.
 
     Parameters
     ----------
@@ -245,6 +248,15 @@ class PythonNativeBool(PythonNativeNumericTypes):
         else:
             return NotImplemented
 
+    @lru_cache
+    def __and__(self, other):
+        if isinstance(other, PythonNativeBool):
+            return PythonNativeBool()
+        elif isinstance(other, PythonNativeNumericTypes):
+            return other
+        else:
+            return NotImplemented
+
 class PythonNativeInt(PythonNativeNumericTypes):
     """
     Class representing Python's native integer type.
@@ -262,6 +274,13 @@ class PythonNativeInt(PythonNativeNumericTypes):
             return self
         elif isinstance(other, PythonNativeNumericTypes):
             return other
+        else:
+            return NotImplemented
+
+    @lru_cache
+    def __and__(self, other):
+        if isinstance(other, PythonNativeNumericTypes):
+            return self
         else:
             return NotImplemented
 

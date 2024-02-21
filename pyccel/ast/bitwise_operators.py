@@ -8,6 +8,8 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the dtype, rank, shape
 """
+import functools
+
 from .builtins     import PythonInt
 from .datatypes    import PyccelBooleanType, PyccelIntegerType
 from .datatypes    import PythonNativeBool, PythonNativeInt, GenericType
@@ -118,8 +120,8 @@ class PyccelBitOperator(PyccelOperator):
             The  datatype of the result of the operation.
         """
         try:
-            dtype = sum((a.dtype for a in args), start=GenericType())
-            class_type = sum((a.class_type for a in args), start=GenericType())
+            dtype = functools.reduce(lambda a, b: a and b, (a.dtype for a in args))
+            class_type = functools.reduce(lambda a, b: a and b, (a.class_type for a in args))
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
