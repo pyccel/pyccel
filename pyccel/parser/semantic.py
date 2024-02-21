@@ -3083,6 +3083,7 @@ class SemanticParser(BasicParser):
                     d_var['order'          ] = arg.order
                     d_var['class_type'     ] = arg.class_type
                     d_var['cls_base'       ] = arg.cls_base
+                    d_var['datatype'       ] = arg.class_type.element_type
 
         elif isinstance(rhs, NumpyTranspose):
             d_var  = self._infer_type(rhs)
