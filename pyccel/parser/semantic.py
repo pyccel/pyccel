@@ -1092,6 +1092,23 @@ class SemanticParser(BasicParser):
         -------
         FunctionCall/PyccelInternalFunction
         """
+        
+        if(len(func.results)):
+            errors.report("Kernel function '{}' should not have a return statement. Kernels cannot return values.".format(func.name),
+                         symbol=expr,
+                         severity='fatal')
+        if 'kernel' not in func.decorators:
+            errors.report("Decorators must include 'kernel'",
+                    symbol=expr,
+                    severity='fatal')
+        if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+            errors.report("Too many arguments passed in function call",
+                    symbol = expr,
+                    severity='fatal')
+        if isinstance(func, FunctionDef) and len(args) < len(func.arguments):
+            errors.report("Too few arguments passed in function call",
+                    symbol = expr,
+                    severity='fatal')
         new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock)
         return new_expr
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
