@@ -1495,6 +1495,7 @@ class FCodePrinter(CodePrinter):
             dtype = self._print(expr_dtype.primitive_type)
             dtype += f'({self.print_kind(var)})'
         else:
+            dtype = self._print(expr_dtype)
 
         # ...
             if isinstance(expr_dtype, StringType):
@@ -1505,8 +1506,6 @@ class FCodePrinter(CodePrinter):
             elif isinstance(expr_dtype, BindCPointer):
                 dtype = 'type(c_ptr)'
                 self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
-            else:
-                dtype = self._print(expr_dtype)
 
         code_value = ''
         if expr.value:
