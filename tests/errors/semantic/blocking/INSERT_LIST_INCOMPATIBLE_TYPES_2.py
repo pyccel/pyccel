@@ -2,5 +2,5 @@
 
 a = [1,2,3]
 b = (4,5)
-a.append(3, b)
+a.insert(3, b)
 
