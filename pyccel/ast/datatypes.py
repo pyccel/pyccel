@@ -331,6 +331,23 @@ class NativeHomogeneousList(DataType, metaclass = Singleton):
         else:
             return NotImplemented
 
+class NativeHomogeneousSet(DataType, metaclass = Singleton):
+    """
+    Class representing the homogeneous Set type.
+
+    Class representing the type of a homogeneous Set. This
+    is a container type and should be used as the class_type.
+    """
+    __slots__ = ()
+    _name = 'Set'
+
+    @lru_cache
+    def __add__(self, other):
+        if isinstance(other, NativeHomogeneousSet):
+            return self
+        else:
+            return NotImplemented
+
 class NativeSymbol(DataType, metaclass=Singleton):
     """
     Class representing a symbol datatype.
