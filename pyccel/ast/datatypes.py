@@ -682,6 +682,17 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
     return newclass
 
 #==============================================================================
+
+pyccel_type_to_original_type = {
+        PythonNativeBool()    : bool,
+        PythonNativeInt()     : int,
+        PythonNativeFloat()   : float,
+        PythonNativeComplex() : complex,
+        }
+
+original_type_to_pyccel_type = {v: k for k,v in pyccel_type_to_original_type.items()}
+
+
 #
 #default_precision = {Float : 8,
 #                     Int : numpy.dtype(int).alignment,

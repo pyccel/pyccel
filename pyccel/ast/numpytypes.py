@@ -8,11 +8,14 @@
 """
 from functools import lru_cache
 
+import numpy as np
+
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes import PythonNativeNumericTypes
+from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
         'NumpyInt8Type',
@@ -21,6 +24,10 @@ __all__ = (
         'NumpyInt64Type',
         'NumpyFloat32Type',
         'NumpyFloat64Type',
+        'NumpyFloat128Type',
+        'NumpyComplex64Type',
+        'NumpyComplex128Type',
+        'NumpyComplex256Type',
         'NumpyNDArrayType',
         'NumpyNumericType',
         )
@@ -41,14 +48,11 @@ class NumpyNumericType(FixedSizeNumericType):
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, PythonNativeBool):
-            return self
-        elif isinstance(other, FixedSizeNumericType):
-            primitive_type = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
-                                                            primitive_type_precedence.index(other.primitive_type))]
-            precision = max(self.precision, other.precision)
-            return numpy_precision_map[(primitive_type, precision)]
-        else:
+        try:
+            return original_type_to_pyccel_type[
+                    np.result_type(pyccel_type_to_original_type[self](),
+                            pyccel_type_to_original_type[other]()).type]
+        except KeyError:
             return NotImplemented
 
     @lru_cache
@@ -239,18 +243,15 @@ class NumpyNDArrayType(HomogeneousContainerType):
 
     @lru_cache
     def __add__(self, other):
-        elem_type = self.element_type
+        test_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         if isinstance(other, FixedSizeNumericType):
-            if primitive_type_precedence.index(elem_type.primitive_type) > primitive_type_precedence.index(other.primitive_type):
-                return self
-            elif isinstance(other, NumpyNumericType):
-                return NumpyNDArrayType(other)
-            else:
-                return NumpyNDArrayType(numpy_precision_map[(other.primitive_type, other.precision)])
+            comparison_type = pyccel_type_to_original_type[other]()
         elif isinstance(other, NumpyNDArrayType):
-            return NumpyNDArrayType(elem_type+other.element_type)
+            comparison_type = np.zeros(1, dtype = pyccel_type_to_original_type[self.element_type])
         else:
             return NotImplemented
+        result_type = original_type_to_pyccel_type[np.result_type(test_type, comparison_type).type]
+        return NumpyNDArrayType(result_type)
 
     @lru_cache
     def __radd__(self, other):
@@ -291,3 +292,21 @@ numpy_precision_map = {
         (PyccelComplexType(), 8) : NumpyComplex128Type(),
         (PyccelComplexType(), 16): NumpyComplex256Type(),
         }
+
+numpy_type_to_original_type = {
+    NumpyInt8Type()       : np.int8,
+    NumpyInt16Type()      : np.int16,
+    NumpyInt32Type()      : np.int32,
+    NumpyInt64Type()      : np.int64,
+    NumpyFloat32Type()    : np.float32,
+    NumpyFloat64Type()    : np.float64,
+    NumpyFloat128Type()   : np.float128,
+    NumpyComplex64Type()  : np.complex64,
+    NumpyComplex128Type() : np.complex128,
+    NumpyComplex256Type() : np.complex256,
+    }
+
+pyccel_type_to_original_type.update(numpy_type_to_original_type)
+original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
+
+
