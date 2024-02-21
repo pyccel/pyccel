@@ -121,13 +121,13 @@ def allow_negative_index(f,*args):
     def identity(f):
         return f
     return identity
-    def kernel(f):
-        """
-        This decorator is used to mark a Python function as a GPU kernel function,
-        allowing it to be executed on a GPU.
-        Parameters
-        ----------
-        f : Function
-            The function to which the decorator is applied
-        """
-        return f
+def kernel(f):
+    """
+    This decorator is used to mark a Python function as a GPU kernel function,
+    allowing it to be executed on a GPU.
+    Parameters
+    ----------
+    f : Function
+        The function to which the decorator is applied
+    """
+    return f
