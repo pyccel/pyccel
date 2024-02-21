@@ -53,15 +53,7 @@ class NumpyNumericType(FixedSizeNumericType):
 
     @lru_cache
     def __radd__(self, other):
-        if isinstance(other, PythonNativeBool):
-            return self
-        elif isinstance(other, FixedSizeNumericType):
-            primitive_type = primitive_type_precedence[max(primitive_type_precedence.index(self.primitive_type),
-                                                            primitive_type_precedence.index(other.primitive_type))]
-            precision = max(self.precision, other.precision)
-            return numpy_precision_map[(primitive_type, precision)]
-        else:
-            return NotImplemented
+        return self.__add__(other)
 
     def __eq__(self, other):
         if other is self:
@@ -247,14 +239,14 @@ class NumpyNDArrayType(HomogeneousContainerType):
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, PythonNativeNumericTypes):
-            return self
-        elif isinstance(other, NumpyNumericType):
-            elem_type = self.element_type
+        elem_type = self.element_type
+        if isinstance(other, FixedSizeNumericType):
             if primitive_type_precedence.index(elem_type.primitive_type) > primitive_type_precedence.index(other.primitive_type):
                 return self
-            else:
+            elif isinstance(other, NumpyNumericType):
                 return NumpyNDArrayType(other)
+            else:
+                return NumpyNDArrayType(numpy_precision_map[(other.primitive_type, other.precision)])
         elif isinstance(other, NumpyNDArrayType):
             return NumpyNDArrayType(self.element_type+other.element_type)
         else:
