@@ -47,7 +47,7 @@ def positron_charge():
                            'float32[:]','float32[:,:]','float32[:,:,:]','float32[:,:,:,:]','float32[:,:,:,:,:]','float32[:,:,:,:,:,:]',\
                            'float64[:]','float64[:,:]','float64[:,:,:]','float64[:,:,:,:]','float64[:,:,:,:,:]','float64[:,:,:,:,:,:]'])
 def add2(a : 'T', b : 'T', c:'T'):
-	c[...] = a+b
+    c[...] = a+b
 
 if __name__ == '__main__':
     print(get_powers(3))
@@ -65,10 +65,8 @@ if __name__ == '__main__':
     a1 = np.ones(10)
     b1 = np.ones(10)
     c1 = np.zeros(10)
-    
     a2 = np.ones((10,10))
     b2 = np.ones((10,10))
     c2 = np.zeros((10,10))
-    
     add2(a1, b1, c1)
     add2(a2, b2, c2)
