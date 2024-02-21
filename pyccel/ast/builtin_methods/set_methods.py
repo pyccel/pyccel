@@ -27,11 +27,11 @@ class SetAdd(PyccelInternalFunction) :
     set_variable : TypedAstNode
         The name of the set.
 
-    index_element : TypedAstNode
-        The current index value for the element to be add.
+    new_elem : TypedAstNode
+        The argument passed to be add.
     """
-    __slots__ = ("_set_variable", "_add_arg")
-    _attribute_nodes = ("_set_variable", "_add_arg")
+    __slots__ = ("_set_variable", "new_elem")
+    _attribute_nodes = ("_set_variable", "new_elem")
     _dtype = NativeVoid()
     _shape = None
     _order = None
