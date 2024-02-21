@@ -1600,7 +1600,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType(self._dtype)
+        self._class_type = NumpyNDArrayType(self._dtype) if self.rank else self._dtype
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1653,7 +1653,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         self._set_dtype(x1, x2)
         self._set_shape_rank(x1, x2)
         self._set_order(x1, x2)
-        self._class_type = NumpyNDArrayType(self._dtype)
+        self._class_type = NumpyNDArrayType(self._dtype) if self.rank else self._dtype
 
     def _set_shape_rank(self, x1, x2):
         self._shape = broadcast(x1.shape, x2.shape)
@@ -1864,11 +1864,15 @@ class NumpyMod(NumpyUfuncBinary):
         x2 : TypedAstNode
             The second argument which helps determine the datatype.
         """
-        arg_dtype = x1.dtype + x2.dtype
-        if isinstance(arg_dtype, PythonNativeBool):
-            return NumpyInt8Type()
+        if isinstance(x1.dtype, PythonNativeBool) and isinstance(x2.dtype, PythonNativeBool):
+            self._dtype = NumpyInt8Type()
         else:
-            return arg_dtype
+            arg_class_type = x1.class_type + x2.class_type
+            if isinstance(arg_class_type, NumpyNDArrayType):
+                arg_dtype = arg_class_type.element_type
+            else:
+                arg_dtype = arg_class_type
+            self._dtype = process_dtype(arg_dtype)
 
 class NumpyAmin(PyccelInternalFunction):
     """
