@@ -22,13 +22,14 @@ class SetAdd(PyccelInternalFunction) :
     Represents a call to the .add() method which add an element
     to the set if it's not already present.
     If the element is already in the set, the set remains unchanged.
+
     Parameters
     ----------
     set_variable : TypedAstNode
         The name of the set.
 
     new_elem : TypedAstNode
-        The argument passed to be add.
+        The element that needs to be added to a set.
     """
     __slots__ = ("_set_variable", "_add_arg")
     _attribute_nodes = ("_set_variable", "_add_arg")
