@@ -514,8 +514,6 @@ class PyccelBinaryOperator(PyccelOperator):
         else:
             dtype = class_type
 
-        print(cls, arg1.class_type, arg1, arg2, class_type)
-
         return dtype, class_type
 
     @staticmethod
