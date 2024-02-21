@@ -1620,7 +1620,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         if not isinstance(x_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
             self._dtype = NumpyFloat64Type()
         else:
-            self._dtype = numpy_precision_map[(PyccelFloatingPointType(), x_dtype.precision)]
+            self._dtype = numpy_precision_map[(x_dtype.primitive_type, x_dtype.precision)]
 
     def _set_order(self, x):
         self._order      = x.order
