@@ -2907,6 +2907,20 @@ class PyccelFunctionDef(FunctionDef):
         """
         return self._argument_description
 
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
+        args = (
+        self._name,
+        self._cls_name)
+
+        kwargs = {
+            'decorators':self._decorators,
+            'argument_description':self._argument_description}
+        return args, kwargs
+
 class Interface(PyccelAstNode):
     """
     Class representing an interface function.
