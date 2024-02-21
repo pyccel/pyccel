@@ -20,7 +20,7 @@ __all__ = ('ListAppend',
            'ListPop',
            )
 
-#=======================================================================================
+#==============================================================================
 class ListAppend(PyccelInternalFunction):
     """
     Represents a call to the .append() method.
@@ -84,7 +84,7 @@ class ListAppend(PyccelInternalFunction):
         """
         return self._append_arg
 
-#=======================================================================================
+#==============================================================================
 class ListPop(PyccelInternalFunction) :
     """
     Represents a call to the .pop() method.
@@ -134,7 +134,7 @@ class ListPop(PyccelInternalFunction) :
         """
         return self._list_variable
 
-#=======================================================================================
+#==============================================================================
 class ListClear(PyccelInternalFunction) :
     """
     Represents a call to the .clear() method.
@@ -171,13 +171,14 @@ class ListClear(PyccelInternalFunction) :
         """
         return self._list_variable
 
-#=======================================================================================
+#==============================================================================
 class ListInsert(PyccelInternalFunction):
     """
     Represents a call to the .insert() method.
 
     Represents a call to the .insert() method of an object with a list type,
-    which inserts a given element at a given index in a list. This method returns `None`.
+    which inserts a given element at a given index in a list.
+    This method returns `None`.
     The insert method is called as follows:
 
     >>> a = [2, 3, 4]
