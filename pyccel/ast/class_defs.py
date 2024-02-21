@@ -139,13 +139,13 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
         methods=[
             PyccelFunctionDef('append', func_class = ListAppend,
                 decorators = {}),
-            PyccelFunctionDef('insert', func_class = ListInsert,
-                decorators = {}),
-            PyccelFunctionDef('pop', func_class = ListPop,
-                decorators = {}),
             PyccelFunctionDef('clear', func_class = ListClear,
                 decorators = {}),
             PyccelFunctionDef('extend', func_class = ListExtend,
+                decorators = {}),
+            PyccelFunctionDef('insert', func_class = ListInsert,
+                decorators = {}),
+            PyccelFunctionDef('pop', func_class = ListPop,
                 decorators = {}),
         ])
 
