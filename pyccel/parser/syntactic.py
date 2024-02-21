@@ -41,7 +41,7 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import kernelCall
+from pyccel.ast.core import KernelCall
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -391,7 +391,6 @@ class SyntaxParser(BasicParser):
         return Nil()
 
     def _visit_str(self, stmt):
-
         return stmt
 
     def _visit_Assign(self, stmt):
@@ -1085,7 +1084,7 @@ class SyntaxParser(BasicParser):
         elif isinstance(func,IndexedElement):
             if(len(func.indices) != 2):
                 raise NotImplementedError
-            func = kernelCall(func.base, args, func.indices[0], func.indices[1])
+            func = KernelCall(func.base, args, func.indices[0], func.indices[1])
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
         

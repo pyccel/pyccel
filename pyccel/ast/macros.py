@@ -148,10 +148,6 @@ class MacroCount(Macro):
     def __str__(self):
         return f'MacroCount({self.argument})'
 
-
-
-
-
 def construct_macro(name, argument, parameter=None):
     """."""
     # TODO add available macros: shape, len, dtype

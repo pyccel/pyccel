@@ -30,7 +30,7 @@ from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
-from pyccel.ast.core import Comment, CommentBlock, Pass
+from pyccel.ast.core import Comment, CommentBlock, Pass, KernelCall
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -1067,7 +1067,8 @@ class SemanticParser(BasicParser):
                 self._check_argument_compatibility(args, func_args,
                             expr, func.is_elemental)
             return new_expr
-
+    def _handle_kernel(self, expr, func, args, **settings):
+        return  KernelCall(func, args, expr.numBlocks, expr.tpblock)
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
         Create a new variable.
@@ -2793,6 +2794,18 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             else:
                 return self._handle_function(expr, func, args)
+    
+    def _visit_KernelCall(self, expr, **settings):
+        name     = expr.funcdef
+        try:
+            name = self.scope.get_expected_name(name)
+        except RuntimeError:
+            pass
+        func     = self.scope.find(name, 'functions')
+
+        args = self._handle_function_args(expr.args, **settings)
+
+        return self._handle_kernel(expr, func, args, **settings)
 
     def _visit_Assign(self, expr):
         # TODO unset position at the end of this part

@@ -61,7 +61,7 @@ __all__ = (
     'Del',
     'Duplicate',
     'DoConcurrent',
-    'kernelCall'
+    'KernelCall'
     'EmptyNode',
     'ErrorExit',
     'Exit',
@@ -2282,7 +2282,7 @@ class ConstructorCall(FunctionCall):
         """
         return self._cls_variable
 
-class kernelCall(FunctionCall):
+class KernelCall(FunctionCall):
     """
     Represents a kernel function call in the code.
     # Example of a method call with array-like indexing: a[c, b]()
