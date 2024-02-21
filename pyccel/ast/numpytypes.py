@@ -248,13 +248,27 @@ class NumpyNDArrayType(HomogeneousContainerType):
             else:
                 return NumpyNDArrayType(numpy_precision_map[(other.primitive_type, other.precision)])
         elif isinstance(other, NumpyNDArrayType):
-            return NumpyNDArrayType(self.element_type+other.element_type)
+            return NumpyNDArrayType(elem_type+other.element_type)
         else:
             return NotImplemented
 
     @lru_cache
     def __radd__(self, other):
         return self.__add__(other)
+
+    @lru_cache
+    def __and__(self, other):
+        elem_type = self.element_type
+        if isinstance(other, FixedSizeNumericType):
+            return NumpyNDArrayType(elem_type and other)
+        elif isinstance(other, NumpyNDArrayType):
+            return NumpyNDArrayType(elem_type+other.element_type)
+        else:
+            return NotImplemented
+
+    @lru_cache
+    def __rand__(self, other):
+        return self.__and__(other)
 
     def switch_basic_type(self, new_type):
         assert isinstance(new_type, FixedSizeNumericType)
