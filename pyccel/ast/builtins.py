@@ -1187,7 +1187,7 @@ class PythonType(PyccelAstNode):
         if class_type != self.dtype:
             return LiteralString(f"<class '{class_type}' ({self.dtype})>")
         else:
-            return LiteralString(f"<class 'numpy.{self.dtype}'>")
+            return LiteralString(f"<class '{self.dtype}'>")
 
 #==============================================================================
 

@@ -109,7 +109,7 @@ class NumpyInt8Type(NumpyIntType):
     Class representing NumPy's int8 type.
     """
     __slots__ = ()
-    _name = 'int8'
+    _name = 'numpy.int8'
     _precision = 1
 
 class NumpyInt16Type(NumpyIntType):
@@ -119,7 +119,7 @@ class NumpyInt16Type(NumpyIntType):
     Class representing NumPy's int16 type.
     """
     __slots__ = ()
-    _name = 'int16'
+    _name = 'numpy.int16'
     _precision = 2
 
 class NumpyInt32Type(NumpyIntType):
@@ -129,7 +129,7 @@ class NumpyInt32Type(NumpyIntType):
     Class representing NumPy's int32 type.
     """
     __slots__ = ()
-    _name = 'int32'
+    _name = 'numpy.int32'
     _precision = 4
 
 class NumpyInt64Type(NumpyIntType):
@@ -139,7 +139,7 @@ class NumpyInt64Type(NumpyIntType):
     Class representing NumPy's int64 type.
     """
     __slots__ = ()
-    _name = 'int64'
+    _name = 'numpy.int64'
     _precision = 8
 
 #==============================================================================
@@ -151,7 +151,7 @@ class NumpyFloat32Type(NumpyNumericType):
     Class representing NumPy's float32 type.
     """
     __slots__ = ()
-    _name = 'float32'
+    _name = 'numpy.float32'
     _primitive_type = PyccelFloatingPointType()
     _precision = 4
 
@@ -162,7 +162,7 @@ class NumpyFloat64Type(NumpyNumericType):
     Class representing NumPy's float64 type.
     """
     __slots__ = ()
-    _name = 'float64'
+    _name = 'numpy.float64'
     _primitive_type = PyccelFloatingPointType()
     _precision = 8
 
@@ -173,7 +173,7 @@ class NumpyFloat128Type(NumpyNumericType):
     Class representing NumPy's float128 type.
     """
     __slots__ = ()
-    _name = 'float128'
+    _name = 'numpy.float128'
     _primitive_type = PyccelFloatingPointType()
     _precision = 16
 
@@ -186,7 +186,7 @@ class NumpyComplex64Type(NumpyNumericType):
     Class representing NumPy's complex64 type.
     """
     __slots__ = ()
-    _name = 'complex64'
+    _name = 'numpy.complex64'
     _primitive_type = PyccelComplexType()
     _precision = 4
 
@@ -201,7 +201,7 @@ class NumpyComplex128Type(NumpyNumericType):
     Class representing NumPy's complex128 type.
     """
     __slots__ = ()
-    _name = 'complex128'
+    _name = 'numpy.complex128'
     _primitive_type = PyccelComplexType()
     _precision = 8
 
@@ -216,7 +216,7 @@ class NumpyComplex256Type(NumpyNumericType):
     Class representing NumPy's complex256 type.
     """
     __slots__ = ()
-    _name = 'complex256'
+    _name = 'numpy.complex256'
     _primitive_type = PyccelComplexType()
     _precision = 16
 
