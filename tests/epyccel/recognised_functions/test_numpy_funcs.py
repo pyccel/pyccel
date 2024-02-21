@@ -138,6 +138,219 @@ def test_fabs_phrase_i_r(language):
     assert(isclose(f2(x,-y), fabs_phrase_r_i(x,-y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(-x,y), fabs_phrase_r_i(-x,y), rtol=RTOL, atol=ATOL))
 
+#------------------------------ isnan function ----------------------------#
+def test_numpy_isnan(language):
+    def numpy_isnan_test(x : 'float'):
+        from numpy import isnan
+        return isnan(x)
+
+    def numpy_isnan_array_test(x : 'float[:]'):
+        from numpy import isnan
+        return isnan(x)
+
+    def numpy_isnan_expr_test(x : 'float', y : 'float'):
+        from numpy import isnan
+        return isnan(x+y)
+
+    f = epyccel(numpy_isnan_test, language=language)
+    f_arr = epyccel(numpy_isnan_array_test, language=language)
+    f_expr = epyccel(numpy_isnan_expr_test, language=language)
+
+    input_data = np.nan
+    expected_output = numpy_isnan_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isnan_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isnan_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.nan
+
+    expected_output = numpy_isnan_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+#------------------------------ isinf function ----------------------------#
+def test_numpy_isinf(language):
+    def numpy_isinf_test(x : 'float'):
+        from numpy import isinf
+        return isinf(x)
+
+    def numpy_isinf_array_test(x : 'float[:]'):
+        from numpy import isinf
+        return isinf(x)
+
+    def numpy_isinf_expr_test(x : 'float', y : 'float'):
+        from numpy import isinf
+        return isinf(x+y)
+
+    f = epyccel(numpy_isinf_test, language=language)
+    f_arr = epyccel(numpy_isinf_array_test, language=language)
+    f_expr = epyccel(numpy_isinf_expr_test, language=language)
+
+    input_data = np.inf
+    expected_output = numpy_isinf_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isinf_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isinf_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.inf
+
+    expected_output = numpy_isinf_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+#------------------------------ isfinite function ----------------------------#
+def test_numpy_isfinite(language):
+    def numpy_isfinite_test(x : 'float'):
+        from numpy import isfinite
+        return isfinite(x)
+
+    def numpy_isfinite_array_test(x : 'float[:]'):
+        from numpy import isfinite
+        return isfinite(x)
+
+    def numpy_isfinite_expr_test(x : 'float', y : 'float'):
+        from numpy import isfinite
+        return isfinite(x+y)
+
+    f = epyccel(numpy_isfinite_test, language=language)
+    f_arr = epyccel(numpy_isfinite_array_test, language=language)
+    f_expr = epyccel(numpy_isfinite_expr_test, language=language)
+
+    input_data = np.inf
+    expected_output = numpy_isfinite_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6)
+    expected_output = numpy_isfinite_test(input_data)
+    obtained = f(input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(input_data, 3.0)
+    obtained = f_expr(input_data, 3.0)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    expected_output = numpy_isfinite_expr_test(3.0, input_data)
+    obtained = f_expr(3.0, input_data)
+
+    assert obtained == expected_output
+    assert matching_types(obtained, expected_output)
+
+    input_data = np.random.uniform(-1e6, 1e6, size=5)
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
+    input_data[1] = np.inf
+
+    expected_output = numpy_isfinite_array_test(input_data)
+    obtained = f_arr(input_data)
+
+    assert np.array_equal(obtained, expected_output)
+    assert matching_types(obtained, expected_output)
+
 #------------------------------ absolute function ----------------------------#
 def test_absolute_call_r(language):
     def absolute_call_r(x : 'float'):
@@ -721,7 +934,7 @@ def test_sinh_phrase(language):
     assert(isclose(f2(-x,y), sinh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), sinh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- cosh function -------------------------------#
 def test_cosh_call_i(language):
     def cosh_call_i(x : 'int'):
         from numpy import cosh
@@ -758,7 +971,7 @@ def test_cosh_phrase(language):
     assert(isclose(f2(-x,y), cosh_phrase(-x,y), rtol=RTOL, atol=ATOL))
     assert(isclose(f2(x,-y), cosh_phrase(x,-y), rtol=RTOL, atol=ATOL))
 
-#------------------------------- sinh function -------------------------------#
+#------------------------------- tanh function -------------------------------#
 def test_tanh_call_i(language):
     def tanh_call_i(x : 'int'):
         from numpy import tanh
