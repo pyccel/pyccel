@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 -   #1690 : Add Python support for list method `pop()`
 -   #1575 : Add support for homogeneous tuple type annotations on variables.
 -   #1691 : Add Python support for list method `clear()`
+-   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for set method `add()`
 
 ### Fixed
