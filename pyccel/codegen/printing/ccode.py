@@ -1697,7 +1697,10 @@ class CCodePrinter(CodePrinter):
                 else:
                     args.append(self._print(arg))
         code_args = ', '.join(args)
-        return self._cast_to(expr, expr.dtype).format(f'{func_name}({code_args})')
+        if expr.dtype.primitive_type is PyccelIntegerType():
+            cast_type = self.find_in_dtype_registry(expr.dtype)
+            return f'({cast_type}){func_name}({code_args})'
+        return f'{func_name}({code_args})'
 
     def _print_MathIsfinite(self, expr):
         """Convert a Python expression with a math isfinite function call to C
