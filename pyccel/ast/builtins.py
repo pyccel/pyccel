@@ -75,11 +75,11 @@ class PythonComplexProperty(PyccelInternalFunction):
         The object which the property is called from.
     """
     __slots__ = ()
-    _dtype = PythonNativeComplex()
+    _dtype = PythonNativeFloat()
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = PythonNativeComplex()
+    _class_type = PythonNativeFloat()
 
     def __init__(self, arg):
         super().__init__(arg)
