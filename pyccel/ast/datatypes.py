@@ -342,13 +342,6 @@ class NativeHomogeneousSet(DataType, metaclass = Singleton):
     __slots__ = ()
     _name = 'Set'
 
-    @lru_cache
-    def __add__(self, other):
-        if isinstance(other, NativeHomogeneousSet):
-            return self
-        else:
-            return NotImplemented
-
 class NativeSymbol(DataType, metaclass=Singleton):
     """
     Class representing a symbol datatype.
