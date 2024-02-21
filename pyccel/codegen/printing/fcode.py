@@ -2823,7 +2823,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
         dtype = arg.dtype.primitive_type
-        if any(isinstance(dtype, t) for t in (PyccelIntegerType, PyccelBooleanType)):
+        if isinstance(dtype, (PyccelIntegerType, PyccelBooleanType)):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)
