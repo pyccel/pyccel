@@ -1087,7 +1087,6 @@ class SyntaxParser(BasicParser):
             func = KernelCall(func.base, args, func.indices[0], func.indices[1])
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
-        
         return func
 
     def _visit_keyword(self, stmt):

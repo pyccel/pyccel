@@ -175,7 +175,6 @@ class CudaCodePrinter(CCodePrinter):
 
         # Generate the code for the docstring, if exists
         docstring = self._print(expr.docstring) if expr.docstring else ''
-    
         # Check if the 'kernel' decorator is present and set the CUDA decorator accordingly
         cuda_decorater = ''
         if 'kernel' in expr.decorators:
@@ -185,7 +184,7 @@ class CudaCodePrinter(CCodePrinter):
         parts = [sep,
              cuda_decorater,
              docstring,
-             '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
+             '{signature}\n{{\n'.format(signature=self.function_signature(expr))
              decs,
              body,
              '}\n',
@@ -219,6 +218,5 @@ class CudaCodePrinter(CCodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join(['{}'.format(self._print(a)) for a in args])
-        
+        args = ', '.join([f'{self._print(a)}' for a in args])        
         return f"{func.name}<<<{expr.numBlocks}, {expr.tpblock}>>>({args});\n"
