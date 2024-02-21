@@ -9,14 +9,17 @@ This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CU
 enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
 from itertools import chain
+from pyccel.ast.literals  import Nil
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_imports
 
 from pyccel.ast.variable    import InhomogeneousTupleVariable
 from pyccel.ast.variable import Variable
 
-from pyccel.ast.core        import Declare, Import, Module
-from pyccel.ast.core      import SeparatorComment
+from pyccel.ast.core        import Declare, Import, Module, Assign
+from pyccel.ast.core      import SeparatorComment, FuncAddressDeclare
+
+from pyccel.ast.c_concepts import ObjectAddress
 
 
 from pyccel.errors.errors   import Errors
