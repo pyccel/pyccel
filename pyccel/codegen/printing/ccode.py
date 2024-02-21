@@ -690,7 +690,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PythonNativeInt) \
+        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PyccelIntegerType) \
                 or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
