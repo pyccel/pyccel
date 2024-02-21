@@ -39,6 +39,16 @@ def not_inline():
 def positron_charge():
     return -not_inline()
 
+@inline
+@template(name='T',types=['int8[:]','int8[:,:]','int8[:,:,:]','int8[:,:,:,:]','int8[:,:,:,:,:]','int8[:,:,:,:,:,:]',\
+                           'int16[:]','int16[:,:]','int16[:,:,:]','int16[:,:,:,:]','int16[:,:,:,:,:]','int16[:,:,:,:,:,:]',\
+                           'int32[:]','int32[:,:]','int32[:,:,:]','int32[:,:,:,:]','int32[:,:,:,:,:]','int32[:,:,:,:,:,:]',\
+                           'int64[:]','int64[:,:]','int64[:,:,:]','int64[:,:,:,:]','int64[:,:,:,:,:]','int64[:,:,:,:,:,:]',\
+                           'float32[:]','float32[:,:]','float32[:,:,:]','float32[:,:,:,:]','float32[:,:,:,:,:]','float32[:,:,:,:,:,:]',\
+                           'float64[:]','float64[:,:]','float64[:,:,:]','float64[:,:,:,:]','float64[:,:,:,:,:]','float64[:,:,:,:,:,:]'])
+def add(a : 'T', b : 'T', c:'T'):
+	c[...] = a+b
+
 if __name__ == '__main__':
     print(get_powers(3))
     a,b,c = get_powers(4)
@@ -52,3 +62,13 @@ if __name__ == '__main__':
     print(arr)
     print(add(1,2))
     print(add(1.,2.))
+    a1 = np.ones(10)
+    b1 = np.ones(10)
+    c1 = np.zeros(10)
+    
+    a2 = np.ones((10,10))
+    b2 = np.ones((10,10))
+    c2 = np.zeros((10,10))
+    
+    add(a1, b1, c1)
+    add(a2, b2, c2)
