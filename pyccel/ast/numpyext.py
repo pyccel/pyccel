@@ -1682,7 +1682,10 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType()
+        if self.rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = self.dtype
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1705,6 +1708,15 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _set_order(self, x):
         self._order      = x.order
+
+    @property
+    def arg(self):
+        """
+        The argument passed to the NumPy unary function.
+
+        The argument passed to the NumPy unary function.
+        """
+        return self._args[0]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -2313,7 +2325,7 @@ class NumpySize(PyccelInternalFunction):
 
         return PyccelArrayShapeElement(a, axis)
 
-class NumpyIsNan(NumpyUfuncBase):
+class NumpyIsNan(NumpyUfuncUnary):
     """ 
     Represents a call to numpy.isnan() function.
 
@@ -2335,21 +2347,20 @@ class NumpyIsNan(NumpyUfuncBase):
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, x):
-        super().__init__(x)
-        self._shape = x.shape
-        self._rank  = x.rank
-        self._order = x.order
-        if self._rank:
-            self._class_type = NumpyNDArrayType()
-        else:
-            self._class_type = NativeBool()
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
 
-    @property
-    def arg(self):
-        return self._args[0]
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
 
-class NumpyIsInf(NumpyUfuncBase):
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsInf(NumpyUfuncUnary):
     """ 
     Represents a call to numpy.isinf() function.
 
@@ -2372,21 +2383,20 @@ class NumpyIsInf(NumpyUfuncBase):
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, x):
-        super().__init__(x)
-        self._shape = x.shape
-        self._rank  = x.rank
-        self._order = x.order
-        if self._rank:
-            self._class_type = NumpyNDArrayType()
-        else:
-            self._class_type = NativeBool()
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
 
-    @property
-    def arg(self):
-        return self._args[0]
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
 
-class NumpyIsFinite(NumpyUfuncBase):
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsFinite(NumpyUfuncUnary):
     """ 
     Represents a call to numpy.isfinite() function.
 
@@ -2409,19 +2419,18 @@ class NumpyIsFinite(NumpyUfuncBase):
     _dtype = NativeBool()
     _precision = -1
 
-    def __init__(self, x):
-        super().__init__(x)
-        self._shape = x.shape
-        self._rank  = x.rank
-        self._order = x.order
-        if self._rank:
-            self._class_type = NumpyNDArrayType()
-        else:
-            self._class_type = NativeBool()
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
 
-    @property
-    def arg(self):
-        return self._args[0]
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
 
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
