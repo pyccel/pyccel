@@ -264,7 +264,8 @@ class ListExtend(PyccelInternalFunction):
     Represents a call to the .extend() method.
 
     Represents a call to the .extend() method of an object with a list type,
-    which adds items of an iterable (list, tuple, dictionary, etc) at the end of a list.
+    which adds items of an iterable (list, tuple, dictionary, etc) at the end
+    of a list.
     This method returns `None`.
     The extend method is called as follows:
 
