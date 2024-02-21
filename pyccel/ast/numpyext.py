@@ -331,11 +331,11 @@ class NumpyReal(PythonReal):
 
     def __init__(self, arg):
         super().__init__(arg)
-        self._dtype = arg.dtype
+        self._dtype = arg.dtype.element_type
         self._order = arg.order
         self._rank  = arg.rank
         self._shape = process_shape(self._rank == 0, self.internal_var.shape)
-        self._class_type = arg.class_type
+        self._class_type = arg.class_type.switch_basic_type(self._dtype)
 
     @property
     def is_elemental(self):
@@ -374,11 +374,11 @@ class NumpyImag(PythonImag):
 
     def __init__(self, arg):
         super().__init__(arg)
-        self._dtype = arg.dtype
+        self._dtype = arg.dtype.element_type
         self._order = arg.order
         self._rank  = arg.rank
         self._shape = process_shape(self._rank == 0, self.internal_var.shape)
-        self._class_type = arg.class_type
+        self._class_type = arg.class_type.switch_basic_type(self._dtype)
 
     @property
     def is_elemental(self):
