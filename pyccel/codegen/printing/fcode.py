@@ -1587,7 +1587,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         mod_str = ''
-        if expr.module_variable and not is_private and isinstance(expr.class_type, FixedSizeNumericType):
+        if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
             mod_str = ', bind(c)'
 
         # Construct declaration
@@ -1808,7 +1808,7 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
 
-    def _print_PyccelBoolType(self, expr):
+    def _print_PyccelBooleanType(self, expr):
         return 'logical'
 
     def _print_PyccelIntegerType(self, expr):
