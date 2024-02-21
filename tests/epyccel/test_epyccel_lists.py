@@ -118,6 +118,74 @@ def test_append_range_tuple(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
+def test_insert_basic(language):
+    def f():
+        a = [1, 2, 3]
+        a.insert(4, 4)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_multiple(language):
+    def f():
+        a = [1, 2, 3]
+        a.insert(4, 4)
+        a.insert(2, 5)
+        a.insert(1, 6)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        a.insert(1, [4, 5, 6])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range(language):
+    def f():
+        a = [1, 2, 3]
+        for i in range(4, 1000):
+            a.insert(i - 1 ,i)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(4, 1000):
+            a.insert(i, [i, i + 1])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range_tuple(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(4, 1000):
+            a.insert(i, (i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_user_defined_objects(language):
+    import modules.list_user_defined_objs as mod
+
+    modnew = epyccel(mod, language=language)
+    python_list = mod.fn()
+    accelerated_list = modnew.fn()
+    assert len(python_list) == len(accelerated_list)
+    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
+        assert python_elem.x == accelerated_elem.x
 
 def test_clear_1(language):
 
