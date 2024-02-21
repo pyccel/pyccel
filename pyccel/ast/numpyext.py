@@ -116,6 +116,9 @@ __all__ = (
     'NumpyZeros',
     'NumpyZerosLike',
     'NumpyShape',
+    'NumpyIsInf',
+    'NumpyIsFinite',
+    'NumpyIsNan',
 )
 
 class NumpyNDArrayType(DataType, metaclass=Singleton):
@@ -1679,7 +1682,10 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         self._set_dtype_precision(x)
         self._set_shape_rank(x)
         self._set_order(x)
-        self._class_type = NumpyNDArrayType()
+        if self.rank:
+            self._class_type = NumpyNDArrayType()
+        else:
+            self._class_type = self.dtype
         super().__init__(x)
 
     def _set_shape_rank(self, x):
@@ -1702,6 +1708,15 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _set_order(self, x):
         self._order      = x.order
+
+    @property
+    def arg(self):
+        """
+        The argument passed to the NumPy unary function.
+
+        The argument passed to the NumPy unary function.
+        """
+        return self._args[0]
 
 #------------------------------------------------------------------------------
 class NumpyUfuncBinary(NumpyUfuncBase):
@@ -2310,6 +2325,113 @@ class NumpySize(PyccelInternalFunction):
 
         return PyccelArrayShapeElement(a, axis)
 
+class NumpyIsNan(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isnan() function.
+
+    This class encapsulates a call to the Numpy 'isnan' function. It is used to
+    check whether the elements of a given array or expression are NaN (Not-a-Number).
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for NaN values.
+
+    See Also
+    --------
+    numpy.isnan :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isnan.html>.
+    """
+    __slots__ = ()
+    name = 'isnan'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsInf(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isinf() function.
+
+    This class represents a call to the Numpy 'isinf' function, which is used
+    to determine whether elements in a given array or expression are positive or
+    negative infinity.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for infinity values.
+
+    See Also
+    --------
+    numpy.isinf :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isinf.html>.
+    """
+    __slots__ = ()
+    name = 'isinf'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
+class NumpyIsFinite(NumpyUfuncUnary):
+    """ 
+    Represents a call to numpy.isfinite() function.
+
+    This class corresponds to a call to the Numpy 'isfinite' function, which is
+    used to determine whether elements in a given array or expression are finite
+    (neither NaN nor infinity).
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        A Pyccel expression or array to be checked for finiteness.
+
+    See Also
+    --------
+    numpy.isfinite :
+        See NumPy docs : <https://numpy.org/doc/stable/reference/generated/numpy.isfinite.html>.
+    """
+    __slots__ = ()
+    name = 'isfinite'
+    _dtype = NativeBool()
+    _precision = -1
+
+    def _set_dtype_precision(self, x):
+        """
+        Use the argument to calculate the dtype and precision of the result.
+
+        Use the argument to calculate the dtype and precision of the result.
+        For this class the dtype and precision is a class property.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
+
 #==============================================================================
 # TODO split numpy_functions into multiple dictionaries following
 # https://docs.scipy.org/doc/numpy-1.15.0/reference/routines.array-creation.html
@@ -2372,6 +2494,9 @@ numpy_funcs = {
     'linspace'  : PyccelFunctionDef('linspace'  , NumpyLinspace),
     'where'     : PyccelFunctionDef('where'     , NumpyWhere),
     # ---
+    'isnan'     : PyccelFunctionDef('isnan'     , NumpyIsNan),
+    'isinf'     : PyccelFunctionDef('isinf'     , NumpyIsInf),
+    'isfinite'  : PyccelFunctionDef('isfinite'  , NumpyIsFinite),
     'sign'      : PyccelFunctionDef('sign'      , NumpySign),
     'abs'       : PyccelFunctionDef('abs'       , NumpyAbs),
     'floor'     : PyccelFunctionDef('floor'     , NumpyFloor),
