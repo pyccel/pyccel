@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate
+from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -133,7 +133,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC, PYCCEL_RESTRICTION_INHOMOG_SET)
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -2195,6 +2195,18 @@ class SemanticParser(BasicParser):
             expr = PythonList(*ls)
         except TypeError:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                severity='fatal')
+        return expr
+
+    def _visit_PythonSet(self, expr):
+        ls = [self._visit(i) for i in expr]
+        try:
+            expr = PythonSet(*ls)
+        except TypeError as e:
+            message = str(e)
+            if not message :
+                message = PYCCEL_RESTRICTION_INHOMOG_SET
+            errors.report(message, symbol=expr,
                 severity='fatal')
         return expr
 
