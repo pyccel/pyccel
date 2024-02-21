@@ -141,7 +141,7 @@ class PyccelType(metaclass=ArgumentSingleton):
     is expected when calling an arithmetic operator on objects of these types.
 
     Where applicable, types also contain an and operator. The operator indicates the type that
-    is expected when calling a bitwise operator on objects of these types.
+    is expected when calling a bitwise comparison operator on objects of these types.
 
     Parameters
     ----------

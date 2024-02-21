@@ -120,8 +120,8 @@ class PyccelBitOperator(PyccelOperator):
             The  datatype of the result of the operation.
         """
         try:
-            dtype = functools.reduce(lambda a, b: a and b, (a.dtype for a in args))
-            class_type = functools.reduce(lambda a, b: a and b, (a.class_type for a in args))
+            dtype = sum((a.dtype for a in args), start=GenericType())
+            class_type = sum((a.class_type for a in args), start=GenericType())
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
@@ -198,30 +198,35 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-    def _handle_integer_type(self, args):
+    def _calculate_dtype(self, *args):
         """
-        Set dtype when the result is an integer.
+        Get the dtype.
 
-        Calculate the dtype of the result from the arguments in
-        the case where the result is an integer, ie. when the arguments are all
-        booleans or integers.
+        If one argument is a string then all arguments must be strings.
+
+        If the arguments are numeric then the dtype
+        match the broadest type.
+        e.g.
+            1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
         Parameters
         ----------
-        args : tuple of TypedAstNode
+        *args : tuple of TypedAstNode
             The arguments passed to the operator.
 
         Returns
         -------
         DataType
-            The datatype of the result of the operator.
+            The  datatype of the result of the operation.
         """
-        assert all(isinstance(getattr(a.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType)) for a in args)
-        if all(a.dtype.primitive_type is PyccelBooleanType() for a in args):
-            dtype = PythonNativeBool()
-        else:
-            dtype = PythonNativeInt()
-        return dtype
+        try:
+            dtype = functools.reduce(lambda a, b: a & b, [a.dtype for a in args])
+            class_type = functools.reduce(lambda a, b: a & b, (a.class_type for a in args))
+        except NotImplementedError:
+            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
+
+        assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        return dtype, class_type
 
 #==============================================================================
 
