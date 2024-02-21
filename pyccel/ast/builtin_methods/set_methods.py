@@ -9,7 +9,7 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousSet
+from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.builtins import PythonTuple
 
@@ -42,7 +42,7 @@ class SetAdd(PyccelInternalFunction) :
 
     def __init__(self, set_variable, new_elem) -> None:
         if (new_elem.rank > 0 and not isinstance(new_elem, PythonTuple)) :
-                raise TypeError(f"Can't add an unhashable type")
+            raise TypeError("Can't add an unhashable type")
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
             set_variable.dtype is not NativeGeneric() and
