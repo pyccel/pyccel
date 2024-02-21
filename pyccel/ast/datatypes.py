@@ -22,19 +22,20 @@ __all__ = (
 #
     'CustomDataType',
     'DataType',
+    'DataTypeFactory',
     'NativeBool',
     'NativeComplex',
     'NativeFloat',
     'NativeGeneric',
+    'NativeHomogeneousList',
+    'NativeHomogeneousSet',
+    'NativeHomogeneousTuple',
     'NativeInhomogeneousTuple',
     'NativeInteger',
-    'NativeHomogeneousList',
-    'NativeHomogeneousTuple',
     'NativeString',
     'NativeSymbol',
     'NativeTuple',
     'NativeVoid',
-    'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
 #

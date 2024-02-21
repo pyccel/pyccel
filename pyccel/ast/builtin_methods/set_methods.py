@@ -30,8 +30,8 @@ class SetAdd(PyccelInternalFunction) :
     new_elem : TypedAstNode
         The argument passed to be add.
     """
-    __slots__ = ("_set_variable", "new_elem")
-    _attribute_nodes = ("_set_variable", "new_elem")
+    __slots__ = ("_set_variable", "_add_arg")
+    _attribute_nodes = ("_set_variable", "_add_arg")
     _dtype = NativeVoid()
     _shape = None
     _order = None
