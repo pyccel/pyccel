@@ -110,7 +110,7 @@ class PyccelPyTypeObject(FixedSizeType, metaclass=Singleton):
     __slots__ = ()
     _name = 'pytypeobject'
 
-class WrapperCustomDataType(ContainerType):
+class WrapperCustomDataType(CustomDataType):
     """
     Datatype representing a subclass of `PyObject`.
 
