@@ -233,6 +233,10 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
         assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+
+        if dtype is not PythonNativeBool():
+            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
+
         return dtype, class_type
 
 #==============================================================================
