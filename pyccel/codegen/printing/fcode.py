@@ -1818,7 +1818,7 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelFloatingPointType(self, expr):
         return 'real'
 
-    def _print_ComplexType(self, expr):
+    def _print_PyccelComplexType(self, expr):
         return 'complex'
 
     def _print_StringType(self, expr):
