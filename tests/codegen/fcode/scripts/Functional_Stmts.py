@@ -1,4 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
+from numpy import ones, float64
+
 a0 = [6]*10
 a1 = sum(a0[i] for i in range(len(a0)))
 a2 = sum(i for i in a0)
@@ -8,7 +10,6 @@ a4 = min(k if i>k else 0 if i==k else i for i in range(5) for k in range(10))
 def incr(x : 'int64'):
     y = x + 1
     return y
-from numpy import ones, float64
 
 a=ones((5,5,5,5),'double')
 b=ones((5),'int64')
