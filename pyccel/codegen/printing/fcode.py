@@ -1049,7 +1049,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
+        if expr.stop.dtype != expr.dtype:
             cast_func = DtypePrecisionToCastFunction[expr.dtype]
             st = cast_func(expr.stop)
             v = self._print(st)
@@ -1164,9 +1164,9 @@ class FCodePrinter(CodePrinter):
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
-        if value_true.dtype != expr.dtype or value_true.precision != expr.precision:
+        if value_true.dtype != expr.dtype:
             value_true = cast_func(value_true)
-        if value_false.dtype != expr.dtype or value_false.precision != expr.precision:
+        if value_false.dtype != expr.dtype:
             value_false = cast_func(value_false)
 
         condition   = self._print(expr.condition)
@@ -1296,7 +1296,6 @@ class FCodePrinter(CodePrinter):
         if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
             return '({})'.format(arg_code)
 
-        prec = expr.precision
         prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
@@ -1326,7 +1325,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
-                shape = expr.shape, precision = expr.precision,
+                shape = expr.shape,
                 order = expr.order, rank = expr.rank)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
@@ -1418,7 +1417,7 @@ class FCodePrinter(CodePrinter):
     # ...
     def _print_MacroType(self, expr):
         dtype = self._print(expr.argument.dtype)
-        prec  = expr.argument.precision
+        prec  = expr.argument.dtype.precision
 
         if dtype == 'integer':
             if prec==4:
@@ -2687,12 +2686,12 @@ class FCodePrinter(CodePrinter):
         exit_code = expr.status
         if isinstance(exit_code, LiteralInteger):
             arg = exit_code.python_value
-        elif not isinstance(exit_code.dtype.primitive_type, PyccelIntegerType) or exit_code.rank > 0:
+        elif not isinstance(getattr(exit_code.dtype, 'primitive_type'), PyccelIntegerType) or exit_code.rank > 0:
             print_arg = FunctionCallArgument(exit_code)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            if exit_code.precision != 4:
+            if exit_code.dtype.precisionprecision != 4:
                 exit_code = NumpyInt32(exit_code)
             arg = self._print(exit_code)
         return f'{code}stop {arg}\n'
