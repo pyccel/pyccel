@@ -53,7 +53,7 @@ class Literal(TypedAstNode):
         """
 
     def __repr__(self):
-        return "Literal({})".format(repr(self.python_value))
+        return f"Literal({repr(self.python_value)})"
 
     def __str__(self):
         return str(self.python_value)
@@ -287,8 +287,8 @@ class LiteralImaginaryUnit(LiteralComplex):
         The exact type of the literal.
     """
     __slots__ = ()
-    def __new__(cls, *, real = 0, imag = 1, dtype = PythonNativeComplex()):
-        return super().__new__(cls, 0, 1)
+    def __new__(cls, real = 0, imag = 1, dtype = PythonNativeComplex()):
+        return super().__new__(cls, 0, 1, dtype = dtype)
 
     def __init__(self, *, real = 0, imag = 1, dtype = PythonNativeComplex()):
         super().__init__(0, 1, dtype)
@@ -325,7 +325,7 @@ class LiteralString(Literal):
         self._string = arg
 
     def __repr__(self):
-        return "'{}'".format(str(self.python_value))
+        return f"'{self.python_value}'"
 
     def __str__(self):
         return str(self.python_value)

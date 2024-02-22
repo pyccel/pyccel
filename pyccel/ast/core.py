@@ -2994,9 +2994,9 @@ class Interface(PyccelAstNode):
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
-        type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                (dtype1 in dtype2 or dtype2 in dtype1) \
-                and (call_arg.rank == func_arg.rank)
+        def type_match(dtype1, dtype2, call_arg, func_arg):
+            return (dtype1 in dtype2 or dtype2 in dtype1) \
+                    and (call_arg.rank == func_arg.rank)
 
 
         j = -1

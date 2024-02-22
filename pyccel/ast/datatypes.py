@@ -437,7 +437,7 @@ class HomogeneousContainerType(ContainerType):
         return self._element_type # pylint: disable=no-member
 
     def __str__(self):
-        return f'{self._name}[{self.element_type}]'
+        return f'{self._name}[{self._element_type}]' # pylint: disable=no-member
 
     def __reduce__(self):
         """
