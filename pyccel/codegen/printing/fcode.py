@@ -803,7 +803,7 @@ class FCodePrinter(CodePrinter):
                 .add(("stdout", "output_unit"))
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
-    def _get_print_format_and_arg(self,var):
+    def _get_print_format_and_arg(self, var, var_code = None):
         """ Get the format string and the printable argument for an object.
         In other words get arg_format and arg such that var can be printed
         by doing:
@@ -822,19 +822,17 @@ class FCodePrinter(CodePrinter):
         arg        : str
                      The fortran code which represents var
         """
+        if var_code is None:
+            var_code = self._print(var)
+        arg = var_code
 
         var_type = var.dtype
         if isinstance(var.class_type, StringType):
             arg_format = 'A'
-            arg = self._print(var)
-        elif isinstance(var.class_type, InhomogeneousTupleType):
-            args_and_formats = [self._get_print_format_and_arg(v) for v in var]
-            arg = ', '.join(af[1] for af in args_and_formats)
-            formats = ',", ",'.join(af[0] for af in args_and_formats)
-            arg_format = f'"(",{formats},")"'
-        elif isinstance(var, FunctionCall):
-            args_and_formats = [self._get_print_format_and_arg(v.var) for v in var.funcdef.results]
-            arg = self._print(var)
+        elif isinstance(var, FunctionCall) and len(var.funcdef.results)>1 or \
+                isinstance(var.class_type, InhomogeneousTupleType):
+            var_elem_code = var_code[1:-1].split(', ')
+            args_and_formats = [self._get_print_format_and_arg(v.var, c) for v,c in zip(var.funcdef.results, var_elem_code)]
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
         elif isinstance(var_type, FixedSizeNumericType):
@@ -847,10 +845,8 @@ class FCodePrinter(CodePrinter):
                 resolution = np.finfo(pyccel_type_to_original_type[var_type]).resolution
                 dps = int(-np.log10(resolution))
                 arg_format = f'F0.{dps}'
-                arg = self._print(var)
             elif isinstance(var_type.primitive_type, PyccelIntegerType):
                 arg_format = 'I0'
-                arg = self._print(var)
             elif isinstance(var_type.primitive_type, PyccelBooleanType):
                 arg_format = 'A'
                 if isinstance(var, LiteralTrue):
@@ -858,7 +854,7 @@ class FCodePrinter(CodePrinter):
                 elif isinstance(var, LiteralFalse):
                     arg = "'False'"
                 else:
-                    arg = f'merge("True ", "False", {self._print(var)})'
+                    arg = f'merge("True ", "False", {var_code})'
             else:
                 errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
         else:
