@@ -17,7 +17,7 @@ from pyccel.stdlib.internal.lapack import dgetrs
 
 from pyccel.stdlib.internal.lapack import dgetri
 
-from numpy import zeros, int32
+from numpy import zeros, int32, float64
 
 def test_1():
     n   = int32(25)
@@ -75,8 +75,8 @@ def test_2():
     work  = zeros(lwork)
 
     # Get the condition number.
-    anorm = 1.0
-    rcond = -1.0
+    anorm = float64(1.0)
+    rcond = float64(-1.0)
     dgecon('I', n, a, lda, anorm, rcond, work, iwork, info)
 #    assert(info == 0)
 
@@ -86,17 +86,17 @@ def test_3():
 
     a = zeros((lda,n), order='F')
 
-    a[0,0] = 0.0
-    a[0,1] = 1.0
-    a[0,2] = 2.0
+    a[0,0] = float64(0.0)
+    a[0,1] = float64(1.0)
+    a[0,2] = float64(2.0)
 
-    a[1,0] = 4.0
-    a[1,1] = 5.0
-    a[1,2] = 6.0
+    a[1,0] = float64(4.0)
+    a[1,1] = float64(5.0)
+    a[1,2] = float64(6.0)
 
-    a[2,0] = 7.0
-    a[2,1] = 8.0
-    a[2,2] = 0.0
+    a[2,0] = float64(7.0)
+    a[2,1] = float64(8.0)
+    a[2,2] = float64(0.0)
 
     info = int32(-1)
     ipiv = zeros(n, 'int32')
@@ -117,17 +117,17 @@ def test_4():
 
     a = zeros((lda,n), order='F')
 
-    a[0,0] = 0.0
-    a[0,1] = 1.0
-    a[0,2] = 2.0
+    a[0,0] = float64(0.0)
+    a[0,1] = float64(1.0)
+    a[0,2] = float64(2.0)
 
-    a[1,0] = 4.0
-    a[1,1] = 5.0
-    a[1,2] = 6.0
+    a[1,0] = float64(4.0)
+    a[1,1] = float64(5.0)
+    a[1,2] = float64(6.0)
 
-    a[2,0] = 7.0
-    a[2,1] = 8.0
-    a[2,2] = 0.0
+    a[2,0] = float64(7.0)
+    a[2,1] = float64(8.0)
+    a[2,2] = float64(0.0)
 
     info = int32(-1)
     ipiv = zeros(n, 'int32')
@@ -137,9 +137,9 @@ def test_4():
 
     # Compute the inverse matrix.
     b = zeros((1,n), order='F')
-    b[0] = 14.0
-    b[1] = 32.0
-    b[2] = 23.0
+    b[0] = float64(14.0)
+    b[1] = float64(32.0)
+    b[2] = float64(23.0)
 
     # Solve the linear system.
     dgetrs('n', n, int32(1), a, lda, ipiv, b, n, info)
