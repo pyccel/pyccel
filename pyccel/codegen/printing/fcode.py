@@ -1506,6 +1506,7 @@ class FCodePrinter(CodePrinter):
 
         # ...
             if isinstance(expr_dtype, StringType):
+                dtype = self._print(expr_dtype)
 
                 if intent_in:
                     dtype = dtype[:9] +'(len =*)'
