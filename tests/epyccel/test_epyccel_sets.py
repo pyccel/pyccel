@@ -4,10 +4,10 @@ from  pyccel.epyccel import epyccel
 
 @pytest.fixture( params=[
         pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="list methods not implemented in fortran"),
+            pytest.mark.skip(reason="set methods not implemented in fortran"),
             pytest.mark.fortran]),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="list methods not implemented in c"),
+            pytest.mark.skip(reason="set methods not implemented in c"),
             pytest.mark.c]),
         pytest.param("python", marks = pytest.mark.python)
     ],
