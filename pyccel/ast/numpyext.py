@@ -1535,7 +1535,7 @@ class NumpyNorm(PyccelInternalFunction):
             self._shape = None
             self._order = None
             self._rank  = 0
-        self._class_type = NumpyNDArrayType(self._dtype)
+        self._class_type = NumpyNDArrayType(self._dtype) if self.rank else self._dtype
 
     @property
     def arg(self):
@@ -2018,7 +2018,7 @@ class NumpyConjugate(PythonConjugate):
         self._order = arg.order
         self._rank  = self.internal_var.rank
         self._shape = process_shape(self._rank == 0, self.internal_var.shape)
-        self._class_type = NumpyNDArrayType(arg.dtype)
+        self._class_type = NumpyNDArrayType(arg.dtype) if self.rank else arg.dtype
 
     @property
     def is_elemental(self):
@@ -2161,7 +2161,7 @@ class NumpyCountNonZero(PyccelInternalFunction):
                 self._shape.pop(axis.python_value)
                 self._rank  = a.rank-1
                 self._order = a.order if a.rank>2 else None
-                self._class_type = NumpyNDArrayType(self._dtype)
+                self._class_type = NumpyNDArrayType(self._dtype) if a.rank else self._dtype
             else:
                 self._dtype = PythonNativeInt()
                 self._rank  = 0
