@@ -1490,18 +1490,11 @@ class FCodePrinter(CodePrinter):
         # ... print datatype
         if isinstance(expr_dtype, CustomDataType):
             name   = expr_dtype.__class__.__name__
-            prefix = expr_dtype.prefix
-            alias  = expr_dtype.alias
 
             if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
-
-            if alias is None:
-                name = name.replace(prefix, '')
-            else:
-                name = alias
             dtype = f'{sig}({name})'
         elif isinstance(expr_dtype, FixedSizeNumericType):
             dtype = self._print(expr_dtype.primitive_type)
