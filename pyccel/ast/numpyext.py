@@ -864,7 +864,7 @@ class NumpyMatmul(PyccelInternalFunction):
         else:
             self._order = None if self._rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType(self._dtype)
+        self._class_type = NumpyNDArrayType(self._dtype) if self.rank else self._dtype
 
     @property
     def a(self):
