@@ -2521,7 +2521,7 @@ class SemanticParser(BasicParser):
             order = None
             return UnionTypeAnnotation(VariableTypeAnnotation(dtype, dtype, rank, order))
         elif isinstance(visited_dtype, PyccelType):
-            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0, None))
+            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, visited_dtype, -1, 0))
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
