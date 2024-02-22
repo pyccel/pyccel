@@ -1,5 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-#$ header g(double, double) results(double, double)
+#$ header g(float, float) results(float, float)
 def g(x,v):
     m = x - v
     t =  2.0 * m
