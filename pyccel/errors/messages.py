@@ -111,7 +111,7 @@ PYCCEL_RESTRICTION_LIST_COMPREHENSION_ASSIGN = "The result of a list comprehensi
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE = 'Could not deduce the size of this list comprehension. If you believe this expression is simple then please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS = 'Pyccel cannot handle this list comprehension. This is because there are occasions where the upper bound is smaller than the lower bound for variable {}'
 PYCCEL_RESTRICTION_INHOMOG_LIST = 'Inhomogeneous lists are not supported by Pyccel. Please use a tuple'
-PYCCEL_RESTRICTION_INHOMOG_SET = 'Inhomogeneous Sets are not supported by Pyccel. Please use a tuple'
+PYCCEL_RESTRICTION_INHOMOG_SET = 'Inhomogeneous Sets are not supported by Pyccel'
 
 # Fortran limitation
 FORTRAN_ALLOCATABLE_IN_EXPRESSION = 'An allocatable function cannot be used in an expression'
