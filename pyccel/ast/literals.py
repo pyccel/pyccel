@@ -287,7 +287,7 @@ class LiteralImaginaryUnit(LiteralComplex):
         The exact type of the literal.
     """
     __slots__ = ()
-    def __new__(cls, *, dtype = PythonNativeComplex()):
+    def __new__(cls, *, real = 0, imag = 1, dtype = PythonNativeComplex()):
         return super().__new__(cls, 0, 1)
 
     def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex()):

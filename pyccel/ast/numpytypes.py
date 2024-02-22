@@ -14,7 +14,6 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
-from .datatypes import PythonNativeNumericTypes
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
@@ -67,6 +66,8 @@ class NumpyNumericType(FixedSizeNumericType):
         elif isinstance(other, FixedSizeNumericType):
             return other.primitive_type == self.primitive_type and \
                     other.precision == self.precision
+        else:
+            return NotImplemented
 
     def __hash__(self):
         return hash(f"numpy.{self}")

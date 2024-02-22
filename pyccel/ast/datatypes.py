@@ -27,7 +27,7 @@ __all__ = (
         'PyccelIntegerType',
         'PyccelFloatingPointType',
         'PyccelComplexType',
-        'PyccelCharacterType'
+        'PyccelCharacterType',
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
         'PythonNativeNumericTypes',
@@ -154,7 +154,7 @@ class PyccelType(metaclass=ArgumentSingleton):
     __slots__ = ()
 
     def __str__(self):
-        return self._name
+        return self._name #pylint: disable=no-member
 
     def switch_basic_type(self, new_type):
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
@@ -677,11 +677,11 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 
     assert isinstance(argname, (list, tuple))
     def class_name_func(self):
-        if argname: 
+        if argname:
             param = ', '.join(str(getattr(self, a)) for a in argname)
-            return f'{self._name}[{param}]'
+            return f'{self._name}[{param}]' #pylint: disable=protected-access
         else:
-            return f'{self._name}'
+            return self._name #pylint: disable=protected-access
 
     newclass = type(f'Pyccel{name}', (BaseClass,),
                     {"__init__": class_init_func,
@@ -700,80 +700,3 @@ pyccel_type_to_original_type = {
         }
 
 original_type_to_pyccel_type = {v: k for k,v in pyccel_type_to_original_type.items()}
-
-
-#
-#default_precision = {Float : 8,
-#                     Int : numpy.dtype(int).alignment,
-#                     Cmplx : 8,
-#                     Bool : -1}
-#
-#
-#
-#def datatype(arg):
-#    """
-#    Get the datatype indicated by a string.
-#
-#    Return the datatype singleton for the dtype described
-#    by the argument.
-#
-#    Parameters
-#    ----------
-#    arg : str
-#        Return the singleton for the corresponding dtype.
-#
-#    Returns
-#    -------
-#    DataType
-#        The data type described by the string.
-#    """
-#    if isinstance(arg, str):
-#        if arg not in dtype_and_precision_registry:
-#            raise ValueError("Unrecognized datatype " + arg)
-#        return dtype_and_precision_registry[arg][0]
-#    else:
-#        raise TypeError('Expecting a DataType')
-#
-#def str_dtype(dtype):
-#
-#    """
-#    Get a string describing a datatype.
-#
-#    This function takes a pyccel datatype and returns a string which describes it.
-#
-#    Parameters
-#    ----------
-#    dtype : DataType
-#        The datatype.
-#
-#    Returns
-#    -------
-#    str
-#        A description of the data type.
-#
-#    Examples
-#    --------
-#    >>> str_dtype('int')
-#    'integer'
-#    >>> str_dtype(NativeInteger())
-#    'integer'
-#    """
-#    if isinstance(dtype, str):
-#        if dtype == 'int':
-#            return 'integer'
-#        elif dtype== 'float':
-#            return 'float'
-#        else:
-#            return dtype
-#    if isinstance(dtype, NativeInteger):
-#        return 'integer'
-#    elif isinstance(dtype, NativeFloat):
-#        return 'float'
-#    elif isinstance(dtype, NativeComplex):
-#        return 'complex'
-#    elif isinstance(dtype, NativeBool):
-#        return 'bool'
-#    elif isinstance(dtype, CustomDataType):
-#        return dtype.name
-#    else:
-#        raise TypeError('Unknown datatype {0}'.format(str(dtype)))

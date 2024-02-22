@@ -3012,11 +3012,10 @@ class Interface(PyccelAstNode):
             if found:
                 break
 
-        if found:
-            return  self._functions[j]
-        else:
-            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+        if not found:
+            errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
+        return  self._functions[j]
 
 class FunctionAddress(FunctionDef):
     """

@@ -141,6 +141,7 @@ dtype_registry.update({
     'f8'         : NumpyFloat64Type(),
     'complex64'  : NumpyComplex64Type(),
     'complex128' : NumpyComplex128Type(),
+    'complex256' : NumpyComplex256Type(),
     'c8'         : NumpyComplex64Type(),
     'c16'        : NumpyComplex128Type(),
     })
@@ -548,7 +549,7 @@ class NumpyNewArray(PyccelInternalFunction):
 
     def __init__(self, *args, init_dtype = None):
         self._init_dtype = init_dtype
-        self._class_type = NumpyNDArrayType(self._dtype)
+        self._class_type = NumpyNDArrayType(self._dtype) # pylint: disable=no-member
 
         super().__init__(*args)
 

@@ -226,7 +226,7 @@ def get_cls_base(class_type):
     NotImplementedError
         Raised if the base class cannot be found.
     """
-    if isinstance(class_type, CustomDataType) and class_type is class_type:
+    if isinstance(class_type, CustomDataType):
         return None
     elif class_type in literal_classes:
         return literal_classes[class_type]

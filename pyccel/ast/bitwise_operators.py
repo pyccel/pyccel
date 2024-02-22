@@ -128,7 +128,7 @@ class PyccelBitOperator(PyccelOperator):
         assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
 
         if dtype is PythonNativeBool():
-            dtype = PythonNativeInteger()
+            dtype = PythonNativeInt()
             class_type.switch_basic_type(dtype)
 
         self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
