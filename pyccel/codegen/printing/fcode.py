@@ -58,9 +58,10 @@ from pyccel.ast.numpyext import NumpyRand
 from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
+from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
 
-from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus
-from pyccel.ast.operators import PyccelMod
+from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
+from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
 from pyccel.ast.operators import PyccelUnarySub, PyccelLt, PyccelGt, IfTernaryOperator
 
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
@@ -100,6 +101,8 @@ numpy_ufunc_to_fortran = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    'NumpyIsFinite':'ieee_is_finite',
+    'NumpyIsNan'  :'ieee_is_nan',
 }
 
 math_function_to_fortran = {
@@ -2695,11 +2698,19 @@ class FCodePrinter(CodePrinter):
             func_name = numpy_ufunc_to_fortran[type_name]
         except KeyError:
             self._print_not_supported(expr)
+        if func_name.startswith('ieee_'):
+            self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
         args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PyccelIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
         return self._get_statement(code)
+
+    def _print_NumpyIsInf(self, expr):
+        code = PyccelAssociativeParenthesis(PyccelAnd(
+                    PyccelNot(NumpyIsFinite(expr.arg)),
+                    PyccelNot(NumpyIsNan(expr.arg))))
+        return self._print(code)
 
     def _print_NumpySign(self, expr):
         """ Print the corresponding Fortran function for a call to Numpy.sign

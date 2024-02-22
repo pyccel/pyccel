@@ -93,6 +93,9 @@ numpy_ufunc_to_c_float = {
     'NumpyArcsinh': 'asinh',
     'NumpyArccosh': 'acosh',
     'NumpyArctanh': 'atanh',
+    'NumpyIsInf':'isinf',
+    'NumpyIsFinite':'isfinite',
+    'NumpyIsNan':'isnan',
 }
 
 numpy_ufunc_to_c_complex = {
@@ -1651,6 +1654,33 @@ class CCodePrinter(CodePrinter):
             func = 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
+
+    def _print_NumpyIsFinite(self, expr):
+        """
+        Convert a Python expression with a numpy isfinite function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        code_arg = self._print(expr.arg)
+        return f"isfinite({code_arg})"
+
+    def _print_NumpyIsInf(self, expr):
+        """
+        Convert a Python expression with a numpy isinf function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        code_arg = self._print(expr.arg)
+        return f"isinf({code_arg})"
+
+    def _print_NumpyIsNan(self, expr):
+        """
+        Convert a Python expression with a numpy isnan function call to C function call
+        """
+
+        self.add_import(c_imports['numpy_c'])
+        code_arg = self._print(expr.arg)
+        return f"isnan({code_arg})"
 
     def _print_MathFunctionBase(self, expr):
         """ Convert a Python expression with a math function call to C
