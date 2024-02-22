@@ -18,6 +18,7 @@ from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
+        'NumpyIntType',
         'NumpyInt8Type',
         'NumpyInt16Type',
         'NumpyInt32Type',

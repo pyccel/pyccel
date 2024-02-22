@@ -227,6 +227,7 @@ class PythonNativeNumericTypes(FixedSizeNumericType):
 
     Base class representing a built-in scalar numeric datatype.
     """
+    __slots__ = ()
 
 class PythonNativeBool(PythonNativeNumericTypes):
     """

@@ -13,6 +13,7 @@ from .datatypes import ContainerType, FixedSizeType, PyccelIntegerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
+           'CNativeInt',
            'CStackArray',
            'CStringExpression',
            'ObjectAddress',
