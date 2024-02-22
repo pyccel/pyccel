@@ -830,7 +830,12 @@ class FCodePrinter(CodePrinter):
         elif isinstance(var.class_type, InhomogeneousTupleType):
             args_and_formats = [self._get_print_format_and_arg(v) for v in var]
             arg = ', '.join(af[1] for af in args_and_formats)
-            formats = ','.join(af[1] for af in args_and_formats)
+            formats = ','.join(af[0] for af in args_and_formats)
+            arg_format = f'"(",{formats},")"'
+        elif isinstance(var, FunctionCall):
+            args_and_formats = [self._get_print_format_and_arg(v.var) for v in var.funcdef.results]
+            arg = self._print(var)
+            formats = ','.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
         elif isinstance(var_type, FixedSizeNumericType):
             if isinstance(var_type.primitive_type, PyccelComplexType):
