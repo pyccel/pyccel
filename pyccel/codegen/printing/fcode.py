@@ -1083,7 +1083,7 @@ class FCodePrinter(CodePrinter):
             var = expr.ind
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
-            var = self.scope.get_temporary_variable('int', 'linspace_index') 
+            var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
 
         init_value = template.format(
             start = self._print(expr.start),
@@ -1104,7 +1104,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNonZeroElement(self, expr):
 
-        ind   = self._print(self.scope.get_temporary_variable('int'))
+        ind   = self._print(self.scope.get_temporary_variable(PythonNativeInt()))
         array = expr.array
 
         if isinstance(array.dtype.primitive_type, PyccelBooleanType):
@@ -1237,7 +1237,7 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = self.scope.get_temporary_variable('int')
+        index  = self.scope.get_temporary_variable(PythonNativeInt())
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
