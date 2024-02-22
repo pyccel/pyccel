@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
 -   #1182 : Fix tuples containing objects with different ranks.
 -   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
+-   Fix all cases where a Python built-in type is returned in place of a NumPy type.
 
 ### Changed
 
@@ -33,6 +34,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Removed unused `NativeSymbol`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
+-   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
 
 ## \[1.11.1\] - 2024-02-13
 
