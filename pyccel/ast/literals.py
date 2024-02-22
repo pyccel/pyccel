@@ -290,7 +290,7 @@ class LiteralImaginaryUnit(LiteralComplex):
     def __new__(cls, *, real = 0, imag = 1, dtype = PythonNativeComplex()):
         return super().__new__(cls, 0, 1)
 
-    def __init__(self, real = 0, imag = 1, dtype = PythonNativeComplex()):
+    def __init__(self, *, real = 0, imag = 1, dtype = PythonNativeComplex()):
         super().__init__(0, 1, dtype)
 
     @property

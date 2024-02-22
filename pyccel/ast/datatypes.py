@@ -437,7 +437,7 @@ class HomogeneousContainerType(ContainerType):
         return self._element_type # pylint: disable=no-member
 
     def __str__(self):
-        return f'{self._name}[{self._element_type}]'
+        return f'{self._name}[{self.element_type}]'
 
     def __reduce__(self):
         """
@@ -609,6 +609,17 @@ class InhomogeneousTupleType(ContainerType, TupleType):
         return (self.__class__, tuple(self._element_types))
 
 class DictType(ContainerType):
+    """
+    Class representing the homogeneous dictionary type.
+
+    Class representing the type of a homogeneous dict. This
+    is a container type and should be used as the class_type.
+
+    Parameters
+    ----------
+    element_type : PyccelType
+        The type of the elements of the homogeneous tuple.
+    """
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'
 
