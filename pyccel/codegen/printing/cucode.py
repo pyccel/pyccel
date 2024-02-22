@@ -184,7 +184,7 @@ class CudaCodePrinter(CCodePrinter):
         parts = [sep,
              cuda_decorater,
              docstring,
-             '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
+             f'{self.function_signature(expr)}\n{{\n',
              decs,
              body,
              '}\n',
@@ -194,7 +194,6 @@ class CudaCodePrinter(CCodePrinter):
 
         return ''.join(p for p in parts if p)
     def _print_KernelCall(self, expr):
-    
         func = expr.funcdef
         if func.is_inline:
             return self._handle_inline_func_call(expr)
@@ -218,5 +217,5 @@ class CudaCodePrinter(CCodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        return '{}<<<{},{}>>>({});\n'.format(func.name, expr.numBlocks, expr.tpblock,args)
+        return f"{func.name}<<<{expr.numBlocks},{expr.tpblock}>>>({args});\n"
 
