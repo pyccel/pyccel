@@ -1173,9 +1173,9 @@ class CCodePrinter(CodePrinter):
         try :
             return self.dtype_registry[key]
         except KeyError:
-            raise errors.report(PYCCEL_RESTRICTION_TODO,
+            raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,
-                    severity='fatal') #pylint: disable=raise-missing-from
+                    severity='fatal')
 
     def find_in_ndarray_type_registry(self, dtype):
         """
@@ -1198,9 +1198,9 @@ class CCodePrinter(CodePrinter):
         try :
             return self.ndarray_type_registry[dtype]
         except KeyError:
-            raise errors.report(PYCCEL_RESTRICTION_TODO,
+            raise errors.report(PYCCEL_RESTRICTION_TODO, #pylint: disable=raise-missing-from
                     symbol = dtype,
-                    severity='fatal') #pylint: disable=raise-missing-from
+                    severity='fatal')
 
     def get_declare_type(self, expr):
         """
