@@ -59,12 +59,11 @@ from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
-from pyccel.ast.class_defs import get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
 from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from pyccel.ast.datatypes import DataTypeFactory, CustomDataType, PyccelFloatingPointType
+from pyccel.ast.datatypes import DataTypeFactory, PyccelFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
 from pyccel.ast.datatypes import PyccelComplexType, FixedSizeNumericType
 
@@ -3978,7 +3977,7 @@ class SemanticParser(BasicParser):
 
         def is_symbolic(var):
             return isinstance(var, Variable) \
-                and isinstance(var.dtype, SymbolType)
+                and isinstance(var.dtype, SymbolicType)
 
         # TODO fix: not yet working because of mpi examples
 #        if not test:
