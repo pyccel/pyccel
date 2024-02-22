@@ -1489,7 +1489,7 @@ class FCodePrinter(CodePrinter):
 
         # ... print datatype
         if isinstance(expr_dtype, CustomDataType):
-            name   = expr_dtype.__class__.__name__
+            name   = expr_dtype.name
 
             if var.is_argument:
                 sig = 'class'
