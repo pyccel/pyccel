@@ -12,7 +12,7 @@ from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt
+from .datatypes import PythonNativeInt, PyccelIntegerType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -232,12 +232,9 @@ class Slice(PyccelAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
-        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, PythonNativeInt)):
-            raise TypeError('Slice start must be Integer or None')
-        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, PythonNativeInt)):
-            raise TypeError('Slice stop must be Integer or None')
-        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, PythonNativeInt)):
-            raise TypeError('Slice step must be Integer or None')
+        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PyccelIntegerType)
+        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PyccelIntegerType)
+        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PyccelIntegerType)
         if slice_type not in (Slice.Range, Slice.Element):
             raise TypeError('Slice type must be Range (1) or Element (0)')
 
