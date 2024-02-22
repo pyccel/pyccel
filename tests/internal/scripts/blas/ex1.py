@@ -12,7 +12,7 @@ import numpy as np
 
 def test_daxpy():
     n = np.int32(5)
-    sa = 1.0
+    sa = np.float64(1.0)
 
     incx = np.int32(1)
     sx = np.zeros(n)
@@ -20,13 +20,13 @@ def test_daxpy():
     incy = np.int32(1)
     sy = np.zeros(n)
 
-    sx[0] = 1.0
-    sx[1] = 3.0
-    sx[3] = 5.0
+    sx[0] = np.float64(1.0)
+    sx[1] = np.float64(3.0)
+    sx[3] = np.float64(5.0)
 
-    sy[0] = 2.0
-    sy[1] = 4.0
-    sy[3] = 6.0
+    sy[0] = np.float64(2.0)
+    sy[1] = np.float64(4.0)
+    sy[3] = np.float64(6.0)
 
     daxpy(n, sa, sx, incx, sy, incy)
 

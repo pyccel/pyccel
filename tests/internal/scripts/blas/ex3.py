@@ -11,21 +11,21 @@ if __name__ == '__main__':
     y = np.zeros(n)
 
     # ...
-    x[0] = 2.0
-    x[1] = 3.0
-    x[2] = 4.0
-    x[3] = 5.0
-    x[4] = 6.0
+    x[0] = np.float64(2.0)
+    x[1] = np.float64(3.0)
+    x[2] = np.float64(4.0)
+    x[3] = np.float64(5.0)
+    x[4] = np.float64(6.0)
     # ...
 
     # ...
-    y[0] =  1.0
-    y[1] = -1.0
-    y[2] =  1.0
-    y[3] = -1.0
+    y[0] = np.float64( 1.0)
+    y[1] = np.float64(-1.0)
+    y[2] = np.float64( 1.0)
+    y[3] = np.float64(-1.0)
     # ...
 
-    alpha = 2.0
+    alpha = np.float64(2.0)
     incx = np.int32(1)
     incy = np.int32(1)
 
