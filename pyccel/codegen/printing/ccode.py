@@ -26,7 +26,7 @@ from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelMod
 from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
-from pyccel.ast.datatypes import PythonNativeFloat, TupleType, FixedSizeNumericType
+from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
 from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
@@ -411,7 +411,7 @@ class CCodePrinter(CodePrinter):
             dtype = self.find_in_ndarray_type_registry(numpy_precision_map[
                         (lhs_dtype.primitive_type, lhs_dtype.precision)])
         else:
-            raise NotImplementedError(f"Don't know how to index {variable.class_type} type")
+            raise NotImplementedError(f"Don't know how to index {lhs.class_type} type")
 
         flattened_list = self._flatten_list(arg)
         operations = ""
@@ -1175,7 +1175,7 @@ class CCodePrinter(CodePrinter):
         except KeyError:
             raise errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = dtype,
-                    severity='fatal')
+                    severity='fatal') #pylint: disable=raise-missing-from
 
     def find_in_ndarray_type_registry(self, dtype):
         """
@@ -1198,9 +1198,9 @@ class CCodePrinter(CodePrinter):
         try :
             return self.ndarray_type_registry[dtype]
         except KeyError:
-            errors.report(PYCCEL_RESTRICTION_TODO,
+            raise errors.report(PYCCEL_RESTRICTION_TODO,
                     symbol = dtype,
-                    severity='fatal')
+                    severity='fatal') #pylint: disable=raise-missing-from
 
     def get_declare_type(self, expr):
         """
@@ -2060,7 +2060,7 @@ class CCodePrinter(CodePrinter):
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
         need_to_cast = all(a.dtype.primitive_type is PyccelIntegerType() for a in expr.args)
-        code = ' / '.join(self._print(a if a.dtype.primitive_type is PyccelFloatingPointType() 
+        code = ' / '.join(self._print(a if a.dtype.primitive_type is PyccelFloatingPointType()
                                         else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):
             cast_type = self.find_in_dtype_registry(expr.dtype)
