@@ -7,6 +7,8 @@
 
 # TODO: - assert
 
+from numpy import zeros, int32, float64
+
 from pyccel.stdlib.internal.lapack import dgbtrf
 from pyccel.stdlib.internal.lapack import dgbtrs
 
@@ -16,8 +18,6 @@ from pyccel.stdlib.internal.lapack import dgecon
 from pyccel.stdlib.internal.lapack import dgetrs
 
 from pyccel.stdlib.internal.lapack import dgetri
-
-from numpy import zeros, int32, float64
 
 def test_1():
     n   = int32(25)
