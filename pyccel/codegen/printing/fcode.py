@@ -7,12 +7,13 @@
 www.fortran90.org as much as possible."""
 
 
+import functools
 import string
 import re
-from itertools import chain
 from collections import OrderedDict
+from itertools import chain
 
-import functools
+import numpy as np
 
 from pyccel.ast.basic import TypedAstNode
 
@@ -37,7 +38,8 @@ from pyccel.ast.c_concepts import CNativeInt
 from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
+from pyccel.ast.datatypes import pyccel_type_to_original_type
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
@@ -167,15 +169,6 @@ _default_methods = {
     '__new__' : 'alloc',
     '__init__': 'create',
     '__del__' : 'free',
-}
-
-type_to_print_format = {
-        ('float'): 'F0.12',
-        ('complex'): '"(",F0.12," + ",F0.12,")"',
-        ('int'): 'I0',
-        ('bool'): 'A',
-        ('str'): 'A',
-        ('tuple'):  '*'
 }
 
 #==============================================================================
@@ -829,23 +822,42 @@ class FCodePrinter(CodePrinter):
         arg        : str
                      The fortran code which represents var
         """
-        var_type = var.dtype
-        try:
-            arg_format = type_to_print_format[str(var_type)]
-        except KeyError:
-            errors.report("{} type is not supported currently".format(var_type), severity='fatal')
 
-        if isinstance(var_type.primitive_type, PyccelComplexType):
-            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
-        elif isinstance(var_type.primitive_type, PyccelBooleanType):
-            if isinstance(var, LiteralTrue):
-                arg = "'True'"
-            elif isinstance(var, LiteralFalse):
-                arg = "'False'"
-            else:
-                arg = 'merge("True ", "False", {})'.format(self._print(var))
-        else:
+        var_type = var.dtype
+        if isinstance(var.class_type, StringType):
+            arg_format = 'A'
             arg = self._print(var)
+        elif isinstance(var.class_type, InhomogeneousTupleType):
+            args_and_formats = [self._get_print_format_and_arg(v) for v in var]
+            arg = ', '.join(af[1] for af in args_and_formats)
+            formats = ','.join(af[1] for af in args_and_formats)
+            arg_format = f'"(",{formats},")"'
+        elif isinstance(var_type, FixedSizeNumericType):
+            if isinstance(var_type.primitive_type, PyccelComplexType):
+                float_format, real_arg = self._get_print_format_and_arg(NumpyReal(var))
+                imag_arg = self._print(NumpyImag(var))
+                arg_format = f'"(",{float_format}," + ",{float_format},")"'
+                arg = f'{real_arg}, {imag_arg}'
+            elif isinstance(var_type.primitive_type, PyccelFloatingPointType):
+                resolution = np.finfo(pyccel_type_to_original_type[var_type]).resolution
+                dps = int(-np.log10(resolution))
+                arg_format = f'F0.{dps}'
+                arg = self._print(var)
+            elif isinstance(var_type.primitive_type, PyccelIntegerType):
+                arg_format = 'I0'
+                arg = self._print(var)
+            elif isinstance(var_type.primitive_type, PyccelBooleanType):
+                arg_format = 'A'
+                if isinstance(var, LiteralTrue):
+                    arg = "'True'"
+                elif isinstance(var, LiteralFalse):
+                    arg = "'False'"
+                else:
+                    arg = f'merge("True ", "False", {self._print(var)})'
+            else:
+                errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
+        else:
+            errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
 
         return arg_format, arg
 
