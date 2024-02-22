@@ -1174,7 +1174,7 @@ class NumpyRandint(PyccelInternalFunction):
             self._rank = 0
             self._class_type = self._dtype
         else:
-            self._dtype = NumpyInt64()
+            self._dtype = NumpyInt64Type()
             self._rank = len(self.shape)
             self._class_type = NumpyNDArrayType(self._dtype)
         self._order   = None if self._rank < 2 else 'C'
