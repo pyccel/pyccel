@@ -521,36 +521,27 @@ class Variable(TypedAstNode):
         # The name is part of the hash so it must never change
         raise RuntimeError('Cannot modify hash definition')
 
-    def __reduce_ex__(self, i):
-        """ Used by pickle to create an object of this class.
-
-          Parameters
-          ----------
-
-          i : int
-           protocol
-
-          Results
-          -------
-
-          out : tuple
-           A tuple of two elements
-           a callable function that can be called
-           to create the initial version of the object
-           and its arguments.
+    def __reduce__(self):
         """
-        args = (
-            self.dtype,
-            self.name)
-        kwargs = {
-            'rank' : self.rank,
-            'memory_handling': self.memory_handling,
-            'is_optional':self.is_optional,
-            'shape':self.shape,
-            'cls_base':self.cls_base,
-            }
+        Function called during pickling.
 
-        out =  (apply_pickle, (self.__class__, args, kwargs))
+        For more details see : https://docs.python.org/3/library/pickle.html#object.__reduce__.
+        This function is necessary to ensure that DataTypes remain singletons.
+
+        Returns
+        -------
+        callable
+            A callable to create the object.
+        args
+            A tuple containing any arguments to be passed to the callable.
+        """
+        args = inspect.signature(Variable.__init__)
+        new_kwargs = {k:getattr(self, '_'+k) \
+                            for k in args.parameters.keys() \
+                            if '_'+k in dir(self)}
+        new_kwargs.update(kwargs)
+
+        out =  (apply_pickle, (self.__class__, (), kwargs))
         return out
 
     def __getitem__(self, *args):
