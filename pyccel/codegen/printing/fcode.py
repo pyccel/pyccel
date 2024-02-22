@@ -2522,17 +2522,17 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, StringType):
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
-            args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+            args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
 
     def _print_PyccelMinus(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
 
         return ' - '.join(args_code)
 
     def _print_PyccelMul(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
         return ' * '.join(a for a in args_code)
 
@@ -2609,11 +2609,11 @@ class FCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [a if isinstance(a.dtype.primitive_type is PyccelBooleanType) else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PyccelBooleanType) else PythonBool(a) for a in expr.args]
         return ' .and. '.join(self._print(a) for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [a if isinstance(a.dtype.primitive_type is PyccelBooleanType) else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PyccelBooleanType) else PythonBool(a) for a in expr.args]
         return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
@@ -2637,25 +2637,25 @@ class FCodePrinter(CodePrinter):
         return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} < {1}'.format(lhs, rhs)
 
     def _print_PyccelLe(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} <= {1}'.format(lhs, rhs)
 
     def _print_PyccelGt(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} > {1}'.format(lhs, rhs)
 
     def _print_PyccelGe(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type is PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} >= {1}'.format(lhs, rhs)
