@@ -444,6 +444,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonSet(self, expr):
         args = ', '.join(self._print(i) for i in expr.args)
+        if len(expr.args) == 0:
+            args += ','
         return '{'+args+'}'
 
     def _print_PythonBool(self, expr):
