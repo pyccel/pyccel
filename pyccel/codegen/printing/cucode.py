@@ -184,7 +184,7 @@ class CudaCodePrinter(CCodePrinter):
         parts = [sep,
              cuda_decorater,
              docstring,
-             '{signature}\n{{\n'.format(signature=self.function_signature(expr))
+             '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
              decs,
              body,
              '}\n',
@@ -218,5 +218,5 @@ class CudaCodePrinter(CCodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join([f'{self._print(a)}' for a in args])        
-        return f"{func.name}<<<{expr.numBlocks}, {expr.tpblock}>>>({args});\n"
+        return '{}<<<{},{}>>>({});\n'.format(func.name, expr.numBlocks, expr.tpblock,args)
+
