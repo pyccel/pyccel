@@ -126,6 +126,13 @@ class PyccelBitOperator(PyccelOperator):
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
         assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+
+        if dtype is PythonNativeBool():
+            dtype = PythonNativeInteger()
+            class_type.switch_basic_type(dtype)
+
+        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
+
         return dtype, class_type
 
     def _set_shape_rank(self):
