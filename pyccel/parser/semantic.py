@@ -1070,8 +1070,11 @@ class SemanticParser(BasicParser):
                 expected  = self.get_type_description(f_arg, not elemental)
                 type_name = self.get_type_description(i_arg, not elemental)
                 received  = f'{i_arg} ({type_name})'
-
-                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
+                if isinstance(expr, DottedName):
+                    name = expr.name[-1].func_name
+                else:
+                    naem = expr.func_name
+                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, name, expected),
                         symbol = expr,
                         severity='error')
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
