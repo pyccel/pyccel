@@ -33,11 +33,9 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.c_concepts import CNativeInt
-
 from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
-from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
+from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
 from pyccel.ast.datatypes import pyccel_type_to_original_type
 
