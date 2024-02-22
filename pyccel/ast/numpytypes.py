@@ -14,6 +14,7 @@ from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
 __all__ = (
@@ -238,7 +239,7 @@ class NumpyNDArrayType(HomogeneousContainerType):
 
     def __init__(self, dtype):
         if pyccel_stage == 'semantic':
-            assert isinstance(dtype, (NumpyNumericType, PythonNativeBool))
+            assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
         self._element_type = dtype
         super().__init__()
 
