@@ -17,7 +17,7 @@ from .basic     import PyccelAstNode
 
 from .bind_c    import BindCPointer
 
-from .datatypes import FixedSizeType, ContainerType, CustomDataType
+from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
 from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
