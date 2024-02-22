@@ -2687,7 +2687,7 @@ class FCodePrinter(CodePrinter):
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            if exit_code.dtype.precisionprecision != 4:
+            if exit_code.dtype.precision != 4:
                 exit_code = NumpyInt32(exit_code)
             arg = self._print(exit_code)
         return f'{code}stop {arg}\n'
