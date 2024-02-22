@@ -2252,10 +2252,9 @@ class NumpyIsNan(NumpyUfuncUnary):
     """
     __slots__ = ()
     name = 'isnan'
-    _dtype = NativeBool()
-    _precision = -1
+    _dtype = PythonNativeBool()
 
-    def _set_dtype_precision(self, x):
+    def _set_dtype(self, x):
         """
         Use the argument to calculate the dtype and precision of the result.
 
@@ -2288,10 +2287,9 @@ class NumpyIsInf(NumpyUfuncUnary):
     """
     __slots__ = ()
     name = 'isinf'
-    _dtype = NativeBool()
-    _precision = -1
+    _dtype = PythonNativeBool()
 
-    def _set_dtype_precision(self, x):
+    def _set_dtype(self, x):
         """
         Use the argument to calculate the dtype and precision of the result.
 
@@ -2324,10 +2322,9 @@ class NumpyIsFinite(NumpyUfuncUnary):
     """
     __slots__ = ()
     name = 'isfinite'
-    _dtype = NativeBool()
-    _precision = -1
+    _dtype = PythonNativeBool()
 
-    def _set_dtype_precision(self, x):
+    def _set_dtype(self, x):
         """
         Use the argument to calculate the dtype and precision of the result.
 

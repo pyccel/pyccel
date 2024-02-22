@@ -204,8 +204,8 @@ class ListInsert(PyccelInternalFunction):
 
     def __init__(self, list_variable, index, new_elem) -> None:
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_variable.dtype is not NativeGeneric() and
+            new_elem.dtype is not GenericType() and
+            list_variable.dtype is not GenericType() and
             list_variable.dtype == new_elem.dtype and
             list_variable.rank - 1 == new_elem.rank
         )
