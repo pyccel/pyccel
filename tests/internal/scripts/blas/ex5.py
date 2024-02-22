@@ -11,7 +11,7 @@ def f(x: 'float32[:]'):
 def g(vect1 : 'float64[:]', vect2 : 'float64[:]'):
     import pyccel.stdlib.internal.blas as blas_mod
 
-    sa = 3.5
+    sa = np.float64(3.5)
     n = np.int32(vect1.shape[0])
 
     blas_mod.daxpy(n, sa, vect1, np.int32(1), vect2, np.int32(1))
