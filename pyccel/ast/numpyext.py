@@ -523,7 +523,7 @@ def process_dtype(dtype):
         except KeyError:
             raise TypeError(f'Unknown type of {dtype}.')
 
-    if isinstance(dtype, (NumpyNumericType, PythonNativeBool)):
+    if isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType)):
         return dtype
     if isinstance(dtype, FixedSizeNumericType):
         return numpy_precision_map[(dtype.primitive_type, dtype.precision)]
