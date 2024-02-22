@@ -489,6 +489,15 @@ class StringType(HomogeneousContainerType, metaclass=Singleton):
         """
         return (self.__class__, ())
 
+    @property
+    def primitive_type(self):
+        """
+        The datatype category of elements of the object.
+
+        The datatype category of elements of the object (e.g. integer, floating point).
+        """
+        return self
+
 class HomogeneousTupleType(HomogeneousContainerType, TupleType):
     """
     Class representing the homogeneous tuple type.
