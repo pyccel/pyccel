@@ -1050,7 +1050,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpyLinspace(self, expr):
 
         if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             st = cast_func(expr.stop)
             v = self._print(st)
         else:
@@ -1160,7 +1160,7 @@ class FCodePrinter(CodePrinter):
         value_true  = expr.value_true
         value_false = expr.value_false
         try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
