@@ -807,8 +807,8 @@ class PythonSet(TypedAstNode):
             inner_shape = [() if a.rank == 0 else a.shape for a in args]
             self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
             self._rank  = len(self._shape)
-            if (self._rank > 1 and not isinstance(arg0, PythonTuple)) :
-                raise TypeError("Can't create an unhashable type")
+            if self._rank > 1:
+                raise TypeError("Pyccel can't hash non-scalar types")
         else:
             raise TypeError("Can't create an inhomogeneous set")
 
