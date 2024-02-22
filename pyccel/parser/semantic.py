@@ -1073,7 +1073,7 @@ class SemanticParser(BasicParser):
                 if isinstance(expr, DottedName):
                     name = expr.name[-1].func_name
                 else:
-                    naem = expr.func_name
+                    name = expr.func_name
                 errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, name, expected),
                         symbol = expr,
                         severity='error')
