@@ -548,6 +548,7 @@ class Variable(TypedAstNode):
             'is_optional':self.is_optional,
             'shape':self.shape,
             'cls_base':self.cls_base,
+            'class_type':self.class_type,
             }
 
         out =  (apply_pickle, (self.__class__, args, kwargs))
