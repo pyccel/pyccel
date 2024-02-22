@@ -18,12 +18,21 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   Stop ignoring a change of type from a Python built-in to a compatible NumPy type.
+-   \[INTERNALS\] Rewrite datatyping system. See #1722.
+-   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
+-   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+-   \[INTERNALS\] Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
+
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unused `ast.core.Block` class.
 -   \[INTERNALS\] Removed unused `NativeSymbol`.
+-   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
+-   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 
 ## \[1.11.1\] - 2024-02-13
 
