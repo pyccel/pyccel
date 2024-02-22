@@ -365,7 +365,8 @@ class CCodePrinter(CodePrinter):
 
         if not isinstance(a, Variable):
             return False
-        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) or a.is_optional or \
+        return (a.is_alias and not isinstance(a.class_type, HomogeneousContainerType)) \
+                or a.is_optional or \
                 any(a is bi for b in self._additional_args for bi in b)
 
     #========================== Numpy Elements ===============================#
