@@ -2812,7 +2812,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if isinstance(arg.dtype.primitve_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2823,7 +2823,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if isinstance(arg.dtype.primitve_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
