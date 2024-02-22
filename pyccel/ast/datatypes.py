@@ -583,7 +583,7 @@ class InhomogeneousTupleType(ContainerType, TupleType):
         super().__init__()
 
     def __str__(self):
-        element_types = ', '.join(d.name for d in self._element_types)
+        element_types = ', '.join(str(d) for d in self._element_types)
         return f'tuple[{element_types}]'
 
     def __getitem__(self, i):
