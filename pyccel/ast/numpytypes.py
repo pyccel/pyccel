@@ -248,7 +248,7 @@ class NumpyComplex256Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType
+class NumpyNDArrayType(HomogeneousContainerType,
                            metaclass = build_argument_singleton('dtype')):
     """
     Class representing the NumPy ND array type.
