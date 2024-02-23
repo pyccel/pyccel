@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 from pyccel.ast.builtins import PythonPrint, DtypePrecisionToCastFunction, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate, PythonMin, PythonMax
+from pyccel.ast.builtins import PythonList, PythonConjugate,
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
