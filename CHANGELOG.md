@@ -20,6 +20,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
+
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
