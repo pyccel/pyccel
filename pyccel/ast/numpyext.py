@@ -840,8 +840,13 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = original_type_to_pyccel_type[
-                        numpy.result_type(pyccel_type_to_original_type[arg.dtype + arg.dtype]).type]
+        lowest_possible_type = process_dtype(PythonNativeInt())
+        if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) and \
+                arg.dtype.precision <= lowest_possible_type.precision:
+            self._dtype = lowest_possible_type
+        else:
+            self._dtype = process_dtype(arg.dtype)
+
         self._class_type = self._dtype
 
     @property
@@ -871,8 +876,13 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
-        self._dtype = original_type_to_pyccel_type[
-                        numpy.result_type(pyccel_type_to_original_type[arg.dtype + arg.dtype]).type]
+        lowest_possible_type = process_dtype(PythonNativeInt())
+        if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) and \
+                arg.dtype.precision <= lowest_possible_type.precision:
+            self._dtype = lowest_possible_type
+        else:
+            self._dtype = process_dtype(arg.dtype)
+
         self._class_type = self._dtype
         default_cast = DtypePrecisionToCastFunction[self._dtype]
         self._arg = default_cast(self._arg) if arg.dtype != self._dtype else self._arg
