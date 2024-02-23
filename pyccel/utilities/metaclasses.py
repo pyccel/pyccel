@@ -48,7 +48,7 @@ def build_argument_singleton(*argnames):
             {'__call__': new_call_func,
              '_instances': {}})
 
-class Singleton(ArgumentSingleton):
+class Singleton(type):
     """
     Metaclass indicating that there is only one instance of the class.
 
