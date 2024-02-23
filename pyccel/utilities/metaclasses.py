@@ -33,19 +33,20 @@ def build_argument_singleton(*argnames):
 
     Examples
     --------
-    >>> class A(metaclass = build_argument_singleton('arg1', 'arg2 = 3')):
+    >>> class A(metaclass = build_argument_singleton('arg1', 'arg2')):
             def __init__(self, arg1, arg2 = 3):
                 pass
     """
     args = ', '.join([*argnames])
     def_code = '\n'.join([f"def new_call_func(cls, {args}):",
-                           "    index = (cls, {args})",
+                          f"    index = (cls, {args})",
                            "    if index not in cls._instances:",
-                           "        cls._instances[index] = super().__call__(*args, **kwargs)",
+                          f"        cls._instances[index] = type.__call__(cls, {args})",
                            "    return cls._instances[index]"])
-    new_call_func = exec(def_code) # pylint: disable=exec-used
+    my_locals = {}
+    exec(def_code, None, my_locals) # pylint: disable=exec-used
     return type('ArgumentSingleton', (type,),
-            {'__call__': new_call_func,
+            {'__call__': my_locals['new_call_func'],
              '_instances': {}})
 
 class Singleton(type):
