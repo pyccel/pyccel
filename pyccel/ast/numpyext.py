@@ -872,7 +872,8 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
-        self._arg = NumpyInt64(self._arg) if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) \
+        default_int_cast = DtypePrecisionToCastFunction[process_dtype(PythonNativeInt())]
+        self._arg = default_int_cast(self._arg) if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) \
                     else self._arg
         self._dtype = process_dtype(self._arg.dtype)
         self._class_type = self._dtype
