@@ -1762,16 +1762,15 @@ class SemanticParser(BasicParser):
                 val = LiteralInteger(0, dtype)
             else:
                 val = convert_to_literal(0, dtype)
-            example_element = PyccelAdd(result, val)
+            d_var = self._infer_type(PyccelAdd(result, val))
         elif isinstance(expr, FunctionalMin):
             val = math_constants['inf']
-            example_element = PythonMin(result, val)
+            d_var = self._infer_type(result)
         elif isinstance(expr, FunctionalMax):
             val = PyccelUnarySub(math_constants['inf'])
-            example_element = PythonMax(result, val)
+            d_var = self._infer_type(result)
 
         # Infer the final dtype of the expression
-        d_var = self._infer_type(example_element)
         dtype = d_var.pop('datatype')
         d_var['is_temp'] = expr.lhs.is_temp
 
