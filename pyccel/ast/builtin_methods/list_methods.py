@@ -105,10 +105,9 @@ class ListPop(PyccelInternalFunction) :
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_dtype','_precision', '_index','_list_variable', '_rank')
+    __slots__ = ('_dtype','_precision', '_index','_list_variable',
+                 '_rank', '_shape', '_order')
     _attribute_nodes = ('_index','_list_variable')
-    _order = None
-    _shape = None
     _class_type = NativeHomogeneousList()
     name = 'pop'
 
@@ -118,6 +117,8 @@ class ListPop(PyccelInternalFunction) :
         self._rank = list_variable.rank - 1
         self._dtype = list_variable.dtype
         self._precision = list_variable.precision
+        self._shape = (None if len(list_variable.shape) == 1 else tuple(list_variable.shape[1:]))
+        self._order = (None if len(self._shape) == 1 else list_variable.order)
         super().__init__()
 
     @property
