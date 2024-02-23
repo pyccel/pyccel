@@ -192,7 +192,7 @@ class NumpyFloat(PythonFloat):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type
+        self._class_type = arg.class_type.switch_basic_type(self._dtype)
         super().__init__(arg)
 
     @property
@@ -237,7 +237,7 @@ class NumpyBool(PythonBool):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type
+        self._class_type = arg.class_type.switch_basic_type(self._dtype)
         super().__init__(arg)
 
     @property
@@ -269,7 +269,7 @@ class NumpyInt(PythonInt):
         self._shape = arg.shape
         self._rank  = arg.rank
         self._order = arg.order
-        self._class_type = arg.class_type
+        self._class_type = arg.class_type.switch_basic_type(self._dtype)
         super().__init__(arg)
 
     @property
@@ -416,7 +416,7 @@ class NumpyComplex(PythonComplex):
         self._shape = arg0.shape
         self._rank  = arg0.rank
         self._order = arg0.order
-        self._class_type = arg0.class_type
+        self._class_type = arg0.class_type.switch_basic_type(self._dtype)
         super().__init__(arg0)
 
     @property
