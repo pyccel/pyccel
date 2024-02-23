@@ -132,7 +132,12 @@ class PyccelBitOperator(PyccelOperator):
         return dtype, class_type
 
     def _set_shape_rank(self):
-        pass
+        """
+        Set the shape and rank of the resulting object.
+
+        Set the shape and rank of the resulting object. For a PyccelBitOperator,
+        the shape and rank are class attributes so nothing needs to be done.
+        """
 
 #==============================================================================
 
