@@ -1,3 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
-if __name__ == "__main__":
-    a = (1, [1, 2, 3])
+
+
+a = [1,2,3]
+a.insert(3, [4])
+
