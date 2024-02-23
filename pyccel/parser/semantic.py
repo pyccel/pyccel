@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 from pyccel.ast.builtins import PythonPrint, DtypePrecisionToCastFunction, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate
+from pyccel.ast.builtins import PythonList, PythonConjugate, PythonMin, PythonMax
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -1755,8 +1755,23 @@ class SemanticParser(BasicParser):
         if isinstance(result, CodeBlock):
             result = result.body[-1]
 
+        # Create start value
+        if isinstance(expr, FunctionalSum):
+            dtype = result.dtype
+            if isinstance(dtype, PythonNativeBool):
+                val = LiteralInteger(0, dtype)
+            else:
+                val = convert_to_literal(0, dtype)
+            example_element = PyccelAdd(result, val)
+        elif isinstance(expr, FunctionalMin):
+            val = math_constants['inf']
+            example_element = PythonMin(result, val)
+        elif isinstance(expr, FunctionalMax):
+            val = PyccelUnarySub(math_constants['inf'])
+            example_element = PythonMax(result, val)
+
         # Infer the final dtype of the expression
-        d_var = self._infer_type(result)
+        d_var = self._infer_type(example_element)
         dtype = d_var.pop('datatype')
         d_var['is_temp'] = expr.lhs.is_temp
 
@@ -1782,16 +1797,6 @@ class SemanticParser(BasicParser):
             for e in new_expr:
                 loop.body.insert2body(e, back=False)
                 e.loops[-1].scope.update_parent_scope(loop.scope, is_loop = True)
-
-        if isinstance(expr, FunctionalSum):
-            if isinstance(dtype, PythonNativeBool):
-                val = LiteralInteger(0, dtype)
-            else:
-                val = convert_to_literal(0, dtype)
-        elif isinstance(expr, FunctionalMin):
-            val = math_constants['inf']
-        elif isinstance(expr, FunctionalMax):
-            val = PyccelUnarySub(math_constants['inf'])
 
         # Initialise result with correct initial value
         stmt = Assign(lhs, val)
