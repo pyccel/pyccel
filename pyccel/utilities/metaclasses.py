@@ -38,7 +38,7 @@ def build_argument_singleton(*argnames):
                 pass
     """
     args = ', '.join([*argnames])
-    def_code = '\n'.join([f"def new_call_func({args}):",
+    def_code = '\n'.join([f"def new_call_func(cls, {args}):",
                            "    index = (cls, {args})",
                            "    if index not in cls._instances:",
                            "        cls._instances[index] = super().__call__(*args, **kwargs)",
@@ -56,5 +56,10 @@ class Singleton(type):
     created. Trying to create a second instance will result in accessing
     the first.
     """
+    _instances = {}
+
     def __call__(cls):
-        return super().__call__()
+        index = cls
+        if index not in cls._instances:
+            cls._instances[index] = super().__call__()
+        return cls._instances[index]
