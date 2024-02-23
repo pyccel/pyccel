@@ -336,10 +336,10 @@ def test_sum_expr(language):
 
 def test_len_numpy(language):
     def f():
-        import numpy as np
-        a = np.ones((3,4))
-        b = np.ones((4,3,5))
-        c = np.ones(4)
+        from numpy import ones
+        a = ones((3,4))
+        b = ones((4,3,5))
+        c = ones(4)
         return len(a), len(b), len(c)
 
     epyc_f = epyccel(f, language=language)
