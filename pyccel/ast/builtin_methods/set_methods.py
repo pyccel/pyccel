@@ -18,7 +18,7 @@ class SetAdd(PyccelInternalFunction) :
     """
     Represents a call to the .add() method.
     
-    Represents a call to the .add() method which add an element
+    Represents a call to the .add() method which adds an element
     to the set if it's not already present.
     If the element is already in the set, the set remains unchanged.
 
