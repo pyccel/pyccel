@@ -653,6 +653,7 @@ class PythonLen(PyccelInternalFunction):
     arg : TypedAstNode
         The argument whose length is being examined.
     """
+    __slots__ = ()
     def __new__(cls, arg):
         return arg.shape[0]
 
