@@ -55,7 +55,6 @@ def matching_types(pyccel_result, python_result):
     """
     if type(pyccel_result) is type(python_result):
         return True
-    print(type(pyccel_result), type(python_result))
     return (isinstance(pyccel_result, bool) and isinstance(python_result, np.bool_)) \
             or \
            (isinstance(pyccel_result, np.int32) and isinstance(python_result, np.intc))
@@ -4402,8 +4401,8 @@ def test_numpy_prod_scalar(language):
     f_integer64_output = epyccel_func(integer64)
     test_int64_output = get_prod(integer64)
 
-    assert matching_types(f_integer64_output, test_int64_output)
     assert f_integer64_output == test_int64_output
+    assert matching_types(f_integer64_output, test_int64_output)
 
     f_fl_output = epyccel_func(fl)
     test_float_output = get_prod(fl)
@@ -5152,7 +5151,6 @@ def test_numpy_matmul_array_like_2x2d(language):
         cast = type(min_for_type)
         min_test = -np.sqrt(abs(min_for_type) / size[0])
         max_test = np.sqrt(abs(max_for_type) / size[0])
-        print(min_test, max_test, cast(min_test), cast(max_test))
         return cast(min_test), cast(max_test)
 
     integer8 = randint(*calculate_max_values(min_int8, max_int8), size=size, dtype=np.int8)
