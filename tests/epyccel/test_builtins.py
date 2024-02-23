@@ -352,7 +352,7 @@ def test_len_tuple(language):
         a = (3,4)
         b = (4,3,5)
         c = b
-        return len(a), len(b), len(c)
+        return len(a), len(b), len(c), len((1,2))
 
     epyc_f = epyccel(f, language=language)
 
