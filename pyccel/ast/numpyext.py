@@ -26,7 +26,7 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType, ContainerType
+from .datatypes      import InhomogeneousTupleType, ContainerType, original_type_to_pyccel_type
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -839,10 +839,7 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        if isinstance(arg.dtype.primitive_type, PyccelBooleanType):
-            self._dtype = process_dtype(PythonNativeInt())
-        else:
-            self._dtype = process_dtype(arg.dtype)
+        self._dtype = original_type_to_pyccel_type[np.result_type(arg.dtype, arg.dtype).type]
         self._class_type = self._dtype
 
     @property
@@ -872,11 +869,10 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
-        default_int_cast = DtypePrecisionToCastFunction[process_dtype(PythonNativeInt())]
-        self._arg = default_int_cast(self._arg) if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) \
-                    else self._arg
-        self._dtype = process_dtype(self._arg.dtype)
+        self._dtype = original_type_to_pyccel_type[np.result_type(arg.dtype, arg.dtype).type]
         self._class_type = self._dtype
+        default_cast = DtypePrecisionToCastFunction[self._dtype]
+        self._arg = default_cast(self._arg) if arg.dtype != self._dtype else self._arg
 
     @property
     def arg(self):
