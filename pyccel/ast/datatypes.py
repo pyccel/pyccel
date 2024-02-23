@@ -12,7 +12,7 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton, build_argument_singleton
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -129,7 +129,7 @@ class PyccelCharacterType(PrimitiveType):
 
 #==============================================================================
 
-class PyccelType(metaclass=ArgumentSingleton):
+class PyccelType:
     """
     Base class representing the type of an object.
 
@@ -142,14 +142,6 @@ class PyccelType(metaclass=ArgumentSingleton):
 
     Where applicable, types also contain an and operator. The operator indicates the type that
     is expected when calling a bitwise comparison operator on objects of these types.
-
-    Parameters
-    ----------
-    *args : tuple
-        Any arguments required by the class.
-
-    **kwargs : dict
-        Any keyword arguments required by the class.
     """
     __slots__ = ()
 
@@ -427,14 +419,6 @@ class ContainerType(PyccelType):
 
     Base class representing a type which contains objects of other types.
     E.g. classes, arrays, etc.
-
-    Parameters
-    ----------
-    *args : tuple
-        Any arguments required by the class.
-
-    **kwargs : dict
-        Any keyword arguments required by the class.
     """
     __slots__ = ()
 
@@ -521,7 +505,7 @@ class HomogeneousContainerType(ContainerType):
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
 
-class StringType(HomogeneousContainerType, metaclass=Singleton):
+class StringType(HomogeneousContainerType):
     """
     Class representing Python's native string type.
 
@@ -559,7 +543,8 @@ class StringType(HomogeneousContainerType, metaclass=Singleton):
         """
         return self
 
-class HomogeneousTupleType(HomogeneousContainerType, TupleType):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType,
+                           metaclass = build_argument_singleton('element_type')):
     """
     Class representing the homogeneous tuple type.
 
@@ -633,9 +618,6 @@ class InhomogeneousTupleType(ContainerType, TupleType):
     ----------
     *args : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
-
-    **kwargs : empty dict
-        Keyword arguments as defined by the ArgumentSingleton class.
     """
     __slots__ = ('_element_types',)
 
