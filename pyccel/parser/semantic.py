@@ -2204,8 +2204,6 @@ class SemanticParser(BasicParser):
             expr = PythonSet(*ls)
         except TypeError as e:
             message = str(e)
-            if not message :
-                message = PYCCEL_RESTRICTION_INHOMOG_SET
             errors.report(message, symbol=expr,
                 severity='fatal')
         return expr
