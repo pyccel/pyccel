@@ -440,9 +440,12 @@ class Variable(TypedAstNode):
 
     @property
     def is_ndarray(self):
-        """user friendly method to check if the variable is an ndarray:
+        """
+        User friendly method to check if the variable is a numpy.ndarray.
+
+        User friendly method to check if the variable is an ndarray:
             1. have a rank > 0
-            2. dtype is one among {int, bool, float, complex}
+            2. class type is NumpyNDArrayType
         """
         return isinstance(self.class_type, NumpyNDArrayType) and self.rank > 0
 

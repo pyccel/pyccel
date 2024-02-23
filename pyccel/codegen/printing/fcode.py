@@ -316,7 +316,19 @@ class FCodePrinter(CodePrinter):
 
     def print_kind(self, expr):
         """
-        Prints the kind(precision) of a literal value or its shortcut if possible
+        Prints the kind(precision) of a literal value or its shortcut if possible.
+
+        Prints the kind(precision) of a literal value or its shortcut if possible.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The object whose precision should be investigated.
+
+        Returns
+        -------
+        str
+            The code for the kind parameter.
         """
         dtype = expr.dtype
         constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
@@ -805,7 +817,10 @@ class FCodePrinter(CodePrinter):
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
     def _get_print_format_and_arg(self, var, var_code = None):
-        """ Get the format string and the printable argument for an object.
+        """
+        Get the format string and the printable argument for an object.
+
+        Get the format string and the printable argument for an object.
         In other words get arg_format and arg such that var can be printed
         by doing:
 
@@ -814,14 +829,14 @@ class FCodePrinter(CodePrinter):
         Parameters
         ----------
         var : TypedAstNode
-              The object to be printed
+            The object to be printed.
 
-        Results
+        Returns
         -------
         arg_format : str
-                     The format string
-        arg        : str
-                     The fortran code which represents var
+            The format string.
+        arg : str
+            The fortran code which represents var.
         """
         if var_code is None:
             var_code = self._print(var)

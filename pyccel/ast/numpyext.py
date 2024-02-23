@@ -206,14 +206,30 @@ class NumpyFloat(PythonFloat):
         return True
 
 class NumpyFloat32(NumpyFloat):
-    """ Represents a call to numpy.float32() function.
+    """
+    Represents a call to numpy.float32() function.
+
+    Represents a call to numpy.float32() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyFloat32Type()
     name = 'float32'
 
 class NumpyFloat64(NumpyFloat):
-    """ Represents a call to numpy.float64() function.
+    """
+    Represents a call to numpy.float64() function.
+
+    Represents a call to numpy.float64() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyFloat64Type()
@@ -283,28 +299,60 @@ class NumpyInt(PythonInt):
         return True
 
 class NumpyInt8(NumpyInt):
-    """ Represents a call to numpy.int8() function.
+    """
+    Represents a call to numpy.int8() function.
+
+    Represents a call to numpy.int8() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyInt8Type()
     name = 'int8'
 
 class NumpyInt16(NumpyInt):
-    """ Represents a call to numpy.int16() function.
+    """
+    Represents a call to numpy.int16() function.
+
+    Represents a call to numpy.int16() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyInt16Type()
     name = 'int16'
 
 class NumpyInt32(NumpyInt):
-    """ Represents a call to numpy.int32() function.
+    """
+    Represents a call to numpy.int32() function.
+
+    Represents a call to numpy.int32() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyInt32Type()
     name = 'int32'
 
 class NumpyInt64(NumpyInt):
-    """ Represents a call to numpy.int64() function.
+    """
+    Represents a call to numpy.int64() function.
+
+    Represents a call to numpy.int64() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyInt64Type()
@@ -430,14 +478,30 @@ class NumpyComplex(PythonComplex):
         return True
 
 class NumpyComplex64(NumpyComplex):
-    """ Represents a call to numpy.complex64() function.
+    """
+    Represents a call to numpy.complex64() function.
+
+    Represents a call to numpy.complex64() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyComplex64Type()
     name = 'complex64'
 
 class NumpyComplex128(NumpyComplex):
-    """ Represents a call to numpy.complex128() function.
+    """
+    Represents a call to numpy.complex128() function.
+
+    Represents a call to numpy.complex128() function.
+
+    Parameters
+    ----------
+    arg : TypedAstNode
+        The argument passed to the function.
     """
     __slots__ = ()
     _dtype = NumpyComplex128Type()
@@ -1292,27 +1356,66 @@ class NumpyEmpty(NumpyAutoFill):
 
     @property
     def fill_value(self):
+        """
+        The value with which the array will be filled on initialisation.
+
+        The value with which the array will be filled on initialisation.
+        """
         return None
 
 #==============================================================================
 class NumpyZeros(NumpyAutoFill):
-    """ Represents a call to numpy.zeros for code generation.
+    """
+    Represents a call to numpy.zeros for code generation.
+
+    Represents a call to numpy.zeros for code generation.
+
+    Parameters
+    ----------
+    shape : TypedAstNode
+        The shape passed as argument to the function call.
+    dtype : PyccelAstNode | PyccelType | str, default = 'float'
+        The datatype specified in the argument of the function call.
+    order : str, default='C'
+        The order specified in the argument of the function call.
     """
     __slots__ = ()
     name = 'zeros'
 
     @property
     def fill_value(self):
+        """
+        The value with which the array will be filled on initialisation.
+
+        The value with which the array will be filled on initialisation.
+        """
         return convert_to_literal(0, self.dtype)
 
 #==============================================================================
 class NumpyOnes(NumpyAutoFill):
-    """ Represents a call to numpy.ones for code generation.
+    """
+    Represents a call to numpy.ones for code generation.
+
+    Represents a call to numpy.ones for code generation.
+
+    Parameters
+    ----------
+    shape : TypedAstNode
+        The shape passed as argument to the function call.
+    dtype : PyccelAstNode | PyccelType | str, default = 'float'
+        The datatype specified in the argument of the function call.
+    order : str, default='C'
+        The order specified in the argument of the function call.
     """
     __slots__ = ()
     name = 'ones'
     @property
     def fill_value(self):
+        """
+        The value with which the array will be filled on initialisation.
+
+        The value with which the array will be filled on initialisation.
+        """
         return convert_to_literal(1, self.dtype)
 
 #==============================================================================
@@ -1973,7 +2076,18 @@ class NumpyAmax(PyccelInternalFunction):
         return False
 
 class NumpyTranspose(NumpyUfuncUnary):
-    """Represents a call to the transpose function in the Numpy library"""
+    """
+    Represents a call to the transpose function from the Numpy library.
+
+    Represents a call to the transpose function from the Numpy library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The array to be transposed.
+    *axes : tuple[TypedAstNode]
+        The axes along which the user wishes to transpose their array.
+    """
     __slots__ = ()
     name = 'transpose'
 

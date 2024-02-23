@@ -1016,15 +1016,17 @@ class SemanticParser(BasicParser):
 
     def get_type_description(self, var, include_rank = True):
         """
-        Provides a text description of the type of a variable
-        (useful for error messages)
+        Provides a text description of the type of a variable.
+
+        Provides a text description of the type of a variable.
+        This is notably useful for error messages.
+
         Parameters
         ----------
-        var          : Variable
-                       The variable to describe
-        include_rank : bool
-                       Indicates whether rank information should be included
-                       Default : True
+        var : Variable
+            The variable to describe.
+        include_rank : bool, default=True
+            Indicates whether rank information should be included.
         """
         descr = str(var.class_type)
         if include_rank and var.rank>0:
@@ -1034,18 +1036,21 @@ class SemanticParser(BasicParser):
 
     def _check_argument_compatibility(self, input_args, func_args, expr, elemental):
         """
-        Check that the provided arguments match the expected types
+        Check that the provided arguments match the expected types.
+
+        Check that the provided arguments match the expected types. If this is
+        not the case then a non-blocking error is raised.
 
         Parameters
         ----------
         input_args : list
-                     The arguments provided to the function
-        func_args  : list
-                     The arguments expected by the function
-        expr       : TypedAstNode
-                     The expression where this call is found (used for error output)
-        elemental  : bool
-                     Indicates if the function is elemental
+            The arguments provided to the function.
+        func_args : list
+            The arguments expected by the function.
+        expr : TypedAstNode
+            The expression where this call is found (used for error output).
+        elemental : bool
+            Indicates if the function is elemental.
         """
         if elemental:
             def incompatible(i_arg, f_arg):

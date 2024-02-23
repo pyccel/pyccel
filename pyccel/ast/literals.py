@@ -240,6 +240,22 @@ class LiteralComplex(Literal):
 
     @staticmethod
     def _collect_python_val(arg):
+        """
+        Extract the Python value from the input argument.
+
+        Extract the Python value from the input argument which can either
+        be a literal or a Python variable.
+
+        Parameters
+        ----------
+        arg : Literal | int | float
+            The Python value.
+
+        Returns
+        -------
+        float
+            The Python value of the argument.
+        """
         if isinstance(arg, Literal):
             return arg.python_value
         elif isinstance(arg, (int, float)):
@@ -283,6 +299,12 @@ class LiteralImaginaryUnit(LiteralComplex):
 
     Parameters
     ----------
+    real : float = 0
+        The value of the real part. This argument is necessary to handle the
+        inheritance but should not be provided explicitly.
+    imag : float = 0
+        The value of the real part. This argument is necessary to handle the
+        inheritance but should not be provided explicitly.
     dtype : FixedSizeType
         The exact type of the literal.
     """
