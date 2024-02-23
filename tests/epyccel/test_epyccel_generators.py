@@ -140,7 +140,7 @@ def test_expression2(language):
         return 5+incr(2+incr(6+sum(b[i] for i in range(n))))
 
     n = randint(1,10)
-    x = randint(100,size=n)
+    x = randint(100,size=n).astype(np.float64)
 
     f_epyc = epyccel(f, language = language)
 
