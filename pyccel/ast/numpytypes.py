@@ -347,11 +347,16 @@ numpy_type_to_original_type = {
     NumpyInt64Type()      : np.int64,
     NumpyFloat32Type()    : np.float32,
     NumpyFloat64Type()    : np.float64,
-    NumpyFloat128Type()   : np.float128,
     NumpyComplex64Type()  : np.complex64,
     NumpyComplex128Type() : np.complex128,
-    NumpyComplex256Type() : np.complex256,
     }
+
+# Large types don't exist on all systems
+if hasattr(np, 'float128'):
+    numpy_type_to_original_type.update({
+        NumpyFloat128Type()   : np.float128,
+        NumpyComplex256Type() : np.complex256,
+        })
 
 pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
