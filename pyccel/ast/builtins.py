@@ -653,35 +653,8 @@ class PythonLen(PyccelInternalFunction):
     arg : TypedAstNode
         The argument whose length is being examined.
     """
-    __slots__ = ()
-    name      = 'len'
-    _dtype     = NativeInteger()
-    _precision = -1
-    _rank      = 0
-    _shape     = None
-    _order     = None
-    _class_type = NativeInteger()
-
     def __new__(cls, arg):
-        if not getattr(arg, 'is_homogeneous', False):
-            return arg.shape[0]
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, arg):
-        super().__init__(arg)
-
-    @property
-    def arg(self):
-        """
-        Get the argument which was passed to the function.
-
-        Get the argument which was passed to the function.
-        """
-        return self._args[0]
-
-    def __str__(self):
-        return f'len({self.arg})'
+        return arg.shape[0]
 
 #==============================================================================
 class PythonList(TypedAstNode):
