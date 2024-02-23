@@ -3019,7 +3019,7 @@ class Interface(PyccelAstNode):
             """
             Check that the types of the arguments in the function and the call match.
             """
-            return call_arg.class_type is func_arg.class_type \
+            return call_arg.class_type == func_arg.class_type \
                     and (call_arg.rank == func_arg.rank)
 
 
