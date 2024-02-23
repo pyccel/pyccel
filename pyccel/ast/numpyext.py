@@ -26,7 +26,8 @@ from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
-from .datatypes      import InhomogeneousTupleType, ContainerType, original_type_to_pyccel_type
+from .datatypes      import InhomogeneousTupleType, ContainerType
+from .datatypes      import original_type_to_pyccel_type, pyccel_type_to_original_type
 
 from .internals      import PyccelInternalFunction, Slice
 from .internals      import PyccelArraySize, PyccelArrayShapeElement
@@ -839,7 +840,8 @@ class NumpySum(PyccelInternalFunction):
         if not isinstance(arg, TypedAstNode):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
-        self._dtype = original_type_to_pyccel_type[numpy.result_type(arg.dtype).type]
+        self._dtype = original_type_to_pyccel_type[
+                        numpy.result_type(pyccel_type_to_original_type[arg.dtype]).type]
         self._class_type = self._dtype
 
     @property
@@ -869,7 +871,8 @@ class NumpyProduct(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
-        self._dtype = original_type_to_pyccel_type[numpy.result_type(arg.dtype).type]
+        self._dtype = original_type_to_pyccel_type[
+                        numpy.result_type(pyccel_type_to_original_type[arg.dtype]).type]
         self._class_type = self._dtype
         default_cast = DtypePrecisionToCastFunction[self._dtype]
         self._arg = default_cast(self._arg) if arg.dtype != self._dtype else self._arg
