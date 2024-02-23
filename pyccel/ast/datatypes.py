@@ -572,6 +572,11 @@ class HomogeneousListType(HomogeneousContainerType,
 
     Class representing the type of a homogeneous list. This
     is a container type and should be used as the class_type.
+
+    Parameters
+    ----------
+    element_type : PyccelType
+        The type which is stored in the homogeneous list.
     """
     __slots__ = ('_element_type',)
     _name = 'list'
@@ -696,7 +701,7 @@ class DictType(ContainerType, metaclass = build_argument_singleton('index_type',
 
 #==============================================================================
 
-def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
+def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
     """
     Create a new data class.
 
@@ -714,9 +719,6 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 
     BaseClass : type inheriting from DataType
         The class from which the new type will be sub-classed.
-
-    prefix : str
-        A prefix which will be added to the class name.
 
     Returns
     -------
@@ -736,13 +738,13 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 
         BaseClass.__init__(self)
 
-    assert isinstance(argname, (list, tuple))
+    assert isinstance(argnames, (list, tuple))
     def class_name_func(self):
         """
         The name function for the new CustomDataType class.
         """
-        if argname:
-            param = ', '.join(str(getattr(self, a)) for a in argname)
+        if argnames:
+            param = ', '.join(str(getattr(self, a)) for a in argnames)
             return f'{self._name}[{param}]' #pylint: disable=protected-access
         else:
             return self._name #pylint: disable=protected-access

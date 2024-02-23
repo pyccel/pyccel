@@ -528,13 +528,13 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Parameters
         ----------
-        args : tuple[TypedAstNode, TypedAstNode]
+        *args : tuple[TypedAstNode, TypedAstNode]
             The arguments passed to the biary operator.
 
         Returns
         -------
         shape : tuple[TypedAstNode]
-            The shape of the resulting object
+            The shape of the resulting object.
         rank : int
             The rank of the resulting object.
         """

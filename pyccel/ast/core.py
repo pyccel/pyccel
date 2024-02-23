@@ -1553,7 +1553,7 @@ class For(ScopedAstNode):
     ----------
     target : Variable
         Variable representing the iterator.
-    iter : Iterable
+    iter_obj : Iterable
         Iterable object. Multiple iterators are supported but these are
         translated to a range object in the Iterable class.
     body : list[PyccelAstNode]

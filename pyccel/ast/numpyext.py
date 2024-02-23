@@ -485,8 +485,11 @@ class NumpyComplex64(NumpyComplex):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    arg0 : TypedAstNode
         The argument passed to the function.
+
+    arg1 : TypedAstNode
+        Unused inherited argument.
     """
     __slots__ = ()
     _dtype = NumpyComplex64Type()
@@ -500,8 +503,11 @@ class NumpyComplex128(NumpyComplex):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    arg0 : TypedAstNode
         The argument passed to the function.
+
+    arg1 : TypedAstNode
+        Unused inherited argument.
     """
     __slots__ = ()
     _dtype = NumpyComplex128Type()
@@ -1892,7 +1898,16 @@ class NumpyArctanh(NumpyUfuncUnary):
 
 #==============================================================================
 class NumpySign(NumpyUfuncUnary):
-    """Represent a call to the sign function in the Numpy library"""
+    """
+    Represent a call to the sign function in the Numpy library.
+
+    Represent a call to the sign function in the Numpy library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The argument passed to the function.
+    """
     __slots__ = ()
     name = 'sign'
     def _set_dtype(self, x):
@@ -1909,7 +1924,16 @@ class NumpySign(NumpyUfuncUnary):
         self._dtype = process_dtype(x.dtype)
 
 class NumpyAbs(NumpyUfuncUnary):
-    """Represent a call to the abs function in the Numpy library"""
+    """
+    Represent a call to the abs function in the Numpy library.
+
+    Represent a call to the abs function in the Numpy library.
+
+    Parameters
+    ----------
+    x : TypedAstNode
+        The argument passed to the function.
+    """
     __slots__ = ()
     name = 'abs'
     def _set_dtype(self, x):
@@ -2130,6 +2154,16 @@ class NumpyTranspose(NumpyUfuncUnary):
         self._dtype = process_dtype(x.dtype)
 
     def _set_shape_rank(self, x):
+        """
+        Set the shape and rank of the resulting object.
+
+        Set the shape and rank of the resulting object.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
         self._shape = tuple(reversed(x.shape))
         self._rank  = x.rank
 

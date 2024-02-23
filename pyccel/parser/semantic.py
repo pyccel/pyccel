@@ -1016,9 +1016,9 @@ class SemanticParser(BasicParser):
 
     def get_type_description(self, var, include_rank = True):
         """
-        Provides a text description of the type of a variable.
+        Get a text description of the type of a variable.
 
-        Provides a text description of the type of a variable.
+        Get a text description of the type of a variable.
         This is notably useful for error messages.
 
         Parameters
@@ -1027,6 +1027,11 @@ class SemanticParser(BasicParser):
             The variable to describe.
         include_rank : bool, default=True
             Indicates whether rank information should be included.
+
+        Returns
+        -------
+        str
+            A description of the variable type.
         """
         descr = str(var.class_type)
         if include_rank and var.rank>0:

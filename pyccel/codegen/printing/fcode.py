@@ -316,9 +316,9 @@ class FCodePrinter(CodePrinter):
 
     def print_kind(self, expr):
         """
-        Prints the kind(precision) of a literal value or its shortcut if possible.
+        Print the kind(precision) of a literal value or its shortcut if possible.
 
-        Prints the kind(precision) of a literal value or its shortcut if possible.
+        Print the kind(precision) of a literal value or its shortcut if possible.
 
         Parameters
         ----------
@@ -830,6 +830,10 @@ class FCodePrinter(CodePrinter):
         ----------
         var : TypedAstNode
             The object to be printed.
+        var_code : str, optional
+            The code which will print the variable (this is mostly useful when calling
+            this function recursively, e.g. to print an inhomogenoeus tuple of function
+            call results).
 
         Returns
         -------
