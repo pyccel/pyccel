@@ -1613,9 +1613,9 @@ class NumpyUfuncUnary(NumpyUfuncBase):
 
     def _set_dtype(self, x):
         """
-        Use the argument to calculate the dtype and precision of the result.
+        Use the argument to calculate the dtype of the result.
 
-        Use the argument to calculate the dtype and precision of the result.
+        Use the argument to calculate the dtype of the result.
 
         Parameters
         ----------
@@ -1674,9 +1674,9 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     def _set_dtype(self, x1, x2):
         """
-        Use the argument to calculate the dtype and precision of the result.
+        Use the argument to calculate the dtype of the result.
 
-        Use the argument to calculate the dtype and precision of the result.
+        Use the argument to calculate the dtype of the result.
 
         Parameters
         ----------
@@ -1793,6 +1793,16 @@ class NumpySign(NumpyUfuncUnary):
     __slots__ = ()
     name = 'sign'
     def _set_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
         self._dtype = process_dtype(x.dtype)
 
 class NumpyAbs(NumpyUfuncUnary):
@@ -1800,6 +1810,16 @@ class NumpyAbs(NumpyUfuncUnary):
     __slots__ = ()
     name = 'abs'
     def _set_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
         x_dtype = x.dtype
         if isinstance(x_dtype.primitive_type, PyccelComplexType):
             dtype = x_dtype.element_type
@@ -1983,6 +2003,16 @@ class NumpyTranspose(NumpyUfuncUnary):
         return NumpyTranspose(x.__getitem__(*reversed(args)))
 
     def _set_dtype(self, x):
+        """
+        Use the argument to calculate the dtype of the result.
+
+        Use the argument to calculate the dtype of the result.
+
+        Parameters
+        ----------
+        x : TypedAstNode
+            The argument passed to the function.
+        """
         self._dtype = process_dtype(x.dtype)
 
     def _set_shape_rank(self, x):

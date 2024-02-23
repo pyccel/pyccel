@@ -2990,12 +2990,30 @@ class Interface(PyccelAstNode):
         return self._functions[0].docstring
 
     def point(self, args):
-        """Returns the actual function that will be called, depending on the passed arguments."""
+        """
+        Return the actual function that will be called, depending on the passed arguments.
+
+        From the arguments passed in the function call, determine which of the FunctionDef
+        objects in the Interface is actually called.
+
+        Parameters
+        ----------
+        args : tuple[TypedAstNode]
+            The arguments passed in the function call.
+
+        Returns
+        -------
+        FunctionDef
+            The function definition which corresponds with the arguments.
+        """
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
-        def type_match(dtype1, dtype2, call_arg, func_arg):
-            return (dtype1 in dtype2 or dtype2 in dtype1) \
+        def type_match(call_arg, func_arg):
+            """
+            Check that the types of the arguments in the function and the call match.
+            """
+            return call_arg.class_type is func_arg.class_type \
                     and (call_arg.rank == func_arg.rank)
 
 
@@ -3006,9 +3024,7 @@ class Interface(PyccelAstNode):
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
                 call_arg = y.value
-                dtype1 = str(call_arg.dtype)
-                dtype2 = str(func_arg.dtype)
-                found = found and type_match(dtype1, dtype2, call_arg, func_arg)
+                found = found and type_match(call_arg, func_arg)
             if found:
                 break
 

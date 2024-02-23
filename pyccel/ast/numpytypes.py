@@ -195,6 +195,12 @@ class NumpyComplex64Type(NumpyNumericType):
 
     @property
     def element_type(self):
+        """
+        The type of an element of the complex.
+
+        The type of an element of the complex. In other words, the type
+        of the floats which comprise the complex type.
+        """
         return NumpyFloat32Type()
 
 class NumpyComplex128Type(NumpyNumericType):
@@ -210,6 +216,12 @@ class NumpyComplex128Type(NumpyNumericType):
 
     @property
     def element_type(self):
+        """
+        The type of an element of the complex.
+
+        The type of an element of the complex. In other words, the type
+        of the floats which comprise the complex type.
+        """
         return NumpyFloat64Type()
 
 class NumpyComplex256Type(NumpyNumericType):
@@ -225,6 +237,12 @@ class NumpyComplex256Type(NumpyNumericType):
 
     @property
     def element_type(self):
+        """
+        The type of an element of the complex.
+
+        The type of an element of the complex. In other words, the type
+        of the floats which comprise the complex type.
+        """
         return NumpyFloat128Type()
 
 #==============================================================================
@@ -275,6 +293,24 @@ class NumpyNDArrayType(HomogeneousContainerType):
         return self.__and__(other)
 
     def switch_basic_type(self, new_type):
+        """
+        Change the basic type to the new type.
+
+        Change the basic type to the new type. A new NumpyNDArrayType will be
+        returned whose underlying elements are of the NumPy type which is
+        equivalent to the new type (e.g. PythonNativeFloat may be replaced by
+        np.float64).
+
+        Parameters
+        ----------
+        new_type : PyccelType
+            The new basic type.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)

@@ -157,6 +157,25 @@ class PyccelType(metaclass=ArgumentSingleton):
         return self._name #pylint: disable=no-member
 
     def switch_basic_type(self, new_type):
+        """
+        Change the basic type to the new type.
+
+        Change the basic type to the new type. In the case of a FixedSizeType the
+        switch will replace the type completely, directly returning the new type.
+        In the case of a homogeneous container type, a new container type will be
+        returned whose underlying elements are of the new type. This method is not
+        implemented for inhomogeneous containers.
+
+        Parameters
+        ----------
+        new_type : PyccelType
+            The new basic type.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
 
 #==============================================================================
@@ -196,6 +215,22 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         return (self.__class__, ())
 
     def switch_basic_type(self, new_type):
+        """
+        Change the basic type to the new type.
+
+        Change the basic type to the new type. In the case of a FixedSizeType the
+        switch will replace the type completely, directly returning the new type.
+
+        Parameters
+        ----------
+        new_type : PyccelType
+            The new basic type.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
         assert isinstance(new_type, FixedSizeType)
         return new_type
 
@@ -325,6 +360,12 @@ class PythonNativeComplex(PythonNativeNumericTypes):
 
     @property
     def element_type(self):
+        """
+        The type of an element of the complex.
+
+        The type of an element of the complex. In other words, the type
+        of the floats which comprise the complex type.
+        """
         return PythonNativeFloat()
 
 class VoidType(FixedSizeType):
@@ -457,6 +498,25 @@ class HomogeneousContainerType(ContainerType):
         return (self.__class__, (self.element_type,))
 
     def switch_basic_type(self, new_type):
+        """
+        Change the basic type to the new type.
+
+        Change the basic type to the new type. In the case of a FixedSizeType the
+        switch will replace the type completely, directly returning the new type.
+        In the case of a homogeneous container type, a new container type will be
+        returned whose underlying elements are of the new type. This method is not
+        implemented for inhomogeneous containers.
+
+        Parameters
+        ----------
+        new_type : PyccelType
+            The new basic type.
+
+        Returns
+        -------
+        PyccelType
+            The new type.
+        """
         assert isinstance(new_type, FixedSizeType)
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
@@ -678,6 +738,9 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
         A new DataType class.
     """
     def class_init_func(self, **kwargs):
+        """
+        The __init__ function for the new CustomDataType class.
+        """
         for key, value in kwargs.items():
             # here, the argnames variable is the one passed to the
             # DataTypeFactory call
@@ -689,6 +752,9 @@ def DataTypeFactory(name, argname = (), *, BaseClass=CustomDataType):
 
     assert isinstance(argname, (list, tuple))
     def class_name_func(self):
+        """
+        The name function for the new CustomDataType class.
+        """
         if argname:
             param = ', '.join(str(getattr(self, a)) for a in argname)
             return f'{self._name}[{param}]' #pylint: disable=protected-access
