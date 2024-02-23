@@ -8,21 +8,48 @@
 
 __all__ = (
     'Singleton',
-    'ArgumentSingleton',
+    'build_argument_singleton'
 )
 
-class ArgumentSingleton(type):
-    """ Indicates that there is only one instance of the class
-    for any given set of arguments
+def build_argument_singleton(*argnames):
     """
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        index = (cls, *args, *sorted(kwargs.items()))
-        if index not in cls._instances:
-            cls._instances[index] = super().__call__(*args, **kwargs)
-        return cls._instances[index]
+    Build a metaclass which handles singletons with arguments.
 
-class Singleton(ArgumentSingleton):
+    Build a metaclass which ensures that there is only one instance of the class
+    for any given set of arguments. The metaclass is specialised for the
+    specified arguments which ensures that `inspect.signature` returns the
+    expected result and that the docstring can match the `__init__` method.
+
+    Parameters
+    ----------
+    *argnames : tuple[str]
+        A tuple of strings describing all the arguments which may be passed to
+        the function.
+
+    Returns
+    -------
+    type
+        A metaclass which can be used when building classes.
+
+    Examples
+    --------
+    >>> class A(metaclass = build_argument_singleton('arg1', 'arg2')):
+            def __init__(self, arg1, arg2 = 3):
+                pass
+    """
+    args = ', '.join([*argnames])
+    def_code = '\n'.join([f"def new_call_func(cls, {args}):",
+                          f"    index = (cls, {args})",
+                           "    if index not in cls._instances:",
+                          f"        cls._instances[index] = type.__call__(cls, {args})",
+                           "    return cls._instances[index]"])
+    my_locals = {}
+    exec(def_code, None, my_locals) # pylint: disable=exec-used
+    return type('ArgumentSingleton', (type,),
+            {'__call__': my_locals['new_call_func'],
+             '_instances': {}})
+
+class Singleton(type):
     """
     Metaclass indicating that there is only one instance of the class.
 
@@ -30,5 +57,10 @@ class Singleton(ArgumentSingleton):
     created. Trying to create a second instance will result in accessing
     the first.
     """
+    _instances = {}
+
     def __call__(cls):
-        return super().__call__()
+        index = cls
+        if index not in cls._instances:
+            cls._instances[index] = super().__call__()
+        return cls._instances[index]

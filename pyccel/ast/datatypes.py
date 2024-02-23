@@ -12,7 +12,7 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton, build_argument_singleton
+from pyccel.utilities.metaclasses import Singleton, build_argument_singleton
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
