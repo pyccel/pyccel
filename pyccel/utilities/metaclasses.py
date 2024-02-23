@@ -43,7 +43,7 @@ def build_argument_singleton(*argnames):
                            "    if index not in cls._instances:",
                            "        cls._instances[index] = super().__call__(*args, **kwargs)",
                            "    return cls._instances[index]"])
-    new_call_func = exec(def_code)
+    new_call_func = exec(def_code) # pylint: disable=exec-used
     return type('ArgumentSingleton', (type,),
             {'__call__': new_call_func,
              '_instances': {}})
