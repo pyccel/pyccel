@@ -12,7 +12,7 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import ArgumentSingleton, Singleton
+from pyccel.utilities.metaclasses import Singleton, build_argument_singleton
 
 # TODO [YG, 12.03.2020] verify why we need all these types
 # NOTE: symbols not used in pyccel are commented out
@@ -92,19 +92,11 @@ iso_c_binding_shortcut_mapping = {
 
 #==============================================================================
 
-class DataType(metaclass=ArgumentSingleton):
+class DataType:
     """
     Base class representing native datatypes.
 
     The base class from which all data types must inherit.
-
-    Parameters
-    ----------
-    *args : tuple
-        Any arguments required by the class.
-
-    **kwargs : dict
-        Any keyword arguments required by the class.
     """
     __slots__ = ()
     _name = '__UNDEFINED__'
@@ -273,7 +265,7 @@ class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
     """
     __slots__ = ()
 
-class NativeInhomogeneousTuple(NativeTuple):
+class NativeInhomogeneousTuple(NativeTuple, metaclass = build_argument_singleton('*dtypes')):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -283,16 +275,13 @@ class NativeInhomogeneousTuple(NativeTuple):
 
     Parameters
     ----------
-    *args : tuple of DataTypes
+    *dtypes : tuple of DataTypes
         The datatypes stored in the inhomogeneous tuple.
-
-    **kwargs : empty dict
-        Keyword arguments as defined by the ArgumentSingleton class.
     """
     __slots__ = ('_dtypes',)
 
-    def __init__(self, *args):
-        self._dtypes = args
+    def __init__(self, *dtypes):
+        self._dtypes = dtypes
         super().__init__()
 
     @property
