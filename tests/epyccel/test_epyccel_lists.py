@@ -117,3 +117,108 @@ def test_append_range_tuple(language):
 
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
+def test_insert_basic(language):
+    def f():
+        a = [1, 2, 3]
+        a.insert(4, 4)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_multiple(language):
+    def f():
+        a = [1, 2, 3]
+        a.insert(4, 4)
+        a.insert(2, 5)
+        a.insert(1, 6)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        a.insert(1, [4, 5, 6])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range(language):
+    def f():
+        a = [1, 2, 3]
+        for i in range(4, 1000):
+            a.insert(i - 1 ,i)
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range_list(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(4, 1000):
+            a.insert(i, [i, i + 1])
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_range_tuple(language):
+    def f():
+        a = [[1, 2, 3]]
+        for i in range(4, 1000):
+            a.insert(i, (i, i + 1))
+        return a
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_insert_user_defined_objects(language):
+    import modules.list_user_defined_objs as mod
+
+    modnew = epyccel(mod, language=language)
+    python_list = mod.fn()
+    accelerated_list = modnew.fn()
+    assert len(python_list) == len(accelerated_list)
+    for python_elem, accelerated_elem in zip(python_list, accelerated_list):
+        assert python_elem.x == accelerated_elem.x
+
+def test_clear_1(language):
+
+    def clear_1():
+        a = [1, 2, 3]
+        a.clear()
+        return a
+
+    epyc_clear_1 = epyccel(clear_1, language = language)
+    pyccel_result = epyc_clear_1()
+    python_result = clear_1()
+    assert python_result == pyccel_result
+
+def test_clear_2(language):
+
+    def clear_2():
+        a = []
+        a.clear()
+        return a
+
+    epyc_clear_2 = epyccel(clear_2, language = language)
+    pyccel_result = epyc_clear_2()
+    python_result = clear_2()
+    assert python_result == pyccel_result
+
+def test_clear_3(language):
+
+    def clear_3():
+        a = [[1, 2, 3]]
+        a.clear()
+        return a
+
+    epyc_clear_3 = epyccel(clear_3, language = language)
+    pyccel_result = epyc_clear_3()
+    python_result = clear_3()
+    assert python_result == pyccel_result
