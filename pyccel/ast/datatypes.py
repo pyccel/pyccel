@@ -505,7 +505,7 @@ class HomogeneousContainerType(ContainerType):
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
 
-class StringType(HomogeneousContainerType):
+class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
 
