@@ -565,7 +565,8 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType,
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
 
-class HomogeneousListType(HomogeneousContainerType):
+class HomogeneousListType(HomogeneousContainerType,
+                           metaclass = build_argument_singleton('element_type')):
     """
     Class representing the homogeneous list type.
 
@@ -606,7 +607,8 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         """
         return (self.__class__, ())
 
-class InhomogeneousTupleType(ContainerType, TupleType):
+class InhomogeneousTupleType(ContainerType, TupleType,
+                           metaclass = build_argument_singleton('*args')):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -651,7 +653,7 @@ class InhomogeneousTupleType(ContainerType, TupleType):
         """
         return (self.__class__, tuple(self._element_types))
 
-class DictType(ContainerType):
+class DictType(ContainerType, metaclass = build_argument_singleton('index_type', 'value_type')):
     """
     Class representing the homogeneous dictionary type.
 
@@ -660,8 +662,10 @@ class DictType(ContainerType):
 
     Parameters
     ----------
-    element_type : PyccelType
-        The type of the elements of the homogeneous tuple.
+    index_type : PyccelType
+        The type of the keys of the homogeneous dictionary.
+    value_type : PyccelType
+        The type of the values of the homogeneous dictionary.
     """
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'

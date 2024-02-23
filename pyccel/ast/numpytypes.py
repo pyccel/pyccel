@@ -10,6 +10,7 @@ from functools import lru_cache
 
 import numpy as np
 
+from pyccel.utilities.metaclasses import build_argument_singleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
@@ -247,11 +248,18 @@ class NumpyComplex256Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType):
+class NumpyNDArrayType(HomogeneousContainerType
+                           metaclass = build_argument_singleton('dtype')):
     """
     Class representing the NumPy ND array type.
 
     Class representing the NumPy ND array type.
+
+    Parameters
+    ----------
+    dtype : NumpyNumericType | PythonNativeBool | GenericType
+        The internal datatype of the object (GenericType is allowed for external
+        libraries, e.g. MPI).
     """
     __slots__ = ('_element_type',)
     _name = 'numpy.ndarray'
