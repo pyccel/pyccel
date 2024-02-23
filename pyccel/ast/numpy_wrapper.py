@@ -39,9 +39,6 @@ __all__ = (
     'PyccelPyArrayObject',
     #------- CAST FUNCTIONS ------
     'pyarray_to_ndarray',
-    #-------CHECK FUNCTIONS ------
-    'array_type_check',
-    'scalar_type_check',
     #-------HELPERS ------
     'array_get_dim',
     'array_get_data',
@@ -221,27 +218,6 @@ numpy_dtype_registry = {PythonNativeBool()    : numpy_bool_type,
                         NumpyComplex256Type() : numpy_clongdouble_type}
 
 # Needed to check for numpy arguments type
-Numpy_Bool_ref       = Variable(dtype=VoidType(),  name = 'Bool')
-Numpy_Int8_ref       = Variable(dtype=VoidType(),  name = 'Int8')
-Numpy_Int16_ref      = Variable(dtype=VoidType(),  name = 'Int16')
-Numpy_Int32_ref      = Variable(dtype=VoidType(),  name = 'Int32')
-Numpy_Int64_ref      = Variable(dtype=VoidType(),  name = 'Int64')
-Numpy_Float_ref      = Variable(dtype=VoidType(),  name = 'Float32')
-Numpy_Double_ref     = Variable(dtype=VoidType(),  name = 'Float64')
-Numpy_Complex64_ref  = Variable(dtype=VoidType(),  name = 'Complex64')
-Numpy_Complex128_ref = Variable(dtype=VoidType(),  name = 'Complex128')
-
-numpy_type_check_registry = {
-    NumpyInt8Type()       : Numpy_Int8_ref,
-    NumpyInt16Type()      : Numpy_Int16_ref,
-    NumpyInt32Type()      : Numpy_Int32_ref,
-    NumpyInt64Type()      : Numpy_Int64_ref,
-    NumpyFloat32Type()    : Numpy_Float_ref,
-    NumpyFloat64Type()    : Numpy_Double_ref,
-    NumpyComplex64Type()  : Numpy_Complex64_ref,
-    NumpyComplex128Type() : Numpy_Complex128_ref,
-}
-
 check_type_registry.update({
     NumpyInt8Type()       : 'PyIs_Int8',
     NumpyInt16Type()      : 'PyIs_Int16',
@@ -264,81 +240,3 @@ c_to_py_registry.update({
     NumpyComplex128Type() : 'Complex128_to_NumpyComplex'
     })
 
-
-# helpers
-def array_type_check(py_variable, c_variable, raise_error):
-    """
-    Return the code which checks if the array has the expected type.
-
-    Returns the code which checks if the array has the expected rank,
-    datatype, and order. These are determined from the
-    properties of the `c_variable` argument.
-
-    Parameters
-    ----------
-    py_variable : Variable
-            A variable containing the Python object passed into the wrapper.
-    c_variable : Variable
-            A variable containing the basic C object which will store the array.
-    raise_error : bool
-            Indicates whether an error should be raised if the type does not match.
-
-    Returns
-    -------
-    FunctionCall
-            The code necessary to validate the provided array.
-    """
-    rank     = c_variable.rank
-    flag     = no_order_check
-    try :
-        type_ref = numpy_dtype_registry[c_variable.dtype]
-    except KeyError:
-        return errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol = c_variable.dtype,
-                severity='fatal')
-    # order flag
-    if rank > 1:
-        if c_variable.order == 'F':
-            flag = numpy_flag_f_contig
-        else:
-            flag = numpy_flag_c_contig
-
-    if raise_error:
-        return FunctionCall(pyarray_check, [py_variable, type_ref, LiteralInteger(rank), flag])
-    else:
-        return FunctionCall(is_numpy_array, [py_variable, type_ref, LiteralInteger(rank), flag])
-
-
-def scalar_type_check(py_variable, c_variable):
-    """
-    Create a FunctionCall to check the type of a Python object.
-
-    Create a FunctionCall object representing a call to a function which
-    is responsible for checking if the Python object passed as an argument
-    has a type matching that of the provided C object.
-
-    Parameters
-    ----------
-    py_variable : Variable
-        The Python argument of the check function.
-
-    c_variable : Variable
-        The variable needed for the generation of the type check.
-
-    Returns
-    -------
-    FunctionCall
-        The FunctionCall which checks the type.
-    """
-    try :
-        check_numpy_ref = numpy_type_check_registry[c_variable.dtype]
-    except KeyError:
-        errors.report(PYCCEL_RESTRICTION_TODO, symbol=c_variable.dtype,severity='fatal')
-
-    check_numpy_func = FunctionDef(name = 'PyArray_IsScalar',
-                              body      = [],
-                              arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias')),
-                                           FunctionDefArgument(check_numpy_ref)],
-                              results   = [FunctionDefResult(Variable(dtype=PythonNativeBool(), name = 'r'))])
-
-    return FunctionCall(check_numpy_func, [py_variable, check_numpy_ref])
