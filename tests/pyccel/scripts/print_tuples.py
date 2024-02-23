@@ -8,5 +8,5 @@ if __name__ == '__main__':
     print(((1,2),(3,)))
     print((((1,),2),(3,)))
     print((1, True))
-    print((1, True), sep=",")
+    print((1, False), sep=",")
     print((1, True), end="!\n")
