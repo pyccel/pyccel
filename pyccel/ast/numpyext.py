@@ -841,7 +841,7 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         self._dtype = original_type_to_pyccel_type[
-                        numpy.result_type(pyccel_type_to_original_type[arg.dtype]).type]
+                        numpy.result_type(pyccel_type_to_original_type[arg.dtype + arg.dtype]).type]
         self._class_type = self._dtype
 
     @property
@@ -872,7 +872,7 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         self._dtype = original_type_to_pyccel_type[
-                        numpy.result_type(pyccel_type_to_original_type[arg.dtype]).type]
+                        numpy.result_type(pyccel_type_to_original_type[arg.dtype + arg.dtype]).type]
         self._class_type = self._dtype
         default_cast = DtypePrecisionToCastFunction[self._dtype]
         self._arg = default_cast(self._arg) if arg.dtype != self._dtype else self._arg
