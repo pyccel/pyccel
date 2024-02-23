@@ -840,7 +840,7 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         if isinstance(arg.dtype.primitive_type, PyccelBooleanType):
-            self._dtype = NumpyInt64Type()
+            self._dtype = process_dtype(PythonNativeInt())
         else:
             self._dtype = process_dtype(arg.dtype)
         self._class_type = self._dtype
