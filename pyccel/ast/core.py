@@ -377,9 +377,14 @@ class Assign(PyccelAstNode):
 
     @property
     def is_symbolic_alias(self):
-        """Returns True if the assignment is a symbolic alias."""
+        """
+        Returns True if the assignment is a symbolic alias.
+
+        Returns True if the assignment is a symbolic alias.
+        """
 
         # TODO to be improved when handling classes
+        # TODO: Is this useful?
 
         lhs = self.lhs
         rhs = self.rhs
@@ -872,8 +877,8 @@ class AugAssign(Assign):
 
 
 class While(ScopedAstNode):
-
-    """Represents a 'while' statement in the code.
+    """
+    Represents a 'while' statement in the code.
 
     Expressions are of the form:
         "while test:
@@ -882,11 +887,11 @@ class While(ScopedAstNode):
     Parameters
     ----------
     test : TypedAstNode
-        test condition given as an expression
+        Test condition given as an expression.
     body : list of Pyccel objects
-        list of statements representing the body of the While statement.
+        List of statements representing the body of the While statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -1537,8 +1542,8 @@ class Iterable(PyccelAstNode):
 #==============================================================================
 
 class For(ScopedAstNode):
-
-    """Represents a 'for-loop' in the code.
+    """
+    Represents a 'for-loop' in the code.
 
     Expressions are of the form:
         "for target in iter:
@@ -1546,14 +1551,15 @@ class For(ScopedAstNode):
 
     Parameters
     ----------
-    target : symbol / Variable
-        symbol representing the iterator
-    iter : iterable
-        iterable object. for the moment only Range is used
-    body : list of pyccel objects
-        list of statements representing the body of the For statement.
+    target : Variable
+        Variable representing the iterator.
+    iter : Iterable
+        Iterable object. Multiple iterators are supported but these are
+        translated to a range object in the Iterable class.
+    body : list[PyccelAstNode]
+        List of statements representing the body of the For statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -3937,13 +3943,15 @@ class SymbolicPrint(PyccelAstNode):
 
 
 class Del(PyccelAstNode):
+    """
+    Represents a memory deallocation in the code.
 
-    """Represents a memory deallocation in the code.
+    Represents a memory deallocation in the code.
 
     Parameters
     ----------
-    variables : list, tuple
-        a list of pyccel variables
+    expr : Variable
+        The variable being deallocated.
 
     Examples
     --------
@@ -4150,10 +4158,12 @@ class Assert(PyccelAstNode):
     """
     Represents an assert statement in the code.
 
+    Represents an assert statement in the code.
+
     Parameters
     ----------
-    test: TypedAstNode
-        boolean expression to check
+    test : TypedAstNode
+        Boolean expression to check.
     """
     __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
@@ -4189,16 +4199,19 @@ class ErrorExit(Exit):
     __slots__ = ()
 
 class IfSection(PyccelAstNode):
-    """Represents a condition and associated code block
+    """
+    Represents one condition and code block in an if statement.
+
+    Represents a condition and associated code block
     in an if statement in the code.
 
     Parameters
     ----------
     cond : TypedAstNode
            A boolean expression indicating whether or not the block
-           should be executed
+           should be executed.
     body : CodeBlock
-           The code to be executed in the condition is satisfied
+           The code to be executed in the condition is satisfied.
 
     Examples
     --------
