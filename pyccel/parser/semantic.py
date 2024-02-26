@@ -134,7 +134,7 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
-        MISSING_KERNEL_CONFIGURATION,
+        MISSING_KERNEL_CONFIGURATION,INVALID_KERNEL_LAUNCH_CONFIG
         )
 
 from pyccel.parser.base      import BasicParser
@@ -1103,7 +1103,7 @@ class SemanticParser(BasicParser):
                     symbol=expr,
                     severity='fatal')
         if(len(expr.launch_config) > 2):
-            errors.report("'int' object has no attribute 'handle'",
+            errors.report(INVALID_KERNEL_LAUNCH_CONFIG,
                     symbol=expr,
                     severity='fatal')
         if(len(func.results)):
