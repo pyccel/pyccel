@@ -154,7 +154,7 @@ class ListClear(ListMethod) :
     _class_type = NativeVoid()
     name = 'clear'
 
-    def __init__(self, list_variable):
+    def __init__(self, list_variable) -> None:
         super().__init__(list_variable)
 
 #==============================================================================
