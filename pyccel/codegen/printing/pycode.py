@@ -844,7 +844,7 @@ class PythonCodePrinter(CodePrinter):
         arg = '{}, {}{}'.format(arr, axis, keep_dims)
 
         return "{}({})".format(name, arg)
-    
+
     def _print_ListMethod(self, expr):
         method_name = self._print(expr.name)
         list_var = self._print(expr.list_variable)
