@@ -18,7 +18,7 @@ __all__ = ('ListAppend',
            'ListClear',
            'ListExtend',
            'ListInsert',
-           'ListMethod'
+           'ListMethod',
            'ListPop',
            )
 
