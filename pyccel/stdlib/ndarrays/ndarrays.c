@@ -490,16 +490,718 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
     return (true);
 }
 
+void copy_data_from_bool(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) +  j) = *(bool *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_int8(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(int8_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_int16(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(int16_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_int32(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j ) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) +  j) = *(int32_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_int64(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(int64_t *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_float(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+       case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+       case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(float *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_double(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(double *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_cfloat(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cdouble:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double complex *)(d + (offset * dest->type_size) + j) = *(float complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_from_cdouble(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    t_ndarray *dest = *ds;
+    unsigned char *d = (unsigned char*)dest->raw_data;
+    unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
+
+    switch(dest->type)
+    {
+        case nd_bool:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(bool *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int8:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int8_t *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int16:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int16_t *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int32:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int32_t *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_int64:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(int64_t *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_float:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_double:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(double *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+
+        case nd_cfloat:
+            for (int64_t i = 0; i < src.buffer_size; i += src.type_size)
+            {
+                *(float complex *)(d + (offset * dest->type_size) + j) = *(double complex *)(s + i);
+                j += dest->type_size;
+            }
+            break;
+    }
+}
+
+void copy_data_diff_types(t_ndarray **ds, t_ndarray src, uint32_t offset)
+{
+    switch(src.type)
+    {
+        case nd_bool:
+            copy_data_from_bool(ds, src, offset);
+            break;
+
+        case nd_int8:
+            copy_data_from_int8(ds, src, offset);
+            break;
+
+        case nd_int16:
+            copy_data_from_int16(ds, src, offset);
+            break;
+
+        case nd_int32:
+            copy_data_from_int32(ds, src, offset);
+            break;
+
+        case nd_int64:
+            copy_data_from_int64(ds, src, offset);
+            break;
+
+        case nd_float:
+            copy_data_from_float(ds, src, offset);
+            break;
+
+        case nd_double:
+            copy_data_from_double(ds, src, offset);
+            break;
+
+        case nd_cfloat:
+            copy_data_from_cfloat(ds, src, offset);
+            break;
+
+        case nd_cdouble:
+            copy_data_from_cdouble(ds, src, offset);
+            break;
+    }
+}
+
 void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
+    int64_t j = 0;
 
     if (!src.is_view && dest->order == src.order
         && (src.order == order_c
             || (src.order == order_f && is_same_shape(*dest, src))))
     {
-        memcpy(d + offset * dest->type_size, s, src.buffer_size);
+        if((src.type == dest->type) || ((src.type == nd_bool) && (dest->type == nd_int8))
+            || ((src.type == nd_int8) && (dest->type == nd_bool)))             
+        {
+            memcpy(d + offset * dest->type_size, s, src.buffer_size);
+        }
+        else
+        {
+            copy_data_diff_types(&dest, src, offset);
+        }       
     }
     else
     {
