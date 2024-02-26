@@ -25,6 +25,15 @@ __all__ = ('ListAppend',
 #==============================================================================
 class ListMethod(PyccelInternalFunction):
     """
+    Abstract class for list method calls.
+
+    A subclass of this base class represents calls to a specific list
+    method.
+
+    Parameters
+    ----------
+    list_variable : TypedAstNode
+        The list object which the method is called from.
     """
     __slots__ = ("_list_variable",)
     _attribute_nodes = ("_list_variable",)
