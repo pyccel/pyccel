@@ -38,9 +38,9 @@ class ListMethod(PyccelInternalFunction):
     __slots__ = ("_list_variable",)
     _attribute_nodes = ("_list_variable",)
     name = None
-    def __init__(self, list_variable):
+    def __init__(self, list_variable, *args):
         self._list_variable = list_variable
-        super().__init__()
+        super().__init__(*args)
 
     @property
     def list_variable(self):
@@ -73,8 +73,7 @@ class ListAppend(ListMethod):
     new_elem : TypedAstNode
         The argument passed to append() method.
     """
-    __slots__ = ('_append_arg',)
-    _attribute_nodes = ('_append_arg',)
+    __slots__ = ()
     _dtype = NativeVoid()
     _shape = None
     _order = None
@@ -93,17 +92,7 @@ class ListAppend(ListMethod):
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._append_arg = new_elem
-        super().__init__(list_variable)
-
-    @property
-    def append_argument(self):
-        """
-        Get the argument which is passed to append().
-
-        Get the argument which is passed to append().
-        """
-        return self._append_arg
+        super().__init__(list_variable, new_elem)
 
 #==============================================================================
 class ListPop(ListMethod) :
@@ -125,29 +114,17 @@ class ListPop(ListMethod) :
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_dtype','_precision', '_index',
-                 '_rank', '_shape', '_order')
-    _attribute_nodes = ('_index',)
+    __slots__ = ('_dtype','_precision', '_rank', '_shape', '_order')
     _class_type = NativeHomogeneousList()
     name = 'pop'
 
     def __init__(self, list_variable, index_element=None) -> None:
-        self._index = index_element
         self._rank = list_variable.rank - 1
         self._dtype = list_variable.dtype
         self._precision = list_variable.precision
         self._shape = (None if len(list_variable.shape) == 1 else tuple(list_variable.shape[1:]))
         self._order = (None if self._shape is None or len(self._shape) == 1 else list_variable.order)
-        super().__init__(list_variable)
-
-    @property
-    def pop_index(self):
-        """
-        The current index value for the element to be popped.
-
-        The current index value for the element to be popped.
-        """
-        return self._index
+        super().__init__(list_variable, index_element)
 
 #==============================================================================
 class ListClear(ListMethod) :
@@ -206,8 +183,7 @@ class ListInsert(ListMethod):
     new_elem : TypedAstNode
         The argument passed to insert() method.
     """
-    __slots__ = ("_index", "_insert_arg")
-    _attribute_nodes = ("_index", "_insert_arg")
+    __slots__ = ()
     _dtype = NativeVoid()
     _shape = None
     _order = None
@@ -226,27 +202,7 @@ class ListInsert(ListMethod):
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._index = index
-        self._insert_arg = new_elem
-        super().__init__(list_variable)
-
-    @property
-    def index(self):
-        """
-        Index in which the element will be added.
-
-        Index in which the element will be added.
-        """
-        return self._index
-
-    @property
-    def insert_argument(self):
-        """
-        Get the argument which is passed to insert().
-
-        Get the argument which is passed to insert().
-        """
-        return self._insert_arg
+        super().__init__(list_variable, index, new_elem)
 
 #==============================================================================
 class ListExtend(ListMethod):
@@ -272,8 +228,7 @@ class ListExtend(ListMethod):
     new_elem : TypedAstNode
         The argument passed to extend() method.
     """
-    __slots__ = ("_extend_arg",)
-    _attribute_nodes = ("_extend_arg",)
+    __slots__ = ()
     _dtype = NativeVoid()
     _shape = None
     _order = None
@@ -292,14 +247,4 @@ class ListExtend(ListMethod):
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        self._extend_arg = new_elem
-        super().__init__(list_variable)
-
-    @property
-    def extend_argument(self):
-        """
-        Get the argument which is passed to extend().
-
-        Get the argument which is passed to extend().
-        """
-        return self._extend_arg
+        super().__init__(list_variable, new_elem)
