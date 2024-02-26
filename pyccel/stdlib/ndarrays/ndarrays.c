@@ -1187,7 +1187,6 @@ void array_copy_data(t_ndarray *dest, t_ndarray src, uint32_t offset)
 {
     unsigned char *d = (unsigned char*)dest->raw_data;
     unsigned char *s = (unsigned char*)src.raw_data;
-    int64_t j = 0;
 
     if (!src.is_view && dest->order == src.order
         && (src.order == order_c
