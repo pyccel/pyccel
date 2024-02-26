@@ -2302,11 +2302,12 @@ class KernelCall(FunctionCall):
     args             : tuple
                    The arguments being passed to the function
     """
-    __slots__ = ('_numBlocks','_tpblock','_func', '_args')
-    _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock')
-    def __init__(self, func, args, numBlocks, tpblock,current_function=None):
+    __slots__ = ('_numBlocks','_tpblock','_func', '_args', '_launch_config')
+    _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock', '_launch_config')
+    def __init__(self, func, args, numBlocks, tpblock, launch_config,current_function=None):
         self._numBlocks = numBlocks
         self._tpblock = tpblock
+        self._launch_config = launch_config
         super().__init__(func, args, current_function)
 
     @property
@@ -2319,6 +2320,11 @@ class KernelCall(FunctionCall):
         """ The number of threads per block
         """
         return self._tpblock
+    @property
+    def launch_config(self):
+        """ launch configuration of kernel call
+        """
+        return self._launch_config
         
 
 class Return(PyccelAstNode):

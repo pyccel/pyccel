@@ -1082,9 +1082,7 @@ class SyntaxParser(BasicParser):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         elif isinstance(func,IndexedElement):
-            if(len(func.indices) != 2):
-                raise NotImplementedError
-            func = KernelCall(func.base, args, func.indices[0], func.indices[1])
+            func = KernelCall(func.base, args, 1, 1, func.indices)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
         return func

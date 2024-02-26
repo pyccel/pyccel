@@ -179,7 +179,6 @@ class CudaCodePrinter(CCodePrinter):
         cuda_decorater = ''
         if 'kernel' in expr.decorators:
             cuda_decorater = "__global__ "
-
         # Assemble the different parts of the function definition
         parts = [sep,
              cuda_decorater,
@@ -189,9 +188,7 @@ class CudaCodePrinter(CCodePrinter):
              body,
              '}\n',
              sep]
-
         self.exit_scope()
-
         return ''.join(p for p in parts if p)
     def _print_KernelCall(self, expr):
         func = expr.funcdef
@@ -217,5 +214,5 @@ class CudaCodePrinter(CCodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        return f"{func.name}<<<{expr.numBlocks},{expr.tpblock}>>>({args});\n"
+        return f"{func.name}<<<{expr.numBlocks}, {expr.tpblock}>>>({args});\n"
 

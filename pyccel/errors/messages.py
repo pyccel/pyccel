@@ -161,3 +161,5 @@ INVALID_MACRO_COMPOSITION = 'Invalid macro composition'
 WRONG_LINSPACE_ENDPOINT = 'endpoint argument must be boolean'
 NON_LITERAL_KEEP_DIMS = 'keep_dims argument must be a literal, otherwise rank is unknown'
 NON_LITERAL_AXIS = 'axis argument must be a literal, otherwise pyccel cannot determine which dimension to operate on'
+MISSING_KERNEL_CONFIGURATION = 'Kernel launch configuration not specified'
+

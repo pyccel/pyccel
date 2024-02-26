@@ -133,7 +133,9 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         PYCCEL_RESTRICTION_LIST_COMPREHENSION_LIMITS, PYCCEL_RESTRICTION_LIST_COMPREHENSION_SIZE,
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
-        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,)
+        FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
+        MISSING_KERNEL_CONFIGURATION,
+        )
 
 from pyccel.parser.base      import BasicParser
 from pyccel.parser.syntactic import SyntaxParser
@@ -1002,6 +1004,10 @@ class SemanticParser(BasicParser):
         FunctionCall/PyccelInternalFunction
             The semantic representation of the call.
         """
+        if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
+            errors.report(MISSING_KERNEL_CONFIGURATION,
+                          symbol = expr,
+                          severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             argument_description = func.argument_description
             func = func.cls_name
@@ -1092,6 +1098,14 @@ class SemanticParser(BasicParser):
         -------
         FunctionCall/PyccelInternalFunction
         """
+        if(len(expr.launch_config) < 2):
+            errors.report("object of type 'int' has no len()",
+                    symbol=expr,
+                    severity='fatal')
+        if(len(expr.launch_config) > 2):
+            errors.report("'int' object has no attribute 'handle'",
+                    symbol=expr,
+                    severity='fatal')
         if(len(func.results)):
             errors.report("cuda kernel function '{}' returned a value in violation of the laid-down specification".format(func.name),
                          symbol=expr,
@@ -1104,7 +1118,30 @@ class SemanticParser(BasicParser):
             errors.report(f"{len(args)} argument types given, but function takes {len(func.arguments)} arguments",
                 symbol=expr,
                 severity='fatal')
-        new_expr = KernelCall(func, args, expr.numBlocks, expr.tpblock)
+        if not isinstance(expr.launch_config[0], (LiteralInteger, PythonTuple)):
+            l
+            if isinstance(expr.launch_config[0], PyccelSymbol):
+                numBlocks = self.get_variable(expr.launch_config[0])
+                if not isinstance(numBlocks.dtype, NativeInteger):
+                    errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                    symbol = expr,
+                    severity='error')
+            else:
+                errors.report(INVALID_KERNEL_CALL_BP_GRID,
+                    symbol = expr,
+                    severity='error')
+        if not isinstance(expr.launch_config[1], (LiteralInteger, PythonTuple)):
+            if isinstance(expr.launch_config[1], PyccelSymbol):
+                tpblock = self.get_variable(expr.launch_config[1])
+                if not isinstance(tpblock.dtype, NativeInteger):
+                    errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                    symbol = expr,
+                    severity='error')
+            else:
+                errors.report(INVALID_KERNEL_CALL_TP_BLOCK,
+                    symbol = expr,
+                    severity='error')
+        new_expr = KernelCall(func, args, expr.launch_config[0], expr.launch_config[1],())
         return new_expr
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
