@@ -34,7 +34,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unused `ast.core.Block` class.
--   \[INTERNALS\] Removed unused `NativeSymbol`.
 -   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
 -   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
 -   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
