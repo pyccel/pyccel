@@ -190,7 +190,7 @@ NumpyArrayClass = ClassDef('numpy.ndarray',
 
 #=======================================================================================
 
-StackArrayClass = ClassDef('stack_array', class_type = CStackArray())
+StackArrayClass = ClassDef('stack_array')
 
 #=======================================================================================
 

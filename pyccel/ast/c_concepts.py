@@ -7,9 +7,9 @@
 Module representing object address.
 """
 
-from pyccel.utilities.metaclasses import Singleton
+from pyccel.utilities.metaclasses import build_argument_singleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import ContainerType, FixedSizeType, PyccelIntegerType
+from .datatypes import HomogeneousContainerType, FixedSizeType, PyccelIntegerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
@@ -33,15 +33,25 @@ class CNativeInt(FixedSizeType):
 
 #------------------------------------------------------------------------------
 
-class CStackArray(ContainerType, metaclass=Singleton):
+class CStackArray(HomogeneousContainerType, metaclass=build_argument_singleton('element_type')):
     """
     A data type representing an array allocated on the stack.
 
     A data type representing an array allocated on the stack.
     E.g. `float a[4];`
+
+    Parameters
+    ----------
+    element_type : FixedSizeType
+        The type of the elements inside the array.
     """
-    __slots__ = ()
+    __slots__ = ('_element_type',)
     _name = 'c_stackarray'
+
+    def __init__(self, element_type):
+        assert isinstance(element_type, FixedSizeType)
+        self._element_type = element_type
+        super().__init__()
 
 #------------------------------------------------------------------------------
 class ObjectAddress(TypedAstNode):
