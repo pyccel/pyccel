@@ -113,6 +113,7 @@ class SetCopy(SetMethod):
 
     The copy() method in set class creates a shallow 
     copy of a set object and returns it. 
+
     Parameters
     ----------
     set_variable : TypedAstNode
