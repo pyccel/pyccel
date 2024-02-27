@@ -1058,7 +1058,7 @@ class SemanticParser(BasicParser):
         """
         if elemental:
             def incompatible(i_arg, f_arg):
-                return i_arg.class_type != f_arg.class_type
+                return i_arg.class_type.datatype != f_arg.class_type.datatype
         else:
             def incompatible(i_arg, f_arg):
                 return (i_arg.class_type != f_arg.class_type or
