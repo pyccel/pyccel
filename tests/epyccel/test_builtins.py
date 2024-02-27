@@ -357,3 +357,15 @@ def test_len_tuple(language):
     epyc_f = epyccel(f, language=language)
 
     assert epyc_f() == f()
+
+
+def test_len_inhomog_tuple(language):
+    def f():
+        a = (3,True)
+        b = (4j,False,5)
+        c = b
+        return len(a), len(b), len(c), len((1.5,2))
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
