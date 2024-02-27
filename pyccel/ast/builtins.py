@@ -515,7 +515,9 @@ class PythonTuple(TypedAstNode):
         dtypes = [a.class_type.datatype for a in args]
         # Extract all dtypes inside any inhomogeneous tuples
         while any(isinstance(d, InhomogeneousTupleType) for d in dtypes):
-            dtypes = [di for d in dtypes for di in (d if isinstance(d, InhomogeneousTupleType) else [d])]
+            dtypes = [di for d in dtypes for di in ((d_elem.datatype for d_elem in d)
+                                                    if isinstance(d, InhomogeneousTupleType)
+                                                    else [d])]
         # Create a set of dtypes using the same key for compatible types
         dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
 
