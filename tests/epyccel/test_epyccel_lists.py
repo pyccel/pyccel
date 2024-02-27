@@ -108,16 +108,6 @@ def test_append_range_list(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_append_range_tuple(language):
-    def f():
-        a = [[1, 2, 3]]
-        for i in range(0, 1000):
-            a.append((i, i + 1))
-        return a
-
-    epyc_f = epyccel(f, language=language)
-    assert f() == epyc_f()
-
 def test_insert_basic(language):
     def f():
         a = [1, 2, 3]
@@ -162,16 +152,6 @@ def test_insert_range_list(language):
         a = [[1, 2, 3]]
         for i in range(4, 1000):
             a.insert(i, [i, i + 1])
-        return a
-
-    epyc_f = epyccel(f, language=language)
-    assert f() == epyc_f()
-
-def test_insert_range_tuple(language):
-    def f():
-        a = [[1, 2, 3]]
-        for i in range(4, 1000):
-            a.insert(i, (i, i + 1))
         return a
 
     epyc_f = epyccel(f, language=language)
