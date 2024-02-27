@@ -67,12 +67,12 @@ def test_clear_float(language):
     python_result = clear_float()
     assert python_result == pyccel_result
 
-def test_clear_empty(language):
-    def clear_empty():
-        se = {}
+def test_clear_complex(language):
+    def clear_complex():
+        se = {3j, 6j, 2j}
         se.clear()
         return se
-    epyccel_clear = epyccel(clear_empty, language = language)
+    epyccel_clear = epyccel(clear_complex, language = language)
     pyccel_result = epyccel_clear()
-    python_result = clear_empty()
+    python_result = clear_complex()
     assert python_result == pyccel_result
