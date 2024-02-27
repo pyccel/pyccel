@@ -1421,7 +1421,7 @@ class CCodePrinter(CodePrinter):
         ----------
         expr : TypedAstNode
             The expression to be cast.
-        dtype : Datatype
+        dtype : PyccelType
             The target type of the cast.
 
         Returns
