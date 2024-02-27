@@ -43,3 +43,31 @@ These objects contain all the information necessary to create a Variable from a 
 ### Inferring types from assignments
 
 When assignments occur in the code types must also be inferred. This allows new variables to be declared implicitly, and also enables us to verify that the types of existing variables do not change. In this case the type inference is done via the AST nodes. Each node contains the logic necessary to deduce its type information from the arguments passed to it. The resulting object, which is found on the right hand side of an assignment can be used to verify or define the type of the object on the left hand side of the assignment.
+
+### Data types in Pyccel
+
+The data types in Pyccel are designed around two super classes:
+-   `PrimitiveType` : Representing the category of datatype (integer/floating point/etc)
+-   `PyccelType` : Representing the actual type of the object in Python
+
+Subclasses of `PyccelType` generally fall into one of two categories:
+-   `FixedSizeType`
+-   `ContainerType`
+
+#### Fixed Size Type
+A `FixedSizeType` is an object whose size in memory is known and cannot change from one instance to another (e.g. `float64`, `int32`, `void`). In most cases the developer will need the sub-class `FixedSizeNumericType` which refers to the subset of fixed size types which contain numeric values. These objects are characterised by a `primitive_type` describing the category of datatype (integer/floating point/etc) and a `precision`. They additionally implement two magic methods:
+-   `__add__` (+)
+-   `__and__` (&)
+
+The add operator describes what happens when two numeric types are combined in an arithmetic operator. In almost all cases this is sufficient to describe all resulting datatypes. Special cases (e.g. float for integer division) are handled in the associated operator in `ast.operators` or `ast.bitwise_operators`.
+
+The and operator describes what happens when two numeric types are combined in a bitwise comparison operator. This only applies to integers and booleans.
+
+When using these operators on an unknown number of arguments it can be useful to use `NativeGeneric()` as a starting point for the sum.
+
+#### Container Type
+A `ContainerType` is an object which is comprised of `FixedSizeType` objects (e.g. `ndarray`,`list`,`tuple`, custom class). The sub-class `HomogeneousContainerType` describes containers which contain homogeneous data. These objects are characterised by an `element_type`. The elements of a `HomogeneousContainerType` are instances of `PyccelType`, but they can be either `FixedSizeType`s or `ContainerType`s.
+
+`HomogeneousContainerType`s also contain some utility functions. They implement `primitive_type` and `precision` to get the properties of the internal `FixedSizeType` (even if that type is inside another `HomogeneousContainerType`). They also implement `switch_basic_type` which creates a new `HomogeneousContainerType` which is similar to the current `HomogeneousContainerType`. The only difference is that the `FixedSizeType` is exchanged.
+
+In order to access the internal `FixedSizeType`, `PyccelType` also implements a `datatype` property. This makes more sense in the case of a `HomogeneousContainerType` however it is also implemented (as the identity function) for `FixedSizeType`s so the low-level type can be obtained without the need for type checks.
