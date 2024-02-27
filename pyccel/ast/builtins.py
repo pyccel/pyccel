@@ -1141,12 +1141,6 @@ class PythonType(PyccelAstNode):
         super().__init__()
 
     @property
-    def dtype(self):
-        """ Returns the dtype of this type
-        """
-        return self._type
-
-    @property
     def arg(self):
         """ Returns the object for which the type is determined
         """
@@ -1161,7 +1155,7 @@ class PythonType(PyccelAstNode):
         printed by Python to describe this type. This string can
         then be easily printed in each language.
         """
-        return LiteralString(f"<class '{self.dtype}'>")
+        return LiteralString(f"<class '{self._type}'>")
 
 #==============================================================================
 
