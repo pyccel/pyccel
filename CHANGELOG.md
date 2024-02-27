@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for set method `add()`
 -   #1739 : Add Python support for set method `clear()`
+-   #1740 : Add Python support for set method `copy()`
 
 ### Fixed
 
