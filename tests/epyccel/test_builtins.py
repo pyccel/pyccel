@@ -333,3 +333,39 @@ def test_sum_expr(language):
 
     assert epyc_f(*int_args) == f(*int_args)
     assert np.allclose(epyc_f(*float_args), f(*float_args), rtol=RTOL, atol=ATOL)
+
+def test_len_numpy(language):
+    def f():
+        from numpy import ones
+        a = ones((3,4))
+        b = ones((4,3,5))
+        c = ones(4)
+        return len(a), len(b), len(c)
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+
+def test_len_tuple(language):
+    def f():
+        a = (3,4)
+        b = (4,3,5)
+        c = b
+        return len(a), len(b), len(c), len((1,2))
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
+
+
+def test_len_inhomog_tuple(language):
+    def f():
+        a = (3,True)
+        b = (4j,False,5)
+        c = b
+        return len(a), len(b), len(c), len((1.5,2))
+
+    epyc_f = epyccel(f, language=language)
+
+    assert epyc_f() == f()
