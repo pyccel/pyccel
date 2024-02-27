@@ -12,7 +12,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod')
+__all__ = ('SetAdd', 'SetClear', 'SetCopy', 'SetMethod')
 
 class SetMethod(PyccelInternalFunction):
     """
