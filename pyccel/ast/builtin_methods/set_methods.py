@@ -106,3 +106,26 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
+class SetCopy(SetMethod):
+    """
+    Represents a call to the .copy() method.
+
+    The copy() method in set class creates a shallow 
+    copy of a set object and returns it. 
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+    """
+    __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
+    name = 'copy'
+
+    def __init__(self, set_variable):
+        self._dtype = set_variable._dtype
+        self._shape = set_variable._shape
+        self._order = set_variable._order
+        self._rank = set_variable._rank
+        self._precision = set_variable._precision
+        self._class_type = set_variable._class_type 
+        super().__init__(set_variable)
