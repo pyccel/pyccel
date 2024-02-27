@@ -1550,6 +1550,13 @@ class SemanticParser(BasicParser):
         """
 
         # TODO improve check type compatibility
+        if not isinstance(var, Variable):
+            name = var.name
+            errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(type(var), class_type),
+                    symbol=f'{name}={class_type}',
+                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
+                    severity='fatal')
+
         if not is_augassign and var.is_ndarray and var.is_target:
             errors.report(ARRAY_ALREADY_IN_USE,
                 bounding_box=(self.current_ast_node.lineno,
