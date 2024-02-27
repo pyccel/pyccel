@@ -448,7 +448,12 @@ class Variable(TypedAstNode):
         return hash((type(self).__name__, self._name))
 
     def inspect(self):
-        """inspects the variable."""
+        """
+        Print a short summary of the Variable and its parameters.
+
+        Print a short summary of the Variable and its parameters.
+        This function is useful for debugging.
+        """
 
         print('>>> Variable')
         print(f'  name               = {self.name}')
@@ -743,16 +748,21 @@ class InhomogeneousTupleVariable(Variable):
         return False
 
 class Constant(Variable):
-
     """
-    Class for expressing constant values (e.g. pi)
+    Class for expressing constant values (e.g. pi).
+
+    Class for expressing constant values (e.g. pi).
 
     Parameters
     ----------
-    *args, **kwargs : See pyccel.ast.variable.Variable
+    *args : tuple
+        See pyccel.ast.variable.Variable.
 
-    value : Type matching datatype
-            The value that the constant represents
+    value : bool|int|float|complex
+        The value that the constant represents.
+
+    **kwargs : dict
+        See pyccel.ast.variable.Variable.
 
     Examples
     --------
@@ -937,8 +947,9 @@ class IndexedElement(TypedAstNode):
         return self.base.is_const
 
 class DottedVariable(Variable):
-
     """
+    Class representing a dotted variable.
+
     Represents a dotted variable. This is usually
     a variable which is a member of a class
 
@@ -946,8 +957,18 @@ class DottedVariable(Variable):
     a = AClass()
     a.b = 3
 
-    In this case b is a DottedVariable where the lhs
-    is a
+    In this case b is a DottedVariable where the lhs is a.
+
+    Parameters
+    ----------
+    *args : tuple
+        See pyccel.ast.variable.Variable.
+
+    lhs : Variable
+        The Variable on the right of the '.'.
+
+    **kwargs : dict
+        See pyccel.ast.variable.Variable.
     """
     __slots__ = ('_lhs',)
     _attribute_nodes = ('_lhs',)
