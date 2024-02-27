@@ -1095,7 +1095,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(f, PythonType):
                 f = f.print_string
 
-            if isinstance(f, FunctionCall) and isinstance(f.dtype, TupleType):
+            if isinstance(f, FunctionCall) and isinstance(f.class_type, TupleType):
                 tmp_list = [self.scope.get_temporary_variable(a.var.dtype) for a in f.funcdef.results]
                 tmp_arg_format_list = []
                 for a in tmp_list:
