@@ -1425,7 +1425,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
-                    kwargs['dtype'] = VoidType()
+                    kwargs['class_type'] = VoidType()
 
             arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
                                     **kwargs)

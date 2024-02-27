@@ -395,8 +395,8 @@ class FortranToCWrapper(Wrapper):
             scope.insert_variable(local_var, name)
 
             # Create the C-compatible data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+name),
+            bind_var = Variable(BindCPointer(),
+                                scope.get_new_name('bound_'+name),
                                 is_const=False, memory_handling='alias')
             scope.insert_variable(bind_var)
 
@@ -459,8 +459,8 @@ class FortranToCWrapper(Wrapper):
             func_scope.imports['variables'][expr.name] = expr
 
             # Create the data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+expr.name),
+            bind_var = Variable(BindCPointer(),
+                                scope.get_new_name('bound_'+expr.name),
                                 is_const=True, memory_handling='alias')
             func_scope.insert_variable(bind_var)
 
@@ -598,8 +598,8 @@ class FortranToCWrapper(Wrapper):
         func_scope.insert_variable(local_var)
 
         # Create the C-compatible data pointer
-        bind_var = Variable(dtype=BindCPointer(),
-                            name=func_scope.get_new_name('bound_'+name),
+        bind_var = Variable(BindCPointer(),
+                            func_scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
         func_scope.insert_variable(bind_var)
 
