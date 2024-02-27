@@ -23,7 +23,7 @@ from sympy import ceiling
 
 from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 
-from pyccel.ast.builtins import PythonPrint, DtypePrecisionToCastFunction, PythonTupleFunction
+from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
@@ -2172,7 +2172,7 @@ class SemanticParser(BasicParser):
         ls = [self._visit(i) for i in expr]
         try:
             expr = PythonList(*ls)
-        except TypeError as e:
+        except TypeError:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
                 severity='fatal')
         return expr
