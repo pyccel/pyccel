@@ -11,7 +11,6 @@ from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, List
 
 from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
-from .c_concepts import CStackArray
 from .datatypes import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                         PythonNativeComplex, StringType, TupleType, CustomDataType,
                         HomogeneousListType)

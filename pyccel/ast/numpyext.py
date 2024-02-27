@@ -6,14 +6,11 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing objects from the numpy module understood by pyccel
 """
-from functools import lru_cache
-
 import numpy
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import WRONG_LINSPACE_ENDPOINT, NON_LITERAL_KEEP_DIMS, NON_LITERAL_AXIS
 
-from pyccel.utilities.metaclasses import Singleton
 from pyccel.utilities.stage import PyccelStage
 
 from .basic          import TypedAstNode

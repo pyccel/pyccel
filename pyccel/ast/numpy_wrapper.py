@@ -9,18 +9,14 @@ Handling the transitions between Python code and C code using (Numpy/C Api).
 
 import numpy as np
 
-from pyccel.utilities.metaclasses import Singleton
-
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
 
 from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry
 
-from .core              import FunctionDef, FunctionCall
+from .core              import FunctionDef
 from .core              import FunctionDefArgument, FunctionDefResult
 
 from .c_concepts        import CNativeInt
-
-from .literals          import LiteralInteger
 
 from .numpytypes        import NumpyInt8Type, NumpyInt16Type, NumpyInt32Type, NumpyInt64Type
 from .numpytypes        import NumpyFloat32Type, NumpyFloat64Type, NumpyFloat128Type
@@ -30,7 +26,6 @@ from .numpytypes        import NumpyNDArrayType
 from .variable          import Variable
 
 from ..errors.errors   import Errors
-from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
 errors = Errors()
 
