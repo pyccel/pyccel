@@ -437,7 +437,7 @@ class Variable(TypedAstNode):
         return str(self.name)
 
     def __repr__(self):
-        return '{}({}, type={})'.format(type(self).__name__, repr(self.name), repr(self.class_type))
+        return f'{type(self).__name__}({self.name}, type={self.class_type})'
 
     def __eq__(self, other):
         if type(self) is type(other):
@@ -451,15 +451,15 @@ class Variable(TypedAstNode):
         """inspects the variable."""
 
         print('>>> Variable')
-        print( '  name               = {}'.format(self.name))
-        print( '  type               = {}'.format(self.class_type))
-        print( '  rank               = {}'.format(self.rank))
-        print( '  order              = {}'.format(self.order))
-        print( '  memory_handling    = {}'.format(self.memory_handling))
-        print( '  shape              = {}'.format(self.shape))
-        print( '  cls_base           = {}'.format(self.cls_base))
-        print( '  is_target          = {}'.format(self.is_target))
-        print( '  is_optional        = {}'.format(self.is_optional))
+        print(f'  name               = {self.name}')
+        print(f'  type               = {self.class_type}')
+        print(f'  rank               = {self.rank}')
+        print(f'  order              = {self.order}')
+        print(f'  memory_handling    = {self.memory_handling}')
+        print(f'  shape              = {self.shape}')
+        print(f'  cls_base           = {self.cls_base}')
+        print(f'  is_target          = {self.is_target}')
+        print(f'  is_optional        = {self.is_optional}')
         print( '<<<')
 
     def clone(self, name, new_class = None, **kwargs):
@@ -876,11 +876,9 @@ class IndexedElement(TypedAstNode):
 
         base_type = base.class_type
         rank = base.rank
-        for i in range(base.rank-self._rank):
+        for _ in range(base.rank-self._rank):
             rank -= 1
-            if rank and isinstance(base_type, NumpyNDArrayType):
-                base_type = base_type
-            else:
+            if not (rank and isinstance(base_type, NumpyNDArrayType)):
                 base_type = base_type.element_type
         self._class_type = base_type
 

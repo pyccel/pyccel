@@ -18,7 +18,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PyccelComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
-from .datatypes import HomogeneousListType, TupleType, HomogeneousContainerType
+from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType
 from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
@@ -26,7 +26,6 @@ from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
 from .literals  import LiteralString
 from .operators import PyccelAdd, PyccelAnd, PyccelMul, PyccelIsNot
 from .operators import PyccelMinus, PyccelUnarySub, PyccelNot
-from .numpytypes import NumpyNumericType
 from .variable  import IndexedElement, Variable, InhomogeneousTupleVariable
 
 pyccel_stage = PyccelStage()
@@ -1185,8 +1184,6 @@ class PythonType(PyccelAstNode):
         printed by Python to describe this type. This string can
         then be easily printed in each language.
         """
-        class_type = self._type
-
         return LiteralString(f"<class '{self.dtype}'>")
 
 #==============================================================================

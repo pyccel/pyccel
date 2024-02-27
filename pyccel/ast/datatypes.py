@@ -458,7 +458,7 @@ class HomogeneousContainerType(ContainerType):
 
         The datatype of the object.
         """
-        return self._element_type.datatype
+        return self.element_type.datatype
 
     @property
     def primitive_type(self):

@@ -10,7 +10,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import VoidType, GenericType, HomogeneousListType
+from pyccel.ast.datatypes import VoidType, HomogeneousListType
 from pyccel.ast.internals import PyccelInternalFunction
 
 
