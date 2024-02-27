@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Add support for homogeneous tuple type annotations on variables.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for set method `add()`
+-   #1739 : Add Python support for set method `clear()`
 
 ### Fixed
 
