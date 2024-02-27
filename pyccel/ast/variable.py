@@ -533,7 +533,7 @@ class Variable(TypedAstNode):
             'rank' : self.rank,
             'memory_handling': self.memory_handling,
             'is_optional':self.is_optional,
-            'shape':self.shape,
+            'order':self.order,
             'cls_base':self.cls_base,
             }
 
