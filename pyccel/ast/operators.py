@@ -253,11 +253,6 @@ class PyccelOperator(TypedAstNode):
         Set the order of the result of the operator.
         This is chosen to match the arguments if they are in agreement.
         Otherwise it defaults to 'C'.
-
-        Returns
-        -------
-        str | None
-            A string indicating the order or None if the rank is 1 or less.
         """
         if self.rank is not None and self.rank > 1:
             orders = [a.order for a in self._args if a.order is not None]
@@ -398,7 +393,12 @@ class PyccelNot(PyccelUnaryOperator):
     _class_type = PythonNativeBool()
 
     def _set_type(self):
-        pass
+        """
+        Set the type of the result of the operator.
+
+        Set the class_type of the result of the operator. Nothing needs
+        to be done here as the type is a class variable.
+        """
 
     @staticmethod
     def _calculate_shape_rank(*args):
@@ -1132,13 +1132,28 @@ class PyccelBooleanOperator(PyccelOperator):
     __slots__ = ()
 
     def _set_order(self):
-        pass
+        """
+        Set the order of the result.
+
+        Set the order of the result of the operator. Nothing needs to
+        be done here as the order is a class variable.
+        """
 
     def _set_type(self):
-        pass
+        """
+        Set the type of the result of the operator.
+
+        Set the class_type of the result of the operator. Nothing needs
+        to be done here as the type is a class variable.
+        """
 
     def _set_shape_rank(self):
-        pass
+        """
+        Set the shape and rank of the result of the operator.
+
+        Set the shape and rank of the result of the operator. Nothing needs
+        to be done here as the shape and rank are class variables.
+        """
 
 #==============================================================================
 
