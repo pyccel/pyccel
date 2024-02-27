@@ -19,6 +19,7 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PyccelComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, TupleType, HomogeneousContainerType
+from .datatypes import FixedSizeNumericType
 from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -510,10 +511,14 @@ class PythonTuple(TypedAstNode):
             self._is_homogeneous = False
             return
 
+        # Get possible datatypes
         dtypes = [a.class_type.datatype for a in args]
+        # Extract all dtypes inside any inhomogeneous tuples
         while any(isinstance(d, InhomogeneousTupleType) for d in dtypes):
             dtypes = [di for d in dtypes for di in (d if isinstance(d, InhomogeneousTupleType) else [d])]
-        dtypes = set((d.primitive_type, d.precision) for d in dtypes)
+        # Create a set of dtypes using the same key for compatible types
+        dtypes = set((d.primitive_type, d.precision) if isinstance(d, FixedSizeNumericType) else d for d in dtypes)
+
         ranks  = set(a.rank for a in args)
         orders = set(a.order for a in args)
         if len(ranks) == 1:

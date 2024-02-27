@@ -1238,7 +1238,7 @@ class CCodePrinter(CodePrinter):
         >>> self.get_declare_type(v)
         't_ndarray*'
         """
-        dtype = expr.dtype
+        class_type = expr.class_type
         rank  = expr.rank
 
         if rank > 0:
@@ -1249,10 +1249,10 @@ class CCodePrinter(CodePrinter):
                 dtype = 't_ndarray'
             else:
                 errors.report(PYCCEL_RESTRICTION_TODO+' (rank>0)', symbol=expr, severity='fatal')
-        elif not isinstance(dtype, CustomDataType):
-            dtype = self.find_in_dtype_registry(dtype)
+        elif not isinstance(class_type, CustomDataType):
+            dtype = self.find_in_dtype_registry(class_type)
         else:
-            dtype = self._print(expr.dtype)
+            dtype = self._print(expr.class_type)
 
         if self.is_c_pointer(expr):
             return f'{dtype}*'

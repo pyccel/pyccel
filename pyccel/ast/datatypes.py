@@ -634,6 +634,15 @@ class CustomDataType(ContainerType, metaclass=Singleton):
     """
     __slots__ = ()
 
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self
+
     def __reduce__(self):
         """
         Function called during pickling.
@@ -706,9 +715,7 @@ class InhomogeneousTupleType(ContainerType, TupleType,
 
         The datatype of the object.
         """
-        print("INHOMOG DTYPE")
         possible_types = set(t.datatype for t in self._element_types)
-        print(possible_types)
         if len(possible_types) == 1:
             return possible_types.pop()
         else:

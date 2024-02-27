@@ -419,7 +419,7 @@ class NumpyImag(PythonImag):
             dtype = PythonNativeInt() if isinstance(arg.dtype, PythonNativeBool) else arg.dtype
             if arg.rank == 0:
                 return convert_to_literal(0, dtype)
-            dtype = DtypePrecisionToCastFunction[dtype].static_dtype()
+            dtype = DtypePrecisionToCastFunction[dtype].static_type()
             return NumpyZeros(arg.shape, dtype=dtype)
         return super().__new__(cls, arg)
 

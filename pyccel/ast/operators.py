@@ -625,7 +625,7 @@ class PyccelAdd(PyccelArithmeticOperator):
             class_type = cls._calculate_type(arg1, arg2)
             if isinstance(arg1, Literal) and isinstance(arg2, Literal):
                 return convert_to_literal(arg1.python_value + arg2.python_value,
-                                          dtype)
+                                          class_type)
             if class_type == arg2.class_type and arg1 == 0:
                 return arg2
             if class_type == arg1.class_type and arg2 == 0:
