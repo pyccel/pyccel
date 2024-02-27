@@ -127,5 +127,5 @@ class SetCopy(SetMethod):
         self._order = set_variable._order
         self._rank = set_variable._rank
         self._precision = set_variable._precision
-        self._class_type = set_variable._class_type 
+        self._class_type = set_variable._class_type
         super().__init__(set_variable)
