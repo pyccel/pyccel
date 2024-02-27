@@ -874,10 +874,15 @@ class IndexedElement(TypedAstNode):
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
-        if self._rank:
-            self._class_type = base.class_type
-        else:
-            self._class_type = base.class_type.element_type
+        base_type = base.class_type
+        rank = self._rank
+        for i in range(base.rank-self._rank):
+            rank -= 1
+            if rank and isinstance(base_type, NumpyNDArrayType):
+                base_type = base_type
+            else:
+                base_type = base_type.element_type
+        self._class_type = base_type
 
         self._order = None if self.rank < 2 else base.order
 
