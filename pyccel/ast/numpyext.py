@@ -1725,6 +1725,11 @@ class NumpyUfuncUnary(NumpyUfuncBase):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         x_dtype = x.dtype
         if not isinstance(x_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
@@ -1788,6 +1793,11 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             The first argument passed to the function.
         x2 : TypedAstNode
             The second argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         if x1.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) or \
            x2.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) :
@@ -1915,6 +1925,11 @@ class NumpySign(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         return process_dtype(x.dtype)
 
@@ -1941,6 +1956,11 @@ class NumpyAbs(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         x_dtype = x.dtype
         if isinstance(x_dtype.primitive_type, PyccelComplexType):
@@ -2018,6 +2038,11 @@ class NumpyMod(NumpyUfuncBinary):
             The first argument which helps determine the datatype.
         x2 : TypedAstNode
             The second argument which helps determine the datatype.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         if isinstance(x1.dtype, PythonNativeBool) and isinstance(x2.dtype, PythonNativeBool):
             return NumpyInt8Type()
@@ -2143,6 +2168,11 @@ class NumpyTranspose(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         return process_dtype(x.dtype)
 
@@ -2432,6 +2462,11 @@ class NumpyIsNan(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         return PythonNativeBool()
 
@@ -2467,6 +2502,11 @@ class NumpyIsInf(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         return PythonNativeBool()
 
@@ -2502,6 +2542,11 @@ class NumpyIsFinite(NumpyUfuncUnary):
         ----------
         x : TypedAstNode
             The argument passed to the function.
+
+        Returns
+        -------
+        PyccelType
+            The dtype of the result of the function.
         """
         return PythonNativeBool()
 
