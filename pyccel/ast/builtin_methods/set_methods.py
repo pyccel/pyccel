@@ -12,7 +12,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear',)
+__all__ = ('SetAdd', 'SetClear', 'SetMethod')
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -24,7 +24,10 @@ class SetMethod(PyccelInternalFunction):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The set object which the method is called from.
+        The name of the set.
+
+    *args : iterable
+        The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
     _attribute_nodes = ('_set_variable',)
@@ -84,9 +87,11 @@ class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
     
-   The method clear is used to remove all data from a set. 
-   This operation clears all elements from the set, leaving it empty.
+    The method clear is used to remove all data from a set. 
+    This operation clears all elements from the set, leaving it empty.
 
+    Parameters
+    ----------
     set_variable : TypedAstNode
         The name of the set.
     """

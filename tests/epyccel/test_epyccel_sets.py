@@ -76,3 +76,4 @@ def test_clear_complex(language):
     pyccel_result = epyccel_clear()
     python_result = clear_complex()
     assert python_result == pyccel_result
+ 
