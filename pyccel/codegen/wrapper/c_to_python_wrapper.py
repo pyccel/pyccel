@@ -104,16 +104,16 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            var = Variable(dtype=self._python_object_map[dtype],
-                            name=self.scope.get_new_name(name),
-                            memory_handling='alias',
-                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
-                            is_temp=is_temp)
+            var = Variable(self._python_object_map[dtype],
+                           self.scope.get_new_name(name),
+                           memory_handling='alias',
+                           cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
+                           is_temp=is_temp)
         else:
-            var = Variable(dtype=PyccelPyObject(),
-                            name=self.scope.get_new_name(name),
-                            memory_handling='alias',
-                            is_temp=is_temp)
+            var = Variable(PyccelPyObject(),
+                           self.scope.get_new_name(name),
+                           memory_handling='alias',
+                           is_temp=is_temp)
         self.scope.insert_variable(var)
         return var
 
@@ -278,8 +278,8 @@ class CToPythonWrapper(Wrapper):
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v'))])
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
             func_call = FunctionCall(func, [py_obj])
         else:
@@ -611,8 +611,8 @@ class CToPythonWrapper(Wrapper):
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
-                                    class_type = CStackArray(), cls_base = StackArrayClass)
+        API_var = Variable(CStackArray(BindCPointer()), API_var_name, rank=1, shape = (n_classes,),
+                                    cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
@@ -708,8 +708,8 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{mod_name}_import')
 
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (None,),
-                                    class_type = CStackArray(), cls_base = StackArrayClass,
+        API_var = Variable(CStackArray(BindCPointer()), API_var_name, rank=1, shape = (None,),
+                                    cls_base = StackArrayClass,
                                     memory_handling = 'alias')
         self.scope.insert_variable(API_var)
 
@@ -803,7 +803,7 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
-        self_var = Variable(dtype=PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
+        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
                               memory_handling='alias')
         self.scope.insert_variable(self_var)
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
@@ -1451,8 +1451,8 @@ class CToPythonWrapper(Wrapper):
                 cast_type = collect_arg
                 cast = []
             else:
-                cast_type = Variable(dtype=self._python_object_map[dtype],
-                                    name=self.scope.get_new_name(collect_arg.name),
+                cast_type = Variable(self._python_object_map[dtype],
+                                    self.scope.get_new_name(collect_arg.name),
                                     memory_handling='alias',
                                     cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
                 self.scope.insert_variable(cast_type)
@@ -1467,8 +1467,8 @@ class CToPythonWrapper(Wrapper):
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
             cast_func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v'))])
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
             cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
