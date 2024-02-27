@@ -875,7 +875,7 @@ class IndexedElement(TypedAstNode):
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
         base_type = base.class_type
-        rank = self._rank
+        rank = base.rank
         for i in range(base.rank-self._rank):
             rank -= 1
             if rank and isinstance(base_type, NumpyNDArrayType):
