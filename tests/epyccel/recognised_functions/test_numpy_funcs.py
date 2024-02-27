@@ -2403,6 +2403,16 @@ def test_sum_real(language):
     x = rand(10)
     assert(isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL))
 
+def test_sum_type(language):
+    def sum_call(x : 'float32[:]'):
+        from numpy import sum as np_sum
+        return np_sum(x)
+
+    f1 = epyccel(sum_call, language = language)
+    x = rand(10, dtype = np.float32)
+    assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
+    assert matching_types(f1(x), sum_call(x))
+
 def test_sum_phrase(language):
     def sum_phrase(x : 'float[:]', y : 'float[:]'):
         from numpy import sum as np_sum
