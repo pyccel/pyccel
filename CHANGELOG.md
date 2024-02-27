@@ -17,6 +17,7 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
 -   #1182 : Fix tuples containing objects with different ranks.
 -   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
+-   #1763 Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
 -   Fix all cases where a Python built-in type is returned in place of a NumPy type.
 
 ### Changed
@@ -27,7 +28,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
--   \[INTERNALS\] Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
 
 ### Deprecated
 
