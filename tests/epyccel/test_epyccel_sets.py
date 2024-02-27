@@ -46,3 +46,33 @@ def test_add_element_3(language):
     pyccel_result = epyc_add_element()
     python_result = add_element_range()
     assert python_result == pyccel_result
+
+def test_clear_int(language):
+    def clear_int():
+        se = {1,2,4,5}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_int, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_int()
+    assert python_result == pyccel_result
+
+def test_clear_float(language):
+    def clear_float():
+        se = {7.2, 2.1, 9.8, 6.4}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_float, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_float()
+    assert python_result == pyccel_result
+
+def test_clear_empty(language):
+    def clear_empty():
+        se = {}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_empty, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_empty()
+    assert python_result == pyccel_result
