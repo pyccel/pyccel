@@ -771,7 +771,6 @@ class Constant(Variable):
     >>> import math
     >>> Constant(PythonNativeFloat(), 'pi' , value=math.pi )
     Constant('pi', type=NativeFloat())
-
     """
     __slots__ = ('_value',)
     # The value of a constant is not a translated object
