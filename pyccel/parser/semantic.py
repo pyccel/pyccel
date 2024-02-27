@@ -1127,16 +1127,15 @@ class SemanticParser(BasicParser):
                 if kw not in kwargs:
                     kwargs[kw] = val
 
-            new_expr = func(*args, **kwargs)
-            #try:
-            #    new_expr = func(*args, **kwargs)
-            #except TypeError as e:
-            #    message = str(e)
-            #    if not message:
-            #        message = UNRECOGNISED_FUNCTION_CALL
-            #    errors.report(message,
-            #                    symbol = expr,
-            #                    severity = 'fatal')
+            try:
+                new_expr = func(*args, **kwargs)
+            except TypeError as e:
+                message = str(e)
+                if not message:
+                    message = UNRECOGNISED_FUNCTION_CALL
+                errors.report(message,
+                                symbol = expr,
+                                severity = 'fatal')
 
             return new_expr
         else:
