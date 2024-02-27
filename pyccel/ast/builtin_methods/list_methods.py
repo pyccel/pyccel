@@ -52,14 +52,13 @@ class ListAppend(PyccelInternalFunction):
     name = 'append'
 
     def __init__(self, list_variable, new_elem) -> None:
+        expected_type = list_variable.class_type.element_type
         is_homogeneous = (
-            new_elem.dtype is not GenericType() and
-            list_variable.dtype is not GenericType() and
-            list_variable.dtype == new_elem.dtype and
+            new_elem.class_type == expected_type and
             list_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         self._list_variable = list_variable
         self._append_arg = new_elem
         super().__init__()
@@ -109,8 +108,7 @@ class ListPop(PyccelInternalFunction) :
     def __init__(self, list_variable, index_element=None):
         self._index = index_element
         self._list_variable = list_variable
-        self._dtype = list_variable.dtype
-        self._class_type = HomogeneousListType(self._dtype)
+        self._class_type = list_variable.class_type.element_type
         super().__init__()
 
     @property
@@ -147,7 +145,6 @@ class ListClear(PyccelInternalFunction) :
     """
     __slots__ = ('_list_variable',)
     _attribute_nodes = ('_list_variable',)
-    _dtype = VoidType()
     _rank = 0
     _order = None
     _shape = None
@@ -195,7 +192,6 @@ class ListInsert(PyccelInternalFunction):
     """
     __slots__ = ("_index", "_list_variable", "_insert_arg")
     _attribute_nodes = ("_index", "_list_variable", "_insert_arg")
-    _dtype = VoidType()
     _shape = None
     _order = None
     _rank = 0
@@ -203,14 +199,13 @@ class ListInsert(PyccelInternalFunction):
     name = 'insert'
 
     def __init__(self, list_variable, index, new_elem) -> None:
+        expected_type = list_variable.class_type.element_type
         is_homogeneous = (
-            new_elem.dtype is not GenericType() and
-            list_variable.dtype is not GenericType() and
-            list_variable.dtype == new_elem.dtype and
+            new_elem.class_type == expected_type and
             list_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         self._index = index
         self._list_variable = list_variable
         self._insert_arg = new_elem

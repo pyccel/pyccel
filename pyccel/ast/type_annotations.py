@@ -39,13 +39,8 @@ class VariableTypeAnnotation(PyccelAstNode):
 
     Parameters
     ----------
-    datatype : DataType
-        The requested internal data type.
-
     class_type : DataType
-        The Python type of the variable. In the case of scalars this is equivalent to
-        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
-        this is the type of the container.
+        The requested Python type of the variable.
 
     rank : int
         The rank of the variable.
@@ -56,28 +51,17 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_datatype', '_class_type', '_rank',
+    __slots__ = ('_class_type', '_rank',
                  '_order', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, datatype : 'DataType', class_type : 'DataType',
+    def __init__(self, class_type : 'DataType',
             rank : int = 0, order : str = None, is_const : bool = False):
-        self._datatype = datatype
         self._class_type = class_type
         self._rank = rank
         self._order = order
         self._is_const = is_const
 
         super().__init__()
-
-    @property
-    def datatype(self):
-        """
-        Get the basic datatype of the object.
-
-        Get the basic datatype of the object. For objects with rank>0 this is the
-        type of one of the elements of the object.
-        """
-        return self._datatype
 
     @property
     def class_type(self):
@@ -133,20 +117,19 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = val
 
     def __hash__(self):
-        return hash((self.datatype, self.class_type, self.rank, self.order))
+        return hash((self.class_type, self.rank, self.order))
 
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
-            return self.datatype == other.datatype and \
-                   self.class_type == other.class_type and \
+            return self.class_type == other.class_type and \
                    self.rank == other.rank and \
                    self.order == other.order
         else:
             return False
 
     def __repr__(self):
-        dtype = str(self._datatype)
+        dtype = str(self._class_type)
         if self._rank:
             dtype += '['+','.join(':'*self._rank)+']'
         if self._order:

@@ -44,18 +44,12 @@ class Variable(TypedAstNode):
 
     Parameters
     ----------
-    dtype : str, PyccelType
-        The type of the variable. Can be either a PyccelType,
-        or a str (bool, int, float).
+    class_type : PyccelType
+        The Python type of the variable.The type of the variable.
 
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
         or a dotted name, when using a Class attribute.
-
-    class_type : PyccelType
-        The Python type of the variable. In the case of scalars this is equivalent to
-        the datatype. For objects in (homogeneous) containers (e.g. list/ndarray/tuple),
-        this is the type of the container.
 
     rank : int, default: 0
         The number of dimensions for an array.
@@ -112,16 +106,15 @@ class Variable(TypedAstNode):
     """
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
-            '_cls_base', '_is_argument', '_is_temp','_dtype',
+            '_cls_base', '_is_argument', '_is_temp',
             '_rank','_shape','_order','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
         self,
-        dtype,
+        class_type,
         name,
         *,
-        class_type = None,
         rank=0,
         memory_handling='stack',
         is_const=False,
@@ -183,7 +176,7 @@ class Variable(TypedAstNode):
         self._is_temp        = is_temp
 
         # ------------ TypedAstNode Properties ---------------
-        assert isinstance(dtype, PyccelType)
+        assert isinstance(class_type, PyccelType)
         assert isinstance(rank, int)
 
         if rank == 0:
@@ -200,19 +193,10 @@ class Variable(TypedAstNode):
         elif rank > 1:
             assert order in ('C', 'F')
 
-        if rank > 0 and class_type is None:
-            raise TypeError("Multi-dimensional object requires a container type")
-        elif class_type is None:
-            class_type = dtype
-
-        if class_type is not dtype and cls_base is None:
-            raise TypeError(f"Missing class definition for type {dtype}")
-
         self._alloc_shape = shape
-        self._dtype = dtype
+        self._class_type = class_type
         self._rank  = rank
         self._shape = self.process_shape(shape)
-        self._class_type = class_type
         if self._rank < 2:
             self._order = None
 
@@ -453,7 +437,7 @@ class Variable(TypedAstNode):
         return str(self.name)
 
     def __repr__(self):
-        return '{}({}, dtype={})'.format(type(self).__name__, repr(self.name), repr(self.dtype))
+        return '{}({}, type={})'.format(type(self).__name__, repr(self.name), repr(self.class_type))
 
     def __eq__(self, other):
         if type(self) is type(other):
@@ -468,7 +452,7 @@ class Variable(TypedAstNode):
 
         print('>>> Variable')
         print( '  name               = {}'.format(self.name))
-        print( '  dtype              = {}'.format(self.dtype))
+        print( '  type               = {}'.format(self.class_type))
         print( '  rank               = {}'.format(self.rank))
         print( '  order              = {}'.format(self.order))
         print( '  memory_handling    = {}'.format(self.memory_handling))
@@ -543,7 +527,7 @@ class Variable(TypedAstNode):
            and its arguments.
         """
         args = (
-            self.dtype,
+            self.class_type,
             self.name)
         kwargs = {
             'rank' : self.rank,
@@ -551,7 +535,6 @@ class Variable(TypedAstNode):
             'is_optional':self.is_optional,
             'shape':self.shape,
             'cls_base':self.cls_base,
-            'class_type':self.class_type,
             }
 
         out =  (apply_pickle, (self.__class__, args, kwargs))
@@ -678,7 +661,7 @@ class InhomogeneousTupleVariable(Variable):
 
     def __init__(self, arg_vars, name, *args, class_type, **kwargs):
         self._vars = tuple(arg_vars)
-        super().__init__(class_type, name, *args, **kwargs, class_type = class_type)
+        super().__init__(class_type, name, *args, **kwargs)
 
     def get_vars(self):
         """ Get the variables saved internally in the tuple
@@ -768,15 +751,16 @@ class Constant(Variable):
     ----------
     *args, **kwargs : See pyccel.ast.variable.Variable
 
-    value : Type matching dtype
+    value : Type matching datatype
             The value that the constant represents
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeFloat
     >>> from pyccel.ast.variable import Constant
     >>> import math
-    >>> Constant('float', 'pi' , value=math.pi )
-    Constant('pi', dtype=NativeFloat())
+    >>> Constant(PythonNativeFloat(), 'pi' , value=math.pi )
+    Constant('pi', type=NativeFloat())
 
     """
     __slots__ = ('_value',)
@@ -827,15 +811,16 @@ class IndexedElement(TypedAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, IndexedElement
-    >>> A = Variable('A', dtype='int', shape=(2,3), rank=2)
-    >>> i = Variable('i', dtype='int')
-    >>> j = Variable('j', dtype='int')
+    >>> from pyccel.ast.datatypes import PythonNativeInt
+    >>> A = Variable(PythonNativeInt(), 'A', shape=(2,3), rank=2)
+    >>> i = Variable(PythonNativeInt(), 'i')
+    >>> j = Variable(PythonNativeInt(), 'j')
     >>> IndexedElement(A, (i, j))
     IndexedElement(A, i, j)
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_dtype','_shape','_rank','_order','_class_type')
+    __slots__ = ('_label', '_indices','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
     def __init__(self, base, *indices):
@@ -849,8 +834,6 @@ class IndexedElement(TypedAstNode):
             self._indices = indices
             super().__init__()
             return
-
-        self._dtype = base.dtype
 
         shape = base.shape
         rank  = base.rank
@@ -891,12 +874,12 @@ class IndexedElement(TypedAstNode):
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
 
-        self._order = None if self.rank < 2 else base.order
-
-        if self.rank == 0:
-            self._class_type = self.dtype
-        else:
+        if self._rank:
             self._class_type = base.class_type
+        else:
+            self._class_type = base.class_type.element_type
+
+        self._order = None if self.rank < 2 else base.order
 
     @property
     def base(self):
@@ -996,9 +979,9 @@ class DottedVariable(Variable):
     def __repr__(self):
         lhs = repr(self.lhs)
         name = str(self.name)
-        dtype = repr(self.dtype)
+        class_type = repr(self.class_type)
         classname = type(self).__name__
-        return f'{classname}({lhs}.{name}, dtype={dtype}'
+        return f'{classname}({lhs}.{name}, type={class_type})'
 
 class AnnotatedPyccelSymbol(PyccelAstNode):
     """

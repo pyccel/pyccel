@@ -71,7 +71,6 @@ class MacroShape(Macro):
     """
     __slots__ = ('_index','_rank','_shape')
     _name      = 'shape'
-    _dtype     = PythonNativeInt()
     _order     = None
     _class_type = PythonNativeInt()
 
@@ -112,7 +111,6 @@ class MacroType(Macro):
     """
     __slots__ = ()
     _name      = 'dtype'
-    _dtype     = GenericType()
     _rank      = 0
     _shape     = None
     _order     = None
@@ -136,7 +134,6 @@ class MacroCount(Macro):
     """
     __slots__ = ()
     _name      = 'count'
-    _dtype     = PythonNativeInt()
     _rank      = 0
     _shape     = None
     _order     = None

@@ -14,8 +14,6 @@ import numpy
 
 from pyccel.utilities.metaclasses import Singleton, build_argument_singleton
 
-# TODO [YG, 12.03.2020] verify why we need all these types
-# NOTE: symbols not used in pyccel are commented out
 __all__ = (
         # ------------ Super classes ------------
         'PyccelType',
@@ -180,6 +178,15 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
     represented in memory. E.g. int32, int64.
     """
     __slots__ = ()
+
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self
 
     @property
     def primitive_type(self):
@@ -445,6 +452,15 @@ class HomogeneousContainerType(ContainerType):
     __slots__ = ()
 
     @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self._element_type.datatype
+
+    @property
     def primitive_type(self):
         """
         The datatype category of elements of the object.
@@ -452,6 +468,19 @@ class HomogeneousContainerType(ContainerType):
         The datatype category of elements of the object (e.g. integer, floating point).
         """
         return self.element_type.primitive_type
+
+    @property
+    def precision(self):
+        """
+        Precision of the elements of the object.
+
+        The precision of the elements of the object. This number is related to the
+        number of bytes that the datatype takes up in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
+        it is comprised of two `float64` objects. The precision is equivalent to
+        the `kind` parameter in Fortran.
+        """
+        return self.element_type.precision
 
     @property
     def element_type(self):
@@ -514,6 +543,15 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     __slots__ = ()
     _name = 'str'
     _element_type = PyccelCharacterType()
+
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self
 
     def __str__(self):
         return 'str'
@@ -642,6 +680,9 @@ class InhomogeneousTupleType(ContainerType, TupleType,
     def __len__(self):
         return len(self._element_types)
 
+    def __iter__(self):
+        return self._element_types.__iter__()
+
     def __reduce__(self):
         """
         Function called during pickling.
@@ -657,6 +698,21 @@ class InhomogeneousTupleType(ContainerType, TupleType,
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, tuple(self._element_types))
+
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        print("INHOMOG DTYPE")
+        possible_types = set(t.datatype for t in self._element_types)
+        print(possible_types)
+        if len(possible_types) == 1:
+            return possible_types.pop()
+        else:
+            return self
 
 class DictType(ContainerType, metaclass = build_argument_singleton('index_type', 'value_type')):
     """
@@ -698,6 +754,15 @@ class DictType(ContainerType, metaclass = build_argument_singleton('index_type',
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, (self._index_type, self._value_type))
+
+    @property
+    def datatype(self):
+        """
+        The datatype of the object.
+
+        The datatype of the object.
+        """
+        return self._index_type.datatype
 
 #==============================================================================
 

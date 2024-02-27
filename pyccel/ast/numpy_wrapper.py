@@ -83,102 +83,102 @@ def get_numpy_max_acceptable_version_file():
 
 PyArray_Check = FunctionDef(name      = 'PyArray_Check',
                             body      = [],
-                            arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o'))],
-                            results   = [FunctionDefResult(Variable(dtype=PythonNativeBool(), name='b'))])
+                            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o'))],
+                            results   = [FunctionDefResult(Variable(PythonNativeBool(), name='b'))])
 
 # numpy array to c ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_to_ndarray = FunctionDef(
                 name      = 'pyarray_to_ndarray',
-                arguments = [FunctionDefArgument(Variable(name = 'a', dtype = PyccelPyObject(), memory_handling = 'alias'))],
+                arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling = 'alias'))],
                 body      = [],
-                results   = [FunctionDefResult(Variable(name = 'array', dtype = NumpyNDArrayType(GenericType())))])
+                results   = [FunctionDefResult(Variable(NumpyNDArrayType(GenericType()), 'array'))])
 
 # numpy array check elements : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 pyarray_check = FunctionDef(
                 name      = 'pyarray_check',
                 arguments = [
-                        FunctionDefArgument(Variable(name = 'a', dtype = PyccelPyObject(), memory_handling='alias')),
-                        FunctionDefArgument(Variable(name = 'dtype', dtype = CNativeInt())),
-                        FunctionDefArgument(Variable(name = 'rank', dtype = CNativeInt())),
-                        FunctionDefArgument(Variable(name = 'flag', dtype = CNativeInt()))
+                        FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'rank')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'flag'))
                     ],
                 body      = [],
-                results   = [FunctionDefResult(Variable(name = 'b', dtype = PythonNativeBool()))])
+                results   = [FunctionDefResult(Variable(PythonNativeBool(), 'b'))])
 
 is_numpy_array = FunctionDef(
                 name      = 'is_numpy_array',
                 arguments = [
-                        FunctionDefArgument(Variable(name = 'a', dtype = PyccelPyObject(), memory_handling='alias')),
-                        FunctionDefArgument(Variable(name = 'dtype', dtype = CNativeInt())),
-                        FunctionDefArgument(Variable(name = 'rank', dtype = CNativeInt())),
-                        FunctionDefArgument(Variable(name = 'flag', dtype = CNativeInt()))
+                        FunctionDefArgument(Variable(PyccelPyObject(), 'a', memory_handling='alias')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'dtype')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'rank')),
+                        FunctionDefArgument(Variable(CNativeInt(), 'flag'))
                     ],
                 body      = [],
-                results   = [FunctionDefResult(Variable(name = 'b', dtype = PythonNativeBool()))])
+                results   = [FunctionDefResult(Variable(PythonNativeBool(), 'b'))])
 
 # Return the shape of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_dim  = FunctionDef(name    = 'nd_ndim',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(dtype=CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(dtype=CNativeInt(), name = 'd'))])
+                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
+                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 # Return the stride of the n-th dimension : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_c_step = FunctionDef(name    = 'nd_nstep_C',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(dtype=CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(dtype=CNativeInt(), name = 'd'))])
+                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
+                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 array_get_f_step = FunctionDef(name    = 'nd_nstep_F',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=VoidType(), name = 'o', is_optional = True)),
-                                        FunctionDefArgument(Variable(dtype=CNativeInt(), name = 'idx'))],
-                           results   = [FunctionDefResult(Variable(dtype=CNativeInt(), name = 'd'))])
+                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional = True)),
+                                        FunctionDefArgument(Variable(CNativeInt(), name = 'idx'))],
+                           results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 # Return the data of ndarray : function definition in pyccel/stdlib/cwrapper/cwrapper_ndarrays.c
 array_get_data  = FunctionDef(name   = 'nd_data',
                            body      = [],
-                           arguments = [FunctionDefArgument(Variable(dtype=VoidType(), name = 'o', is_optional=True))],
-                           results   = [FunctionDefResult(Variable(dtype=VoidType(), name = 'v', memory_handling='alias', rank = 1, class_type = VoidType()))])
+                           arguments = [FunctionDefArgument(Variable(VoidType(), name = 'o', is_optional=True))],
+                           results   = [FunctionDefResult(Variable(VoidType(), name = 'v', memory_handling='alias', rank = 1))])
 
 PyArray_SetBaseObject = FunctionDef(name   = 'PyArray_SetBaseObject',
                                     body      = [],
-                                    arguments = [FunctionDefArgument(Variable(dtype=PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
-                                                 FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'obj', memory_handling='alias'))],
-                                    results   = [FunctionDefResult(Variable(dtype=CNativeInt(), name = 'd'))])
+                                    arguments = [FunctionDefArgument(Variable(PyccelPyArrayObject(), name = 'arr', memory_handling='alias')),
+                                                 FunctionDefArgument(Variable(PyccelPyObject(), name = 'obj', memory_handling='alias'))],
+                                    results   = [FunctionDefResult(Variable(CNativeInt(), name = 'd'))])
 
 import_array = FunctionDef('import_array', (), (), ())
 
 # Basic Array Flags
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_OWNDATA
-numpy_flag_own_data     = Variable(dtype=CNativeInt(),  name = 'NPY_ARRAY_OWNDATA')
+numpy_flag_own_data     = Variable(CNativeInt(),  name = 'NPY_ARRAY_OWNDATA')
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_C_CONTIGUOUS
-numpy_flag_c_contig     = Variable(dtype=CNativeInt(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
+numpy_flag_c_contig     = Variable(CNativeInt(),  name = 'NPY_ARRAY_C_CONTIGUOUS')
 # https://numpy.org/doc/stable/reference/c-api/array.html#c.NPY_ARRAY_F_CONTIGUOUS
-numpy_flag_f_contig     = Variable(dtype=CNativeInt(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
+numpy_flag_f_contig     = Variable(CNativeInt(),  name = 'NPY_ARRAY_F_CONTIGUOUS')
 
 # Custom Array Flags defined in pyccel/stdlib/cwrapper/cwrapper_ndarrays.h
-no_type_check           = Variable(dtype=CNativeInt(),  name = 'NO_TYPE_CHECK')
-no_order_check          = Variable(dtype=CNativeInt(),  name = 'NO_ORDER_CHECK')
+no_type_check           = Variable(CNativeInt(),  name = 'NO_TYPE_CHECK')
+no_order_check          = Variable(CNativeInt(),  name = 'NO_ORDER_CHECK')
 
 # https://numpy.org/doc/stable/reference/c-api/dtype.html
-numpy_bool_type         = Variable(dtype=CNativeInt(),  name = 'NPY_BOOL')
-numpy_byte_type         = Variable(dtype=CNativeInt(),  name = 'NPY_BYTE')
-numpy_ubyte_type        = Variable(dtype=CNativeInt(),  name = 'NPY_UBYTE')
-numpy_short_type        = Variable(dtype=CNativeInt(),  name = 'NPY_SHORT')
-numpy_ushort_type       = Variable(dtype=CNativeInt(),  name = 'NPY_USHORT')
-numpy_int_type          = Variable(dtype=CNativeInt(),  name = 'NPY_INT32')
-numpy_uint_type         = Variable(dtype=CNativeInt(),  name = 'NPY_UINT')
-numpy_long_type         = Variable(dtype=CNativeInt(),  name = 'NPY_LONG')
-numpy_ulong_type        = Variable(dtype=CNativeInt(),  name = 'NPY_ULONG')
-numpy_longlong_type     = Variable(dtype=CNativeInt(),  name = 'NPY_INT64')
-numpy_ulonglong_type    = Variable(dtype=CNativeInt(),  name = 'NPY_ULONGLONG')
-numpy_float_type        = Variable(dtype=CNativeInt(),  name = 'NPY_FLOAT')
-numpy_double_type       = Variable(dtype=CNativeInt(),  name = 'NPY_DOUBLE')
-numpy_longdouble_type   = Variable(dtype=CNativeInt(),  name = 'NPY_LONGDOUBLE')
-numpy_cfloat_type       = Variable(dtype=CNativeInt(),  name = 'NPY_CFLOAT')
-numpy_cdouble_type      = Variable(dtype=CNativeInt(),  name = 'NPY_CDOUBLE')
-numpy_clongdouble_type  = Variable(dtype=CNativeInt(),  name = 'NPY_CLONGDOUBLE')
+numpy_bool_type         = Variable(CNativeInt(),  name = 'NPY_BOOL')
+numpy_byte_type         = Variable(CNativeInt(),  name = 'NPY_BYTE')
+numpy_ubyte_type        = Variable(CNativeInt(),  name = 'NPY_UBYTE')
+numpy_short_type        = Variable(CNativeInt(),  name = 'NPY_SHORT')
+numpy_ushort_type       = Variable(CNativeInt(),  name = 'NPY_USHORT')
+numpy_int_type          = Variable(CNativeInt(),  name = 'NPY_INT32')
+numpy_uint_type         = Variable(CNativeInt(),  name = 'NPY_UINT')
+numpy_long_type         = Variable(CNativeInt(),  name = 'NPY_LONG')
+numpy_ulong_type        = Variable(CNativeInt(),  name = 'NPY_ULONG')
+numpy_longlong_type     = Variable(CNativeInt(),  name = 'NPY_INT64')
+numpy_ulonglong_type    = Variable(CNativeInt(),  name = 'NPY_ULONGLONG')
+numpy_float_type        = Variable(CNativeInt(),  name = 'NPY_FLOAT')
+numpy_double_type       = Variable(CNativeInt(),  name = 'NPY_DOUBLE')
+numpy_longdouble_type   = Variable(CNativeInt(),  name = 'NPY_LONGDOUBLE')
+numpy_cfloat_type       = Variable(CNativeInt(),  name = 'NPY_CFLOAT')
+numpy_cdouble_type      = Variable(CNativeInt(),  name = 'NPY_CDOUBLE')
+numpy_clongdouble_type  = Variable(CNativeInt(),  name = 'NPY_CLONGDOUBLE')
 
 numpy_num_to_type = {0 : numpy_bool_type,
                      1 : numpy_byte_type,

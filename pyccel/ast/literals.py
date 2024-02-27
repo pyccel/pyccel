@@ -79,10 +79,9 @@ class LiteralTrue(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_dtype', '_class_type')
+    __slots__ = ('_class_type',)
 
     def __init__(self, dtype = PythonNativeBool()):
-        self._dtype = dtype
         self._class_type = dtype
         super().__init__()
 
@@ -107,10 +106,9 @@ class LiteralFalse(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__ = ('_dtype', '_class_type')
+    __slots__ = ('_class_type',)
 
     def __init__(self, dtype = PythonNativeBool()):
-        self._dtype = dtype
         self._class_type = dtype
         super().__init__()
 
@@ -138,14 +136,13 @@ class LiteralInteger(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_dtype', '_class_type')
+    __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeInt()):
         assert(value >= 0)
         if not isinstance(value, int):
             raise TypeError("A LiteralInteger can only be created with an integer")
         self._value = value
-        self._dtype = dtype
         self._class_type = dtype
         super().__init__()
 
@@ -176,7 +173,7 @@ class LiteralFloat(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_value', '_dtype', '_class_type')
+    __slots__   = ('_value', '_class_type')
 
     def __init__(self, value, dtype = PythonNativeFloat()):
         if not isinstance(value, (int, float, LiteralFloat)):
@@ -185,7 +182,6 @@ class LiteralFloat(Literal):
             self._value = value.python_value
         else:
             self._value = float(value)
-        self._dtype = dtype
         self._class_type = dtype
         super().__init__()
 
@@ -217,7 +213,7 @@ class LiteralComplex(Literal):
     dtype : FixedSizeType
         The exact type of the literal.
     """
-    __slots__   = ('_real_part','_imag_part', '_dtype', '_class_type')
+    __slots__   = ('_real_part','_imag_part', '_class_type')
 
     def __new__(cls, real, imag, dtype = PythonNativeComplex()):
         if cls is LiteralImaginaryUnit:
@@ -234,7 +230,6 @@ class LiteralComplex(Literal):
                                        dtype = dtype.element_type)
         self._imag_part = LiteralFloat(self._collect_python_val(imag),
                                        dtype = dtype.element_type)
-        self._dtype = dtype
         self._class_type = dtype
         super().__init__()
 
@@ -337,7 +332,6 @@ class LiteralString(Literal):
         The Python literal.
     """
     __slots__ = ('_string',)
-    _dtype      = StringType()
     _class_type = StringType()
 
     def __init__(self, arg):
@@ -376,7 +370,6 @@ class Nil(Literal, metaclass=Singleton):
     """
     __slots__ = ()
     _attribute_nodes = ()
-    _dtype = GenericType()
     _class_type = GenericType()
 
     def __str__(self):

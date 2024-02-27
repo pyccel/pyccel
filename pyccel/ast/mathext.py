@@ -107,7 +107,6 @@ class MathFunctionFloat(MathFunctionBase):
     """
     __slots__ = ()
     name = 'float'
-    _dtype = PythonNativeFloat()
     _class_type = PythonNativeFloat()
 
 
@@ -125,7 +124,6 @@ class MathFunctionInt(MathFunctionBase):
     """
     __slots__ = ()
     name = 'int'
-    _dtype = PythonNativeInt()
     _class_type = PythonNativeInt()
 
 
@@ -143,7 +141,6 @@ class MathFunctionBool(MathFunctionBase):
     """
     __slots__ = ()
     name = 'bool'
-    _dtype = PythonNativeBool()
     _class_type = PythonNativeBool()
 
 #==============================================================================

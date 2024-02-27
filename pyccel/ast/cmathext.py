@@ -59,7 +59,6 @@ class CmathFunctionBool(MathFunctionBase):
         The arguments passed to the function.
     """
     __slots__ = ()
-    _dtype = PythonNativeBool()
     _class_type = PythonNativeBool()
 
 class CmathFunctionComplex(MathFunctionBase):
@@ -75,7 +74,6 @@ class CmathFunctionComplex(MathFunctionBase):
         The expression passed as argument to the function.
     """
     __slots__ = ()
-    _dtype = PythonNativeComplex()
     _shape = None
     _rank  = 0
     _order = None
@@ -437,7 +435,6 @@ class CmathPolar(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'polar'
-    _dtype = PythonNativeFloat()
     _shape = (LiteralInteger(2),)
     _rank  = 1
     _order = None
@@ -461,7 +458,6 @@ class CmathRect(PyccelInternalFunction):
     """
     __slots__ = ()
     name = 'rect'
-    _dtype = PythonNativeComplex()
     _shape = None
     _rank  = 0
     _order = None

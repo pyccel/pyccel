@@ -83,7 +83,6 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _dtype = PythonNativeInt()
     _rank  = 0
     _shape = None
     _order = None
@@ -130,7 +129,6 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _dtype = PythonNativeInt()
     _rank  = 0
     _shape = None
     _order = None

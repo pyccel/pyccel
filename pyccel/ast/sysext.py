@@ -31,7 +31,7 @@ class SysExit(PyccelInternalFunction):
     """
     __slots__ = ()
     name      = 'exit'
-    _dtype     = VoidType()
+    _class_type     = VoidType()
     _rank      = 0
     _shape     = None
     _order     = None

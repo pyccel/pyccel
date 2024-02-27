@@ -66,7 +66,7 @@ class ObjectAddress(TypedAstNode):
     'a'
     """
 
-    __slots__ = ('_obj', '_rank', '_dtype', '_shape', '_order', '_class_type')
+    __slots__ = ('_obj', '_rank', '_shape', '_order', '_class_type')
     _attribute_nodes = ('_obj',)
 
     def __init__(self, obj):
@@ -75,7 +75,6 @@ class ObjectAddress(TypedAstNode):
         self._obj        = obj
         self._rank       = obj.rank
         self._shape      = obj.shape
-        self._dtype      = obj.dtype
         self._order      = obj.order
         self._class_type = obj.class_type
         super().__init__()
@@ -112,7 +111,7 @@ class PointerCast(TypedAstNode):
     cast_type : TypedAstNode
         A TypedAstNode describing the object resulting from the cast.
     """
-    __slots__ = ('_obj', '_rank', '_dtype', '_shape', '_order',
+    __slots__ = ('_obj', '_rank', '_shape', '_order',
             '_class_type', '_cast_type')
     _attribute_nodes = ('_obj',)
 
@@ -123,7 +122,6 @@ class PointerCast(TypedAstNode):
         self._obj        = obj
         self._rank       = cast_type.rank
         self._shape      = cast_type.shape
-        self._dtype      = cast_type.dtype
         self._class_type = cast_type.class_type
         self._order      = cast_type.order
         self._cast_type  = cast_type

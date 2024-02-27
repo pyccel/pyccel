@@ -247,7 +247,7 @@ class PythonCodePrinter(CodePrinter):
             var = expr.var
             def get_type_annotation(var):
                 if isinstance(var, Variable):
-                    type_annotation = str(var.dtype)
+                    type_annotation = str(var.class_type)
                     if var.rank:
                         type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
                     return f"'{type_annotation}'"

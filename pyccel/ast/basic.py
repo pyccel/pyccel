@@ -534,7 +534,7 @@ class TypedAstNode(PyccelAstNode):
         containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
         of the container.
         """
-        return self._dtype # pylint: disable=no-member
+        return self.class_type.datatype
 
     @property
     def order(self):
@@ -572,21 +572,6 @@ class TypedAstNode(PyccelAstNode):
         return cls._rank # pylint: disable=no-member
 
     @classmethod
-    def static_dtype(cls):
-        """
-        Datatype of the object.
-
-        The underlying datatype of the object. In the case of scalars this is
-        equivalent to the type of the object in Python. For objects in (homogeneous)
-        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
-        of the container.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined datatype.
-        """
-        return cls._dtype # pylint: disable=no-member
-
-    @classmethod
     def static_order(cls):
         """
         The data layout ordering in memory.
@@ -601,7 +586,7 @@ class TypedAstNode(PyccelAstNode):
         return cls._order # pylint: disable=no-member
 
     @classmethod
-    def static_class_type(cls):
+    def static_type(cls):
         """
         The type of the object.
 
@@ -612,7 +597,7 @@ class TypedAstNode(PyccelAstNode):
         This function is static and will return an AttributeError if the
         class does not have a predetermined order.
         """
-        return cls._class_type # pylint: disable=no-member
+        return cls._static_type # pylint: disable=no-member
 
     def copy_attributes(self, x):
         """
@@ -629,7 +614,6 @@ class TypedAstNode(PyccelAstNode):
         """
         self._shape      = x.shape
         self._rank       = x.rank
-        self._dtype      = x.dtype
         self._order      = x.order
         self._class_type = x.class_type
 

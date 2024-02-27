@@ -46,7 +46,7 @@ class PyccelInvert(PyccelUnaryOperator):
     __slots__ = ()
     _precedence = 14
 
-    def _calculate_dtype(self, arg):
+    def _calculate_type(self, arg):
         """
         Get the dtype.
 
@@ -67,7 +67,7 @@ class PyccelInvert(PyccelUnaryOperator):
         assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
 
         self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
-        return dtype, dtype
+        return dtype
 
     def __repr__(self):
         return f'~{repr(self.args[0])}'
@@ -90,7 +90,7 @@ class PyccelBitOperator(PyccelOperator):
     _shape = None
     _rank  = 0
     _order = None
-    __slots__ = ('_dtype','_class_type')
+    __slots__ = ('_class_type',)
 
     def __init__(self, arg1, arg2):
         super().__init__(arg1, arg2)
@@ -98,7 +98,7 @@ class PyccelBitOperator(PyccelOperator):
     def _set_order(self):
         pass
 
-    def _calculate_dtype(self, *args):
+    def _calculate_type(self, *args):
         """
         Get the dtype.
 
@@ -120,16 +120,15 @@ class PyccelBitOperator(PyccelOperator):
             The  datatype of the result of the operation.
         """
         try:
-            dtype = sum((a.dtype for a in args), start=GenericType())
             class_type = sum((a.class_type for a in args), start=GenericType())
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
-        assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        assert isinstance(getattr(class_type, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
 
         self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
 
-        return dtype, class_type
+        return class_type
 
     def _set_shape_rank(self):
         """
@@ -206,7 +205,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-    def _calculate_dtype(self, *args):
+    def _calculate_type(self, *args):
         """
         Get the dtype.
 
@@ -228,17 +227,17 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
             The  datatype of the result of the operation.
         """
         try:
-            dtype = functools.reduce(lambda a, b: a & b, [a.dtype for a in args])
             class_type = functools.reduce(lambda a, b: a & b, (a.class_type for a in args))
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
-        assert isinstance(getattr(dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        primitive_type = class_type.primitive_type
+        assert isinstance(primitive_type, (PyccelBooleanType, PyccelIntegerType))
 
-        if dtype is not PythonNativeBool():
+        if isinstance(primitive_type, PyccelIntegerType):
             self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
 
-        return dtype, class_type
+        return class_type
 
 #==============================================================================
 
