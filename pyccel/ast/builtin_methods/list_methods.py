@@ -12,6 +12,8 @@ This module contains objects which describe these methods within Pyccel's AST.
 
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
 from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.builtins  import PythonList, PythonRange
+from pyccel.ast.literals  import LiteralInteger
 
 
 __all__ = ('ListAppend',
@@ -238,6 +240,14 @@ class ListExtend(ListMethod):
     name = 'extend'
 
     def __init__(self, list_variable, new_elem) -> None:
+        if isinstance(new_elem, PythonRange):
+            temp = []
+            start = new_elem.start.python_value
+            step = new_elem.step.python_value
+            stop = new_elem.stop.python_value
+            for i in range(start, stop, step):
+                temp.append(LiteralInteger(i))
+            new_elem = PythonList(*temp)
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
             list_variable.dtype is not NativeGeneric() and
