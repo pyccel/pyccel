@@ -1214,8 +1214,8 @@ class SemanticParser(BasicParser):
 
         Returns
         -------
-        input_args:
-          The sorted and complete call arguments.
+        list[FunctionCallArgument]
+            The sorted and complete call arguments.
         """
         input_args = [a for a in args if a.keyword is None]
         nargs = len(input_args)
