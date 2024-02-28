@@ -13,7 +13,7 @@ def increment_value_inplace(a : int):
 def make_it_ten(a: int):
     a = 10
 def main():
-    a = 1 
+    a = 1
     make_it_ten[1, 1](a)
 if __name__ == "__main__":
     main()
