@@ -1207,10 +1207,10 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        func_args : list
-          The function def arguments.
-        args : list
-          The call arguments.
+        func_args : list[FunctionDefArgument]
+          The arguments of the function definition.
+        args : list[FunctionCallArgument]
+          The arguments of the function call.
 
         Returns
         -------
