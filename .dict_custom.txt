@@ -110,6 +110,7 @@ Valgrind
 variadic
 subclasses
 oneAPI
+Cuda
 getter
 setter
 bitwise
