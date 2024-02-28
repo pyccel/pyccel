@@ -386,12 +386,13 @@ class FunctionHeaderStmt(BasicStmt):
         Arguments defined by textx.
     """
 
-    def __init__(self, name, decs, kind=None, static = None, results=None, **kwargs):
+    def __init__(self, name, decs, kind=None, static = None, results=None, no_call=None,**kwargs):
         self.name = name
         self.kind = kind
         self.static = static
         self.decs = decs
         self.results = results
+        self.no_call = no_call
 
         super().__init__(**kwargs)
 
@@ -418,12 +419,14 @@ class FunctionHeaderStmt(BasicStmt):
         if kind == 'method':
             return MethodHeader(self.name, dtypes,
                                   results=results,
-                                  is_static=is_static)
+                                  is_static=is_static,
+                                  no_call = self.no_call)
         else:
             return FunctionHeader(self.name,
                                   dtypes,
                                   results=results,
-                                  is_static=is_static)
+                                  is_static=is_static,
+                                  no_call = self.no_call)
 
 
 class MetavarHeaderStmt(BasicStmt):
@@ -691,7 +694,7 @@ if __name__ == '__main__':
     print(parse(stmts='#$ header variable x float [1:10]'))
     print(parse(stmts='#$ header variable x :: int'))
     print(parse(stmts='#$ header variable x float [:, :]'))
-    print(parse(stmts='#$ header function f(float [:], int [:]) results(int)'))
+    print(parse(stmts='#$ header inline function f(float [:], int [:]) results(int)'))
     print(parse(stmts='#$ header function f(float|int, int [:]) results(int)'))
     print(parse(stmts='#$ header method translate(Point, [double], [int], int[:,:], double[:])'))
     print(parse(stmts="#$ header metavar module_name='mpi'"))

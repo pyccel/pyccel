@@ -51,7 +51,7 @@ from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
-from pyccel.ast.builtins import PythonTuple, PythonList
+from pyccel.ast.builtins import PythonTuple, PythonList, PythonDict
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -357,6 +357,11 @@ class SyntaxParser(BasicParser):
             val = Assign(PyccelSymbol('_', is_temp=True), val)
         return val
 
+    def _visit_Dict(self, stmt):
+        keys = [self._visit(k) for k in stmt.keys]
+        vals = [self._visit(v) for v in stmt.values]
+        return PythonDict(keys, vals)
+
     def _visit_Tuple(self, stmt):
         return PythonTuple(*self._treat_iterable(stmt.elts))
 
@@ -381,9 +386,9 @@ class SyntaxParser(BasicParser):
         else:
             return old
 
-    def _visit_Dict(self, stmt):
-        errors.report(PYCCEL_RESTRICTION_TODO,
-                symbol=stmt, severity='error')
+#    def _visit_Dict(self, stmt):
+#        errors.report(PYCCEL_RESTRICTION_TODO,
+#                symbol=stmt, severity='error')
 
     def _visit_NoneType(self, stmt):
         return Nil()

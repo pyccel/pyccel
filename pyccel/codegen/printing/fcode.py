@@ -1503,7 +1503,7 @@ class FCodePrinter(CodePrinter):
         # Compute intent string
         if intent:
             if intent == 'in' and rank == 0 and not is_optional \
-                and not isinstance(expr_dtype, CustomDataType):
+                and not isinstance(expr_dtype, CustomDataType) and not isinstance(expr_dtype, NativeString):
                 intentstr = ', value'
                 if is_const:
                     intentstr += ', intent(in)'
@@ -1515,7 +1515,7 @@ class FCodePrinter(CodePrinter):
             if is_alias:
                 allocatablestr = ', pointer'
 
-            elif on_heap and not intent_in:
+            elif on_heap and (not intent_in or expr.arg_allocatable):
                 allocatablestr = ', allocatable'
 
             # ISSUES #177: var is allocatable and target
@@ -1550,10 +1550,10 @@ class FCodePrinter(CodePrinter):
                                                      self._print(PyccelMinus(i, LiteralInteger(1), simplify = True))) for i in shape)
             rankstr = '({rank})'.format(rank=rankstr)
 
-        elif (rank > 0) and on_heap and intent_in:
+        elif (rank > 0) and on_heap and intent_in and not expr.arg_lbound==False:
             rankstr = '({})'.format(','.join(['0:'] * rank))
 
-        elif (rank > 0) and (on_heap or is_alias):
+        elif (rank > 0) and (on_heap or is_alias or expr.arg_lbound==False):
             rankstr = '({})'.format(','.join( [':'] * rank))
 
 #        else:
@@ -1908,6 +1908,7 @@ class FCodePrinter(CodePrinter):
         args_decs = OrderedDict()
         arguments = expr.arguments
         argument_vars = [a.var for a in arguments]
+        decorators = expr.decorators
 
         func_end  = ''
         rec = 'recursive ' if expr.is_recursive else ''
@@ -1931,20 +1932,33 @@ class FCodePrinter(CodePrinter):
         # ...
 
         for i, arg in enumerate(arguments):
-            arg_var = arg.var
+            arg_var         = arg.var
+            arg_lbound      = True
+            intent          = None
+            arg_allocatable = False
+            if decorators.get('declare_dummy_args', None):
+                for a in decorators['declare_dummy_args']:
+                    if a['name'] == arg_var.name:
+                        intent = a.get('intent', None)
+                        arg_lbound = a.get('lbound', True)
+                        arg_allocatable = a.get('allocatable', False)
             if isinstance(arg_var, Variable):
                 if isinstance(arg, BindCFunctionDefArgument) and arg.original_function_argument_variable.rank!=0:
                     for b_arg in arg.get_all_function_def_arguments():
                         v = b_arg.var
-                        dec = Declare(v, intent='in')
+                        intent = 'in' if intent is None else intent
+                        dec = Declare(v, intent=intent)
                         args_decs[v] = dec
                 else:
                     if i == 0 and expr.cls_name:
-                        dec = Declare(arg_var, intent='inout')
+                        intent = 'inout' if intent is None else intent
+                        dec = Declare(arg_var, intent=intent)
                     elif arg.inout:
-                        dec = Declare(arg_var, intent='inout')
+                        intent = 'inout' if intent is None else intent
+                        dec = Declare(arg_var, intent=intent, arg_lbound=arg_lbound, arg_allocatable=arg_allocatable)
                     else:
-                        dec = Declare(arg_var, intent='in')
+                        intent = 'in' if intent is None else intent
+                        dec = Declare(arg_var, intent=intent)
                     args_decs[arg_var] = dec
 
         # treat case of pure function
@@ -1978,6 +1992,7 @@ class FCodePrinter(CodePrinter):
         name = expr.cls_name or expr.name
 
         sig_parts = self.function_signature(expr, name)
+
         bind_c = ' bind(c)' if isinstance(expr, BindCFunctionDef) else ''
         prelude = sig_parts.pop('arg_decs')
         functions = [f for f in expr.functions if not f.is_inline]
@@ -2834,6 +2849,12 @@ class FCodePrinter(CodePrinter):
         inds = list(expr.indices)
         if expr.base.order == 'C':
             inds = inds[::-1]
+        if isinstance(base, PythonTuple):
+            base = list(base)
+            assert len(inds) == 1
+            assert isinstance(inds[0], LiteralInteger)
+            return self._print(base[inds[0].python_value])
+
         allow_negative_indexes = base.allows_negative_indexes
 
         for i, ind in enumerate(inds):
@@ -3014,7 +3035,10 @@ class FCodePrinter(CodePrinter):
             args_code = ', '.join(args_strs+results_strs)
             code = f'{f_name}({args_code})'
             if not is_function:
-                code = f'call {code}\n'
+                if func.no_call:
+                    code = f'{code}\n'
+                else:
+                    code = f'call {code}\n'
 
         if not parent_assign:
             if is_function or len(func_results) == 0:

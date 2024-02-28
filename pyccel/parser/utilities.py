@@ -24,6 +24,7 @@ pyccel_external_lib = {"mpi4py"             : "pyccel.stdlib.external.mpi4py",
                        "scipy.linalg.blas"  : "pyccel.stdlib.external.blas",
                        "scipy.fftpack"      : "pyccel.stdlib.external.dfftpack",
                        "fitpack"            : "pyccel.stdlib.internal.fitpack",
+                       "pyccel.fstdlib"     : "pyccel.stdlib.internal.fstdlib",
                        "scipy.interpolate._fitpack":"pyccel.stdlib.external.fitpack"}
 
 #==============================================================================

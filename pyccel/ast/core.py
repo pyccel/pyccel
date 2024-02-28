@@ -1979,14 +1979,14 @@ class FunctionCall(TypedAstNode):
                  '_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
-    def __init__(self, func, args, current_function=None):
+    def __init__(self, func, args, current_function=None, annotated=None):
 
         for a in args:
             assert not isinstance(a, FunctionDefArgument)
         # Ensure all arguments are of type FunctionCallArgument
         args = [a if isinstance(a, FunctionCallArgument) else FunctionCallArgument(a) for a in args]
 
-        if pyccel_stage == "syntactic":
+        if pyccel_stage == "syntactic" or annotated==False:
             self._interface = None
             self._funcdef   = func
             self._arguments = tuple(args)
@@ -2001,7 +2001,7 @@ class FunctionCall(TypedAstNode):
         if isinstance(func, Interface):
             self._interface = func
             self._interface_name = func.name
-            func = func.point(args)
+            func = func.point(args, use_final_precision=True)
         else:
             self._interface = None
 
@@ -2331,10 +2331,10 @@ class FunctionDef(ScopedAstNode):
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_docstring', '_is_external',
-                 '_is_annotated', '_syntactic_node', '_result_pointer_map')
+                 '_is_annotated', '_syntactic_node', '_result_pointer_map', '_no_call')
 
     _attribute_nodes = ('_arguments','_results','_body',
-                 '_global_vars','_imports','_functions','_interfaces')
+                 '_global_vars','_imports','_functions','_interfaces', '_no_call')
 
     def __init__(
         self,
@@ -2360,7 +2360,8 @@ class FunctionDef(ScopedAstNode):
         docstring=None,
         scope=None,
         is_annotated=None,
-        syntactic_node=None):
+        syntactic_node=None,
+        no_call=False):
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2456,6 +2457,7 @@ class FunctionDef(ScopedAstNode):
         self._result_pointer_map = result_pointer_map
         self._is_annotated    = is_annotated
         self._syntactic_node  = syntactic_node
+        self._no_call  = no_call
         self._docstring      = docstring
         super().__init__(scope)
 
@@ -2638,6 +2640,11 @@ class FunctionDef(ScopedAstNode):
     def interfaces(self):
         """ List of interfaces within this function """
         return self._interfaces
+
+    @property
+    def no_call(self):
+        """ List of interfaces within this function """
+        return self._no_call
 
     @property
     def docstring(self):
@@ -3050,6 +3057,7 @@ class Interface(PyccelAstNode):
         if found:
             return  self._functions[j]
         else:
+            raise
             errors.report('Arguments types provided to {} are incompatible'.format(self.name),
                         severity='fatal')
 
@@ -3830,7 +3838,7 @@ class Declare(PyccelAstNode):
     """
     __slots__ = ('_variable','_intent','_value',
                  '_static', '_external',
-                 '_module_variable')
+                 '_module_variable','_arg_lbound', '_arg_allocatable')
     _attribute_nodes = ('_variable', '_value')
 
     def __init__(
@@ -3840,7 +3848,9 @@ class Declare(PyccelAstNode):
         value=None,
         static=False,
         external = False,
-        module_variable = False
+        module_variable = False,
+        arg_lbound = None,
+        arg_allocatable = None
         ):
         if not isinstance(variable, Variable):
             raise TypeError('var must be of type Variable, given {0}'.format(variable))
@@ -3864,6 +3874,8 @@ class Declare(PyccelAstNode):
         self._static = static
         self._external = external
         self._module_variable = module_variable
+        self._arg_lbound = arg_lbound
+        self._arg_allocatable = arg_allocatable
         super().__init__()
 
     @property
@@ -3892,6 +3904,14 @@ class Declare(PyccelAstNode):
         a module
         """
         return self._module_variable
+
+    @property
+    def arg_lbound(self):
+        return self._arg_lbound
+
+    @property
+    def arg_allocatable(self):
+        return self._arg_allocatable
 
     def __repr__(self):
         return 'Declare({})'.format(repr(self.variable))

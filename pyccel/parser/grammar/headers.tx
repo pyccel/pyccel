@@ -16,13 +16,14 @@ Statement:
 VariableHeaderStmt: 'variable'  name=ID ('::')? dec=UnionTypeStmt;
 
 FunctionHeaderStmt: 
-  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
+  ((name=ID '(') | ((kind=FunctionKind)? (static?=Static) (no_call?=NoCall) name=ID '(')) decs*=UnionTypeStmt[','] ')' (results=HeaderResults)?
 ;
 
 TemplateStmt: 'template' name = ID '(' dtypes+=TypeHeader['|'] ')';
 
 FunctionKind: 'function' | 'method';
 Static: 'static';
+NoCall: 'no_call';
 HeaderResults: 'results' '(' decs+=TypeHeader[','] ')';
 
 MetavarHeaderStmt: 'metavar'  name=ID '=' value=MetavarValues;

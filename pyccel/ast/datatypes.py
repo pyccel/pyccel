@@ -529,6 +529,8 @@ def str_dtype(dtype):
         return 'complex'
     elif isinstance(dtype, NativeBool):
         return 'bool'
+    elif isinstance(dtype, NativeString):
+        return 'str'
     elif isinstance(dtype, CustomDataType):
         return dtype.name
     else:

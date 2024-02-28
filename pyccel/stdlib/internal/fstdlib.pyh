@@ -1,0 +1,20 @@
+# pyccel header for Fortran intrinsic functions.
+
+#$ header metavar ignore_at_import=True
+#$ header metavar save=True
+#$ header metavar libraries='fortran_intrinsics'
+#$ header metavar external=True
+
+#$ header template T(int8|int16|int32|int64|float32|float64|complex64|complex128)
+#$ header function no_call allocate(T[1:15])
+#$ header function  sin  (float32|float64) results(float64)
+#$ header function  cos  (float32|float64) results(float64)
+#$ header function  tan  (float32|float64) results(float64)
+#$ header function  sinh (float32|float64) results(float64)
+#$ header function  cosh (float32|float64) results(float64)
+#$ header function  tanh (float32|float64) results(float64)
+#$ header function  log  (float32|float64) results(float64)
+#$ header function  log10(float32|float64) results(float64)
+#$ header function  asin (float32|float64) results(float64)
+#$ header function  acos (float32|float64) results(float64)
+#$ header function  sqrt (float32|float64) results(float64)

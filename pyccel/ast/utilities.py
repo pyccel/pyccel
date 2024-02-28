@@ -72,10 +72,58 @@ def builtin_function(expr, args=None):
     return None
 
 #==============================================================================
+class MacroNdArraySlice(PyccelInternalFunction):
+    """
+    """
+    __slots__ = ('_array','_args')
+    name   = 'ndarray_slice'
+    _rank  = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, array, args):
+        self._array = array
+        self._args  = args
+
+    @property
+    def array(self):
+        return self._array
+
+    @property
+    def args(self):
+        return self._args
+
+class MacroCast(PyccelInternalFunction):
+    """
+    """
+    __slots__ = ('_arg', '_value')
+    name   = 'ndarray_slice'
+    _rank  = 0
+    _shape = None
+    _order = None
+
+    def __init__(self, arg, value):
+        self._arg   = arg
+        self._value = value
+
+    @property
+    def arg(self):
+        return self._arg
+
+    @property
+    def value(self):
+        return self._value
+
 decorators_mod = Module('decorators',(),
         funcs = [PyccelFunctionDef(d, PyccelInternalFunction) for d in pyccel_decorators.__all__])
+
+macros_funcs_names = ['pass_lhs','dtype', 'mlen', 'val', 'declare_passed_args', 'declare_dummy_args']
+macros_mod = Module('macros',(),
+        funcs = ([PyccelFunctionDef(d, PyccelInternalFunction) for d in macros_funcs_names]\
+                +[PyccelFunctionDef('ndarray_slice', MacroNdArraySlice), PyccelFunctionDef('cast', MacroCast)]))
+
 pyccel_mod = Module('pyccel',(),(),
-        imports = [Import('decorators', decorators_mod)])
+        imports = [Import('decorators', decorators_mod), Import('macros', macros_mod)])
 
 # TODO add documentation
 builtin_import_registry = Module('__main__',

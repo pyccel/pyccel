@@ -771,6 +771,27 @@ class PythonList(TypedAstNode):
         return True
 
 #==============================================================================
+class PythonDict(TypedAstNode):
+    """
+    Class representing a call to Python's `{,}` function.
+    """
+    __slots__ = ('_keys', '_values')
+    _attribute_nodes = ('_keys', '_values')
+
+    def __init__(self, keys, values):
+        self._keys   = tuple(keys)
+        self._values = tuple(values)
+        super().__init__()
+
+    @property
+    def keys(self):
+        return self._keys
+
+    @property
+    def values(self):
+        return self._values
+
+#==============================================================================
 class PythonMap(PyccelAstNode):
     """ Represents the map stmt
     """

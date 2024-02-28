@@ -865,14 +865,14 @@ class IndexedElement(TypedAstNode):
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_label', '_indices')
 
-    def __init__(self, base, *indices):
+    def __init__(self, base, *indices, not_annotated=False):
 
         if not indices:
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
 
-        if pyccel_stage == 'syntactic':
+        if pyccel_stage == 'syntactic' or not_annotated:
             self._indices = indices
             super().__init__()
             return

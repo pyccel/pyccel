@@ -175,11 +175,12 @@ class FunctionHeader(Header):
     >>> FunctionHeader('f', ['double'])
     FunctionHeader(f, [(NativeDouble(), [])])
     """
-    __slots__ = ('_name','_dtypes','_results','_is_static')
+    __slots__ = ('_name','_dtypes','_results','_is_static', '_no_call')
 
     def __init__(self, name, dtypes,
                  results=None,
-                 is_static=False):
+                 is_static=False,
+                 no_call=False):
 
         if not(iterable(dtypes)):
             raise TypeError("Expecting dtypes to be iterable.")
@@ -195,6 +196,7 @@ class FunctionHeader(Header):
         self._dtypes    = dtypes
         self._results   = results
         self._is_static = is_static
+        self._no_call   = no_call
         super().__init__()
 
     @property
@@ -212,6 +214,10 @@ class FunctionHeader(Header):
     @property
     def is_static(self):
         return self._is_static
+
+    @property
+    def no_call(self):
+        return self._no_call
 
     def to_static(self):
         """returns a static function header. needed for bind(c)"""
@@ -295,7 +301,7 @@ class MethodHeader(FunctionHeader):
     """
     __slots__ = ()
 
-    def __init__(self, name, dtypes, results=None, is_static=False):
+    def __init__(self, name, dtypes, results=None, is_static=False, no_call=False):
         if not isinstance(name, str):
             raise TypeError("Expecting a string.")
 
@@ -314,7 +320,7 @@ class MethodHeader(FunctionHeader):
         if not isinstance(is_static, bool):
             raise TypeError('is_static must be a boolean')
 
-        super().__init__(name, dtypes, results, is_static)
+        super().__init__(name, dtypes, results, is_static, no_call=no_call)
 
     def __reduce_ex__(self, i):
 

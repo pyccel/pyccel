@@ -94,7 +94,7 @@ from pyccel.ast.omp import (OMP_For_Loop, OMP_Simd_Construct, OMP_Distribute_Con
                             OMP_Single_Construct)
 
 from pyccel.ast.operators import PyccelArithmeticOperator, PyccelIs, PyccelIsNot, IfTernaryOperator, PyccelUnarySub
-from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow
+from pyccel.ast.operators import PyccelNot, PyccelEq, PyccelAdd, PyccelMul, PyccelPow, PyccelMinus
 from pyccel.ast.operators import PyccelAssociativeParenthesis, PyccelDiv
 
 from pyccel.ast.sympy_helper import sympy_to_pyccel, pyccel_to_sympy
@@ -2170,6 +2170,16 @@ class SemanticParser(BasicParser):
         if self.is_header_file:
             # ARA : issue-999
             is_external = self.metavars.get('external', False)
+            templates = self.scope.find_all('templates')
+            for t,v in templates.items():
+                templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
+
+            def unpack(ann):
+                if isinstance(ann, UnionTypeAnnotation):
+                    return ann.type_list
+                else:
+                    return [ann]
+
             for name, headers in self.scope.headers.items():
                 if all(isinstance(v, FunctionHeader) and \
                         not isinstance(v, MethodHeader) for v in headers):
@@ -2177,23 +2187,77 @@ class SemanticParser(BasicParser):
                     if F is None:
                         func_defs = []
                         for v in headers:
-                            types = [self._visit(d).type_list[0] for d in v.dtypes]
-                            args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
-                                is_const = t.is_const, is_optional = False,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+                            # Filter out unused templates
+                            templatable_args = [unpack(a) for a in v.dtypes if isinstance(a, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+                            arg_annotations  = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
+                            used_type_names  = set(a.dtype for a in arg_annotations)
+                            used_type_names  = used_type_names.union(set(a.base for a in used_type_names if isinstance(a, IndexedElement)))
+                            templates        = {t: vi for t,vi in templates.items() if t in used_type_names}
 
-                            types = [self._visit(d).type_list[0] for d in v.results]
-                            results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
-                                shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
-                                cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
-                                is_const = t.is_const, is_optional = False,
-                                memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+                            template_combinations = list(product(*[vi.type_list for vi in templates.values()]))
+                            template_names = list(templates.keys())
+                            n_templates = len(template_combinations)
+                            tmp_templates = {}
+                            dtypes = []
+                            for a in v.dtypes:
+                                annotation = []
+                                for tmpl_idx in range(n_templates):
+                                    for n, vi in zip(template_names, template_combinations[tmpl_idx]):
+                                        self.scope.insert_symbolic_alias(n, vi)
 
-                            args = [FunctionDefArgument(a) for a in args]
-                            results = [FunctionDefResult(r) for r in results]
-                            func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True))
+                                    if isinstance(a, UnionTypeAnnotation):
+                                        ann = [aa.type_list if isinstance(aa, UnionTypeAnnotation) else [aa] for aa in a]
+                                        ann = [ii for i in ann for ii in i]
+                                    else:
+                                        ann = [a]
+
+                                    annotation += [self._visit(vi) for vi in ann]
+
+                                    for n in template_names:
+                                        self.scope.symbolic_alias.pop(n)
+
+                                annotation = set(annotation)
+                                if len(annotation)>1:
+                                    tmp_template_name = 'anon_' + random_string(12)
+                                    tmp_templates[tmp_template_name] = UnionTypeAnnotation(*annotation)
+                                    dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
+                                    dtype_symb = SyntacticTypeAnnotation(dtype_symb)
+                                    dtypes.append(dtype_symb)
+                                else:
+                                    dtypes.append(a)
+
+                            templates.update(tmp_templates)
+                            templatable_args = [unpack(a) for a in dtypes if isinstance(a, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+                            arg_annotations  = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
+                            used_type_names  = set(a.dtype for a in arg_annotations)
+                            used_type_names  = used_type_names.union(set(a.base for a in used_type_names if isinstance(a, IndexedElement)))
+                            templates        = {t: vi for t,vi in templates.items() if t in used_type_names}
+                            template_combinations = list(product(*[vi.type_list for vi in templates.values()]))
+                            template_names = list(templates.keys())
+                            n_templates = len(template_combinations)
+                            for tmpl_idx in range(n_templates):
+                                for n, vi in zip(template_names, template_combinations[tmpl_idx]):
+                                    self.scope.insert_symbolic_alias(n, vi)
+                                types = [self._visit(d).type_list[0] for d in dtypes]
+                                for n in template_names:
+                                    self.scope.symbolic_alias.pop(n)
+
+                                args = [Variable(t.datatype, PyccelSymbol(f'anon_{i}'), precision = t.precision,
+                                    shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
+                                    is_const = t.is_const, is_optional = False,
+                                    cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
+                                    memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                                types = [self._visit(d).type_list[0] for d in v.results]
+                                results = [Variable(t.datatype, PyccelSymbol(f'result_{i}'), precision = t.precision,
+                                    shape = None, rank = t.rank, order = t.order, class_type = t.class_type,
+                                    cls_base = t.datatype if t.rank == 0 else NumpyNDArrayType(),
+                                    is_const = t.is_const, is_optional = False,
+                                    memory_handling = 'heap' if t.rank > 0 else 'stack') for i,t in enumerate(types)]
+
+                                args = [FunctionDefArgument(a) for a in args]
+                                results = [FunctionDefResult(r) for r in results]
+                                func_defs.append(FunctionDef(v.name, args, results, [], is_external = is_external, is_header = True, no_call=v.no_call))
 
                         if len(func_defs) == 1:
                             F = func_defs[0]
@@ -2939,7 +3003,6 @@ class SemanticParser(BasicParser):
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
-
         if (isinstance(func, FunctionDef) and func.scope) or (isinstance(func, Interface) and func.is_annotated):
             scope = func.scope if isinstance(func, FunctionDef) else func.syntactic_node.scope
             args = [a if a.keyword is None else \
@@ -3039,7 +3102,8 @@ class SemanticParser(BasicParser):
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
             else:
-                return self._handle_function(expr, func, args)
+                expr = self._handle_function(expr, func, args)
+                return expr
 
     def _visit_Assign(self, expr):
         # TODO unset position at the end of this part
@@ -3080,6 +3144,69 @@ class SemanticParser(BasicParser):
         if isinstance(rhs, FunctionCall):
             name = rhs.funcdef
             macro = self.scope.find(name, 'macros')
+            func = self.scope.find(name, 'functions')
+            if isinstance(func, Interface):
+                func = func.syntactic_node
+            if isinstance(func, FunctionDef) and func.decorators.get('pass_lhs',None):
+                args = self._handle_function_args(rhs.args)
+                if func.scope:
+                    args = [a if a.keyword is None else \
+                    FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
+                    for a in args]
+
+                dec       = func.decorators['pass_lhs'][0]
+                args_vals = [arg.value for arg in args]
+                args_names = [arg.name for arg in func.arguments]
+
+                lhs_args = [*expr.lhs.args] if isinstance(expr.lhs, (PythonList,PythonTuple)) else [expr.lhs]
+                new_args = [*rhs.args]
+                pass_lhs = [a.python_value for a in dec.args[0].value]
+                assert len(lhs_args) == len(pass_lhs)
+                # here we assume that we pass all the lhs to the arguments
+
+                for lhs_name,lhs_arg in zip(pass_lhs,lhs_args):
+                    pos = args_names.index(lhs_name)
+                    args_vals.insert(pos, lhs_arg)
+                    new_args.insert(pos, FunctionCallArgument(lhs_arg))
+
+                args_dict = dict(zip(args_names, args_vals))
+                declare_args = func.decorators.get('declare_passed_args',[])
+                for da in declare_args:
+                    keys = da.args[0].value.keys
+                    vals = da.args[0].value.values
+                    da   = dict(zip(keys, vals))
+                    name = da['name']
+                    arg_v = args_dict[name]
+                    if not isinstance(arg_v, PyccelSymbol):
+                        continue
+
+                    dtype = self._visit(da['dtype'])
+                    rank  = self._visit(da.get('rank', 0))
+                    dvar  = {}
+                    if isinstance(dtype, PyccelInternalFunction) and str(da['dtype'].funcdef) == 'val':
+                        a = dtype.args[0].python_value
+                        dtype = args_dict[a].python_value
+                    if isinstance(rank, PyccelInternalFunction) and str(da['rank'].funcdef) == 'mlen':
+                        rank = len(args_dict[rank.args[0].python_value])
+
+                    if rank > 0:
+                        order = self._visit(da.get('order', 'C'))
+                        if isinstance(order, PyccelInternalFunction) and str(da['order'].funcdef) == 'val':
+                            a = order.args[0].python_value
+                            order = args_dict[a].python_value
+                        dvar['order'] = order
+                        dvar['cls_base'] = NumpyArrayClass
+                        dvar['class_type'] = NumpyNDArrayType()
+
+                    dvar['rank'] = rank
+                    dvar['memory_handling'] = 'heap' if rank > 0 else 'stack'
+                    dtype, dvar['precision'] = dtype_and_precision_registry[dtype]
+                    new_name = self.scope.get_expected_name(arg_v)
+                    var = Variable(dtype, new_name, **dvar)
+                    self.scope.insert_variable(var, new_name)
+
+                return self._visit(FunctionCall(rhs.funcdef, new_args, annotated=False))
+
             if macro is None:
                 rhs = self._visit(rhs)
                 if isinstance(rhs, (PythonMap, PythonZip, PythonEnumerate, PythonRange)):
@@ -3860,9 +3987,15 @@ class SemanticParser(BasicParser):
         if cls_name:
             bound_class = self.scope.find(cls_name, 'classes')
 
+        if decorators.get('declare_dummy_args',None):
+            ldc = [i.value for i in decorators['declare_dummy_args'][0].args]
+            ldc = [dict(zip([d.python_value for d in dc.keys], [d.python_value for d in dc.values])) for dc in ldc]
+            decorators['declare_dummy_args'] = ldc
+
         not_used = [d for d in decorators if d not in def_decorators.__all__]
-        if len(not_used) >= 1:
-            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
+
+#        if len(not_used) >= 1:
+#            errors.report(UNUSED_DECORATORS, symbol=', '.join(not_used), severity='warning')
 
         templates = self.scope.find_all('templates')
         if decorators['template']:
@@ -3882,19 +4015,39 @@ class SemanticParser(BasicParser):
         templatable_args = [unpack(a.annotation) for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
         arg_annotations  = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
         used_type_names  = set(a.dtype for a in arg_annotations)
+        used_type_names  = used_type_names.union(set(a.base for a in used_type_names if isinstance(a, IndexedElement)))
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
         tmp_templates = {}
         new_expr_args = []
+
+        template_combinations = list(product(*[v.type_list for v in templates.values()]))
+        template_names = list(templates.keys())
+        n_templates = len(template_combinations)
+
         for a in expr.arguments:
-            if isinstance(a.annotation, UnionTypeAnnotation):
-                annotation = [aa.type_list if isinstance(aa, UnionTypeAnnotation) else [aa] for aa in a.annotation]
-                annotation = [aa for a in annotation for aa in a]
-            else:
-                annotation = [a.annotation]
+            annotation = []
+            for tmpl_idx in range(n_templates):
+                self.create_new_function_scope(name)
+                for n, v in zip(template_names, template_combinations[tmpl_idx]):
+                    self.scope.insert_symbolic_alias(n, v)
+
+                if isinstance(a.annotation, UnionTypeAnnotation):
+                    ann = [aa.type_list if isinstance(aa, UnionTypeAnnotation) else [aa] for aa in a.annotation]
+                    ann = [aa for a in ann for aa in a]
+                else:
+                    ann = [a.annotation]
+
+                annotation += [self._visit(vi) for vi in ann]
+
+                for n in template_names:
+                    self.scope.symbolic_alias.pop(n)
+                self.exit_function_scope()
+
+            annotation = set(annotation)
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
-                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
+                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*annotation)
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
                 var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb)
@@ -3904,6 +4057,13 @@ class SemanticParser(BasicParser):
                 new_expr_args.append(a)
 
         templates.update(tmp_templates)
+        # Filter out unused templates
+        templatable_args = [unpack(a.annotation) for a in new_expr_args if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+        arg_annotations  = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
+        used_type_names  = set(a.dtype for a in arg_annotations)
+        used_type_names  = used_type_names.union(set(a.base for a in used_type_names if isinstance(a, IndexedElement)))
+        templates = {t: v for t,v in templates.items() if t in used_type_names}
+
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
@@ -4041,6 +4201,11 @@ class SemanticParser(BasicParser):
             for a in arguments:
                 if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
                     a.make_const()
+                if decorators.get('declare_dummy_args', None):
+                    ldc = decorators['declare_dummy_args']
+                    for dc in ldc:
+                        if dc['name'] == a.name and dc.get('intent', None) == 'in':
+                            a.make_const()
             # ...
             # Raise an error if one of the return arguments is an alias.
             pointer_targets = self._pointer_targets.pop()
@@ -4081,7 +4246,7 @@ class SemanticParser(BasicParser):
                     'result_pointer_map': result_pointer_map,
                     'docstring': docstring,
                     'scope': scope,
-                     'is_annotated':True,
+                    'is_annotated':True,
                     'syntactic_node':expr,
             }
             if is_inline:
@@ -4486,6 +4651,21 @@ class SemanticParser(BasicParser):
         return With(domaine, body, scope).block
 
 
+    def _visit_MacroNdArraySlice(self, expr):
+        args = [self._visit(a).value for a in expr.args]
+        array = args[0]
+        shape = args[1]
+        minus = lambda a,b:PyccelMinus(a,b)
+        lint = lambda i:LiteralInteger(i)
+        indices = [Slice(lint(0),minus(IndexedElement(shape, lint(i)),lint(1))) for i in range(array.rank)]
+        expr  = IndexedElement(array, *indices)
+        return expr
+
+    def _visit_MacroCast(self, expr):
+        a = self._visit(expr.args[0]).value
+        v = self._visit(expr.args[1]).value
+        dtype = DtypePrecisionToCastFunction[a.dtype.name][a.precision]
+        return dtype(v)
 
     def _visit_MacroFunction(self, expr):
         # we change here the master name to its FunctionDef
