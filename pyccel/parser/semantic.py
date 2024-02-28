@@ -1172,7 +1172,7 @@ class SemanticParser(BasicParser):
                 return self._visit(tmp_var)
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-            if not len(args) > len(func_args):
+            if len(func_args) <= len(args):
                 args     = self._sort_function_call_args(func_args, args)
                 new_expr = FunctionCall(func, args, self._current_function)
                 for a, f_a in zip(new_expr.args, func_args):
