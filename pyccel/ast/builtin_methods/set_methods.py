@@ -134,13 +134,14 @@ class SetRemove(SetMethod):
     """
     Represents a call to the .remove() method.
 
-
     The remove() removes the specified item from 
     the set and updates the set. It doesn't return any value.
+
     Parameters
     ----------
     set_variable : TypedAstNode
         The name of the set.
+
     item : TypedAstNode
         The item to search for, and remove.
     """
