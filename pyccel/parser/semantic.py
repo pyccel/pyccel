@@ -2128,7 +2128,7 @@ class SemanticParser(BasicParser):
                                 init_func_body+[Assign(init_var, LiteralTrue())]))
 
             init_func = FunctionDef(init_func_name, [], [], [init_func_body],
-                    global_vars = variables, scope=init_scope, is_annotated=True)
+                    global_vars = variables, scope=init_scope)
             self.insert_function(init_func)
 
         if init_func:
@@ -2152,7 +2152,7 @@ class SemanticParser(BasicParser):
                 # Ensure that the function is correctly defined within the namespaces
                 scope = self.create_new_function_scope(free_func_name)
                 free_func = FunctionDef(free_func_name, [], [], [free_func_body],
-                                    global_vars = variables, scope = scope, is_annotated=True)
+                                    global_vars = variables, scope = scope)
                 self.exit_function_scope()
                 self.insert_function(free_func)
 
@@ -3973,7 +3973,7 @@ class SemanticParser(BasicParser):
             # insert the FunctionDef into the scope
             # to handle the case of a recursive function
             # TODO improve in the case of an interface
-            recursive_func_obj = FunctionDef(name, arguments, results, [], is_annotated=True)
+            recursive_func_obj = FunctionDef(name, arguments, results, [])
             self.insert_function(recursive_func_obj)
 
             # Create a new list that store local variables for each FunctionDef to handle nested functions
@@ -4081,7 +4081,6 @@ class SemanticParser(BasicParser):
                     'result_pointer_map': result_pointer_map,
                     'docstring': docstring,
                     'scope': scope,
-                     'is_annotated':True,
                     'syntactic_node':expr,
             }
             if is_inline:
@@ -4235,7 +4234,7 @@ class SemanticParser(BasicParser):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
             self.scope.insert_symbol('__del__')
             scope = self.create_new_function_scope('__del__')
-            del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope, is_annotated=True)
+            del_method = FunctionDef('__del__', [argument], (), [Pass()], scope=scope)
             self.exit_function_scope()
             self.insert_function(del_method)
             cls.add_new_method(del_method)

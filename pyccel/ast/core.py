@@ -2359,7 +2359,6 @@ class FunctionDef(ScopedAstNode):
         result_pointer_map={},
         docstring=None,
         scope=None,
-        is_annotated=None,
         syntactic_node=None):
 
         if isinstance(name, str):
@@ -2454,7 +2453,6 @@ class FunctionDef(ScopedAstNode):
         self._functions       = functions
         self._interfaces      = interfaces
         self._result_pointer_map = result_pointer_map
-        self._is_annotated    = is_annotated
         self._syntactic_node  = syntactic_node
         self._docstring      = docstring
         super().__init__(scope)
@@ -2620,7 +2618,7 @@ class FunctionDef(ScopedAstNode):
         """
         Indicates if the function is annotated.
         """
-        return self._is_annotated
+        return self.pyccel_staging != 'syntactic'
 
     @property
     def syntactic_node(self):
