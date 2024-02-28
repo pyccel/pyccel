@@ -96,3 +96,23 @@ def test_remove_int(language):
     pyccel_result = epyccel_remove()
     python_result = remove_int()
     assert python_result == pyccel_result
+
+def test_remove_complex(language):
+    def remove_complex():
+        se = {7j, 6j, 9j}
+        se.remove(7j)
+        return se
+    epyccel_remove = epyccel(remove_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_complex()
+    assert python_result == pyccel_result
+
+def test_remove_int(language):
+    def remove_int():
+        se = {7j, 6j, 9j}
+        se.remove(7j)
+        return se
+    epyccel_remove = epyccel(remove_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_int()
+    assert python_result == pyccel_result
