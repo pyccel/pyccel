@@ -117,7 +117,7 @@ class Scope(object):
         ----------
         name : str
             Name of the new scope, used as a key to retrieve the new scope.
-        kwargs : dict
+        **kwargs : dict
             Keyword arguments passed to __init__() for object initialization.
 
         Returns
