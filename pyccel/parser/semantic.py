@@ -1044,6 +1044,8 @@ class SemanticParser(BasicParser):
         """
         Check that the provided arguments match the expected types.
 
+        Check that the provided arguments match the expected types.
+
         Parameters
         ----------
         input_args : list
@@ -1201,6 +1203,8 @@ class SemanticParser(BasicParser):
         """
         Sort and add the missing call arguments to match the arguments in the function definition.
 
+        Sort and add the missing call arguments to match the arguments in the function definition.
+
         Parameters
         ----------
         func_args : list
@@ -1229,6 +1233,8 @@ class SemanticParser(BasicParser):
 
     def _annotate_the_called_function_def(self, func, function_call=None):
         """
+        Annotate the called FunctionDef.
+
         Annotate the called FunctionDef.
 
         Parameters

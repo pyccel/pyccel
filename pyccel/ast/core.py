@@ -2615,6 +2615,8 @@ class FunctionDef(ScopedAstNode):
     def is_annotated(self):
         """
         Indicates if the function is annotated.
+
+        Indicates if the function is annotated.
         """
         return self.pyccel_staging != 'syntactic'
 
@@ -2985,7 +2987,11 @@ class Interface(PyccelAstNode):
 
     @property
     def syntactic_node(self):
-        """The syntactic node that is not annotated."""
+        """
+        The syntactic node that is not annotated.
+
+        The syntactic node that is not annotated.
+        """
         return self._syntactic_node
 
     @property
@@ -3000,6 +3006,8 @@ class Interface(PyccelAstNode):
     @property
     def is_annotated(self):
         """
+         Flag to check if the node is annotated.
+
          Flag to check if the node is annotated.
         """
         return self._functions[0].is_annotated

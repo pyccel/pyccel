@@ -137,7 +137,11 @@ class Scope(object):
 
     @property
     def name(self):
-        """ The name of the scope."""
+        """
+        The name of the scope.
+
+        The name of the scope.
+        """
         return self._name
 
     @property
@@ -497,6 +501,8 @@ class Scope(object):
 
     def remove_symbol(self, symbol):
         """
+        Remove symbol from the scope.
+
         Remove symbol from the scope.
 
         Parameters

@@ -16,6 +16,8 @@ def random_string( n ):
     """
     Generate a random string.
 
+    Generate a random string.
+
     Parameters
     ----------
     n : int
