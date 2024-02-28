@@ -1201,7 +1201,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        func_args: list
+        func_args : list
           The function def arguments.
         args : list
           The call arguments.
