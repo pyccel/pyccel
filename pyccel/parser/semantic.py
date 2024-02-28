@@ -1056,7 +1056,7 @@ class SemanticParser(BasicParser):
            The expression where this call is found (used for error output).
         elemental : bool
            Indicates if the function is elemental.
-        error : bool, default : True
+        raise_error : bool, default : True
            Raise the error if the arguments are incompatible.
 
         Returns
