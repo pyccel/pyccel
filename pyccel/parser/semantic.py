@@ -3948,7 +3948,7 @@ class SemanticParser(BasicParser):
                     if is_interface:
                         self.scope.remove_symbol(name)
                     continue
-
+                found_func = True
             for a in arguments:
                 a_var = a.var
                 if isinstance(a_var, FunctionAddress):

@@ -616,18 +616,11 @@ class CCodePrinter(CodePrinter):
 
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            sc  = self.scope
-            imp = True
-            while sc.parent_scope is not None:
-                if mod.scope is sc.parent_scope:
-                    imp = False
-                sc = sc.parent_scope
 
-            if imp:
-                self.add_import(Import(mod.name, [AsName(v, v.name) \
-                    for v in (*func.global_vars, *func.global_funcs)]))
-                for v in (*func.global_vars, *func.global_funcs):
-                    self.scope.insert_symbol(v.name)
+            self.add_import(Import(mod.name, [AsName(v, v.name) \
+                for v in (*func.global_vars, *func.global_funcs)]))
+            for v in (*func.global_vars, *func.global_funcs):
+                self.scope.insert_symbol(v.name)
 
         for b in body.body:
             if isinstance(b, ScopedAstNode):

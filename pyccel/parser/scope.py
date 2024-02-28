@@ -503,9 +503,7 @@ class Scope(object):
             The symbol to be added to the scope.
         """
 
-        if not self.allow_loop_scoping and self.is_loop:
-            self.parent_scope.remove_symbol(symbol)
-        elif symbol in self._used_symbols:
+        if symbol in self._used_symbols:
             collisionless_symbol = self._used_symbols.pop(symbol)
             self._original_symbol.pop(collisionless_symbol)
 
