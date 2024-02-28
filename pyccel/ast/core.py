@@ -2719,7 +2719,6 @@ class FunctionDef(ScopedAstNode):
         'is_external':self._is_external,
         'interfaces':self._interfaces,
         'docstring':self._docstring,
-        'is_annotated':self._is_annotated,
         'syntactic_node':self._syntactic_node,
         'scope':self._scope}
         return args, kwargs
