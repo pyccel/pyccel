@@ -116,3 +116,4 @@ def test_remove_int(language):
     pyccel_result = epyccel_remove()
     python_result = remove_int()
     assert python_result == pyccel_result
+ 
