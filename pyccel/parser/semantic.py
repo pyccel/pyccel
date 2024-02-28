@@ -1260,12 +1260,12 @@ class SemanticParser(BasicParser):
                 names.append(sc.name)
         names.reverse()
 
-        if len(names) == 0:
+        if names:
             self._current_function = None
         else:
             self._current_function = DottedName(*names) if len(names)>1 else names[0]
 
-        while len(names) > 0:
+        while names:
             sc = sc.sons_scopes[names[0]]
             names = names[1:]
         self._scope = sc
