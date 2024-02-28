@@ -7,8 +7,8 @@ from pyccel.decorators import  kernel
 from pyccel.errors.errors import Errors, PyccelSemanticError
 from pyccel.errors.messages import (INVALID_KERNEL_CALL_TP_BLOCK,
                                     INVALID_KERNEL_CALL_BP_GRID,
-                                    INVALID_KERNEL_LAUNCH_CONFIG,
-                                    INVALID_FUNCTION_CALL,
+                                    INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT,
+                                    INVALID_KERNEL_LAUNCH_CONFIG_LOW,
                                     )
 @pytest.mark.parametrize( 'language', [
         pytest.param("cuda", marks = pytest.mark.cuda)
@@ -64,15 +64,15 @@ def test_invalid_thread_per_block(language):
         pytest.param("cuda", marks = pytest.mark.cuda)
     ]
 )
-def test_invalid_launch_config(language)
-    def invalid_launch_config():
+def test_invalid_launch_config_height(language)
+    def invalid_launch_config_low():
         @kernel
         def kernel_call():
             pass
         blocks_per_grid = 1
         threads_per_block = 1
         third_param = 1
-        kernel_call[blocks_per_grid, threads_per_block, third_param]
+        kernel_call[blocks_per_grid, threads_per_block, third_param]()
 
     errors = Errors()
 
@@ -84,26 +84,103 @@ def test_invalid_launch_config(language)
 
     error_info = [*errors.error_info_map.values()][0][0]
     assert error_info.symbol.funcdef == 'kernel_call'
-    assert  INVALID_KERNEL_LAUNCH_CONFIG == error_info.message
+    assert  INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT == error_info.message
     
 @pytest.mark.parametrize( 'language', [
         pytest.param("cuda", marks = pytest.mark.cuda)
     ]
 )
-def test_invalid_function_call(language):
-    def invalid_function_call():
-        def non_kernel_func():
+def test_invalid_launch_config_low(language)
+    def invalid_launch_config_low():
+        @kernel
+        def kernel_call():
             pass
-        non_kernel_func[1, 2]() # pylint: disable=E1136
+        blocks_per_grid = 1
+        kernel_call[blocks_per_grid]()
 
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_function_call, language=language)
+        epyccel(invalid_thread_per_block, language=language)
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
 
     error_info = [*errors.error_info_map.values()][0][0]
-    assert error_info.symbol.funcdef == 'non_kernel_func'
-    assert INVALID_FUNCTION_CALL == error_info.message
+    assert error_info.symbol.funcdef == 'kernel_call'
+    assert  INVALID_KERNEL_LAUNCH_CONFIG_LOW == error_info.message
+    
+@pytest.mark.parametrize( 'language', [
+        pytest.param("cuda", marks = pytest.mark.cuda)
+    ]
+)
+def test_invalid_arguments_for_cuda_language(language)
+    def incalid_arguments()
+        @kernel
+        def kernel_call(9):
+            pass
+        blocks_per_grid = 1
+        threads_per_block = 1
+        kernel_call[blocks_per_grid, threads_per_block]()
+    
+    errors = Errors()
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(invalid_thread_per_block, language=language)
+
+    assert errors.has_errors()
+    assert errors.num_messages() == 1
+
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol.funcdef == 'kernel_call'
+    assert  "0 argument types given, but function takes 1 arguments" == error_info.message
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("cuda", marks = pytest.mark.cuda)
+    ]
+)
+def test_invalid_arguments_for_cuda_language(language)
+    def invalid_arguments_()
+        @kernel
+        def kernel_call():
+            pass
+        blocks_per_grid = 1
+        threads_per_block = 1
+        kernel_call[blocks_per_grid, threads_per_block](1)
+    
+    errors = Errors()
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(invalid_thread_per_block, language=language)
+
+    assert errors.has_errors()
+    assert errors.num_messages() == 1
+
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol.funcdef == 'kernel_call'
+    assert  "1 argument types given, but function takes 0 arguments" == error_info.message
+
+@pytest.mark.parametrize( 'language', [
+        pytest.param("cuda", marks = pytest.mark.cuda)
+    ]
+)
+def test_kernel_return(language)
+    def kernel_return()
+        @kernel
+        def kernel_call():
+            return 7
+        blocks_per_grid = 1
+        threads_per_block = 1
+        kernel_call[blocks_per_grid, threads_per_block](1)
+    
+    errors = Errors()
+
+    with pytest.raises(PyccelSemanticError):
+        epyccel(invalid_thread_per_block, language=language)
+
+    assert errors.has_errors()
+    assert errors.num_messages() == 1
+
+    error_info = [*errors.error_info_map.values()][0][0]
+    assert error_info.symbol.funcdef == 'kernel_call'
+    assert  "cuda kernel function 'kernel_call' returned a value in violation of the laid-down specification" == error_info.message

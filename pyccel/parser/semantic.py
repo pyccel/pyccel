@@ -30,7 +30,7 @@ from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
-from pyccel.ast.core import Comment, CommentBlock, Pass, KernelCall
+from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
 from pyccel.ast.core import Assign, AliasAssign, SymbolicAssign
@@ -59,6 +59,8 @@ from pyccel.ast.core import PyccelFunctionDef
 from pyccel.ast.core import Assert
 
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
+
+from pyccel.ast.cuda import KernelCall
 
 from pyccel.ast.datatypes import str_dtype, DataType
 from pyccel.ast.datatypes import NativeSymbol, DataTypeFactory, CustomDataType
@@ -134,7 +136,8 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
-        MISSING_KERNEL_CONFIGURATION,INVALID_KERNEL_LAUNCH_CONFIG
+        MISSING_KERNEL_CONFIGURATION,INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT, 
+        INVALID_KERNEL_LAUNCH_CONFIG_LOW
         )
 
 from pyccel.parser.base      import BasicParser
@@ -1073,6 +1076,7 @@ class SemanticParser(BasicParser):
                 self._check_argument_compatibility(args, func_args,
                             expr, func.is_elemental)
             return new_expr
+
     def _handle_kernel(self, expr, func, args, **settings):
         
         """
@@ -1099,27 +1103,22 @@ class SemanticParser(BasicParser):
         FunctionCall/PyccelInternalFunction
         """
         if(len(expr.launch_config) < 2):
-            errors.report("object of type 'int' has no len()",
+            errors.report(INVALID_KERNEL_LAUNCH_CONFIG_LOW,
                     symbol=expr,
                     severity='fatal')
         if(len(expr.launch_config) > 2):
-            errors.report(INVALID_KERNEL_LAUNCH_CONFIG,
+            errors.report(INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT,
                     symbol=expr,
                     severity='fatal')
         if(len(func.results)):
             errors.report("cuda kernel function '{}' returned a value in violation of the laid-down specification".format(func.name),
                          symbol=expr,
                          severity='fatal')
-        if 'kernel' not in func.decorators:
-            errors.report("'function' object is not subscriptable",
-                    symbol=expr,
-                    severity='fatal')
         if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
             errors.report(f"{len(args)} argument types given, but function takes {len(func.arguments)} arguments",
                 symbol=expr,
                 severity='fatal')
         if not isinstance(expr.launch_config[0], (LiteralInteger, PythonTuple)):
-            l
             if isinstance(expr.launch_config[0], PyccelSymbol):
                 numBlocks = self.get_variable(expr.launch_config[0])
                 if not isinstance(numBlocks.dtype, NativeInteger):
@@ -1143,6 +1142,7 @@ class SemanticParser(BasicParser):
                     severity='error')
         new_expr = KernelCall(func, args, expr.launch_config[0], expr.launch_config[1],())
         return new_expr
+
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
         Create a new variable.
@@ -2868,8 +2868,8 @@ class SemanticParser(BasicParser):
                         severity='fatal')
             else:
                 return self._handle_function(expr, func, args)
-    
-    def _visit_KernelCall(self, expr, **settings):
+
+    def _visit_IndexedFunctionCall(self, expr, **settings):
         name     = expr.funcdef
         try:
             name = self.scope.get_expected_name(name)
@@ -2878,8 +2878,11 @@ class SemanticParser(BasicParser):
         func     = self.scope.find(name, 'functions')
 
         args = self._handle_function_args(expr.args, **settings)
-
-        return self._handle_kernel(expr, func, args, **settings)
+        if('kernel' in func.decorators):
+            return self._handle_kernel(expr, func, args, **settings)
+        else:
+            return errors.report("Unknown function type",
+                symbol=expr, severity='fatal')
 
     def _visit_Assign(self, expr):
         # TODO unset position at the end of this part

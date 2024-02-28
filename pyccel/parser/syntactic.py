@@ -41,7 +41,6 @@ from pyccel.ast.core import With
 from pyccel.ast.core import StarredArguments
 from pyccel.ast.core import CodeBlock
 from pyccel.ast.core import IndexedElement
-from pyccel.ast.core import KernelCall
 
 from pyccel.ast.bitwise_operators import PyccelRShift, PyccelLShift, PyccelBitXor, PyccelBitOr, PyccelBitAnd, PyccelInvert
 from pyccel.ast.operators import PyccelPow, PyccelAdd, PyccelMul, PyccelDiv, PyccelMod, PyccelFloorDiv
@@ -64,6 +63,8 @@ from pyccel.ast.variable  import DottedName, AnnotatedPyccelSymbol
 from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
+
+from pyccel.ast.cuda import IndexedFunctionCall
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
@@ -1082,7 +1083,8 @@ class SyntaxParser(BasicParser):
             func_attr = FunctionCall(func.name[-1], args)
             func = DottedName(*func.name[:-1], func_attr)
         elif isinstance(func,IndexedElement):
-            func = KernelCall(func.base, args, 1, 1, func.indices)
+            func = IndexedFunctionCall(func.base, args, func.indices)
+            # func = KernelCall(func.base, args, 1, 1, func.indices)
         else:
             raise NotImplementedError(' Unknown function type {}'.format(str(type(func))))
         return func

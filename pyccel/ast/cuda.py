@@ -35,7 +35,6 @@ class KernelCall(FunctionCall):
     __slots__ = ('_numBlocks','_tpblock','_func', '_args', '_launch_config')
     _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock', '_launch_config')
     def __init__(self, func, args, numBlocks, tpblock, launch_config,current_function=None):
-        print(args)
         self._numBlocks = numBlocks
         self._tpblock = tpblock
         self._launch_config = launch_config
@@ -73,7 +72,7 @@ class IndexedFunctionCall(FunctionCall):
         The arguments passed to the function.
     """
 
-    __slots__ = ('_arguments', '_func_name', '__attribute_nodes','_launch_config')       
+    __slots__ = ('_arguments', '_func_name', '_launch_config')       
     def __init__(self, func, args, launch_config):
         self._arguments = tuple(args)
         self._func_name = func
