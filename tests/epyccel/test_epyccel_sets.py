@@ -77,3 +77,52 @@ def test_clear_complex(language):
     python_result = clear_complex()
     assert python_result == pyccel_result
 
+def test_copy_int(language):
+    def copy_int():
+        se = {1,2,4,5}
+        se.copy()
+        return se
+    epyccel_copy = epyccel(copy_int, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_int()
+    assert python_result == pyccel_result
+
+def test_copy_float(language):
+    def copy_float():
+        se = {5.7, 6.2, 4.3, 9.8}
+        se.copy()
+        return se
+    epyccel_copy = epyccel(copy_float, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_float()
+    assert python_result == pyccel_result
+
+def test_copy_complex(language):
+    def copy_float():
+        se = {7j, 6j, 9j}
+        se.copy()
+        return se
+    epyccel_copy = epyccel(copy_float, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_float()
+    assert python_result == pyccel_result
+
+def test_remove_complex(language):
+    def remove_complex():
+        se = {7j, 6j, 9j}
+        se.remove(7j)
+        return se
+    epyccel_remove = epyccel(remove_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_complex()
+    assert python_result == pyccel_result
+
+def test_remove_int(language):
+    def remove_int():
+        se = {7j, 6j, 9j}
+        se.remove(7j)
+        return se
+    epyccel_remove = epyccel(remove_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_int()
+    assert python_result == pyccel_result
