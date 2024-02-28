@@ -863,7 +863,7 @@ class IndexedElement(TypedAstNode):
     True
     """
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
-    _attribute_nodes = ('_label', '_indices')
+    _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
 
@@ -871,7 +871,7 @@ class IndexedElement(TypedAstNode):
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
-
+        self._shape = None
         if pyccel_stage == 'syntactic':
             self._indices = indices
             super().__init__()
@@ -892,7 +892,6 @@ class IndexedElement(TypedAstNode):
                     symbol = indices, severity = 'fatal')
 
         self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
-        super().__init__()
 
         # Calculate new shape
         new_shape = []
@@ -918,7 +917,7 @@ class IndexedElement(TypedAstNode):
                 new_shape.append(_shape)
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
-
+        super().__init__()
         self._order = None if self.rank < 2 else base.order
 
         if self.rank == 0:
