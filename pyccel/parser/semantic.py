@@ -1012,7 +1012,7 @@ class SemanticParser(BasicParser):
         for arg in arguments:
             a = self._visit(arg.value)
             if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_annotated:
-                self._annotate_the_called_function_def(a, annotate=True)
+                self._annotate_the_called_function_def(a)
             a = self._visit(arg)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
@@ -1042,18 +1042,23 @@ class SemanticParser(BasicParser):
 
     def _check_argument_compatibility(self, input_args, func_args, expr, elemental, error=True):
         """
-        Check that the provided arguments match the expected types
+        Check that the provided arguments match the expected types.
 
         Parameters
         ----------
         input_args : list
-                     The arguments provided to the function
+                     The arguments provided to the function.
         func_args  : list
-                     The arguments expected by the function
+                     The arguments expected by the function.
         expr       : TypedAstNode
-                     The expression where this call is found (used for error output)
+                     The expression where this call is found (used for error output).
         elemental  : bool
-                     Indicates if the function is elemental
+                     Indicates if the function is elemental.
+
+        Returns
+        -------
+        flag : bool
+            Return True if the arguments are compatible, False otherwise.
         """
         if elemental:
             def incompatible(i_arg, f_arg):
@@ -1065,6 +1070,7 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
+        flag = True
         if isinstance(expr, FunctionCall):
             expr = expr.func_name
         # Compare each set of arguments
@@ -1093,9 +1099,10 @@ class SemanticParser(BasicParser):
                     errors.report(ms, symbol = expr, severity='fatal')
 
             elif not error and len(err_msgs)>0:
-                return False
+                flag = False
+                return flag
 
-        return True
+        return flag
 
     def _handle_function(self, expr, func, args, is_method = False):
         """
@@ -1189,7 +1196,21 @@ class SemanticParser(BasicParser):
             return new_expr
 
     def _sort_function_call_args(self, func_args, args):
-        """ Sort and add the missing call arguments to match the arguments in the function definition."""
+        """
+        Sort and add the missing call arguments to match the arguments in the function definition.
+
+        Parameters
+        ----------
+        func_args: list
+          The function def arguments.
+        args : list
+          The call arguments.
+
+        Returns
+        -------
+        input_args:
+          The sorted and complete call arguments.
+        """
         input_args = [a for a in args if a.keyword is None]
         nargs = len(input_args)
         for ka in func_args[nargs:]:
@@ -1204,8 +1225,23 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, func, annotate=True, function_call=None):
-        """ Annotate the called FunctionDef."""
+    def _annotate_the_called_function_def(self, func, function_call=None):
+        """
+        Annotate the called FunctionDef.
+
+        Parameters
+        ----------
+        func: FunctionDef|Interface
+           The function that needs to be annotated.
+
+        function_call: list,optional
+           The list of the call arguments.
+
+        Returns
+        -------
+        func: FunctionDef|Interface
+            The new annotated function.
+        """
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
@@ -1225,7 +1261,7 @@ class SemanticParser(BasicParser):
             sc = sc.sons_scopes[names[0]]
             names = names[1:]
         self._scope = sc
-        self._visit_FunctionDef(func, annotate=annotate, function_call=function_call)
+        self._visit_FunctionDef(func, annotate=True, function_call=function_call)
         user_nodes = func.get_all_user_nodes()
         func       = self.scope.find(func.name, 'functions')
         func.get_all_user_nodes().extend(user_nodes)
@@ -2941,16 +2977,16 @@ class SemanticParser(BasicParser):
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
 
             if not func.is_annotated and not is_inline:
-                func = self._annotate_the_called_function_def(func, annotate=True)
+                func = self._annotate_the_called_function_def(func)
             elif not func.is_annotated and is_inline:
-                func = self._annotate_the_called_function_def(func, annotate=True, function_call=args)
+                func = self._annotate_the_called_function_def(func, function_call=args)
             elif func.is_annotated and is_inline and isinstance(func, Interface):
                 is_compatible = []
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, error=False)
                     is_compatible.append(fl)
                 if not any(is_compatible):
-                    func = self._annotate_the_called_function_def(func, annotate=True, function_call=args)
+                    func = self._annotate_the_called_function_def(func, function_call=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')

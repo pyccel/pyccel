@@ -33,6 +33,9 @@ class Scope(object):
 
     Parameters
     ----------
+    name : str, default: Nonr
+        The name of the scope.
+
     decorators : dict, default: ()
         A dictionary of any decorators which operate on objects in this scope.
 
@@ -136,7 +139,7 @@ class Scope(object):
 
     @property
     def name(self):
-        """ the name of the scope."""
+        """ The name of the scope."""
         return self._name
 
     @property
@@ -496,7 +499,8 @@ class Scope(object):
 
     def remove_symbol(self, symbol):
         """
-        Remove symbol from the scope
+        Remove symbol from the scope.
+
         Parameters
         ----------
         symbol : PyccelSymbol

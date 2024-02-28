@@ -2938,6 +2938,9 @@ class Interface(PyccelAstNode):
     is_argument : bool
         True if the interface is used for a function argument.
 
+    syntactic_node: FunctionDef, optional
+        The syntactic node that is not annotated.
+
     Examples
     --------
     >>> from pyccel.ast.core import Interface, FunctionDef
@@ -2982,9 +2985,7 @@ class Interface(PyccelAstNode):
 
     @property
     def syntactic_node(self):
-        """
-        The syntactic node that is not annotated.
-        """
+        """The syntactic node that is not annotated."""
         return self._syntactic_node
 
     @property
@@ -2999,7 +3000,7 @@ class Interface(PyccelAstNode):
     @property
     def is_annotated(self):
         """
-         flag to check if the node is annotated.
+         Flag to check if the node is annotated.
         """
         return self._functions[0].is_annotated
 
