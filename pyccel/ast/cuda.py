@@ -75,7 +75,7 @@ class IndexedFunctionCall(FunctionCall):
         The arguments passed to the function.
     """
 
-    __slots__ = ('_arguments', '_func_name', '_launch_config')       
+    __slots__ = ('_arguments', '_func_name', '_launch_config')
     def __init__(self, func, args, launch_config):
         self._arguments = tuple(args)
         self._func_name = func
