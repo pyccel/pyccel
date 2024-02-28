@@ -1231,10 +1231,10 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        func: FunctionDef|Interface
+        func : FunctionDef|Interface
            The function that needs to be annotated.
 
-        function_call: list,optional
+        function_call : list,optional
            The list of the call arguments.
 
         Returns
