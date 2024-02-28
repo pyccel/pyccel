@@ -4108,7 +4108,6 @@ class SemanticParser(BasicParser):
             for args in annotated_args:
                 #raise errors if we do not find any compatible function def
                 self._check_argument_compatibility(function_call, args, expr, is_elemental, error=True)
-            return EmptyNode()
 
         if interface_funcs:
             funcs += interface_funcs
