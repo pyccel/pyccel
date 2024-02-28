@@ -3927,8 +3927,7 @@ class SemanticParser(BasicParser):
         new_expr_args = []
         for a in expr.arguments:
             if isinstance(a.annotation, UnionTypeAnnotation):
-                annotation = [aa.type_list if isinstance(aa, UnionTypeAnnotation) else [aa] for aa in a.annotation]
-                annotation = [aa for a in annotation for aa in a]
+                annotation = [aa for a in annotation for aa in unpack(a)]
             else:
                 annotation = [a.annotation]
             if len(annotation)>1:
