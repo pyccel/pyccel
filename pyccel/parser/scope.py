@@ -33,7 +33,7 @@ class Scope(object):
 
     Parameters
     ----------
-    name : str, default: None
+    name : str, optional
         The name of the scope.
 
     decorators : dict, default: ()
