@@ -44,6 +44,7 @@ class SetMethod(PyccelInternalFunction):
         """
         return self._set_variable
 
+
 class SetAdd(SetMethod) :
     """
     Represents a call to the .add() method.
@@ -81,6 +82,7 @@ class SetAdd(SetMethod) :
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
+
 class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
@@ -104,3 +106,39 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
+class SetRemove(SetMethod):
+    """
+    Represents a call to the .remove() method.
+
+    The remove() removes the specified item from 
+    the set and updates the set. It doesn't return any value.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    _dtype = NativeVoid()
+    _shape = None
+    _order = None
+    _rank = 0
+    _precision = None
+    _class_type = NativeVoid()
+    name = 'remove'
+
+    def __init__(self, set_variable, item) -> None:
+        is_homogeneous = (
+            item.dtype is not NativeGeneric() and
+            set_variable.dtype is not NativeGeneric() and
+            set_variable.dtype == item.dtype and
+            set_variable.precision == item.precision and
+            set_variable.rank - 1 == item.rank
+        )
+        if not is_homogeneous:
+            raise TypeError("Expecting an argument of the same type as the elements of the set")
+        super().__init__(set_variable, item)
