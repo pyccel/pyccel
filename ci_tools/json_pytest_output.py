@@ -61,7 +61,7 @@ if __name__ == '__main__':
     summary = ""
 
     failed_pattern = re.compile(r".*FAILED.*")
-    languages = ('c', 'fortran', 'python')
+    languages = ('c', 'fortran', 'python', 'cuda')
     pattern = {lang: re.compile(r".*\["+lang+r"\]\ \_.*") for lang in languages}
 
     for i in p_args.tests:

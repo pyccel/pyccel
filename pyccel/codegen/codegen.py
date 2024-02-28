@@ -9,34 +9,41 @@ import os
 from pyccel.codegen.printing.fcode  import FCodePrinter
 from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
+from pyccel.codegen.printing.cucode import CudaCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
 from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
-_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
-_header_extension_registry = {'fortran': None, 'c':'h',  'python':None}
+_extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py', 'cuda':'cu'}
+_header_extension_registry = {'fortran': None, 'c':'h',  'python':None, 'cuda':'h'}
 printer_registry    = {
                         'fortran':FCodePrinter,
                         'c':CCodePrinter,
-                        'python':PythonCodePrinter
+                        'python':PythonCodePrinter,
+                        'cuda':CudaCodePrinter
                       }
 
 pyccel_stage = PyccelStage()
 
 class Codegen(object):
 
-    """Abstract class for code generator."""
+    """
+    Class which handles the generation of code.
+
+    The class which handles the generation of code. This is done by creating an appropriate class
+    inheriting from `CodePrinter` and using it to create strings describing the code that should
+    be printed. This class then takes care of creating the necessary files.
+
+    Parameters
+    ----------
+    parser : SemanticParser
+        The Pyccel Semantic parser node.
+    name : str
+        Name of the generated module or program.
+    """
 
     def __init__(self, parser, name):
-        """Constructor for Codegen.
-
-        parser: pyccel parser
-
-
-        name: str
-            name of the generated module or program.
-        """
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
@@ -135,12 +142,22 @@ class Codegen(object):
         return self._language
 
     def set_printer(self, **settings):
-        """ Set the current codeprinter instance"""
+        """
+        Set the current codeprinter instance.
+        
+        Getting the language that will be used (default language used is fortran),
+        Then instantiating the codePrinter with the corresponding language.
+
+        Parameters
+        ----------
+        **settings : dict
+            Any additional arguments which are necessary for CCodePrinter.
+        """
         # Get language used (default language used is fortran)
         language = settings.pop('language', 'fortran')
 
         # Set language
-        if not language in ['fortran', 'c', 'python']:
+        if not language in ['fortran', 'c', 'python', 'cuda']:
             raise ValueError('{} language is not available'.format(language))
         self._language = language
 
