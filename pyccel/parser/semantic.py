@@ -20,8 +20,8 @@ from sympy import Integer as sp_Integer
 from sympy import ceiling
 
 #==============================================================================
-from pyccel.parser.utilities import random_string
-from pyccel.ast.basic        import PyccelAstNode, TypedAstNode, ScopedAstNode
+from pyccel.utilities.strings import random_string
+from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
@@ -1209,7 +1209,7 @@ class SemanticParser(BasicParser):
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
-        sc = func.scope
+        sc = func.scope if isinstance(func, FunctionDef) else func.syntactic_node.scope
         while sc.parent_scope is not None:
             sc = sc.parent_scope
             if not sc.name is None:
@@ -2065,15 +2065,6 @@ class SemanticParser(BasicParser):
                 init_func_body.extend(b.body)
             else:
                 init_func_body.append(b)
-
-        if program_body:
-            self.change_to_program_scope()
-            prog_scope = self.scope
-            self.change_to_module_scope()
-            for f in prog_scope.functions:
-                if prog_scope.functions[f].is_annotated:
-                    if not self.scope.functions[f].is_annotated:
-                        self.insert_function(prog_scope.functions[f])
 
         for f in self.scope.functions.copy().values():
             if not f.is_annotated and not isinstance(f, InlineFunctionDef):
@@ -2959,7 +2950,7 @@ class SemanticParser(BasicParser):
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, error=False)
                     is_compatible.append(fl)
                 if not any(is_compatible):
-                    func = self._annotate_the_called_function_def(func.syntactic_node, annotate=True, function_call=args)
+                    func = self._annotate_the_called_function_def(func, annotate=True, function_call=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3837,8 +3828,12 @@ class SemanticParser(BasicParser):
             self.insert_function(expr)
             return EmptyNode()
 
-        if not expr.is_annotated and expr.name in self.scope.functions:
-            self.scope.functions.pop(expr.name)
+        interface_funcs = []
+        if not expr.is_annotated:
+            self.scope.functions.pop(expr.name, None)
+        elif isinstance(expr, Interface):
+            interface_funcs = [*expr.functions]
+            expr  = expr.syntactic_node
 
         name            = self.scope.get_expected_name(expr.name)
         decorators      = expr.decorators
@@ -3912,19 +3907,23 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
+        for f in interface_funcs:
+            self.scope.remove_symbol(f.name)
 
         for tmpl_idx in range(n_templates):
+
             if is_interface:
                 name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
 
-            if is_interface and function_call is not None and name in self.scope.sons_scopes:
-                # the function has already been annotated
-                func = self.scope.find(name, 'functions')
-                assert func.is_annotated
-                funcs.append(func)
-                continue
-
             if function_call is not None and found_func:continue
+            if is_interface and function_call is not None and self.scope.find(name, 'functions'):
+                # the function has already been annotated
+                f = self.scope.find(name, 'functions')
+                assert f.is_annotated
+                funcs.append(f)
+                assert f is interface_funcs[0]
+                interface_funcs.pop(0)
+                continue
 
             scope = self.create_new_function_scope(name, decorators = decorators,
                 used_symbols = expr.scope.local_used_symbols.copy(),
@@ -3946,7 +3945,8 @@ class SemanticParser(BasicParser):
                     self.exit_function_scope()
                     # remove the new created scope and the function name
                     self.scope.sons_scopes.pop(name)
-                    if is_interface:self.scope.local_used_symbols.pop(name)
+                    if is_interface:
+                        self.scope.remove_symbol(name)
                     continue
 
             for a in arguments:
@@ -4081,7 +4081,6 @@ class SemanticParser(BasicParser):
                     'result_pointer_map': result_pointer_map,
                     'docstring': docstring,
                     'scope': scope,
-                    'syntactic_node':expr,
             }
             if is_inline:
                 func_kwargs['namespace_imports'] = namespace_imports
@@ -4111,6 +4110,9 @@ class SemanticParser(BasicParser):
                 self._check_argument_compatibility(function_call, args, expr, is_elemental, error=True)
             return EmptyNode()
 
+        if interface_funcs:
+            funcs += interface_funcs
+
         if len(funcs) == 1 and not is_interface:
             funcs = funcs[0]
             self.insert_function(funcs)
@@ -4122,6 +4124,7 @@ class SemanticParser(BasicParser):
             if cls_name:
                 bound_class.add_new_interface(funcs)
             self.insert_function(funcs)
+
         return EmptyNode()
 
     def _visit_PythonPrint(self, expr):

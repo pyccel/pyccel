@@ -15,9 +15,9 @@ from filelock import FileLock, Timeout
 from types import ModuleType, FunctionType
 from importlib.machinery import ExtensionFileLoader
 
-from pyccel.parser.utilities  import random_string
-from pyccel.codegen.pipeline import execute_pyccel
-from pyccel.errors.errors import ErrorsMode
+from pyccel.utilities.strings  import random_string
+from pyccel.codegen.pipeline   import execute_pyccel
+from pyccel.errors.errors      import ErrorsMode
 
 __all__ = ['get_source_function', 'epyccel_seq', 'epyccel']
 

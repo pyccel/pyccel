@@ -70,3 +70,4 @@ if __name__ == '__main__':
     c2 = np.zeros((10,10))
     add2(a1, b1, c1)
     add2(a2, b2, c2)
+    add2(a2, b2, c2)

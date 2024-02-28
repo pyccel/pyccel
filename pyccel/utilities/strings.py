@@ -5,7 +5,19 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing helper functions for managing strings
 """
+import string
+import random
 
+__all__ = ('random_string', 'create_incremented_string')
+#==============================================================================
+random_selector = random.SystemRandom()
+
+def random_string( n ):
+    """ Generate a random string. """
+    chars    = string.ascii_lowercase + string.digits
+    return ''.join( random_selector.choice( chars ) for _ in range(n) )
+
+#==============================================================================
 def create_incremented_string(forbidden_exprs, prefix = 'Dummy', counter = 1, name_clash_checker = None):
     """
     Create a new unique string by incrementing a prefix.

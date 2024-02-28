@@ -2331,7 +2331,7 @@ class FunctionDef(ScopedAstNode):
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_docstring', '_is_external',
-                 '_is_annotated', '_syntactic_node', '_result_pointer_map')
+                 '_result_pointer_map')
 
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
@@ -2358,8 +2358,7 @@ class FunctionDef(ScopedAstNode):
         interfaces=(),
         result_pointer_map={},
         docstring=None,
-        scope=None,
-        syntactic_node=None):
+        scope=None):
 
         if isinstance(name, str):
             name = PyccelSymbol(name)
@@ -2453,7 +2452,6 @@ class FunctionDef(ScopedAstNode):
         self._functions       = functions
         self._interfaces      = interfaces
         self._result_pointer_map = result_pointer_map
-        self._syntactic_node  = syntactic_node
         self._docstring      = docstring
         super().__init__(scope)
 
@@ -2621,13 +2619,6 @@ class FunctionDef(ScopedAstNode):
         return self.pyccel_staging != 'syntactic'
 
     @property
-    def syntactic_node(self):
-        """
-        The syntactic node that is not annotated.
-        """
-        return self._syntactic_node
-
-    @property
     def functions(self):
         """ List of functions within this function """
         return self._functions
@@ -2719,7 +2710,6 @@ class FunctionDef(ScopedAstNode):
         'is_external':self._is_external,
         'interfaces':self._interfaces,
         'docstring':self._docstring,
-        'syntactic_node':self._syntactic_node,
         'scope':self._scope}
         return args, kwargs
 

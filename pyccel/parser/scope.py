@@ -494,6 +494,22 @@ class Scope(object):
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
 
+    def remove_symbol(self, symbol):
+        """
+        Remove symbol from the scope
+        Parameters
+        ----------
+        symbol : PyccelSymbol
+            The symbol to be added to the scope.
+        """
+
+        if not self.allow_loop_scoping and self.is_loop:
+            self.parent_scope.remove_symbol(symbol)
+        elif symbol in self._used_symbols:
+            collisionless_symbol = self._used_symbols.pop(symbol)
+            self._original_symbol.pop(collisionless_symbol)
+
+
     def insert_symbolic_alias(self, symbol, alias):
         """
         Add a new symbolic alias to the scope.
