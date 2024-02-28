@@ -929,19 +929,6 @@ class FCodePrinter(CodePrinter):
     def _print_Lambda(self, expr):
         return '"{args} -> {expr}"'.format(args=expr.variables, expr=expr.expr)
 
-    def _print_PythonLen(self, expr):
-        var = expr.arg
-        idx = 1 if var.order == 'F' else var.rank
-        prec = self.print_kind(expr)
-
-        dtype = var.dtype
-        if dtype is NativeString():
-            return 'len({})'.format(self._print(var))
-        elif var.rank == 1:
-            return 'size({}, kind={})'.format(self._print(var), prec)
-        else:
-            return 'size({},{},{})'.format(self._print(var), self._print(idx), prec)
-
     def _print_PythonSum(self, expr):
         args = [self._print(arg) for arg in expr.args]
         return "sum({})".format(", ".join(args))
