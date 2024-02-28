@@ -118,6 +118,7 @@ class SetRemove(SetMethod):
     ----------
     set_variable : TypedAstNode
         The name of the set.
+
     item : TypedAstNode
         The item to search for, and remove.
     """
