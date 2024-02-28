@@ -33,7 +33,7 @@ class Scope(object):
 
     Parameters
     ----------
-    name : str, default: Nonr
+    name : str, default: None
         The name of the scope.
 
     decorators : dict, default: ()
@@ -117,15 +117,13 @@ class Scope(object):
         ----------
         name : str
             Name of the new scope, used as a key to retrieve the new scope.
-
         kwargs : dict
             Keyword arguments passed to __init__() for object initialization.
 
         Returns
         -------
-        child : Scope
+        Scope
             New child scope, which has the current object as parent.
-
         """
         ps = kwargs.pop('parent_scope', self)
         if ps is not self:

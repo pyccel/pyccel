@@ -13,7 +13,19 @@ __all__ = ('random_string', 'create_incremented_string')
 random_selector = random.SystemRandom()
 
 def random_string( n ):
-    """ Generate a random string. """
+    """
+    Generate a random string.
+
+    Parameters
+    ----------
+    n : int
+      The lenght of the random string.
+
+    Returns
+    -------
+    str
+       The random string.
+    """
     chars    = string.ascii_lowercase + string.digits
     return ''.join( random_selector.choice( chars ) for _ in range(n) )
 

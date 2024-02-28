@@ -2938,7 +2938,7 @@ class Interface(PyccelAstNode):
     is_argument : bool
         True if the interface is used for a function argument.
 
-    syntactic_node: FunctionDef, optional
+    syntactic_node : FunctionDef, default: None
         The syntactic node that is not annotated.
 
     Examples

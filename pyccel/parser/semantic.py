@@ -1047,17 +1047,17 @@ class SemanticParser(BasicParser):
         Parameters
         ----------
         input_args : list
-                     The arguments provided to the function.
-        func_args  : list
-                     The arguments expected by the function.
-        expr       : TypedAstNode
-                     The expression where this call is found (used for error output).
-        elemental  : bool
-                     Indicates if the function is elemental.
+           The arguments provided to the function.
+        func_args : list
+           The arguments expected by the function.
+        expr : TypedAstNode
+           The expression where this call is found (used for error output).
+        elemental : bool
+           Indicates if the function is elemental.
 
         Returns
         -------
-        flag : bool
+        bool
             Return True if the arguments are compatible, False otherwise.
         """
         if elemental:
