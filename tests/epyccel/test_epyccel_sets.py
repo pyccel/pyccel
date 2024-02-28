@@ -127,4 +127,3 @@ def test_remove_int(language):
     python_result = remove_int()
     assert python_result == pyccel_result
 
-
