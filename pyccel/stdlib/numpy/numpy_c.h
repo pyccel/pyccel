@@ -15,6 +15,8 @@
 
 long long int isign(long long int x);
 double fsign(double x);
+#ifndef __NVCC__
 double complex csign(double complex x);
+#endif
 
 #endif
