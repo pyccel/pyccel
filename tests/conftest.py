@@ -21,6 +21,17 @@ if github_debugging:
 def language(request):
     return request.param
 
+@pytest.fixture( params=[
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python),
+        pytest.param("cuda", marks = pytest.mark.cuda)
+    ],
+    scope = "session"
+)
+def language_with_cuda(request):
+    return request.param
+
 def move_coverage(path_dir):
     for root, _, files in os.walk(path_dir):
         for name in files:
