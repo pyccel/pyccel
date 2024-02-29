@@ -52,19 +52,28 @@ class KernelCall(FunctionCall):
 
     @property
     def numBlocks(self):
-        """ The number of blocks in the kernel being called.
+        """
+        The number of blocks in the kernel being called.
+    
+        The number of blocks in the kernel being called.
         """
         return self._numBlocks
 
     @property
     def tpblock(self):
-        """ The number of threads per block.
+        """
+        The number of threads per block.
+
+        Launch configuration of kernel call.
         """
         return self._tpblock
 
     @property
     def launch_config(self):
-        """ Launch configuration of kernel call.
+        """
+        Launch configuration of kernel call.
+
+        Launch configuration of kernel call.
         """
         return self._launch_config
 
@@ -95,6 +104,9 @@ class IndexedFunctionCall(FunctionCall):
 
     @property
     def launch_config(self):
-        """ Launch configuration of kernel call.
+        """
+        Launch configuration of kernel call.
+        
+        Launch configuration of kernel call.
         """
         return self._launch_config
