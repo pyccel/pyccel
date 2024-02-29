@@ -18,6 +18,9 @@ __all__ = (
 class KernelCall(FunctionCall):
     """
     Represents a kernel function call in the code.
+    
+     The class serves as a representation of a kernel
+     function call within the codebase.
 
     Parameters
     ----------
@@ -68,6 +71,9 @@ class KernelCall(FunctionCall):
 class IndexedFunctionCall(FunctionCall):
     """
     Represents an indexed function call in the code.
+    
+    class represents indexed function calls, encapsulating all
+    relevant information for such calls within the codebase.
 
     Parameters
     ----------
