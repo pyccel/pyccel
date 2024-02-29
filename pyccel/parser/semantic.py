@@ -3957,8 +3957,8 @@ class SemanticParser(BasicParser):
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
-                var_clone = AnnotatedPyccelSymbol(a.var, annotation=dtype_symb)
-                new_expr_args.append(FunctionDefArgument(var_clone, bound_argument = a.bound_argument,
+                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.is_temp)
+                new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
                                         value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
             else:
                 new_expr_args.append(a)
