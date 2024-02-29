@@ -3986,15 +3986,6 @@ class SemanticParser(BasicParser):
             if function_call is not None and found_func:
                 break
 
-            # search for the function to see if we already have it in existing_semantic_funcs
-            if is_interface and function_call is not None and f:
-                # the function has already been annotated
-                assert f.is_annotated
-                funcs.append(f)
-                assert f is existing_semantic_funcs[0]
-                existing_semantic_funcs.pop(0)
-                continue
-
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
