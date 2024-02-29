@@ -4183,7 +4183,7 @@ class SemanticParser(BasicParser):
             new_semantic_funcs += existing_semantic_funcs
 
         if len(new_semantic_funcs) == 1 and not is_interface:
-            funcnew_semantic_funcss = new_semantic_funcs[0]
+            new_semantic_funcs = new_semantic_funcs[0]
             self.insert_function(new_semantic_funcs)
         else:
             for f in new_semantic_funcs:
