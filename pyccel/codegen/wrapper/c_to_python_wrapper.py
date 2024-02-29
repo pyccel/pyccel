@@ -1047,7 +1047,7 @@ class CToPythonWrapper(Wrapper):
         funcs = [self._wrap(f) for f in funcs_to_wrap]
 
         # Wrap interfaces
-        interfaces = [self._wrap(i) for i in expr.interfaces if not i.functions[0].is_inline]
+        interfaces = [self._wrap(i) for i in expr.interfaces if not i.is_inline]
 
         init_func = self._build_module_init_function(expr, imports)
 

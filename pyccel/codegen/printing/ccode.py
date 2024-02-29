@@ -616,7 +616,6 @@ class CCodePrinter(CodePrinter):
 
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-
             self.add_import(Import(mod.name, [AsName(v, v.name) \
                 for v in (*func.global_vars, *func.global_funcs)]))
             for v in (*func.global_vars, *func.global_funcs):
@@ -1298,7 +1297,6 @@ class CCodePrinter(CodePrinter):
         str
             Signature of the function.
         """
-
         arg_vars = [a.var for a in expr.arguments]
         result_vars = [r.var for r in expr.results if not r.is_argument]
 

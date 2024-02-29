@@ -172,7 +172,8 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = [f for f in expr.funcs if f.is_annotated]
+        # We only wrap the non inlined functions
+        funcs_to_wrap = [f for f in expr.funcs if f.is_annotated and not f.is_inline]
 
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:

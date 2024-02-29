@@ -3012,6 +3012,15 @@ class Interface(PyccelAstNode):
         """
         return self._functions[0].is_annotated
 
+    @property
+    def is_inline(self):
+        """
+         Flag to check if the node is inlined.
+
+         Flag to check if the node is inlined.
+        """
+        return self._functions[0].is_inline
+
     def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""
         fs_args = [[j for j in i.arguments] for i in

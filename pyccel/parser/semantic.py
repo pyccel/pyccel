@@ -1040,7 +1040,7 @@ class SemanticParser(BasicParser):
             descr += f'[{dims}]'
         return descr
 
-    def _check_argument_compatibility(self, input_args, func_args, expr, elemental, error=True):
+    def _check_argument_compatibility(self, input_args, func_args, expr, elemental, raise_error=True):
         """
         Check that the provided arguments match the expected types.
 
@@ -1098,14 +1098,12 @@ class SemanticParser(BasicParser):
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
                 err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr, order=f_arg.order)]
 
-            if error and len(err_msgs)>0:
-                for ms in err_msgs:
-                    errors.report(ms, symbol = expr, severity='fatal')
-
-            elif not error and len(err_msgs)>0:
+            if err_msgs:
                 flag = False
-                return flag
-
+                if raise_error:
+                    errors.report('\n'.join(err_msgs), symbol = expr, severity='fatal')
+                else:
+                    return flag
         return flag
 
     def _handle_function(self, expr, func, args, is_method = False):
@@ -2991,7 +2989,7 @@ class SemanticParser(BasicParser):
             elif func.is_annotated and is_inline and isinstance(func, Interface):
                 is_compatible = []
                 for f in func.functions:
-                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, error=False)
+                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
                     is_compatible.append(fl)
                 if not any(is_compatible):
                     func = self._annotate_the_called_function_def(func, function_call=args)
@@ -3983,7 +3981,7 @@ class SemanticParser(BasicParser):
                 self.scope.symbolic_alias.pop(n)
 
             if function_call is not None:
-                is_compatible = self._check_argument_compatibility(function_call, arguments, expr, is_elemental, error=False)
+                is_compatible = self._check_argument_compatibility(function_call, arguments, expr, is_elemental, raise_error=False)
                 if not is_compatible:
                     self.exit_function_scope()
                     # remove the new created scope and the function name
@@ -4150,7 +4148,7 @@ class SemanticParser(BasicParser):
         if function_call is not None and len(funcs) == 0:
             for args in annotated_args:
                 #raise errors if we do not find any compatible function def
-                self._check_argument_compatibility(function_call, args, expr, is_elemental, error=True)
+                self._check_argument_compatibility(function_call, args, expr, is_elemental)
 
         if interface_funcs:
             funcs += interface_funcs

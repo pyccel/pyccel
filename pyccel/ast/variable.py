@@ -917,13 +917,15 @@ class IndexedElement(TypedAstNode):
                 new_shape.append(_shape)
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
-        super().__init__()
+
         self._order = None if self.rank < 2 else base.order
 
         if self.rank == 0:
             self._class_type = self.dtype
         else:
             self._class_type = base.class_type
+
+        super().__init__()
 
     @property
     def base(self):
