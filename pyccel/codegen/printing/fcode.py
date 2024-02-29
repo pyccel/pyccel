@@ -408,16 +408,8 @@ class FCodePrinter(CodePrinter):
         self._additional_imports.update(func.imports)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-#            current_mod = expr.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            sc  = self.scope
-            imp = True
-            while sc.parent_scope is not None:
-                if mod.scope is sc.parent_scope:
-                    imp = False
-                sc = sc.parent_scope
-
-            if imp:
-#            if current_mod is not mod:
+            current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
+            if current_mod is not mod:
                 self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
                           for v in (*func.global_vars, *func.global_funcs)]))
                 for v in (*func.global_vars, *func.global_funcs):

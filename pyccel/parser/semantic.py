@@ -1170,7 +1170,11 @@ class SemanticParser(BasicParser):
                 return self._visit(tmp_var)
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-            if len(args) <= len(func_args):
+            if len(args) > len(func_args):
+                errors.report("Too many arguments passed in function call",
+                        symbol = expr,
+                        severity='fatal')
+            else:
                 new_expr = FunctionCall(func, args, self._current_function)
                 for a, f_a in zip(new_expr.args, func_args):
                     if f_a.persistent_target:
@@ -1190,10 +1194,7 @@ class SemanticParser(BasicParser):
                 elif isinstance(func, FunctionDef):
                     self._check_argument_compatibility(args, func_args,
                                 expr, func.is_elemental)
-            else:
-                errors.report("Too many arguments passed in function call",
-                        symbol = expr,
-                        severity='fatal')
+
             return new_expr
 
     def _sort_function_call_args(self, func_args, args):
@@ -3957,7 +3958,7 @@ class SemanticParser(BasicParser):
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
-                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.is_temp)
+                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
                 new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
                                         value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
             else:
@@ -3967,6 +3968,7 @@ class SemanticParser(BasicParser):
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
+
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
@@ -3981,7 +3983,7 @@ class SemanticParser(BasicParser):
                 name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
 
             if function_call is not None and found_func:
-                continue
+                break
 
             f = self.scope.find(name, 'functions')
             if is_interface and function_call is not None and f:
