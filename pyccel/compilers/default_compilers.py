@@ -188,7 +188,7 @@ nvc_info = {'exec' : 'nvc',
 #------------------------------------------------------------
 nvcc_info = {'exec'         : 'nvcc',
              'language'     : 'cuda',
-             'debug_flags'  :("-g",),
+             'debug_flags'  : ("-g",),
              'release_flags': ("-O3",),
              'general_flags': ('--compiler-options', '-fPIC',),
              'family'       : 'nvidia'

@@ -173,7 +173,6 @@ def euler_test ( t0: 'float', t1 : 'float', y0: 'float[:]', n: int ):
 
     m = len ( y0 )
 
-    t = [t0+(t1-t0)*i/n for i in range(n+1)]
     t = linspace ( t0, t1, n + 1 )
     y = zeros ( ( n + 1, m ) )
 

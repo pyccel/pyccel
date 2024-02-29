@@ -29,55 +29,21 @@ pyccel_stage = PyccelStage()
 class Codegen(object):
 
     """
-    Abstract class for code generator.
+    Class which handles the generation of code.
 
-    Handles the collect of statements, initiating the correct printer and Generating the files.
+    The class which handles the generation of code. This is done by creating an appropriate class
+    inheriting from `CodePrinter` and using it to create strings describing the code that should
+    be printed. This class then takes care of creating the necessary files.
 
     Parameters
     ----------
-    parser : BasicParser
-        The Pyccel parser node.
+    parser : SemanticParser
+        The Pyccel Semantic parser node.
     name : str
         Name of the generated module or program.
     """
 
     def __init__(self, parser, name):
-        """
-        Constructor for Codegen.
-
-        Parameters
-        ----------
-        parser: pyccel parser
-            The Pyccel parser node.
-        name: str
-            name of the generated module or program.
-
-        Attributes
-        ----------
-        parser
-        name
-        imports
-        variables
-        body
-        routines
-        classes
-        interfaces
-        modules
-        is_program
-        ast
-        language
-
-        Methods
-        -------
-        set_printer()
-            Set the current codeprinter instance.
-        get_printer_imports()
-            return the imports of the current codeprinter
-        doprint()
-            Prints the code in the target language.
-        export(filename=None)
-            Export code in filename
-        """
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
@@ -198,7 +164,6 @@ class Codegen(object):
         # instantiate codePrinter
         code_printer = printer_registry[language]
         errors = Errors()
-        errors.set_parser_stage('codegen')
         # set the code printer
         self._printer = code_printer(self.parser.filename, **settings)
 

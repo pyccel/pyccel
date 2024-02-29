@@ -11,6 +11,37 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1689 : Add Python support for list method `append()`
+-   #1692 : Add Python support for list method `insert()`
+-   #1690 : Add Python support for list method `pop()`
+-   #1691 : Add Python support for list method `clear()`
+-   #1575 : Add support for homogeneous tuple type annotations on variables.
+-   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
+
+### Fixed
+
+-   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
+-   #1182 : Fix tuples containing objects with different ranks.
+-   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
+
+### Changed
+
+### Deprecated
+
+-   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
+-   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
+-   \[INTERNALS\] Remove unused `ast.core.Block` class.
+
+## \[1.11.1\] - 2024-02-13
+
+### Fixed
+
+-   #1724 : Fix returns in for loops
+
+## \[1.11.0\] - 2024-02-12
+
+### Added
+
 -   #1645 : Handle deprecated `ast` classes.
 -   #1649 : Add support for `np.min` in C code.
 -   #1621 : Add support for `np.max` in C code.
@@ -18,13 +49,18 @@ All notable changes to this project will be documented in this file.
 -   #1493 : Add preliminary support for importing classes.
 -   #1578 : Allow classes to avoid type annotations for the self argument of a method.
 -   #1597 : Handle class docstrings.
--   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
 -   #1494 : Add support for functions returning class instances.
 -   #1495 : Add support for functions with class instance arguments.
 -   #1684 : Add support for classes without `__init__` functions.
 -   #1685 : Add support for `type()` function with class instance argument.
--   #1605 : Add support for class methods and interfaces (including `__init__` and `__del__`).
+-   #1605 : Add support for methods and interfaces in classes (including `__init__` and `__del__`).
+-   #1618 : Add support for class instance attributes.
 -   #1680 : Add support for `typing.Final`.
+-   Add a `--time_execution` flag to allow detailed investigation of critical sections of code.
+-   #1659 : Add multi-file support for classes.
+-   #1708 : Allow returning pointers to arguments from functions.
+-   \[INTERNALS\] Add `class_type` attribute to `TypedAstNode`.
+-   \[INTERNALS\] Add `PyccelPyArrayObject` datatype.
 
 ### Fixed
 
@@ -47,6 +83,9 @@ All notable changes to this project will be documented in this file.
 -   Ensure `pyccel-init` calls the related function.
 -   Stop unnecessarily importing deprecated NumPy classes `int`, `bool`, `float`, `complex` in Python translation.
 -   #1712 : Fix library path and OpenMP support for recent Apple chips by getting Homebrew directory with `brew --prefix`.
+-   #1687 : Pointers in tuples are deallocated.
+-   #1586 : Raise an error for targets of class instances which go out of scope too early.
+-   #1717 : Fix a bug when handling paths with dots.
 
 ### Changed
 

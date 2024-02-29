@@ -123,7 +123,7 @@ class Bot:
         if commit:
             self._ref = commit
             if '/' in self._ref:
-                _, _, branch = self._ref.split('/')
+                _, _, branch = self._ref.split('/',2)
                 branch_info = self._GAI.get_branch_details(branch)
                 self._ref = branch_info['commit']['sha']
         else:
@@ -290,11 +290,13 @@ class Bot:
             self._GAI.create_comment(self._pr_id, "There are unrecognised tests.\n"+message_from_file('show_tests.txt'))
             return []
         else:
-            check_runs = self._GAI.get_check_runs(self._ref)['check_runs']
-            already_triggered = [c["name"] for c in check_runs if c['status'] in ('completed', 'in_progress') and c['conclusion'] != 'cancelled']
+            check_runs = {self.get_name_key(c["name"]): c for c in self._GAI.get_check_runs(self._ref)['check_runs']}
+            already_triggered = [c["name"] for n,c in check_runs.items() if c['status'] in ('completed', 'in_progress') and \
+                                                                            c['conclusion'] != 'cancelled' and \
+                                                                            n != 'coverage']
             already_triggered_names = [self.get_name_key(t) for t in already_triggered]
-            already_programmed = {c["name"]:c for c in check_runs if c['status'] == 'queued'}
-            success_names = [self.get_name_key(c["name"]) for c in check_runs if c['status'] == 'completed' and c['conclusion'] == 'success']
+            already_programmed = {c["name"]:c for c in check_runs.values() if c['status'] == 'queued'}
+            success_names = [n for n,c in check_runs.items() if c['status'] == 'completed' and c['conclusion'] == 'success']
             print(already_triggered)
             states = []
 
@@ -315,6 +317,7 @@ class Bot:
                 pv = python_version or default_python_versions[t]
                 key = f"({t}, {pv})"
                 if any(key in a for a in already_triggered):
+                    states.append(check_runs[t]['conclusion'])
                     continue
                 name = f"{test_names[t]} {key}"
                 if not force_run and not self.is_test_required(commit_log, name, t, states):
@@ -330,8 +333,8 @@ class Bot:
                 if all(d in success_names for d in deps):
                     workflow_ids = None
                     if t == 'coverage':
-                        print([r['details_url'] for r in check_runs if r['conclusion'] == "success"])
-                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs if r['conclusion'] == "success" and '(' in r['name']]
+                        print([r['details_url'] for r in check_runs.values() if r['conclusion'] == "success"])
+                        workflow_ids = [int(r['details_url'].split('/')[-1]) for r in check_runs.values() if r['conclusion'] == "success" and '(' in r['name']]
                     print("Running test")
                     self.run_test(t, pv, posted["id"], workflow_ids)
             return states
@@ -418,31 +421,31 @@ class Bot:
         bool
             True if the test should be run, False otherwise.
         """
-        print("Checking : ", name)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'coverage', 'intel', 'cuda'):
-            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/'))  #pylint: disable=unnecessary-lambda-assignment
+        print("Checking : ", name, key)
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel', 'cuda'):
+            has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) #pylint: disable=unnecessary-lambda-assignment
                                                     and f.endswith('.py') and f != 'pyccel/version.py'
                                                     for f in diff)
-        elif key in ('pyccel_lint'):
-            has_relevant_change = lambda diff: any(f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
-                                                    and f != 'pyccel/version.py' for f in diff)
-        elif key in ('pylint'):
+        elif key in ('pylint',):
             has_relevant_change = lambda diff: any(f.endswith('.py') for f in diff) #pylint: disable=unnecessary-lambda-assignment
-        elif key in ('docs'):
+        elif key in ('pyccel_lint','docs'):
             has_relevant_change = lambda diff: any(f.endswith('.py') and f != 'pyccel/version.py' #pylint: disable=unnecessary-lambda-assignment
                                                     for f in diff)
-        elif key in ('spelling'):
+        elif key in ('spelling',):
             has_relevant_change = lambda diff: any(f.endswith('.md') or f == '.dict_custom.txt' for f in diff) #pylint: disable=unnecessary-lambda-assignment
         elif key in ('pickle', 'pickle_wheel', 'editable_pickle'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') and f.endswith('.py') #pylint: disable=unnecessary-lambda-assignment
                                                     and f != 'pyccel/version.py') or f == 'pyproject.toml'
                                                     or f.startswith('install_scripts/')
                                                     for f in diff)
+        elif key in ('coverage',):
+            has_relevant_change = lambda diff: True #pylint: disable=unnecessary-lambda-assignment
         else:
             raise NotImplementedError(f"Please update for new has_relevant_change : {key}")
 
         for c in commit_log:
             diff = self.get_diff(c)
+            print("Diff found : ", diff)
             if has_relevant_change(diff):
                 print("Contains relevant change : ", c)
                 return True
@@ -553,6 +556,7 @@ class Bot:
                 _, err = p.communicate()
             print(err)
 
+            print(states)
             if all(s == 'success' for s in states):
                 self.mark_as_ready(False)
 
@@ -855,17 +859,19 @@ class Bot:
             base_commit = self._base
         assert bool(base_commit)
         cmd = [git, 'diff', f"{base_commit}..{self._ref}"]
-        print(cmd)
+        print(' '.join(cmd))
         with subprocess.Popen(cmd + ['--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
             out, _ = p.communicate()
         diff = {f: None for f in out.strip().split('\n')}
         for f in diff:
-            with subprocess.Popen(cmd + [f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
+            with subprocess.Popen(cmd + ['--', f], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True) as p:
                 out, err = p.communicate()
             if not err:
                 lines = out.split('\n')
                 n = next((i for i,l in enumerate(lines) if '@@' in l), len(lines))
                 diff[f] = lines[n:]
+            else:
+                print(err)
         return {f:l for f,l in diff.items() if l is not None}
 
     def accept_coverage_fix(self, comment_thread):

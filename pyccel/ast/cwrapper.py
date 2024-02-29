@@ -13,7 +13,9 @@ from pyccel.utilities.metaclasses import Singleton
 from ..errors.errors import Errors
 from ..errors.messages import PYCCEL_RESTRICTION_TODO
 
-from .basic     import PyccelAstNode, TypedAstNode
+from .basic     import PyccelAstNode
+
+from .bind_c    import BindCPointer
 
 from .datatypes import DataType, default_precision, CustomDataType
 from .datatypes import NativeInteger, NativeFloat, NativeComplex
@@ -21,11 +23,11 @@ from .datatypes import NativeBool, NativeString, NativeVoid
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
-from .core      import Module, Interface
+from .core      import Module, Interface, Declare
 
-from .internals import get_final_precision
+from .internals import get_final_precision, PyccelInternalFunction
 
-from .literals  import LiteralString
+from .literals  import LiteralString, LiteralInteger
 
 from .variable  import Variable
 
@@ -35,29 +37,42 @@ from .c_concepts import ObjectAddress
 errors = Errors()
 
 __all__ = (
-#
+# --------- DATATYPES -----------
+    'PyccelPyObject',
+    'PyccelPyClassType',
+    'PyccelPyTypeObject',
+    'WrapperCustomDataType',
 # --------- CLASSES -----------
-#
     'PyFunctionDef',
     'PyInterface',
     'PyClassDef',
     'PyModule',
-    'PyccelPyClassType',
-    'PyccelPyObject',
-    'PyccelPyTypeObject',
-    'WrapperCustomDataType',
     'PyArgKeywords',
     'PyArg_ParseTupleNode',
     'PyBuildValueNode',
+    'PyCapsule_New',
+    'PyCapsule_Import',
+    'PyGetSetDefElement',
+    'PyModule_Create',
     'PyModule_AddObject',
+    'PyModInitFunc',
 #--------- CONSTANTS ----------
     'Py_True',
     'Py_False',
     'Py_None',
-    'flags_registry',
 #----- C / PYTHON FUNCTIONS ---
     'Py_INCREF',
     'Py_DECREF',
+    'PyObject_TypeCheck',
+    'PySys_GetObject',
+    'PyUnicode_FromString',
+    'PyList_GetItem',
+    'PyList_SetItem',
+    'PyErr_Occurred',
+    'PyErr_SetString',
+    'PyAttributeError',
+    'PyNotImplementedError',
+    'PyTypeError',
     'PyObject_TypeCheck',
 )
 
@@ -235,7 +250,7 @@ class PyArg_ParseTupleNode(PyccelAstNode):
         return self._arg_names
 
 #-------------------------------------------------------------------
-class PyBuildValueNode(TypedAstNode):
+class PyBuildValueNode(PyccelInternalFunction):
     """
     Represents a call to the function PyBuildValueNode.
 
@@ -277,7 +292,7 @@ class PyBuildValueNode(TypedAstNode):
         return self._result_args
 
 #-------------------------------------------------------------------
-class PyModule_AddObject(TypedAstNode):
+class PyModule_AddObject(PyccelInternalFunction):
     """
     Represents a call to the PyModule_AddObject function.
 
@@ -332,6 +347,139 @@ class PyModule_AddObject(TypedAstNode):
         return self._var
 
 #-------------------------------------------------------------------
+class PyModule_Create(PyccelInternalFunction):
+    """
+    Represents a call to the PyModule_Create function.
+
+    The PyModule_Create function can be found in Python.h.
+    It acts as a constructor for a module. More information about
+    this function can be found in Python's documentation.
+    See <https://docs.python.org/3/c-api/module.html#c.PyModule_Create>.
+
+    Parameters
+    ----------
+    module_def_name : str
+        The name of the structure which defined the module.
+    """
+    __slots__ = ('_module_def_name',)
+    _attribute_nodes = ()
+    _dtype = PyccelPyObject()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = PyccelPyObject()
+
+    def __init__(self, module_def_name):
+        self._module_def_name = module_def_name
+        super().__init__()
+
+    @property
+    def module_def_name(self):
+        """
+        Get the name of the structure which defined the module.
+
+        Get the name of the structure which defined the module.
+        """
+        return self._module_def_name
+
+#-------------------------------------------------------------------
+class PyCapsule_New(PyccelInternalFunction):
+    """
+    Represents a call to the function PyCapsule_New.
+
+    The function PyCapsule_New can be found in Python.h. It describes
+    the creation of a capsule. A capsule contains all information
+    from a module which should be exposed to other modules that import
+    this module.
+    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    for a tutorial involving capsules.
+    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_New>
+    for the API docstrings for this method.
+
+    Parameters
+    ----------
+    API_var : Variable
+        The variable which contains all elements of the API which should be exposed.
+
+    module_name : str
+        The name of the module being exposed.
+    """
+    __slots__ = ('_capsule_name', '_API_var')
+    _attribute_nodes = ('_API_var',)
+    _dtype = PyccelPyObject()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = PyccelPyObject()
+
+    def __init__(self, API_var, module_name):
+        self._capsule_name = f'{module_name}._C_API'
+        self._API_var = API_var
+        super().__init__()
+
+    @property
+    def capsule_name(self):
+        """
+        Get the name of the capsule being created.
+
+        Get the name of the capsule being created.
+        """
+        return self._capsule_name
+
+    @property
+    def API_var(self):
+        """
+        Get the variable describing the API.
+
+        Get the variable which contains all elements of the API which
+        should be exposed.
+        """
+        return self._API_var
+
+#-------------------------------------------------------------------
+class PyCapsule_Import(PyccelInternalFunction):
+    """
+    Represents a call to the function PyCapsule_Import.
+
+    The function PyCapsule_Import can be found in Python.h. It describes
+    the initialisation of a capsule by importing the information from
+    another module. A capsule contains all information from a module
+    which should be exposed to other modules that import this module.
+    See <https://docs.python.org/3/extending/extending.html#using-capsules>
+    for a tutorial involving capsules.
+    See <https://docs.python.org/3/c-api/capsule.html#c.PyCapsule_Import>
+    for the API docstrings for this method.
+
+    Parameters
+    ----------
+    module_name : str
+        The name of the module being retrieved.
+    """
+    __slots__ = ('_capsule_name',)
+    _attribute_nodes = ()
+    _dtype = BindCPointer()
+    _precision = 0
+    _rank = 0
+    _shape = ()
+    _order = None
+    _class_type = BindCPointer()
+
+    def __init__(self, module_name):
+        self._capsule_name = f'{module_name}._C_API'
+        super().__init__()
+
+    @property
+    def capsule_name(self):
+        """
+        Get the name of the capsule being retrieved.
+
+        Get the name of the capsule being retrieved.
+        """
+        return self._capsule_name
+
+#-------------------------------------------------------------------
 class PyModule(Module):
     """
     Class to hold a module which is accessible from Python.
@@ -344,6 +492,9 @@ class PyModule(Module):
 
     Parameters
     ----------
+    name : str
+        Name of the module.
+
     *args : tuple
         See Module.
 
@@ -354,7 +505,13 @@ class PyModule(Module):
         Any declarations of (external) variables which should be made in the module.
 
     init_func : FunctionDef, optional
-        A definition of the initialisation function.
+        The function which is executed when a module is initialised.
+        See: <https://docs.python.org/3/c-api/module.html#multi-phase-initialization>.
+
+    import_func : FunctionDef, optional
+        The function which allows types from this module to be imported in other
+        modules.
+        See: <https://docs.python.org/3/extending/extending.html>.
 
     **kwargs : dict
         See Module.
@@ -363,14 +520,19 @@ class PyModule(Module):
     --------
     Module : The super class from which the class inherits.
     """
-    __slots__ = ('_external_funcs', '_declarations')
-    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations')
-    def __init__(self, *args, external_funcs = (), declarations = (), init_func = None, **kwargs):
+    __slots__ = ('_external_funcs', '_declarations', '_import_func')
+    _attribute_nodes = Module._attribute_nodes + ('_external_funcs', '_declarations', '_import_func')
+
+    def __init__(self, name, *args, external_funcs = (), declarations = (), init_func = None,
+                        import_func = None, **kwargs):
         self._external_funcs = external_funcs
         self._declarations = declarations
-        super().__init__(*args, **kwargs)
-        self._init_func = init_func
-        init_func.set_current_user_node(self)
+        if import_func is None:
+            self._import_func = FunctionDef(f'{name}_import', (),
+                            (FunctionDefResult(Variable(NativeInteger(), '_', precision=-2, is_temp=True)),), ())
+        else:
+            self._import_func = import_func
+        super().__init__(name, *args, init_func = init_func, **kwargs)
 
     @property
     def external_funcs(self):
@@ -410,6 +572,17 @@ class PyModule(Module):
         for d in decs:
             d.set_current_user_node(self)
 
+    @property
+    def import_func(self):
+        """
+        The function which allows types from this module to be imported in other modules.
+
+        The function which allows types from this module to be imported in other modules.
+        See <https://docs.python.org/3/extending/extending.html> to understand how this
+        is done.
+        """
+        return self._import_func
+
 #-------------------------------------------------------------------
 class PyFunctionDef(FunctionDef):
     """
@@ -443,7 +616,7 @@ class PyFunctionDef(FunctionDef):
 
     def __init__(self, *args, original_function, **kwargs):
         self._original_function = original_function
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, is_static = True)
 
     @property
     def original_function(self):
@@ -563,7 +736,7 @@ class PyClassDef(ClassDef):
         wrapped.
     """
     __slots__ = ('_original_class', '_struct_name', '_type_name', '_type_object',
-                 '_new_func')
+                 '_new_func', '_properties')
 
     def __init__(self, original_class, struct_name, type_name, scope, **kwargs):
         self._original_class = original_class
@@ -571,8 +744,13 @@ class PyClassDef(ClassDef):
         self._type_name = type_name
         self._type_object = Variable(PyccelPyClassType(), type_name)
         self._new_func = None
-        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias')]
+        self._properties = ()
+        variables = [Variable(NativeVoid(), 'instance', memory_handling='alias'),
+                     Variable(PyccelPyObject(), 'referenced_objects', memory_handling='alias'),
+                     Variable(NativeBool(), 'is_alias')]
         scope.insert_variable(variables[0])
+        scope.insert_variable(variables[1])
+        scope.insert_variable(variables[2])
         super().__init__(original_class.name, variables, scope=scope, **kwargs)
 
     @property
@@ -636,6 +814,139 @@ class PyClassDef(ClassDef):
         """
         return self._new_func
 
+    def add_property(self, p):
+        """
+        Add a class property which has been wrapped.
+
+        Add a class property which has been wrapped.
+
+        Parameters
+        ----------
+        p : PyccelAstNode
+            The new wrapped property which is added to the class.
+        """
+        p.set_current_user_node(self)
+        self._properties += (p,)
+
+    @property
+    def properties(self):
+        """
+        Get all wrapped class properties.
+
+        Get all wrapped class properties.
+        """
+        return self._properties
+
+#-------------------------------------------------------------------
+
+class PyGetSetDefElement(PyccelAstNode):
+    """
+    A class representing a PyGetSetDef object.
+
+    A class representing an element of the list of PyGetSetDef objects
+    which are used to add attributes/properties to classes.
+    See <https://docs.python.org/3/c-api/structures.html#c.PyGetSetDef>.
+
+    Parameters
+    ----------
+    python_name : str
+        The name of the attribute/property in the original Python code.
+    getter : FunctionDef
+        The function which collects the value of the class attribute.
+    setter : FunctionDef
+        The function which modifies the value of the class attribute.
+    docstring : LiteralString
+        The docstring of the property.
+    """
+    _attribute_nodes = ('_getter', '_setter', '_docstring')
+    __slots__ = ('_python_name', '_getter', '_setter', '_docstring')
+    def __init__(self, python_name, getter, setter, docstring):
+        if not isinstance(getter, PyFunctionDef):
+            raise TypeError("Getter should be a PyFunctionDef")
+        if not isinstance(setter, PyFunctionDef):
+            raise TypeError("Setter should be a PyFunctionDef")
+        self._python_name = python_name
+        self._getter = getter
+        self._setter = setter
+        self._docstring = docstring
+        super().__init__()
+
+    @property
+    def python_name(self):
+        """
+        The name of the attribute/property in the original Python code.
+
+        The name of the attribute/property in the original Python code.
+        """
+        return self._python_name
+
+    @property
+    def getter(self):
+        """
+        The BindCFunctionDef describing the getter function.
+
+        The BindCFunctionDef describing the function which allows the user to collect
+        the value of the property.
+        """
+        return self._getter
+
+    @property
+    def setter(self):
+        """
+        The BindCFunctionDef describing the setter function.
+
+        The BindCFunctionDef describing the function which allows the user to modify
+        the value of the property.
+        """
+        return self._setter
+
+    @property
+    def docstring(self):
+        """
+        The docstring of the property being wrapped.
+
+        The docstring of the property being wrapped.
+        """
+        return self._docstring
+
+#-------------------------------------------------------------------
+class PyModInitFunc(FunctionDef):
+    """
+    A class representing the PyModInitFunc function def.
+
+    A class representing the PyModInitFunc function def. This function returns the
+    macro PyModInitFunc, takes no arguments and initialises a module.
+
+    Parameters
+    ----------
+    name : str
+        The name of the function.
+
+    body : list[PyccelAstNode]
+        The code executed in the function.
+
+    static_vars : list[Variable]
+        A list of variables which should be declared as static objects.
+
+    scope : Scope
+        The scope of the function.
+    """
+    __slots__ = ('_static_vars',)
+
+    def __init__(self, name, body, static_vars, scope):
+        self._static_vars = static_vars
+        super().__init__(name, (), (), body, scope=scope)
+
+    @property
+    def declarations(self):
+        """
+        Returns the declarations of the variables.
+
+        Returns the declarations of the variables.
+        """
+        return [Declare(v, static=(v in self._static_vars)) \
+                for v in self.scope.variables.values()]
+
 #-------------------------------------------------------------------
 #                      Python.h Constants
 #-------------------------------------------------------------------
@@ -659,10 +970,40 @@ Py_DECREF = FunctionDef(name = 'Py_DECREF',
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [])
 
+# https://docs.python.org/3/c-api/type.html#c.PyType_Ready
 PyType_Ready = FunctionDef(name = 'PyType_Ready',
                         body = [],
                         arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))],
                         results = [FunctionDefResult(Variable(NativeInteger(), '_'))])
+
+# https://docs.python.org/3/c-api/sys.html#PySys_GetObject
+PySys_GetObject = FunctionDef(name = 'PySys_GetObject',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/unicode.html#c.PyUnicode_FromString
+PyUnicode_FromString = FunctionDef(name = 'PyUnicode_FromString',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=NativeString(), name='_'))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_GetItem
+PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2))],
+                        results = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name='o', memory_handling='alias'))])
+
+# https://docs.python.org/3/c-api/list.html#c.PyList_SetItem
+PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
+                        body = [],
+                        arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='l', memory_handling='alias')),
+                                     FunctionDefArgument(Variable(dtype=NativeInteger(), name='i', precision=-2)),
+                                     FunctionDefArgument(Variable(dtype=PyccelPyObject(), name='new_item', memory_handling='alias'))],
+                        results = [])
+
+#-------------------------------------------------------------------
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
@@ -725,7 +1066,7 @@ def C_to_Python(c_object):
 
     cast_func = FunctionDef(name = cast_function,
                        body      = [],
-                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling))],
+                       arguments = [FunctionDefArgument(c_object.clone('v', is_argument = True, memory_handling=memory_handling, new_class = Variable))],
                        results   = [FunctionDefResult(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))])
 
     return cast_func
@@ -764,11 +1105,36 @@ PyErr_SetString = FunctionDef(name = 'PyErr_SetString',
 
 PyNotImplementedError = Variable(PyccelPyObject(), name = 'PyExc_NotImplementedError')
 PyTypeError = Variable(PyccelPyObject(), name = 'PyExc_TypeError')
+PyAttributeError = Variable(PyccelPyObject(), name = 'PyExc_AttributeError')
 
 PyObject_TypeCheck = FunctionDef(name = 'PyObject_TypeCheck',
-            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')), FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
+            arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'o', memory_handling = 'alias')),
+                         FunctionDefArgument(Variable(PyccelPyClassType(), 'c_type', memory_handling='alias'))],
             results = [FunctionDefResult(Variable(NativeBool(), 'r'))],
             body = [])
+
+PyList_New = FunctionDef(name = 'PyList_New',
+                    arguments = [FunctionDefArgument(Variable(NativeInteger(), 'size'), value = LiteralInteger(0))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'r', memory_handling='alias'))],
+                    body = [])
+
+PyList_Append = FunctionDef(name = 'PyList_Append',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=4))],
+                    body = [])
+
+PyList_GetItem = FunctionDef(name = 'PyList_GetItem',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias')),
+                                 FunctionDefArgument(Variable(NativeInteger(), 'i', precision=8))],
+                    results = [FunctionDefResult(Variable(PyccelPyObject(), 'item', memory_handling='alias'))],
+                    body = [])
+
+PyList_Size = FunctionDef(name = 'PyList_Size',
+                    arguments = [FunctionDefArgument(Variable(PyccelPyObject(), 'list', memory_handling='alias'))],
+                    results = [FunctionDefResult(Variable(NativeInteger(), 'i', precision=8))],
+                    body = [])
+
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 check_type_registry = {

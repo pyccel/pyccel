@@ -49,18 +49,6 @@ def test_class_function(modnew):
     c = modnew.C()
     assert c.get_3() == 3
 
-@pytest.mark.parametrize( 'language', (
-        pytest.param("fortran", marks = [
-            pytest.mark.skip(reason="Argument reference count not increased. See #1586"),
-            pytest.mark.fortran]
-        ),
-        pytest.param("c", marks = [
-            pytest.mark.skip(reason="Argument reference count not increased. See #1586"),
-            pytest.mark.c]
-        ),
-        pytest.param("python", marks = pytest.mark.python)
-    )
-)
 def test_classes_1(language):
     import classes.classes_1 as mod
     modnew = epyccel(mod, language = language)
@@ -72,13 +60,13 @@ def test_classes_1(language):
     p1_py = mod.Point(x1)
     p1_l  = modnew.Point(x2)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
 
     p1_py.translate(a)
     p1_l.translate(a)
 
-    assert np.isclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p1_py.get_x(), p1_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p1_py.get_X() == p1_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
@@ -87,7 +75,7 @@ def test_classes_1(language):
 
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.allclose(p2_py.get_x(), p2_l.get_x())
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     print(p2_py.get_x(), p2_l.get_x())
     assert p2_py.get_X() == p2_l.get_X()
 
@@ -97,15 +85,15 @@ def test_classes_1(language):
     p2_l.translate(a)
     print(p2_py.get_x(), p2_l.get_x())
 
-    assert np.isclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
+    assert np.allclose(p2_py.get_x(), p2_l.get_x(), rtol=RTOL, atol=ATOL)
     assert p2_py.get_X() == p2_l.get_X()
     assert np.allclose(x1, x2, rtol=RTOL, atol=ATOL)
 
     l_py = mod.Line(p1_py)
-    l_l  = mod.Line(p1_l)
+    l_l  = modnew.Line(p1_l)
 
     assert p1_py.get_X() == p1_l.get_X()
-    assert l_py.get_x() == l_l.get_x()
+    assert np.allclose(l_py.get_x(), l_l.get_x(), rtol=RTOL, atol=ATOL)
 
 def test_classes_2(language):
     import classes.classes_2 as mod
@@ -147,6 +135,19 @@ def test_classes_3(language):
 
     p_py.set_coordinates(2.3, 5.1)
     p_l.set_coordinates(2.3, 5.1)
+
+    assert p_py.get_coordinates() == p_l.get_coordinates()
+
+    assert p_py.x == p_l.x
+    assert p_py.X == p_l.X
+    assert isinstance(p_py.x, type(p_l.x))
+    assert isinstance(p_py.X, type(p_l.X))
+
+    p_py.x = -1.2
+    p_py.X = -10.2
+
+    p_l.x = -1.2
+    p_l.X = -10.2
 
     assert p_py.get_coordinates() == p_l.get_coordinates()
 
@@ -208,3 +209,82 @@ def test_generic_methods(language):
 
     assert p_py.get_x() == p_l.get_x()
     assert p_py.get_y() == p_l.get_y()
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = [
+            pytest.mark.skip(reason="Attribute renamed. See #1705"),
+            pytest.mark.python]
+        )
+    )
+)
+def test_classes(language):
+    import classes.classes as mod
+    modnew = epyccel(mod, language = language)
+
+    p_py = mod.Point(0.0, 0.0)
+    p_l  = modnew.Point(0.0, 0.0)
+
+    assert p_py.x == p_l.x
+    assert isinstance(p_py.x, type(p_l.x))
+
+    assert p_py.y == p_l.y
+    assert isinstance(p_py.y, type(p_l.y))
+
+    p_py.x = 2.0
+    p_l.x = 2.0
+
+    if language != 'python':
+        with pytest.raises(TypeError):
+            p_l.y = 1j
+
+    assert p_py.x == p_l.x
+
+    p_py.translate(1.0, 2.0)
+    p_l.translate(1.0, 2.0)
+
+    assert p_py.x == p_l.x
+    assert p_py.y == p_l.y
+
+def test_class_out(language):
+    import classes.array_attribute as mod
+    modnew = epyccel(mod, language = language)
+
+    p_py = mod.A(5)
+    p_l  = modnew.A(5)
+
+    assert np.array_equal(p_py.x, p_l.x)
+    assert np.array_equal(p_py.get_x(), p_l.get_x())
+    assert np.array_equal(p_py.x, p_py.get_x())
+
+    p_py.x[:] = 4
+    p_l.x[:] = 4
+
+    if language != 'python':
+        with pytest.raises(AttributeError):
+            p_l.x = np.ones(6)
+
+def test_ptr_in_class(language):
+    import classes.ptr_in_class as mod
+    modnew = epyccel(mod, language = language)
+
+    x = np.ones(4)
+    a_py = mod.A(x)
+    a_l = modnew.A(x)
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    x[2] = 3
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    y = np.zeros(3)
+    a_py.x = y
+    a_l.x = y
+
+    assert np.array_equal(a_py.x, a_l.x)
+
+    y[0] = -3
+
+    assert np.array_equal(a_py.x, a_l.x)

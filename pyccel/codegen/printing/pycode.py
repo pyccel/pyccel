@@ -845,6 +845,30 @@ class PythonCodePrinter(CodePrinter):
 
         return "{}({})".format(name, arg)
 
+    def _print_ListAppend(self, expr):
+        method_name = expr.name
+        list_var = self._print(expr.list_variable)
+        append_arg = self._print(expr.append_argument)
+
+        return f"{list_var}.{method_name}({append_arg})\n"
+
+    def _print_ListInsert(self, expr):
+        method_name = expr.name
+        index = self._print(expr.index)
+        list_var = self._print(expr.list_variable)
+        insert_arg = self._print(expr.insert_argument)
+
+        return f"{list_var}.{method_name}({index}, {insert_arg})\n"
+
+    def _print_ListPop(self, expr):
+        args = self._print(expr.pop_index) if expr.pop_index else ""
+        name = self._print(expr.list_variable)
+        return f"{name}.pop({args})"
+
+    def _print_ListClear(self, expr):
+        name = self._print(expr.list_variable)
+        return f"{name}.clear()\n"
+
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
         stop  = self._print(expr.stop)  if expr.stop  else ''

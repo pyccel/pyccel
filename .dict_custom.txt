@@ -16,6 +16,7 @@ deallocate
 deallocated
 deallocation
 deallocations
+deallocating
 conda
 PyPI
 CentOS
@@ -106,3 +107,5 @@ variadic
 subclasses
 oneAPI
 Cuda
+getter
+setter

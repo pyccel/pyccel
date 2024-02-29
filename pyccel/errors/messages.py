@@ -32,7 +32,7 @@ INCOMPATIBLE_ORDERING = "Argument {idx} : {arg}, passed to function {func} is in
 UNRECOGNISED_FUNCTION_CALL = 'Function call cannot be processed. Please ensure that your code runs correctly in python. If this is the case then you may be using function arguments which are not currently supported by pyccel. Please create an issue at https://github.com/pyccel/pyccel/issues and provide a small example of your problem.'
 
 UNSUPPORTED_FEATURE_OOP_EMPTY_CLASS = "Empty classes are not supported"
-UNSUPPORTED_POINTER_RETURN_VALUE = "returning a pointer is not implemented yet."
+UNSUPPORTED_POINTER_RETURN_VALUE = "A pointer can only be returned from a function if it points at one of the arguments."
 UNSUPPORTED_ARRAY_RANK = 'Arrays of dimensions > 15 are currently not supported'
 
 INCOMPATIBLE_TYPES_IN_STR_INTERPOLATION = 'Incompatible types in string interpolation'
