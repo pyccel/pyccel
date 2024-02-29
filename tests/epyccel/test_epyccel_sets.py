@@ -98,11 +98,11 @@ def test_copy_float(language):
     assert python_result == pyccel_result
 
 def test_copy_complex(language):
-    def copy_float():
+    def copy_complex():
         se = {7j, 6j, 9j}
         se.copy()
         return se
-    epyccel_copy = epyccel(copy_float, language = language)
+    epyccel_copy = epyccel(copy_complex, language = language)
     pyccel_result = epyccel_copy()
-    python_result = copy_float()
+    python_result = copy_complex()
     assert python_result == pyccel_result
