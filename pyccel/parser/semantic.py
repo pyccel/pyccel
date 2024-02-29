@@ -3894,23 +3894,23 @@ class SemanticParser(BasicParser):
             self.insert_function(expr)
             return EmptyNode()
 
-        interface_funcs = []
+        existing_semantic_funcs = []
         if not expr.is_annotated:
             self.scope.functions.pop(expr.name, None)
         elif isinstance(expr, Interface):
-            interface_funcs = [*expr.functions]
-            expr            = expr.syntactic_node
+            existing_semantic_funcs = [*expr.functions]
+            expr                    = expr.syntactic_node
 
-        name            = self.scope.get_expected_name(expr.name)
-        decorators      = expr.decorators
-        funcs           = []
-        sub_funcs       = []
-        func_interfaces = []
-        docstring       = self._visit(expr.docstring) if expr.docstring else expr.docstring
-        is_pure         = expr.is_pure
-        is_elemental    = expr.is_elemental
-        is_private      = expr.is_private
-        is_inline       = expr.is_inline
+        name               = self.scope.get_expected_name(expr.name)
+        decorators         = expr.decorators
+        new_semantic_funcs = []
+        sub_funcs          = []
+        func_interfaces    = []
+        docstring          = self._visit(expr.docstring) if expr.docstring else expr.docstring
+        is_pure            = expr.is_pure
+        is_elemental       = expr.is_elemental
+        is_private         = expr.is_private
+        is_inline          = expr.is_inline
 
         if function_call is not None:
             assert is_inline
@@ -3975,7 +3975,7 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-        for f in interface_funcs:
+        for f in existing_semantic_funcs:
             self.scope.remove_symbol(f.name)
 
         for tmpl_idx in range(n_templates):
@@ -3986,13 +3986,13 @@ class SemanticParser(BasicParser):
             if function_call is not None and found_func:
                 break
 
-            f = self.scope.find(name, 'functions')
+            # search for the function to see if we already have it in existing_semantic_funcs
             if is_interface and function_call is not None and f:
                 # the function has already been annotated
                 assert f.is_annotated
                 funcs.append(f)
-                assert f is interface_funcs[0]
-                interface_funcs.pop(0)
+                assert f is existing_semantic_funcs[0]
+                existing_semantic_funcs.pop(0)
                 continue
 
             scope = self.create_new_function_scope(name, decorators = decorators,
@@ -4181,27 +4181,27 @@ class SemanticParser(BasicParser):
                 if not is_interface:
                     bound_class.add_new_method(func)
 
-            funcs += [func]
+            new_semantic_funcs += [func]
 
-        if function_call is not None and len(funcs) == 0:
+        if function_call is not None and len(new_semantic_funcs) == 0:
             for args in annotated_args:
                 #raise errors if we do not find any compatible function def
                 self._check_argument_compatibility(function_call, args, expr, is_elemental)
 
-        if interface_funcs:
-            funcs += interface_funcs
+        if existing_semantic_funcs:
+            new_semantic_funcs += existing_semantic_funcs
 
-        if len(funcs) == 1 and not is_interface:
-            funcs = funcs[0]
-            self.insert_function(funcs)
+        if len(new_semantic_funcs) == 1 and not is_interface:
+            funcnew_semantic_funcss = new_semantic_funcs[0]
+            self.insert_function(new_semantic_funcs)
         else:
-            for f in funcs:
+            for f in new_semantic_funcs:
                 self.insert_function(f)
 
-            funcs = Interface(interface_name, funcs, syntactic_node=expr)
+            new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
             if cls_name:
-                bound_class.add_new_interface(funcs)
-            self.insert_function(funcs)
+                bound_class.add_new_interface(new_semantic_funcs)
+            self.insert_function(new_semantic_funcs)
 
         return EmptyNode()
 
