@@ -12,9 +12,9 @@ This module contains objects which describe these methods within Pyccel's AST.
 
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
 from pyccel.ast.internals import PyccelInternalFunction
-from pyccel.ast.builtins  import PythonList, PythonRange
-from pyccel.ast.literals  import LiteralInteger
+from pyccel.utilities.stage import PyccelStage
 
+pyccel_stage = PyccelStage()
 
 __all__ = ('ListAppend',
            'ListClear',
@@ -85,15 +85,16 @@ class ListAppend(ListMethod):
     name = 'append'
 
     def __init__(self, list_variable, new_elem) -> None:
-        is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_variable.dtype is not NativeGeneric() and
-            list_variable.dtype == new_elem.dtype and
-            list_variable.precision == new_elem.precision and
-            list_variable.rank - 1 == new_elem.rank
-        )
-        if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+        if pyccel_stage != "syntactic":
+            is_homogeneous = (
+                new_elem.dtype is not NativeGeneric() and
+                list_variable.dtype is not NativeGeneric() and
+                list_variable.dtype == new_elem.dtype and
+                list_variable.precision == new_elem.precision and
+                list_variable.rank - 1 == new_elem.rank
+            )
+            if not is_homogeneous:
+                raise TypeError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_variable, new_elem)
 
 #==============================================================================
@@ -231,30 +232,7 @@ class ListExtend(ListMethod):
         The argument passed to extend() method.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
-    _shape = None
-    _order = None
-    _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
     name = 'extend'
 
     def __init__(self, list_variable, new_elem) -> None:
-        if isinstance(new_elem, PythonRange):
-            temp = []
-            start = new_elem.start.python_value
-            step = new_elem.step.python_value
-            stop = new_elem.stop.python_value
-            for i in range(start, stop, step):
-                temp.append(LiteralInteger(i))
-            new_elem = PythonList(*temp)
-        is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_variable.dtype is not NativeGeneric() and
-            list_variable.dtype == new_elem.dtype and
-            list_variable.precision == new_elem.precision and
-            list_variable.rank == new_elem.rank
-        )
-        if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
         super().__init__(list_variable, new_elem)
