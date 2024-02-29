@@ -1171,7 +1171,6 @@ class SemanticParser(BasicParser):
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
             if len(args) <= len(func_args):
-#                args     = self._sort_function_call_args(func_args, args)
                 new_expr = FunctionCall(func, args, self._current_function)
                 for a, f_a in zip(new_expr.args, func_args):
                     if f_a.persistent_target:
