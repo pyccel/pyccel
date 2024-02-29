@@ -130,7 +130,7 @@ def kernel(f):
 
     Parameters
     ----------
-    f : Function.
+    f : Function
         The function to which the decorator is applied.
     
     Returns
