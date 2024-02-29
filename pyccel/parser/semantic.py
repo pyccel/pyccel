@@ -3094,6 +3094,8 @@ class SemanticParser(BasicParser):
             errors.report("Cannot assign a datatype to a variable.",
                     symbol=expr, severity='error')
 
+        if isinstance(rhs, For):
+            return rhs
         if isinstance(rhs, ConstructorCall):
             return rhs
         elif isinstance(rhs, FunctionDef):
