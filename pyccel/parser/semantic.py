@@ -2687,7 +2687,7 @@ class SemanticParser(BasicParser):
         func_call = FunctionCall('append', [arg])
 
         # Construct DottedName
-        dotted = DottedName(str(list_variable), func_call)
+        dotted = DottedName(list_variable, func_call)
 
         # Construct Assign
         rhs = dotted
