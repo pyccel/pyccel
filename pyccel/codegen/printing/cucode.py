@@ -8,16 +8,23 @@ Provide tools for generating and handling CUDA code.
 This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CUDA,
 enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
+from itertools import chain
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_library_headers
 
 from pyccel.ast.core        import Import, Module
 from pyccel.ast.core      import SeparatorComment
 from pyccel.ast.core      import Declare
+from pyccel.ast.core      import FuncAddressDeclare
+from pyccel.ast.core      import Assign
 
 from pyccel.errors.errors   import Errors
 
 from pyccel.ast.variable import Variable
+
+from pyccel.ast.literals  import Nil
+
+from pyccel.ast.c_concepts import ObjectAddress
 
 from itertools import chain
 
@@ -114,7 +121,7 @@ class CudaCodePrinter(CCodePrinter):
         parts = [sep,
                  cuda_decorater,
                  docstring,
-                '{signature}\n{{\n'.format(signature=self.function_signature(expr)),
+                 f'{self.function_signature(expr)}\n{{\n',
                  decs,
                  body,
                  '}\n',
