@@ -1170,7 +1170,7 @@ class SemanticParser(BasicParser):
                 return self._visit(tmp_var)
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-            if len(func_args) <= len(args):
+            if len(args) <= len(func_args):
                 args     = self._sort_function_call_args(func_args, args)
                 new_expr = FunctionCall(func, args, self._current_function)
                 for a, f_a in zip(new_expr.args, func_args):
@@ -1257,11 +1257,10 @@ class SemanticParser(BasicParser):
             if not sc.name is None:
                 names.append(sc.name)
         names.reverse()
-
         if names:
-            self._current_function = None
-        else:
             self._current_function = DottedName(*names) if len(names)>1 else names[0]
+        else:
+            self._current_function = None
 
         while names:
             sc = sc.sons_scopes[names[0]]
