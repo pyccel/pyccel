@@ -135,7 +135,7 @@ def kernel(f):
     
     Returns
     -------
-        The function
-            to which the decorator is applied.
+        Function
+            Function to which the decorator is applied.
     """
     return f
