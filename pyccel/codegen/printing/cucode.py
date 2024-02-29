@@ -26,8 +26,6 @@ from pyccel.ast.literals  import Nil
 
 from pyccel.ast.c_concepts import ObjectAddress
 
-from itertools import chain
-
 errors = Errors()
 
 __all__ = ["CudaCodePrinter"]

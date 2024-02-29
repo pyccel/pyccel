@@ -136,8 +136,8 @@ from pyccel.errors.messages import (PYCCEL_RESTRICTION_TODO, UNDERSCORE_NOT_A_TH
         UNUSED_DECORATORS, UNSUPPORTED_POINTER_RETURN_VALUE, PYCCEL_RESTRICTION_OPTIONAL_NONE,
         PYCCEL_RESTRICTION_PRIMITIVE_IMMUTABLE, PYCCEL_RESTRICTION_IS_ISNOT,
         FOUND_DUPLICATED_IMPORT, UNDEFINED_WITH_ACCESS, MACRO_MISSING_HEADER_OR_FUNC,
-        MISSING_KERNEL_CONFIGURATION,INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT, 
-        INVALID_KERNEL_LAUNCH_CONFIG_LOW
+        MISSING_KERNEL_CONFIGURATION,INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT,
+        INVALID_KERNEL_LAUNCH_CONFIG_LOW, INVALID_KERNEL_CALL_BP_GRID, INVALID_KERNEL_CALL_TP_BLOCK
         )
 
 from pyccel.parser.base      import BasicParser
@@ -1201,7 +1201,7 @@ class SemanticParser(BasicParser):
             return new_expr
 
     def _handle_kernel(self, expr, func, args, **settings):
-        
+
         """
         Create the node representing the kernel function call.
 
@@ -1234,7 +1234,7 @@ class SemanticParser(BasicParser):
                     symbol=expr,
                     severity='fatal')
         if(len(func.results)):
-            errors.report("cuda kernel function '{}' returned a value in violation of the laid-down specification".format(func.name),
+            errors.report(f"cuda kernel function '{func.name}' returned a value in violation of the laid-down specification",
                          symbol=expr,
                          severity='fatal')
         if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
