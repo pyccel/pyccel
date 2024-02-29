@@ -29,6 +29,7 @@ from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
 from pyccel.ast.builtins import PythonList, PythonConjugate
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
+from pyccel.ast.builtin_methods.list_methods import ListAppend
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -2634,6 +2635,10 @@ class SemanticParser(BasicParser):
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
             method = cls_base.get_method(rhs_name)
+            if isinstance(method, PyccelFunctionDef):
+                annotation_method = '_visit_' + method.cls_name.__name__
+                if hasattr(self, annotation_method):
+                    return getattr(self, annotation_method)(visited_lhs, rhs.args[0].value)
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
@@ -2671,6 +2676,20 @@ class SemanticParser(BasicParser):
         return errors.report(f'Attribute {rhs_name} not found',
             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
             severity='fatal')
+
+    def _visit_ListExtend(self, list_variable, iterable):
+        iterable = self._visit(iterable)
+
+        pyccel_stage.set_stage('syntactic')
+
+        for_target = self.scope.get_new_name('index')
+        body = ListAppend(list_variable, for_target)
+        # no scope as arg for For() object
+        for_obj = For(for_target, iterable, body) 
+
+        pyccel_stage.set_stage('semantic')
+
+        return self._visit(for_obj)
 
     def _visit_PyccelOperator(self, expr):
         args     = [self._visit(a) for a in expr.args]
