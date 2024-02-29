@@ -104,3 +104,29 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
+class SetPop(SetMethod):
+    """
+    Represents a call to the .pop() method.
+
+    The pop() method pops an element from the set. 
+    It does not take any argument but returns the popped 
+    element. It raises an error if the element is not 
+    present in the set.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+    """
+    __slots__ = ('_dtype', '_precision', '_class_type')
+    _rank = 0
+    _order = None
+    _shape = None
+    name = 'pop'
+
+    def __init__(self, set_variable):
+        self._dtype = set_variable.dtype
+        self._precision = set_variable.precision
+        self._class_type = set_variable.class_type
+        super.__init__(set_variable)
