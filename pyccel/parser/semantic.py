@@ -4058,8 +4058,8 @@ class SemanticParser(BasicParser):
 
             # Annotate the remaining functions
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
-                        not isinstance(i, (InlineFunctionDef, FunctionAddress) and \
-                        not i.is_annotated)]
+                        not isinstance(i, (InlineFunctionDef, FunctionAddress)) and \
+                        not i.is_annotated]
             for i in sub_funcs:
                 self._visit_FunctionDef(i, annotate=True)
 
