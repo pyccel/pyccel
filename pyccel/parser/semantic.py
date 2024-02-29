@@ -1224,6 +1224,7 @@ class SemanticParser(BasicParser):
         Returns
         -------
         FunctionCall/PyccelInternalFunction
+            The semantic representation of the call.
         """
         if(len(expr.launch_config) < 2):
             errors.report(INVALID_KERNEL_LAUNCH_CONFIG_LOW,
