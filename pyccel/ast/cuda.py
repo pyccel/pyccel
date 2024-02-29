@@ -17,25 +17,23 @@ __all__ = (
 class KernelCall(FunctionCall):
     """
     Represents a kernel function call in the code.
+    # Example of a method call with array-like indexing: a[c, b]().
     
     Parameters
-    ----------
-    numBlocks : NativeInteger
-        The number of blocks.
-        
-    tpblock : NativeInteger
-        The number of threads per block.
-        
-    func : FunctionDef
-        The definition of the function being called.
-        
-    args : tuple
-        The arguments being passed to the function.
-        
-    launch_config : str
-        Launch configuration of the kernel call.
+    ==========
+    numBlocks        : NativeInteger
+                   The number of blocks
+                   
+    tpblock          : NativeInteger
+                   The number of threads per block
+                   
+    func             : FunctionDef
+                   The definition of the function being called
+                   
+    args             : tuple
+                   The arguments being passed to the function
     """
-    __slots__ = ('_numBlocks','_tpblock','_func', '_args', '_launch_config',)
+    __slots__ = ('_numBlocks','_tpblock','_func', '_args', '_launch_config')
     _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock', '_launch_config')
     def __init__(self, func, args, numBlocks, tpblock, launch_config,current_function=None):
         self._numBlocks = numBlocks
@@ -61,19 +59,20 @@ class KernelCall(FunctionCall):
 
 class IndexedFunctionCall(FunctionCall):
     """
-    Represents an indexed function call in the code.
+    represents a indexed funtion call in the code 
+    
+    A node with hild all information necessary to represent a indexed function
+    call in the code
     
     Parameters
     ----------
     func : FunctionDef
         The function being called.
-        
+
     args : list of FunctionCallArgument
         The arguments passed to the function.
-        
-    launch_config : str
-        Launch configuration of the kernel call.
     """
+    __slots__ = ('_launch_config',)
     def __init__(self, func, args, launch_config):
         self._arguments = tuple(args)
         self._func_name = func
