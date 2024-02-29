@@ -2678,12 +2678,15 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_ListExtend(self, list_variable, iterable):
-        iterable = self._visit(iterable)
 
         pyccel_stage.set_stage('syntactic')
 
         for_target = self.scope.get_new_name('index')
-        body = ListAppend(list_variable, for_target)
+        lhs = PyccelSymbol('_', is_temp=True)
+        rhs = ListAppend(list_variable, for_target)
+        assign = Assign(lhs, rhs)
+        assign.set_current_ast(list_variable.python_ast)
+        body = CodeBlock([assign])
         # no scope as arg for For() object
         for_obj = For(for_target, iterable, body) 
 
