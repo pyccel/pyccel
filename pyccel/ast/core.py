@@ -14,7 +14,7 @@ from pyccel.utilities.strings import create_incremented_string
 
 from .basic     import PyccelAstNode, TypedAstNode, iterable, ScopedAstNode
 from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
-                        PythonRange, PythonZip, PythonBool, Lambda)
+                        PythonRange, PythonZip, PythonBool, PythonList, Lambda)
 
 from .c_concepts import PointerCast
 
@@ -1411,7 +1411,8 @@ class Iterable(PyccelAstNode):
                - n_indices
                - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate,
+                                  PythonRange, PythonList, IndexedElement)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
