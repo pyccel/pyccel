@@ -21,17 +21,17 @@ class KernelCall(FunctionCall):
     
     Parameters
     ==========
-    numBlocks        : NativeInteger
-                   The number of blocks
+    numBlocks : NativeInteger
+        The number of blocks.
                    
-    tpblock          : NativeInteger
-                   The number of threads per block
+    tpblock : NativeInteger
+        The number of threads per block.
                    
-    func             : FunctionDef
-                   The definition of the function being called
+    func : FunctionDef
+        The definition of the function being called.
                    
-    args             : tuple
-                   The arguments being passed to the function
+    args : tuple
+        The arguments being passed to the function.
     """
     __slots__ = ('_numBlocks','_tpblock','_func', '_args', '_launch_config')
     _attribute_nodes = (*FunctionCall._attribute_nodes, '_numBlocks', '_tpblock', '_launch_config')
@@ -43,17 +43,17 @@ class KernelCall(FunctionCall):
 
     @property
     def numBlocks(self):
-        """The number of blocks in the kernel being called
+        """ The number of blocks in the kernel being called
         """
         return self._numBlocks
     @property
     def tpblock(self):
-        """ The number of threads per block
+        """ The number of threads per block.
         """
         return self._tpblock
     @property
     def launch_config(self):
-        """ launch configuration of kernel call
+        """ launch configuration of kernel call.
         """
         return self._launch_config
 
@@ -81,6 +81,6 @@ class IndexedFunctionCall(FunctionCall):
 
     @property
     def launch_config(self):
-        """ launch configuration of kernel call
+        """ launch configuration of kernel call.
         """
         return self._launch_config

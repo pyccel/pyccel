@@ -4059,7 +4059,7 @@ class AnnotatedComment(PyccelAstNode):
     Parameters
     ----------
     accel : str
-       accelerator id. One among {'acc'}
+        accelerator id. One among {'acc'}
 
     txt: str
         statement to print
