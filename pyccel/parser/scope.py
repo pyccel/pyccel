@@ -508,7 +508,7 @@ class Scope(object):
         Parameters
         ----------
         symbol : PyccelSymbol
-            The symbol to be added to the scope.
+            The symbol to be removed from the scope.
         """
 
         if symbol in self._used_symbols:
