@@ -1201,7 +1201,8 @@ class SemanticParser(BasicParser):
         """
         Sort and add the missing call arguments to match the arguments in the function definition.
 
-        Sort and add the missing call arguments to match the arguments in the function definition.
+        We sort the call arguments by dividing them into two chunks, positional arguments and keyword arguments.
+        We provide the default value of the keyword argument if the corresponding call argument is not persent.
 
         Parameters
         ----------
