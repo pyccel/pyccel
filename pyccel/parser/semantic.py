@@ -1248,6 +1248,9 @@ class SemanticParser(BasicParser):
         func: FunctionDef|Interface
             The new annotated function.
         """
+        # The function call might be in a completely different scope from the FunctionDef
+        # Here we store the current scope and go to the parent scope of the FunctionDef
+
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
