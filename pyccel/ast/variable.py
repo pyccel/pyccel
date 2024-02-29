@@ -917,7 +917,6 @@ class IndexedElement(TypedAstNode):
                 new_shape.append(_shape)
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
-
         self._order = None if self.rank < 2 else base.order
 
         if self.rank == 0:

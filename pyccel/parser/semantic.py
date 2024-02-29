@@ -1171,7 +1171,7 @@ class SemanticParser(BasicParser):
 
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
             if len(args) <= len(func_args):
-                args     = self._sort_function_call_args(func_args, args)
+#                args     = self._sort_function_call_args(func_args, args)
                 new_expr = FunctionCall(func, args, self._current_function)
                 for a, f_a in zip(new_expr.args, func_args):
                     if f_a.persistent_target:
@@ -3874,7 +3874,7 @@ class SemanticParser(BasicParser):
             self.scope.functions.pop(expr.name, None)
         elif isinstance(expr, Interface):
             interface_funcs = [*expr.functions]
-            expr  = expr.syntactic_node
+            expr            = expr.syntactic_node
 
         name            = self.scope.get_expected_name(expr.name)
         decorators      = expr.decorators
@@ -3924,7 +3924,7 @@ class SemanticParser(BasicParser):
         new_expr_args = []
         for a in expr.arguments:
             if isinstance(a.annotation, UnionTypeAnnotation):
-                annotation = [aa for a in annotation for aa in unpack(a)]
+                annotation = [aa for a in a.annotation for aa in unpack(a)]
             else:
                 annotation = [a.annotation]
             if len(annotation)>1:
@@ -3989,6 +3989,7 @@ class SemanticParser(BasicParser):
                         self.scope.remove_symbol(name)
                     continue
                 found_func = True
+
             for a in arguments:
                 a_var = a.var
                 if isinstance(a_var, FunctionAddress):
