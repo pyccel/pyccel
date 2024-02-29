@@ -1174,26 +1174,26 @@ class SemanticParser(BasicParser):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-            else:
-                new_expr = FunctionCall(func, args, self._current_function)
-                for a, f_a in zip(new_expr.args, func_args):
-                    if f_a.persistent_target:
-                        assert is_method
-                        val = a.value
-                        if isinstance(val, Variable):
-                            a.value.is_target = True
-                            self._indicate_pointer_target(args[0].value, a.value, expr)
-                        else:
-                            errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
-                                    severity='error', symbol=expr)
 
-                if None in new_expr.args:
-                    errors.report("Too few arguments passed in function call",
-                            symbol = expr,
-                            severity='error')
-                elif isinstance(func, FunctionDef):
-                    self._check_argument_compatibility(args, func_args,
-                                expr, func.is_elemental)
+            new_expr = FunctionCall(func, args, self._current_function)
+            for a, f_a in zip(new_expr.args, func_args):
+                if f_a.persistent_target:
+                    assert is_method
+                    val = a.value
+                    if isinstance(val, Variable):
+                        a.value.is_target = True
+                        self._indicate_pointer_target(args[0].value, a.value, expr)
+                    else:
+                        errors.report(f"{val} cannot be passed to function call as target. Please create a temporary variable.",
+                                severity='error', symbol=expr)
+
+            if None in new_expr.args:
+                errors.report("Too few arguments passed in function call",
+                        symbol = expr,
+                        severity='error')
+            elif isinstance(func, FunctionDef):
+                self._check_argument_compatibility(args, func_args,
+                            expr, func.is_elemental)
 
             return new_expr
 
