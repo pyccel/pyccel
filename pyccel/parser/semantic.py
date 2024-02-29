@@ -1207,6 +1207,7 @@ class SemanticParser(BasicParser):
 
         Create a FunctionCall or an instance of a PyccelInternalFunction
         from the function information and arguments.
+
         Parameters
         ----------
         expr : PyccelAstNode
