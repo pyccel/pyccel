@@ -2678,16 +2678,27 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_ListExtend(self, list_variable, iterable):
-
+        # Structure: For(CodeBlock(Assign(DottedName(FunctionCall))))
         pyccel_stage.set_stage('syntactic')
 
         for_target = self.scope.get_new_name('index')
+        # Construct FunctionCall()
+        arg = FunctionCallArgument(for_target)
+        func_call = FunctionCall('append', [arg])
+
+        # Construct DottedName
+        dotted = DottedName(str(list_variable), func_call)
+
+        # Construct Assign
+        rhs = dotted
         lhs = PyccelSymbol('_', is_temp=True)
-        rhs = ListAppend(list_variable, for_target)
         assign = Assign(lhs, rhs)
         assign.set_current_ast(list_variable.python_ast)
+
+        # Construct CodeBlock
         body = CodeBlock([assign])
-        # no scope as arg for For() object
+
+        # Construct Syntactic node of For loop
         for_obj = For(for_target, iterable, body) 
 
         pyccel_stage.set_stage('semantic')
