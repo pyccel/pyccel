@@ -77,7 +77,6 @@ def test_clear_complex(language):
     python_result = clear_complex()
     assert python_result == pyccel_result
 
- 
 def test_Pop_int(language):
     def Pop_int():
         se = {2, 4, 9}
