@@ -97,20 +97,20 @@ def test_copy_float(language):
     python_result = copy_float()
     assert python_result == pyccel_result
 
-def test_copy_float(language):
-    def copy_float():
-        se = {7.2, 6.3, 9.6}
+def test_copy_complex(language):
+    def copy_complex():
+        se = {7j, 6j, 9j}
         se.copy()
         return se
-    epyccel_copy = epyccel(copy_float, language = language)
+    epyccel_copy = epyccel(copy_complex, language = language)
     pyccel_result = epyccel_copy()
-    python_result = copy_float()
+    python_result = copy_complex()
     assert python_result == pyccel_result
 
 def test_remove_complex(language):
     def remove_complex():
-        se = {7j, 6j, 9j}
-        se.remove(7j)
+        se = {1j, 3j, 8j}
+        se.remove(3j)
         return se
     epyccel_remove = epyccel(remove_complex, language = language)
     pyccel_result = epyccel_remove()
