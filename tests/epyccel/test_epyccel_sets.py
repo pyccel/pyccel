@@ -109,8 +109,8 @@ def test_remove_complex(language):
 
 def test_remove_int(language):
     def remove_int():
-        se = {7j, 6j, 9j}
-        se.remove(7j)
+        se = {2, 4, 9}
+        se.remove(4)
         return se
     epyccel_remove = epyccel(remove_int, language = language)
     pyccel_result = epyccel_remove()
