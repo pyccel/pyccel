@@ -2171,6 +2171,7 @@ class ConstructorCall(FunctionCall):
         """
         return self._cls_variable
 
+
 class Return(PyccelAstNode):
 
     """Represents a function return in the code.
@@ -4059,7 +4060,7 @@ class AnnotatedComment(PyccelAstNode):
     Parameters
     ----------
     accel : str
-        accelerator id. One among {'acc'}
+       accelerator id. One among {'acc'}
 
     txt: str
         statement to print
@@ -4323,4 +4324,3 @@ class Decorator(PyccelAstNode):
         return self._name
 
 #==============================================================================
-
