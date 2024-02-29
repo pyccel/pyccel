@@ -574,7 +574,7 @@ def process_dtype(dtype):
             errors.report("Python's type function doesn't return enough information about this object for pyccel to fully define a type",
                     symbol=dtype, severity="fatal")
         else:
-            dtype = dtype.dtype
+            dtype = dtype.arg.class_type
     elif isinstance(dtype, NumpyResultType):
         dtype =  dtype.dtype
 
