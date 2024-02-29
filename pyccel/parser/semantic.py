@@ -3866,7 +3866,29 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionDef(self, expr, annotate=False, function_call=None):
+        """
+        Annotate the FunctionDef if necessary.
 
+        The FunctionDef is only annotated if the flag annotate is set to True.
+        In the case of an inlined function, we always annotate the function partialy,
+        depending on the function call if it is an interface, otherwise we annotate it
+        if the function_call argument are compatible with the FunctionDef arguments.
+        In the case of non inlined function, we only pass through this method
+        twice, the first time we do nothing and the second time we annotate all of functions.
+
+        Parameter
+        ---------
+        expr : FunctionDef|Interface
+           The that needs to be annotated.
+           If we provide an Interface, this means that the function has been annotated partialy,
+           and we need to continue annotating the needed ones.
+
+        annotate : bool, default: False
+           Annotate expr if the flag is set to True.
+
+        function_call: list, optional
+            The list of call argument, needed only in the case of an inlined function.
+        """
         if not annotate:
             self.insert_function(expr)
             return EmptyNode()
@@ -3958,10 +3980,12 @@ class SemanticParser(BasicParser):
             if is_interface:
                 name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
 
-            if function_call is not None and found_func:continue
-            if is_interface and function_call is not None and self.scope.find(name, 'functions'):
+            if function_call is not None and found_func:
+                continue
+
+            f = self.scope.find(name, 'functions')
+            if is_interface and function_call is not None and f:
                 # the function has already been annotated
-                f = self.scope.find(name, 'functions')
                 assert f.is_annotated
                 funcs.append(f)
                 assert f is interface_funcs[0]
@@ -3969,14 +3993,17 @@ class SemanticParser(BasicParser):
                 continue
 
             scope = self.create_new_function_scope(name, decorators = decorators,
-                used_symbols = expr.scope.local_used_symbols.copy(),
-                original_symbols = expr.scope.python_names.copy())
+                    used_symbols = expr.scope.local_used_symbols.copy(),
+                    original_symbols = expr.scope.python_names.copy())
 
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
             self.scope.decorators.update(decorators)
 
+            # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
+            # so we flatten the arguments
             arguments = [i for a in new_expr_args for i in self._visit(a)]
+            assert len(arguments) == len(expr.arguments)
             arg_dict  = {a.name:a.var for a in arguments}
             annotated_args.append(arguments)
             for n in template_names:
@@ -3991,6 +4018,8 @@ class SemanticParser(BasicParser):
                     if is_interface:
                         self.scope.remove_symbol(name)
                     continue
+                #In the case of an Interface we set found_func to True so that we don't continue
+                #searching for the other functions
                 found_func = True
 
             for a in arguments:
@@ -4000,7 +4029,7 @@ class SemanticParser(BasicParser):
                 else:
                     self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
 
-            if len(arguments)>0 and arguments[0].bound_argument:
+            if arguments and arguments[0].bound_argument:
                 if arguments[0].var.cls_base.name != cls_name:
                     errors.report('Class method self argument does not have the expected type',
                             severity='error', symbol=arguments[0])
@@ -4028,10 +4057,11 @@ class SemanticParser(BasicParser):
             body = self._visit(expr.body)
 
             # Annotate the remaining functions
-            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
+                        not isinstance(i, (InlineFunctionDef, FunctionAddress) and \
+                        not i.is_annotated)]
             for i in sub_funcs:
-                if not i.is_annotated and not isinstance(i, InlineFunctionDef):
-                    self._visit_FunctionDef(i, annotate=True)
+                self._visit_FunctionDef(i, annotate=True)
 
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
@@ -4051,12 +4081,14 @@ class SemanticParser(BasicParser):
             imports   = list({imp:None for imp in imports}.keys())
 
             # remove the FunctionDef from the function scope
-            # TODO improve func_ is None in the case of an interface
-            func_     = self.scope.functions.pop(name, None)
+            func_     = self.scope.functions.pop(name)
             is_recursive = False
             # check if the function is recursive if it was called on the same scope
-            if func_ and func_.is_recursive and not is_inline:
+            if func_.is_recursive and not is_inline:
                 is_recursive = True
+            elif func_.is_recursive and is_inline:
+                errors.report("Pyccel does not support an inlined recursive function", symbol=expr,
+                        severity='fatal')
 
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
 
