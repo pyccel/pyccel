@@ -3955,6 +3955,7 @@ class SemanticParser(BasicParser):
                 annotation = [a.annotation]
             if len(annotation)>1:
                 tmp_template_name = a.name + '_' + random_string(12)
+                tmp_template_name = self.scope.get_new_name(tmp_template_name)
                 tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
                 dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
                 dtype_symb = SyntacticTypeAnnotation(dtype_symb)
