@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 -   #1691 : Add Python support for list method `clear()`
 -   #1575 : Add support for homogeneous tuple type annotations on variables.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
--   #1720 : Add support for Ellipsis in containers
+-   #1720 : Add support for `Ellipsis` in containers
 
 ### Fixed
 
@@ -22,8 +22,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 -   #1720 : Make INCOMPATIBLE_ARGUMENT error blocking
--   \[INTERNALS\] FunctionDefs are annotated when they are called or at the end of the CodeBlock if they are never called.
--   \[INTERNALS\] InlinedFunctionDefs are annotated only if they are called.  
+-   \[INTERNALS\] `FunctionDef` is annotated when they are called or at the end of the `CodeBlock` if they are never called.
+-   \[INTERNALS\] `InlinedFunctionDef` is annotated only if they are called.  
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
