@@ -2409,7 +2409,7 @@ def test_sum_type(language):
         return np_sum(x)
 
     f1 = epyccel(sum_call, language = language)
-    x = rand(10, dtype = np.float32)
+    x = rand(10).astype(np.float32)
     assert isclose(f1(x), sum_call(x), rtol=RTOL, atol=ATOL)
     assert matching_types(f1(x), sum_call(x))
 
