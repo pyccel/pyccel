@@ -3922,6 +3922,7 @@ class SemanticParser(BasicParser):
         used_type_names  = set(a.dtype for a in arg_annotations)
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
+        # Create new temparary templates for the arguments with a Union data type.
         tmp_templates = {}
         new_expr_args = []
         for a in expr.arguments:
