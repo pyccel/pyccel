@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------------------#
 import warnings
 
+from ast import unparse
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
@@ -306,6 +307,10 @@ class PythonCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
 
+        if expr.is_inline:
+            code = unparse(expr.syntactic_node.python_ast)
+            code = code + '\n'
+            return code
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
@@ -322,6 +327,11 @@ class PythonCodePrinter(CodePrinter):
         return func_def_code[0]
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline and not expr.is_annotated:
+            code = unparse(expr.python_ast)
+            code = code + '\n'
+            return code
+
         self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
