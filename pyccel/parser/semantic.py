@@ -3798,7 +3798,7 @@ class SemanticParser(BasicParser):
                         original_symbols = expr.scope.python_names.copy())
 
                 if len(arguments)>0 and arguments[0].bound_argument:
-                    if arguments[0].var.class_type.name != cls_name:
+                    if str(arguments[0].var.class_type) != cls_name:
                         errors.report('Class method self argument does not have the expected type',
                                 severity='error', symbol=arguments[0])
                     for s in expr.scope.dotted_symbols:
