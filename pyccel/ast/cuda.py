@@ -76,37 +76,3 @@ class KernelCall(FunctionCall):
         Launch configuration of kernel call.
         """
         return self._launch_config
-
-class IndexedFunctionCall(FunctionCall):
-    """
-    Represents an indexed function call in the code.
-    
-    class represents indexed function calls, encapsulating all
-    relevant information for such calls within the codebase.
-
-    Parameters
-    ----------
-    func : FunctionDef
-        The function being called.
-
-    args : tuple
-        The arguments passed to the function.
-
-    launch_config : tuple
-        Launch configuration of kernel call.
-    """
-    __slots__ = ('_launch_config',)
-    def __init__(self, func, args, launch_config):
-        self._arguments = tuple(args)
-        self._func_name = func
-        self._launch_config = launch_config
-        super().__init__(func, args, None)
-
-    @property
-    def launch_config(self):
-        """
-        Launch configuration of kernel call.
-        
-        Launch configuration of kernel call.
-        """
-        return self._launch_config
