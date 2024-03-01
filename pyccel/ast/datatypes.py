@@ -98,17 +98,14 @@ class DataType(metaclass=ArgumentSingleton):
     Base class representing native datatypes.
 
     The base class from which all data types must inherit.
-
-    Parameters
-    ----------
-    *args : tuple
-        Any arguments required by the class.
-
-    **kwargs : dict
-        Any keyword arguments required by the class.
     """
     __slots__ = ()
     _name = '__UNDEFINED__'
+
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the ArgumentSingleton can
+        # always detect a signature
+        super().__init__()
 
     @property
     def name(self):
