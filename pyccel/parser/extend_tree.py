@@ -7,9 +7,10 @@
 ===========================================================
 
 """
+from io import StringIO
+
 import astunparse
 
-from io import StringIO
 from numpy import array, logical_and, where
 from ast   import AST, If as IfNode, parse
 from pyccel.errors.errors import Errors
@@ -49,6 +50,14 @@ class Unparser(astunparse.Unparser):
         super().__init__(tree, file=file)
 
     def _CommentLine(self, node):
+        """
+        Unparse the CommentLine node.
+
+        Parameters
+        ----------
+        node : CommentLine
+            The AST node that represents a comment.
+        """
         self.write('\n'+' '*4*self._indent+node.s)
 
 def unparse(tree):
