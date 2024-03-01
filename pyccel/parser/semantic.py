@@ -1040,7 +1040,7 @@ class SemanticParser(BasicParser):
             descr += f'[{dims}]'
         return descr
 
-    def _check_argument_compatibility(self, input_args, func_args, expr, elemental, raise_error=True, error_type='error'):
+    def _check_argument_compatibility(self, input_args, func_args, func, elemental, raise_error=True, error_type='error'):
         """
         Check that the provided arguments match the expected types.
 
@@ -1052,8 +1052,8 @@ class SemanticParser(BasicParser):
            The arguments provided to the function.
         func_args : list
            The arguments expected by the function.
-        expr : TypedAstNode
-           The expression where this call is found (used for error output).
+        expr : FunctionDef
+           The called function (used for error output).
         elemental : bool
            Indicates if the function is elemental.
         raise_error : bool, default : True
@@ -1077,10 +1077,6 @@ class SemanticParser(BasicParser):
                         i_arg.rank != f_arg.rank)
 
         flag = True
-        if isinstance(expr, FunctionCall):
-            func_name = expr.func_name
-        else:
-            func_name = expr
         err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
@@ -1097,16 +1093,16 @@ class SemanticParser(BasicParser):
                 expected  = self.get_type_description(f_arg, not elemental)
                 type_name = self.get_type_description(i_arg, not elemental)
                 received  = f'{i_arg} ({type_name})'
-                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func_name, expected)]
+                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func, expected)]
 
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
-                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func_name, order=f_arg.order)]
+                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func, order=f_arg.order)]
 
         if err_msgs:
             flag = False
             if raise_error:
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset)
-                errors.report('\n\n'.join(err_msgs), symbol = expr, bounding_box=bounding_box, severity=error_type)
+                errors.report('\n\n'.join(err_msgs), symbol = func, bounding_box=bounding_box, severity=error_type)
             else:
                 return flag
         return flag
@@ -1198,7 +1194,7 @@ class SemanticParser(BasicParser):
                         severity='error')
             elif isinstance(func, FunctionDef):
                 self._check_argument_compatibility(args, func_args,
-                            expr, func.is_elemental)
+                            func, func.is_elemental)
 
             return new_expr
 
@@ -3057,7 +3053,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             self._check_argument_compatibility(args, method.arguments,
-                            expr, method.is_elemental)
+                            method, method.is_elemental)
 
             new_expr = ConstructorCall(method, args, cls_variable)
 
