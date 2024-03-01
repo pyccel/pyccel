@@ -72,7 +72,7 @@ class Singleton(type):
     def __call__(cls):
         existing_instance = cls._instance
         if existing_instance is None:
-            new_instance = super().__call__(*args, **kwargs)
+            new_instance = super().__call__()
             cls._instance = new_instance
             return new_instance
         else:
