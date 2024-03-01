@@ -3,8 +3,8 @@
 # go to https://github.com/pyccel/pyccel/blob/master/LICENSE for full license details.     #
 #------------------------------------------------------------------------------------------#
 
-"""Extended AST with CommentLine nodes
-======================================
+"""Extended AST with CommentLine and CommentMultiLine nodes
+===========================================================
 
 """
 
@@ -30,7 +30,24 @@ class CommentLine(AST):
 class CommentMultiLine(CommentLine):
     """"New AST node representing a multi-line comment"""
 
+# ast.unparse only available in python>3.8
+try:
+    from ast import unparse
+except ImportError:
+    import astunparse
+    from io import StringIO
+    class Unparser(astunparse.Unparser):
+        def __init__(self, tree, file):
+            super().__init__(tree, file=file)
 
+        def _CommentLine(self, node):
+            self.write('\n'+' '*4*self._indent+node.s)
+
+    def unparse(tree):
+        v = StringIO()
+        Unparser(tree, v)
+        return v.getvalue()
+        
 def get_comments(code):
     lines = code.split("\n")
     comments        = []

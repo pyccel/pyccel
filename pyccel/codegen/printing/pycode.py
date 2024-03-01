@@ -5,7 +5,6 @@
 #------------------------------------------------------------------------------------------#
 import warnings
 
-from ast import unparse
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
@@ -28,6 +27,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
 
+from pyccel.parser.extend_tree import unparse
 errors = Errors()
 
 #==============================================================================
