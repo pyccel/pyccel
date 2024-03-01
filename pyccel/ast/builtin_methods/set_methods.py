@@ -113,8 +113,10 @@ class SetClear(SetMethod):
 class SetDiscard(SetMethod):
     """
     Represents a call to the .discard() method.
-    
-    
+
+    The discard() is a built-in method to remove elements from the set.
+    The discard() method takes exactly one argument. 
+    This method does not return any value.    
 
     Parameters
     ----------
