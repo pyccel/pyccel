@@ -271,7 +271,7 @@ class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
     """
     __slots__ = ()
 
-class NativeInhomogeneousTuple(NativeTuple):
+class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
     """
     Class representing the inhomogeneous tuple type.
 
