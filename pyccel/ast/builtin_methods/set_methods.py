@@ -12,7 +12,11 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 
+<<<<<<< HEAD
 __all__ = ('SetAdd', 'SetClear', 'SetMethod')
+=======
+__all__ = ('SetAdd', 'SetClear', 'SetCopy', 'SetMethod', 'SetRemove', 'SetPop', 'SetDiscard')
+>>>>>>> 6ddb2d93 (add support for disard method and test functions)
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -104,3 +108,39 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
+
+class SetDiscard(SetMethod):
+    """
+    Represents a call to the .discard() method.
+    
+    
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    _dtype = NativeVoid()
+    _shape = None
+    _order = None
+    _rank = 0
+    _precision = None
+    _class_type = NativeVoid()
+    name = 'discard'
+
+    def __init__(self, set_variable, item) -> None:
+        is_homogeneous = (
+            item.dtype is not NativeGeneric() and
+            set_variable.dtype is not NativeGeneric() and
+            set_variable.dtype == item.dtype and
+            set_variable.precision == item.precision and
+            set_variable.rank - 1 == item.rank
+        )
+        if not is_homogeneous:
+            raise TypeError("Expecting an argument of the same type as the elements of the set")
+        super().__init__(set_variable, item)
