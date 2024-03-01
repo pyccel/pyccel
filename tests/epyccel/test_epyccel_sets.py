@@ -80,7 +80,7 @@ def test_clear_complex(language):
 def test_Pop_int(language):
     def Pop_int():
         se = {2, 4, 9}
-        se.remove(4)
+        se.pop()
         return se
     epyccel_remove = epyccel(Pop_int, language = language)
     pyccel_result = epyccel_remove()
@@ -89,8 +89,8 @@ def test_Pop_int(language):
 
 def test_Pop_float(language):
     def Pop_float():
-        se = {2, 4, 9}
-        se.remove(4)
+        se = {2.7, 4.3, 9.2}
+        se.pop()
         return se
     epyccel_remove = epyccel(Pop_float, language = language)
     pyccel_result = epyccel_remove()
