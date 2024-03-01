@@ -892,7 +892,7 @@ class IndexedElement(TypedAstNode):
             indices = [Slice(None,None)]*rank
         # Add empty slices to fully index the object
         elif len(indices) < rank:
-            indices = indices + tuple([Slice(None, None)]*(rank-len(newindices)))
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
             self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
         else:
             self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
