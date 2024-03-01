@@ -28,9 +28,8 @@ class ArgumentSingleton(type):
     dct : dict
         A dictionary of the class attributes.
     """
-    _instances = {}
-
     def __init__(cls, name, bases, dct):
+        cls._instances = {}
         # Trick inspect.signature into seeing the signature of
         # cls.__init__ so numpydoc checks the correct signature
         cls.__signature__ = signature(cls.__init__)
