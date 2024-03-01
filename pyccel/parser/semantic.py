@@ -1052,7 +1052,7 @@ class SemanticParser(BasicParser):
            The arguments provided to the function.
         func_args : list
            The arguments expected by the function.
-        expr : FunctionDef
+        func : FunctionDef
            The called function (used for error output).
         elemental : bool
            Indicates if the function is elemental.

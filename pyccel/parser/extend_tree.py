@@ -38,6 +38,8 @@ class Unparser(astunparse.Unparser):
     """
     Class which extend the Unparser to handle CommentLine nodes.
 
+    Class which extend the Unparser to handle CommentLine nodes.
+
     Parameters
     ----------
     tree : ast.AST
@@ -51,7 +53,9 @@ class Unparser(astunparse.Unparser):
 
     def _CommentLine(self, node):
         """
-        Unparse the CommentLine node.
+        Method to unparse the CommentLine node.
+
+        Method to unparse the CommentLine node.
 
         Parameters
         ----------
@@ -64,6 +68,8 @@ def unparse(tree):
     """
     Unparse the AST.
 
+    Unparse the AST and return the code.
+
     Parameters
     ----------
     tree : ast.AST
@@ -71,7 +77,8 @@ def unparse(tree):
 
     Returns
     -------
-    str : The code of the unparsed tree.
+    str
+       The code of the unparsed tree.
     """
     v = StringIO()
     Unparser(tree, v)
