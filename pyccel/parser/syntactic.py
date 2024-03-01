@@ -64,7 +64,7 @@ from pyccel.ast.internals import Slice, PyccelSymbol, PyccelInternalFunction
 
 from pyccel.ast.type_annotations import SyntacticTypeAnnotation, UnionTypeAnnotation
 
-from pyccel.ast.cuda import IndexedFunctionCall
+from pyccel.ast.core import IndexedFunctionCall
 
 from pyccel.parser.base        import BasicParser
 from pyccel.parser.extend_tree import extend_tree
