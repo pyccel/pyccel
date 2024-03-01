@@ -22,7 +22,7 @@ from .cmathext      import cmath_mod
 from .datatypes     import NativeHomogeneousTuple
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
-from .literals      import LiteralInteger, Nil
+from .literals      import LiteralInteger, LiteralEllipsis, Nil
 from .mathext       import math_mod
 from .sysext        import sys_mod
 
@@ -313,16 +313,18 @@ def insert_index(expr, pos, index_var):
     elif isinstance(expr, IndexedElement):
         base = expr.base
         indices = list(expr.indices)
+        if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
+            indices = [Slice(None,None)]*base.rank
         i = -1
-        while i>=pos and -i<=expr.base.rank:
+        while i>=pos and -i<=base.rank:
             if not isinstance(indices[i], Slice):
                 pos -= 1
             i -= 1
-        if -pos>expr.base.rank:
+        if -pos>base.rank:
             return expr
 
         # Add index at the required position
-        if expr.base.shape[pos]==1:
+        if base.shape[pos]==1:
             # If there is no dimension in this axis, reduce the rank
             assert(indices[pos].start is None)
             index_var = LiteralInteger(0)

@@ -894,6 +894,9 @@ class PythonCodePrinter(CodePrinter):
                 stop  = stop,
                 step  = step)
 
+    def _print_LiteralEllipsis(self, expr):
+        return '...'
+
     def _print_SetAdd(self, expr):
         name = self._print(expr.set_variable)
         args = self._print(expr.add_argument)

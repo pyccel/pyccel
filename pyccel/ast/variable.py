@@ -18,7 +18,7 @@ from .datatypes import (datatype, DataType,
                         NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .internals import apply_pickle
-from .literals  import LiteralInteger, Nil
+from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
@@ -883,15 +883,19 @@ class IndexedElement(TypedAstNode):
         shape = base.shape
         rank  = base.rank
 
-        # Add empty slices to fully index the object
-        if len(indices) < rank:
-            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
-
-        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
+        if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
             errors.report("Index is not of valid type",
                     symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+        if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+            indices = [Slice(None,None)]*rank
+        # Add empty slices to fully index the object
+        elif len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(newindices)))
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+        else:
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
         # Calculate new shape
         new_shape = []

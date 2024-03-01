@@ -903,7 +903,7 @@ class SemanticParser(BasicParser):
                 severity='error')
 
         for arg in var[indices].indices:
-            if not isinstance(arg, Slice) and not \
+            if not isinstance(arg, (Slice, LiteralEllipsis)) and not \
                 (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
                 errors.report(INVALID_INDICES, symbol=var[indices],
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -2492,8 +2492,6 @@ class SemanticParser(BasicParser):
 
         if (len(args) == 1 and isinstance(getattr(args[0], 'class_type', None), NativeTuple)):
             args = args[0]
-        elif len(args) == 1 and isinstance(args[0], LiteralEllipsis):
-            args = [Slice(None, None, None)]*var.rank
 
         elif any(isinstance(getattr(a, 'class_type', None), NativeTuple) for a in args):
             n_exprs = None

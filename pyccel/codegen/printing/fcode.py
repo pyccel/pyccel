@@ -44,7 +44,7 @@ from pyccel.ast.internals import get_final_precision
 
 from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
@@ -2823,6 +2823,9 @@ class FCodePrinter(CodePrinter):
         base_code = self._print(base)
 
         inds = list(expr.indices)
+        if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
+            inds = [Slice(None,None)]*expr.rank
+
         if expr.base.order == 'C':
             inds = inds[::-1]
         allow_negative_indexes = base.allows_negative_indexes
