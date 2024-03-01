@@ -307,7 +307,7 @@ class PythonCodePrinter(CodePrinter):
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
 
-        if expr.is_inline:
+        if expr.is_inline and not expr.is_annotated:
             code = unparse(expr.syntactic_node.python_ast)
             code = code + '\n'
             return code
