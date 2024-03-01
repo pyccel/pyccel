@@ -12,7 +12,6 @@ from pyccel.ast.core import FunctionCall
 
 __all__ = (
     'KernelCall',
-    'IndexedFunctionCall'
 )
 
 class KernelCall(FunctionCall):

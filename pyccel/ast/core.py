@@ -67,6 +67,7 @@ __all__ = (
     'FuncAddressDeclare',
     'FunctionAddress',
     'FunctionCall',
+    'IndexedFunctionCall',
     'FunctionCallArgument',
     'FunctionDef',
     'FunctionDefArgument',
