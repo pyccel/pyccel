@@ -1040,7 +1040,7 @@ class SemanticParser(BasicParser):
             descr += f'[{dims}]'
         return descr
 
-    def _check_argument_compatibility(self, input_args, func_args, expr, elemental, raise_error=True):
+    def _check_argument_compatibility(self, input_args, func_args, expr, elemental, raise_error=True, error_type='error'):
         """
         Check that the provided arguments match the expected types.
 
@@ -1058,6 +1058,8 @@ class SemanticParser(BasicParser):
            Indicates if the function is elemental.
         raise_error : bool, default : True
            Raise the error if the arguments are incompatible.
+        error_type : str, default : error
+           The error type if the arguments are incompatible.
 
         Returns
         -------
@@ -1076,7 +1078,10 @@ class SemanticParser(BasicParser):
 
         flag = True
         if isinstance(expr, FunctionCall):
-            expr = expr.func_name
+            func_name = expr.func_name
+        else:
+            func_name = expr
+        err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
@@ -1087,23 +1092,23 @@ class SemanticParser(BasicParser):
                     or f_arg.dtype is NativeGeneric()):
                 continue
 
-            err_msgs = []
             # Check for compatibility
             if incompatible(i_arg, f_arg):
                 expected  = self.get_type_description(f_arg, not elemental)
                 type_name = self.get_type_description(i_arg, not elemental)
                 received  = f'{i_arg} ({type_name})'
-                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr, expected)]
+                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func_name, expected)]
 
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
-                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr, order=f_arg.order)]
+                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func_name, order=f_arg.order)]
 
-            if err_msgs:
-                flag = False
-                if raise_error:
-                    errors.report('\n'.join(err_msgs), symbol = expr, severity='fatal')
-                else:
-                    return flag
+        if err_msgs:
+            flag = False
+            if raise_error:
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset)
+                errors.report('\n\n'.join(err_msgs), symbol = expr, bounding_box=bounding_box, severity=error_type)
+            else:
+                return flag
         return flag
 
     def _handle_function(self, expr, func, args, is_method = False):
@@ -4185,9 +4190,10 @@ class SemanticParser(BasicParser):
             new_semantic_funcs += [func]
 
         if function_call is not None and len(new_semantic_funcs) == 0:
-            for args in annotated_args:
+            for args in annotated_args[:-1]:
                 #raise errors if we do not find any compatible function def
-                self._check_argument_compatibility(function_call, args, expr, is_elemental)
+                self._check_argument_compatibility(function_call, args, expr, is_elemental, error_type='error')
+            self._check_argument_compatibility(function_call, annotated_args[-1], expr, is_elemental, error_type='fatal')
 
         if existing_semantic_funcs:
             new_semantic_funcs += existing_semantic_funcs
