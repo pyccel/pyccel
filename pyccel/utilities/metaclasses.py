@@ -45,7 +45,7 @@ class ArgumentSingleton(type):
         else:
             return existing_instance
 
-class Singleton(ArgumentSingleton):
+class Singleton(type):
     """
     Metaclass indicating that there is only one instance of the class.
 
@@ -62,5 +62,18 @@ class Singleton(ArgumentSingleton):
     dct : dict
         A dictionary of the class attributes.
     """
+    def __init__(cls, name, bases, dct):
+        cls._instance = None
+        # Trick inspect.signature into seeing the signature of
+        # cls.__init__ so numpydoc checks the correct signature
+        cls.__signature__ = signature(cls.__init__)
+        super().__init__(name, bases, dct)
+
     def __call__(cls):
-        return super().__call__()
+        existing_instance = cls._instance
+        if existing_instance is None:
+            new_instance = super().__call__(*args, **kwargs)
+            cls._instance = new_instance
+            return new_instance
+        else:
+            return existing_instance

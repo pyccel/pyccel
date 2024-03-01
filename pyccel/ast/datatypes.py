@@ -93,7 +93,7 @@ iso_c_binding_shortcut_mapping = {
 
 #==============================================================================
 
-class DataType(metaclass=ArgumentSingleton):
+class DataType:
     """
     Base class representing native datatypes.
 
