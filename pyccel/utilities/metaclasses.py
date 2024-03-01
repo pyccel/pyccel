@@ -34,6 +34,7 @@ class ArgumentSingleton(type):
         # Trick inspect.signature into seeing the signature of
         # cls.__init__ so numpydoc checks the correct signature
         cls.__signature__ = signature(cls.__init__)
+        super().__init__(name, bases, dct)
 
     def __call__(cls, *args, **kwargs):
         index = (cls, *args, *sorted(kwargs.items()))
