@@ -20,11 +20,11 @@ dependencies = [
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
+    "astunparse >= 1.6.0",
 ]
 
 [project.optional-dependencies]
 test = [
-    "astunparse >= 1.6.0",
     "coverage >= 3.1",
     "mpi4py >= 3.0.0",
     "pytest >= 2.7",
