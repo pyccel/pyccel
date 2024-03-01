@@ -261,7 +261,7 @@ def insert_index(expr, pos, index_var):
        The expression to be modified.
     pos : int
        The index at which the expression is modified
-       (If negative then there is no index to insert)
+       (If negative then there is no index to insert).
     index_var : Variable
        The variable which will be used for indexing.
 

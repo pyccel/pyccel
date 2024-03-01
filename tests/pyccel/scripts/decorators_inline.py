@@ -37,6 +37,7 @@ def not_inline():
 
 @inline
 def positron_charge():
+    # comment
     return -not_inline()
 
 @inline
