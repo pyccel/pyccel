@@ -306,11 +306,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
-
-        if expr.is_inline and not expr.is_annotated:
-            code = unparse(expr.syntactic_node.python_ast)
-            code = code + '\n'
-            return code
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
