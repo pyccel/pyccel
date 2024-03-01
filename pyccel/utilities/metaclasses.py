@@ -39,12 +39,12 @@ class ArgumentSingleton(type):
     def __call__(cls, *args, **kwargs):
         index = (cls, *args, *sorted(kwargs.items()))
         existing_instance = cls._instances.get(index, None)
-        if existing_instance:
-            return existing_instance
-        else:
+        if existing_instance is None:
             new_instance = super().__call__(*args, **kwargs)
             cls._instances[index] = new_instance
             return new_instance
+        else:
+            return existing_instance
 
 class Singleton(ArgumentSingleton):
     """
