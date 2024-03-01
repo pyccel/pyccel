@@ -16,7 +16,7 @@ from  pyccel.epyccel import epyccel
 def language(request):
     return request.param
 
-def test_add_1(language) :
+def test_add_literal_int(language) :
     def add_int():
         a = {1,3,45}
         a.add(4)
@@ -26,7 +26,7 @@ def test_add_1(language) :
     python_result = add_int()
     assert python_result == pyccel_result
 
-def test_add_element2(language) :
+def test_add_literal_complex(language) :
     def add_complex():
         a = {6j,7j,8j}
         a.add(9j)
@@ -36,7 +36,7 @@ def test_add_element2(language) :
     python_result = add_complex()
     assert python_result == pyccel_result
 
-def test_add_element_3(language):
+def test_add_variable_int(language):
     def add_element_range():
         a = {1, 2, 3}
         for i in range(50, 100):

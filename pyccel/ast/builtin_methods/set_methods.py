@@ -70,8 +70,6 @@ class SetAdd(SetMethod) :
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
-        if new_elem.rank > 0:
-            raise TypeError("Pyccel can't hash non-scalar types")
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
             set_variable.dtype is not NativeGeneric() and
