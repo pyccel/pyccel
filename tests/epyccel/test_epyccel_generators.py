@@ -186,3 +186,16 @@ def test_nested_generators4(language):
     f_epyc = epyccel(f, language = language)
 
     assert f(x) == f_epyc(x)
+
+def test_sum_range_overwrite(language):
+    def f(a0 : 'int[:]'):
+        v = sum(a0[i] for i in range(len(a0)))
+        v = sum(a0[i] for i in range(len(a0)))
+        return v
+
+    n = randint(1,50)
+    x = randint(100,size=n)
+
+    f_epyc = epyccel(f, language = language)
+
+    assert f(x) == f_epyc(x)
