@@ -9,7 +9,7 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric
+from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('SetAdd',)
@@ -32,20 +32,15 @@ class SetAdd(PyccelInternalFunction) :
     """
     __slots__ = ("_set_variable", "_add_arg")
     _attribute_nodes = ("_set_variable", "_add_arg")
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            set_variable.dtype is not NativeGeneric() and
             set_variable.dtype == new_elem.dtype and
-            set_variable.precision == new_elem.precision and
             set_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:

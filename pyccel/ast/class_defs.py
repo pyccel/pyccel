@@ -245,7 +245,7 @@ def get_cls_base(class_type):
         return TupleClass
     elif isinstance(class_type, HomogeneousListType):
         return ListClass
-    elif isinstance(container_type, HomogeneousSetType):
+    elif isinstance(class_type, HomogeneousSetType):
         return SetClass
     else:
         raise NotImplementedError(f"No class definition found for type {class_type}")

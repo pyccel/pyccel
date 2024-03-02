@@ -761,8 +761,8 @@ class PythonSet(TypedAstNode):
         if pyccel_stage == 'syntactic':
             return
         arg0 = args[0]
-        is_homogeneous = arg0.class_type is not NativeGeneric() and \
-                         all(a.class_type is not NativeGeneric() and \
+        is_homogeneous = arg0.class_type is not GenericType() and \
+                         all(a.class_type is not GenericType() and \
                              arg0.class_type == a.class_type and \
                              arg0.rank  == a.rank  and \
                              arg0.order == a.order for a in args[1:])
