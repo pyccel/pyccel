@@ -1045,7 +1045,7 @@ class PythonSum(PyccelInternalFunction):
         if isinstance(arg.class_type, HomogeneousContainerType):
             self._class_type = arg.class_type.element_type
         else:
-            self._class_type = sum(arg.class_type)
+            self._class_type = sum(arg.class_type, start=GenericType())
         super().__init__(arg)
 
     @property
@@ -1091,7 +1091,7 @@ class PythonMax(PyccelInternalFunction):
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
         else:
-            self._class_type = sum(x.class_type)
+            self._class_type = sum(x.class_type, start=GenericType())
         super().__init__(x)
 
 
@@ -1128,7 +1128,7 @@ class PythonMin(PyccelInternalFunction):
         if isinstance(x.class_type, HomogeneousContainerType):
             self._class_type = x.class_type.element_type
         else:
-            self._class_type = sum(x.class_type)
+            self._class_type = sum(x.class_type, start=GenericType())
         super().__init__(x)
 
 #==============================================================================
