@@ -19,7 +19,7 @@ from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
 from .datatypes import GenericType, PythonNativeComplex, PyccelComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
-from .datatypes import FixedSizeNumericType
+from .datatypes import FixedSizeNumericType, HomogeneousSetType
 from .internals import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex, Nil
 from .literals  import Literal, LiteralImaginaryUnit, convert_to_literal
@@ -49,6 +49,7 @@ __all__ = (
     'PythonPrint',
     'PythonRange',
     'PythonReal',
+    'PythonSet',
     'PythonSum',
     'PythonTuple',
     'PythonTupleFunction',
@@ -734,6 +735,69 @@ class PythonList(TypedAstNode):
 
         Indicates whether all elements of the list have the same dtype,
         rank, etc (homogenous) or if these values can vary (inhomogeneous). Lists
+        are always homogeneous.
+        """
+        return True
+
+#==============================================================================
+class PythonSet(TypedAstNode):
+    """
+    Class representing a call to Python's `{,}` function.
+
+    Class representing a call to Python's `{,}` function which generates
+    a literal Python Set.
+
+    Parameters
+    ----------
+    *args : tuple of TypedAstNodes
+        The arguments passed to the operator.
+    """
+    __slots__ = ('_args','_class_type','_rank','_shape','_order')
+    _attribute_nodes = ('_args',)
+
+    def __init__(self, *args):
+        self._args = args
+        super().__init__()
+        if pyccel_stage == 'syntactic':
+            return
+        arg0 = args[0]
+        is_homogeneous = arg0.class_type is not NativeGeneric() and \
+                         all(a.class_type is not NativeGeneric() and \
+                             arg0.class_type == a.class_type and \
+                             arg0.rank  == a.rank  and \
+                             arg0.order == a.order for a in args[1:])
+        if is_homogeneous:
+            dtype = arg0.dtype
+            inner_shape = [() if a.rank == 0 else a.shape for a in args]
+            self._shape = (LiteralInteger(len(args)), ) + inner_shape[0]
+            self._rank  = len(self._shape)
+            if self._rank > 1:
+                raise TypeError("Pyccel can't hash non-scalar types")
+        else:
+            raise TypeError("Can't create an inhomogeneous set")
+
+        self._class_type = HomogeneousSetType(dtype)
+        self._order = None if self._rank < 2 else 'C'
+
+    def __iter__(self):
+        return self._args.__iter__()
+
+    @property
+    def args(self):
+        """
+        Arguments of the set.
+
+        The arguments that were used to initialise the set.
+        """
+        return self._args
+
+    @property
+    def is_homogeneous(self):
+        """
+        Indicates whether the set is homogeneous or inhomogeneous.
+
+        Indicates whether all elements of the Set have the same dtype, precision,
+        rank, etc (homogenous) or if these values can vary (inhomogeneous). sets
         are always homogeneous.
         """
         return True

@@ -12,7 +12,7 @@ from functools import lru_cache
 
 import numpy
 
-from pyccel.utilities.metaclasses import Singleton, build_argument_singleton
+from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
 
 __all__ = (
         # ------------ Super classes ------------
@@ -581,8 +581,7 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
         """
         return self
 
-class HomogeneousTupleType(HomogeneousContainerType, TupleType,
-                           metaclass = build_argument_singleton('element_type')):
+class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous tuple type.
 
@@ -603,8 +602,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType,
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
 
-class HomogeneousListType(HomogeneousContainerType,
-                           metaclass = build_argument_singleton('element_type')):
+class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous list type.
 
@@ -618,6 +616,25 @@ class HomogeneousListType(HomogeneousContainerType,
     """
     __slots__ = ('_element_type',)
     _name = 'list'
+
+    def __init__(self, element_type):
+        assert isinstance(element_type, PyccelType)
+        self._element_type = element_type
+
+class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
+    """
+    Class representing the homogeneous set type.
+
+    Class representing the type of a homogeneous set. This
+    is a container type and should be used as the class_type.
+
+    Parameters
+    ----------
+    element_type : PyccelType
+        The type which is stored in the homogeneous set.
+    """
+    __slots__ = ('_element_type',)
+    _name = 'set'
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -659,8 +676,7 @@ class CustomDataType(ContainerType, metaclass=Singleton):
         """
         return (self.__class__, ())
 
-class InhomogeneousTupleType(ContainerType, TupleType,
-                           metaclass = build_argument_singleton('*args')):
+class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -721,7 +737,7 @@ class InhomogeneousTupleType(ContainerType, TupleType,
         else:
             return self
 
-class DictType(ContainerType, metaclass = build_argument_singleton('index_type', 'value_type')):
+class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
 

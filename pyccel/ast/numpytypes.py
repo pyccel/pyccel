@@ -10,7 +10,7 @@ from functools import lru_cache
 
 import numpy as np
 
-from pyccel.utilities.metaclasses import build_argument_singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
@@ -248,8 +248,7 @@ class NumpyComplex256Type(NumpyNumericType):
 
 #==============================================================================
 
-class NumpyNDArrayType(HomogeneousContainerType,
-                           metaclass = build_argument_singleton('dtype')):
+class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the NumPy ND array type.
 

@@ -14,6 +14,7 @@ from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
 from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
 from pyccel.ast.variable import Variable
+from pyccel.utilities.metaclasses import Singleton
 
 __all__ = (
     'BindCArrayVariable',
@@ -34,7 +35,7 @@ __all__ = (
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(FixedSizeType):
+class BindCPointer(FixedSizeType, metaclass = Singleton):
     """
     Datatype representing a C pointer in Fortran.
 

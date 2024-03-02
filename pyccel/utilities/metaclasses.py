@@ -4,50 +4,46 @@
 #------------------------------------------------------------------------------------------#
 """ Module containing metaclasses which are useful for the rest of pyccel
 """
-
+from inspect import signature
 
 __all__ = (
     'Singleton',
-    'build_argument_singleton'
+    'ArgumentSingleton',
 )
 
-def build_argument_singleton(*argnames):
-    """
-    Build a metaclass which handles singletons with arguments.
 
-    Build a metaclass which ensures that there is only one instance of the class
-    for any given set of arguments. The metaclass is specialised for the
-    specified arguments which ensures that `inspect.signature` returns the
-    expected result and that the docstring can match the `__init__` method.
+class ArgumentSingleton(type):
+    """
+    Metaclass indicating that there is only one instance of the parametrised class.
+
+    Metaclass indicating that there is only one instance of the class for any given
+    set of arguments.
 
     Parameters
     ----------
-    *argnames : tuple[str]
-        A tuple of strings describing all the arguments which may be passed to
-        the function.
-
-    Returns
-    -------
-    type
-        A metaclass which can be used when building classes.
-
-    Examples
-    --------
-    >>> class A(metaclass = build_argument_singleton('arg1', 'arg2')):
-            def __init__(self, arg1, arg2 = 3):
-                pass
+    name : str
+        The name of the class.
+    bases : tuple[class,...]
+        A tuple of the superclasses of the class.
+    dct : dict
+        A dictionary of the class attributes.
     """
-    args = ', '.join([*argnames])
-    def_code = '\n'.join([f"def new_call_func(cls, {args}):",
-                          f"    index = (cls, {args})",
-                           "    if index not in cls._instances:",
-                          f"        cls._instances[index] = type.__call__(cls, {args})",
-                           "    return cls._instances[index]"])
-    my_locals = {}
-    exec(def_code, None, my_locals) # pylint: disable=exec-used
-    return type('ArgumentSingleton', (type,),
-            {'__call__': my_locals['new_call_func'],
-             '_instances': {}})
+    def __init__(cls, name, bases, dct):
+        cls._instances = {}
+        # Trick inspect.signature into seeing the signature of
+        # cls.__init__ so numpydoc checks the correct signature
+        cls.__signature__ = signature(cls.__init__)
+        super().__init__(name, bases, dct)
+
+    def __call__(cls, *args, **kwargs):
+        index = (*args, *sorted(kwargs.items()))
+        existing_instance = cls._instances.get(index, None)
+        if existing_instance is None:
+            new_instance = super().__call__(*args, **kwargs)
+            cls._instances[index] = new_instance
+            return new_instance
+        else:
+            return existing_instance
 
 class Singleton(type):
     """
@@ -56,11 +52,28 @@ class Singleton(type):
     A metaclass which ensures that only one instance of the class is ever
     created. Trying to create a second instance will result in accessing
     the first.
+
+    Parameters
+    ----------
+    name : str
+        The name of the class.
+    bases : tuple[class,...]
+        A tuple of the superclasses of the class.
+    dct : dict
+        A dictionary of the class attributes.
     """
-    _instances = {}
+    def __init__(cls, name, bases, dct):
+        cls._instance = None
+        # Trick inspect.signature into seeing the signature of
+        # cls.__init__ so numpydoc checks the correct signature
+        cls.__signature__ = signature(cls.__init__)
+        super().__init__(name, bases, dct)
 
     def __call__(cls):
-        index = cls
-        if index not in cls._instances:
-            cls._instances[index] = super().__call__()
-        return cls._instances[index]
+        existing_instance = cls._instance
+        if existing_instance is None:
+            new_instance = super().__call__()
+            cls._instance = new_instance
+            return new_instance
+        else:
+            return existing_instance

@@ -6,6 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
+from pyccel.ast.builtin_methods.set_methods import SetAdd
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear
 
 
@@ -13,7 +14,7 @@ from .builtins  import PythonImag, PythonReal, PythonConjugate
 from .core      import ClassDef, PyccelFunctionDef
 from .datatypes import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
                         PythonNativeComplex, StringType, TupleType, CustomDataType,
-                        HomogeneousListType)
+                        HomogeneousListType, HomogeneousSetType)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
@@ -23,6 +24,7 @@ __all__ = ('BooleanClass',
         'IntegerClass',
         'FloatClass',
         'ComplexClass',
+        'SetClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
@@ -148,6 +150,14 @@ ListClass = ClassDef('list',
 
 #=======================================================================================
 
+SetClass = ClassDef('set',
+        methods=[
+            PyccelFunctionDef('add', func_class = SetAdd,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple',
         methods=[
             #index
@@ -235,6 +245,8 @@ def get_cls_base(class_type):
         return TupleClass
     elif isinstance(class_type, HomogeneousListType):
         return ListClass
+    elif isinstance(container_type, HomogeneousSetType):
+        return SetClass
     else:
         raise NotImplementedError(f"No class definition found for type {class_type}")
 

@@ -7,7 +7,7 @@
 Module representing object address.
 """
 
-from pyccel.utilities.metaclasses import build_argument_singleton
+from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import HomogeneousContainerType, FixedSizeType, PyccelIntegerType
 from .literals  import LiteralString
@@ -33,7 +33,7 @@ class CNativeInt(FixedSizeType):
 
 #------------------------------------------------------------------------------
 
-class CStackArray(HomogeneousContainerType, metaclass=build_argument_singleton('element_type')):
+class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     """
     A data type representing an array allocated on the stack.
 
