@@ -1059,7 +1059,7 @@ class SemanticParser(BasicParser):
         raise_error : bool, default : True
            Raise the error if the arguments are incompatible.
         error_type : str, default : error
-           The error type if the arguments are incompatible.
+           The error type if errors are raised from the function.
 
         Returns
         -------
