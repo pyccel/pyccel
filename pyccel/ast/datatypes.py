@@ -62,6 +62,11 @@ class PrimitiveType(metaclass=Singleton):
     __slots__ = ()
     _name = '__UNDEFINED__'
 
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the ArgumentSingleton can
+        # always detect a signature
+        super().__init__()
+
     def __str__(self):
         return self._name
 
@@ -143,6 +148,11 @@ class PyccelType:
     is expected when calling a bitwise comparison operator on objects of these types.
     """
     __slots__ = ()
+
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the ArgumentSingleton can
+        # always detect a signature
+        super().__init__()
 
     def __str__(self):
         return self._name #pylint: disable=no-member
