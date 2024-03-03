@@ -144,14 +144,6 @@ def test_same_string(language):
     test = epyccel_test(base.isnot_same_string, lang=language)
     test.compare_epyccel()
 
-@pytest.mark.parametrize( 'language', [
-        pytest.param("c", marks = pytest.mark.c),
-        pytest.param("fortran", marks = pytest.mark.fortran),
-        pytest.param("cuda", marks = [
-            pytest.mark.xfail(reason="Complex are not yet implemented for Cuda language"),
-            pytest.mark.cuda])
-    ]
-)
 def test_same_complex(language):
     test = epyccel_test(base.is_same_complex, lang=language)
     test.compare_epyccel( complex(2,3) )
@@ -186,7 +178,6 @@ def test_pass2_if(language_with_cuda):
 optional_marks = [
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python),
-        pytest.param("cuda", marks = pytest.mark.cuda),
     ]
 if os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel':
     optional_marks.append(pytest.param("fortran", marks = [
