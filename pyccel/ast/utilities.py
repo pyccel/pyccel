@@ -257,7 +257,7 @@ def insert_index(expr, pos, index_var):
 
     Parameters
     ----------
-    expr : PyccelAstNode Node
+    expr : PyccelAstNode
        The expression to be modified.
     pos : int
        The index at which the expression is modified
