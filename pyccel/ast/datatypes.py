@@ -609,6 +609,7 @@ class HomogeneousTupleType(HomogeneousContainerType, TupleType, metaclass = Argu
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
+        super().__init__()
 
     def __str__(self):
         return f'{self._name}[{self._element_type}, ...]'
@@ -631,6 +632,7 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
+        super().__init__()
 
 class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     """
@@ -650,6 +652,7 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
         self._element_type = element_type
+        super().__init__()
 
 #==============================================================================
 
