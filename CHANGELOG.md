@@ -26,7 +26,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 -   #1720 : Make INCOMPATIBLE_ARGUMENT error blocking
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
--   \[INTERNALS\] `InlinedFunctionDef` is annotated only if they are called.
+-   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
