@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import numpy as np
-from pyccel.decorators import inline,template
+from pyccel.decorators import inline, template
 
 pi = 3.14159
 
