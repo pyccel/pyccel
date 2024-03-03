@@ -364,7 +364,8 @@ end module boo
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
-The function with the `@inline` decorator will not be exposed to the user in the shared library.
+Any functions with the `@inline` decorator will not be exposed to the user in the shared library.
+
 ### Basic Example
 
 Here is a simple usage example:
