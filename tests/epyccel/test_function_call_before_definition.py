@@ -8,7 +8,7 @@ from pyccel.epyccel import epyccel
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
         pytest.param("c", marks = [
-            pytest.mark.skip(reason="Can't compile nested functions"),
+            pytest.mark.skip(reason="Functions in functions not implemented in c"),
             pytest.mark.c]
         ),
         pytest.param("python", marks = pytest.mark.python)
