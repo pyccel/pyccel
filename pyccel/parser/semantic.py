@@ -26,7 +26,7 @@ from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
 from pyccel.ast.builtins import builtin_functions_dict, PythonImag, PythonReal
-from pyccel.ast.builtins import PythonList, PythonConjugate
+from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
@@ -2272,6 +2272,16 @@ class SemanticParser(BasicParser):
             expr = PythonList(*ls)
         except TypeError:
             errors.report(PYCCEL_RESTRICTION_INHOMOG_LIST, symbol=expr,
+                severity='fatal')
+        return expr
+
+    def _visit_PythonSet(self, expr):
+        ls = [self._visit(i) for i in expr]
+        try:
+            expr = PythonSet(*ls)
+        except TypeError as e:
+            message = str(e)
+            errors.report(message, symbol=expr,
                 severity='fatal')
         return expr
 

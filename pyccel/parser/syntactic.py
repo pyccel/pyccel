@@ -51,7 +51,7 @@ from pyccel.ast.operators import PyccelIs, PyccelIsNot
 from pyccel.ast.operators import IfTernaryOperator
 from pyccel.ast.numpyext  import NumpyMatmul
 
-from pyccel.ast.builtins import PythonTuple, PythonList
+from pyccel.ast.builtins import PythonTuple, PythonList, PythonSet
 from pyccel.ast.builtins import PythonPrint, Lambda
 from pyccel.ast.headers  import MetaVariable, FunctionHeader, MethodHeader
 from pyccel.ast.literals import LiteralInteger, LiteralFloat, LiteralComplex
@@ -364,6 +364,9 @@ class SyntaxParser(BasicParser):
 
     def _visit_List(self, stmt):
         return PythonList(*self._treat_iterable(stmt.elts))
+
+    def _visit_Set(self, stmt):
+        return PythonSet(*self._treat_iterable(stmt.elts))
 
     def _visit_tuple(self, stmt):
         return tuple(self._treat_iterable(stmt))
