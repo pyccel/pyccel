@@ -1099,13 +1099,12 @@ class SemanticParser(BasicParser):
                 err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func, order=f_arg.order)]
 
         if err_msgs:
-            flag = False
             if raise_error:
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset)
                 errors.report('\n\n'.join(err_msgs), symbol = func, bounding_box=bounding_box, severity=error_type)
             else:
-                return flag
-        return flag
+                return False
+        return True
 
     def _handle_function(self, expr, func, args, is_method = False):
         """
