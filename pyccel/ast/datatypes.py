@@ -43,6 +43,7 @@ __all__ = (
         'StringType',
         'HomogeneousTupleType',
         'HomogeneousListType',
+        'HomogeneousSetType',
         'CustomDataType',
         'InhomogeneousTupleType',
         'DictType',
