@@ -606,6 +606,7 @@ Traceback (most recent call last):
   File "<string>", line 1, in <module>
 ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)
 ```
+
 ## Getting Help
 
 If you face problems with Pyccel, please take the following steps:
