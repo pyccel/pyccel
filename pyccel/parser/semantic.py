@@ -4191,7 +4191,7 @@ class SemanticParser(BasicParser):
             self._check_argument_compatibility(function_call, annotated_args[-1], expr, is_elemental, error_type='fatal')
 
         if existing_semantic_funcs:
-            new_semantic_funcs += existing_semantic_funcs
+            new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
         if len(new_semantic_funcs) == 1 and not is_interface:
             new_semantic_funcs = new_semantic_funcs[0]
