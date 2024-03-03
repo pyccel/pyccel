@@ -14,7 +14,7 @@ All notable changes to this project will be documented in this file.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1720 : `@inline`decorator will not expose the user to the function through the shared library.
+-   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 
 ### Fixed
 
