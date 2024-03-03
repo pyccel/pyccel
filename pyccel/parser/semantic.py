@@ -1076,7 +1076,6 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
-        flag = True
         err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
@@ -2995,7 +2994,7 @@ class SemanticParser(BasicParser):
                 if not is_inline:
                     func = self._annotate_the_called_function_def(func)
                 else:
-                     func = self._annotate_the_called_function_def(func, function_call=args)
+                        func = self._annotate_the_called_function_def(func, function_call=args)
             elif is_inline and isinstance(func, Interface):
                 is_compatible = False
                 for f in func.functions:
