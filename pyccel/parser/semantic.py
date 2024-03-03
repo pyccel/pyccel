@@ -3984,6 +3984,7 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
+        # The names of these functions will be recreated in the loop
         for f in existing_semantic_funcs:
             self.scope.remove_symbol(f.name)
 
