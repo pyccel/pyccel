@@ -600,7 +600,7 @@ The generated C code:
 ```
 
 ### Import Error when imported from the shared library
-Using the previous example, if we import the function `get_val`, we get this Error
+Using the previous example, if we import the function `get_val`, we get this error:
 ```
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
