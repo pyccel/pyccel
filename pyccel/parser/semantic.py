@@ -2992,11 +2992,12 @@ class SemanticParser(BasicParser):
             args      = self._sort_function_call_args(func_args, args)
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
 
-            if not func.is_annotated and not is_inline:
-                func = self._annotate_the_called_function_def(func)
-            elif not func.is_annotated and is_inline:
-                func = self._annotate_the_called_function_def(func, function_call=args)
-            elif func.is_annotated and is_inline and isinstance(func, Interface):
+            if not func.is_annotated:
+                if not is_inline:
+                    func = self._annotate_the_called_function_def(func)
+                else:
+                     func = self._annotate_the_called_function_def(func, function_call=args)
+            elif is_inline and isinstance(func, Interface):
                 is_compatible = []
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
