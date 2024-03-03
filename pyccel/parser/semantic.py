@@ -2998,11 +2998,11 @@ class SemanticParser(BasicParser):
                 else:
                      func = self._annotate_the_called_function_def(func, function_call=args)
             elif is_inline and isinstance(func, Interface):
-                is_compatible = []
+                is_compatible = False
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
-                    is_compatible.append(fl)
-                if not any(is_compatible):
+                    is_compatible |= fl
+                if not is_compatible:
                     func = self._annotate_the_called_function_def(func, function_call=args)
 
         if name == 'lambdify':
