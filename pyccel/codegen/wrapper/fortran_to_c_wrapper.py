@@ -186,7 +186,7 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces if f.is_annotated and not f.is_inline]
+        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]

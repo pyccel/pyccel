@@ -763,7 +763,7 @@ class CCodePrinter(CodePrinter):
                         class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
                         funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
-        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if f.is_annotated and not f.is_inline)
+        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
 
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 

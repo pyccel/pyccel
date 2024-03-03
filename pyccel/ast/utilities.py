@@ -257,7 +257,7 @@ def insert_index(expr, pos, index_var):
 
     Parameters
     ----------
-    expr : Ast Node
+    expr : PyccelAstNode Node
        The expression to be modified.
     pos : int
        The index at which the expression is modified
@@ -268,7 +268,7 @@ def insert_index(expr, pos, index_var):
     Returns
     -------
     PyccelAstNode
-       Either a modified version of expr or expr itself.
+       The modified version of expr.
 
     Examples
     --------
@@ -281,10 +281,8 @@ def insert_index(expr, pos, index_var):
     >>> i = Variable('int', 'i')
     >>> d = PyccelAdd(a,b)
     >>> expr = Assign(c,d)
-    >>> insert_index(expr, 0, i, language_has_vectors = False)
+    >>> insert_index(expr, 0, i)
     IndexedElement(c, i) := IndexedElement(a, i) + IndexedElement(b, i)
-    >>> insert_index(expr, 0, i, language_has_vectors = True)
-    c := a + b
     """
     if expr.rank==0:
         return expr

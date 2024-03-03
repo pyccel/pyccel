@@ -2376,6 +2376,7 @@ class SemanticParser(BasicParser):
             else:
                 ls.append(line)
         self._additional_exprs.pop()
+
         return CodeBlock(ls)
 
     def _visit_Nil(self, expr):
@@ -2962,7 +2963,6 @@ class SemanticParser(BasicParser):
         return expr
 
     def _visit_FunctionCall(self, expr):
-
         name     = expr.funcdef
         try:
             name = self.scope.get_expected_name(name)
@@ -2982,7 +2982,6 @@ class SemanticParser(BasicParser):
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
-
         if (isinstance(func, FunctionDef) and func.scope) or (isinstance(func, Interface) and func.is_annotated):
             scope = func.scope if isinstance(func, FunctionDef) else func.syntactic_node.scope
             args = [a if a.keyword is None else \
@@ -3984,17 +3983,12 @@ class SemanticParser(BasicParser):
         interface_counter = 0
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
-        # The names of these functions will be recreated in the loop
-        for f in existing_semantic_funcs:
-            self.scope.remove_symbol(f.name)
-
         for tmpl_idx in range(n_templates):
-
-            if is_interface:
-                name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
-
             if function_call is not None and found_func:
                 break
+
+            if is_interface:
+                name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
 
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),

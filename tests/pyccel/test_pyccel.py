@@ -1083,6 +1083,7 @@ def test_function(language):
             language = language, output_dtype=[str]+[int]*8 )
 
 #------------------------------------------------------------------------------
+@pytest.mark.xdist_incompatible
 @pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason="1671")
 def test_inline(language):
     pyccel_test("scripts/decorators_inline.py", language = language)
