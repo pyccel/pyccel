@@ -6,6 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
+from pyccel.ast.builtin_methods.set_methods import SetAdd
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
 
@@ -14,7 +15,7 @@ from .core      import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
 from .datatypes import (NativeBool, NativeInteger, NativeFloat,
                         NativeComplex, NativeString, NativeNumericTypes,
-                        NativeTuple, CustomDataType, NativeHomogeneousList)
+                        NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
 from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                         NumpyImag, NumpyReal, NumpyTranspose,
                         NumpyConjugate, NumpySize, NumpyResultType,
@@ -24,6 +25,7 @@ __all__ = ('BooleanClass',
         'IntegerClass',
         'FloatClass',
         'ComplexClass',
+        'SetClass',
         'StringClass',
         'NumpyArrayClass',
         'TupleClass',
@@ -151,6 +153,14 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
 
 #=======================================================================================
 
+SetClass = ClassDef('set', class_type=NativeHomogeneousSet(),
+        methods=[
+            PyccelFunctionDef('add', func_class = SetAdd,
+                decorators = {}),
+        ])
+
+#=======================================================================================
+
 TupleClass = ClassDef('tuple', class_type = NativeTuple(),
         methods=[
             #index
@@ -244,6 +254,8 @@ def get_cls_base(dtype, precision, container_type):
         return TupleClass
     elif isinstance(container_type, NativeHomogeneousList):
         return ListClass
+    elif isinstance(container_type, NativeHomogeneousSet):
+        return SetClass
     else:
         if container_type:
             type_name = str(container_type)

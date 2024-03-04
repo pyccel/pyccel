@@ -22,19 +22,20 @@ __all__ = (
 #
     'CustomDataType',
     'DataType',
+    'DataTypeFactory',
     'NativeBool',
     'NativeComplex',
     'NativeFloat',
     'NativeGeneric',
+    'NativeHomogeneousList',
+    'NativeHomogeneousSet',
+    'NativeHomogeneousTuple',
     'NativeInhomogeneousTuple',
     'NativeInteger',
-    'NativeHomogeneousList',
-    'NativeHomogeneousTuple',
     'NativeString',
     'NativeSymbol',
     'NativeTuple',
     'NativeVoid',
-    'DataTypeFactory',
 #
 # --------- FUNCTIONS -----------
 #
@@ -92,22 +93,19 @@ iso_c_binding_shortcut_mapping = {
 
 #==============================================================================
 
-class DataType(metaclass=ArgumentSingleton):
+class DataType:
     """
     Base class representing native datatypes.
 
     The base class from which all data types must inherit.
-
-    Parameters
-    ----------
-    *args : tuple
-        Any arguments required by the class.
-
-    **kwargs : dict
-        Any keyword arguments required by the class.
     """
     __slots__ = ()
     _name = '__UNDEFINED__'
+
+    def __init__(self): #pylint: disable=useless-parent-delegation
+        # This __init__ function is required so the ArgumentSingleton can
+        # always detect a signature
+        super().__init__()
 
     @property
     def name(self):
@@ -273,7 +271,7 @@ class NativeHomogeneousTuple(NativeTuple, metaclass = Singleton):
     """
     __slots__ = ()
 
-class NativeInhomogeneousTuple(NativeTuple):
+class NativeInhomogeneousTuple(NativeTuple, metaclass = ArgumentSingleton):
     """
     Class representing the inhomogeneous tuple type.
 
@@ -283,16 +281,13 @@ class NativeInhomogeneousTuple(NativeTuple):
 
     Parameters
     ----------
-    *args : tuple of DataTypes
+    *dtypes : tuple[DataType, ...]
         The datatypes stored in the inhomogeneous tuple.
-
-    **kwargs : empty dict
-        Keyword arguments as defined by the ArgumentSingleton class.
     """
     __slots__ = ('_dtypes',)
 
-    def __init__(self, *args):
-        self._dtypes = args
+    def __init__(self, *dtypes):
+        self._dtypes = dtypes
         super().__init__()
 
     @property
@@ -330,6 +325,16 @@ class NativeHomogeneousList(DataType, metaclass = Singleton):
             return self
         else:
             return NotImplemented
+
+class NativeHomogeneousSet(DataType, metaclass = Singleton):
+    """
+    Class representing the homogeneous Set type.
+
+    Class representing the type of a homogeneous Set. This
+    is a container type and should be used as the class_type.
+    """
+    __slots__ = ()
+    _name = 'Set'
 
 class NativeSymbol(DataType, metaclass=Singleton):
     """
