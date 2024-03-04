@@ -259,10 +259,15 @@ class FixedSizeNumericType(FixedSizeType):
         Precision of the datatype of the object.
 
         The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
+        number of bytes that the datatype takes up in memory. For basic types the
+        number is equivalent to the number of bytes in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes), however for less simple types the
+        connection is less trivial. For example `complex128` has precision = 8 as
+        it is comprised of two `float64` objects (which have precision=8).
+        It should be noted that this is not the convention chosen by NumPy (in NumPy
+        a `complex128` is so named because `16*8=precision*bits_in_a_byte=128`).
+
+        The precision is Pyccel is equivalent to the `kind` parameter in Fortran.
         """
         return self._precision # pylint: disable=no-member
 
@@ -483,13 +488,18 @@ class HomogeneousContainerType(ContainerType):
     @property
     def precision(self):
         """
-        Precision of the elements of the object.
+        Precision of the datatype of the object.
 
-        The precision of the elements of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
+        The precision of the datatype of the object. This number is related to the
+        number of bytes that the datatype takes up in memory. For basic types the
+        number is equivalent to the number of bytes in memory (e.g. `float64` has
+        precision = 8 as it takes up 8 bytes), however for less simple types the
+        connection is less trivial. For example `complex128` has precision = 8 as
+        it is comprised of two `float64` objects (which have precision=8).
+        It should be noted that this is not the convention chosen by NumPy (in NumPy
+        a `complex128` is so named because `16*8=precision*bits_in_a_byte=128`).
+
+        The precision is Pyccel is equivalent to the `kind` parameter in Fortran.
         """
         return self.element_type.precision
 
