@@ -13,11 +13,8 @@ def test_invalid_launch_configuration():
         @device
         def add_one(x : int)
             return x + 1
-        @kernel
-        def kernel_call():
-            pass
+
         x = add_one(1)
-        kernel_call[1, 1]()
 
     errors = Errors()
 

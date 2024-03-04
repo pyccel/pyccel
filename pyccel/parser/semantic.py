@@ -1119,7 +1119,8 @@ class SemanticParser(BasicParser):
 
         if (isinstance(func, FunctionDef) and
             'device' in func.decorators and
-            'kernel' not in self.scope.decorators):
+            'kernel' not in self.scope.decorators and
+            'device' not in self.scope.decorators):
                 errors.report(MISSING_KERNEL_CONFIGURATION,
                             symbol=expr,
                             severity='fatal')
