@@ -40,7 +40,7 @@ class SetAdd(PyccelInternalFunction) :
 
     def __init__(self, set_variable, new_elem) -> None:
         is_homogeneous = (
-            set_variable.dtype == new_elem.dtype and
+            set_variable.class_type == new_elem.class_type and
             set_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
