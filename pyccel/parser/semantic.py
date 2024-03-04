@@ -2109,7 +2109,8 @@ class SemanticParser(BasicParser):
             else:
                 init_func_body.append(b)
 
-        for f in self.scope.functions.copy().values():
+        for f in self.scope.functions.copy():
+            f = self.scope.functions[f]
             if not f.is_annotated and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit_FunctionDef(f, annotate=True)
