@@ -9,6 +9,8 @@ This module is designed to interface Pyccel's Abstract Syntax Tree (AST) with CU
 enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
 
+import functools
+
 from pyccel.codegen.printing.ccode import CCodePrinter, c_library_headers, c_imports
 from pyccel.ast.datatypes import NativeInteger, NativeVoid
 
@@ -16,6 +18,7 @@ from pyccel.ast.core      import Deallocate
 from pyccel.ast.variable import DottedVariable
 
 from pyccel.ast.core        import Import, Module, Declare
+from pyccel.ast.operators import PyccelMul
 
 from pyccel.errors.errors   import Errors
 
@@ -108,6 +111,48 @@ class CudaCodePrinter(CCodePrinter):
 
         self.exit_scope()
         return code
+
+    def _init_stack_array(self, expr):
+        """
+        Return a string which handles the assignment of a stack ndarray.
+
+        Print the code necessary to initialise a ndarray on the stack.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The Assign Node used to get the lhs and rhs.
+
+        Returns
+        -------
+        buffer_array : str
+            String initialising the stack (C) array which stores the data.
+        array_init   : str
+            String containing the rhs of the initialization of a stack array.
+        """
+        var = expr
+        dtype = self.find_in_dtype_registry(var.dtype, var.precision)
+        np_dtype = self.find_in_ndarray_type_registry(var.dtype, var.precision)
+        shape = ", ".join(self._print(i) for i in var.alloc_shape)
+        tot_shape = self._print(functools.reduce(
+            lambda x,y: PyccelMul(x,y,simplify=True), var.alloc_shape))
+        declare_dtype = self.find_in_dtype_registry(NativeInteger(), 8)
+
+        dummy_array_name = self.scope.get_new_name('array_dummy')
+        buffer_array = "{dtype} {name}[{size}];\n".format(
+                dtype = dtype,
+                name  = dummy_array_name,
+                size  = tot_shape)
+        tmp_shape = self.scope.get_new_name(f'tmp_shape_{var.name}')
+        shape_init = f'{declare_dtype} {tmp_shape}[] = {{{shape}}};\n'
+        tmp_strides = self.scope.get_new_name(f'tmp_strides_{var.name}')
+        strides_init = f'{declare_dtype} {tmp_strides}[{var.rank}] = {{0}};\n'
+        array_init = f' = (t_ndarray){{\n.{np_dtype}={dummy_array_name},\n .nd={var.rank},\n '
+        array_init += f'.shape={tmp_shape},\n .strides={tmp_strides},\n .type={np_dtype},\n .is_view=false\n}};\n'
+        array_init += 'stack_array_init(&{})'.format(self._print(var))
+        preface = buffer_array + shape_init + strides_init
+        self.add_import(c_imports['ndarrays'])
+        return preface, array_init
 
     def _print_Allocate(self, expr):
         free_code = ''
