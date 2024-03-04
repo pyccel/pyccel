@@ -24,12 +24,15 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1776 : Increase minimum version for `pytest` to 7.0.
 -   Stop ignoring a change of type from a Python built-in to a compatible NumPy type.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+
+
 
 ### Deprecated
 
