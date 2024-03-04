@@ -1239,7 +1239,7 @@ class SemanticParser(BasicParser):
             errors.report(f"cuda kernel function '{func.name}' returned a value in violation of the laid-down specification",
                          symbol=expr,
                          severity='fatal')
-        if isinstance(func, FunctionDef) and len(args) > len(func.arguments):
+        if isinstance(func, FunctionDef) and len(args) != len(func.arguments):
             errors.report(f"{len(args)} argument types given, but function takes {len(func.arguments)} arguments",
                 symbol=expr,
                 severity='fatal')

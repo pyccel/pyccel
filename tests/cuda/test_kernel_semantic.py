@@ -120,7 +120,7 @@ def test_invalid_launch_config_low(language):
 def test_invalid_arguments_for_cuda_language(language):
     def invalid_arguments():
         @kernel
-        def kernel_call(arg : None):
+        def kernel_call(arg : int):
             pass
 
         blocks_per_grid = 1
