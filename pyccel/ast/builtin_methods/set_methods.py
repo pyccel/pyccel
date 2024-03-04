@@ -24,7 +24,7 @@ class SetMethod(PyccelInternalFunction):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
 
     *args : iterable
         The arguments passed to the function call.
@@ -55,7 +55,7 @@ class SetAdd(SetMethod) :
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
 
     new_elem : TypedAstNode
         The element that needs to be added to a set.
@@ -91,7 +91,7 @@ class SetClear(SetMethod):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
     """
     __slots__ = ()
     _dtype = NativeVoid()
