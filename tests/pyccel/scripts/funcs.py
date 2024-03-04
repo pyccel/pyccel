@@ -18,5 +18,6 @@ def g():
     def f(a : int = 3, b : int = 3):
         pass
 
-    f(b = 3)
+    f(b = b)
+
 
