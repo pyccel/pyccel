@@ -9,15 +9,23 @@ import pytest
 
 NEEDS_FROM_PARENT = hasattr(pytest.Item, "from_parent")
 
-def pytest_collect_file(parent, path):
+def pytest_collect_file(file_path, parent):
     """
     A hook to collect test_*.c test files.
 
+    A hook to collect test_*.c test files.
+
+    Parameters
+    ----------
+    file_path : pathlib.PosixPath
+        The path to the file which may or may not be collected.
+    parent : Collector
+        The node where the file will be collected.
     """
-    if path.ext == ".c" and path.basename.startswith("test_"):
+    if file_path.suffix == ".c" and file_path.name.startswith("test_"):
         if NEEDS_FROM_PARENT:
-            return CTestFile.from_parent(path=pathlib.Path(path), parent=parent)
-        return CTestFile(parent=parent, path=pathlib.Path(path))
+            return CTestFile.from_parent(path=pathlib.Path(file_path), parent=parent)
+        return CTestFile(parent=parent, path=pathlib.Path(file_path))
 
 def pytest_collection_modifyitems(items):
     """
