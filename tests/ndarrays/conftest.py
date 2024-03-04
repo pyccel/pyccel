@@ -10,8 +10,6 @@ def pytest_collect_file(parent, file_path):
     """
     A hook to collect test_*.c test files.
 
-    A hook to collect test_*.c test files.
-
     Parameters
     ----------
     parent : Collector
@@ -25,8 +23,6 @@ def pytest_collect_file(parent, file_path):
 
 class CTestFile(pytest.File):
     """
-    A custom file handler class for C unit test files.
-
     A custom file handler class for C unit test files.
     """
     def collect(self):
