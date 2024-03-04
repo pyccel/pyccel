@@ -10,7 +10,10 @@ enabling the direct translation of high-level Pyccel expressions into CUDA code.
 """
 
 from pyccel.codegen.printing.ccode import CCodePrinter, c_library_headers, c_imports
-from pyccel.ast.datatypes import NativeInteger
+from pyccel.ast.datatypes import NativeInteger, NativeVoid
+
+from pyccel.ast.core      import Deallocate
+from pyccel.ast.variable import DottedVariable
 
 from pyccel.ast.core        import Import, Module, Declare
 
