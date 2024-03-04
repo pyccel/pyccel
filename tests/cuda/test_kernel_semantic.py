@@ -10,9 +10,7 @@ from pyccel.errors.messages import (INVALID_KERNEL_CALL_TP_BLOCK,
                                     INVALID_KERNEL_LAUNCH_CONFIG_LOW)
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_block_number(language):
     def invalid_block_number():
         @kernel
@@ -36,9 +34,7 @@ def test_invalid_block_number(language):
     assert INVALID_KERNEL_CALL_BP_GRID == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_thread_per_block(language):
     def invalid_thread_per_block():
         @kernel
@@ -62,9 +58,7 @@ def test_invalid_thread_per_block(language):
     assert INVALID_KERNEL_CALL_TP_BLOCK == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_launch_config_height(language):
     def invalid_launch_config_height():
         @kernel
@@ -89,9 +83,7 @@ def test_invalid_launch_config_height(language):
     assert INVALID_KERNEL_LAUNCH_CONFIG_HEIGHT == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_launch_config_low(language):
     def invalid_launch_config_low():
         @kernel
@@ -114,9 +106,7 @@ def test_invalid_launch_config_low(language):
     assert INVALID_KERNEL_LAUNCH_CONFIG_LOW == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_arguments_for_cuda_language(language):
     def invalid_arguments():
         @kernel
@@ -140,9 +130,7 @@ def test_invalid_arguments_for_cuda_language(language):
     assert "0 argument types given, but function takes 1 arguments" == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_invalid_arguments_for_cuda_language2(language):
     def invalid_arguments_():
         @kernel
@@ -166,9 +154,7 @@ def test_invalid_arguments_for_cuda_language2(language):
     assert "1 argument types given, but function takes 0 arguments" == error_info.message
 
 
-@pytest.mark.parametrize('language', [
-    pytest.param("cuda", marks=pytest.mark.cuda)
-])
+@pytest.mark.cuda
 def test_kernel_return(language):
     def kernel_return():
         @kernel

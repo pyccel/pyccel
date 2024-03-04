@@ -152,5 +152,5 @@ class CudaCodePrinter(CCodePrinter):
 
         args += self._temporary_args
         self._temporary_args = []
-        args = ', '.join(['{}'.format(self._print(a)) for a in args])
+        args = ', '.join([f'{self._print(a)}' for a in args])
         return f"{func.name}<<<{expr.numBlocks}, {expr.tpblock}>>>({args});\n"
