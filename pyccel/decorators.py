@@ -20,7 +20,8 @@ __all__ = (
     'sympy',
     'template',
     'types',
-    'kernel'
+    'kernel',
+    'device'
 )
 
 def lambdify(f):

@@ -116,6 +116,8 @@ class CudaCodePrinter(CCodePrinter):
         cuda_decorater = ''
         if 'kernel' in expr.decorators:
             cuda_decorater = "__global__ "
+        if 'device' in expr.decorators:
+            cuda_decorater = "__device__ "
         parts = [sep,
                  cuda_decorater,
                  docstring,
