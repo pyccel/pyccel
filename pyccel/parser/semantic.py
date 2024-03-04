@@ -1116,10 +1116,6 @@ class SemanticParser(BasicParser):
         FunctionCall/PyccelInternalFunction
             The semantic representation of the call.
         """
-        if isinstance(func, FunctionDef) and 'kernel' in func.decorators:
-            errors.report(MISSING_KERNEL_CONFIGURATION,
-                          symbol = expr,
-                          severity = 'fatal')
         if isinstance(func, PyccelFunctionDef):
             argument_description = func.argument_description
             func = func.cls_name
