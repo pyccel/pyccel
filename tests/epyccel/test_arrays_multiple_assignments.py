@@ -15,7 +15,7 @@ from pyccel.errors.messages import (ARRAY_REALLOCATION,
                                     STACK_ARRAY_UNKNOWN_SHAPE)
 
 #==============================================================================
-def test_no_reallocation(language):
+def test_no_reallocation(language_with_cuda):
 
     @stack_array('y')
     def f():
@@ -30,13 +30,13 @@ def test_no_reallocation(language):
         return x.sum() + y.sum()
 
     # TODO: check that we don't get any Pyccel warnings
-    g = epyccel(f, language=language)
+    g = epyccel(f, language=language_with_cuda)
 
     # Check result of pyccelized function
     assert f() == g()
 
 #==============================================================================
-def test_reallocation_heap(language):
+def test_reallocation_heap(language_with_cuda):
 
     def f():
         import numpy as np
@@ -48,7 +48,7 @@ def test_reallocation_heap(language):
     errors = Errors()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = epyccel(f, language=language_with_cuda)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -63,7 +63,7 @@ def test_reallocation_heap(language):
     assert warning_info.message == ARRAY_REALLOCATION
 
 #==============================================================================
-def test_reallocation_stack(language):
+def test_reallocation_stack(language_with_cuda):
 
     @stack_array('x')
     def f():
@@ -77,7 +77,7 @@ def test_reallocation_stack(language):
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        epyccel(f, language=language_with_cuda)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors()
@@ -89,7 +89,7 @@ def test_reallocation_stack(language):
     assert error_info.message == INCOMPATIBLE_REDEFINITION_STACK_ARRAY
 
 #==============================================================================
-def test_creation_in_loop_heap(language):
+def test_creation_in_loop_heap(language_with_cuda):
 
     def f():
         import numpy as np
@@ -101,7 +101,7 @@ def test_creation_in_loop_heap(language):
     errors = Errors()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = epyccel(f, language=language_with_cuda)
 
     # Check result of pyccelized function
     assert f() == g()
@@ -116,7 +116,7 @@ def test_creation_in_loop_heap(language):
     assert warning_info.message == ARRAY_DEFINITION_IN_LOOP
 
 #==============================================================================
-def test_creation_in_loop_stack(language):
+def test_creation_in_loop_stack(language_with_cuda):
 
     @stack_array('x')
     def f():
@@ -130,7 +130,7 @@ def test_creation_in_loop_stack(language):
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f, language=language)
+        epyccel(f, language=language_with_cuda)
 
     # Check that we got exactly 2 Pyccel errors
     assert errors.has_errors()
@@ -149,7 +149,7 @@ def test_creation_in_loop_stack(language):
     assert error_info.message == STACK_ARRAY_DEFINITION_IN_LOOP
 
 #==============================================================================
-def test_creation_in_if_heap(language):
+def test_creation_in_if_heap(language_with_cuda):
 
     def f(c : 'float'):
         import numpy as np
@@ -160,7 +160,7 @@ def test_creation_in_if_heap(language):
         return x.sum()
 
     # TODO: check if we get the correct Pyccel warning
-    g = epyccel(f, language=language)
+    g = epyccel(f, language=language_with_cuda)
 
     # Check result of pyccelized function
     import numpy as np
@@ -168,7 +168,7 @@ def test_creation_in_if_heap(language):
     assert f(c) == g(c)
 
 #==============================================================================
-def test_Reassign_to_Target():
+def test_Reassign_to_Target(language_with_cuda):
 
     def f():
         import numpy as np
@@ -182,7 +182,7 @@ def test_Reassign_to_Target():
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        epyccel(f, language=language_with_cuda)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -195,7 +195,7 @@ def test_Reassign_to_Target():
 
 #==============================================================================
 
-def test_Assign_Between_Allocatables():
+def test_Assign_Between_Allocatables(language_with_cuda):
 
     def f():
         import numpy as np
@@ -210,7 +210,7 @@ def test_Assign_Between_Allocatables():
 
     # epyccel should raise an Exception
     with pytest.raises(PyccelSemanticError):
-        epyccel(f)
+        epyccel(f, language=language_with_cuda)
 
     # Check that we got exactly 1 Pyccel error
     assert errors.has_errors() == 1
@@ -223,7 +223,7 @@ def test_Assign_Between_Allocatables():
 
 #==============================================================================
 
-def test_Assign_after_If():
+def test_Assign_after_If(language_with_cuda):
 
     def f(b : bool):
         import numpy as np
@@ -240,7 +240,7 @@ def test_Assign_after_If():
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f)
+    f2 = epyccel(f, language=language_with_cuda)
 
     # Check that we got exactly 1 Pyccel warning
     assert errors.has_warnings()
@@ -255,7 +255,7 @@ def test_Assign_after_If():
     assert f(False) == f2(False)
 
 #==============================================================================
-def test_stack_array_if(language):
+def test_stack_array_if(language_with_cuda):
 
     @stack_array('x')
     def f(b : bool):
@@ -267,18 +267,15 @@ def test_stack_array_if(language):
         return x[0]
 
     # Initialize singleton that stores Pyccel errors
-    f2 = epyccel(f, language=language)
+    f2 = epyccel(f, language=language_with_cuda)
 
     assert f(True) == f2(True)
     assert f(False) == f2(False)
 
 #==============================================================================
 
-@pytest.mark.parametrize('lang',[
-    pytest.param('fortran', marks = pytest.mark.fortran),
-    pytest.param('python', marks = pytest.mark.python),
-    pytest.param('c'      , marks = pytest.mark.c)])
-def test_Assign_between_nested_If(lang):
+
+def test_Assign_between_nested_If(language_with_cuda):
 
     def f(b1 : bool, b2 : bool):
         import numpy as np
@@ -297,7 +294,7 @@ def test_Assign_between_nested_If(lang):
     errors = Errors()
 
     # epyccel should raise an Exception
-    f2 = epyccel(f, language=lang)
+    f2 = epyccel(f, language=language_with_cuda)
 
     # Check that we don't get a Pyccel warning
     assert not errors.has_warnings()

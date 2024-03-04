@@ -12,13 +12,13 @@ from pyccel.decorators import template
 int_types = ['int8', 'int16', 'int32', 'int64']
 float_types = ['float32', 'float64']
 
-def test_array_int_1d_scalar_add(language):
+def test_array_int_1d_scalar_add(language_with_cuda):
     @template('T', ['int8', 'int16', 'int32', 'int64'])
     def array_int_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_int_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = epyccel(f1, language=language_with_cuda)
 
     for t in int_types:
         size = randint(1, 30)
@@ -31,13 +31,13 @@ def test_array_int_1d_scalar_add(language):
 
         assert np.array_equal( x1, x2 )
 
-def test_array_real_1d_scalar_add(language):
+def test_array_real_1d_scalar_add(language_with_cuda):
     @template('T', ['float32', 'double'])
     def array_real_1d_scalar_add(x : 'T[:]', a : 'T', x_len : int):
         for i in range(x_len):
             x[i] += a
     f1 = array_real_1d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = epyccel(f1, language=language_with_cuda)
 
     for t in float_types:
         size = randint(1, 30)
@@ -71,14 +71,14 @@ def test_array_complex_1d_scalar_add(language):
 
         assert np.array_equal( x1, x2 )
 
-def test_array_int_2d_scalar_add(language):
+def test_array_int_2d_scalar_add(language_with_cuda):
     @template('T', ['int8', 'int16', 'int32', 'int64'])
     def array_int_2d_scalar_add( x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
     f1 = array_int_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = epyccel(f1, language=language_with_cuda)
 
     for t in int_types:
         d1 = randint(1, 15)
@@ -92,14 +92,14 @@ def test_array_int_2d_scalar_add(language):
 
         assert np.array_equal( x1, x2 )
 
-def test_array_real_2d_scalar_add(language):
+def test_array_real_2d_scalar_add(language_with_cuda):
     @template('T', ['float32', 'double'])
     def array_real_2d_scalar_add(x : 'T[:,:]', a : 'T', d1 : int, d2 : int):
         for i in range(d1):
             for j in range(d2):
                 x[i, j] += a
     f1 = array_real_2d_scalar_add
-    f2 = epyccel(f1, language=language)
+    f2 = epyccel(f1, language=language_with_cuda)
 
     for t in float_types:
         d1 = randint(1, 15)

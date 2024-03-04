@@ -85,10 +85,10 @@ def test_array_assigned_dtype(language):
 # TEST: 1D ARRAYS OF INT-32
 #==============================================================================
 
-def test_array_int32_1d_scalar_add(language):
+def test_array_int32_1d_scalar_add(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -99,10 +99,10 @@ def test_array_int32_1d_scalar_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_add_stride(language):
+def test_array_int32_1d_scalar_add_stride(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3,4,5,6,7,8], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -113,10 +113,10 @@ def test_array_int32_1d_scalar_add_stride(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_sub(language):
+def test_array_int32_1d_scalar_sub(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -127,10 +127,10 @@ def test_array_int32_1d_scalar_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_sub_stride(language):
+def test_array_int32_1d_scalar_sub_stride(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -141,10 +141,10 @@ def test_array_int32_1d_scalar_sub_stride(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_mul(language):
+def test_array_int32_1d_scalar_mul(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -155,10 +155,10 @@ def test_array_int32_1d_scalar_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_mul_stride(language):
+def test_array_int32_1d_scalar_mul_stride(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -169,10 +169,10 @@ def test_array_int32_1d_scalar_mul_stride(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_div(language):
+def test_array_int32_1d_scalar_div(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_div
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -183,10 +183,10 @@ def test_array_int32_1d_scalar_div(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_idiv(language):
+def test_array_int32_1d_scalar_idiv(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -197,10 +197,10 @@ def test_array_int32_1d_scalar_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_scalar_idiv_stride(language):
+def test_array_int32_1d_scalar_idiv_stride(language_with_cuda):
 
     f1 = arrays.array_int32_1d_scalar_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3,4,5,6,7,8,9], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -211,10 +211,10 @@ def test_array_int32_1d_scalar_idiv_stride(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_add(language):
+def test_array_int32_1d_add(language_with_cuda):
 
     f1 = arrays.array_int32_1d_add
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -225,10 +225,10 @@ def test_array_int32_1d_add(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_sub(language):
+def test_array_int32_1d_sub(language_with_cuda):
 
     f1 = arrays.array_int32_1d_sub
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -239,10 +239,10 @@ def test_array_int32_1d_sub(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_mul(language):
+def test_array_int32_1d_mul(language_with_cuda):
 
     f1 = arrays.array_int32_1d_mul
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -253,10 +253,10 @@ def test_array_int32_1d_mul(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_idiv(language):
+def test_array_int32_1d_idiv(language_with_cuda):
 
     f1 = arrays.array_int32_1d_idiv
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -267,10 +267,10 @@ def test_array_int32_1d_idiv(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_add_augassign(language):
+def test_array_int32_1d_add_augassign(language_with_cuda):
 
     f1 = arrays.array_int32_1d_add_augassign
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -281,10 +281,10 @@ def test_array_int32_1d_add_augassign(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int32_1d_sub_augassign(language):
+def test_array_int32_1d_sub_augassign(language_with_cuda):
 
     f1 = arrays.array_int32_1d_sub_augassign
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     x1 = np.array( [1,2,3], dtype=np.int32 )
     x2 = np.copy(x1)
@@ -295,10 +295,10 @@ def test_array_int32_1d_sub_augassign(language):
 
     assert np.array_equal( x1, x2 )
 
-def test_array_int_1d_initialization_1(language):
+def test_array_int_1d_initialization_1(language_with_cuda):
 
     f1 = arrays.array_int_1d_initialization_1
-    f2 = epyccel( f1 , language = language)
+    f2 = epyccel( f1 , language = language_with_cuda)
 
     assert f1() == f2()
 
