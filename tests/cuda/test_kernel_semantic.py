@@ -11,7 +11,7 @@ from pyccel.errors.messages import (INVALID_KERNEL_CALL_TP_BLOCK,
 
 
 @pytest.mark.cuda
-def test_invalid_block_number(language):
+def test_invalid_block_number():
     def invalid_block_number():
         @kernel
         def kernel_call():
@@ -24,7 +24,7 @@ def test_invalid_block_number(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_block_number, language=language)
+        epyccel(invalid_block_number, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -35,7 +35,7 @@ def test_invalid_block_number(language):
 
 
 @pytest.mark.cuda
-def test_invalid_thread_per_block(language):
+def test_invalid_thread_per_block():
     def invalid_thread_per_block():
         @kernel
         def kernel_call():
@@ -48,7 +48,7 @@ def test_invalid_thread_per_block(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_thread_per_block, language=language)
+        epyccel(invalid_thread_per_block, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -59,7 +59,7 @@ def test_invalid_thread_per_block(language):
 
 
 @pytest.mark.cuda
-def test_invalid_launch_config_height(language):
+def test_invalid_launch_config_height():
     def invalid_launch_config_height():
         @kernel
         def kernel_call():
@@ -73,7 +73,7 @@ def test_invalid_launch_config_height(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_launch_config_height, language=language)
+        epyccel(invalid_launch_config_height, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -84,7 +84,7 @@ def test_invalid_launch_config_height(language):
 
 
 @pytest.mark.cuda
-def test_invalid_launch_config_low(language):
+def test_invalid_launch_config_low():
     def invalid_launch_config_low():
         @kernel
         def kernel_call():
@@ -96,7 +96,7 @@ def test_invalid_launch_config_low(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_launch_config_low, language=language)
+        epyccel(invalid_launch_config_low, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -107,7 +107,7 @@ def test_invalid_launch_config_low(language):
 
 
 @pytest.mark.cuda
-def test_invalid_arguments_for_cuda_language(language):
+def test_invalid_arguments_for_cuda_language():
     def invalid_arguments():
         @kernel
         def kernel_call(arg : int):
@@ -120,7 +120,7 @@ def test_invalid_arguments_for_cuda_language(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_arguments, language=language)
+        epyccel(invalid_arguments, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -131,7 +131,7 @@ def test_invalid_arguments_for_cuda_language(language):
 
 
 @pytest.mark.cuda
-def test_invalid_arguments_for_cuda_language2(language):
+def test_invalid_arguments_for_cuda_language2():
     def invalid_arguments_():
         @kernel
         def kernel_call():
@@ -144,7 +144,7 @@ def test_invalid_arguments_for_cuda_language2(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(invalid_arguments_, language=language)
+        epyccel(invalid_arguments_, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
@@ -155,7 +155,7 @@ def test_invalid_arguments_for_cuda_language2(language):
 
 
 @pytest.mark.cuda
-def test_kernel_return(language):
+def test_kernel_return():
     def kernel_return():
         @kernel
         def kernel_call():
@@ -168,7 +168,7 @@ def test_kernel_return(language):
     errors = Errors()
 
     with pytest.raises(PyccelSemanticError):
-        epyccel(kernel_return, language=language)
+        epyccel(kernel_return, language="cuda")
 
     assert errors.has_errors()
     assert errors.num_messages() == 1
