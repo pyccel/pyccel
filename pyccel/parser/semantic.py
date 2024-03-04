@@ -2983,14 +2983,17 @@ class SemanticParser(BasicParser):
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
         if (isinstance(func, FunctionDef) and func.scope) or (isinstance(func, Interface) and func.is_annotated):
-            scope = func.scope if isinstance(func, FunctionDef) else func.syntactic_node.scope
+            scope = func.scope if isinstance(func, FunctionDef) else func.functions[0].scope
             args = [a if a.keyword is None else \
                     FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
                     for a in args]
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
+            # Correct func_args keyword names
+            func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
+                        annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                        for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-
             if not func.is_annotated:
                 if not is_inline:
                     func = self._annotate_the_called_function_def(func)
