@@ -1281,9 +1281,6 @@ class SemanticParser(BasicParser):
         # Go back to the original Scope
         self._scope = old_scope
         self._current_function = old_current_function
-        # Retreive the function from the scope. For an imported function old_func remains unchanged.
-        # Otherwise this retrieves the semantic version
-        old_func = self.scope.find(old_func.name, 'functions')
         # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
