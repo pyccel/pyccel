@@ -24,9 +24,12 @@ All notable changes to this project will be documented in this file.
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration 
 
 ### Changed
+
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
+-   #1776 : Increase minimum version for `pytest` to 7.0.
+
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
