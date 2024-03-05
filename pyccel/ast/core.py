@@ -2785,6 +2785,8 @@ class InlineFunctionDef(FunctionDef):
     """
     Represents a function definition for an inline function.
 
+    Represents a function definition for an inline function.
+
     Parameters
     ----------
     *args : list
