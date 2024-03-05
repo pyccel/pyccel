@@ -3059,7 +3059,8 @@ class Interface(PyccelAstNode):
         """
          Flag to check if the node is annotated.
 
-         Flag to check if the node is annotated.
+         Flag to check if the node has been annotated with type descriptors
+         in the semantic stage.
         """
         return self._functions[0].is_semantic
 
