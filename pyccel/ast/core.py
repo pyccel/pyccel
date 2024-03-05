@@ -2898,8 +2898,8 @@ class InlineFunctionDef(FunctionDef):
 
     def __getnewargs__(self):
         """
-          This method returns the positional and keyword arguments
-            used to create an instance of this class.
+        This method returns the positional and keyword arguments
+        used to create an instance of this class.
         """
         args = (
         self._name,
