@@ -2637,7 +2637,8 @@ class FunctionDef(ScopedAstNode):
         """
         Indicates if the function is annotated.
 
-        Indicates if the function is annotated.
+        Indicates if the function has been annotated with type descriptors
+        in the semantic stage.
         """
         return self._is_semantic
 
