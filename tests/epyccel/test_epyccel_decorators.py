@@ -155,18 +155,16 @@ def test_indexed_template(language):
     pyccel_sum = epyccel(my_sum, language=language)
 
     x = np.ones(4, dtype=float)
-    y = np.ones(4, dtype=float)
 
     python_fl = my_sum(x)
-    pyccel_fl = pyccel_sum(y)
+    pyccel_fl = pyccel_sum(x)
 
     assert python_fl == pyccel_fl
     assert isinstance(python_fl, type(pyccel_fl))
 
-    x = np.ones(4, dtype=complex)
-    y = np.ones(4, dtype=complex)
+    y = np.ones(4, dtype=complex) * (1 + 3j)
 
-    python_cmplx = my_sum(x)
+    python_cmplx = my_sum(y)
     pyccel_cmplx = pyccel_sum(y)
 
     assert python_cmplx == pyccel_cmplx
