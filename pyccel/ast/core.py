@@ -2277,10 +2277,10 @@ class FunctionDef(ScopedAstNode):
     is_external : bool
         True for a function which cannot be explicitly imported or renamed.
 
-    is_imported : bool
+    is_imported : bool, default : False
         True for a function that is imported.
 
-    is_annotated : bool
+    is_annotated : bool, optional
         True for a function that is annotated.
 
     functions : list, tuple

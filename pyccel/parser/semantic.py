@@ -1249,7 +1249,7 @@ class SemanticParser(BasicParser):
             The new annotated function.
         """
         # The function call might be in a completely different scope from the FunctionDef
-        # Here we store the current scope and go to the parent scope of the FunctionDef
+        # Store the current scope and go to the parent scope of the FunctionDef
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
@@ -1268,16 +1268,22 @@ class SemanticParser(BasicParser):
             sc = sc.sons_scopes[names[0]]
             names = names[1:]
 
+        # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
         self._visit_FunctionDef(old_func, annotate=True, function_call=function_call)
+        # Retreive the annotated function
         func = self.scope.find(old_func.name, 'functions')
+        # Add the Module of the imported function to the new function
         if old_func.is_imported:
             mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
             func.set_current_user_node(mod)
 
+        # Go back to the original Scope
         self._scope = old_scope
         self._current_function = old_current_function
+        # Retreive the function again which is still not annotated if it is imported
         old_func = self.scope.find(old_func.name, 'functions')
+        # Remove the old_func from the imports dict and Assign the new annotated one
         if old_func.is_imported:
             scope = self.scope
             while old_func.name not in scope.imports['functions']:

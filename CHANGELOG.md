@@ -5,9 +5,16 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+-   #1720 : Add support for `Ellipsis` as the only index for an array.
+-   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
+
 ### Fixed
 
 ### Changed
+
+-   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
+-   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 
 ### Deprecated
 
@@ -23,8 +30,6 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
--   #1720 : Add support for `Ellipsis` as the only index for an array.
--   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 
 ### Fixed
 
@@ -36,9 +41,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
--   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
--   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 -   #1776 : Increase minimum version for `pytest` to 7.0.
 
 ### Deprecated
