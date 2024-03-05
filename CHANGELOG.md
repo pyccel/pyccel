@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+
 ### Changed
 
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
@@ -36,7 +38,6 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
 -   #1182 : Fix tuples containing objects with different ranks.
 -   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
--   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration 
 -   #1779 : Fix standalone partial templates.
 
 ### Changed
