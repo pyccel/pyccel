@@ -1011,7 +1011,7 @@ class SemanticParser(BasicParser):
         args  = []
         for arg in arguments:
             a = self._visit(arg.value)
-            if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_annotated:
+            if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_semantic:
                 self._annotate_the_called_function_def(a)
             a = self._visit(arg)
             if isinstance(a.value, StarredArguments):
@@ -2129,7 +2129,7 @@ class SemanticParser(BasicParser):
 
         for f in self.scope.functions.copy():
             f = self.scope.functions[f]
-            if not f.is_annotated and not isinstance(f, InlineFunctionDef):
+            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
                 self._visit_FunctionDef(f, annotate=True)
 
@@ -3000,20 +3000,20 @@ class SemanticParser(BasicParser):
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
-        if (isinstance(func, FunctionDef) and func.scope) or (isinstance(func, Interface) and func.is_annotated):
+        if (isinstance(func, FunctionDef) and func.scope) or (isinstance(func, Interface) and func.is_semantic):
             scope = func.scope if isinstance(func, FunctionDef) else func.functions[0].scope
             args = [a if a.keyword is None else \
                     FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
                     for a in args]
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-            if not func.is_annotated:
+            if not func.is_semantic:
                 # Correct func_args keyword names
                 func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
                             annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
                             for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
-            if not func.is_annotated:
+            if not func.is_semantic:
                 if not is_inline:
                     func = self._annotate_the_called_function_def(func)
                 else:
@@ -3925,7 +3925,7 @@ class SemanticParser(BasicParser):
             return EmptyNode()
 
         existing_semantic_funcs = []
-        if not expr.is_annotated:
+        if not expr.is_semantic:
             self.scope.functions.pop(expr.name, None)
         elif isinstance(expr, Interface):
             existing_semantic_funcs = [*expr.functions]
@@ -4080,7 +4080,7 @@ class SemanticParser(BasicParser):
             # Annotate the remaining functions
             sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
                         not isinstance(i, (InlineFunctionDef, FunctionAddress)) and \
-                        not i.is_annotated]
+                        not i.is_semantic]
             for i in sub_funcs:
                 self._visit_FunctionDef(i, annotate=True)
 

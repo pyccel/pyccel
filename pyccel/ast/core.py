@@ -2280,8 +2280,9 @@ class FunctionDef(ScopedAstNode):
     is_imported : bool, default : False
         True for a function that is imported.
 
-    is_annotated : bool, optional
+    is_semantic : bool, optional
         True for a function that is annotated.
+        It is used to indicate if the function has been visited in the semantics stage or not.
 
     functions : list, tuple
         A list of functions defined within this function.
@@ -2337,7 +2338,7 @@ class FunctionDef(ScopedAstNode):
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_docstring', '_is_external',
-                 '_result_pointer_map','_is_imported', '_is_annotated')
+                 '_result_pointer_map','_is_imported', '_is_semantic')
 
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
@@ -2361,7 +2362,7 @@ class FunctionDef(ScopedAstNode):
         is_header=False,
         is_external=False,
         is_imported=False,
-        is_annotated=None,
+        is_semantic=None,
         functions=(),
         interfaces=(),
         result_pointer_map={},
@@ -2463,7 +2464,7 @@ class FunctionDef(ScopedAstNode):
         self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
-        self._is_annotated    = self.pyccel_staging != 'syntactic' if is_annotated is None else is_annotated
+        self._is_semantic    = self.pyccel_staging != 'syntactic' if is_semantic is None else is_semantic
 
     @property
     def name(self):
@@ -2631,13 +2632,13 @@ class FunctionDef(ScopedAstNode):
         return self._is_static
 
     @property
-    def is_annotated(self):
+    def is_semantic(self):
         """
         Indicates if the function is annotated.
 
         Indicates if the function is annotated.
         """
-        return self._is_annotated
+        return self._is_semantic
 
     @property
     def functions(self):
@@ -2729,7 +2730,7 @@ class FunctionDef(ScopedAstNode):
         'functions':self._functions,
         'is_external':self._is_external,
         'is_imported':self._is_imported,
-        'is_annotated':self._is_annotated,
+        'is_semantic':self._is_semantic,
         'interfaces':self._interfaces,
         'docstring':self._docstring,
         'scope':self._scope}
@@ -2902,33 +2903,8 @@ class InlineFunctionDef(FunctionDef):
         This method returns the positional and keyword arguments
         used to create an instance of this class.
         """
-        args = (
-        self._name,
-        self._arguments,
-        self._results,
-        self._body)
-
-        kwargs = {
-        'namespace_imports':self._namespace_imports,
-        'global_funcs':self._global_funcs,
-        'global_vars':self._global_vars,
-        'cls_name':self._cls_name,
-        'is_static':self._is_static,
-        'imports':self._imports,
-        'decorators':self._decorators,
-        'headers':self._headers,
-        'is_recursive':self._is_recursive,
-        'is_pure':self._is_pure,
-        'is_elemental':self._is_elemental,
-        'is_private':self._is_private,
-        'is_header':self._is_header,
-        'functions':self._functions,
-        'is_external':self._is_external,
-        'is_imported':self._is_imported,
-        'is_annotated':self._is_annotated,
-        'interfaces':self._interfaces,
-        'docstring':self._docstring,
-        'scope':self._scope}
+        args, kwargs = super().__getnewargs__()
+        kwargs.update({'namespace_imports':self._namespace_imports, 'global_funcs':self._global_funcs})
         return args, kwargs
 
 class PyccelFunctionDef(FunctionDef):
@@ -3078,13 +3054,13 @@ class Interface(PyccelAstNode):
         return self._functions[0].docstring
 
     @property
-    def is_annotated(self):
+    def is_semantic(self):
         """
          Flag to check if the node is annotated.
 
          Flag to check if the node is annotated.
         """
-        return self._functions[0].is_annotated
+        return self._functions[0].is_semantic
 
     @property
     def is_inline(self):
