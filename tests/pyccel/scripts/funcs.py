@@ -12,4 +12,3 @@ def sum_to_n(n : 'int'):
         result = add2(result,i)
     return result
 
-
