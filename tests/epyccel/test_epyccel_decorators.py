@@ -162,7 +162,7 @@ def test_indexed_template(language):
     assert python_fl == pyccel_fl
     assert isinstance(python_fl, type(pyccel_fl))
 
-    y = np.ones(4, dtype=complex) * (1 + 3j)
+    y = np.full(4, 1 + 3j)
 
     python_cmplx = my_sum(y)
     pyccel_cmplx = pyccel_sum(y)
