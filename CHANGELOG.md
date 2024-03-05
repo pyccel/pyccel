@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 
+### Fixed
+
+-   #1763 Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
+-   Fix all cases where a Python built-in type is returned in place of a NumPy type.
+
+### Changed
+
+-   Stop ignoring a change of type from a Python built-in to a compatible NumPy type.
+-   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
+-   \[INTERNALS\] Rewrite datatyping system. See #1722.
+-   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
+-   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+
+### Deprecated
+
+-   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
+-   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
+-   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
+-   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
+
+## \[1.11.2\] - 2024-03-05
+
+### Added
+
 -   #1689 : Add Python support for list method `append()`.
 -   #1692 : Add Python support for list method `insert()`.
 -   #1690 : Add Python support for list method `pop()`.
@@ -19,28 +44,17 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
 -   #1182 : Fix tuples containing objects with different ranks.
 -   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
--   #1763 Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
--   Fix all cases where a Python built-in type is returned in place of a NumPy type.
+-   #1779 : Fix standalone partial templates.
 
 ### Changed
 
 -   #1776 : Increase minimum version for `pytest` to 7.0.
--   Stop ignoring a change of type from a Python built-in to a compatible NumPy type.
--   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
--   \[INTERNALS\] Rewrite datatyping system. See #1722.
--   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
--   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
--   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unnecessary `passed_from_dotted` parameter from `ast.core.Declare` class.
 -   \[INTERNALS\] Remove unused `ast.core.Block` class.
--   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
--   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
--   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
--   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 
 ## \[1.11.1\] - 2024-02-13
 
