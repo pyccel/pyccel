@@ -2690,25 +2690,46 @@ class SemanticParser(BasicParser):
         # Structure: For(CodeBlock(Assign(DottedName(FunctionCall))))
         pyccel_stage.set_stage('syntactic')
 
-        for_target = self.scope.get_new_name('index')
-        # Construct FunctionCall()
-        arg = FunctionCallArgument(for_target)
-        func_call = FunctionCall('append', [arg])
+        #list as arg:
+        if isinstance(iterable, PythonList):
+            temp = []
+            for i in iterable.args:
+                arg = FunctionCallArgument(i)
+                func_call = FunctionCall('append', [arg])
+                dotted = DottedName(list_variable, func_call)
 
-        # Construct DottedName
-        dotted = DottedName(list_variable, func_call)
+                rhs = dotted
+                lhs = PyccelSymbol('_', is_temp=True)
+                assign = Assign(lhs, rhs)
+                assign.set_current_ast(list_variable.python_ast)
 
-        # Construct Assign
-        rhs = dotted
-        lhs = PyccelSymbol('_', is_temp=True)
-        assign = Assign(lhs, rhs)
-        assign.set_current_ast(list_variable.python_ast)
+                temp.append(assign)
 
-        # Construct CodeBlock
-        body = CodeBlock([assign])
+            pyccel_stage.set_stage('semantic')
+            
+            return self._visit(CodeBlock(temp))
+            # return [self._visit(a) for a in temp]
+        
+        elif isinstance(iterable, PythonRange):
+            for_target = self.scope.get_new_name('index')
+            # Construct FunctionCall()
+            arg = FunctionCallArgument(for_target)
+            func_call = FunctionCall('append', [arg])
 
-        # Construct Syntactic node of For loop
-        for_obj = For(for_target, iterable, body) 
+            # Construct DottedName
+            dotted = DottedName(list_variable, func_call)
+
+            # Construct Assign
+            rhs = dotted
+            lhs = PyccelSymbol('_', is_temp=True)
+            assign = Assign(lhs, rhs)
+            assign.set_current_ast(list_variable.python_ast)
+
+            # Construct CodeBlock
+            body = CodeBlock([assign])
+
+            # Construct Syntactic node of For loop
+            for_obj = For(for_target, iterable, body) 
 
         pyccel_stage.set_stage('semantic')
 
