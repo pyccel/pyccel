@@ -2282,8 +2282,8 @@ class FunctionDef(ScopedAstNode):
 
     is_semantic : bool, optional
         True for a function that is annotated.
-        It is used to indicate if the function has been visited in the semantics stage or not.
-        It is only used by the clone method, where we might clone a syntactic function in the semantics stage.
+        It is used to indicate if the function has been visited in the semantic stage or not.
+        It is only used by the clone method, where we might clone a syntactic function in the semantic stage.
 
     functions : list, tuple
         A list of functions defined within this function.
