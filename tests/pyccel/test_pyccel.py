@@ -1092,6 +1092,7 @@ def test_inline(language):
 @pytest.mark.xdist_incompatible
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("python", marks = pytest.mark.python),
         pytest.param("c", marks = [
             pytest.mark.skip(reason="Collisions (initialised boolean) are not handled."),
             pytest.mark.c]
