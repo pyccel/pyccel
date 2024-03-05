@@ -886,8 +886,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_SetMethod(self, expr):
         set_var = self._print(expr.set_variable)
-        name = self._print(expr.name)
-        args = "" if len(expr.args) == 0 or expr.args[0] is None \
+        name = expr.name
+        args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)
         return f"{set_var}.{name}({args})\n"
 
