@@ -2787,13 +2787,13 @@ class InlineFunctionDef(FunctionDef):
 
     Parameters
     ----------
-    args : list
+    *args : list
         The FunctionDef class arguments.
     namespace_imports : Scope
         The objects in the scope which are available due to imports.
     global_funcs : list, optional
         The global functions used in the function.
-    kwargs : dict
+    **kwargs : dict
         The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
