@@ -1197,7 +1197,6 @@ class SemanticParser(BasicParser):
             return new_expr
 
     def _handle_kernel(self, expr, func, args, **settings):
-
         """
         Create the node representing the kernel function call.
 
