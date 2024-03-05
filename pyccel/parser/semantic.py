@@ -1240,7 +1240,7 @@ class SemanticParser(BasicParser):
         old_func : FunctionDef|Interface
            The function that needs to be annotated.
 
-        function_call : list,optional
+        function_call : list[FunctionCallArgument], optional
            The list of the call arguments.
 
         Returns
