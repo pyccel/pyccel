@@ -2277,10 +2277,10 @@ class FunctionDef(ScopedAstNode):
     is_external : bool
         True for a function which cannot be explicitly imported or renamed.
 
-    is_imported: bool
+    is_imported : bool
         True for a function that is imported.
 
-    is_annotated: bool
+    is_annotated : bool
         True for a function that is annotated.
 
     functions : list, tuple
@@ -2787,10 +2787,14 @@ class InlineFunctionDef(FunctionDef):
 
     Parameters
     ----------
-    See FunctionDef
-
+    args: list
+        The FunctionDef class arguments.
     namespace_imports : Scope
-                        The objects in the scope which are available due to imports
+        The objects in the scope which are available due to imports.
+    global_funcs : list, optional
+        The global functions used in the function.
+    kwargs: dict
+        The FunctionDef class keyword arguments.   
     """
     __slots__ = ('_namespace_imports','_orig_args','_new_args','_new_local_vars', '_if_block_replacements',
             '_global_funcs')
@@ -2993,6 +2997,9 @@ class Interface(PyccelAstNode):
     is_argument : bool
         True if the interface is used for a function argument.
 
+    is_imported : bool
+        True if the interface is imported from another file.
+
     syntactic_node : FunctionDef, default: None
         The syntactic node that is not annotated.
 
@@ -3087,13 +3094,14 @@ class Interface(PyccelAstNode):
 
     def rename(self, newname):
         """
-        Rename the FunctionDef name
-        newname.
+        Rename the Interface name to a newname.
+
+        Rename the Interface name to a newname.
 
         Parameters
         ----------
-        newname: str
-            new name for the FunctionDef
+        newname : str
+            New name for the Interface.
         """
 
         self._name = newname
