@@ -2464,6 +2464,7 @@ class FunctionDef(ScopedAstNode):
         self._docstring      = docstring
         super().__init__(scope)
         self._is_annotated    = self.pyccel_staging != 'syntactic' if is_annotated is None else is_annotated
+
     @property
     def name(self):
         """ Name of the function """
