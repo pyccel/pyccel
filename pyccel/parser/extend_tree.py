@@ -36,9 +36,9 @@ class CommentMultiLine(CommentLine):
 # ast.unparse only available in python>3.8
 class Unparser(astunparse.Unparser):
     """
-    Class which extend the Unparser to handle CommentLine nodes.
+    Class which extends `astunparse.Unparser` to handle CommentLine nodes.
 
-    Class which extend the Unparser to handle CommentLine nodes.
+    Class which extends `astunparse.Unparser` to handle CommentLine nodes.
 
     Parameters
     ----------
