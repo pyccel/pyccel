@@ -32,8 +32,6 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 
-
-
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
