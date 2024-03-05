@@ -14,12 +14,12 @@ def get_powers(s : int):
     return s, s*s, s*s*s
 
 @inline
-def power_4(s : int|float):
+def power_4(s : 'int|float'):
     tmp = s*s
     return tmp*tmp
 
 @inline
-def f(s : int|float):
+def f(s : 'int|float'):
     return power_4(s) / 2
 
 @inline
