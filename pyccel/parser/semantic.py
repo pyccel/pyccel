@@ -1229,7 +1229,7 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, func, function_call=None):
+    def _annotate_the_called_function_def(self, old_func, function_call=None):
         """
         Annotate the called FunctionDef.
 
@@ -1237,7 +1237,7 @@ class SemanticParser(BasicParser):
 
         Parameters
         ----------
-        func : FunctionDef|Interface
+        old_func : FunctionDef|Interface
            The function that needs to be annotated.
 
         function_call : list,optional
@@ -1253,7 +1253,7 @@ class SemanticParser(BasicParser):
         old_scope            = self._scope
         old_current_function = self._current_function
         names = []
-        sc = func.scope if isinstance(func, FunctionDef) else func.syntactic_node.scope
+        sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
         while sc.parent_scope is not None:
             sc = sc.parent_scope
             if not sc.name is None:
@@ -1267,13 +1267,25 @@ class SemanticParser(BasicParser):
         while names:
             sc = sc.sons_scopes[names[0]]
             names = names[1:]
+
         self._scope = sc
-        self._visit_FunctionDef(func, annotate=True, function_call=function_call)
-        user_nodes = func.get_all_user_nodes()
-        func       = self.scope.find(func.name, 'functions')
-        func.get_all_user_nodes().extend(user_nodes)
+        self._visit_FunctionDef(old_func, annotate=True, function_call=function_call)
+        func = self.scope.find(old_func.name, 'functions')
+        if old_func.is_imported:
+            mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            func.set_current_user_node(mod)
+
         self._scope = old_scope
         self._current_function = old_current_function
+        old_func = self.scope.find(old_func.name, 'functions')
+        if old_func.is_imported:
+            scope = self.scope
+            while old_func.name not in scope.imports['functions']:
+                scope = scope.parent_scope
+            assert old_func is scope.imports['functions'].get(old_func.name)
+            func = func.clone(old_func.name, is_imported=True)
+            func.set_current_user_node(mod)
+            scope.imports['functions'][old_func.name] = func
         return func
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
@@ -2988,10 +3000,11 @@ class SemanticParser(BasicParser):
                     FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
                     for a in args]
             func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
-            # Correct func_args keyword names
-            func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
-                        annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
-                        for a in func_args]
+            if not func.is_annotated:
+                # Correct func_args keyword names
+                func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
+                            annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                            for a in func_args]
             args      = self._sort_function_call_args(func_args, args)
             is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
             if not func.is_annotated:
@@ -4481,10 +4494,14 @@ class SemanticParser(BasicParser):
                     for t,n in zip(targets.keys(),names):
                         if n in d_son:
                             e = d_son[n]
-                            if t == n:
-                                container[entry][t] = e
-                            else:
+                            if entry == 'functions':
+                                container[entry][t] = e.clone(t, is_imported=True)
+                                m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                container[entry][t].set_current_user_node(m)
+                            elif entry == 'variables':
                                 container[entry][t] = e.clone(t)
+                            else:
+                                container[entry][t] = e
                             targets[t] = e
                 if None in targets.values():
                     errors.report("Import target {} could not be found",

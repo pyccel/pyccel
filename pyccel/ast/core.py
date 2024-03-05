@@ -2277,6 +2277,12 @@ class FunctionDef(ScopedAstNode):
     is_external : bool
         True for a function which cannot be explicitly imported or renamed.
 
+    is_imported: bool
+        True for a function that is imported.
+
+    is_annotated: bool
+        True for a function that is annotated.
+
     functions : list, tuple
         A list of functions defined within this function.
 
@@ -2331,7 +2337,7 @@ class FunctionDef(ScopedAstNode):
                  '_decorators','_headers','_is_recursive','_is_pure',
                  '_is_elemental','_is_private','_is_header',
                  '_functions','_interfaces','_docstring', '_is_external',
-                 '_result_pointer_map')
+                 '_result_pointer_map','_is_imported', '_is_annotated')
 
     _attribute_nodes = ('_arguments','_results','_body',
                  '_global_vars','_imports','_functions','_interfaces')
@@ -2354,6 +2360,8 @@ class FunctionDef(ScopedAstNode):
         is_private=False,
         is_header=False,
         is_external=False,
+        is_imported=False,
+        is_annotated=None,
         functions=(),
         interfaces=(),
         result_pointer_map={},
@@ -2449,12 +2457,13 @@ class FunctionDef(ScopedAstNode):
         self._is_private      = is_private
         self._is_header       = is_header
         self._is_external     = is_external
+        self._is_imported     = is_imported
         self._functions       = functions
         self._interfaces      = interfaces
         self._result_pointer_map = result_pointer_map
         self._docstring      = docstring
         super().__init__(scope)
-
+        self._is_annotated    = self.pyccel_staging != 'syntactic' if is_annotated is None else is_annotated
     @property
     def name(self):
         """ Name of the function """
@@ -2598,6 +2607,15 @@ class FunctionDef(ScopedAstNode):
         return self._is_external
 
     @property
+    def is_imported(self):
+        """
+        Indicates if the function was imported from another file.
+
+        Indicates if the function was imported from another file.
+        """
+        return self._is_imported
+
+    @property
     def is_inline(self):
         """ True if the function should be printed inline """
         return False
@@ -2618,7 +2636,7 @@ class FunctionDef(ScopedAstNode):
 
         Indicates if the function is annotated.
         """
-        return self.pyccel_staging != 'syntactic'
+        return self._is_annotated
 
     @property
     def functions(self):
@@ -2671,7 +2689,6 @@ class FunctionDef(ScopedAstNode):
         new_func.rename(newname)
         return new_func
 
-
     def rename(self, newname):
         """
         Rename the FunctionDef name
@@ -2710,6 +2727,8 @@ class FunctionDef(ScopedAstNode):
         'is_header':self._is_header,
         'functions':self._functions,
         'is_external':self._is_external,
+        'is_imported':self._is_imported,
+        'is_annotated':self._is_annotated,
         'interfaces':self._interfaces,
         'docstring':self._docstring,
         'scope':self._scope}
@@ -2871,6 +2890,40 @@ class InlineFunctionDef(FunctionDef):
         """ List of global functions used in the function """
         return self._global_funcs
 
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
+        args = (
+        self._name,
+        self._arguments,
+        self._results,
+        self._body)
+
+        kwargs = {
+        'namespace_imports':self._namespace_imports,
+        'global_funcs':self._global_funcs,
+        'global_vars':self._global_vars,
+        'cls_name':self._cls_name,
+        'is_static':self._is_static,
+        'imports':self._imports,
+        'decorators':self._decorators,
+        'headers':self._headers,
+        'is_recursive':self._is_recursive,
+        'is_pure':self._is_pure,
+        'is_elemental':self._is_elemental,
+        'is_private':self._is_private,
+        'is_header':self._is_header,
+        'functions':self._functions,
+        'is_external':self._is_external,
+        'is_imported':self._is_imported,
+        'is_annotated':self._is_annotated,
+        'interfaces':self._interfaces,
+        'docstring':self._docstring,
+        'scope':self._scope}
+        return args, kwargs
+
 class PyccelFunctionDef(FunctionDef):
     """
     Class used for storing `PyccelInternalFunction` objects in a FunctionDef.
@@ -2949,7 +3002,7 @@ class Interface(PyccelAstNode):
     >>> f = FunctionDef('F', [], [], [])
     >>> Interface('I', [f])
     """
-    __slots__ = ('_name','_functions','_is_argument', '_syntactic_node')
+    __slots__ = ('_name','_functions','_is_argument', '_is_imported', '_syntactic_node')
     _attribute_nodes = ('_functions',)
 
     def __init__(
@@ -2957,16 +3010,18 @@ class Interface(PyccelAstNode):
         name,
         functions,
         is_argument = False,
+        is_imported=False,
         syntactic_node=None,
         ):
 
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
-        if not isinstance(functions, list):
+        if not isinstance(functions, (list, tuple)):
             raise TypeError('Expecting a list')
         self._name = name
         self._functions = functions
         self._is_argument = is_argument
+        self._is_imported = is_imported
         self._syntactic_node = syntactic_node
         super().__init__()
 
@@ -2984,6 +3039,15 @@ class Interface(PyccelAstNode):
     def is_argument(self):
         """True if the interface is used for a function argument."""
         return self._is_argument
+
+    @property
+    def is_imported(self):
+        """
+        Indicates if the function was imported from another file.
+
+        Indicates if the function was imported from another file.
+        """
+        return self._is_imported
 
     @property
     def syntactic_node(self):
@@ -3020,6 +3084,63 @@ class Interface(PyccelAstNode):
          Flag to check if the node is inlined.
         """
         return self._functions[0].is_inline
+
+    def rename(self, newname):
+        """
+        Rename the FunctionDef name
+        newname.
+
+        Parameters
+        ----------
+        newname: str
+            new name for the FunctionDef
+        """
+
+        self._name = newname
+
+    def clone(self, newname, **new_kwargs):
+        """
+        Create an almost identical Interface with name `newname`.
+
+        Create an almost identical Interface with name `newname`.
+        Additional parameters can be passed to alter the resulting
+        FunctionDef.
+
+        Parameters
+        ----------
+        newname : str
+            New name for the Interface.
+
+        **new_kwargs : dict
+            Any new keyword arguments to be passed to the new Interface.
+
+        Returns
+        -------
+        Interface
+            The clone of the interface.
+        """
+
+        args, kwargs = self.__getnewargs__()
+        kwargs.update(new_kwargs)
+        cls = type(self)
+        new_func = cls(*args, **kwargs)
+        new_func.rename(newname)
+        return new_func
+
+    def __getnewargs__(self):
+        """
+          This method returns the positional and keyword arguments
+            used to create an instance of this class.
+        """
+        args = (
+        self._name,
+        self._functions)
+
+        kwargs = {
+        'is_argument': self._is_argument,
+        'is_imported':self._is_imported,
+        'syntactic_node':self._syntactic_node}
+        return args, kwargs
 
     def point(self, args, use_final_precision = False):
         """Returns the actual function that will be called, depending on the passed arguments."""

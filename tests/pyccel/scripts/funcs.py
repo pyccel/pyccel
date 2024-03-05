@@ -12,12 +12,4 @@ def sum_to_n(n : 'int'):
         result = add2(result,i)
     return result
 
-def g():
-    b = 2
-
-    def f(a : int = 3, b : int = 3):
-        pass
-
-    f(b = b)
-
 

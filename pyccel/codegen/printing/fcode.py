@@ -22,7 +22,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
 
-from pyccel.ast.core import FunctionDef, InlineFunctionDef
+from pyccel.ast.core import FunctionDef, Interface
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
@@ -614,7 +614,7 @@ class FCodePrinter(CodePrinter):
         if len(targets) == 0:
             return 'use {}\n'.format(source)
 
-        targets = [t for t in targets if not isinstance(t.object, InlineFunctionDef)]
+        targets = [t for t in targets if not (isinstance(t.object, (FunctionDef, Interface)) and t.object.is_inline)]
         if len(targets) == 0:
             return ''
 
