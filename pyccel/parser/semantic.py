@@ -2692,7 +2692,7 @@ class SemanticParser(BasicParser):
         list_variable = self._visit(expr.name[0])
         iterable = expr.name[1].args[0].value
 
-        if isinstance(iterable, PythonList):
+        if isinstance(iterable, (PythonList, PythonTuple)):
             added_list = self._visit(iterable)
             store = [ListAppend(list_variable, a) for a in added_list]
             return CodeBlock(store)
