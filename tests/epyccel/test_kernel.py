@@ -20,13 +20,15 @@ def language(request):
 
 @pytest.mark.gpu
 def test_kernel(language):
+    @kernel
+    def add_one_kernel(a: 'int[:]'):
+        a[0] += 1
+
     def f():
-        @kernel
-        def add_one_kernel(a: 'int[:]'):
-            a[0] += 1
         a = np.array([1], dtype=np.int32)
         add_one_kernel[1, 1](a)
         return a[0]
+
     epyc_f = epyccel(f, language=language)
     res = epyc_f()
     assert res == 2

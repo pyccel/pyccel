@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print('*********************************')
 
     for f in files:
-        print('> testing {0}'.format(str(os.path.basename(f))))
+        print(f"> testing {os.path.basename(f)}")
         test_codegen(f)
 
     print('\n')
