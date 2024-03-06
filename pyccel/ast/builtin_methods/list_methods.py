@@ -228,11 +228,8 @@ class ListExtend(ListMethod):
     list_variable : TypedAstNode
         The list object which the method is called from.
     
-    new_elem : TypedAstNode
-        The argument passed to extend() method.
+    iterable : TypedAstNode
+        Iterable argument passed to extend() method.
     """
     __slots__ = ()
     name = 'extend'
-
-    def __init__(self, list_variable, new_elem) -> None:
-        super().__init__(list_variable, new_elem)
