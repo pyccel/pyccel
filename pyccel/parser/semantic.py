@@ -2699,7 +2699,7 @@ class SemanticParser(BasicParser):
                 dotted = DottedName(list_variable, func_call)
                 lhs = PyccelSymbol('_', is_temp=True)
                 assign = Assign(lhs, dotted)
-                assign.set_current_ast(list_variable.python_ast)
+                assign.set_current_ast(iterable.python_ast)
                 store.append(assign)
             result = CodeBlock(store)
             pyccel_stage.set_stage('semantic')
@@ -2713,7 +2713,7 @@ class SemanticParser(BasicParser):
             rhs = dotted
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, rhs)
-            assign.set_current_ast(list_variable.python_ast)
+            assign.set_current_ast(iterable.python_ast)
             body = CodeBlock([assign])
             for_obj = For(for_target, iterable, body) 
             pyccel_stage.set_stage('semantic')
