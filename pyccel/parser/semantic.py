@@ -2702,7 +2702,7 @@ class SemanticParser(BasicParser):
             for_target = self.scope.get_new_name('index')
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('append', [arg])
-            dotted = DottedName(list_variable, func_call)
+            dotted = DottedName(expr.name[0], func_call)
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, dotted)
             assign.set_current_ast(expr.python_ast)
