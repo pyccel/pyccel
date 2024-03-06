@@ -30,6 +30,8 @@ from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
+from pyccel.ast.builtin_methods.list_methods import ListMethod
+
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -2687,53 +2689,35 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_ListExtend(self, list_variable, iterable):
-        # Structure: For(CodeBlock(Assign(DottedName(FunctionCall))))
         pyccel_stage.set_stage('syntactic')
 
-        #list as arg:
         if isinstance(iterable, PythonList):
-            temp = []
+            store = []
             for i in iterable.args:
                 arg = FunctionCallArgument(i)
                 func_call = FunctionCall('append', [arg])
                 dotted = DottedName(list_variable, func_call)
-
-                rhs = dotted
                 lhs = PyccelSymbol('_', is_temp=True)
-                assign = Assign(lhs, rhs)
+                assign = Assign(lhs, dotted)
                 assign.set_current_ast(list_variable.python_ast)
-
-                temp.append(assign)
-
+                store.append(assign)
+            result = CodeBlock(store)
             pyccel_stage.set_stage('semantic')
-            
-            return self._visit(CodeBlock(temp))
-            # return [self._visit(a) for a in temp]
-        
-        elif isinstance(iterable, PythonRange):
+            return self._visit(result)
+
+        elif isinstance(iterable, FunctionCall):
             for_target = self.scope.get_new_name('index')
-            # Construct FunctionCall()
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('append', [arg])
-
-            # Construct DottedName
             dotted = DottedName(list_variable, func_call)
-
-            # Construct Assign
             rhs = dotted
             lhs = PyccelSymbol('_', is_temp=True)
             assign = Assign(lhs, rhs)
             assign.set_current_ast(list_variable.python_ast)
-
-            # Construct CodeBlock
             body = CodeBlock([assign])
-
-            # Construct Syntactic node of For loop
             for_obj = For(for_target, iterable, body) 
-
-        pyccel_stage.set_stage('semantic')
-
-        return self._visit(for_obj)
+            pyccel_stage.set_stage('semantic')
+            return self._visit(for_obj)
 
     def _visit_PyccelOperator(self, expr):
         args     = [self._visit(a) for a in expr.args]
@@ -3124,7 +3108,7 @@ class SemanticParser(BasicParser):
             errors.report("Cannot assign a datatype to a variable.",
                     symbol=expr, severity='error')
 
-        if isinstance(rhs, For):
+        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and isinstance(rhs.body[0], ListMethod)):
             return rhs
         if isinstance(rhs, ConstructorCall):
             return rhs
