@@ -28,6 +28,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   #1776 : Increase minimum version for `pytest` to 7.0.
+
 ### Deprecated
 
 -   \[INTERNALS\] Remove unnecessary `dtype` parameter from `ast.core.Declare` class.
