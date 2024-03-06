@@ -30,7 +30,7 @@ from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
-from pyccel.ast.builtin_methods.list_methods import ListMethod
+from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
 
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
@@ -2635,6 +2635,11 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
+            method = cls_base.get_method(rhs_name)
+            if isinstance(method, PyccelFunctionDef):
+                annotation_method = '_visit_' + method.cls_name.__name__
+                if hasattr(self, annotation_method):
+                    return getattr(self, annotation_method)(expr)
             macro = self.scope.find(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
@@ -2645,11 +2650,6 @@ class SemanticParser(BasicParser):
                 return FunctionCall(master, args, self._current_function)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
-            method = cls_base.get_method(rhs_name)
-            if isinstance(method, PyccelFunctionDef):
-                annotation_method = '_visit_' + method.cls_name.__name__
-                if hasattr(self, annotation_method):
-                    return getattr(self, annotation_method)(visited_lhs, rhs.args[0].value)
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
@@ -2688,32 +2688,24 @@ class SemanticParser(BasicParser):
             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
             severity='fatal')
 
-    def _visit_ListExtend(self, list_variable, iterable):
-        pyccel_stage.set_stage('syntactic')
+    def _visit_ListExtend(self, expr):
+        list_variable = self._visit(expr.name[0])
+        iterable = expr.name[1].args[0].value
 
         if isinstance(iterable, PythonList):
-            store = []
-            for i in iterable.args:
-                arg = FunctionCallArgument(i)
-                func_call = FunctionCall('append', [arg])
-                dotted = DottedName(list_variable, func_call)
-                lhs = PyccelSymbol('_', is_temp=True)
-                assign = Assign(lhs, dotted)
-                assign.set_current_ast(iterable.python_ast)
-                store.append(assign)
-            result = CodeBlock(store)
-            pyccel_stage.set_stage('semantic')
-            return self._visit(result)
+            added_list = self._visit(iterable)
+            store = [ListAppend(list_variable, a) for a in added_list]
+            return CodeBlock(store)
 
-        elif isinstance(iterable, FunctionCall):
+        else:
+            pyccel_stage.set_stage('syntactic')
             for_target = self.scope.get_new_name('index')
             arg = FunctionCallArgument(for_target)
             func_call = FunctionCall('append', [arg])
             dotted = DottedName(list_variable, func_call)
-            rhs = dotted
             lhs = PyccelSymbol('_', is_temp=True)
-            assign = Assign(lhs, rhs)
-            assign.set_current_ast(iterable.python_ast)
+            assign = Assign(lhs, dotted)
+            assign.set_current_ast(expr.python_ast)
             body = CodeBlock([assign])
             for_obj = For(for_target, iterable, body) 
             pyccel_stage.set_stage('semantic')
