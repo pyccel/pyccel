@@ -2694,7 +2694,11 @@ class SemanticParser(BasicParser):
 
         if isinstance(iterable, (PythonList, PythonTuple)):
             added_list = self._visit(iterable)
-            store = [ListAppend(list_variable, a) for a in added_list]
+            try:
+                store = [ListAppend(list_variable, a) for a in added_list]                            
+            except TypeError as e:                                                                    
+                msg = str(e)
+                errors.report(msg, symbol=expr, severity='fatal')                                                      
             return CodeBlock(store)
 
         else:
