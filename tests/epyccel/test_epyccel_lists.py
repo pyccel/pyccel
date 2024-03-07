@@ -591,3 +591,4 @@ def test_extend_returned_list(language):
         lst.extend(g())
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
+
