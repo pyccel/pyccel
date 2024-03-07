@@ -239,7 +239,7 @@ class PythonCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_Variable(self, expr):
-        return self._print(expr.name)
+        return expr.name
 
     def _print_DottedVariable(self, expr):
         rhs_code = self._print_Variable(expr)
