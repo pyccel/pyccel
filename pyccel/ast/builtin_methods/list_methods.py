@@ -215,21 +215,16 @@ class ListExtend(ListMethod):
     Represents a call to the .extend() method of an object with a list type,
     which adds items of an iterable (list, tuple, dictionary, etc) at the end
     of a list.
-    This method returns `None`.
+    This method is handled through the call to `_visit_ListExtend` in
+    the semantic stage. It then attempts to construct a `For` loop node with
+    a body that calls `append()`, or a direct `append()` node depending on
+    the type of the iterable passed to `extend()`.
     The extend method is called as follows:
 
-    >>> a = [1]
-    >>> a.extend([2])
+    >>> a = [1, 2, 3]
+    >>> a.extend(range(4, 8))
     >>> print(a)
-    [1, 2]
-
-    Parameters
-    ----------
-    list_variable : TypedAstNode
-        The list object which the method is called from.
-    
-    iterable : TypedAstNode
-        Iterable argument passed to extend() method.
+    [1, 2, 3, 4, 5, 6, 7]
     """
     __slots__ = ()
     name = 'extend'
