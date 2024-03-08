@@ -887,10 +887,12 @@ class PythonCodePrinter(CodePrinter):
                 stop  = stop,
                 step  = step)
 
-    def _print_SetAdd(self, expr):
-        name = self._print(expr.set_variable)
-        args = self._print(expr.add_argument)
-        return f"{name}.add({args})\n"
+    def _print_SetMethod(self, expr):
+        set_var = self._print(expr.set_variable)
+        name = expr.name
+        args = "" if len(expr.args) == 0 or expr.args[-1] is None \
+            else ', '.join(self._print(a) for a in expr.args)
+        return f"{set_var}.{name}({args})\n"
 
     def _print_Nil(self, expr):
         return 'None'

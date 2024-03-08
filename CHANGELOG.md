@@ -1,6 +1,21 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## \[UNRELEASED\]
+
+### Added
+
+-   #1739 : Add Python support for set method `clear()`.
+-   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
+
+### Fixed
+
+
+### Changed
+
+
+### Deprecated
+
 ## \[1.12.1\] - 2024-10-01
 
 ### Added
