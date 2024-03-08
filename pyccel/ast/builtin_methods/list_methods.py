@@ -228,6 +228,17 @@ class ListExtend(ListMethod):
     >>> a.extend(range(4, 8))
     >>> print(a)
     [1, 2, 3, 4, 5, 6, 7]
+
+    Parameters
+    ----------
+    list_variable : TypedAstNode
+        The list object which the method is called from.
+
+    iterable : TypedAstNode
+        The argument passed to extend() method.
     """
     __slots__ = ()
     name = 'extend'
+
+    def __init__(self, list_variable, iterable) -> None:
+        super().__init__(list_variable, iterable)
