@@ -852,9 +852,9 @@ class PythonCodePrinter(CodePrinter):
         return "{}({})".format(name, arg)
 
     def _print_ListMethod(self, expr):
-        method_name = self._print(expr.name)
+        method_name = expr.name
         list_var = self._print(expr.list_variable)
-        if len(expr.args) == 0 or expr.args[0] is None:
+        if len(expr.args) == 0 or all(arg is None for arg in expr.args):
             method_args = ''
         else:
             method_args = ', '.join(self._print(a) for a in expr.args)
