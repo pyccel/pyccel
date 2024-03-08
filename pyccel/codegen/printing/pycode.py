@@ -239,7 +239,7 @@ class PythonCodePrinter(CodePrinter):
         return 'complex'
 
     def _print_Variable(self, expr):
-        return self._print(expr.name)
+        return expr.name
 
     def _print_DottedVariable(self, expr):
         rhs_code = self._print_Variable(expr)
@@ -443,9 +443,9 @@ class PythonCodePrinter(CodePrinter):
         return '['+args+']'
 
     def _print_PythonSet(self, expr):
-        args = ', '.join(self._print(i) for i in expr.args)
         if len(expr.args) == 0:
-            args += ','
+            return 'set()'
+        args = ', '.join(self._print(i) for i in expr.args)
         return '{'+args+'}'
 
     def _print_PythonBool(self, expr):
@@ -886,8 +886,8 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_SetMethod(self, expr):
         set_var = self._print(expr.set_variable)
-        name = self._print(expr.name)
-        args = "" if len(expr.args) == 0 or expr.args[0] is None \
+        name = expr.name
+        args = "" if len(expr.args) == 0 or expr.args[-1] is None \
             else ', '.join(self._print(a) for a in expr.args)
         return f"{set_var}.{name}({args})\n"
 

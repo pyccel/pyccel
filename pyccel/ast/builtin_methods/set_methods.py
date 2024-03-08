@@ -12,7 +12,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear', 'SetCopy', 'SetMethod')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -24,7 +24,7 @@ class SetMethod(PyccelInternalFunction):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
 
     *args : iterable
         The arguments passed to the function call.
@@ -55,7 +55,7 @@ class SetAdd(SetMethod) :
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
 
     new_elem : TypedAstNode
         The element that needs to be added to a set.
@@ -70,8 +70,6 @@ class SetAdd(SetMethod) :
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
-        if new_elem.rank > 0:
-            raise TypeError("Pyccel can't hash non-scalar types")
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
             set_variable.dtype is not NativeGeneric() and
@@ -93,7 +91,7 @@ class SetClear(SetMethod):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
     """
     __slots__ = ()
     _dtype = NativeVoid()
@@ -117,7 +115,7 @@ class SetCopy(SetMethod):
     Parameters
     ----------
     set_variable : TypedAstNode
-        The name of the set.
+        The set on which the method will operate.
     """
     __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
     name = 'copy'
