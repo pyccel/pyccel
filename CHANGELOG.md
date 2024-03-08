@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 -   #1739 : Add Python support for set method `clear()`.
--   #1739 : Add `SetMethod` to handle calls to various set methods.
+-   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 
 ### Fixed
 
