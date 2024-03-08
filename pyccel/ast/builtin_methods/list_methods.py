@@ -83,7 +83,7 @@ class ListAppend(ListMethod):
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
+    _precision = -1
     _class_type = NativeVoid()
     name = 'append'
 
@@ -153,7 +153,7 @@ class ListClear(ListMethod) :
     """
     __slots__ = ()
     _dtype = NativeVoid()
-    _precision = None
+    _precision = -1
     _rank = 0
     _order = None
     _shape = None
@@ -194,7 +194,7 @@ class ListInsert(ListMethod):
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
+    _precision = -1
     _class_type = NativeVoid()
     name = 'insert'
 
