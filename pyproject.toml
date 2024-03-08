@@ -20,6 +20,7 @@ dependencies = [
     "sympy >= 1.2",
     "termcolor >= 1.0.0",
     "textx >= 2.2",
+    "stc >= 5.0",
 ]
 
 [project.optional-dependencies]
@@ -52,3 +53,8 @@ artifacts = [
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "install_scripts/hook.py"
 require-runtime-dependencies = true
+
+[tool.hatch.build]
+include = [
+  "stc/include/*"
+]
