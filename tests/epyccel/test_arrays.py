@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
-from numpy import iinfo
-from numpy.random import randint
+from numpy import iinfo, finfo
+from numpy.random import randint, uniform
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
@@ -3975,6 +3975,808 @@ def test_array_ndmin_2_order(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_bool_to_other_types_1(language):
+    size = (2, 2)
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int8(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_bool(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int16(bl)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_bool_to_other_types_2(language):
+    size = (2, 2)
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int32(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int64(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_float32(bl)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_bool_to_other_types_3(language):
+    size = (2, 2)
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_float64(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_cfloat(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_cdouble(bl)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_bool_to_other_types_4(language):
+    size = (2, 2)
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_pyint(bl)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_pyfloat(bl)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int8_to_other_types_1(language):
+    size = (2, 2)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int8(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_bool(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int16(integer8)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int8_to_other_types_2(language):
+    size = (2, 2)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int32(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int64(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_float32(integer8)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int8_to_other_types_3(language):
+    size = (2, 2)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_float64(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_cfloat(integer8)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int8_to_other_types_4(language):
+    size = (2, 2)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_cdouble(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_pyint(integer8)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_pyfloat(integer8)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int16_to_other_types_1(language):
+    size = (2, 2)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int8(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_bool(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int16(integer16)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int16_to_other_types_2(language):
+    size = (2, 2)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int32(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int64(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_float32(integer16)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int16_to_other_types_3(language):
+    size = (2, 2)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_float64(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_cfloat(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_cdouble(integer16)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int16_to_other_types_4(language):
+    size = (2, 2)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_pyint(integer16)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_pyfloat(integer16)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int32_to_other_types_1(language):
+    size = (2, 2)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int8(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_bool(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int16(integer32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int32_to_other_types_2(language):
+    size = (2, 2)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int32(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int64(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_float32(integer32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int32_to_other_types_3(language):
+    size = (2, 2)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_float64(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_cfloat(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_cdouble(integer32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int32_to_other_types_3(language):
+    size = (2, 2)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_pyint(integer32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_pyfloat(integer32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int64_to_other_types_1(language):
+    size = (2, 2)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int8(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_bool(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int16(integer64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int64_to_other_types_2(language):
+    size = (2, 2)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int32(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int64(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_float32(integer64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int64_to_other_types_3(language):
+    size = (2, 2)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_float64(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_cfloat(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_cdouble(integer64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_int64_to_other_types_4(language):
+    size = (2, 2)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_pyint(integer64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_pyfloat(integer64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float32_to_other_types_1(language):
+    size = (2, 2)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int8(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_bool(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int16(fl32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float32_to_other_types_2(language):
+    size = (2, 2)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int32(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int64(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_float32(fl32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float32_to_other_types_3(language):
+    size = (2, 2)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_float64(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_cfloat(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_cdouble(fl32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float32_to_other_types_4(language):
+    size = (2, 2)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_pyint(fl32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_pyfloat(fl32)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float64_to_other_types_1(language):
+    size = (2, 2)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int8(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_bool(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int16(fl64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float64_to_other_types_2(language):
+    size = (2, 2)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int32(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int64(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_float32(fl64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float64_to_other_types_3(language):
+    size = (2, 2)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_float64(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_cfloat(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_cdouble(fl64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_float64_to_other_types_4(language):
+    size = (2, 2)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_pyint(fl64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_pyfloat(fl64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex64_to_other_types_1(language):
+    size = (2, 2)
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int8(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_bool(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int16(cmplx64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex64_to_other_types_2(language):
+    size = (2, 2)
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int32(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int64(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float32(cmplx64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex64_to_other_types_3(language):
+    size = (2, 2)
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float64(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cfloat(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cdouble(cmplx64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex64_to_other_types_4(language):
+    size = (2, 2)
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    # the result of the last operation is a Python complex type which has 8 bytes in the alignment,
+    # that's why we need to convert it to a numpy.complex64 the needed type.
+    cmplx64 = np.complex64(cmplx128_from_float32)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyint(cmplx64)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyfloat(cmplx64)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex128_to_other_types_1(language):
+    size = (2, 2)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int8(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_bool(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int16(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex128_to_other_types_2(language):
+    size = (2, 2)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int32(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int64(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float32(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex128_to_other_types_3(language):
+    size = (2, 2)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float64(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cfloat(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cdouble(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_complex128_to_other_types_4(language):
+    size = (2, 2)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyint(cmplx128)
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyfloat(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion(language):
+    size = (1,2)
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer64_1, integer64_2, integer64_3)
+ 
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer16_1, integer16_2, integer16_3)
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_complex128, language=language)
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_complex128(b1, b2, b3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Template results in compilation error")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_orderF(language):
+    size = (1,2)
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer64_1, integer64_2, integer64_3)
+ 
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer16_1, integer16_2, integer16_3)
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_complex128_orderF, language=language)
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_complex128_orderF(b1, b2, b3)
 
 #def teardown_module():
 #    import os, glob
