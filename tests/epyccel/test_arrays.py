@@ -4289,7 +4289,7 @@ def test_dtype_conversion_int32_to_other_types_3(language):
         pytest.param("python", marks = pytest.mark.python)
     )
 )
-def test_dtype_conversion_int32_to_other_types_3(language):
+def test_dtype_conversion_int32_to_other_types_4(language):
     size = (2, 2)
     integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
 
@@ -4742,7 +4742,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion(language):
 
     epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language)
     assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer64_1, integer64_2, integer64_3)
- 
+
     epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language)
     assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer16_1, integer16_2, integer16_3)
 
