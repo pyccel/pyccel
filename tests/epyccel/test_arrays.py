@@ -4771,7 +4771,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_orderF(language):
 
     epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language)
     assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer64_1, integer64_2, integer64_3)
- 
+
     epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language)
     assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer16_1, integer16_2, integer16_3)
 
