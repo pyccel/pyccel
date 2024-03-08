@@ -220,8 +220,10 @@ class ListExtend(ListMethod):
     of a list.
     This method is handled through the call to `_visit_ListExtend` in
     the semantic stage. It then attempts to construct a `For` loop node with
-    a body that calls `append()`, or a direct `append()` nodes depending on
+    a body that calls `append()`, or direct `append()` nodes depending on
     the type of the iterable passed to `extend()`.
+    This class should never be instantiated; it's only purpose is to help
+    construct the annotation_method `_visit_ListExtend`. 
     The extend method is called as follows:
 
     >>> a = [1, 2, 3]
