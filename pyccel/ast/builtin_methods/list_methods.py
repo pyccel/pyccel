@@ -36,6 +36,9 @@ class ListMethod(PyccelInternalFunction):
     ----------
     list_variable : TypedAstNode
         The list object which the method is called from.
+    
+    *args : Tuple
+        The arguments passed to list methods.
     """
     __slots__ = ("_list_variable",)
     _attribute_nodes = ("_list_variable",)
@@ -217,7 +220,7 @@ class ListExtend(ListMethod):
     of a list.
     This method is handled through the call to `_visit_ListExtend` in
     the semantic stage. It then attempts to construct a `For` loop node with
-    a body that calls `append()`, or a direct `append()` node depending on
+    a body that calls `append()`, or a direct `append()` nodes depending on
     the type of the iterable passed to `extend()`.
     The extend method is called as follows:
 

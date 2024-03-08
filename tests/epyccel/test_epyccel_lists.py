@@ -69,11 +69,11 @@ def test_pop_list_of_tuples(language) :
 
 def test_pop_list_of_ndarrays(language) :
     def pop_last_element():
-        import numpy as np
+        from numpy import array
 
-        array1 = np.array([[1, 2, 3], [4, 5, 6]])
-        array2 = np.array([[7, 8, 9], [10, 11, 12]])
-        array3 = np.array([[13, 14, 15], [16, 17, 18]])
+        array1 = array([[1, 2, 3], [4, 5, 6]])
+        array2 = array([[7, 8, 9], [10, 11, 12]])
+        array3 = array([[13, 14, 15], [16, 17, 18]])
         a = [array1, array2, array3]
         return a.pop()
     epyc_last_element = epyccel(pop_last_element, language = language)
@@ -218,14 +218,14 @@ def test_append_complex(language):
 
 def test_append_ndarrays(language):
     def f():
-        import numpy as np
+        from numpy import array
 
-        array1 = np.array([[1, 2, 3], [4, 5, 6]])
-        array2 = np.array([[7, 8, 9], [10, 11, 12]])
-        array3 = np.array([[13, 14, 15], [16, 17, 18]])
-        array4 = np.array([[5, 4, 66], [69, 2, 180]])
-        array5 = np.array([[13, 14, 15], [6, 27, 0]])
-        array6 = np.array([[13, 1, 5], [16, 17, 18]])
+        array1 = array([[1, 2, 3], [4, 5, 6]])
+        array2 = array([[7, 8, 9], [10, 11, 12]])
+        array3 = array([[13, 14, 15], [16, 17, 18]])
+        array4 = array([[5, 4, 66], [69, 2, 180]])
+        array5 = array([[13, 14, 15], [6, 27, 0]])
+        array6 = array([[13, 1, 5], [16, 17, 18]])
         a = [array1, array2, array3]
         a.append(array4)
         a.append(array5)
@@ -301,14 +301,14 @@ def test_insert_float(language):
 
 def test_insert_ndarrays(language):
     def f():
-        import numpy as np
+        from numpy import array
 
-        array1 = np.array([[1, 2, 3], [4, 5, 6]])
-        array2 = np.array([[7, 8, 9], [10, 11, 12]])
-        array3 = np.array([[13, 14, 15], [16, 17, 18]])
-        array4 = np.array([[5, 4, 66], [69, 2, 180]])
-        array5 = np.array([[13, 14, 15], [6, 27, 0]])
-        array6 = np.array([[13, 1, 5], [16, 17, 18]])
+        array1 = array([[1, 2, 3], [4, 5, 6]])
+        array2 = array([[7, 8, 9], [10, 11, 12]])
+        array3 = array([[13, 14, 15], [16, 17, 18]])
+        array4 = array([[5, 4, 66], [69, 2, 180]])
+        array5 = array([[13, 14, 15], [6, 27, 0]])
+        array6 = array([[13, 1, 5], [16, 17, 18]])
         a = [array1, array2]
         a.insert(-100, array3)
         a.insert(0, array4)
@@ -526,10 +526,10 @@ def test_extend_tuple_as_arg(language):
 
 def test_extend_np_int(language):
     def f():
-        import numpy as np
+        from numpy import ones, int64
 
-        a = [np.int64(1),np.int64(2),np.int64(3)]
-        b = np.ones(3, dtype=np.int64)
+        a = [int64(1),int64(2),int64(3)]
+        b = ones(3, dtype=int64)
         a.extend(b)
         return a
 
@@ -538,10 +538,10 @@ def test_extend_np_int(language):
 
 def test_extend_np_float(language):
     def f():
-        import numpy as np
+        from numpy import ones, float64
 
-        a = [np.float64(1.0), np.float64(2.0), np.float64(3.0)]
-        b = np.ones(3, dtype=np.float64)
+        a = [float64(1.0), float64(2.0), float64(3.0)]
+        b = ones(3, dtype=float64)
         a.extend(b)
         return a
 
