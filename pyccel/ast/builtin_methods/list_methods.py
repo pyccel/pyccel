@@ -34,10 +34,10 @@ class ListMethod(PyccelInternalFunction):
 
     Parameters
     ----------
-    list_variable : TypedAstNode
-        The list object which the method is called from.
+    arg : TypedAstNode
+        The object which the method is called from.
     
-    *args : Tuple
+    *args : Tuple of TypedAstNodes
         The arguments passed to list methods.
     """
     __slots__ = ("_list_variable",)
