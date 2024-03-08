@@ -11,8 +11,9 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.builtins import PythonRange
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod')
+__all__ = ('SetAdd', 'SetClear', 'SetCopy', 'SetMethod', 'SetRemove')
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -106,6 +107,7 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
 
 class SetRemove(SetMethod):
     """
