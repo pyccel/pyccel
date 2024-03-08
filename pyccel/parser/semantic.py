@@ -2695,12 +2695,11 @@ class SemanticParser(BasicParser):
         if isinstance(iterable, (PythonList, PythonTuple)):
             added_list = self._visit(iterable)
             try:
-                store = [ListAppend(list_variable, a) for a in added_list]                            
-            except TypeError as e:                                                                    
+                store = [ListAppend(list_variable, a) for a in added_list]
+            except TypeError as e:
                 msg = str(e)
-                errors.report(msg, symbol=expr, severity='fatal')                                                      
+                errors.report(msg, symbol=expr, severity='fatal')
             return CodeBlock(store)
-
         else:
             pyccel_stage.set_stage('syntactic')
             for_target = self.scope.get_new_name('index')
@@ -2711,7 +2710,7 @@ class SemanticParser(BasicParser):
             assign = Assign(lhs, dotted)
             assign.set_current_ast(expr.python_ast)
             body = CodeBlock([assign])
-            for_obj = For(for_target, iterable, body) 
+            for_obj = For(for_target, iterable, body)
             pyccel_stage.set_stage('semantic')
             return self._visit(for_obj)
 
