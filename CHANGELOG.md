@@ -15,7 +15,6 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
--   Stop ignoring a change of type from a Python built-in to a compatible NumPy type.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
