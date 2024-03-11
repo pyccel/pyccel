@@ -267,7 +267,7 @@ class FixedSizeNumericType(FixedSizeType):
         It should be noted that this is not the convention chosen by NumPy (in NumPy
         a `complex128` is so named because `16*8=precision*bits_in_a_byte=128`).
 
-        The precision is Pyccel is equivalent to the `kind` parameter in Fortran.
+        The precision in Pyccel is equivalent to the `kind` parameter in Fortran.
         """
         return self._precision # pylint: disable=no-member
 
@@ -499,7 +499,7 @@ class HomogeneousContainerType(ContainerType):
         It should be noted that this is not the convention chosen by NumPy (in NumPy
         a `complex128` is so named because `16*8=precision*bits_in_a_byte=128`).
 
-        The precision is Pyccel is equivalent to the `kind` parameter in Fortran.
+        The precision in Pyccel is equivalent to the `kind` parameter in Fortran.
         """
         return self.element_type.precision
 
