@@ -14,6 +14,7 @@ from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
 
+
 class SetMethod(PyccelInternalFunction):
     """
     Abstract class for set method calls.
@@ -43,6 +44,7 @@ class SetMethod(PyccelInternalFunction):
         Get the variable representing the set.
         """
         return self._set_variable
+
 
 class SetAdd(SetMethod) :
     """
@@ -81,6 +83,7 @@ class SetAdd(SetMethod) :
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
+
 class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
@@ -104,6 +107,7 @@ class SetClear(SetMethod):
 
     def __init__(self, set_variable):
         super().__init__(set_variable)
+
 
 class SetCopy(SetMethod):
     """
