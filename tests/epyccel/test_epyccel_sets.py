@@ -97,3 +97,13 @@ def test_remove_int(language):
     python_result = remove_int()
     assert python_result == pyccel_result
 
+def test_remove_float(language):
+    def remove_float():
+        se = {5.7, 2.4, 8.1}
+        se.remove(8.1)
+        return se
+    epyccel_remove = epyccel(remove_float, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_float()
+    assert python_result == pyccel_result
+
