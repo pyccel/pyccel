@@ -6,7 +6,7 @@
 Module handling all Python builtin operators
 These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
-They also have specific rules to determine the dtype, rank, shape
+They also have specific rules to determine the datatype, rank, shape
 """
 import functools
 
@@ -48,7 +48,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
     def _calculate_type(self, arg):
         """
-        Get the dtype.
+        Get the type of the result of the function.
 
         Arguments must be integers or booleans. Any booleans are cast
         to integers.
@@ -100,11 +100,11 @@ class PyccelBitOperator(PyccelOperator):
 
     def _calculate_type(self, *args):
         """
-        Get the dtype.
+        Get the type of the result of the function.
 
         If one argument is a string then all arguments must be strings.
 
-        If the arguments are numeric then the dtype
+        If the arguments are numeric then the datatype
         matches the broadest type.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
@@ -207,7 +207,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
     __slots__ = ()
     def _calculate_type(self, *args):
         """
-        Get the dtype.
+        Get the type of the result of the function.
 
         If one argument is a string then all arguments must be strings.
 
