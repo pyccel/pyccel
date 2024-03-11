@@ -17,11 +17,16 @@ The class `TypedAstNode` is a super class. This class should never be used direc
 
 The contents of these types are explained in more detail below.
 
-When examining the class `TypedAstNode` you may notice that there are two methods for getting each of these properties. Each time, one is a standard method, while the other is a static class method. In general in the code you will always use the normal method. This will return the instance attribute if it is available, otherwise it will return the static class attribute. The static class method is used for type deductions when [parsing type annotations](./type_inference.md). In type annotations we do not generally have an instance of a class, however we can get access to the class itself. For instance let us consider the following type annotation:
+The class `TypedAstNode` also contains static class methods. The static class method is used for type deductions when [parsing type annotations](./type_inference.md). In type annotations we do not generally have an instance of a class, however we can get access to the class itself. The available class methods are:
+-   `static_type`
+-   `static_rank`
+-   `static_order`
+
+For instance let us consider the following type annotation:
 ```python
 a : int
 ```
-When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticParser` will return the class `PythonInt`. This is usually used as a function (e.g to cast a variable), however here we use it to deduce the type. Following the [development conventions](./development_conventions.md#Class-variables-vs.-Instance-variables) any attributes which will remain constant over all instances of a class should be stored in static class attributes. This means that they can be accessed via these static methods. Returning to our example, a call to the function `int` always returns a scalar object with an integer type and default precision. This means that all the properties of a `TypedAstNode` can be defined without having an instance of this class. These properties cannot be defined statically for all nodes (e.g. it would not be possible for `PyccelAdd`), however generally they can be defined for the nodes which can be used in type annotations.
+When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticParser` will return the class `PythonInt`. This is usually used as a function (e.g to cast a variable), however here we use it to deduce the type. Following the [development conventions](./development_conventions.md#Class-variables-vs.-Instance-variables) any attributes which will remain constant over all instances of a class should be stored in static class attributes. This means that they can be accessed via these static methods. Returning to our example, a call to the function `int` always returns a scalar object with the built-in `float` type. This means that all the properties of a `TypedAstNode` can be defined without having an instance of this class. These properties cannot be defined statically for all nodes (e.g. it would not be possible for `PyccelAdd`), however generally they can be defined for the nodes which can be used in type annotations.
 
 ### Class type
 
@@ -44,6 +49,18 @@ The shape of an array indicates the number of elements in each dimension of the 
 ### Order
 
 The order indicates how an array is laid out in memory. This can either be row-major (C-style) ordering or column-major (Fortran-style) ordering. For more information about this, please see the [dedicated documentation](./order_docs.md).
+
+### Static Type
+
+The static type is the class type that would be assigned to an object created using an instance of this class as a type annotation.
+
+### Static rank
+
+The static rank is the rank that would be assigned to an object created using an instance of this class as a type annotation.
+
+### Static order
+
+The static order is the order that would be assigned to an object created using an instance of this class as a type annotation.
 
 ## Pyccel Internal Function
 
