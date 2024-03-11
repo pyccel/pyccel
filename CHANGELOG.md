@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
--   #1763 Use `np.result_type` to avoid mistakes in complex NumPy type promotion rules.
+-   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix all cases where a Python built-in type is returned in place of a NumPy type.
 
 ### Changed
