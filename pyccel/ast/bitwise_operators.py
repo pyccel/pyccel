@@ -55,7 +55,7 @@ class PyccelInvert(PyccelUnaryOperator):
 
         Parameters
         ----------
-        arg : tuple of TypedAstNode
+        arg : TypedAstNode
             The argument passed to the operator.
 
         Returns
