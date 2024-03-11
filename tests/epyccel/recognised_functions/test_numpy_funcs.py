@@ -281,6 +281,7 @@ def test_numpy_isinf(language):
     assert matching_types(obtained, expected_output)
 
 #------------------------------ isfinite function ----------------------------#
+@pytest.mark.xfail(os.environ.get('PYCCEL_DEFAULT_COMPILER', None) == 'intel', reason='Different inf representation.')
 def test_numpy_isfinite(language):
     def numpy_isfinite_test(x : 'float'):
         from numpy import isfinite
