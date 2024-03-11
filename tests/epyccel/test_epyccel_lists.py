@@ -558,6 +558,14 @@ def test_extend_user_defined_objects(language):
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
 
+def test_extend_list_class_attribute(language):
+    import modules.list_class_attr as mod
+
+    modnew = epyccel(mod, language=language)
+    python_list = mod.fn()
+    accelerated_list = modnew.fn()
+    assert python_list == accelerated_list
+
 def test_mixed_list_methods(language):
     def f():
         a = [(1, 4, 5), (33, 12, 5), (3, 5)]
