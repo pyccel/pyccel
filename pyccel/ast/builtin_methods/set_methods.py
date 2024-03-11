@@ -108,6 +108,7 @@ class SetClear(SetMethod):
     def __init__(self, set_variable):
         super().__init__(set_variable)
 
+
 class SetRemove(SetMethod):
     """
     Represents a call to the .remove() method.
