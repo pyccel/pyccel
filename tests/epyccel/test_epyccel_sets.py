@@ -79,7 +79,7 @@ def test_clear_complex(language):
 
 def test_copy_int(language):
     def copy_int():
-        se = {1,2,4,5}
+        se = {1, 2, 4, 5}
         cop = se.copy()
         return cop
     epyccel_copy = epyccel(copy_int, language = language)
@@ -87,6 +87,8 @@ def test_copy_int(language):
     python_result = copy_int()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
+
 
 def test_copy_float(language):
     def copy_float():
@@ -108,18 +110,6 @@ def test_copy_complex(language):
     epyccel_copy = epyccel(copy_complex, language = language)
     pyccel_result = epyccel_copy()
     python_result = copy_complex()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
-    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
-
-def test_copy_int(language):
-    def copy_int():
-        se = {56, 23, 98, 3, 6}
-        cop = se.copy()
-        return cop
-    epyccel_copy = epyccel(copy_int, language = language)
-    pyccel_result = epyccel_copy()
-    python_result = copy_int()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
     assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
