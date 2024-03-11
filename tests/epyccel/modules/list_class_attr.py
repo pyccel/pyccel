@@ -19,3 +19,4 @@ def fn():
     store = [1]
     store.extend(my_b.a.ls)
     return store
+
