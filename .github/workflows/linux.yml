@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   push:
-    branches: devel
+    branches: [devel, main]
 
 env:
   COMMIT: ${{ inputs.ref || github.event.ref }}
@@ -28,7 +28,7 @@ env:
 jobs:
   matrix_prep:
     runs-on: ubuntu-latest
-    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel'
+    if: github.event_name != 'push' || github.repository == 'pyccel/pyccel-cuda'
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
