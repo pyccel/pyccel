@@ -1,0 +1,13 @@
+name: 'Ensure STC is installed with Pyccel'
+
+runs:
+  using: "composite"
+  steps:
+    - name: check stc installation
+      shell: python
+      run: |
+        from extensions import STC
+        from os.path import exists, join
+        pyccel_loc = stc.__path__[0]
+        print(pyccel_loc)
+        assert(exists(join(pyccel_loc,'include')))
