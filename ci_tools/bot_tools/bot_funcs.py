@@ -23,7 +23,8 @@ default_python_versions = {
         'pyccel_lint': '3.8',
         'pylint': '3.8',
         'spelling': '3.8',
-        'windows': '3.8'
+        'windows': '3.8',
+        'cuda': '-'
         }
 
 test_names = {
@@ -40,15 +41,16 @@ test_names = {
         'pyccel_lint': "Pyccel best practices",
         'pylint': "Python linting",
         'spelling': "Spelling verification",
-        'windows': "Unit tests on Windows"
+        'windows': "Unit tests on Windows",
+        'cuda': "Unit tests on Linux with cuda"
         }
 
-test_dependencies = {'coverage':['linux']}
+test_dependencies = {'coverage':['linux', 'cuda']}
 
 tests_with_base = ('coverage', 'docs', 'pyccel_lint', 'pylint')
 
 pr_test_keys = ('linux', 'windows', 'macosx', 'coverage', 'docs', 'pylint',
-                'pyccel_lint', 'spelling')
+                'pyccel_lint', 'spelling', 'cuda')
 
 review_stage_labels = ["needs_initial_review", "Ready_for_review", "Ready_to_merge"]
 
@@ -420,7 +422,7 @@ class Bot:
             True if the test should be run, False otherwise.
         """
         print("Checking : ", name, key)
-        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel'):
+        if key in ('linux', 'windows', 'macosx', 'anaconda_linux', 'anaconda_windows', 'intel', 'cuda'):
             has_relevant_change = lambda diff: any((f.startswith('pyccel/') or f.startswith('tests/')) #pylint: disable=unnecessary-lambda-assignment
                                                     and f.endswith('.py') and f != 'pyccel/version.py'
                                                     for f in diff)
