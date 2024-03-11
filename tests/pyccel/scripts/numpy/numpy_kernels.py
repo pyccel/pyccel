@@ -6,7 +6,7 @@
 
 import numpy as np
 
-def kern_sqexp(x0 : 'float[:]', x1 : 'float[:]', h : 'float64'):
+def kern_sqexp(x0 : 'float[:]', x1 : 'float[:]', h : 'float'):
     """Squared exponential kernel"""
     return np.real(np.exp(-0.5*np.sum(((x1 - x0)/h)**2)))
 

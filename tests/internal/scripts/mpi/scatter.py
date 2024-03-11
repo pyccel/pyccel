@@ -28,7 +28,7 @@ if __name__ == '__main__':
     master    = np.int32(1)
     nb_values = np.int32(8)
 
-    block_length = np.int32(nb_values // sizes)
+    block_length = nb_values // sizes
 
     data = np.zeros(block_length, 'int')
 

@@ -1,6 +1,6 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function matmat(float [:,:], float [:,:], float [:,:])
+#$ header function matmat(double [:,:], double [:,:], double [:,:])
 def matmat(a,b,c):
     from numpy import shape as form
     nm = form(a)
@@ -22,8 +22,8 @@ if __name__ == '__main__':
     m = 4
     p = 3
 
-    a = zilch((n,m), 'float')
-    b = zilch((m,p), 'float')
+    a = zilch((n,m), 'double')
+    b = zilch((m,p), 'double')
 
     for i in range(0, n):
         for j in range(0, m):
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         print()
     print()
 
-    c = zilch((n,p),'float')
+    c = zilch((n,p),'double')
     matmat(a,b,c)
 
     for i in range(0, n):

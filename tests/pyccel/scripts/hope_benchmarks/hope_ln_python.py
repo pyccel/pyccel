@@ -1,10 +1,10 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-#$ header function ln_python(float)
+#$ header function ln_python(double)
 def ln_python (X) :
     return (X-1) - (X-1)**2 / 2 + (X-1)**3 / 3 - (X-1)**4 / 4 + (X-1)**5 / 5 - (X-1)**6 / 6 + (X-1)**7 / 7 - (X-1)**8 / 8 + (X-1)**9 / 9
 
-#$ header function ln_python_exp(float)
+#$ header function ln_python_exp(double)
 def ln_python_exp (Y) :
     x = (Y - 1)
     x2 = x*x

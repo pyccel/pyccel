@@ -145,7 +145,7 @@ def test_float_float_int_2():
     x = high_float_float_int_2(f7, f4, f3)
     return x
 
-def euler (dydt: '()(float64, const float[:], float[:])',
+def euler (dydt: '()(float, const float[:], float[:])',
            t0: 'float', t1: 'float', y0: 'float[:]', n: int,
            t: 'float[:]', y: 'float[:,:]'):
 
