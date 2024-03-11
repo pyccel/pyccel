@@ -30,7 +30,7 @@ When we visit `int` in the [semantic stage](./semantic_stage.md) the `SemanticPa
 
 ### Class type
 
-The class type is the type reported by Python when you call the built-in function `type`. The object stored in this attribute should inherit from `pyccel.ast.datatypes.PyccelType`.
+The `class_type` property represents the type reported by Python when you call the built-in function `type`. This property should return an object which inherits from `pyccel.ast.datatypes.PyccelType`.
 
 ### Datatype
 
