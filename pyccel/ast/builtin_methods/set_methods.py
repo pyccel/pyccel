@@ -13,7 +13,7 @@ from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.builtins import PythonRange
 
-__all__ = ('SetAdd', 'SetClear', 'SetCopy', 'SetMethod', 'SetRemove')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetRemove')
 
 class SetMethod(PyccelInternalFunction):
     """
