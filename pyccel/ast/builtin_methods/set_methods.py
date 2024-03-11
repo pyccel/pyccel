@@ -92,7 +92,7 @@ class SetClear(SetMethod):
     _shape = None
     _order = None
     _rank = 0
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, set_variable):
