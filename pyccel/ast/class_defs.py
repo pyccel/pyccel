@@ -157,8 +157,7 @@ SetClass = ClassDef('set', class_type=NativeHomogeneousSet(),
                 decorators = {}),
             PyccelFunctionDef('clear', func_class = SetClear,
                 decorators={}),
-            PyccelFunctionDef('remove', func_class = SetRemove,
-                decorators={}),
+            PyccelFunctionDef('remove', func_class = SetRemove),
         ])
 
 #=======================================================================================
