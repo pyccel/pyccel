@@ -97,3 +97,13 @@ def test_Pop_float(language):
     python_result = Pop_float()
     assert python_result == pyccel_result
 
+def test_Pop_complex(language):
+    def Pop_complex():
+        se = {1j, 3j, 6j}
+        se.pop()
+        return se
+    epyccel_remove = epyccel(Pop_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = Pop_complex()
+    assert python_result == pyccel_result
+
