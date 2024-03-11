@@ -5400,10 +5400,7 @@ def test_numpy_linspace_scalar(language):
         from numpy import linspace
         stop = start + steps
         b = linspace(start, stop, num)
-        x = 0.0
-        for bi in b:
-            x += bi
-        return x
+        return b
 
     def test_linspace(start : 'complex64', end : 'complex64'):
         from numpy import linspace
@@ -5456,29 +5453,29 @@ def test_numpy_linspace_scalar(language):
     assert (np.allclose(x, out))
     arr = np.zeros
     x = randint(1, 60)
-    assert np.isclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer8, x, 100), get_linspace(integer8, x, 100))
+    assert np.allclose(epyccel_func(integer8, x, 30), get_linspace(integer8, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer8, x, 100)[0], get_linspace(integer8, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer, x, 100), get_linspace(integer, x, 100))
+    assert np.allclose(epyccel_func(integer, x, 30), get_linspace(integer, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer, x, 100)[0], get_linspace(integer, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer16, x, 100), get_linspace(integer16, x, 100))
+    assert np.allclose(epyccel_func(integer16, x, 30), get_linspace(integer16, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer16, x, 100)[0], get_linspace(integer16, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer32, x, 100), get_linspace(integer32, x, 100))
+    assert np.allclose(epyccel_func(integer32, x, 30), get_linspace(integer32, x, 30), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer32, x, 100)[0], get_linspace(integer32, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(integer64, x, 100), get_linspace(integer64, x, 100))
+    assert np.allclose(epyccel_func(integer64, x, 200), get_linspace(integer64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(integer64, x, 100)[0], get_linspace(integer64, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl, x, 100), get_linspace(fl, x, 100))
+    assert np.allclose(epyccel_func(fl, x, 100), get_linspace(fl, x, 100), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl, x, 100)[0], get_linspace(fl, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl32, x, 100), get_linspace(fl32, x, 100))
+    assert np.allclose(epyccel_func(fl32, x, 200), get_linspace(fl32, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl32, x, 100)[0], get_linspace(fl32, x, 100)[0])
     x = randint(100, 200)
-    assert np.isclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
-    assert matching_types(epyccel_func(fl64, x, 100), get_linspace(fl64, x, 100))
+    assert np.allclose(epyccel_func(fl64, x, 200), get_linspace(fl64, x, 200), rtol=RTOL, atol=ATOL)
+    assert matching_types(epyccel_func(fl64, x, 100)[0], get_linspace(fl64, x, 100)[0])
 
     epyccel_func1 = epyccel(test_linspace, language=language)
     epyccel_func2 = epyccel(test_linspace2, language=language)
