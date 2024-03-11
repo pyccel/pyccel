@@ -999,18 +999,10 @@ PyList_SetItem = FunctionDef(name = 'PyList_SetItem',
 
 #using the documentation of PyArg_ParseTuple() and Py_BuildValue https://docs.python.org/3/c-api/arg.html
 pytype_parse_registry = {
-    #(PythonNativeInt(), 4)       : 'i',
-    #(PythonNativeInt(), 8)       : 'l',
-    #(PythonNativeInt(), 2)       : 'h',
-    #(PythonNativeInt(), 1)       : 'b',
-    PythonNativeFloat() : 'd',
-    #(PythonNativeFloat(), 8)         : 'd',
-    #(PythonNativeFloat(), 4)         : 'f',
+    PythonNativeFloat()   : 'd',
     PythonNativeComplex() : 'O',
-    #(NativeComplex(), 4)       : 'O',
-    #(NativeComplex(), 8)       : 'O',
-    PythonNativeBool()         : 'p',
-    StringType()        : 's',
+    PythonNativeBool()    : 'p',
+    StringType()          : 's',
     PyccelPyObject()      : 'O',
     }
 

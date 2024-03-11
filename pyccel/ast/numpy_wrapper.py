@@ -11,7 +11,7 @@ import numpy as np
 
 from .datatypes         import PythonNativeBool, GenericType, VoidType, FixedSizeType
 
-from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry
+from .cwrapper          import PyccelPyObject, check_type_registry, c_to_py_registry, pytype_parse_registry
 
 from .core              import FunctionDef
 from .core              import FunctionDefArgument, FunctionDefResult
@@ -235,3 +235,13 @@ c_to_py_registry.update({
     NumpyComplex128Type() : 'Complex128_to_NumpyComplex'
     })
 
+pytype_parse_registry.update({
+    NumpyInt8Type()       : 'b',
+    NumpyInt16Type()      : 'h',
+    NumpyInt32Type()      : 'i',
+    NumpyInt64Type()      : 'l',
+    NumpyFloat32Type()    : 'f',
+    NumpyFloat64Type()    : 'd',
+    NumpyComplex64Type()  : 'O',
+    NumpyComplex128Type() : 'O'
+    })
