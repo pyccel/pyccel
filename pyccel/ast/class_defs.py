@@ -153,12 +153,9 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
 
 SetClass = ClassDef('set', class_type=NativeHomogeneousSet(),
         methods=[
-            PyccelFunctionDef('add', func_class = SetAdd,
-                decorators = {}),
-            PyccelFunctionDef('clear', func_class = SetClear,
-                decorators={}),
-            PyccelFunctionDef('copy', func_class = SetCopy,
-                decorators={}),
+            PyccelFunctionDef('add', func_class = SetAdd ),
+            PyccelFunctionDef('clear', func_class = SetClear),
+            PyccelFunctionDef('copy', func_class = SetCopy),
         ])
 
 #=======================================================================================
