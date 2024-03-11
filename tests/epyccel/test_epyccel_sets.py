@@ -96,4 +96,4 @@ def test_Pop_float(language):
     pyccel_result = epyccel_remove()
     python_result = Pop_float()
     assert python_result == pyccel_result
- 
+
