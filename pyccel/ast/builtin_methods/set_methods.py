@@ -27,7 +27,7 @@ class SetMethod(PyccelInternalFunction):
     set_variable : TypedAstNode
         The set on which the method will operate.
 
-    *args : iterable
+    *args : TypedAstNode
         The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
