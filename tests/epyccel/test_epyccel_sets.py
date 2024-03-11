@@ -98,6 +98,7 @@ def test_copy_float(language):
     python_result = copy_float()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
 
 def test_copy_complex(language):
     def copy_complex():
@@ -109,3 +110,5 @@ def test_copy_complex(language):
     python_result = copy_complex()
     assert isinstance(python_result, type(pyccel_result))
     assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
+
