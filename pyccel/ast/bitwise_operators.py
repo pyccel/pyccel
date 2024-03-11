@@ -105,7 +105,7 @@ class PyccelBitOperator(PyccelOperator):
         If one argument is a string then all arguments must be strings.
 
         If the arguments are numeric then the dtype
-        match the broadest type.
+        matches the broadest type.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
@@ -212,7 +212,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         If one argument is a string then all arguments must be strings.
 
         If the arguments are numeric then the dtype
-        match the broadest type.
+        matches the broadest type.
         e.g.
             1 + 2j -> PyccelAdd(LiteralInteger, LiteralComplex) -> complex
 
