@@ -134,8 +134,9 @@ class SetRemove(SetMethod):
     name = 'remove'
 
     def __init__(self, set_variable, item) -> None:
-        if (isinstance(item, PythonRange)):
-            raise TypeError("KeyError : ")
+        result = getattr(item, "dtype", None)
+        if result == None:
+            raise TypeError(f"KeyError : It is not possible to look for a {item} in a set of {set_variable.dtype}")
         is_homogeneous = (
             item.dtype is not NativeGeneric() and
             set_variable.dtype is not NativeGeneric() and
@@ -144,5 +145,5 @@ class SetRemove(SetMethod):
             set_variable.rank - 1 == item.rank
         )
         if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the set")
+            raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
         super().__init__(set_variable, item)
