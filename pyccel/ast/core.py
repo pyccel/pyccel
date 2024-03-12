@@ -1411,8 +1411,7 @@ class Iterable(PyccelAstNode):
                - n_indices
                - to_range
     """
-    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate,
-                                  PythonRange, IndexedElement)
+    acceptable_iterator_types = (Variable, PythonMap, PythonZip, PythonEnumerate, PythonRange, IndexedElement)
     __slots__ = ('_iterable','_indices','_num_indices_required')
     _attribute_nodes = ('_iterable','_indices')
 
