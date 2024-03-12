@@ -146,6 +146,7 @@ class SetRemove(SetMethod):
     Parameters
     ----------
     set_variable : TypedAstNode
+        The set on which the method will operate.
 
     item : TypedAstNode
         The item to search for, and remove.
