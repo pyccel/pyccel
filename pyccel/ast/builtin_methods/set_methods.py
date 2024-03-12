@@ -12,7 +12,8 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
+
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -26,7 +27,7 @@ class SetMethod(PyccelInternalFunction):
     set_variable : TypedAstNode
         The set on which the method will operate.
 
-    *args : iterable
+    *args : TypedAstNode
         The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
@@ -43,6 +44,7 @@ class SetMethod(PyccelInternalFunction):
         Get the variable representing the set.
         """
         return self._set_variable
+
 
 class SetAdd(SetMethod) :
     """
@@ -81,6 +83,7 @@ class SetAdd(SetMethod) :
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
 
+
 class SetClear(SetMethod):
     """
     Represents a call to the .clear() method.
@@ -103,4 +106,29 @@ class SetClear(SetMethod):
     name = 'clear'
 
     def __init__(self, set_variable):
+        super().__init__(set_variable)
+
+
+class SetCopy(SetMethod):
+    """
+    Represents a call to the .copy() method.
+
+    The copy() method in set class creates a shallow 
+    copy of a set object and returns it. 
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set on which the method will operate.
+    """
+    __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
+    name = 'copy'
+
+    def __init__(self, set_variable):
+        self._dtype = set_variable._dtype
+        self._shape = set_variable._shape
+        self._order = set_variable._order
+        self._rank = set_variable._rank
+        self._precision = set_variable._precision
+        self._class_type = set_variable._class_type
         super().__init__(set_variable)
