@@ -11,7 +11,6 @@ This module contains objects which describe these methods within Pyccel's AST.
 """
 from pyccel.ast.datatypes import NativeVoid, NativeGeneric
 from pyccel.ast.internals import PyccelInternalFunction
-from pyccel.ast.builtins import PythonRange
 
 __all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetRemove')
 
@@ -135,7 +134,7 @@ class SetRemove(SetMethod):
 
     def __init__(self, set_variable, item) -> None:
         result = getattr(item, "dtype", None)
-        if result == None:
+        if result is None:
             raise TypeError(f"KeyError : It is not possible to look for a {item} in a set of {set_variable.dtype}")
         is_homogeneous = (
             item.dtype is not NativeGeneric() and
