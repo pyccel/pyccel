@@ -497,85 +497,112 @@ bool is_same_shape(t_ndarray a, t_ndarray b)
         switch(dest->type) \
         { \
             case nd_bool: \
-                for(int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false)\
+                    for(int64_t i = 0; i < src.length; i++) \
                         dest->nd_bool[i + offset] = (bool)src.nd_##SRC_TYPE[i]; \
-                    else \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
                         dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (bool)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                }\
                 break; \
             case nd_int8: \
-                for(int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false)\
-                        dest->nd_int8[i + offset] = (int8_t)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_int8[element_index(*dest, i, dest->nd) + offset] = (int8_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (int8_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (int8_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_int16: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false)\
-                        dest->nd_int16[i + offset] = (int16_t)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_int16[element_index(*dest, i, dest->nd) + offset] = (int16_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (int16_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (int16_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_int32: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false)\
-                        dest->nd_int32[i + offset] = (int32_t)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_int32[element_index(*dest, i, dest->nd) + offset] = (int32_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (int32_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (int32_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_int64: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false)\
-                        dest->nd_int64[i + offset] = (int64_t)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_int64[element_index(*dest, i, dest->nd) + offset] = (int64_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (int64_t)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (int64_t)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_float: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false) \
-                        dest->nd_float[i + offset] = (float)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_float[element_index(*dest, i, dest->nd) + offset] = (float)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (float)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (float)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_double: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false) \
-                        dest->nd_double[i + offset] = (double)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_double[element_index(*dest, i, dest->nd) + offset] = (double)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (double)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (double)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_cfloat: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false) \
-                        dest->nd_cfloat[i + offset] = (float complex)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_cfloat[element_index(*dest, i, dest->nd) + offset] = (float complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (float complex)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (float complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
             case nd_cdouble: \
-                for (int64_t i = 0; i < src.length; i++) \
+                if(elem_wise_cp == false)\
                 { \
-                    if(elem_wise_cp == false) \
-                        dest->nd_cdouble[i + offset] = (double complex)src.nd_##SRC_TYPE[i]; \
-                    else \
-                        dest->nd_cdouble[element_index(*dest, i, dest->nd) + offset] = (double complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
-                } \
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[i + offset] = (double complex)src.nd_##SRC_TYPE[i]; \
+                }\
+                else \
+                {\
+                    for(int64_t i = 0; i < src.length; i++) \
+                        dest->nd_bool[element_index(*dest, i, dest->nd) + offset] = (double complex)src.nd_##SRC_TYPE[element_index(src, i, src.nd)]; \
+                }\
                 break; \
         } \
     }
