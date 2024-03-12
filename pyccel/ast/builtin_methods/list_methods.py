@@ -47,9 +47,9 @@ class ListMethod(PyccelInternalFunction):
     @property
     def list_obj(self):
         """
-        Get the variable representing the list.
+        Get the object representing the list.
 
-        Get the variable representing the list.
+        Get the object representing the list.
         """
         return self._list_obj
 
