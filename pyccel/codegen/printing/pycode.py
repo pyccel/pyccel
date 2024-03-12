@@ -853,13 +853,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListMethod(self, expr):
         method_name = expr.name
-        list_var = self._print(expr.list_variable)
+        list_obj = self._print(expr.arg)
         if len(expr.args) == 0 or all(arg is None for arg in expr.args):
             method_args = ''
         else:
             method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{list_var}.{method_name}({method_args})\n"
+        return f"{list_obj}.{method_name}({method_args})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
