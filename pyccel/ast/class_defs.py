@@ -6,32 +6,33 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_methods.set_methods import SetAdd, SetClear
+from .builtins   import PythonImag, PythonReal, PythonConjugate
+from .core       import ClassDef, PyccelFunctionDef
+from .c_concepts import CStackArray
+from .datatypes  import (NativeBool, NativeInteger, NativeFloat,
+                         NativeComplex, NativeString, NativeNumericTypes,
+                         NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
+from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
+                         NumpyImag, NumpyReal, NumpyTranspose,
+                         NumpyConjugate, NumpySize, NumpyResultType,
+                         NumpyArray, NumpyNDArrayType)
+
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
-
-from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .core      import ClassDef, PyccelFunctionDef
-from .c_concepts import CStackArray
-from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumericTypes,
-                        NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
-from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray, NumpyNDArrayType)
-
-__all__ = ('BooleanClass',
-        'IntegerClass',
-        'FloatClass',
-        'ComplexClass',
-        'SetClass',
-        'StringClass',
-        'NumpyArrayClass',
-        'TupleClass',
-        'ListClass',
-        'literal_classes',
-        'get_cls_base')
+__all__ = (
+    'BooleanClass',
+    'IntegerClass',
+    'FloatClass',
+    'ComplexClass',
+    'SetClass',
+    'StringClass',
+    'NumpyArrayClass',
+    'TupleClass',
+    'ListClass',
+    'literal_classes',
+    'get_cls_base',
+)
 
 #=======================================================================================
 
@@ -150,10 +151,9 @@ ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
 
 SetClass = ClassDef('set', class_type=NativeHomogeneousSet(),
         methods=[
-            PyccelFunctionDef('add', func_class = SetAdd,
-                decorators = {}),
-            PyccelFunctionDef('clear', func_class = SetClear,
-                decorators={}),
+            PyccelFunctionDef('add', func_class = SetAdd ),
+            PyccelFunctionDef('clear', func_class = SetClear),
+            PyccelFunctionDef('copy', func_class = SetCopy),
         ])
 
 #=======================================================================================
