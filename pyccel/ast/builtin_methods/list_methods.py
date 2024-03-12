@@ -76,7 +76,7 @@ class ListAppend(ListMethod):
         The argument passed to append() method.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
+    _dtype = VoidType()
     _shape = None
     _order = None
     _rank = 0
@@ -84,12 +84,13 @@ class ListAppend(ListMethod):
     name = 'append'
 
     def __init__(self, list_obj, new_elem) -> None:
+        expected_type = list_obj.class_type.element_type
         is_homogeneous = (
             new_elem.class_type == expected_type and
-            list_variable.rank - 1 == new_elem.rank
+            list_obj.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
 #==============================================================================
@@ -185,10 +186,10 @@ class ListInsert(ListMethod):
     name = 'insert'
 
     def __init__(self, list_obj, index, new_elem) -> None:
-        expected_type = list_variable.class_type.element_type
+        expected_type = list_obj.class_type.element_type
         is_homogeneous = (
             new_elem.class_type == expected_type and
-            list_variable.rank - 1 == new_elem.rank
+            list_obj.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")

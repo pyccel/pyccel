@@ -9,16 +9,16 @@ This module contains all types which define a python class which is automaticall
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
+
 from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
-from .c_concepts import CStackArray
-from .datatypes  import (NativeBool, NativeInteger, NativeFloat,
-                         NativeComplex, NativeString, NativeNumericTypes,
-                         NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
+from .datatypes  import (PythonNativeBool, PythonNativeInt, PythonNativeFloat,
+                         PythonNativeComplex, StringType, TupleType, CustomDataType,
+                         HomogeneousListType, HomogeneousSetType)
 from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                          NumpyImag, NumpyReal, NumpyTranspose,
-                         NumpyConjugate, NumpySize, NumpyResultType,
-                         NumpyArray, NumpyNDArrayType)
+                         NumpyConjugate, NumpySize, NumpyResultType, NumpyArray)
+from .numpytypes import NumpyNumericType, NumpyNDArrayType
 
 __all__ = (
     'BooleanClass',
@@ -141,7 +141,7 @@ StringClass = ClassDef('string', class_type = StringType(),
 ListClass = ClassDef('list',
         methods=[
             PyccelFunctionDef('append', func_class = ListAppend),
-            PyccelFunctionDef('clear', func_class = ListClear,),
+            PyccelFunctionDef('clear', func_class = ListClear),
             PyccelFunctionDef('extend', func_class = ListExtend),
             PyccelFunctionDef('insert', func_class = ListInsert),
             PyccelFunctionDef('pop', func_class = ListPop),
