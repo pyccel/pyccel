@@ -30,6 +30,8 @@ from pyccel.ast.builtins import PythonList, PythonConjugate , PythonSet
 from pyccel.ast.builtins import (PythonRange, PythonZip, PythonEnumerate,
                                  PythonTuple, Lambda, PythonMap)
 
+from pyccel.ast.builtin_methods.list_methods import ListMethod, ListAppend
+
 from pyccel.ast.core import Comment, CommentBlock, Pass
 from pyccel.ast.core import If, IfSection
 from pyccel.ast.core import Allocate, Deallocate
@@ -2638,6 +2640,11 @@ class SemanticParser(BasicParser):
 
         # look for a class method
         if isinstance(rhs, FunctionCall):
+            method = cls_base.get_method(rhs_name)
+            if isinstance(method, PyccelFunctionDef):
+                annotation_method = '_visit_' + method.cls_name.__name__
+                if hasattr(self, annotation_method):
+                    return getattr(self, annotation_method)(expr)
             macro = self.scope.find(rhs_name, 'macros')
             if macro is not None:
                 master = macro.master
@@ -2648,7 +2655,6 @@ class SemanticParser(BasicParser):
                 return FunctionCall(master, args, self._current_function)
 
             args = [FunctionCallArgument(visited_lhs), *self._handle_function_args(rhs.args)]
-            method = cls_base.get_method(rhs_name)
             if cls_base.name == 'numpy.ndarray':
                 numpy_class = method.cls_name
                 self.insert_import('numpy', AsName(numpy_class, numpy_class.name))
@@ -2686,6 +2692,53 @@ class SemanticParser(BasicParser):
         return errors.report(f'Attribute {rhs_name} not found',
             bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
             severity='fatal')
+
+    def _visit_ListExtend(self, expr):
+        """
+        Method to navigate the syntactic DottedName node of an `extend()` call.
+
+        The purpose of this `_visit` method is to construct new nodes from a syntactic 
+        DottedName node. It checks the type of the iterable passed to `extend()`.
+        If the iterable is an instance of `PythonList` or `PythonTuple`, it constructs 
+        a CodeBlock node where its body consists of `ListAppend` objects with the 
+        elements of the iterable. If not, it attempts to construct a syntactic `For` 
+        loop to iterate over the iterable object and append its elements to the list 
+        object. Finally, it passes to a `_visit()` call for semantic parsing.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.extend()`
+
+        Returns
+        -------
+        PyccelAstNode
+            CodeBlock or For containing ListAppend objects.
+        """
+        iterable = expr.name[1].args[0].value
+
+        if isinstance(iterable, (PythonList, PythonTuple)):
+            list_variable = self._visit(expr.name[0])
+            added_list = self._visit(iterable)
+            try:
+                store = [ListAppend(list_variable, a) for a in added_list]
+            except TypeError as e:
+                msg = str(e)
+                errors.report(msg, symbol=expr, severity='fatal')
+            return CodeBlock(store)
+        else:
+            pyccel_stage.set_stage('syntactic')
+            for_target = self.scope.get_new_name('index')
+            arg = FunctionCallArgument(for_target)
+            func_call = FunctionCall('append', [arg])
+            dotted = DottedName(expr.name[0], func_call)
+            lhs = PyccelSymbol('_', is_temp=True)
+            assign = Assign(lhs, dotted)
+            assign.set_current_ast(expr.python_ast)
+            body = CodeBlock([assign])
+            for_obj = For(for_target, iterable, body)
+            pyccel_stage.set_stage('semantic')
+            return self._visit(for_obj)
 
     def _visit_PyccelOperator(self, expr):
         args     = [self._visit(a) for a in expr.args]
@@ -3076,6 +3129,9 @@ class SemanticParser(BasicParser):
             errors.report("Cannot assign a datatype to a variable.",
                     symbol=expr, severity='error')
 
+        # Checking for the result of _visit_ListExtend
+        if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and isinstance(rhs.body[0], ListMethod)):
+            return rhs
         if isinstance(rhs, ConstructorCall):
             return rhs
         elif isinstance(rhs, FunctionDef):
