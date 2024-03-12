@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1785 : Add missing cast when creating an array of booleans from non-boolean values.
+
 ### Changed
 
 ### Deprecated
