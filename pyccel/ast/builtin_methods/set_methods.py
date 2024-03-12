@@ -114,14 +114,12 @@ class SetCopy(SetMethod):
     set_variable : TypedAstNode
         The set on which the method will operate.
     """
-    __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
+    __slots__ = ("_shape", "_order", "_rank", "_class_type",)
     name = 'copy'
 
     def __init__(self, set_variable):
-        self._dtype = set_variable._dtype
         self._shape = set_variable._shape
         self._order = set_variable._order
         self._rank = set_variable._rank
-        self._precision = set_variable._precision
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
