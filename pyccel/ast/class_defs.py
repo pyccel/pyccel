@@ -6,6 +6,9 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
+
 from .builtins   import PythonImag, PythonReal, PythonConjugate
 from .core       import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
@@ -16,9 +19,6 @@ from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
                          NumpyImag, NumpyReal, NumpyTranspose,
                          NumpyConjugate, NumpySize, NumpyResultType,
                          NumpyArray, NumpyNDArrayType)
-
-from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
 __all__ = (
     'BooleanClass',
