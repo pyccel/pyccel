@@ -6,32 +6,33 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_methods.set_methods import SetAdd, SetClear, SetCopy
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
+from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
-
-from .builtins  import PythonImag, PythonReal, PythonConjugate
-from .core      import ClassDef, PyccelFunctionDef
+from .builtins   import PythonImag, PythonReal, PythonConjugate
+from .core       import ClassDef, PyccelFunctionDef
 from .c_concepts import CStackArray
-from .datatypes import (NativeBool, NativeInteger, NativeFloat,
-                        NativeComplex, NativeString, NativeNumericTypes,
-                        NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
-from .numpyext  import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
-                        NumpyImag, NumpyReal, NumpyTranspose,
-                        NumpyConjugate, NumpySize, NumpyResultType,
-                        NumpyArray, NumpyNDArrayType)
+from .datatypes  import (NativeBool, NativeInteger, NativeFloat,
+                         NativeComplex, NativeString, NativeNumericTypes,
+                         NativeTuple, CustomDataType, NativeHomogeneousList, NativeHomogeneousSet)
+from .numpyext   import (NumpyShape, NumpySum, NumpyAmin, NumpyAmax,
+                         NumpyImag, NumpyReal, NumpyTranspose,
+                         NumpyConjugate, NumpySize, NumpyResultType,
+                         NumpyArray, NumpyNDArrayType)
 
-__all__ = ('BooleanClass',
-        'IntegerClass',
-        'FloatClass',
-        'ComplexClass',
-        'SetClass',
-        'StringClass',
-        'NumpyArrayClass',
-        'TupleClass',
-        'ListClass',
-        'literal_classes',
-        'get_cls_base')
+__all__ = (
+    'BooleanClass',
+    'IntegerClass',
+    'FloatClass',
+    'ComplexClass',
+    'SetClass',
+    'StringClass',
+    'NumpyArrayClass',
+    'TupleClass',
+    'ListClass',
+    'literal_classes',
+    'get_cls_base',
+)
 
 #=======================================================================================
 
@@ -139,14 +140,11 @@ StringClass = ClassDef('string', class_type = NativeString(),
 
 ListClass = ClassDef('list', class_type = NativeHomogeneousList(),
         methods=[
-            PyccelFunctionDef('append', func_class = ListAppend,
-                decorators = {}),
-            PyccelFunctionDef('clear', func_class = ListClear,
-                decorators = {}),
-            PyccelFunctionDef('insert', func_class = ListInsert,
-                decorators = {}),
-            PyccelFunctionDef('pop', func_class = ListPop,
-                decorators = {}),
+            PyccelFunctionDef('append', func_class = ListAppend),
+            PyccelFunctionDef('clear', func_class = ListClear,),
+            PyccelFunctionDef('extend', func_class = ListExtend),
+            PyccelFunctionDef('insert', func_class = ListInsert),
+            PyccelFunctionDef('pop', func_class = ListPop),
         ])
 
 #=======================================================================================
