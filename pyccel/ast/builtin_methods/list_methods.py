@@ -31,27 +31,27 @@ class ListMethod(PyccelInternalFunction):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The object which the method is called from.
     
     *args : TypedAstNode
         The arguments passed to list methods.
     """
-    __slots__ = ("_arg",)
-    _attribute_nodes = ("_arg",)
+    __slots__ = ("_list_obj",)
+    _attribute_nodes = ("_list_obj",)
     name = None
-    def __init__(self, arg, *args):
-        self._arg = arg
+    def __init__(self, list_obj, *args):
+        self._list_obj = list_obj
         super().__init__(*args)
 
     @property
-    def arg(self):
+    def list_obj(self):
         """
         Get the variable representing the list.
 
         Get the variable representing the list.
         """
-        return self._arg
+        return self._list_obj
 
 #==============================================================================
 class ListAppend(ListMethod):
@@ -69,7 +69,7 @@ class ListAppend(ListMethod):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The list object which the method is called from.
     
     new_elem : TypedAstNode
@@ -84,17 +84,17 @@ class ListAppend(ListMethod):
     _class_type = NativeVoid()
     name = 'append'
 
-    def __init__(self, arg, new_elem) -> None:
+    def __init__(self, list_obj, new_elem) -> None:
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
-            arg.dtype is not NativeGeneric() and
-            arg.dtype == new_elem.dtype and
-            arg.precision == new_elem.precision and
-            arg.rank - 1 == new_elem.rank
+            list_obj.dtype is not NativeGeneric() and
+            list_obj.dtype == new_elem.dtype and
+            list_obj.precision == new_elem.precision and
+            list_obj.rank - 1 == new_elem.rank
             )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        super().__init__(arg, new_elem)
+        super().__init__(list_obj, new_elem)
 
 #==============================================================================
 class ListPop(ListMethod) :
@@ -110,7 +110,7 @@ class ListPop(ListMethod) :
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The list object which the method is called from.
 
     index_element : TypedAstNode
@@ -120,13 +120,13 @@ class ListPop(ListMethod) :
     _class_type = NativeHomogeneousList()
     name = 'pop'
 
-    def __init__(self, arg, index_element=None) -> None:
-        self._rank = arg.rank - 1
-        self._dtype = arg.dtype
-        self._precision = arg.precision
-        self._shape = (None if len(arg.shape) == 1 else tuple(arg.shape[1:]))
-        self._order = (None if self._shape is None or len(self._shape) == 1 else arg.order)
-        super().__init__(arg, index_element)
+    def __init__(self, list_obj, index_element=None) -> None:
+        self._rank = list_obj.rank - 1
+        self._dtype = list_obj.dtype
+        self._precision = list_obj.precision
+        self._shape = (None if len(list_obj.shape) == 1 else tuple(list_obj.shape[1:]))
+        self._order = (None if self._shape is None or len(self._shape) == 1 else list_obj.order)
+        super().__init__(list_obj, index_element)
 
 #==============================================================================
 class ListClear(ListMethod) :
@@ -144,7 +144,7 @@ class ListClear(ListMethod) :
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The list object which the method is called from.
     """
     __slots__ = ()
@@ -156,8 +156,8 @@ class ListClear(ListMethod) :
     _class_type = NativeVoid()
     name = 'clear'
 
-    def __init__(self, arg) -> None:
-        super().__init__(arg)
+    def __init__(self, list_obj) -> None:
+        super().__init__(list_obj)
 
 #==============================================================================
 class ListInsert(ListMethod):
@@ -176,7 +176,7 @@ class ListInsert(ListMethod):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The list object which the method is called from.
 
     index : TypedAstNode
@@ -194,17 +194,17 @@ class ListInsert(ListMethod):
     _class_type = NativeVoid()
     name = 'insert'
 
-    def __init__(self, arg, index, new_elem) -> None:
+    def __init__(self, list_obj, index, new_elem) -> None:
         is_homogeneous = (
             new_elem.dtype is not NativeGeneric() and
-            arg.dtype is not NativeGeneric() and
-            arg.dtype == new_elem.dtype and
-            arg.precision == new_elem.precision and
-            arg.rank - 1 == new_elem.rank
+            list_obj.dtype is not NativeGeneric() and
+            list_obj.dtype == new_elem.dtype and
+            list_obj.precision == new_elem.precision and
+            list_obj.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the list")
-        super().__init__(arg, index, new_elem)
+        super().__init__(list_obj, index, new_elem)
 
 #==============================================================================
 class ListExtend(ListMethod):
@@ -229,7 +229,7 @@ class ListExtend(ListMethod):
 
     Parameters
     ----------
-    arg : TypedAstNode
+    list_obj : TypedAstNode
         The list object which the method is called from.
 
     iterable : TypedAstNode
@@ -238,5 +238,5 @@ class ListExtend(ListMethod):
     __slots__ = ()
     name = 'extend'
 
-    def __init__(self, arg, iterable) -> None:
-        super().__init__(arg, iterable)
+    def __init__(self, list_obj, iterable) -> None:
+        super().__init__(list_obj, iterable)

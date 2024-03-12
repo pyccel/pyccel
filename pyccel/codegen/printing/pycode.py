@@ -853,7 +853,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_ListMethod(self, expr):
         method_name = expr.name
-        list_obj = self._print(expr.arg)
+        list_obj = self._print(expr.list_obj)
         if len(expr.args) == 0 or all(arg is None for arg in expr.args):
             method_args = ''
         else:
