@@ -2689,10 +2689,31 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_ListExtend(self, expr):
-        list_variable = self._visit(expr.name[0])
+        """
+        Method to navigate the syntactic DottedName node of an `extend()` call.
+
+        The purpose of this `_visit` method is to construct new nodes from a syntactic 
+        DottedName node. It checks the type of the iterable passed to `extend()`.
+        If the iterable is an instance of `PythonList` or `PythonTuple`, it constructs 
+        a CodeBlock node where its body consists of `ListAppend` objects with the 
+        elements of the iterable. If not, it attempts to construct a syntactic `For` 
+        loop to iterate over the iterable object and append its elements to the list 
+        object. Finally, it passes to a `_visit()` call for semantic parsing.
+
+        Parameters
+        ----------
+        expr : DottedName
+            The syntactic DottedName node that represent the call to `.extend()`
+
+        Returns
+        -------
+        PyccelAstNode
+            CodeBlock or For containing ListAppend objects.
+        """
         iterable = expr.name[1].args[0].value
 
         if isinstance(iterable, (PythonList, PythonTuple)):
+            list_variable = self._visit(expr.name[0])
             added_list = self._visit(iterable)
             try:
                 store = [ListAppend(list_variable, a) for a in added_list]
@@ -3103,6 +3124,7 @@ class SemanticParser(BasicParser):
             errors.report("Cannot assign a datatype to a variable.",
                     symbol=expr, severity='error')
 
+        # Checking for the result of _visit_ListExtend
         if isinstance(rhs, For) or (isinstance(rhs, CodeBlock) and isinstance(rhs.body[0], ListMethod)):
             return rhs
         if isinstance(rhs, ConstructorCall):
