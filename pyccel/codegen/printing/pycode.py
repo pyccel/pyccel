@@ -323,8 +323,7 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_FunctionDef(self, expr):
         if expr.is_inline and not expr.is_semantic:
-            code = unparse(expr.python_ast)
-            code = code + '\n'
+            code = unparse(expr.python_ast) + '\n'
             return code
 
         self.set_scope(expr.scope)
