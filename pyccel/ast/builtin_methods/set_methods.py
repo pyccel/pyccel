@@ -114,8 +114,12 @@ class SetCopy(SetMethod):
     Represents a call to the .copy() method.
 
     The copy() method in set class creates a shallow 
-    copy of a set object and returns it
-    The set on which the method will operate.
+    copy of a set object and returns it. 
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set on which the method will operate.
     """
     __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
     name = 'copy'
