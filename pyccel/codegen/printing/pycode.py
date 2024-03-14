@@ -877,11 +877,6 @@ class PythonCodePrinter(CodePrinter):
     def _print_LiteralEllipsis(self, expr):
         return '...'
 
-    def _print_SetAdd(self, expr):
-        name = self._print(expr.set_variable)
-        args = self._print(expr.add_argument)
-        return f"{name}.add({args})\n"
-
     def _print_SetMethod(self, expr):
         set_var = self._print(expr.set_variable)
         name = expr.name
