@@ -18,7 +18,7 @@ from .datatypes import (datatype, DataType,
                         NativeComplex, NativeHomogeneousTuple, NativeInhomogeneousTuple)
 from .internals import PyccelArrayShapeElement, Slice, get_final_precision, PyccelSymbol
 from .internals import apply_pickle
-from .literals  import LiteralInteger, Nil
+from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 
@@ -861,7 +861,7 @@ class IndexedElement(TypedAstNode):
     True
     """
     __slots__ = ('_label', '_indices','_dtype','_precision','_shape','_rank','_order','_class_type')
-    _attribute_nodes = ('_label', '_indices')
+    _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
 
@@ -869,7 +869,7 @@ class IndexedElement(TypedAstNode):
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
-
+        self._shape = None
         if pyccel_stage == 'syntactic':
             self._indices = indices
             super().__init__()
@@ -881,16 +881,19 @@ class IndexedElement(TypedAstNode):
         shape = base.shape
         rank  = base.rank
 
-        # Add empty slices to fully index the object
-        if len(indices) < rank:
-            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
-
-        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
+        if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
             errors.report("Index is not of valid type",
                     symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
-        super().__init__()
+        if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+            indices = [Slice(None,None)]*rank
+        # Add empty slices to fully index the object
+        elif len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+        else:
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
         # Calculate new shape
         new_shape = []
@@ -916,13 +919,14 @@ class IndexedElement(TypedAstNode):
                 new_shape.append(_shape)
         self._rank  = len(new_shape)
         self._shape = None if self._rank == 0 else tuple(new_shape)
-
         self._order = None if self.rank < 2 else base.order
 
         if self.rank == 0:
             self._class_type = self.dtype
         else:
             self._class_type = base.class_type
+
+        super().__init__()
 
     @property
     def base(self):

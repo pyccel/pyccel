@@ -172,7 +172,9 @@ class FortranToCWrapper(Wrapper):
         self.scope = mod_scope
 
         # Wrap contents
-        funcs_to_wrap = expr.funcs
+        # We only wrap the non inlined functions
+        funcs_to_wrap = [f for f in expr.funcs if f.is_semantic and not f.is_inline]
+
         funcs = [self._wrap(f) for f in funcs_to_wrap]
         if expr.init_func:
             init_func = funcs[next(i for i,f in enumerate(funcs_to_wrap) if f == expr.init_func)]
@@ -184,7 +186,7 @@ class FortranToCWrapper(Wrapper):
             free_func = None
         removed_functions = [f for f,w in zip(funcs_to_wrap, funcs) if isinstance(w, EmptyNode)]
         funcs = [f for f in funcs if not isinstance(f, EmptyNode)]
-        interfaces = [self._wrap(f) for f in expr.interfaces]
+        interfaces = [self._wrap(f) for f in expr.interfaces if not f.is_inline]
         classes = [self._wrap(f) for f in expr.classes]
         variables = [self._wrap(v) for v in expr.variables if not v.is_private]
         variable_getters = [v for v in variables if isinstance(v, BindCArrayVariable)]

@@ -24,7 +24,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple
 from pyccel.ast.builtins import PythonBool, PythonAbs
 
-from pyccel.ast.core import FunctionDef, InlineFunctionDef
+from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
@@ -46,7 +46,7 @@ from pyccel.ast.internals import get_final_precision
 
 from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
@@ -411,10 +411,12 @@ class FCodePrinter(CodePrinter):
         self._additional_imports.update(func.imports)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
+            current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
+            if current_mod is not mod:
+                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                          for v in (*func.global_vars, *func.global_funcs)]))
+                for v in (*func.global_vars, *func.global_funcs):
+                    self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -615,7 +617,7 @@ class FCodePrinter(CodePrinter):
         if len(targets) == 0:
             return 'use {}\n'.format(source)
 
-        targets = [t for t in targets if not isinstance(t.object, InlineFunctionDef)]
+        targets = [t for t in targets if not getattr(t.object, 'is_inline', False)]
         if len(targets) == 0:
             return ''
 
@@ -1807,18 +1809,9 @@ class FCodePrinter(CodePrinter):
         return ' // '.join(formatted_str)
 
     def _print_Interface(self, expr):
-        interface_funcs = expr.functions
-
-        example_func = interface_funcs[0]
-
-        if len(example_func.results) == 1:
-            if len(set(f.results[0].var.rank == 0 for f in interface_funcs)) != 1:
-                message = ("Fortran cannot yet handle a templated function returning either a scalar or an array. "
-                           "If you are using the terminal interface, please pass --language c, "
-                           "if you are using the interactive interfaces epyccel or lambdify, please pass language='c'. "
-                           "See https://github.com/pyccel/pyccel/issues/1339 to monitor the advancement of this issue.")
-                errors.report(message,
-                        severity='error', symbol=expr)
+        # ... we don't print 'hidden' functions
+        if expr.functions[0].is_inline:
+            return ''
 
         name = self._print(expr.name)
         if all(isinstance(f, FunctionAddress) for f in interface_funcs):
@@ -2839,6 +2832,9 @@ class FCodePrinter(CodePrinter):
         base_code = self._print(base)
 
         inds = list(expr.indices)
+        if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
+            inds = [Slice(None,None)]*expr.rank
+
         if expr.base.order == 'C':
             inds = inds[::-1]
         allow_negative_indexes = base.allows_negative_indexes

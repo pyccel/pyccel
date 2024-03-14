@@ -33,6 +33,9 @@ class Scope(object):
 
     Parameters
     ----------
+    name : str, optional
+        The name of the scope. The value needs to be provided when it is not a loop.
+
     decorators : dict, default: ()
         A dictionary of any decorators which operate on objects in this scope.
 
@@ -53,7 +56,7 @@ class Scope(object):
     """
     allow_loop_scoping = False
     name_clash_checker = PythonNameClashChecker()
-    __slots__ = ('_imports','_locals','_parent_scope','_sons_scopes',
+    __slots__ = ('_name', '_imports','_locals','_parent_scope','_sons_scopes',
             '_is_loop','_loops','_temporary_variables', '_used_symbols',
             '_dummy_counter','_original_symbol', '_dotted_symbols')
 
@@ -62,10 +65,11 @@ class Scope(object):
             'macros','templates','headers','decorators',
             'cls_constructs')
 
-    def __init__(self, *, decorators = (), is_loop = False,
+    def __init__(self, *, name=None, decorators = (), is_loop = False,
                     parent_scope = None, used_symbols = None,
                     original_symbols = None):
 
+        self._name    = name
         self._imports = {k:{} for k in self.categories}
 
         self._locals  = {k:{} for k in self.categories}
@@ -113,25 +117,32 @@ class Scope(object):
         ----------
         name : str
             Name of the new scope, used as a key to retrieve the new scope.
-
-        kwargs : dict
+        **kwargs : dict
             Keyword arguments passed to __init__() for object initialization.
 
         Returns
         -------
-        child : Scope
+        Scope
             New child scope, which has the current object as parent.
-
         """
         ps = kwargs.pop('parent_scope', self)
         if ps is not self:
             raise ValueError("A child of {} cannot have a parent {}".format(self, ps))
 
-        child = Scope(**kwargs, parent_scope = self)
+        child = Scope(name=name, **kwargs, parent_scope = self)
 
         self.add_son(name, child)
 
         return child
+
+    @property
+    def name(self):
+        """
+        The name of the scope.
+
+        The name of the scope.
+        """
+        return self._name
 
     @property
     def imports(self):
@@ -487,6 +498,23 @@ class Scope(object):
                         is_temp = getattr(symbol, 'is_temp', False))
                 self._used_symbols[symbol] = collisionless_symbol
                 self._original_symbol[collisionless_symbol] = symbol
+
+    def remove_symbol(self, symbol):
+        """
+        Remove symbol from the scope.
+
+        Remove symbol from the scope.
+
+        Parameters
+        ----------
+        symbol : PyccelSymbol
+            The symbol to be removed from the scope.
+        """
+
+        if symbol in self._used_symbols:
+            collisionless_symbol = self._used_symbols.pop(symbol)
+            self._original_symbol.pop(collisionless_symbol)
+
 
     def insert_symbolic_alias(self, symbol, alias):
         """

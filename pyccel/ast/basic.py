@@ -10,6 +10,7 @@ This module contains classes from which all pyccel nodes inherit. They are:
   AST nodes requiring type descriptors.
 """
 import ast
+from types import GeneratorType
 
 from pyccel.utilities.stage   import PyccelStage
 
@@ -35,7 +36,7 @@ def iterable(x):
     bool
         True if object is iterable for a PyccelAstNode.
     """
-    return isinstance(x, (list, tuple, dict_keys, dict_values, set))
+    return isinstance(x, (list, tuple, dict_keys, dict_values, set, GeneratorType))
 
 pyccel_stage = PyccelStage()
 

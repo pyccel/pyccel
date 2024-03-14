@@ -13,7 +13,8 @@ from pyccel.epyccel import epyccel
     multi_rank.augadd_mixed_order,
     multi_rank.augmul_mixed_order,
     multi_rank.augsub_mixed_order,
-    multi_rank.augdiv_mixed_order])
+    multi_rank.augdiv_mixed_order,
+    multi_rank.add_mixed_order_ellipsis])
 def test_add_mixed_order(f1, language):
     f2 = epyccel( f1, language = language )
 

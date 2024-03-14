@@ -21,11 +21,11 @@ dependencies = [
     "termcolor >= 1.0.0",
     "textx >= 2.2",
     "packaging",
+    "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
 ]
 
 [project.optional-dependencies]
 test = [
-    "astunparse >= 1.6.0",
     "coverage >= 3.1",
     "mpi4py >= 3.0.0",
     "pytest >= 7.0",

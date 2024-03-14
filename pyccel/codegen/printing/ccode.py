@@ -569,6 +569,7 @@ class CCodePrinter(CodePrinter):
             else:
                 args.append(a.value)
 
+        # Create new local variables to ensure there are no name collisions
         new_local_vars = [self.scope.get_temporary_variable(v) \
                             for v in func.local_vars]
 
@@ -763,7 +764,7 @@ class CCodePrinter(CodePrinter):
                         class_scope.rename_function(func, f"{classDef.name}__{func.name.lstrip('__')}")
                         funcs += f"{self.function_signature(func)};\n"
             classes += "};\n"
-        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs)
+        funcs += '\n'.join(f"{self.function_signature(f)};" for f in expr.module.funcs if not f.is_inline)
 
         global_variables = ''.join(['extern '+self._print(d) for d in expr.module.declarations if not d.variable.is_private])
 

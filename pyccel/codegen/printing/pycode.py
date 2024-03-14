@@ -26,6 +26,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.extend_tree import unparse
 
 errors = Errors()
 
@@ -305,7 +306,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
-
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
@@ -322,6 +322,10 @@ class PythonCodePrinter(CodePrinter):
         return func_def_code[0]
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline and not expr.is_semantic:
+            code = unparse(expr.python_ast) + '\n'
+            return code
+
         self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -872,6 +876,9 @@ class PythonCodePrinter(CodePrinter):
                 start = start,
                 stop  = stop,
                 step  = step)
+
+    def _print_LiteralEllipsis(self, expr):
+        return '...'
 
     def _print_SetMethod(self, expr):
         set_var = self._print(expr.set_variable)

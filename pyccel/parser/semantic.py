@@ -20,8 +20,8 @@ from sympy import Integer as sp_Integer
 from sympy import ceiling
 
 #==============================================================================
-
-from pyccel.ast.basic import PyccelAstNode, TypedAstNode, ScopedAstNode
+from pyccel.utilities.strings import random_string
+from pyccel.ast.basic         import PyccelAstNode, TypedAstNode, ScopedAstNode
 
 from pyccel.ast.builtins import PythonPrint, PythonTupleFunction
 from pyccel.ast.builtins import PythonComplex
@@ -905,7 +905,7 @@ class SemanticParser(BasicParser):
                 severity='error')
 
         for arg in var[indices].indices:
-            if not isinstance(arg, Slice) and not \
+            if not isinstance(arg, (Slice, LiteralEllipsis)) and not \
                 (hasattr(arg, 'dtype') and isinstance(arg.dtype, NativeInteger)):
                 errors.report(INVALID_INDICES, symbol=var[indices],
                 bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -1012,6 +1012,9 @@ class SemanticParser(BasicParser):
         """
         args  = []
         for arg in arguments:
+            a = self._visit(arg.value)
+            if isinstance(a, FunctionDef) and not isinstance(a, PyccelFunctionDef) and not a.is_semantic:
+                self._annotate_the_called_function_def(a)
             a = self._visit(arg)
             if isinstance(a.value, StarredArguments):
                 args.extend([FunctionCallArgument(av) for av in a.value.args_var])
@@ -1039,20 +1042,31 @@ class SemanticParser(BasicParser):
             descr += f'[{dims}]'
         return descr
 
-    def _check_argument_compatibility(self, input_args, func_args, expr, elemental):
+    def _check_argument_compatibility(self, input_args, func_args, func, elemental, raise_error=True, error_type='error'):
         """
-        Check that the provided arguments match the expected types
+        Check that the provided arguments match the expected types.
+
+        Check that the provided arguments match the expected types.
 
         Parameters
         ----------
         input_args : list
-                     The arguments provided to the function
-        func_args  : list
-                     The arguments expected by the function
-        expr       : TypedAstNode
-                     The expression where this call is found (used for error output)
-        elemental  : bool
-                     Indicates if the function is elemental
+           The arguments provided to the function.
+        func_args : list
+           The arguments expected by the function.
+        func : FunctionDef
+           The called function (used for error output).
+        elemental : bool
+           Indicates if the function is elemental.
+        raise_error : bool, default : True
+           Raise the error if the arguments are incompatible.
+        error_type : str, default : error
+           The error type if errors are raised from the function.
+
+        Returns
+        -------
+        bool
+            Return True if the arguments are compatible, False otherwise.
         """
         if elemental:
             def incompatible(i_arg, f_arg):
@@ -1064,6 +1078,7 @@ class SemanticParser(BasicParser):
                         get_final_precision(i_arg) != get_final_precision(f_arg) or
                         i_arg.rank != f_arg.rank)
 
+        err_msgs = []
         # Compare each set of arguments
         for idx, (i_arg, f_arg) in enumerate(zip(input_args, func_args)):
             i_arg = i_arg.value
@@ -1073,19 +1088,24 @@ class SemanticParser(BasicParser):
                     or isinstance(f_arg, FunctionAddress)
                     or f_arg.dtype is NativeGeneric()):
                 continue
+
             # Check for compatibility
             if incompatible(i_arg, f_arg):
                 expected  = self.get_type_description(f_arg, not elemental)
                 type_name = self.get_type_description(i_arg, not elemental)
                 received  = f'{i_arg} ({type_name})'
+                err_msgs += [INCOMPATIBLE_ARGUMENT.format(idx+1, received, func, expected)]
 
-                errors.report(INCOMPATIBLE_ARGUMENT.format(idx+1, received, expr.func_name, expected),
-                        symbol = expr,
-                        severity='error')
             if f_arg.rank > 1 and i_arg.order != f_arg.order:
-                errors.report(INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=expr.func_name, order=f_arg.order),
-                        symbol = expr,
-                        severity='error')
+                err_msgs += [INCOMPATIBLE_ORDERING.format(idx=idx+1, arg=i_arg, func=func, order=f_arg.order)]
+
+        if err_msgs:
+            if raise_error:
+                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset)
+                errors.report('\n\n'.join(err_msgs), symbol = func, bounding_box=bounding_box, severity=error_type)
+            else:
+                return False
+        return True
 
     def _handle_function(self, expr, func, args, is_method = False):
         """
@@ -1142,9 +1162,7 @@ class SemanticParser(BasicParser):
 
             parent_assign = expr.get_direct_user_nodes(lambda x: isinstance(x, Assign) and not isinstance(x, AugAssign))
 
-            func_args = func.arguments if isinstance(func, FunctionDef) else func.functions[0].arguments
             func_results = func.results if isinstance(func, FunctionDef) else func.functions[0].results
-
             if not parent_assign and len(func_results) == 1 and func_results[0].var.rank > 0:
                 tmp_var = PyccelSymbol(self.scope.get_new_name())
                 assign = Assign(tmp_var, expr)
@@ -1152,27 +1170,13 @@ class SemanticParser(BasicParser):
                 self._additional_exprs[-1].append(self._visit(assign))
                 return self._visit(tmp_var)
 
+            func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
             if len(args) > len(func_args):
                 errors.report("Too many arguments passed in function call",
                         symbol = expr,
                         severity='fatal')
-            # Sort arguments to match the order in the function definition
-            input_args = [a for a in args if a.keyword is None]
-            nargs = len(input_args)
-            for ka in func_args[nargs:]:
-                key = ka.name
-                relevant_args = [a for a in args[nargs:] if a.keyword == key]
-                n_relevant_args = len(relevant_args)
-                assert n_relevant_args <= 1
-                if n_relevant_args == 0 and ka.has_default:
-                    input_args.append(ka.default_call_arg)
-                elif n_relevant_args == 1:
-                    input_args.append(relevant_args[0])
-
-            args = input_args
 
             new_expr = FunctionCall(func, args, self._current_function)
-
             for a, f_a in zip(new_expr.args, func_args):
                 if f_a.persistent_target:
                     assert is_method
@@ -1190,8 +1194,105 @@ class SemanticParser(BasicParser):
                         severity='error')
             elif isinstance(func, FunctionDef):
                 self._check_argument_compatibility(args, func_args,
-                            expr, func.is_elemental)
+                            func, func.is_elemental)
+
             return new_expr
+
+    def _sort_function_call_args(self, func_args, args):
+        """
+        Sort and add the missing call arguments to match the arguments in the function definition.
+
+        We sort the call arguments by dividing them into two chunks, positional arguments and keyword arguments.
+        We provide the default value of the keyword argument if the corresponding call argument is not present.
+
+        Parameters
+        ----------
+        func_args : list[FunctionDefArgument]
+          The arguments of the function definition.
+        args : list[FunctionCallArgument]
+          The arguments of the function call.
+
+        Returns
+        -------
+        list[FunctionCallArgument]
+            The sorted and complete call arguments.
+        """
+        input_args = [a for a in args if a.keyword is None]
+        nargs = len(input_args)
+        for ka in func_args[nargs:]:
+            key = ka.name
+            relevant_args = [a for a in args[nargs:] if a.keyword == key]
+            n_relevant_args = len(relevant_args)
+            assert n_relevant_args <= 1
+            if n_relevant_args == 0 and ka.has_default:
+                input_args.append(ka.default_call_arg)
+            elif n_relevant_args == 1:
+                input_args.append(relevant_args[0])
+
+        return input_args
+
+    def _annotate_the_called_function_def(self, old_func, function_call_args=None):
+        """
+        Annotate the called FunctionDef.
+
+        Annotate the called FunctionDef.
+
+        Parameters
+        ----------
+        old_func : FunctionDef|Interface
+           The function that needs to be annotated.
+
+        function_call_args : list[FunctionCallArgument], optional
+           The list of the call arguments.
+
+        Returns
+        -------
+        func: FunctionDef|Interface
+            The new annotated function.
+        """
+        # The function call might be in a completely different scope from the FunctionDef
+        # Store the current scope and go to the parent scope of the FunctionDef
+        old_scope            = self._scope
+        old_current_function = self._current_function
+        names = []
+        sc = old_func.scope if isinstance(old_func, FunctionDef) else old_func.syntactic_node.scope
+        while sc.parent_scope is not None:
+            sc = sc.parent_scope
+            if not sc.name is None:
+                names.append(sc.name)
+        names.reverse()
+        if names:
+            self._current_function = DottedName(*names) if len(names)>1 else names[0]
+        else:
+            self._current_function = None
+
+        while names:
+            sc = sc.sons_scopes[names[0]]
+            names = names[1:]
+
+        # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
+        self._scope = sc
+        self._visit_FunctionDef(old_func, annotate=True, function_call_args=function_call_args)
+        # Retreive the annotated function
+        func = self.scope.find(old_func.name, 'functions')
+        # Add the Module of the imported function to the new function
+        if old_func.is_imported:
+            mod = old_func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+            func.set_current_user_node(mod)
+
+        # Go back to the original Scope
+        self._scope = old_scope
+        self._current_function = old_current_function
+        # Remove the old_func from the imports dict and Assign the new annotated one
+        if old_func.is_imported:
+            scope = self.scope
+            while old_func.name not in scope.imports['functions']:
+                scope = scope.parent_scope
+            assert old_func is scope.imports['functions'].get(old_func.name)
+            func = func.clone(old_func.name, is_imported=True)
+            func.set_current_user_node(mod)
+            scope.imports['functions'][old_func.name] = func
+        return func
 
     def _create_variable(self, name, dtype, rhs, d_lhs, arr_in_multirets=False):
         """
@@ -2028,6 +2129,12 @@ class SemanticParser(BasicParser):
             else:
                 init_func_body.append(b)
 
+        for f in self.scope.functions.copy():
+            f = self.scope.functions[f]
+            if not f.is_semantic and not isinstance(f, InlineFunctionDef):
+                assert isinstance(f, FunctionDef)
+                self._visit_FunctionDef(f, annotate=True)
+
         variables = self.get_variables(self.scope)
         init_func = None
         free_func = None
@@ -2178,6 +2285,7 @@ class SemanticParser(BasicParser):
             if init_func:
                 import_init  = FunctionCall(init_func,[],[])
                 program_body = [import_init, *program_body]
+
             if free_func:
                 import_free  = FunctionCall(free_func,[],[])
                 program_body = [*program_body, import_free]
@@ -2189,7 +2297,6 @@ class SemanticParser(BasicParser):
                             scope=self._program_namespace)
 
             mod.program = program
-
         return mod
 
     def _visit_PythonTuple(self, expr):
@@ -2945,14 +3052,35 @@ class SemanticParser(BasicParser):
                 return getattr(self, annotation_method)(expr)
 
         args = self._handle_function_args(expr.args)
+
         # Correct keyword names if scope is available
         # The scope is only available if the function body has been parsed
         # (i.e. not for headers or builtin functions)
-        if isinstance(func, FunctionDef) and func.scope:
+        if (isinstance(func, FunctionDef) and func.scope) or isinstance(func, Interface):
+            scope = func.scope if isinstance(func, FunctionDef) else func.functions[0].scope
             args = [a if a.keyword is None else \
-                    FunctionCallArgument(a.value, func.scope.get_expected_name(a.keyword)) \
+                    FunctionCallArgument(a.value, scope.get_expected_name(a.keyword)) \
                     for a in args]
-
+            func_args = func.arguments if isinstance(func,FunctionDef) else func.functions[0].arguments
+            if not func.is_semantic:
+                # Correct func_args keyword names
+                func_args = [FunctionDefArgument(AnnotatedPyccelSymbol(scope.get_expected_name(a.var.name), a.annotation),
+                            annotation=a.annotation, value=a.value, kwonly=a.is_kwonly, bound_argument=a.bound_argument)
+                            for a in func_args]
+            args      = self._sort_function_call_args(func_args, args)
+            is_inline = func.is_inline if isinstance(func, FunctionDef) else func.functions[0].is_inline
+            if not func.is_semantic:
+                if not is_inline:
+                    func = self._annotate_the_called_function_def(func)
+                else:
+                    func = self._annotate_the_called_function_def(func, function_call_args=args)
+            elif is_inline and isinstance(func, Interface):
+                is_compatible = False
+                for f in func.functions:
+                    fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
+                    is_compatible |= fl
+                if not is_compatible:
+                    func = self._annotate_the_called_function_def(func, function_call_args=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3000,7 +3128,7 @@ class SemanticParser(BasicParser):
             self._additional_exprs[-1].extend(new_expression)
             args = (FunctionCallArgument(cls_variable), *args)
             self._check_argument_compatibility(args, method.arguments,
-                            expr, method.is_elemental)
+                            method, method.is_elemental)
 
             new_expr = ConstructorCall(method, args, cls_variable)
 
@@ -3026,8 +3154,7 @@ class SemanticParser(BasicParser):
                 func = macro.master.funcdef
                 name = _get_name(func.name)
                 args = macro.apply(args)
-            else:
-                func = self.scope.find(name, 'functions')
+
             if func is None:
                 return errors.report(UNDEFINED_FUNCTION, symbol=name,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
@@ -3715,6 +3842,7 @@ class SemanticParser(BasicParser):
             self.change_to_program_scope()
         else:
             cond = self._visit(expr.condition)
+
         body = self._visit(expr.body)
         if prog_check:
             # Calling the Garbage collecting,
@@ -3830,17 +3958,55 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr):
-        name            = self.scope.get_expected_name(expr.name)
-        decorators      = expr.decorators
-        funcs           = []
-        sub_funcs       = []
-        func_interfaces = []
-        is_pure         = expr.is_pure
-        is_elemental    = expr.is_elemental
-        is_private      = expr.is_private
-        is_inline       = expr.is_inline
-        docstring      = self._visit(expr.docstring) if expr.docstring else expr.docstring
+    def _visit_FunctionDef(self, expr, annotate=False, function_call_args=None):
+        """
+        Annotate the FunctionDef if necessary.
+
+        The FunctionDef is only annotated if the flag annotate is set to True.
+        In the case of an inlined function, we always annotate the function partially,
+        depending on the function call if it is an interface, otherwise we annotate it
+        if the function_call argument are compatible with the FunctionDef arguments.
+        In the case of non inlined function, we only pass through this method
+        twice, the first time we do nothing and the second time we annotate all of functions.
+
+        Parameter
+        ---------
+        expr : FunctionDef|Interface
+           The node that needs to be annotated.
+           If we provide an Interface, this means that the function has been annotated partially,
+           and we need to continue annotating the needed ones.
+
+        annotate : bool, default: False
+           Annotate expr if the flag is set to True.
+
+        function_call_args : list[FunctionCallArgument], optional
+            The list of call arguments, needed only in the case of an inlined function.
+        """
+        if not annotate:
+            self.insert_function(expr)
+            return EmptyNode()
+
+        existing_semantic_funcs = []
+        if not expr.is_semantic:
+            self.scope.functions.pop(expr.name, None)
+        elif isinstance(expr, Interface):
+            existing_semantic_funcs = [*expr.functions]
+            expr                    = expr.syntactic_node
+
+        name               = self.scope.get_expected_name(expr.name)
+        decorators         = expr.decorators
+        new_semantic_funcs = []
+        sub_funcs          = []
+        func_interfaces    = []
+        docstring          = self._visit(expr.docstring) if expr.docstring else expr.docstring
+        is_pure            = expr.is_pure
+        is_elemental       = expr.is_elemental
+        is_private         = expr.is_private
+        is_inline          = expr.is_inline
+
+        if function_call_args is not None:
+            assert is_inline
+            found_func = False
 
         current_class = expr.get_direct_user_nodes(lambda u: isinstance(u, ClassDef))
         cls_name = current_class[0].name if current_class else None
@@ -3859,15 +4025,40 @@ class SemanticParser(BasicParser):
         for t,v in templates.items():
             templates[t] = UnionTypeAnnotation(*[self._visit(vi) for vi in v])
 
+        def unpack(ann):
+            if isinstance(ann, UnionTypeAnnotation):
+                return ann.type_list
+            else:
+                return [ann]
+
         # Filter out unused templates
-        templatable_args = [a.annotation for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
-        arg_annotations = [annot for a in templatable_args for annot in (a.type_list \
-                                        if isinstance(a, UnionTypeAnnotation) else [a]) \
-                                        if isinstance(annot, SyntacticTypeAnnotation)]
+        templatable_args = [unpack(a.annotation) for a in expr.arguments if isinstance(a.annotation, (SyntacticTypeAnnotation, UnionTypeAnnotation))]
+        arg_annotations = [annot for a in templatable_args for annot in a if isinstance(annot, SyntacticTypeAnnotation)]
         type_names = [a.dtype for a in arg_annotations]
         used_type_names = set(d.base if isinstance(d, IndexedElement) else d for d in type_names)
         templates = {t: v for t,v in templates.items() if t in used_type_names}
 
+        # Create new temparary templates for the arguments with a Union data type.
+        tmp_templates = {}
+        new_expr_args = []
+        for a in expr.arguments:
+            if isinstance(a.annotation, UnionTypeAnnotation):
+                annotation = [aa for a in a.annotation for aa in unpack(a)]
+            else:
+                annotation = [a.annotation]
+            if len(annotation)>1:
+                tmp_template_name = a.name + '_' + random_string(12)
+                tmp_template_name = self.scope.get_new_name(tmp_template_name)
+                tmp_templates[tmp_template_name] = UnionTypeAnnotation(*[self._visit(vi) for vi in annotation])
+                dtype_symb = PyccelSymbol(tmp_template_name, is_temp=True)
+                dtype_symb = SyntacticTypeAnnotation(dtype_symb)
+                var_clone = AnnotatedPyccelSymbol(a.var.name, annotation=dtype_symb, is_temp=a.var.name.is_temp)
+                new_expr_args.append(FunctionDefArgument(var_clone, bound_argument=a.bound_argument,
+                                        value=a.value, kwonly=a.is_kwonly, annotation=dtype_symb))
+            else:
+                new_expr_args.append(a)
+
+        templates.update(tmp_templates)
         template_combinations = list(product(*[v.type_list for v in templates.values()]))
         template_names = list(templates.keys())
         n_templates = len(template_combinations)
@@ -3875,197 +4066,224 @@ class SemanticParser(BasicParser):
         # this for the case of a function without arguments => no headers
         interface_name = name
         interface_counter = 0
-
+        is_interface = n_templates > 1
+        annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
-            # Change to syntactic FunctionDef scope to ensure get_expected_name is available
+            if function_call_args is not None and found_func:
+                break
+
+            if is_interface:
+                name, _ = self.scope.get_new_incremented_symbol(interface_name, tmpl_idx)
+
             scope = self.create_new_function_scope(name, decorators = decorators,
                     used_symbols = expr.scope.local_used_symbols.copy(),
                     original_symbols = expr.scope.python_names.copy())
+
             for n, v in zip(template_names, template_combinations[tmpl_idx]):
                 self.scope.insert_symbolic_alias(n, v)
             self.scope.decorators.update(decorators)
-            arguments = [self._visit(a) for a in expr.arguments]
+
+            # Here _visit_AnnotatedPyccelSymbol always give us an list of size 1
+            # so we flatten the arguments
+            arguments = [i for a in new_expr_args for i in self._visit(a)]
+            assert len(arguments) == len(expr.arguments)
+            arg_dict  = {a.name:a.var for a in arguments}
+            annotated_args.append(arguments)
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
+
+            if function_call_args is not None:
+                is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
+                if not is_compatible:
+                    self.exit_function_scope()
+                    # remove the new created scope and the function name
+                    self.scope.sons_scopes.pop(name)
+                    if is_interface:
+                        self.scope.remove_symbol(name)
+                    continue
+                #In the case of an Interface we set found_func to True so that we don't continue
+                #searching for the other functions
+                found_func = True
+
+            for a in arguments:
+                a_var = a.var
+                if isinstance(a_var, FunctionAddress):
+                    self.insert_function(a_var)
+                else:
+                    self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
+
+            if arguments and arguments[0].bound_argument:
+                if arguments[0].var.cls_base.name != cls_name:
+                    errors.report('Class method self argument does not have the expected type',
+                            severity='error', symbol=arguments[0])
+                for s in expr.scope.dotted_symbols:
+                    base = s.name[0]
+                    if base in arg_dict:
+                        cls_base = arg_dict[base].cls_base
+                        cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
+
+            results = expr.results
+            if results and results[0].annotation:
+                results = [self._visit(r) for r in expr.results]
+
+            # insert the FunctionDef into the scope
+            # to handle the case of a recursive function
+            # TODO improve in the case of an interface
+            recursive_func_obj = FunctionDef(name, arguments, results, [])
+            self.insert_function(recursive_func_obj)
+
+            # Create a new list that store local variables for each FunctionDef to handle nested functions
+            self._allocs.append(set())
+            self._pointer_targets.append({})
+
+            # we annotate the body
+            body = self._visit(expr.body)
+
+            # Annotate the remaining functions
+            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and\
+                        not isinstance(i, (InlineFunctionDef, FunctionAddress)) and \
+                        not i.is_semantic]
+            for i in sub_funcs:
+                self._visit_FunctionDef(i, annotate=True)
+
+            # Calling the Garbage collecting,
+            # it will add the necessary Deallocate nodes
+            # to the body of the function
+            body.insert2body(*self._garbage_collector(body))
+            self._check_pointer_targets(results)
+
+            results = [self._visit(a) for a in results]
+
+            # Determine local and global variables
+            global_vars = list(self.get_variables(self.scope.parent_scope))
+            global_vars = [g for g in global_vars if body.is_user_of(g)]
+
+            # get the imports
+            imports   = self.scope.imports['imports'].values()
+            # Prefer dict to set to preserve order
+            imports   = list({imp:None for imp in imports}.keys())
+
+            # remove the FunctionDef from the function scope
+            func_     = self.scope.functions.pop(name)
+            is_recursive = False
+            # check if the function is recursive if it was called on the same scope
+            if func_.is_recursive and not is_inline:
+                is_recursive = True
+            elif func_.is_recursive and is_inline:
+                errors.report("Pyccel does not support an inlined recursive function", symbol=expr,
+                        severity='fatal')
+
+            sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
+
+            func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
+            if func_args:
+                func_interfaces.append(Interface('', func_args, is_argument = True))
+
+            namespace_imports = self.scope.imports
             self.exit_function_scope()
 
-            n_interface_funcs = prod(len(a) for a in arguments)
-            argument_vars = list(product(*arguments))
+            results_names = [i.var.name for i in results]
 
-            is_interface = n_templates > 1 or n_interface_funcs > 1
+            # Find all nodes which can modify variables
+            assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
+            calls   = body.get_attribute_nodes(FunctionCall)
 
-            for i in range(n_interface_funcs):
-                arguments      = argument_vars[i]
-                arg_dict = {a.name:a.var for a in arguments}
+            # Collect the modified objects
+            lhs_assigns   = [a.lhs for a in assigns]
+            modified_args = [call_arg.value for f in calls
+                                for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
+            # Collect modified variables
+            all_assigned = [v for a in (lhs_assigns + modified_args) for v in
+                            (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
 
-                if is_interface:
-                    name, interface_counter = self.scope.get_new_incremented_symbol(interface_name, interface_counter)
-                scope = self.create_new_function_scope(name, decorators = decorators,
-                        used_symbols = expr.scope.local_used_symbols.copy(),
-                        original_symbols = expr.scope.python_names.copy())
-
-                if len(arguments)>0 and arguments[0].bound_argument:
-                    if arguments[0].var.cls_base.name != cls_name:
-                        errors.report('Class method self argument does not have the expected type',
-                                severity='error', symbol=arguments[0])
-                    for s in expr.scope.dotted_symbols:
-                        base = s.name[0]
-                        if base in arg_dict:
-                            cls_base = arg_dict[base].cls_base
-                            cls_base.scope.insert_symbol(DottedName(*s.name[1:]))
-
-                for a in arguments:
-                    a_var = a.var
-                    if isinstance(a_var, FunctionAddress):
-                        self.insert_function(a_var)
+            # ... computing inout arguments
+            for a in arguments:
+                if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
+                    a.make_const()
+            # ...
+            # Raise an error if one of the return arguments is an alias.
+            pointer_targets = self._pointer_targets.pop()
+            result_pointer_map = {}
+            for r in results:
+                t = pointer_targets.get(r.var, ())
+                if r.var.is_alias:
+                    persistent_targets = []
+                    for target, _ in t:
+                        target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
+                        if target_argument_index != -1:
+                            persistent_targets.append(target_argument_index)
+                    if not persistent_targets:
+                        errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
+                            symbol=r, severity='error',
+                            bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
                     else:
-                        self.scope.insert_variable(a_var, expr.scope.get_python_name(a.name))
+                        result_pointer_map[r] = persistent_targets
 
-                results = expr.results
-                if results and results[0].annotation:
-                    results = [self._visit(r) for r in expr.results]
+            optional_inits = []
+            for a in arguments:
+                var = self._optional_params.pop(a.var, None)
+                if var:
+                    optional_inits.append(If(IfSection(PyccelIsNot(a.var, Nil()),
+                                                       [Assign(var, a.var)])))
+            body.insert2body(*optional_inits, back=False)
 
-                # insert the FunctionDef into the scope
-                # to handle the case of a recursive function
-                # TODO improve in the case of an interface
-                recursive_func_obj = FunctionDef(name, arguments, results, [])
-                self.insert_function(recursive_func_obj)
+            func_kwargs = {
+                    'global_vars':global_vars,
+                    'is_pure':is_pure,
+                    'is_elemental':is_elemental,
+                    'is_private':is_private,
+                    'imports':imports,
+                    'decorators':decorators,
+                    'is_recursive':is_recursive,
+                    'functions': sub_funcs,
+                    'interfaces': func_interfaces,
+                    'result_pointer_map': result_pointer_map,
+                    'docstring': docstring,
+                    'scope': scope,
+            }
+            if is_inline:
+                func_kwargs['namespace_imports'] = namespace_imports
+                global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
+                func_kwargs['global_funcs'] = global_funcs
+                cls = InlineFunctionDef
+            else:
+                cls = FunctionDef
+            func = cls(name,
+                    arguments,
+                    results,
+                    body,
+                    **func_kwargs)
+            if not is_recursive:
+                recursive_func_obj.invalidate_node()
 
-                # Create a new list that store local variables for each FunctionDef to handle nested functions
-                self._allocs.append(set())
-                self._pointer_targets.append({})
+            if cls_name:
+                # update the class methods
+                if not is_interface:
+                    bound_class.add_new_method(func)
 
-                # we annotate the body
-                body = self._visit(expr.body)
+            new_semantic_funcs += [func]
 
-                # Calling the Garbage collecting,
-                # it will add the necessary Deallocate nodes
-                # to the body of the function
-                body.insert2body(*self._garbage_collector(body))
-                self._check_pointer_targets(results)
+        if function_call_args is not None and len(new_semantic_funcs) == 0:
+            for args in annotated_args[:-1]:
+                #raise errors if we do not find any compatible function def
+                self._check_argument_compatibility(function_call_args, args, expr, is_elemental, error_type='error')
+            self._check_argument_compatibility(function_call_args, annotated_args[-1], expr, is_elemental, error_type='fatal')
 
-                results = [self._visit(a) for a in results]
+        if existing_semantic_funcs:
+            new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs
 
-                # Determine local and global variables
-                global_vars = list(self.get_variables(self.scope.parent_scope))
-                global_vars = [g for g in global_vars if body.is_user_of(g)]
-
-                # get the imports
-                imports   = self.scope.imports['imports'].values()
-                # Prefer dict to set to preserve order
-                imports   = list({imp:None for imp in imports}.keys())
-
-                # remove the FunctionDef from the function scope
-                # TODO improve func_ is None in the case of an interface
-                func_     = self.scope.functions.pop(name, None)
-                is_recursive = False
-                # check if the function is recursive if it was called on the same scope
-                if func_ and func_.is_recursive:
-                    is_recursive = True
-
-                sub_funcs = [i for i in self.scope.functions.values() if not i.is_header and not isinstance(i, FunctionAddress)]
-
-                func_args = [i for i in self.scope.functions.values() if isinstance(i, FunctionAddress)]
-                if func_args:
-                    func_interfaces.append(Interface('', func_args, is_argument = True))
-
-                namespace_imports = self.scope.imports
-                self.exit_function_scope()
-
-                results_names = [i.var.name for i in results]
-
-                # Find all nodes which can modify variables
-                assigns = body.get_attribute_nodes(Assign, excluded_nodes = (FunctionCall,))
-                calls   = body.get_attribute_nodes(FunctionCall)
-
-                # Collect the modified objects
-                lhs_assigns   = [a.lhs for a in assigns]
-                modified_args = [call_arg.value for f in calls
-                                    for call_arg, func_arg in zip(f.args, f.funcdef.arguments) if func_arg.inout]
-                # Collect modified variables
-                all_assigned = [v for a in (lhs_assigns + modified_args) for v in
-                                (a.get_attribute_nodes(Variable) if not isinstance(a, Variable) else [a])]
-
-                # ... computing inout arguments
-                for a in arguments:
-                    if a.name not in chain(results_names, ['self']) and a.var not in all_assigned:
-                        a.make_const()
-                # ...
-
-                # Raise an error if one of the return arguments is an alias.
-                pointer_targets = self._pointer_targets.pop()
-                result_pointer_map = {}
-                for r in results:
-                    t = pointer_targets.get(r.var, ())
-                    if r.var.is_alias:
-                        persistent_targets = []
-                        for target, _ in t:
-                            target_argument_index = next((i for i,a in enumerate(arguments) if a.var == target), -1)
-                            if target_argument_index != -1:
-                                persistent_targets.append(target_argument_index)
-                        if not persistent_targets:
-                            errors.report(UNSUPPORTED_POINTER_RETURN_VALUE,
-                                symbol=r, severity='error',
-                                bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset))
-                        else:
-                            result_pointer_map[r] = persistent_targets
-
-                optional_inits = []
-                for a in arguments:
-                    var = self._optional_params.pop(a.var, None)
-                    if var:
-                        optional_inits.append(If(IfSection(PyccelIsNot(a.var, Nil()),
-                                                           [Assign(var, a.var)])))
-                body.insert2body(*optional_inits, back=False)
-
-                func_kwargs = {
-                        'global_vars':global_vars,
-                        'is_pure':is_pure,
-                        'is_elemental':is_elemental,
-                        'is_private':is_private,
-                        'imports':imports,
-                        'decorators':decorators,
-                        'is_recursive':is_recursive,
-                        'functions': sub_funcs,
-                        'interfaces': func_interfaces,
-                        'result_pointer_map': result_pointer_map,
-                        'docstring': docstring,
-                        'scope': scope
-                        }
-                if is_inline:
-                    func_kwargs['namespace_imports'] = namespace_imports
-                    global_funcs = [f for f in body.get_attribute_nodes(FunctionDef) if self.scope.find(f.name, 'functions')]
-                    func_kwargs['global_funcs'] = global_funcs
-                    cls = InlineFunctionDef
-                else:
-                    cls = FunctionDef
-                func = cls(name,
-                        arguments,
-                        results,
-                        body,
-                        **func_kwargs)
-                if not is_recursive:
-                    recursive_func_obj.invalidate_node()
-
-                if cls_name:
-                    # update the class methods
-                    if not is_interface:
-                        bound_class.add_new_method(func)
-
-                funcs += [func]
-
-        if len(funcs) == 1:
-            funcs = funcs[0]
-            self.insert_function(funcs)
-
+        if len(new_semantic_funcs) == 1 and not is_interface:
+            new_semantic_funcs = new_semantic_funcs[0]
+            self.insert_function(new_semantic_funcs)
         else:
-            for f in funcs:
+            for f in new_semantic_funcs:
                 self.insert_function(f)
 
-            funcs = Interface(interface_name, funcs)
+            new_semantic_funcs = Interface(interface_name, new_semantic_funcs, syntactic_node=expr)
             if cls_name:
-                bound_class.add_new_interface(funcs)
-            self.insert_function(funcs)
+                bound_class.add_new_interface(new_semantic_funcs)
+            self.insert_function(new_semantic_funcs)
+
         return EmptyNode()
 
     def _visit_PythonPrint(self, expr):
@@ -4149,7 +4367,7 @@ class SemanticParser(BasicParser):
             m_name = method.name
             if m_name == '__init__':
                 if init_func is None:
-                    self._visit(method)
+                    self._visit_FunctionDef(method, annotate=True)
                     init_func = self.scope.functions.pop(m_name)
 
                 if isinstance(init_func, Interface):
@@ -4172,7 +4390,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit(i)
+            self._visit_FunctionDef(i, annotate=True)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(cls.name, 'self', cls_base = cls), bound_argument = True)
@@ -4345,10 +4563,14 @@ class SemanticParser(BasicParser):
                     for t,n in zip(targets.keys(),names):
                         if n in d_son:
                             e = d_son[n]
-                            if t == n:
-                                container[entry][t] = e
-                            else:
+                            if entry == 'functions':
+                                container[entry][t] = e.clone(t, is_imported=True)
+                                m = e.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
+                                container[entry][t].set_current_user_node(m)
+                            elif entry == 'variables':
                                 container[entry][t] = e.clone(t)
+                            else:
+                                container[entry][t] = e
                             targets[t] = e
                 if None in targets.values():
                     errors.report("Import target {} could not be found",
