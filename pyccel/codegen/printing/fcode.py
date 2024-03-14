@@ -23,7 +23,7 @@ from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
 from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonAbs
 
-from pyccel.ast.core import FunctionDef, InlineFunctionDef
+from pyccel.ast.core import FunctionDef
 from pyccel.ast.core import SeparatorComment, Comment
 from pyccel.ast.core import ConstructorCall
 from pyccel.ast.core import FunctionCallArgument
@@ -43,7 +43,7 @@ from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
 
 from pyccel.ast.itertoolsext import Product
 
-from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal
+from pyccel.ast.literals  import LiteralInteger, LiteralFloat, Literal, LiteralEllipsis
 from pyccel.ast.literals  import LiteralTrue, LiteralFalse, LiteralString
 from pyccel.ast.literals  import Nil
 
@@ -445,10 +445,12 @@ class FCodePrinter(CodePrinter):
         self._additional_imports.update(func.imports)
         if func.global_vars or func.global_funcs:
             mod = func.get_direct_user_nodes(lambda x: isinstance(x, Module))[0]
-            self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
-                for v in (*func.global_vars, *func.global_funcs)]))
-            for v in (*func.global_vars, *func.global_funcs):
-                self.scope.insert_symbol(v.name)
+            current_mod = expr.get_user_nodes(Module, excluded_nodes=(FunctionCall,))[0]
+            if current_mod is not mod:
+                self._additional_imports.add(Import(mod.name, [AsName(v, v.name) \
+                          for v in (*func.global_vars, *func.global_funcs)]))
+                for v in (*func.global_vars, *func.global_funcs):
+                    self.scope.insert_symbol(v.name)
 
         self.set_scope(scope)
         return code
@@ -649,7 +651,7 @@ class FCodePrinter(CodePrinter):
         if len(targets) == 0:
             return 'use {}\n'.format(source)
 
-        targets = [t for t in targets if not isinstance(t.object, InlineFunctionDef)]
+        targets = [t for t in targets if not getattr(t.object, 'is_inline', False)]
         if len(targets) == 0:
             return ''
 
@@ -1859,6 +1861,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # ... we don't print 'hidden' functions
+        if expr.functions[0].is_inline:
+            return ''
+
         name = self._print(expr.name)
         if all(isinstance(f, FunctionAddress) for f in expr.functions):
             funcs = expr.functions
@@ -2878,6 +2883,9 @@ class FCodePrinter(CodePrinter):
         base_code = self._print(base)
 
         inds = list(expr.indices)
+        if len(inds) == 1 and isinstance(inds[0], LiteralEllipsis):
+            inds = [Slice(None,None)]*expr.rank
+
         if expr.base.order == 'C':
             inds = inds[::-1]
         allow_negative_indexes = base.allows_negative_indexes

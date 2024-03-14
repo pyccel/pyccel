@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
-from .literals  import LiteralInteger, Nil
+from .literals  import LiteralInteger, Nil, LiteralEllipsis
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 from .numpytypes import NumpyNDArrayType
@@ -830,7 +830,7 @@ class IndexedElement(TypedAstNode):
     True
     """
     __slots__ = ('_label', '_indices','_shape','_rank','_order','_class_type')
-    _attribute_nodes = ('_label', '_indices')
+    _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
 
@@ -838,7 +838,7 @@ class IndexedElement(TypedAstNode):
             raise IndexError('Indexed needs at least one index.')
 
         self._label = base
-
+        self._shape = None
         if pyccel_stage == 'syntactic':
             self._indices = indices
             super().__init__()
@@ -847,16 +847,19 @@ class IndexedElement(TypedAstNode):
         shape = base.shape
         rank  = base.rank
 
-        # Add empty slices to fully index the object
-        if len(indices) < rank:
-            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
-
-        if any(not isinstance(a, (int, TypedAstNode, Slice)) for a in indices):
+        if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
             errors.report("Index is not of valid type",
                     symbol = indices, severity = 'fatal')
 
-        self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
-        super().__init__()
+        if len(indices) == 1 and isinstance(indices[0], LiteralEllipsis):
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+            indices = [Slice(None,None)]*rank
+        # Add empty slices to fully index the object
+        elif len(indices) < rank:
+            indices = indices + tuple([Slice(None, None)]*(rank-len(indices)))
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
+        else:
+            self._indices = tuple(LiteralInteger(a) if isinstance(a, int) else a for a in indices)
 
         # Calculate new shape
         new_shape = []
@@ -890,8 +893,9 @@ class IndexedElement(TypedAstNode):
             if not (rank and isinstance(base_type, NumpyNDArrayType)):
                 base_type = base_type.element_type
         self._class_type = base_type
-
         self._order = None if self.rank < 2 else base.order
+
+        super().__init__()
 
     @property
     def base(self):

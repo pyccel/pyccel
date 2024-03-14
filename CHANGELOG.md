@@ -4,18 +4,23 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
-
--   #1694 : Add Python support for list method `extend()`.    
+-   #1720 : Add support for `Ellipsis` as the only index for an array.
+-   #1694 : Add Python support for list method `extend()`.
 -   #1739 : Add Python support for set method `clear()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1740 : Add Python support for set method `copy()`.
 
 ### Fixed
 
+-   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 
 ### Changed
+-   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
+-   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
+-   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
 
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
