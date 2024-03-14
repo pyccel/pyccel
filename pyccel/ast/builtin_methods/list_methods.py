@@ -240,3 +240,37 @@ class ListExtend(ListMethod):
 
     def __init__(self, list_obj, iterable) -> None:
         super().__init__(list_obj, iterable)
+
+#==============================================================================
+class ListRemove(ListMethod) :
+    """
+    Represents a call to the .remove() method.
+    
+    Represents a call to the .remove() method which removes the first occurence
+    of a given element from the list.
+    Note that the .remove() method doesn't return any value.
+
+    >>> a = [(1, 2), [3, 4]]
+    >>> a.remove((1, 2))
+    >>> print(a)
+    [[3, 4]]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    removed_obj : TypedAstNode
+        The object to be removed from the list.
+    """
+    __slots__ = ()
+    _dtype = NativeVoid()
+    _precision = -1
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = NativeVoid()
+    name = 'remove'
+
+    def __init__(self, list_obj, removed_obj) -> None:
+        super().__init__(list_obj, removed_obj)
