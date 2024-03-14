@@ -16,12 +16,12 @@ def random_string( n ):
     """
     Generate a random string.
 
-    Generate a random string.
+    Generate a random string with length n made of lower case characters and digits.
 
     Parameters
     ----------
     n : int
-      The lenght of the random string.
+      The length of the random string.
 
     Returns
     -------

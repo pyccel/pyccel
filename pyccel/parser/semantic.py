@@ -1203,7 +1203,7 @@ class SemanticParser(BasicParser):
         Sort and add the missing call arguments to match the arguments in the function definition.
 
         We sort the call arguments by dividing them into two chunks, positional arguments and keyword arguments.
-        We provide the default value of the keyword argument if the corresponding call argument is not persent.
+        We provide the default value of the keyword argument if the corresponding call argument is not present.
 
         Parameters
         ----------
@@ -1231,7 +1231,7 @@ class SemanticParser(BasicParser):
 
         return input_args
 
-    def _annotate_the_called_function_def(self, old_func, function_call=None):
+    def _annotate_the_called_function_def(self, old_func, function_call_args=None):
         """
         Annotate the called FunctionDef.
 
@@ -1242,7 +1242,7 @@ class SemanticParser(BasicParser):
         old_func : FunctionDef|Interface
            The function that needs to be annotated.
 
-        function_call : list[FunctionCallArgument], optional
+        function_call_args : list[FunctionCallArgument], optional
            The list of the call arguments.
 
         Returns
@@ -1272,7 +1272,7 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
-        self._visit_FunctionDef(old_func, annotate=True, function_call=function_call)
+        self._visit_FunctionDef(old_func, annotate=True, function_call_args=function_call_args)
         # Retreive the annotated function
         func = self.scope.find(old_func.name, 'functions')
         # Add the Module of the imported function to the new function
@@ -3068,14 +3068,14 @@ class SemanticParser(BasicParser):
                 if not is_inline:
                     func = self._annotate_the_called_function_def(func)
                 else:
-                    func = self._annotate_the_called_function_def(func, function_call=args)
+                    func = self._annotate_the_called_function_def(func, function_call_args=args)
             elif is_inline and isinstance(func, Interface):
                 is_compatible = False
                 for f in func.functions:
                     fl = self._check_argument_compatibility(args, f.arguments, func, f.is_elemental, raise_error=False)
                     is_compatible |= fl
                 if not is_compatible:
-                    func = self._annotate_the_called_function_def(func, function_call=args)
+                    func = self._annotate_the_called_function_def(func, function_call_args=args)
 
         if name == 'lambdify':
             args = self.scope.find(str(expr.args[0]), 'symbolic_functions')
@@ -3950,12 +3950,12 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr, annotate=False, function_call=None):
+    def _visit_FunctionDef(self, expr, annotate=False, function_call_args=None):
         """
         Annotate the FunctionDef if necessary.
 
         The FunctionDef is only annotated if the flag annotate is set to True.
-        In the case of an inlined function, we always annotate the function partialy,
+        In the case of an inlined function, we always annotate the function partially,
         depending on the function call if it is an interface, otherwise we annotate it
         if the function_call argument are compatible with the FunctionDef arguments.
         In the case of non inlined function, we only pass through this method
@@ -3964,14 +3964,14 @@ class SemanticParser(BasicParser):
         Parameter
         ---------
         expr : FunctionDef|Interface
-           The that needs to be annotated.
-           If we provide an Interface, this means that the function has been annotated partialy,
+           The node that needs to be annotated.
+           If we provide an Interface, this means that the function has been annotated partially,
            and we need to continue annotating the needed ones.
 
         annotate : bool, default: False
            Annotate expr if the flag is set to True.
 
-        function_call: list, optional
+        function_call_args: list, optional
             The list of call argument, needed only in the case of an inlined function.
         """
         if not annotate:
@@ -3996,7 +3996,7 @@ class SemanticParser(BasicParser):
         is_private         = expr.is_private
         is_inline          = expr.is_inline
 
-        if function_call is not None:
+        if function_call_args is not None:
             assert is_inline
             found_func = False
 
@@ -4061,7 +4061,7 @@ class SemanticParser(BasicParser):
         is_interface = n_templates > 1
         annotated_args = [] # collect annotated arguments to check for argument incompatibility errors
         for tmpl_idx in range(n_templates):
-            if function_call is not None and found_func:
+            if function_call_args is not None and found_func:
                 break
 
             if is_interface:
@@ -4084,8 +4084,8 @@ class SemanticParser(BasicParser):
             for n in template_names:
                 self.scope.symbolic_alias.pop(n)
 
-            if function_call is not None:
-                is_compatible = self._check_argument_compatibility(function_call, arguments, expr, is_elemental, raise_error=False)
+            if function_call_args is not None:
+                is_compatible = self._check_argument_compatibility(function_call_args, arguments, expr, is_elemental, raise_error=False)
                 if not is_compatible:
                     self.exit_function_scope()
                     # remove the new created scope and the function name
@@ -4255,11 +4255,11 @@ class SemanticParser(BasicParser):
 
             new_semantic_funcs += [func]
 
-        if function_call is not None and len(new_semantic_funcs) == 0:
+        if function_call_args is not None and len(new_semantic_funcs) == 0:
             for args in annotated_args[:-1]:
                 #raise errors if we do not find any compatible function def
-                self._check_argument_compatibility(function_call, args, expr, is_elemental, error_type='error')
-            self._check_argument_compatibility(function_call, annotated_args[-1], expr, is_elemental, error_type='fatal')
+                self._check_argument_compatibility(function_call_args, args, expr, is_elemental, error_type='error')
+            self._check_argument_compatibility(function_call_args, annotated_args[-1], expr, is_elemental, error_type='fatal')
 
         if existing_semantic_funcs:
             new_semantic_funcs = existing_semantic_funcs + new_semantic_funcs

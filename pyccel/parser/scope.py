@@ -34,7 +34,7 @@ class Scope(object):
     Parameters
     ----------
     name : str, optional
-        The name of the scope, The value needs to be provided when it is not a loop.
+        The name of the scope. The value needs to be provided when it is not a loop.
 
     decorators : dict, default: ()
         A dictionary of any decorators which operate on objects in this scope.

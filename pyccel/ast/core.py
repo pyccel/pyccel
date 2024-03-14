@@ -2795,9 +2795,9 @@ class InlineFunctionDef(FunctionDef):
     ----------
     *args : list
         The FunctionDef class arguments.
-    namespace_imports : Scope
-        The objects in the scope which are available due to imports.
-    global_funcs : list, optional
+    namespace_imports : dict
+        The imports available in the function Scope.
+    global_funcs : iterable, optional
         The global functions used in the function.
     **kwargs : dict
         The FunctionDef class keyword arguments.   
@@ -2806,8 +2806,10 @@ class InlineFunctionDef(FunctionDef):
             '_global_funcs')
 
     def __init__(self, *args, namespace_imports = None, global_funcs = None, **kwargs):
+        if namespace_imports is not None:
+            assert isinstance(namespace_imports, dict)
         self._namespace_imports = namespace_imports
-        self._global_funcs = global_funcs
+        self._global_funcs = tuple(global_funcs) if global_funcs is not None else None
         super().__init__(*args, **kwargs)
         self._orig_args = tuple(a.var for a in self.arguments)
         self._new_args  = None
@@ -3004,10 +3006,9 @@ class Interface(PyccelAstNode):
 
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
-        if not isinstance(functions, (list, tuple)):
-            raise TypeError('Expecting a list')
+
         self._name = name
-        self._functions = functions
+        self._functions = tuple(functions)
         self._is_argument = is_argument
         self._is_imported = is_imported
         self._syntactic_node = syntactic_node

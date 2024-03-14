@@ -9,7 +9,6 @@ def f1():
 x1 = f1()
 
 def f2():
-    print(1)
     return g2()
 
 def g2():
