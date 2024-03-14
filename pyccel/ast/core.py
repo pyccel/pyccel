@@ -3007,6 +3007,8 @@ class Interface(PyccelAstNode):
         if not isinstance(name, str):
             raise TypeError('Expecting an str')
 
+        assert iterable(functions)
+
         self._name = name
         self._functions = tuple(functions)
         self._is_argument = is_argument
