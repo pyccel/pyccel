@@ -266,7 +266,7 @@ class ListRemove(ListMethod) :
     """
     __slots__ = ()
     _dtype = NativeVoid()
-    _precision = -1
+    _precision = None
     _rank = 0
     _order = None
     _shape = None
@@ -274,5 +274,14 @@ class ListRemove(ListMethod) :
     name = 'remove'
 
     def __init__(self, list_obj, removed_obj) -> None:
+        is_homogeneous = (
+            removed_obj.dtype is not NativeGeneric() and
+            list_obj.dtype is not NativeGeneric() and
+            list_obj.dtype == removed_obj.dtype and
+            list_obj.precision == removed_obj.precision and
+            list_obj.rank - 1 == removed_obj.rank
+        )
+        if not is_homogeneous:
+            raise TypeError(f"Can't remove an element of type {removed_obj.dtype} from a list of {list_obj.dtype}")
         super().__init__(list_obj, removed_obj)
 
