@@ -26,8 +26,8 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
-
 from pyccel.parser.extend_tree import unparse
+
 errors = Errors()
 
 #==============================================================================
