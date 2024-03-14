@@ -275,3 +275,4 @@ class ListRemove(ListMethod) :
 
     def __init__(self, list_obj, removed_obj) -> None:
         super().__init__(list_obj, removed_obj)
+
