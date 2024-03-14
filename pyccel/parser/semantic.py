@@ -3971,8 +3971,8 @@ class SemanticParser(BasicParser):
         annotate : bool, default: False
            Annotate expr if the flag is set to True.
 
-        function_call_args: list, optional
-            The list of call argument, needed only in the case of an inlined function.
+        function_call_args : list[FunctionCallArgument], optional
+            The list of call arguments, needed only in the case of an inlined function.
         """
         if not annotate:
             self.insert_function(expr)
