@@ -20,7 +20,7 @@ from .bind_c    import BindCPointer
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
-from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
@@ -1012,7 +1012,7 @@ pytype_parse_registry = {
 
 # Functions definitions are defined in pyccel/stdlib/cwrapper/cwrapper.c
 py_to_c_registry = {
-    (PyccelBooleanType(), -1)      : 'PyBool_to_Bool',
+    (PrimitiveBooleanType(), -1)      : 'PyBool_to_Bool',
     (PyccelIntegerType(), 1)       : 'PyInt8_to_Int8',
     (PyccelIntegerType(), 2)       : 'PyInt16_to_Int16',
     (PyccelIntegerType(), 4)       : 'PyInt32_to_Int32',

@@ -11,7 +11,7 @@ They also have specific rules to determine the datatype, rank, shape
 import functools
 
 from .builtins     import PythonInt
-from .datatypes    import PyccelBooleanType, PyccelIntegerType
+from .datatypes    import PrimitiveBooleanType, PyccelIntegerType
 from .datatypes    import PythonNativeBool, PythonNativeInt, GenericType
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
@@ -64,7 +64,7 @@ class PyccelInvert(PyccelUnaryOperator):
             The  datatype of the result of the operation.
         """
         dtype = PythonNativeInt()
-        assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        assert isinstance(getattr(arg.dtype, 'primitive_type', None), (PrimitiveBooleanType, PyccelIntegerType))
 
         self._args      = (PythonInt(arg) if arg.dtype is PythonNativeBool() else arg,)
         return dtype
@@ -124,7 +124,7 @@ class PyccelBitOperator(PyccelOperator):
         except NotImplementedError:
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
-        assert isinstance(getattr(class_type, 'primitive_type', None), (PyccelBooleanType, PyccelIntegerType))
+        assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PyccelIntegerType))
 
         self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
 
@@ -232,7 +232,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
             raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
 
         primitive_type = class_type.primitive_type
-        assert isinstance(primitive_type, (PyccelBooleanType, PyccelIntegerType))
+        assert isinstance(primitive_type, (PrimitiveBooleanType, PyccelIntegerType))
 
         if isinstance(primitive_type, PyccelIntegerType):
             self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]

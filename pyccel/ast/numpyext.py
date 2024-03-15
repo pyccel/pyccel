@@ -21,7 +21,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes      import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes      import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
 from .datatypes      import InhomogeneousTupleType, ContainerType
 
@@ -833,7 +833,7 @@ class NumpySum(PyccelInternalFunction):
             raise TypeError('Unknown type of  %s.' % type(arg))
         super().__init__(arg)
         lowest_possible_type = process_dtype(PythonNativeInt())
-        if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) and \
+        if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PyccelIntegerType)) and \
                 arg.dtype.precision <= lowest_possible_type.precision:
             self._class_type = lowest_possible_type
         else:
@@ -867,7 +867,7 @@ class NumpyProduct(PyccelInternalFunction):
         super().__init__(arg)
         self._arg = PythonList(arg) if arg.rank == 0 else self._args[0]
         lowest_possible_type = process_dtype(PythonNativeInt())
-        if isinstance(arg.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) and \
+        if isinstance(arg.dtype.primitive_type, (PrimitiveBooleanType, PyccelIntegerType)) and \
                 arg.dtype.precision <= lowest_possible_type.precision:
             self._class_type = lowest_possible_type
         else:
@@ -1796,8 +1796,8 @@ class NumpyUfuncBinary(NumpyUfuncBase):
         PyccelType
             The dtype of the result of the function.
         """
-        if x1.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) or \
-           x2.dtype.primitive_type in (PyccelBooleanType(), PyccelIntegerType()) :
+        if x1.dtype.primitive_type in (PrimitiveBooleanType(), PyccelIntegerType()) or \
+           x2.dtype.primitive_type in (PrimitiveBooleanType(), PyccelIntegerType()) :
             return NumpyFloat64Type()
         else:
             arg_dtype = x1.dtype + x2.dtype

@@ -33,7 +33,7 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
@@ -188,7 +188,7 @@ iso_c_binding = {
         4  : 'C_FLOAT_COMPLEX',
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'}, #not supported yet
-    PyccelBooleanType() : {
+    PrimitiveBooleanType() : {
         -1 : "C_BOOL"}
 }
 
@@ -869,7 +869,7 @@ class FCodePrinter(CodePrinter):
                 arg_format = f'F0.{dps}'
             elif isinstance(var_type.primitive_type, PyccelIntegerType):
                 arg_format = 'I0'
-            elif isinstance(var_type.primitive_type, PyccelBooleanType):
+            elif isinstance(var_type.primitive_type, PrimitiveBooleanType):
                 arg_format = 'A'
                 if isinstance(var, LiteralTrue):
                     arg = "'True'"
@@ -1006,7 +1006,7 @@ class FCodePrinter(CodePrinter):
         """Fortran print."""
         rhs_code = self._print(expr.arg)
         dtype = expr.arg.dtype.primitive_type
-        if isinstance(dtype, PyccelBooleanType):
+        if isinstance(dtype, PrimitiveBooleanType):
             return 'count({0})'.format(rhs_code)
         return 'sum({0})'.format(rhs_code)
 
@@ -1022,9 +1022,9 @@ class FCodePrinter(CodePrinter):
         b_code = self._print(expr.b)
 
         if expr.rank == 0:
-            if isinstance(expr.a.dtype.primitive_type, PyccelBooleanType):
+            if isinstance(expr.a.dtype.primitive_type, PrimitiveBooleanType):
                 a_code = self._print(PythonInt(expr.a))
-            if isinstance(expr.b.dtype.primitive_type, PyccelBooleanType):
+            if isinstance(expr.b.dtype.primitive_type, PrimitiveBooleanType):
                 b_code = self._print(PythonInt(expr.b))
             return 'sum({}*{})'.format(a_code, b_code)
         if expr.a.order and expr.b.order:
@@ -1113,7 +1113,7 @@ class FCodePrinter(CodePrinter):
         ind   = self._print(self.scope.get_temporary_variable(PythonNativeInt()))
         array = expr.array
 
-        if isinstance(array.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(array.dtype.primitive_type, PrimitiveBooleanType):
             mask  = self._print(array)
         else:
             mask  = self._print(NumpyBool(array))
@@ -1130,7 +1130,7 @@ class FCodePrinter(CodePrinter):
         axis  = expr.axis
         array = expr.array
 
-        if isinstance(array.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(array.dtype.primitive_type, PrimitiveBooleanType):
             mask  = self._print(array)
         else:
             mask  = self._print(NumpyBool(array))
@@ -1282,7 +1282,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        if isinstance(expr.arg.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
             code  = 'Int({0}, {1})'.format(value, self.print_kind(expr))
@@ -1290,7 +1290,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        if isinstance(expr.arg.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
             code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
@@ -1321,7 +1321,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PythonBool(self, expr):
-        if isinstance(expr.arg.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
         else:
             return '({} /= 0)'.format(self._print(expr.arg))
@@ -1360,7 +1360,7 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
             arg_code = self._print(NumpyInt32(array_arg))
         else:
             arg_code = self._print(array_arg)
@@ -1373,7 +1373,7 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
-        if isinstance(array_arg.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
             arg_code = self._print(NumpyInt32(array_arg))
         else:
             arg_code = self._print(array_arg)
@@ -1824,7 +1824,7 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
 
-    def _print_PyccelBooleanType(self, expr):
+    def _print_PrimitiveBooleanType(self, expr):
         return 'logical'
 
     def _print_PyccelIntegerType(self, expr):
@@ -2464,7 +2464,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs_var, Nil):
             return '.not. '+ self._handle_not_none(lhs, lhs_var)
 
-        if all(isinstance(var.dtype.primitive_type, PyccelBooleanType) for var in (a, b)):
+        if all(isinstance(var.dtype.primitive_type, PrimitiveBooleanType) for var in (a, b)):
             return f'{lhs} .eqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
@@ -2481,7 +2481,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs_var, Nil):
             return self._handle_not_none(lhs, lhs_var)
 
-        if all(isinstance(var.dtype.primitive_type, PyccelBooleanType) for var in (a, b)):
+        if all(isinstance(var.dtype.primitive_type, PrimitiveBooleanType) for var in (a, b)):
             return f'{lhs} .neqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
@@ -2512,7 +2512,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_IfTernaryOperator(self, expr):
 
-        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype.primitive_type, PyccelBooleanType) else expr.cond
+        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype.primitive_type, PrimitiveBooleanType) else expr.cond
         value_true = expr.value_true
         value_false = expr.value_false
 
@@ -2540,22 +2540,22 @@ class FCodePrinter(CodePrinter):
         if isinstance(expr.dtype, StringType):
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
-            args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+            args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
 
     def _print_PyccelMinus(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
 
         return ' - '.join(args_code)
 
     def _print_PyccelMul(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
         return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(isinstance(a.dtype.primitive_type, (PyccelBooleanType, PyccelIntegerType)) for a in expr.args):
+        if all(isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PyccelIntegerType)) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
@@ -2600,17 +2600,17 @@ class FCodePrinter(CodePrinter):
         return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitXor(self, expr):
-        if isinstance(expr.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .neqv. '.join(self._print(a) for a in expr.args)
         return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitOr(self, expr):
-        if isinstance(expr.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .or. '.join(self._print(a) for a in expr.args)
         return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitAnd(self, expr):
-        if isinstance(expr.dtype.primitive_type, PyccelBooleanType):
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .and. '.join(self._print(a) for a in expr.args)
         return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
@@ -2627,11 +2627,11 @@ class FCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [a if isinstance(a.dtype.primitive_type, PyccelBooleanType) else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else PythonBool(a) for a in expr.args]
         return ' .and. '.join(self._print(a) for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [a if isinstance(a.dtype.primitive_type, PyccelBooleanType) else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else PythonBool(a) for a in expr.args]
         return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
@@ -2640,7 +2640,7 @@ class FCodePrinter(CodePrinter):
         a = expr.args[0].dtype.primitive_type
         b = expr.args[1].dtype.primitive_type
 
-        if all(isinstance(var, PyccelBooleanType) for var in (a, b)):
+        if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
             return '{} .eqv. {}'.format(lhs, rhs)
         return '{0} == {1}'.format(lhs, rhs)
 
@@ -2650,37 +2650,37 @@ class FCodePrinter(CodePrinter):
         a = expr.args[0].dtype.primitive_type
         b = expr.args[1].dtype.primitive_type
 
-        if all(isinstance(var, PyccelBooleanType) for var in (a, b)):
+        if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
             return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} < {1}'.format(lhs, rhs)
 
     def _print_PyccelLe(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} <= {1}'.format(lhs, rhs)
 
     def _print_PyccelGt(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} > {1}'.format(lhs, rhs)
 
     def _print_PyccelGe(self, expr):
-        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PyccelBooleanType) else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
-        if not isinstance(expr.args[0].dtype.primitive_type, PyccelBooleanType):
+        if not isinstance(expr.args[0].dtype.primitive_type, PrimitiveBooleanType):
             return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
@@ -2850,7 +2850,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
         dtype = arg.dtype.primitive_type
-        if isinstance(dtype, (PyccelIntegerType, PyccelBooleanType)):
+        if isinstance(dtype, (PyccelIntegerType, PrimitiveBooleanType)):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)

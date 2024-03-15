@@ -14,7 +14,7 @@ from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
-from .datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
@@ -36,7 +36,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-primitive_type_precedence = [PyccelBooleanType(), PyccelIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
+primitive_type_precedence = [PrimitiveBooleanType(), PyccelIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
 
 #==============================================================================
 
@@ -334,7 +334,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 #==============================================================================
 
 numpy_precision_map = {
-        (PyccelBooleanType(), -1): PythonNativeBool(),
+        (PrimitiveBooleanType(), -1): PythonNativeBool(),
         (PyccelIntegerType(), 1): NumpyInt8Type(),
         (PyccelIntegerType(), 2): NumpyInt16Type(),
         (PyccelIntegerType(), 4): NumpyInt32Type(),

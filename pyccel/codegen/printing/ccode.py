@@ -28,7 +28,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
-from pyccel.ast.datatypes import PyccelBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -271,7 +271,7 @@ class CCodePrinter(CodePrinter):
                       (PyccelIntegerType(),8)     : 'int64_t',
                       (PyccelIntegerType(),2)     : 'int16_t',
                       (PyccelIntegerType(),1)     : 'int8_t',
-                      (PyccelBooleanType(),-1) : 'bool',
+                      (PrimitiveBooleanType(),-1) : 'bool',
                       }
 
     ndarray_type_registry = {
@@ -1009,7 +1009,7 @@ class CCodePrinter(CodePrinter):
                 _, real_part = self.get_print_format_and_arg(NumpyReal(var))
                 float_format, imag_part = self.get_print_format_and_arg(NumpyImag(var))
                 return f'({float_format} + {float_format}j)', f'{real_part}, {imag_part}'
-            elif isinstance(primitive_type, PyccelBooleanType):
+            elif isinstance(primitive_type, PrimitiveBooleanType):
                 return self.get_print_format_and_arg(IfTernaryOperator(var, LiteralString("True"), LiteralString("False")))
             else:
                 try:
@@ -1810,7 +1810,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_sum_float{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelComplexType):
             return f'numpy_sum_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PyccelBooleanType):
+        elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_sum_bool({name})'
         raise NotImplementedError('Sum not implemented for argument')
 
@@ -1828,7 +1828,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amax_float{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelComplexType):
             return f'numpy_amax_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PyccelBooleanType):
+        elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_amax_bool({name})'
 
     def _print_NumpyAmin(self, expr):
@@ -1845,7 +1845,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amin_float{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelComplexType):
             return f'numpy_amin_complex{prec * 16}({name})'
-        elif isinstance(primitive_type, PyccelBooleanType):
+        elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_amin_bool({name})'
 
     def _print_NumpyLinspace(self, expr):

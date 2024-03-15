@@ -21,7 +21,7 @@ __all__ = (
         'FixedSizeType',
         'ContainerType',
         # ------------ Primitive types ------------
-        'PyccelBooleanType',
+        'PrimitiveBooleanType',
         'PyccelIntegerType',
         'PyccelFloatingPointType',
         'PyccelComplexType',
@@ -86,7 +86,7 @@ class PrimitiveType(metaclass=Singleton):
         """
         return (self.__class__, ())
 
-class PyccelBooleanType(PrimitiveType):
+class PrimitiveBooleanType(PrimitiveType):
     """
     Class representing a boolean datatype.
 
@@ -287,7 +287,7 @@ class PythonNativeBool(PythonNativeNumericType):
     """
     __slots__ = ()
     _name = 'bool'
-    _primitive_type = PyccelBooleanType()
+    _primitive_type = PrimitiveBooleanType()
     _precision = -1
 
     @lru_cache
