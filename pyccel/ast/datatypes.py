@@ -23,7 +23,7 @@ __all__ = (
         # ------------ Primitive types ------------
         'PrimitiveBooleanType',
         'PrimitiveIntegerType',
-        'PyccelFloatingPointType',
+        'PrimitiveFloatingPointType',
         'PyccelComplexType',
         'PyccelCharacterType',
         # ------------ Fixed size types ------------
@@ -104,7 +104,7 @@ class PrimitiveIntegerType(PrimitiveType):
     __slots__ = ()
     _name = 'integer'
 
-class PyccelFloatingPointType(PrimitiveType):
+class PrimitiveFloatingPointType(PrimitiveType):
     """
     Class representing a floating point datatype.
 
@@ -343,7 +343,7 @@ class PythonNativeFloat(PythonNativeNumericType):
     """
     __slots__ = ()
     _name = 'float'
-    _primitive_type = PyccelFloatingPointType()
+    _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
     @lru_cache

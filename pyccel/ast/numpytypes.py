@@ -14,7 +14,7 @@ from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
 from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
@@ -36,7 +36,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-primitive_type_precedence = [PrimitiveBooleanType(), PrimitiveIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
+primitive_type_precedence = [PrimitiveBooleanType(), PrimitiveIntegerType(), PrimitiveFloatingPointType(), PyccelComplexType()]
 
 #==============================================================================
 
@@ -160,7 +160,7 @@ class NumpyFloat32Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.float32'
-    _primitive_type = PyccelFloatingPointType()
+    _primitive_type = PrimitiveFloatingPointType()
     _precision = 4
 
 
@@ -172,7 +172,7 @@ class NumpyFloat64Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.float64'
-    _primitive_type = PyccelFloatingPointType()
+    _primitive_type = PrimitiveFloatingPointType()
     _precision = 8
 
 
@@ -184,7 +184,7 @@ class NumpyFloat128Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.float128'
-    _primitive_type = PyccelFloatingPointType()
+    _primitive_type = PrimitiveFloatingPointType()
     _precision = 16
 
 #==============================================================================
@@ -339,9 +339,9 @@ numpy_precision_map = {
         (PrimitiveIntegerType(), 2): NumpyInt16Type(),
         (PrimitiveIntegerType(), 4): NumpyInt32Type(),
         (PrimitiveIntegerType(), 8): NumpyInt64Type(),
-        (PyccelFloatingPointType(), 4) : NumpyFloat32Type(),
-        (PyccelFloatingPointType(), 8) : NumpyFloat64Type(),
-        (PyccelFloatingPointType(), 16): NumpyFloat128Type(),
+        (PrimitiveFloatingPointType(), 4) : NumpyFloat32Type(),
+        (PrimitiveFloatingPointType(), 8) : NumpyFloat64Type(),
+        (PrimitiveFloatingPointType(), 16): NumpyFloat128Type(),
         (PyccelComplexType(), 4) : NumpyComplex64Type(),
         (PyccelComplexType(), 8) : NumpyComplex128Type(),
         (PyccelComplexType(), 16): NumpyComplex256Type(),

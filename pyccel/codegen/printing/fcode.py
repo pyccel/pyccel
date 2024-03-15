@@ -33,7 +33,7 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
@@ -180,7 +180,7 @@ iso_c_binding = {
         4  : 'C_INT32_T',
         8  : 'C_INT64_T',
         16 : 'C_INT128_T'}, #not supported yet
-    PyccelFloatingPointType() : {
+    PrimitiveFloatingPointType() : {
         4  : 'C_FLOAT',
         8  : 'C_DOUBLE',
         16 : 'C_LONG_DOUBLE'}, #not supported yet
@@ -863,7 +863,7 @@ class FCodePrinter(CodePrinter):
                 imag_arg = self._print(NumpyImag(var))
                 arg_format = f'"(",{float_format}," + ",{float_format},"j)"'
                 arg = f'{real_arg}, {imag_arg}'
-            elif isinstance(var_type.primitive_type, PyccelFloatingPointType):
+            elif isinstance(var_type.primitive_type, PrimitiveFloatingPointType):
                 resolution = np.finfo(pyccel_type_to_original_type[var_type]).resolution
                 dps = int(-np.log10(resolution))
                 arg_format = f'F0.{dps}'
@@ -1830,7 +1830,7 @@ class FCodePrinter(CodePrinter):
     def _print_PrimitiveIntegerType(self, expr):
         return 'integer'
 
-    def _print_PyccelFloatingPointType(self, expr):
+    def _print_PrimitiveFloatingPointType(self, expr):
         return 'real'
 
     def _print_PyccelComplexType(self, expr):
@@ -2562,7 +2562,7 @@ class FCodePrinter(CodePrinter):
         return ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelMod(self, expr):
-        is_float = isinstance(expr.dtype.primitive_type, PyccelFloatingPointType)
+        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
 
         def correct_type_arg(a):
             if is_float and isinstance(a.dtype.primitive_type, PrimitiveIntegerType):
@@ -2581,7 +2581,7 @@ class FCodePrinter(CodePrinter):
 
         code     = self._print(expr.args[0])
         adtype   = expr.args[0].dtype.primitive_type
-        is_float = isinstance(expr.dtype.primitive_type, PyccelFloatingPointType)
+        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
         for b in expr.args[1:]:
             bdtype    = b.dtype.primitive_type
             if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):

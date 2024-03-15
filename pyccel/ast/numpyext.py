@@ -21,7 +21,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
 from .datatypes      import InhomogeneousTupleType, ContainerType
 
@@ -1621,11 +1621,11 @@ class NumpyNorm(PyccelInternalFunction):
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
         arg_dtype = arg.dtype
-        if not isinstance(arg_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
+        if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PyccelComplexType)):
             arg = NumpyFloat64(arg)
             dtype = NumpyFloat64Type()
         else:
-            dtype = numpy_precision_map[(PyccelFloatingPointType(), arg_dtype.precision)]
+            dtype = numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
         self._arg = PythonList(arg) if arg.rank == 0 else arg
         if self.axis is not None:
             sh = list(arg.shape)
@@ -1729,7 +1729,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             The dtype of the result of the function.
         """
         x_dtype = x.dtype
-        if not isinstance(x_dtype.primitive_type, (PyccelFloatingPointType, PyccelComplexType)):
+        if not isinstance(x_dtype.primitive_type, (PrimitiveFloatingPointType, PyccelComplexType)):
             return NumpyFloat64Type()
         else:
             return numpy_precision_map[(x_dtype.primitive_type, x_dtype.precision)]
@@ -1801,7 +1801,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
             return NumpyFloat64Type()
         else:
             arg_dtype = x1.dtype + x2.dtype
-            return numpy_precision_map[(PyccelFloatingPointType(), arg_dtype.precision)]
+            return numpy_precision_map[(PrimitiveFloatingPointType(), arg_dtype.precision)]
 
     def _set_order(self, x1, x2):
         if x1.order == x2.order:

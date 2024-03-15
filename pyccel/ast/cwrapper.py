@@ -20,7 +20,7 @@ from .bind_c    import BindCPointer
 from .datatypes import FixedSizeType, CustomDataType
 from .datatypes import PythonNativeInt, PythonNativeFloat, PythonNativeComplex
 from .datatypes import PythonNativeBool, StringType, VoidType
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
 
 from .core      import FunctionDefArgument, FunctionDefResult
 from .core      import FunctionDef, ClassDef
@@ -1017,8 +1017,8 @@ py_to_c_registry = {
     (PrimitiveIntegerType(), 2)       : 'PyInt16_to_Int16',
     (PrimitiveIntegerType(), 4)       : 'PyInt32_to_Int32',
     (PrimitiveIntegerType(), 8)       : 'PyInt64_to_Int64',
-    (PyccelFloatingPointType(), 4) : 'PyFloat_to_Float',
-    (PyccelFloatingPointType(), 8) : 'PyDouble_to_Double',
+    (PrimitiveFloatingPointType(), 4) : 'PyFloat_to_Float',
+    (PrimitiveFloatingPointType(), 8) : 'PyDouble_to_Double',
     (PyccelComplexType(), 4)       : 'PyComplex_to_Complex64',
     (PyccelComplexType(), 8)       : 'PyComplex_to_Complex128',
     }
