@@ -141,6 +141,8 @@ class SetPop(SetMethod):
     The pop() method pops an element from the set. 
     It does not take any arguments but returns the popped 
     element. It raises an error if the set is empty.
+    The class does not raise an error as it assumes that the
+    user code is valid.
 
     Parameters
     ----------
