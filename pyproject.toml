@@ -21,7 +21,12 @@ dependencies = [
     "termcolor >= 1.0.0",
     "textx >= 2.2",
 ]
-stc = { kind = "path", path = "stc/include" }
+
+[hatch.dependencies]
+stc = {git = " https://github.com/Stclib/STC/", extras = ["extensions/STC/include/stc"]}
+
+[hatch.extras.specific_directory]
+install = ["pyccel"]
 
 [project.optional-dependencies]
 test = [
@@ -54,7 +59,3 @@ artifacts = [
 path = "install_scripts/hook.py"
 require-runtime-dependencies = true
 
-[tool.hatch.build]
-include = [
-  "stc/include/"
-]
