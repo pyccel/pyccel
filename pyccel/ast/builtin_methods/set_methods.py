@@ -141,7 +141,6 @@ class SetRemove(SetMethod):
 
     The remove() method removes the specified item from 
     the set and updates the set. It doesn't return any value.
-        The name of the set.
 
     Parameters
     ----------
