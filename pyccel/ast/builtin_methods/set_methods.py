@@ -139,9 +139,8 @@ class SetPop(SetMethod):
     Represents a call to the .pop() method.
 
     The pop() method pops an element from the set. 
-    It does not take any argument but returns the popped 
-    element. It raises an error if the element is not 
-    present in the set.
+    It does not take any arguments but returns the popped 
+    element. It raises an error if the set is empty.
 
     Parameters
     ----------
