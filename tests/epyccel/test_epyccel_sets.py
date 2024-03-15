@@ -46,3 +46,71 @@ def test_add_variable_int(language):
     pyccel_result = epyc_add_element()
     python_result = add_element_range()
     assert python_result == pyccel_result
+
+def test_clear_int(language):
+    def clear_int():
+        se = {1,2,4,5}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_int, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_int()
+    assert python_result == pyccel_result
+
+def test_clear_float(language):
+    def clear_float():
+        se = {7.2, 2.1, 9.8, 6.4}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_float, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_float()
+    assert python_result == pyccel_result
+
+def test_clear_complex(language):
+    def clear_complex():
+        se = {3j, 6j, 2j}
+        se.clear()
+        return se
+    epyccel_clear = epyccel(clear_complex, language = language)
+    pyccel_result = epyccel_clear()
+    python_result = clear_complex()
+    assert python_result == pyccel_result
+
+def test_copy_int(language):
+    def copy_int():
+        se = {1, 2, 4, 5}
+        cop = se.copy()
+        return cop
+    epyccel_copy = epyccel(copy_int, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_int()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
+
+
+def test_copy_float(language):
+    def copy_float():
+        se = {5.7, 6.2, 4.3, 9.8}
+        cop = se.copy()
+        return cop
+    epyccel_copy = epyccel(copy_float, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_float()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
+
+def test_copy_complex(language):
+    def copy_complex():
+        se = {7j, 6j, 9j}
+        cop = se.copy()
+        return cop
+    epyccel_copy = epyccel(copy_complex, language = language)
+    pyccel_result = epyccel_copy()
+    python_result = copy_complex()
+    assert isinstance(python_result, type(pyccel_result))
+    assert python_result == pyccel_result
+    assert all(isinstance(elem, type(pyccel_result.pop())) for elem in python_result)
+

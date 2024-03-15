@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 ## \[UNRELEASED\]
 
 ### Added
+-   #1720 : Add support for `Ellipsis` as the only index for an array.
+-   #1694 : Add Python support for list method `extend()`.
+-   #1739 : Add Python support for set method `clear()`.
+-   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
+-   #1740 : Add Python support for set method `copy()`.
+
+### Fixed
+
+-   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+-   #1762 : Fix array copy between different data types.
+
+### Changed
+-   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
+-   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
+-   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
+-   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
+
+### Deprecated
+
+## \[1.11.2\] - 2024-03-05
+
+### Added
 
 -   #1689 : Add Python support for list method `append()`.
 -   #1692 : Add Python support for list method `insert()`.
@@ -19,7 +41,7 @@ All notable changes to this project will be documented in this file.
 -   #1575 : Fixed inhomogeneous tuple (due to incompatible sizes) being treated as homogeneous tuple.
 -   #1182 : Fix tuples containing objects with different ranks.
 -   #1575 : Fix duplication operator for non-homogeneous tuples with a non-literal but constant multiplier.
--   #1762 : Fix array copy between different data types.
+-   #1779 : Fix standalone partial templates.
 
 ### Changed
 
