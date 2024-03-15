@@ -159,6 +159,7 @@ class NumpyFloat32Type(NumpyNumericType):
     _primitive_type = PyccelFloatingPointType()
     _precision = 4
 
+
 class NumpyFloat64Type(NumpyNumericType):
     """
     Class representing NumPy's float64 type.
@@ -169,6 +170,7 @@ class NumpyFloat64Type(NumpyNumericType):
     _name = 'numpy.float64'
     _primitive_type = PyccelFloatingPointType()
     _precision = 8
+
 
 class NumpyFloat128Type(NumpyNumericType):
     """
@@ -204,6 +206,7 @@ class NumpyComplex64Type(NumpyNumericType):
         """
         return NumpyFloat32Type()
 
+
 class NumpyComplex128Type(NumpyNumericType):
     """
     Class representing NumPy's complex128 type.
@@ -224,6 +227,7 @@ class NumpyComplex128Type(NumpyNumericType):
         of the floats which comprise the complex type.
         """
         return NumpyFloat64Type()
+
 
 class NumpyComplex256Type(NumpyNumericType):
     """
