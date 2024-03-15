@@ -106,6 +106,7 @@ class NumpyIntType(NumpyNumericType):
         else:
             return NotImplemented
 
+
 class NumpyInt8Type(NumpyIntType):
     """
     Class representing NumPy's int8 type.
@@ -115,6 +116,7 @@ class NumpyInt8Type(NumpyIntType):
     __slots__ = ()
     _name = 'numpy.int8'
     _precision = 1
+
 
 class NumpyInt16Type(NumpyIntType):
     """
@@ -126,6 +128,7 @@ class NumpyInt16Type(NumpyIntType):
     _name = 'numpy.int16'
     _precision = 2
 
+
 class NumpyInt32Type(NumpyIntType):
     """
     Class representing NumPy's int32 type.
@@ -135,6 +138,7 @@ class NumpyInt32Type(NumpyIntType):
     __slots__ = ()
     _name = 'numpy.int32'
     _precision = 4
+
 
 class NumpyInt64Type(NumpyIntType):
     """
@@ -364,4 +368,3 @@ if hasattr(np, 'float128'):
 pyccel_type_to_original_type.update(numpy_type_to_original_type)
 original_type_to_pyccel_type.update({v:k for k,v in numpy_type_to_original_type.items()})
 original_type_to_pyccel_type[np.bool_] = PythonNativeBool()
-
