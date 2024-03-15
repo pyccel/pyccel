@@ -45,7 +45,7 @@ class Variable(TypedAstNode):
     Parameters
     ----------
     class_type : PyccelType
-        The Python type of the variable.The type of the variable.
+        The Python type of the variable.
 
     name : str, list, DottedName
         The name of the variable represented. This can be either a string
