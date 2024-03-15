@@ -222,8 +222,7 @@ def get_cls_base(class_type):
     Parameters
     ----------
     class_type : DataType
-        The Python type of the object. If this is different to the dtype then
-        the object is a container.
+        The Python type of the object.
 
     Returns
     -------
