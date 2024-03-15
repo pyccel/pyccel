@@ -156,5 +156,5 @@ class SetPop(SetMethod):
     def __init__(self, set_variable):
         self._dtype = set_variable.dtype
         self._precision = set_variable.precision
-        self._class_type = set_variable.class_type
+        self._class_type = set_variable.dtype
         super().__init__(set_variable)
