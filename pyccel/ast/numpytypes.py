@@ -14,7 +14,7 @@ from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
-from .datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
 from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
@@ -36,7 +36,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-primitive_type_precedence = [PrimitiveBooleanType(), PyccelIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
+primitive_type_precedence = [PrimitiveBooleanType(), PrimitiveIntegerType(), PyccelFloatingPointType(), PyccelComplexType()]
 
 #==============================================================================
 
@@ -84,7 +84,7 @@ class NumpyIntType(NumpyNumericType):
     Super class representing NumPy's integer types.
     """
     __slots__ = ()
-    _primitive_type = PyccelIntegerType()
+    _primitive_type = PrimitiveIntegerType()
 
     @lru_cache
     def __and__(self, other):
@@ -335,10 +335,10 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
 numpy_precision_map = {
         (PrimitiveBooleanType(), -1): PythonNativeBool(),
-        (PyccelIntegerType(), 1): NumpyInt8Type(),
-        (PyccelIntegerType(), 2): NumpyInt16Type(),
-        (PyccelIntegerType(), 4): NumpyInt32Type(),
-        (PyccelIntegerType(), 8): NumpyInt64Type(),
+        (PrimitiveIntegerType(), 1): NumpyInt8Type(),
+        (PrimitiveIntegerType(), 2): NumpyInt16Type(),
+        (PrimitiveIntegerType(), 4): NumpyInt32Type(),
+        (PrimitiveIntegerType(), 8): NumpyInt64Type(),
         (PyccelFloatingPointType(), 4) : NumpyFloat32Type(),
         (PyccelFloatingPointType(), 8) : NumpyFloat64Type(),
         (PyccelFloatingPointType(), 16): NumpyFloat128Type(),

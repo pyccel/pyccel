@@ -63,7 +63,7 @@ from pyccel.ast.core import Assert
 from pyccel.ast.class_defs import NumpyArrayClass, TupleClass, get_cls_base
 
 from pyccel.ast.datatypes import CustomDataType, PyccelType, TupleType, VoidType, GenericType
-from pyccel.ast.datatypes import PyccelIntegerType, HomogeneousListType, StringType, SymbolicType
+from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, StringType, SymbolicType
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PyccelFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
@@ -904,7 +904,7 @@ class SemanticParser(BasicParser):
 
         for arg in var[indices].indices:
             if not isinstance(arg, (Slice, LiteralEllipsis)) and not (hasattr(arg, 'dtype') and
-                    isinstance(getattr(arg.dtype, 'primitive_type', None), PyccelIntegerType)):
+                    isinstance(getattr(arg.dtype, 'primitive_type', None), PrimitiveIntegerType)):
                 errors.report(INVALID_INDICES, symbol=var[indices],
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
@@ -2887,7 +2887,7 @@ class SemanticParser(BasicParser):
             mul1, mul2 = arg.value.args
             mul1_syn, mul2_syn = expr.args[0].value.args
             is_abs = False
-            if mul1 is mul2 and isinstance(mul1.dtype.primitive_type, (PyccelIntegerType, PyccelFloatingPointType)):
+            if mul1 is mul2 and isinstance(mul1.dtype.primitive_type, (PrimitiveIntegerType, PyccelFloatingPointType)):
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')
@@ -2922,7 +2922,7 @@ class SemanticParser(BasicParser):
         elif isinstance(arg.value, PyccelPow):
             base, exponent = arg.value.args
             base_syn, _ = expr.args[0].value.args
-            if exponent == 2 and isinstance(base.dtype.primitive_type, (PyccelIntegerType, PyccelFloatingPointType)):
+            if exponent == 2 and isinstance(base.dtype.primitive_type, (PrimitiveIntegerType, PyccelFloatingPointType)):
                 pyccel_stage.set_stage('syntactic')
 
                 fabs_name = self.scope.get_new_name('fabs')

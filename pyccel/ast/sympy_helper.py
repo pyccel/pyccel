@@ -15,7 +15,7 @@ from pyccel.utilities.strings import create_incremented_string
 
 from .builtins  import PythonRange, PythonTuple
 from .core      import Iterable
-from .datatypes import PyccelIntegerType
+from .datatypes import PrimitiveIntegerType
 from .internals import PyccelArrayShapeElement
 from .literals  import LiteralInteger, LiteralFloat, LiteralComplex
 from .mathext   import MathCeil
@@ -99,7 +99,7 @@ def sympy_to_pyccel(expr, symbol_map):
     elif isinstance(expr, sp.ceiling):
         arg = sympy_to_pyccel(expr.args[0], symbol_map)
         # Only apply ceiling where appropriate
-        if getattr(arg.dtype, 'primitive_type', None) is PyccelIntegerType():
+        if getattr(arg.dtype, 'primitive_type', None) is PrimitiveIntegerType():
             return arg
         else:
             return MathCeil(arg)

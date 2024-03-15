@@ -22,7 +22,7 @@ __all__ = (
         'ContainerType',
         # ------------ Primitive types ------------
         'PrimitiveBooleanType',
-        'PyccelIntegerType',
+        'PrimitiveIntegerType',
         'PyccelFloatingPointType',
         'PyccelComplexType',
         'PyccelCharacterType',
@@ -95,7 +95,7 @@ class PrimitiveBooleanType(PrimitiveType):
     __slots__ = ()
     _name = 'boolean'
 
-class PyccelIntegerType(PrimitiveType):
+class PrimitiveIntegerType(PrimitiveType):
     """
     Class representing an integer datatype.
 
@@ -316,7 +316,7 @@ class PythonNativeInt(PythonNativeNumericType):
     """
     __slots__ = ()
     _name = 'int'
-    _primitive_type = PyccelIntegerType()
+    _primitive_type = PrimitiveIntegerType()
     _precision = numpy.dtype(int).alignment
 
     @lru_cache

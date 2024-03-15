@@ -17,7 +17,7 @@ from .basic                 import TypedAstNode
 
 from .datatypes             import PythonNativeBool, PythonNativeFloat
 from .datatypes             import StringType, FixedSizeNumericType, ContainerType
-from .datatypes             import PrimitiveBooleanType, PyccelIntegerType
+from .datatypes             import PrimitiveBooleanType, PrimitiveIntegerType
 
 
 from .literals              import Literal, LiteralInteger, LiteralFloat, LiteralComplex
@@ -841,7 +841,7 @@ class PyccelDiv(PyccelArithmeticOperator):
         """
         class_type = super()._calculate_type(arg1, arg2)
 
-        if class_type.primitive_type in (PyccelIntegerType(), PrimitiveBooleanType()):
+        if class_type.primitive_type in (PrimitiveIntegerType(), PrimitiveBooleanType()):
             class_type = class_type.switch_basic_type(PythonNativeFloat())
 
         return class_type

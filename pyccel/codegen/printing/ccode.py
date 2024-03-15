@@ -28,7 +28,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
-from pyccel.ast.datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -267,10 +267,10 @@ class CCodePrinter(CodePrinter):
                       (PyccelComplexType(),4) : 'float complex',
                       (PyccelFloatingPointType(),8)   : 'double',
                       (PyccelFloatingPointType(),4)   : 'float',
-                      (PyccelIntegerType(),4)     : 'int32_t',
-                      (PyccelIntegerType(),8)     : 'int64_t',
-                      (PyccelIntegerType(),2)     : 'int16_t',
-                      (PyccelIntegerType(),1)     : 'int8_t',
+                      (PrimitiveIntegerType(),4)     : 'int32_t',
+                      (PrimitiveIntegerType(),8)     : 'int64_t',
+                      (PrimitiveIntegerType(),2)     : 'int16_t',
+                      (PrimitiveIntegerType(),1)     : 'int8_t',
                       (PrimitiveBooleanType(),-1) : 'bool',
                       }
 
@@ -287,10 +287,10 @@ class CCodePrinter(CodePrinter):
 
     type_to_format = {(PyccelFloatingPointType(),8) : '%.12lf',
                       (PyccelFloatingPointType(),4) : '%.12f',
-                      (PyccelIntegerType(),4)       : '%d',
-                      (PyccelIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
-                      (PyccelIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
-                      (PyccelIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
+                      (PrimitiveIntegerType(),4)       : '%d',
+                      (PrimitiveIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
+                      (PrimitiveIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
+                      (PrimitiveIntegerType(),1)       : LiteralString("%") + CMacro('PRId8'),
                       StringType()                  : '%s',
                       }
 
@@ -663,7 +663,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmin({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
-        elif arg.dtype.primitive_type is PyccelIntegerType() and len(arg) == 2:
+        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
             arg1 = self.scope.get_temporary_variable(PythonNativeInt())
             arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
@@ -681,7 +681,7 @@ class CCodePrinter(CodePrinter):
             self.add_import(c_imports['math'])
             return "fmax({}, {})".format(self._print(arg[0]),
                                          self._print(arg[1]))
-        elif arg.dtype.primitive_type is PyccelIntegerType() and len(arg) == 2:
+        elif arg.dtype.primitive_type is PrimitiveIntegerType() and len(arg) == 2:
             arg1 = self.scope.get_temporary_variable(PythonNativeInt())
             arg2 = self.scope.get_temporary_variable(PythonNativeInt())
             assign1 = Assign(arg1, arg[0])
@@ -695,7 +695,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_SysExit(self, expr):
         code = ""
-        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PyccelIntegerType) \
+        if not isinstance(getattr(expr.status.dtype, 'primitive_type', None), PrimitiveIntegerType) \
                 or expr.status.rank > 0:
             print_arg = FunctionCallArgument(expr.status)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
@@ -907,12 +907,12 @@ class CCodePrinter(CodePrinter):
         first = self._print(expr.args[0])
         second = self._print(expr.args[1])
 
-        if expr.dtype.primitive_type is PyccelIntegerType():
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
             return "pyc_modulo({n}, {base})".format(n=first, base=second)
 
-        if expr.args[0].dtype.primitive_type is PyccelIntegerType():
+        if expr.args[0].dtype.primitive_type is PrimitiveIntegerType():
             first = self._print(NumpyFloat(expr.args[0]))
-        if expr.args[1].dtype.primitive_type is PyccelIntegerType():
+        if expr.args[1].dtype.primitive_type is PrimitiveIntegerType():
             second = self._print(NumpyFloat(expr.args[1]))
         return "pyc_fmodulo({n}, {base})".format(n=first, base=second)
 
@@ -1152,7 +1152,7 @@ class CCodePrinter(CodePrinter):
             if isinstance(primitive_type, PyccelComplexType):
                 self.add_import(c_imports['complex'])
                 return f'{self.find_in_dtype_registry(dtype.element_type)} complex'
-            elif isinstance(primitive_type, PyccelIntegerType):
+            elif isinstance(primitive_type, PrimitiveIntegerType):
                 self.add_import(c_imports['stdint'])
             elif isinstance(dtype, PythonNativeBool):
                 self.add_import(c_imports['stdbool'])
@@ -1639,7 +1639,7 @@ class CCodePrinter(CodePrinter):
         self.add_import(c_imports['numpy_c'])
         primitive_type = expr.dtype.primitive_type
         func = ''
-        if isinstance(primitive_type, PyccelIntegerType):
+        if isinstance(primitive_type, PrimitiveIntegerType):
             func = 'isign'
         elif isinstance(primitive_type, PyccelFloatingPointType):
             func = 'fsign'
@@ -1720,7 +1720,7 @@ class CCodePrinter(CodePrinter):
                 else:
                     args.append(self._print(arg))
         code_args = ', '.join(args)
-        if expr.dtype.primitive_type is PyccelIntegerType():
+        if expr.dtype.primitive_type is PrimitiveIntegerType():
             cast_type = self.find_in_dtype_registry(expr.dtype)
             return f'({cast_type}){func_name}({code_args})'
         return f'{func_name}({code_args})'
@@ -1731,7 +1731,7 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self.add_import(c_imports['math'])
         arg = expr.args[0]
-        if arg.dtype.primitive_type is PyccelIntegerType():
+        if arg.dtype.primitive_type is PrimitiveIntegerType():
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -1743,7 +1743,7 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self.add_import(c_imports['math'])
         arg = expr.args[0]
-        if arg.dtype.primitive_type is PyccelIntegerType():
+        if arg.dtype.primitive_type is PrimitiveIntegerType():
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -1755,7 +1755,7 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self.add_import(c_imports['math'])
         arg = expr.args[0]
-        if arg.dtype.primitive_type is PyccelIntegerType():
+        if arg.dtype.primitive_type is PrimitiveIntegerType():
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -1767,7 +1767,7 @@ class CCodePrinter(CodePrinter):
         # add necessary include
         self.add_import(c_imports['math'])
         arg = expr.args[0]
-        if arg.dtype.primitive_type is PyccelIntegerType():
+        if arg.dtype.primitive_type is PrimitiveIntegerType():
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -1804,7 +1804,7 @@ class CCodePrinter(CodePrinter):
         prec  = dtype.precision
         name  = self._print(expr.arg)
 
-        if isinstance(primitive_type, PyccelIntegerType):
+        if isinstance(primitive_type, PrimitiveIntegerType):
             return f'numpy_sum_int{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelFloatingPointType):
             return f'numpy_sum_float{prec * 8}({name})'
@@ -1822,7 +1822,7 @@ class CCodePrinter(CodePrinter):
         primitive_type = dtype.primitive_type
         prec  = dtype.precision
         name  = self._print(expr.arg)
-        if isinstance(primitive_type, PyccelIntegerType):
+        if isinstance(primitive_type, PrimitiveIntegerType):
             return f'numpy_amax_int{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelFloatingPointType):
             return f'numpy_amax_float{prec * 8}({name})'
@@ -1839,7 +1839,7 @@ class CCodePrinter(CodePrinter):
         primitive_type = dtype.primitive_type
         prec  = dtype.precision
         name  = self._print(expr.arg)
-        if isinstance(primitive_type, PyccelIntegerType):
+        if isinstance(primitive_type, PrimitiveIntegerType):
             return f'numpy_amin_int{prec * 8}({name})'
         elif isinstance(primitive_type, PyccelFloatingPointType):
             return f'numpy_amin_float{prec * 8}({name})'
@@ -2040,7 +2040,7 @@ class CCodePrinter(CodePrinter):
         return ' * '.join(self._print(a) for a in expr.args)
 
     def _print_PyccelDiv(self, expr):
-        if all(a.dtype.primitive_type is PyccelIntegerType() for a in expr.args):
+        if all(a.dtype.primitive_type is PrimitiveIntegerType() for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
@@ -2051,7 +2051,7 @@ class CCodePrinter(CodePrinter):
         # the result type of the floor division is dependent on the arguments
         # type, if all arguments are integers the result is integer otherwise
         # the result type is float
-        need_to_cast = all(a.dtype.primitive_type is PyccelIntegerType() for a in expr.args)
+        need_to_cast = all(a.dtype.primitive_type is PrimitiveIntegerType() for a in expr.args)
         code = ' / '.join(self._print(a if a.dtype.primitive_type is PyccelFloatingPointType()
                                         else NumpyFloat(a)) for a in expr.args)
         if (need_to_cast):

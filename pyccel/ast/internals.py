@@ -11,7 +11,7 @@ To avoid circular imports this file should only import from basic, datatypes, an
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import PythonNativeInt, PyccelIntegerType
+from .datatypes import PythonNativeInt, PrimitiveIntegerType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -229,9 +229,9 @@ class Slice(PyccelAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
-        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PyccelIntegerType)
-        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PyccelIntegerType)
-        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PyccelIntegerType)
+        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PrimitiveIntegerType)
         if slice_type not in (Slice.Range, Slice.Element):
             raise TypeError('Slice type must be Range (1) or Element (0)')
 

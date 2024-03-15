@@ -33,7 +33,7 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import PrimitiveBooleanType, PyccelIntegerType, PyccelFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PyccelFloatingPointType, PyccelComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
@@ -174,7 +174,7 @@ _default_methods = {
 
 #==============================================================================
 iso_c_binding = {
-    PyccelIntegerType() : {
+    PrimitiveIntegerType() : {
         1  : 'C_INT8_T',
         2  : 'C_INT16_T',
         4  : 'C_INT32_T',
@@ -867,7 +867,7 @@ class FCodePrinter(CodePrinter):
                 resolution = np.finfo(pyccel_type_to_original_type[var_type]).resolution
                 dps = int(-np.log10(resolution))
                 arg_format = f'F0.{dps}'
-            elif isinstance(var_type.primitive_type, PyccelIntegerType):
+            elif isinstance(var_type.primitive_type, PrimitiveIntegerType):
                 arg_format = 'I0'
             elif isinstance(var_type.primitive_type, PrimitiveBooleanType):
                 arg_format = 'A'
@@ -1302,7 +1302,7 @@ class FCodePrinter(CodePrinter):
 
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
-        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             return '({})'.format(arg_code)
 
         prec_code = self.print_kind(expr)
@@ -1827,7 +1827,7 @@ class FCodePrinter(CodePrinter):
     def _print_PrimitiveBooleanType(self, expr):
         return 'logical'
 
-    def _print_PyccelIntegerType(self, expr):
+    def _print_PrimitiveIntegerType(self, expr):
         return 'integer'
 
     def _print_PyccelFloatingPointType(self, expr):
@@ -2555,7 +2555,7 @@ class FCodePrinter(CodePrinter):
         return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PyccelIntegerType)) for a in expr.args):
+        if all(isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
@@ -2565,7 +2565,7 @@ class FCodePrinter(CodePrinter):
         is_float = isinstance(expr.dtype.primitive_type, PyccelFloatingPointType)
 
         def correct_type_arg(a):
-            if is_float and isinstance(a.dtype.primitive_type, PyccelIntegerType):
+            if is_float and isinstance(a.dtype.primitive_type, PrimitiveIntegerType):
                 return NumpyFloat(a)
             else:
                 return a
@@ -2584,7 +2584,7 @@ class FCodePrinter(CodePrinter):
         is_float = isinstance(expr.dtype.primitive_type, PyccelFloatingPointType)
         for b in expr.args[1:]:
             bdtype    = b.dtype.primitive_type
-            if all(isinstance(dtype, PyccelIntegerType) for dtype in (adtype, bdtype)):
+            if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):
                 b = NumpyFloat(b)
             c = self._print(b)
             adtype = bdtype
@@ -2692,7 +2692,7 @@ class FCodePrinter(CodePrinter):
         exit_code = expr.status
         if isinstance(exit_code, LiteralInteger):
             arg = exit_code.python_value
-        elif not isinstance(getattr(exit_code.dtype, 'primitive_type'), PyccelIntegerType) or exit_code.rank > 0:
+        elif not isinstance(getattr(exit_code.dtype, 'primitive_type'), PrimitiveIntegerType) or exit_code.rank > 0:
             print_arg = FunctionCallArgument(exit_code)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
@@ -2710,7 +2710,7 @@ class FCodePrinter(CodePrinter):
             self._print_not_supported(expr)
         if func_name.startswith('ieee_'):
             self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
-        args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PyccelIntegerType) else a)\
+        args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
@@ -2811,7 +2811,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2822,7 +2822,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2833,7 +2833,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if isinstance(arg.dtype.primitive_type, PyccelIntegerType):
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2850,7 +2850,7 @@ class FCodePrinter(CodePrinter):
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
         dtype = arg.dtype.primitive_type
-        if isinstance(dtype, (PyccelIntegerType, PrimitiveBooleanType)):
+        if isinstance(dtype, (PrimitiveIntegerType, PrimitiveBooleanType)):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)

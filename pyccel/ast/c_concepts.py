@@ -9,7 +9,7 @@ Module representing object address.
 
 from pyccel.utilities.metaclasses import ArgumentSingleton
 from .basic     import TypedAstNode, PyccelAstNode
-from .datatypes import HomogeneousContainerType, FixedSizeType, PyccelIntegerType
+from .datatypes import HomogeneousContainerType, FixedSizeType, PrimitiveIntegerType
 from .literals  import LiteralString
 
 __all__ = ('CMacro',
@@ -29,7 +29,7 @@ class CNativeInt(FixedSizeType):
     """
     __slots__ = ()
     _name = 'int'
-    _primitive_type = PyccelIntegerType()
+    _primitive_type = PrimitiveIntegerType()
 
 #------------------------------------------------------------------------------
 
