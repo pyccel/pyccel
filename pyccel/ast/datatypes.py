@@ -28,7 +28,7 @@ __all__ = (
         'PyccelCharacterType',
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
-        'PythonNativeNumericTypes',
+        'PythonNativeNumericType',
         'PythonNativeBool',
         'PythonNativeInt',
         'PythonNativeFloat',
@@ -271,7 +271,7 @@ class FixedSizeNumericType(FixedSizeType):
         """
         return self._precision # pylint: disable=no-member
 
-class PythonNativeNumericTypes(FixedSizeNumericType):
+class PythonNativeNumericType(FixedSizeNumericType):
     """
     Base class representing a built-in scalar numeric datatype.
 
@@ -279,7 +279,7 @@ class PythonNativeNumericTypes(FixedSizeNumericType):
     """
     __slots__ = ()
 
-class PythonNativeBool(PythonNativeNumericTypes):
+class PythonNativeBool(PythonNativeNumericType):
     """
     Class representing Python's native boolean type.
 
@@ -294,7 +294,7 @@ class PythonNativeBool(PythonNativeNumericTypes):
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeInt()
-        elif isinstance(other, PythonNativeNumericTypes):
+        elif isinstance(other, PythonNativeNumericType):
             return other
         else:
             return NotImplemented
@@ -303,12 +303,12 @@ class PythonNativeBool(PythonNativeNumericTypes):
     def __and__(self, other):
         if isinstance(other, PythonNativeBool):
             return PythonNativeBool()
-        elif isinstance(other, PythonNativeNumericTypes):
+        elif isinstance(other, PythonNativeNumericType):
             return other
         else:
             return NotImplemented
 
-class PythonNativeInt(PythonNativeNumericTypes):
+class PythonNativeInt(PythonNativeNumericType):
     """
     Class representing Python's native integer type.
 
@@ -323,19 +323,19 @@ class PythonNativeInt(PythonNativeNumericTypes):
     def __add__(self, other):
         if isinstance(other, PythonNativeBool):
             return self
-        elif isinstance(other, PythonNativeNumericTypes):
+        elif isinstance(other, PythonNativeNumericType):
             return other
         else:
             return NotImplemented
 
     @lru_cache
     def __and__(self, other):
-        if isinstance(other, PythonNativeNumericTypes):
+        if isinstance(other, PythonNativeNumericType):
             return self
         else:
             return NotImplemented
 
-class PythonNativeFloat(PythonNativeNumericTypes):
+class PythonNativeFloat(PythonNativeNumericType):
     """
     Class representing Python's native floating point type.
 
@@ -350,12 +350,12 @@ class PythonNativeFloat(PythonNativeNumericTypes):
     def __add__(self, other):
         if isinstance(other, PythonNativeComplex):
             return other
-        elif isinstance(other, PythonNativeNumericTypes):
+        elif isinstance(other, PythonNativeNumericType):
             return self
         else:
             return NotImplemented
 
-class PythonNativeComplex(PythonNativeNumericTypes):
+class PythonNativeComplex(PythonNativeNumericType):
     """
     Class representing Python's native complex type.
 
@@ -368,7 +368,7 @@ class PythonNativeComplex(PythonNativeNumericTypes):
 
     @lru_cache
     def __add__(self, other):
-        if isinstance(other, PythonNativeNumericTypes):
+        if isinstance(other, PythonNativeNumericType):
             return self
         else:
             return NotImplemented
