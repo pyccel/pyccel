@@ -44,7 +44,9 @@ def f2(x : int, m : int = None):
 def my_print(a : 'int[:]'):
     print(a)
 
-
+def f(a : int = 3, b : int = 3):
+    pass
+b = 1
 y = decr(2)
 z = f1(1)
 
@@ -63,3 +65,4 @@ if __name__ == '__main__':
     print(z1)
     print(z2)
     my_print(np.array([1,2,3]))
+    f(1,b=b)
