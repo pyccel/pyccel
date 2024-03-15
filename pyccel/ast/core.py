@@ -4362,7 +4362,7 @@ class IfSection(PyccelAstNode):
            A boolean expression indicating whether or not the block
            should be executed.
     body : CodeBlock
-           The code to be executed in the condition is satisfied.
+           The code to be executed if the condition is satisfied.
 
     Examples
     --------
