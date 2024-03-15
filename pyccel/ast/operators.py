@@ -305,9 +305,7 @@ class PyccelUnaryOperator(PyccelOperator):
 
         Returns
         -------
-        dtype : DataType
-            The underlying datatype of the object.
-        class_type : DataType
+        DataType
             The Python type of the object.
         """
         return arg.class_type
@@ -477,9 +475,7 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Returns
         -------
-        dtype : DataType
-            The underlying datatype of the object.
-        class_type : DataType
+        DataType
             The Python type of the object.
 
         Raises
@@ -494,7 +490,7 @@ class PyccelBinaryOperator(PyccelOperator):
             raise TypeError(f'Cannot determine the type of ({arg1}, {arg2})') #pylint: disable=raise-missing-from
 
     @staticmethod
-    def _calculate_shape_rank(*args):
+    def _calculate_shape_rank(arg1, arg2):
         """
         Calculate the shape and rank.
 
@@ -505,8 +501,10 @@ class PyccelBinaryOperator(PyccelOperator):
 
         Parameters
         ----------
-        *args : tuple[TypedAstNode, TypedAstNode]
-            The arguments passed to the biary operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
@@ -515,6 +513,7 @@ class PyccelBinaryOperator(PyccelOperator):
         rank : int
             The rank of the resulting object.
         """
+        args = (arg1, arg2)
         strs = [a for a in args if isinstance(a.dtype, StringType)]
         if strs:
             other = [a for a in args if isinstance(a.dtype, FixedSizeNumericType)]
@@ -522,7 +521,7 @@ class PyccelBinaryOperator(PyccelOperator):
             rank  = 0
             shape = None
         else:
-            s = broadcast(args[0].shape, args[1].shape)
+            s = broadcast(arg1.shape, arg2.shape)
 
             shape = s
             rank  = 0 if s is None else len(s)
@@ -666,9 +665,7 @@ class PyccelAdd(PyccelArithmeticOperator):
 
         Returns
         -------
-        dtype : DataType
-            The underlying datatype of the object.
-        class_type : DataType
+        DataType
             The Python type of the object.
         """
         if arg1.dtype == arg2.dtype == StringType():
@@ -834,9 +831,7 @@ class PyccelDiv(PyccelArithmeticOperator):
 
         Returns
         -------
-        dtype : DataType
-            The underlying datatype of the object.
-        class_type : DataType
+        DataType
             The Python type of the object.
         """
         class_type = super()._calculate_type(arg1, arg2)
@@ -919,7 +914,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     _precedence = 7
 
     @staticmethod
-    def _calculate_type(*args):
+    def _calculate_type(arg1, arg2):
         """
         Calculate the dtype and class type of the result.
 
@@ -929,8 +924,10 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
 
         Parameters
         ----------
-        *args : TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
@@ -940,7 +937,7 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
             The Python type of the object.
         """
         dtype = PythonNativeBool()
-        possible_class_types = set(a.class_type for a in args \
+        possible_class_types = set(a.class_type for a in (arg1, arg2) \
                         if isinstance(a.class_type, ContainerType))
         if len(possible_class_types) == 0:
             class_type = dtype
@@ -1376,9 +1373,7 @@ class IfTernaryOperator(PyccelOperator):
 
         Returns
         -------
-        dtype : DataType
-            The underlying datatype of the object.
-        class_type : DataType
+        DataType
             The Python type of the object.
         """
         if value_true.dtype is value_false.dtype and value_true.class_type is value_false.class_type:
