@@ -849,7 +849,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
                 raise TypeError(f"Argument {key} not valid for {self.__class__.__name__}")
             setattr(self, key, value)
 
-        BaseClass.__init__(self)
+        BaseClass.__init__(self) # pylint: disable=unnecessary-dunder-call
 
     assert iterable(argnames)
     assert all(isinstance(a, str) for a in argnames)
