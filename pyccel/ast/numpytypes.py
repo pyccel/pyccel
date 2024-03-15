@@ -14,7 +14,7 @@ from pyccel.utilities.metaclasses import ArgumentSingleton
 from pyccel.utilities.stage   import PyccelStage
 
 from .datatypes import FixedSizeNumericType, HomogeneousContainerType, PythonNativeBool
-from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
+from .datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes import GenericType
 from .datatypes import pyccel_type_to_original_type, original_type_to_pyccel_type
 
@@ -36,7 +36,7 @@ __all__ = (
 
 pyccel_stage = PyccelStage()
 
-primitive_type_precedence = [PrimitiveBooleanType(), PrimitiveIntegerType(), PrimitiveFloatingPointType(), PyccelComplexType()]
+primitive_type_precedence = [PrimitiveBooleanType(), PrimitiveIntegerType(), PrimitiveFloatingPointType(), PrimitiveComplexType()]
 
 #==============================================================================
 
@@ -197,7 +197,7 @@ class NumpyComplex64Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.complex64'
-    _primitive_type = PyccelComplexType()
+    _primitive_type = PrimitiveComplexType()
     _precision = 4
 
     @property
@@ -219,7 +219,7 @@ class NumpyComplex128Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.complex128'
-    _primitive_type = PyccelComplexType()
+    _primitive_type = PrimitiveComplexType()
     _precision = 8
 
     @property
@@ -241,7 +241,7 @@ class NumpyComplex256Type(NumpyNumericType):
     """
     __slots__ = ()
     _name = 'numpy.complex256'
-    _primitive_type = PyccelComplexType()
+    _primitive_type = PrimitiveComplexType()
     _precision = 16
 
     @property
@@ -342,9 +342,9 @@ numpy_precision_map = {
         (PrimitiveFloatingPointType(), 4) : NumpyFloat32Type(),
         (PrimitiveFloatingPointType(), 8) : NumpyFloat64Type(),
         (PrimitiveFloatingPointType(), 16): NumpyFloat128Type(),
-        (PyccelComplexType(), 4) : NumpyComplex64Type(),
-        (PyccelComplexType(), 8) : NumpyComplex128Type(),
-        (PyccelComplexType(), 16): NumpyComplex256Type(),
+        (PrimitiveComplexType(), 4) : NumpyComplex64Type(),
+        (PrimitiveComplexType(), 8) : NumpyComplex128Type(),
+        (PrimitiveComplexType(), 16): NumpyComplex256Type(),
         }
 
 numpy_type_to_original_type = {

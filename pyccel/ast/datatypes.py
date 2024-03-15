@@ -24,8 +24,8 @@ __all__ = (
         'PrimitiveBooleanType',
         'PrimitiveIntegerType',
         'PrimitiveFloatingPointType',
-        'PyccelComplexType',
-        'PyccelCharacterType',
+        'PrimitiveComplexType',
+        'PrimitiveCharacterType',
         # ------------ Fixed size types ------------
         'FixedSizeNumericType',
         'PythonNativeNumericType',
@@ -113,7 +113,7 @@ class PrimitiveFloatingPointType(PrimitiveType):
     __slots__ = ()
     _name = 'floating point'
 
-class PyccelComplexType(PrimitiveType):
+class PrimitiveComplexType(PrimitiveType):
     """
     Class representing a complex datatype.
 
@@ -122,7 +122,7 @@ class PyccelComplexType(PrimitiveType):
     __slots__ = ()
     _name = 'complex'
 
-class PyccelCharacterType(PrimitiveType):
+class PrimitiveCharacterType(PrimitiveType):
     """
     Class representing a character datatype.
 
@@ -363,7 +363,7 @@ class PythonNativeComplex(PythonNativeNumericType):
     """
     __slots__ = ('_element_type',)
     _name = 'complex'
-    _primitive_type = PyccelComplexType()
+    _primitive_type = PrimitiveComplexType()
     _precision = 8
 
     @lru_cache
@@ -432,7 +432,7 @@ class CharType(FixedSizeType):
     """
     __slots__ = ()
     _name = 'char'
-    _primitive_type = PyccelCharacterType
+    _primitive_type = PrimitiveCharacterType
 
 #==============================================================================
 
@@ -563,7 +563,7 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     __slots__ = ()
     _name = 'str'
-    _element_type = PyccelCharacterType()
+    _element_type = PrimitiveCharacterType()
 
     @property
     def datatype(self):

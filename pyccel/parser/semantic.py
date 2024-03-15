@@ -67,7 +67,7 @@ from pyccel.ast.datatypes import PrimitiveIntegerType, HomogeneousListType, Stri
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeInt, PythonNativeFloat
 from pyccel.ast.datatypes import DataTypeFactory, PrimitiveFloatingPointType
 from pyccel.ast.datatypes import InhomogeneousTupleType, HomogeneousTupleType
-from pyccel.ast.datatypes import PyccelComplexType, FixedSizeNumericType
+from pyccel.ast.datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 from pyccel.ast.functionalexpr import FunctionalSum, FunctionalMax, FunctionalMin, GeneratorComprehension, FunctionalFor
 
@@ -2965,7 +2965,7 @@ class SemanticParser(BasicParser):
     def _visit_CmathPhase(self, expr):
         arg, = self._handle_function_args(expr.args) #pylint: disable=unbalanced-tuple-unpacking
         var = arg.value
-        if not isinstance(var.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(var.dtype.primitive_type, PrimitiveComplexType):
             return LiteralFloat(0.0)
         else:
             self.insert_import('math', AsName(MathAtan2, 'atan2'))

@@ -28,7 +28,7 @@ from pyccel.ast.operators import PyccelUnarySub, IfTernaryOperator
 from pyccel.ast.datatypes import PythonNativeInt, PythonNativeBool, VoidType
 from pyccel.ast.datatypes import TupleType, FixedSizeNumericType
 from pyccel.ast.datatypes import CustomDataType, StringType, HomogeneousTupleType
-from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import HomogeneousContainerType
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
@@ -263,8 +263,8 @@ class CCodePrinter(CodePrinter):
 
     dtype_registry = {CNativeInt()    : 'int',
                       VoidType() : 'void',
-                      (PyccelComplexType(),8) : 'double complex',
-                      (PyccelComplexType(),4) : 'float complex',
+                      (PrimitiveComplexType(),8) : 'double complex',
+                      (PrimitiveComplexType(),4) : 'float complex',
                       (PrimitiveFloatingPointType(),8)   : 'double',
                       (PrimitiveFloatingPointType(),4)   : 'float',
                       (PrimitiveIntegerType(),4)     : 'int32_t',
@@ -650,7 +650,7 @@ class CCodePrinter(CodePrinter):
         if expr.arg.dtype.primitive_type is PrimitiveFloatingPointType():
             self.add_import(c_imports['math'])
             func = "fabs"
-        elif expr.arg.dtype.primitive_type is PyccelComplexType():
+        elif expr.arg.dtype.primitive_type is PrimitiveComplexType():
             self.add_import(c_imports['complex'])
             func = "cabs"
         else:
@@ -920,9 +920,9 @@ class CCodePrinter(CodePrinter):
         b = expr.args[0]
         e = expr.args[1]
 
-        if expr.dtype.primitive_type is PyccelComplexType():
-            b = self._print(b if b.dtype.primitive_type is PyccelComplexType() else PythonComplex(b))
-            e = self._print(e if e.dtype.primitive_type is PyccelComplexType() else PythonComplex(e))
+        if expr.dtype.primitive_type is PrimitiveComplexType():
+            b = self._print(b if b.dtype.primitive_type is PrimitiveComplexType() else PythonComplex(b))
+            e = self._print(e if e.dtype.primitive_type is PrimitiveComplexType() else PythonComplex(e))
             self.add_import(c_imports['complex'])
             return 'cpow({}, {})'.format(b, e)
 
@@ -1005,7 +1005,7 @@ class CCodePrinter(CodePrinter):
         """
         if isinstance(var.dtype, FixedSizeNumericType):
             primitive_type = var.dtype.primitive_type
-            if isinstance(primitive_type, PyccelComplexType):
+            if isinstance(primitive_type, PrimitiveComplexType):
                 _, real_part = self.get_print_format_and_arg(NumpyReal(var))
                 float_format, imag_part = self.get_print_format_and_arg(NumpyImag(var))
                 return f'({float_format} + {float_format}j)', f'{real_part}, {imag_part}'
@@ -1149,7 +1149,7 @@ class CCodePrinter(CodePrinter):
         """
         if isinstance(dtype, FixedSizeNumericType):
             primitive_type = dtype.primitive_type
-            if isinstance(primitive_type, PyccelComplexType):
+            if isinstance(primitive_type, PrimitiveComplexType):
                 self.add_import(c_imports['complex'])
                 return f'{self.find_in_dtype_registry(dtype.element_type)} complex'
             elif isinstance(primitive_type, PrimitiveIntegerType):
@@ -1600,7 +1600,7 @@ class CCodePrinter(CodePrinter):
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
         args = []
         for arg in expr.args:
-            if arg.dtype.primitive_type is PyccelComplexType():
+            if arg.dtype.primitive_type is PrimitiveComplexType():
                 self.add_import(c_imports['complex'])
                 try:
                     func_name = numpy_ufunc_to_c_complex[type_name]
@@ -1643,7 +1643,7 @@ class CCodePrinter(CodePrinter):
             func = 'isign'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             func = 'fsign'
-        elif isinstance(primitive_type, PyccelComplexType):
+        elif isinstance(primitive_type, PrimitiveComplexType):
             func = 'csign'
 
         return f'{func}({self._print(expr.args[0])})'
@@ -1705,11 +1705,11 @@ class CCodePrinter(CodePrinter):
         if func_name.startswith("pyc"):
             self.add_import(c_imports['pyc_math_c'])
         else:
-            if expr.dtype.primitive_type is PyccelComplexType():
+            if expr.dtype.primitive_type is PrimitiveComplexType():
                 self.add_import(c_imports['complex'])
             else:
                 self.add_import(c_imports['math'])
-        if expr.dtype.primitive_type is PyccelComplexType():
+        if expr.dtype.primitive_type is PrimitiveComplexType():
             args = [self._print(a) for a in expr.args]
         else:
             args = []
@@ -1808,7 +1808,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_sum_int{prec * 8}({name})'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             return f'numpy_sum_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PyccelComplexType):
+        elif isinstance(primitive_type, PrimitiveComplexType):
             return f'numpy_sum_complex{prec * 16}({name})'
         elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_sum_bool({name})'
@@ -1826,7 +1826,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amax_int{prec * 8}({name})'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             return f'numpy_amax_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PyccelComplexType):
+        elif isinstance(primitive_type, PrimitiveComplexType):
             return f'numpy_amax_complex{prec * 16}({name})'
         elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_amax_bool({name})'
@@ -1843,7 +1843,7 @@ class CCodePrinter(CodePrinter):
             return f'numpy_amin_int{prec * 8}({name})'
         elif isinstance(primitive_type, PrimitiveFloatingPointType):
             return f'numpy_amin_float{prec * 8}({name})'
-        elif isinstance(primitive_type, PyccelComplexType):
+        elif isinstance(primitive_type, PrimitiveComplexType):
             return f'numpy_amin_complex{prec * 16}({name})'
         elif isinstance(primitive_type, PrimitiveBooleanType):
             return f'numpy_amin_bool({name})'

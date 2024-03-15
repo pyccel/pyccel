@@ -10,7 +10,7 @@ from .basic     import TypedAstNode, PyccelAstNode
 from .datatypes import GenericType, PythonNativeInt, PythonNativeBool
 from .datatypes import PythonNativeFloat, StringType, PythonNativeComplex
 from .datatypes import PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveBooleanType
-from .datatypes import PyccelComplexType, FixedSizeNumericType
+from .datatypes import PrimitiveComplexType, FixedSizeNumericType
 
 __all__ = (
     'convert_to_literal',
@@ -479,7 +479,7 @@ def convert_to_literal(value, dtype = None):
             literal_val = PyccelUnarySub(LiteralInteger(-value, dtype))
     elif isinstance(primitive_type, PrimitiveFloatingPointType):
         literal_val = LiteralFloat(value, dtype)
-    elif isinstance(primitive_type, PyccelComplexType):
+    elif isinstance(primitive_type, PrimitiveComplexType):
         literal_val = LiteralComplex(value.real, value.imag, dtype)
     elif isinstance(primitive_type, PrimitiveBooleanType):
         if value:

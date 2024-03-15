@@ -21,7 +21,7 @@ from .builtins       import (PythonInt, PythonBool, PythonFloat, PythonTuple,
 from .core           import Module, Import, PyccelFunctionDef, FunctionCall
 
 from .datatypes      import PythonNativeBool, PythonNativeInt, PythonNativeFloat
-from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
+from .datatypes      import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from .datatypes      import HomogeneousTupleType, FixedSizeNumericType, GenericType, HomogeneousContainerType
 from .datatypes      import InhomogeneousTupleType, ContainerType
 
@@ -412,7 +412,7 @@ class NumpyImag(PythonImag):
     name = 'imag'
     def __new__(cls, arg):
 
-        if not isinstance(arg.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             dtype = PythonNativeInt() if isinstance(arg.dtype, PythonNativeBool) else arg.dtype
             if arg.rank == 0:
                 return convert_to_literal(0, dtype)
@@ -1621,7 +1621,7 @@ class NumpyNorm(PyccelInternalFunction):
     def __init__(self, arg, axis=None):
         super().__init__(arg, axis)
         arg_dtype = arg.dtype
-        if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PyccelComplexType)):
+        if not isinstance(arg_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
             arg = NumpyFloat64(arg)
             dtype = NumpyFloat64Type()
         else:
@@ -1729,7 +1729,7 @@ class NumpyUfuncUnary(NumpyUfuncBase):
             The dtype of the result of the function.
         """
         x_dtype = x.dtype
-        if not isinstance(x_dtype.primitive_type, (PrimitiveFloatingPointType, PyccelComplexType)):
+        if not isinstance(x_dtype.primitive_type, (PrimitiveFloatingPointType, PrimitiveComplexType)):
             return NumpyFloat64Type()
         else:
             return numpy_precision_map[(x_dtype.primitive_type, x_dtype.precision)]
@@ -1960,7 +1960,7 @@ class NumpyAbs(NumpyUfuncUnary):
             The dtype of the result of the function.
         """
         x_dtype = x.dtype
-        if isinstance(x_dtype.primitive_type, PyccelComplexType):
+        if isinstance(x_dtype.primitive_type, PrimitiveComplexType):
             dtype = x_dtype.element_type
         else:
             dtype = x_dtype

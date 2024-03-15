@@ -16,7 +16,7 @@ from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PythonNativeInt, PythonNativeBool, PythonNativeFloat
-from .datatypes import GenericType, PythonNativeComplex, PyccelComplexType
+from .datatypes import GenericType, PythonNativeComplex, PrimitiveComplexType
 from .datatypes import HomogeneousTupleType, InhomogeneousTupleType
 from .datatypes import HomogeneousListType, HomogeneousContainerType
 from .datatypes import FixedSizeNumericType, HomogeneousSetType
@@ -110,7 +110,7 @@ class PythonReal(PythonComplexProperty):
     def __new__(cls, arg):
         if isinstance(arg.dtype, PythonNativeBool):
             return PythonInt(arg)
-        elif not isinstance(arg.dtype.primitive_type, PyccelComplexType):
+        elif not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             return arg
         else:
             return super().__new__(cls)
@@ -137,7 +137,7 @@ class PythonImag(PythonComplexProperty):
     __slots__ = ()
     name = 'imag'
     def __new__(cls, arg):
-        if not isinstance(arg.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             return convert_to_literal(0, dtype = arg.dtype)
         else:
             return super().__new__(cls)
@@ -174,7 +174,7 @@ class PythonConjugate(PyccelInternalFunction):
     def __new__(cls, arg):
         if arg.dtype is PythonNativeBool():
             return PythonInt(arg)
-        elif not isinstance(arg.dtype.primitive_type, PyccelComplexType):
+        elif not isinstance(arg.dtype.primitive_type, PrimitiveComplexType):
             return arg
         else:
             return super().__new__(cls)
@@ -285,13 +285,13 @@ class PythonComplex(PyccelInternalFunction):
         # Split arguments depending on their type to ensure that the arguments are
         # either a complex and LiteralFloat(0) or 2 floats
 
-        if isinstance(arg0.dtype.primitive_type, PyccelComplexType) and isinstance(arg1.dtype.primitive_type, PyccelComplexType):
+        if isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and isinstance(arg1.dtype.primitive_type, PrimitiveComplexType):
             # both args are complex
             return PyccelAdd(arg0, PyccelMul(arg1, LiteralImaginaryUnit()))
         return super().__new__(cls)
 
     def __init__(self, arg0, arg1 = LiteralFloat(0)):
-        self._is_cast = isinstance(arg0.dtype.primitive_type, PyccelComplexType) and \
+        self._is_cast = isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and \
                         isinstance(arg1, Literal) and arg1.python_value == 0
 
         if self._is_cast:
@@ -302,12 +302,12 @@ class PythonComplex(PyccelInternalFunction):
         else:
             self._internal_var = None
 
-            if isinstance(arg0.dtype.primitive_type, PyccelComplexType) and \
+            if isinstance(arg0.dtype.primitive_type, PrimitiveComplexType) and \
                     not (isinstance(arg1, Literal) and arg1.python_value == 0):
                 # first arg is complex. Second arg is non-0
                 self._real_part = self._real_cast(arg0)
                 self._imag_part = PyccelAdd(self._imag_cast(arg0), arg1)
-            elif isinstance(arg1.dtype.primitive_type, PyccelComplexType):
+            elif isinstance(arg1.dtype.primitive_type, PrimitiveComplexType):
                 if isinstance(arg0, Literal) and arg0.python_value == 0:
                     # second arg is complex. First arg is 0
                     self._real_part = PyccelUnarySub(self._imag_cast(arg1))

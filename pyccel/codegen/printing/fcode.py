@@ -33,7 +33,7 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
 from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
 from pyccel.ast.datatypes import PythonNativeInt
 from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
@@ -184,7 +184,7 @@ iso_c_binding = {
         4  : 'C_FLOAT',
         8  : 'C_DOUBLE',
         16 : 'C_LONG_DOUBLE'}, #not supported yet
-    PyccelComplexType() : {
+    PrimitiveComplexType() : {
         4  : 'C_FLOAT_COMPLEX',
         8  : 'C_DOUBLE_COMPLEX',
         16 : 'C_LONG_DOUBLE_COMPLEX'}, #not supported yet
@@ -858,7 +858,7 @@ class FCodePrinter(CodePrinter):
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
         elif isinstance(var_type, FixedSizeNumericType):
-            if isinstance(var_type.primitive_type, PyccelComplexType):
+            if isinstance(var_type.primitive_type, PrimitiveComplexType):
                 float_format, real_arg = self._get_print_format_and_arg(NumpyReal(var))
                 imag_arg = self._print(NumpyImag(var))
                 arg_format = f'"(",{float_format}," + ",{float_format},"j)"'
@@ -1043,7 +1043,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PyccelComplexType) else expr.arg
+        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
@@ -1365,7 +1365,7 @@ class FCodePrinter(CodePrinter):
         else:
             arg_code = self._print(array_arg)
 
-        if isinstance(array_arg.dtype.primitive_type, PyccelComplexType):
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
         else:
@@ -1378,7 +1378,7 @@ class FCodePrinter(CodePrinter):
         else:
             arg_code = self._print(array_arg)
 
-        if isinstance(array_arg.dtype.primitive_type, PyccelComplexType):
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
         else:
@@ -1833,7 +1833,7 @@ class FCodePrinter(CodePrinter):
     def _print_PrimitiveFloatingPointType(self, expr):
         return 'real'
 
-    def _print_PyccelComplexType(self, expr):
+    def _print_PrimitiveComplexType(self, expr):
         return 'complex'
 
     def _print_StringType(self, expr):
@@ -2745,7 +2745,7 @@ class FCodePrinter(CodePrinter):
         """
         arg = expr.args[0]
         arg_code = self._print(arg)
-        if isinstance(expr.dtype.primitive_type, PyccelComplexType):
+        if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
             func = PyccelFunctionDef('numpy_sign', NumpySign)
             self._additional_imports.add(Import('numpy_f90', AsName(func, 'numpy_sign')))
             return f'numpy_sign({arg_code})'

@@ -10,7 +10,7 @@ import cmath
 from pyccel.ast.builtins  import PythonReal, PythonImag
 from pyccel.ast.core      import PyccelFunctionDef, Module
 from pyccel.ast.datatypes import PythonNativeBool, PythonNativeFloat, PythonNativeComplex
-from pyccel.ast.datatypes import PyccelComplexType
+from pyccel.ast.datatypes import PrimitiveComplexType
 from pyccel.ast.internals import PyccelInternalFunction
 from pyccel.ast.literals  import LiteralInteger
 from pyccel.ast.operators import PyccelAnd, PyccelOr
@@ -354,7 +354,7 @@ class CmathIsfinite(CmathFunctionBool):
     __slots__ = ()
     name = 'isfinite'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsfinite(z)
         else:
             return PyccelAnd(MathIsfinite(PythonImag(z)), MathIsfinite(PythonReal(z)))
@@ -375,7 +375,7 @@ class CmathIsinf   (CmathFunctionBool):
     __slots__ = ()
     name = 'isinf'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsinf(z)
         else:
             return PyccelOr(MathIsinf(PythonImag(z)), MathIsinf(PythonReal(z)))
@@ -396,7 +396,7 @@ class CmathIsnan   (CmathFunctionBool):
     __slots__ = ()
     name = 'isnan'
     def __new__(cls, z):
-        if not isinstance(z.dtype.primitive_type, PyccelComplexType):
+        if not isinstance(z.dtype.primitive_type, PrimitiveComplexType):
             return MathIsnan(z)
         else:
             return PyccelOr(MathIsnan(PythonImag(z)), MathIsnan(PythonReal(z)))
