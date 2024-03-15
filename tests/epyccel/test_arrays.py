@@ -5343,7 +5343,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
     fl32_1 = np.float32(fl32_1)
     fl32_2 = np.float32(fl32_2)
     fl32_3 = np.float32(fl32_3)
- 
+
     fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
     fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
     fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
