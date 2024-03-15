@@ -13,6 +13,7 @@ from functools import lru_cache
 import numpy
 
 from pyccel.utilities.metaclasses import Singleton, ArgumentSingleton
+from .basic import iterable
 
 __all__ = (
         # ------------ Super classes ------------
@@ -825,7 +826,7 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
     name : str
         The name of the new class.
 
-    argnames : list[str]
+    argnames : iterable[str]
         A list of all the arguments for the new class.
         This can be used to create classes which are parametrised by a type.
 
@@ -850,7 +851,9 @@ def DataTypeFactory(name, argnames = (), *, BaseClass=CustomDataType):
 
         BaseClass.__init__(self)
 
-    assert isinstance(argnames, (list, tuple))
+    assert iterable(argnames)
+    assert all(isinstance(a, str) for a in argnames)
+
     def class_name_func(self):
         """
         The name function for the new CustomDataType class.
