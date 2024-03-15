@@ -496,12 +496,12 @@ class PyccelBinaryOperator(PyccelOperator):
     @staticmethod
     def _calculate_shape_rank(*args):
         """
-        Calucate the shape and rank.
+        Calculate the shape and rank.
 
         Strings must be scalars.
 
         For numeric types the rank and shape is determined according
-        to numpy broadcasting rules where possible.
+        to NumPy broadcasting rules where possible.
 
         Parameters
         ----------
