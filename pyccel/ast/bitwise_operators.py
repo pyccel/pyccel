@@ -98,7 +98,7 @@ class PyccelBitOperator(PyccelOperator):
     def _set_order(self):
         pass
 
-    def _calculate_type(self, *args):
+    def _calculate_type(self, arg1, arg2):
         """
         Get the type of the result of the function.
 
@@ -111,8 +111,10 @@ class PyccelBitOperator(PyccelOperator):
 
         Parameters
         ----------
-        *args : tuple of TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
@@ -120,13 +122,13 @@ class PyccelBitOperator(PyccelOperator):
             The  datatype of the result of the operation.
         """
         try:
-            class_type = sum((a.class_type for a in args), start=GenericType())
-        except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
+            class_type = arg1.class_type + arg2.class_type
+        except NotImplementedError as err:
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err
 
         assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
-        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
+        self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
 
         return class_type
 
@@ -137,6 +139,9 @@ class PyccelBitOperator(PyccelOperator):
         Set the shape and rank of the resulting object. For a PyccelBitOperator,
         the shape and rank are class attributes so nothing needs to be done.
         """
+
+    def __repr__(self):
+        return f'{self.args[0]} {self.op} {self.args[1]}'
 
 #==============================================================================
 
@@ -159,9 +164,7 @@ class PyccelRShift(PyccelBitOperator):
     """
     __slots__ = ()
     _precedence = 11
-
-    def __repr__(self):
-        return f'{self.args[0]} >> {self.args[1]}'
+    op = ">>"
 
 #==============================================================================
 
@@ -184,9 +187,7 @@ class PyccelLShift(PyccelBitOperator):
     """
     __slots__ = ()
     _precedence = 11
-
-    def __repr__(self):
-        return f'{self.args[0]} << {self.args[1]}'
+    op = "<<"
 
 #==============================================================================
 
@@ -205,7 +206,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-    def _calculate_type(self, *args):
+    def _calculate_type(self, arg1, arg2):
         """
         Get the type of the result of the function.
 
@@ -218,8 +219,10 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
 
         Parameters
         ----------
-        *args : tuple of TypedAstNode
-            The arguments passed to the operator.
+        arg1 : TypedAstNode
+            The first argument passed to the operator.
+        arg2 : TypedAstNode
+            The second argument passed to the operator.
 
         Returns
         -------
@@ -227,15 +230,15 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
             The  datatype of the result of the operation.
         """
         try:
-            class_type = functools.reduce(lambda a, b: a & b, (a.class_type for a in args))
-        except NotImplementedError:
-            raise TypeError(f'Cannot determine the type of {args}') #pylint: disable=raise-missing-from
+            class_type = arg1.class_type & arg2.class_type
+        except NotImplementedError as err:
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') as err
 
         primitive_type = class_type.primitive_type
         assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))
 
         if isinstance(primitive_type, PrimitiveIntegerType):
-            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in args]
+            self._args = [PythonInt(a) if a.dtype is PythonNativeBool() else a for a in (arg1, arg2)]
 
         return class_type
 
@@ -260,9 +263,7 @@ class PyccelBitXor(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 9
-
-    def __repr__(self):
-        return f'{self.args[0]} ^ {self.args[1]}'
+    op = "^"
 
 #==============================================================================
 
@@ -285,9 +286,7 @@ class PyccelBitOr(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 8
-
-    def __repr__(self):
-        return f'{self.args[0]} | {self.args[1]}'
+    op = "|"
 
 #==============================================================================
 
@@ -310,6 +309,4 @@ class PyccelBitAnd(PyccelBitComparisonOperator):
     """
     __slots__ = ()
     _precedence = 10
-
-    def __repr__(self):
-        return f'{self.args[0]} & {self.args[1]}'
+    op = "&"

@@ -311,13 +311,20 @@ class PyccelUnaryOperator(PyccelOperator):
         return arg.class_type
 
     @staticmethod
-    def _calculate_shape_rank(*args):
-        """ Sets the shape and rank
-        They are chosen to match the argument
+    def _calculate_shape_rank(arg):
         """
-        a = args[0]
-        rank = a.rank
-        shape = a.shape
+        Calculate the shape and rank.
+
+        Calculate the shape and rank.
+        They are chosen to match the argument
+
+        Parameters
+        ----------
+        arg : TypedAstNode
+            The argument passed to the operator.
+        """
+        rank = arg.rank
+        shape = arg.shape
         return shape, rank
 
 #==============================================================================
@@ -399,10 +406,17 @@ class PyccelNot(PyccelUnaryOperator):
         """
 
     @staticmethod
-    def _calculate_shape_rank(*args):
-        """ Sets the shape and rank
-        They are chosen to match the argument unless the class has
-        a _shape or _rank member
+    def _calculate_shape_rank(arg):
+        """
+        Calculate the shape and rank.
+
+        Calculate the shape and rank.
+        They are chosen to match the argument
+
+        Parameters
+        ----------
+        arg : TypedAstNode
+            The argument passed to the operator.
         """
         rank = 0
         shape = None
