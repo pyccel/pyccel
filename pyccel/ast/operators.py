@@ -927,8 +927,8 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
     __slots__ = ()
     _precedence = 7
 
-    @staticmethod
-    def _calculate_type(arg1, arg2):
+    @classmethod
+    def _calculate_type(cls, arg1, arg2):
         """
         Calculate the dtype and class type of the result.
 
@@ -956,12 +956,14 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         if len(possible_class_types) == 0:
             class_type = dtype
         elif len(possible_class_types) == 1:
-            cls = type(possible_class_types.pop())
-            class_type = cls(dtype)
+            class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
             raise NotImplementedError("Can't deduce type for comparison operator"
-                                      " with multiple containers {', '.join(args)}")
+                                      f" with multiple containers ({arg1} {cls.op} {arg2})")
         return class_type
+
+    def __repr__(self):
+        return f'{repr(self.args[0])} {self.op} {repr(self.args[1])}'
 
 #==============================================================================
 
@@ -986,6 +988,7 @@ class PyccelEq(PyccelComparisonOperator):
         possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
+    op = "=="
 
     def __new__(cls, arg1, arg2, simplify = False):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
@@ -995,9 +998,6 @@ class PyccelEq(PyccelComparisonOperator):
 
     def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} == {repr(self.args[1])}'
 
 class PyccelNe(PyccelComparisonOperator):
     """
@@ -1020,6 +1020,7 @@ class PyccelNe(PyccelComparisonOperator):
         possible. False if the arguments should be preserved as they are.
     """
     __slots__ = ()
+    op = "!="
 
     def __new__(cls, arg1, arg2, simplify = False):
         if isinstance(arg1, Nil) or isinstance(arg2, Nil):
@@ -1029,9 +1030,6 @@ class PyccelNe(PyccelComparisonOperator):
 
     def __init__(self, arg1, arg2, simplify = False):
         super().__init__(arg1, arg2)
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} != {repr(self.args[1])}'
 
 class PyccelLt(PyccelComparisonOperator):
     """
@@ -1051,9 +1049,7 @@ class PyccelLt(PyccelComparisonOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} < {repr(self.args[1])}'
+    op = "<"
 
 class PyccelLe(PyccelComparisonOperator):
     """
@@ -1073,9 +1069,7 @@ class PyccelLe(PyccelComparisonOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} <= {repr(self.args[1])}'
+    op = "<="
 
 class PyccelGt(PyccelComparisonOperator):
     """
@@ -1095,9 +1089,7 @@ class PyccelGt(PyccelComparisonOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} > {repr(self.args[1])}'
+    op = ">"
 
 class PyccelGe(PyccelComparisonOperator):
     """
@@ -1117,9 +1109,7 @@ class PyccelGe(PyccelComparisonOperator):
         The second argument passed to the operator.
     """
     __slots__ = ()
-
-    def __repr__(self):
-        return f'{repr(self.args[0])} >= {repr(self.args[1])}'
+    op = ">="
 
 #==============================================================================
 
@@ -1192,7 +1182,7 @@ class PyccelAnd(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return f'{repr(self.args[0])} and {repr(self.args[1])}'
+        return ' and '.join(repr(a) for a in args)
 
 #==============================================================================
 
@@ -1220,7 +1210,7 @@ class PyccelOr(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return f'{repr(self.args[0])} or {repr(self.args[1])}'
+        return ' or '.join(repr(a) for a in args)
 
 #==============================================================================
 
