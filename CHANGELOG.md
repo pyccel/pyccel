@@ -15,6 +15,8 @@ All notable changes to this project will be documented in this file.
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
+-   Stop printing numbers with more decimal digits than their precision.
+-   Allow printing the result of a function returning multiple objects of different types.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
