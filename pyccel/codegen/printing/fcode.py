@@ -842,7 +842,7 @@ class FCodePrinter(CodePrinter):
         arg_format : str
             The format string.
         arg : str
-            The fortran code which represents var.
+            The Fortran code which represents var.
         """
         if var_code is None:
             var_code = self._print(var)
