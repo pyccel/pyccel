@@ -958,8 +958,9 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         elif len(possible_class_types) == 1:
             class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
+            description = f"({arg1} {cls.op} {arg2})" # pylint: disable=no-member
             raise NotImplementedError("Can't deduce type for comparison operator"
-                                      f" with multiple containers ({arg1} {cls.op} {arg2})") # pylint: disable=no-member
+                                      f" with multiple containers {description}")
         return class_type
 
     def __repr__(self):

@@ -230,7 +230,7 @@ class PyccelBitComparisonOperator(PyccelBitOperator):
         try:
             class_type = arg1.class_type & arg2.class_type
         except NotImplementedError as err:
-            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
 
         primitive_type = class_type.primitive_type
         assert isinstance(primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType))
