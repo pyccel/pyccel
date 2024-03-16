@@ -8,11 +8,9 @@ These operators all have a precision as detailed here:
     https://docs.python.org/3/reference/expressions.html#operator-precedence
 They also have specific rules to determine the datatype, rank, shape
 """
-import functools
-
 from .builtins     import PythonInt
 from .datatypes    import PrimitiveBooleanType, PrimitiveIntegerType
-from .datatypes    import PythonNativeBool, PythonNativeInt, GenericType
+from .datatypes    import PythonNativeBool, PythonNativeInt
 from .operators    import PyccelUnaryOperator, PyccelOperator
 
 __all__ = (
