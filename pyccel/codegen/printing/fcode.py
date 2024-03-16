@@ -857,6 +857,7 @@ class FCodePrinter(CodePrinter):
             args_and_formats = [self._get_print_format_and_arg(v.var, c) for v,c in zip(var.funcdef.results, var_elem_code)]
             formats = ',", ",'.join(af[0] for af in args_and_formats)
             arg_format = f'"(",{formats},")"'
+            arg = ', '.join(af[1] for af in args_and_formats)
         elif isinstance(var_type, FixedSizeNumericType):
             if isinstance(var_type.primitive_type, PrimitiveComplexType):
                 float_format, real_arg = self._get_print_format_and_arg(NumpyReal(var))
