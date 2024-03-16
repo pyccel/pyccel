@@ -285,8 +285,8 @@ class CCodePrinter(CodePrinter):
                       NumpyInt8Type()       : 'nd_int8',
                       PythonNativeBool()    : 'nd_bool'}
 
-    type_to_format = {(PrimitiveFloatingPointType(),8) : '%.12lf',
-                      (PrimitiveFloatingPointType(),4) : '%.12f',
+    type_to_format = {(PrimitiveFloatingPointType(),8) : '%.15lf',
+                      (PrimitiveFloatingPointType(),4) : '%.6f',
                       (PrimitiveIntegerType(),4)       : '%d',
                       (PrimitiveIntegerType(),8)       : LiteralString("%") + CMacro('PRId64'),
                       (PrimitiveIntegerType(),2)       : LiteralString("%") + CMacro('PRId16'),
