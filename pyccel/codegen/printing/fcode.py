@@ -864,8 +864,7 @@ class FCodePrinter(CodePrinter):
                 arg_format = f'"(",{float_format}," + ",{float_format},"j)"'
                 arg = f'{real_arg}, {imag_arg}'
             elif isinstance(var_type.primitive_type, PrimitiveFloatingPointType):
-                resolution = np.finfo(pyccel_type_to_original_type[var_type]).resolution
-                dps = int(-np.log10(resolution))
+                dps = np.finfo(pyccel_type_to_original_type[var_type]).precision
                 arg_format = f'F0.{dps}'
             elif isinstance(var_type.primitive_type, PrimitiveIntegerType):
                 arg_format = 'I0'
