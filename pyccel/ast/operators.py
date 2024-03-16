@@ -959,11 +959,11 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
             class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
             raise NotImplementedError("Can't deduce type for comparison operator"
-                                      f" with multiple containers ({arg1} {cls.op} {arg2})")
+                                      f" with multiple containers ({arg1} {cls.op} {arg2})") # pylint: disable=no-member
         return class_type
 
     def __repr__(self):
-        return f'{repr(self.args[0])} {self.op} {repr(self.args[1])}'
+        return f'{repr(self.args[0])} {self.op} {repr(self.args[1])}' # pylint: disable=no-member
 
 #==============================================================================
 
@@ -1182,7 +1182,7 @@ class PyccelAnd(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return ' and '.join(repr(a) for a in args)
+        return ' and '.join(repr(a) for a in self.args)
 
 #==============================================================================
 
@@ -1210,7 +1210,7 @@ class PyccelOr(PyccelBooleanOperator):
         return args
 
     def __repr__(self):
-        return ' or '.join(repr(a) for a in args)
+        return ' or '.join(repr(a) for a in self.args)
 
 #==============================================================================
 

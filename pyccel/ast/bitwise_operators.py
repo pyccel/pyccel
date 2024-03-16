@@ -122,7 +122,7 @@ class PyccelBitOperator(PyccelOperator):
         try:
             class_type = arg1.class_type + arg2.class_type
         except NotImplementedError as err:
-            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err
+            raise TypeError(f'Cannot determine the type of {arg1} {self.op} {arg2}') from err # pylint: disable=no-member
 
         assert isinstance(getattr(class_type, 'primitive_type', None), (PrimitiveBooleanType, PrimitiveIntegerType))
 
@@ -139,7 +139,7 @@ class PyccelBitOperator(PyccelOperator):
         """
 
     def __repr__(self):
-        return f'{self.args[0]} {self.op} {self.args[1]}'
+        return f'{self.args[0]} {self.op} {self.args[1]}' # pylint: disable=no-member
 
 #==============================================================================
 
