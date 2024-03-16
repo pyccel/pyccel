@@ -2614,7 +2614,7 @@ class SemanticParser(BasicParser):
         if isinstance(visited_dtype, PyccelFunctionDef):
             dtype_cls = visited_dtype.cls_name
             class_type = dtype_cls.static_type()
-            return UnionTypeAnnotation(VariableTypeAnnotation(class_type, 0, None))
+            return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
             if visited_dtype.rank > 1:
                 visited_dtype.order = order or visited_dtype.order or 'C'
@@ -2624,11 +2624,9 @@ class SemanticParser(BasicParser):
         elif isinstance(visited_dtype, ClassDef):
             # TODO: Improve when #1676 is merged
             dtype = self.get_class_construct(visited_dtype.name)
-            rank = 0
-            order = None
-            return UnionTypeAnnotation(VariableTypeAnnotation(dtype, rank, order))
+            return UnionTypeAnnotation(VariableTypeAnnotation(dtype))
         elif isinstance(visited_dtype, PyccelType):
-            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype, 0))
+            return UnionTypeAnnotation(VariableTypeAnnotation(visited_dtype))
         else:
             raise errors.report(PYCCEL_RESTRICTION_TODO + ' Could not deduce type information',
                     severity='fatal', symbol=expr)
