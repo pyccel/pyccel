@@ -322,6 +322,13 @@ class PyccelUnaryOperator(PyccelOperator):
         ----------
         arg : TypedAstNode
             The argument passed to the operator.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the resulting object.
+        rank : int
+            The rank of the resulting object.
         """
         rank = arg.rank
         shape = arg.shape
@@ -417,6 +424,13 @@ class PyccelNot(PyccelUnaryOperator):
         ----------
         arg : TypedAstNode
             The argument passed to the operator.
+
+        Returns
+        -------
+        shape : tuple[TypedAstNode]
+            The shape of the resulting object.
+        rank : int
+            The rank of the resulting object.
         """
         rank = 0
         shape = None
