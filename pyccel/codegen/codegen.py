@@ -11,7 +11,6 @@ from pyccel.codegen.printing.ccode  import CCodePrinter
 from pyccel.codegen.printing.pycode import PythonCodePrinter
 
 from pyccel.ast.core      import FunctionDef, Interface, ModuleHeader
-from pyccel.errors.errors import Errors
 from pyccel.utilities.stage import PyccelStage
 
 _extension_registry = {'fortran': 'f90', 'c':'c',  'python':'py'}
@@ -24,28 +23,30 @@ printer_registry    = {
 
 pyccel_stage = PyccelStage()
 
-class Codegen(object):
+class Codegen:
+    """
+    Class which handles the generation of code.
 
-    """Abstract class for code generator."""
+    The class which handles the generation of code. This is done by creating an appropriate
+    class inheriting from `CodePrinter` and using it to create strings describing the code
+    that should be printed. This class then takes care of creating the necessary files.
 
-    def __init__(self, parser, name):
-        """Constructor for Codegen.
-
-        parser: pyccel parser
-
-
-        name: str
-            name of the generated module or program.
-        """
+    Parameters
+    ----------
+    parser : SemanticParser
+        The Pyccel Semantic parser node.
+    name : str
+        Name of the generated module or program.
+    language : str
+        The language which the printer should print to.
+    """
+    def __init__(self, parser, name, language):
         pyccel_stage.set_stage('codegen')
         self._parser   = parser
         self._ast      = parser.ast
         self._name     = name
         self._printer  = None
-        self._language = None
-
-        #TODO verify module name != function name
-        #it generates a compilation error
+        self._language = language
 
         self._stmts = {}
         _structs = [
@@ -63,10 +64,21 @@ class Codegen(object):
         self._collect_statements()
         self._is_program = self.ast.program is not None
 
+        # instantiate code_printer
+        try:
+            CodePrinterSubclass = printer_registry[language]
+        except KeyError as err:
+            raise ValueError(f'{language} language is not available') from err
+
+        self._printer = CodePrinterSubclass(self.parser.filename)
 
     @property
     def parser(self):
         return self._parser
+
+    @property
+    def printer(self):
+        return self._printer
 
     @property
     def name(self):
@@ -134,31 +146,6 @@ class Codegen(object):
 
         return self._language
 
-    def set_printer(self, language):
-        """
-        Set the current codeprinter instance.
-
-        Set the current codeprinter instance to a printer which
-        prints in the requested language.
-
-        Parameters
-        ----------
-        language : str
-            The language which the printer should print to.
-        """
-        # Set language
-        self._language = language
-
-        # instantiate code_printer
-        try:
-            code_printer = printer_registry[language]
-        except KeyError as err:
-            raise ValueError(f'{language} language is not available') from err
-
-        errors = Errors()
-        # set the code printer
-        self._printer = code_printer(self.parser.filename)
-
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
         return self._printer.get_additional_imports()
@@ -205,7 +192,6 @@ class Codegen(object):
         prog_filename : str
             The name of the file where the source code for the program was printed.
         """
-        self.set_printer(language)
         ext = _extension_registry[self._language]
         header_ext = _header_extension_registry[self._language]
 
