@@ -74,6 +74,11 @@ class Codegen:
 
     @property
     def parser(self):
+        """
+        The parser which generated the AST printed by this class.
+
+        The parser which generated the AST printed by this class.
+        """
         return self._parser
 
     @property
