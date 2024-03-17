@@ -187,6 +187,15 @@ class Codegen:
         """
         Export code to a file with the requested name.
 
+        Generate the code in the target language from the AST and print this code
+        to file. Between 1 and 3 files are generated depending on the AST and the
+        target language. A source file is always generated. In languages with
+        header files, a header file is also generated. Finally if the AST includes
+        a program and the target language is not Python a program source file is
+        also generated. The source and header files are named by appending the
+        extension to the requested filename. The program source file is named by
+        additionally prepending 'prog_' to the requested filename.
+
         Parameters
         ----------
         filename : str
