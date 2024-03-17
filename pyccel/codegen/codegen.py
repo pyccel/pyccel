@@ -173,7 +173,7 @@ class Codegen:
         self._stmts['body']       = self.ast
 
 
-    def export(self, filename, language):
+    def export(self, filename):
         """
         Export code to a file with the requested name.
 
@@ -182,8 +182,6 @@ class Codegen:
         filename : str
             The base (i.e. no extensions) of the filename of the file where the
             code should be printed to.
-        language : str
-            The target language for the printing.
 
         Returns
         -------
