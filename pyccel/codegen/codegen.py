@@ -134,21 +134,30 @@ class Codegen(object):
 
         return self._language
 
-    def set_printer(self, **settings):
-        """ Set the current codeprinter instance"""
-        # Get language used (default language used is fortran)
-        language = settings.pop('language', 'fortran')
+    def set_printer(self, language):
+        """
+        Set the current codeprinter instance.
 
+        Set the current codeprinter instance to a printer which
+        prints in the requested language.
+
+        Parameters
+        ----------
+        language : str
+            The language which the printer should print to.
+        """
         # Set language
-        if not language in ['fortran', 'c', 'python']:
-            raise ValueError('{} language is not available'.format(language))
         self._language = language
 
-        # instantiate codePrinter
-        code_printer = printer_registry[language]
+        # instantiate code_printer
+        try:
+            code_printer = printer_registry[language]
+        except KeyError as err:
+            raise ValueError(f'{language} language is not available') from err
+
         errors = Errors()
         # set the code printer
-        self._printer = code_printer(self.parser.filename, **settings)
+        self._printer = code_printer(self.parser.filename)
 
     def get_printer_imports(self):
         """return the imports of the current codeprinter"""
@@ -176,22 +185,32 @@ class Codegen(object):
         self._stmts['interfaces'] = interfaces
         self._stmts['body']       = self.ast
 
-    def doprint(self, **settings):
-        """Prints the code in the target language."""
-        if not self._printer:
-            self.set_printer(**settings)
-        return self._printer.doprint(self.ast)
 
+    def export(self, filename, language):
+        """
+        Export code to a file with the requested name.
 
-    def export(self, filename=None, **settings):
-        """Export code in filename"""
-        self.set_printer(**settings)
+        Parameters
+        ----------
+        filename : str
+            The base (i.e. no extensions) of the filename of the file where the
+            code should be printed to.
+        language : str
+            The target language for the printing.
+
+        Returns
+        -------
+        filename : str
+            The name of the file where the source code was printed.
+        prog_filename : str
+            The name of the file where the source code for the program was printed.
+        """
+        self.set_printer(language)
         ext = _extension_registry[self._language]
         header_ext = _header_extension_registry[self._language]
 
-        if filename is None: filename = self.name
-        header_filename = '{name}.{ext}'.format(name=filename, ext=header_ext)
-        filename = '{name}.{ext}'.format(name=filename, ext=ext)
+        header_filename = f'{filename}.{header_ext}'
+        filename = f'{filename}.{ext}'
 
         # print module header
         if header_ext is not None:
