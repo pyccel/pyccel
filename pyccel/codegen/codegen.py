@@ -78,6 +78,11 @@ class Codegen:
 
     @property
     def printer(self):
+        """
+        The printer which is used to generate code.
+
+        The printer which is used by this class to generate code in the target language.
+        """
         return self._printer
 
     @property
