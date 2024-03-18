@@ -1764,13 +1764,13 @@ def unpack_array(arr : 'T'):
     return x, y, z
 
 def unpack_array_of_known_size():
-    from numpy import zeros
-    arr = zeros(3, dtype='float64')
+    from numpy import array
+    arr = array([1,2,3], dtype='float64')
     x, y, z = arr[:]
     return x, y, z
 
 def unpack_array_2D_of_known_size():
-    from numpy import zeros
-    arr = zeros((3,4), dtype='float64')
+    from numpy import array
+    arr = array([[1,2,3], [4,5,6], [7,8,9]], dtype='float64')
     x, y, z = arr[:]
     return x[0], y[1], z[2]

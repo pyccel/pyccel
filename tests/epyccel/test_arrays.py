@@ -3984,27 +3984,27 @@ def test_unpacking(language):
     f1 = arrays.unpack_array
     f2 = epyccel(f1, language = language)
 
-    arr = np.ones(3, dtype=int)
+    arr = np.arange(3, dtype=int)
     assert f1(arr) == f2(arr)
 
-    arr = np.ones((3,4), dtype=int)
+    arr = np.arange(12, dtype=int).reshape((3,4))
     x1, y1, z1 = f1(arr)
     x2, y2, z2 = f1(arr)
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
 
-    arr = np.ones((3,4,2), dtype=int)
+    arr = np.arange(24, dtype=int).reshape((3,4,2))
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
 
-    arr = np.ones((3,4), dtype=int, order='F')
+    arr = np.arange(12, dtype=int).reshape((3,4), order='F')
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
 
-    arr = np.ones((3,4,2), dtype=int, order='F')
+    arr = np.arange(24, dtype=int).reshape((3,4,2), order='F')
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
