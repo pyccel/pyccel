@@ -516,6 +516,18 @@ class CWrapperCodePrinter(CCodePrinter):
         else:
             return CCodePrinter._print_IndexedElement(self, expr)
 
+    def _print_AliasAssign(self, expr):
+        lhs_var = expr.lhs
+        rhs_var = expr.rhs
+
+        lhs_address = ObjectAddress(lhs_var)
+        rhs_address = ObjectAddress(rhs_var)
+
+        lhs = self._print(lhs_address)
+        rhs = self._print(rhs_address)
+
+        return '{} = {};\n'.format(lhs, rhs)
+
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
 
