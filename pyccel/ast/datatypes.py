@@ -754,11 +754,14 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         """
         The datatype of the object.
 
-        The datatype of the object.
+        The datatype of the object. For an inhomogeneous tuple the datatype is the type
+        of the tuple unless the tuple is comprised of containers which are all based on
+        compatible data types. In this case one of the underlying types is returned.
         """
         possible_types = set(t.datatype for t in self._element_types)
-        if len(possible_types) == 1:
-            return possible_types.pop()
+        dtype = possible_types.pop()
+        if all(d == dtype for d in possible_types):
+            return dtype
         else:
             return self
 
