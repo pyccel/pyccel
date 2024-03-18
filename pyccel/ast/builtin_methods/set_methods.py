@@ -9,7 +9,7 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric
+from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
@@ -63,20 +63,15 @@ class SetAdd(SetMethod) :
         The element that needs to be added to a set.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            set_variable.dtype is not NativeGeneric() and
-            set_variable.dtype == new_elem.dtype and
-            set_variable.precision == new_elem.precision and
+            set_variable.class_type.element_type == new_elem.class_type and
             set_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
@@ -97,12 +92,10 @@ class SetClear(SetMethod):
         The set on which the method will operate.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, set_variable):
@@ -121,14 +114,12 @@ class SetCopy(SetMethod):
     set_variable : TypedAstNode
         The set on which the method will operate.
     """
-    __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
+    __slots__ = ("_shape", "_order", "_rank", "_class_type",)
     name = 'copy'
 
     def __init__(self, set_variable):
-        self._dtype = set_variable._dtype
         self._shape = set_variable._shape
         self._order = set_variable._order
         self._rank = set_variable._rank
-        self._precision = set_variable._precision
         self._class_type = set_variable._class_type
         super().__init__(set_variable)

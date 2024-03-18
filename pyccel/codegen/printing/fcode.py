@@ -7,13 +7,13 @@
 www.fortran90.org as much as possible."""
 
 
+import functools
 import string
 import re
-from itertools import chain
 from collections import OrderedDict
+from itertools import chain
 from packaging.version import Version
 
-import functools
 import numpy as np
 
 from pyccel.ast.basic import TypedAstNode
@@ -21,7 +21,7 @@ from pyccel.ast.basic import TypedAstNode
 from pyccel.ast.bind_c import BindCPointer, BindCFunctionDef, BindCFunctionDefArgument, BindCModule, BindCClassDef
 
 from pyccel.ast.builtins import PythonInt, PythonType, PythonPrint, PythonRange
-from pyccel.ast.builtins import PythonTuple
+from pyccel.ast.builtins import PythonTuple, DtypePrecisionToCastFunction
 from pyccel.ast.builtins import PythonBool, PythonAbs
 
 from pyccel.ast.core import FunctionDef
@@ -34,15 +34,13 @@ from pyccel.ast.core import Import, CodeBlock, AsName, EmptyNode
 from pyccel.ast.core import Assign, AliasAssign, Declare, Deallocate
 from pyccel.ast.core import FunctionCall, PyccelFunctionDef
 
-from pyccel.ast.datatypes import NativeSymbol, NativeString, str_dtype
-from pyccel.ast.datatypes import NativeInteger, NativeBool, NativeFloat, NativeComplex
-from pyccel.ast.datatypes import iso_c_binding
-from pyccel.ast.datatypes import iso_c_binding_shortcut_mapping
-from pyccel.ast.datatypes import NativeNumeric
-from pyccel.ast.datatypes import CustomDataType
+from pyccel.ast.datatypes import PrimitiveBooleanType, PrimitiveIntegerType, PrimitiveFloatingPointType, PrimitiveComplexType
+from pyccel.ast.datatypes import SymbolicType, StringType, FixedSizeNumericType
+from pyccel.ast.datatypes import PythonNativeInt
+from pyccel.ast.datatypes import CustomDataType, InhomogeneousTupleType
+from pyccel.ast.datatypes import pyccel_type_to_original_type
 
 from pyccel.ast.internals import Slice, PrecomputedCode, PyccelArrayShapeElement
-from pyccel.ast.internals import get_final_precision
 
 from pyccel.ast.itertoolsext import Product
 
@@ -60,7 +58,6 @@ from pyccel.ast.numpyext import NumpyNewArray
 from pyccel.ast.numpyext import NumpyNonZero
 from pyccel.ast.numpyext import NumpySign
 from pyccel.ast.numpyext import NumpyIsFinite, NumpyIsNan
-from pyccel.ast.numpyext import DtypePrecisionToCastFunction
 
 from pyccel.ast.operators import PyccelAdd, PyccelMul, PyccelMinus, PyccelAnd
 from pyccel.ast.operators import PyccelMod, PyccelNot, PyccelAssociativeParenthesis
@@ -177,13 +174,39 @@ _default_methods = {
     '__del__' : 'free',
 }
 
-type_to_print_format = {
-        ('float'): 'F0.12',
-        ('complex'): '"(",F0.12," + ",F0.12,")"',
-        ('int'): 'I0',
-        ('bool'): 'A',
-        ('str'): 'A',
-        ('tuple'):  '*'
+#==============================================================================
+iso_c_binding = {
+    PrimitiveIntegerType() : {
+        1  : 'C_INT8_T',
+        2  : 'C_INT16_T',
+        4  : 'C_INT32_T',
+        8  : 'C_INT64_T',
+        16 : 'C_INT128_T'}, #not supported yet
+    PrimitiveFloatingPointType() : {
+        4  : 'C_FLOAT',
+        8  : 'C_DOUBLE',
+        16 : 'C_LONG_DOUBLE'}, #not supported yet
+    PrimitiveComplexType() : {
+        4  : 'C_FLOAT_COMPLEX',
+        8  : 'C_DOUBLE_COMPLEX',
+        16 : 'C_LONG_DOUBLE_COMPLEX'}, #not supported yet
+    PrimitiveBooleanType() : {
+        -1 : "C_BOOL"}
+}
+
+iso_c_binding_shortcut_mapping = {
+    'C_INT8_T'              : 'i8',
+    'C_INT16_T'             : 'i16',
+    'C_INT32_T'             : 'i32',
+    'C_INT64_T'             : 'i64',
+    'C_INT128_T'            : 'i128',
+    'C_FLOAT'               : 'f32',
+    'C_DOUBLE'              : 'f64',
+    'C_LONG_DOUBLE'         : 'f128',
+    'C_FLOAT_COMPLEX'       : 'c32',
+    'C_DOUBLE_COMPLEX'      : 'c64',
+    'C_LONG_DOUBLE_COMPLEX' : 'c128',
+    'C_BOOL'                : 'b1'
 }
 
 inc_keyword = (r'do\b', r'if\b',
@@ -295,10 +318,23 @@ class FCodePrinter(CodePrinter):
 
     def print_kind(self, expr):
         """
-        Prints the kind(precision) of a literal value or its shortcut if possible
+        Print the kind(precision) of a literal value or its shortcut if possible.
+
+        Print the kind(precision) of a literal value or its shortcut if possible.
+
+        Parameters
+        ----------
+        expr : TypedAstNode
+            The object whose precision should be investigated.
+
+        Returns
+        -------
+        str
+            The code for the kind parameter.
         """
-        precision = get_final_precision(expr)
-        constant_name = iso_c_binding[self._print(expr.dtype)][precision]
+        dtype = expr.dtype
+        constant_name = iso_c_binding[dtype.primitive_type][dtype.precision]
+
         constant_shortcut = iso_c_binding_shortcut_mapping[constant_name]
         if constant_shortcut not in self.scope.all_used_symbols and constant_name != constant_shortcut:
             self._constantImports.setdefault('ISO_C_Binding', set())\
@@ -705,7 +741,7 @@ class FCodePrinter(CodePrinter):
                     args_format = []
                     args = []
                 loop_scope = self.scope.create_new_loop_scope()
-                for_index = self.scope.get_temporary_variable(NativeInteger(), name='i')
+                for_index = self.scope.get_temporary_variable(PythonNativeInt(), name='i')
                 max_index = PyccelMinus(f.shape[0], LiteralInteger(1), simplify=True)
                 for_range = PythonRange(max_index)
                 print_body = [FunctionCallArgument(f[for_index])]
@@ -784,8 +820,11 @@ class FCodePrinter(CodePrinter):
                 .add(("stdout", "output_unit"))
         return f"write(stdout, '({args_formatting})', advance=\"{advance}\") {args_code}\n"
 
-    def _get_print_format_and_arg(self,var):
-        """ Get the format string and the printable argument for an object.
+    def _get_print_format_and_arg(self, var, var_code = None):
+        """
+        Get the format string and the printable argument for an object.
+
+        Get the format string and the printable argument for an object.
         In other words get arg_format and arg such that var can be printed
         by doing:
 
@@ -794,32 +833,56 @@ class FCodePrinter(CodePrinter):
         Parameters
         ----------
         var : TypedAstNode
-              The object to be printed
+            The object to be printed.
+        var_code : str, optional
+            The code which will print the variable (this is mostly useful when calling
+            this function recursively, e.g. to print an inhomogenoeus tuple of function
+            call results).
 
-        Results
+        Returns
         -------
         arg_format : str
-                     The format string
-        arg        : str
-                     The fortran code which represents var
+            The format string.
+        arg : str
+            The Fortran code which represents var.
         """
-        var_type = var.dtype
-        try:
-            arg_format = type_to_print_format[str(var_type)]
-        except KeyError:
-            errors.report("{} type is not supported currently".format(var_type), severity='fatal')
+        if var_code is None:
+            var_code = self._print(var)
+        arg = var_code
 
-        if var_type is NativeComplex():
-            arg = '{}, {}'.format(self._print(NumpyReal(var)), self._print(NumpyImag(var)))
-        elif var_type is NativeBool():
-            if isinstance(var, LiteralTrue):
-                arg = "'True'"
-            elif isinstance(var, LiteralFalse):
-                arg = "'False'"
+        var_type = var.dtype
+        if isinstance(var.class_type, StringType):
+            arg_format = 'A'
+        elif isinstance(var, FunctionCall) and len(var.funcdef.results)>1 or \
+                isinstance(var.class_type, InhomogeneousTupleType):
+            var_elem_code = var_code[1:-1].split(', ')
+            args_and_formats = [self._get_print_format_and_arg(v.var, c) for v,c in zip(var.funcdef.results, var_elem_code)]
+            formats = ',", ",'.join(af[0] for af in args_and_formats)
+            arg_format = f'"(",{formats},")"'
+            arg = ', '.join(af[1] for af in args_and_formats)
+        elif isinstance(var_type, FixedSizeNumericType):
+            if isinstance(var_type.primitive_type, PrimitiveComplexType):
+                float_format, real_arg = self._get_print_format_and_arg(NumpyReal(var))
+                imag_arg = self._print(NumpyImag(var))
+                arg_format = f'"(",{float_format}," + ",{float_format},"j)"'
+                arg = f'{real_arg}, {imag_arg}'
+            elif isinstance(var_type.primitive_type, PrimitiveFloatingPointType):
+                dps = np.finfo(pyccel_type_to_original_type[var_type]).precision
+                arg_format = f'F0.{dps}'
+            elif isinstance(var_type.primitive_type, PrimitiveIntegerType):
+                arg_format = 'I0'
+            elif isinstance(var_type.primitive_type, PrimitiveBooleanType):
+                arg_format = 'A'
+                if isinstance(var, LiteralTrue):
+                    arg = "'True'"
+                elif isinstance(var, LiteralFalse):
+                    arg = "'False'"
+                else:
+                    arg = f'merge("True ", "False", {var_code})'
             else:
-                arg = 'merge("True ", "False", {})'.format(self._print(var))
+                errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
         else:
-            arg = self._print(var)
+            errors.report(f"Printing {var_type} type is not supported currently", severity='fatal')
 
         return arg_format, arg
 
@@ -946,9 +1009,9 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpySum(self, expr):
         """Fortran print."""
-
         rhs_code = self._print(expr.arg)
-        if isinstance(expr.arg.dtype, NativeBool):
+        dtype = expr.arg.dtype.primitive_type
+        if isinstance(dtype, PrimitiveBooleanType):
             return 'count({0})'.format(rhs_code)
         return 'sum({0})'.format(rhs_code)
 
@@ -964,9 +1027,9 @@ class FCodePrinter(CodePrinter):
         b_code = self._print(expr.b)
 
         if expr.rank == 0:
-            if isinstance(expr.a.dtype, NativeBool):
+            if isinstance(expr.a.dtype.primitive_type, PrimitiveBooleanType):
                 a_code = self._print(PythonInt(expr.a))
-            if isinstance(expr.b.dtype, NativeBool):
+            if isinstance(expr.b.dtype.primitive_type, PrimitiveBooleanType):
                 b_code = self._print(PythonInt(expr.b))
             return 'sum({}*{})'.format(a_code, b_code)
         if expr.a.order and expr.b.order:
@@ -985,7 +1048,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNorm(self, expr):
         """Fortran print."""
-        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype, NativeComplex) else expr.arg
+        arg = PythonAbs(expr.arg) if isinstance(expr.arg.dtype.primitive_type, PrimitiveComplexType) else expr.arg
         if expr.axis:
             axis = expr.axis
             if arg.order != 'F':
@@ -1000,8 +1063,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyLinspace(self, expr):
 
-        if expr.stop.dtype != expr.dtype or expr.precision != expr.stop.precision:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+        if expr.stop.dtype != expr.dtype:
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             st = cast_func(expr.stop)
             v = self._print(st)
         else:
@@ -1031,7 +1094,7 @@ class FCodePrinter(CodePrinter):
             var = expr.ind
         else:
             template = '[(({start} + {index}*{step}), {index} = {zero},{end})]'
-            var = self.scope.get_temporary_variable('int', 'linspace_index') 
+            var = self.scope.get_temporary_variable(PythonNativeInt(), 'linspace_index')
 
         init_value = template.format(
             start = self._print(expr.start),
@@ -1052,10 +1115,10 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpyNonZeroElement(self, expr):
 
-        ind   = self._print(self.scope.get_temporary_variable('int'))
+        ind   = self._print(self.scope.get_temporary_variable(PythonNativeInt()))
         array = expr.array
 
-        if array.dtype is NativeBool():
+        if isinstance(array.dtype.primitive_type, PrimitiveBooleanType):
             mask  = self._print(array)
         else:
             mask  = self._print(NumpyBool(array))
@@ -1072,7 +1135,7 @@ class FCodePrinter(CodePrinter):
         axis  = expr.axis
         array = expr.array
 
-        if array.dtype is NativeBool():
+        if isinstance(array.dtype.primitive_type, PrimitiveBooleanType):
             mask  = self._print(array)
         else:
             mask  = self._print(NumpyBool(array))
@@ -1111,13 +1174,13 @@ class FCodePrinter(CodePrinter):
         value_true  = expr.value_true
         value_false = expr.value_false
         try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
 
-        if value_true.dtype != expr.dtype or value_true.precision != expr.precision:
+        if value_true.dtype != expr.dtype:
             value_true = cast_func(value_true)
-        if value_false.dtype != expr.dtype or value_false.precision != expr.precision:
+        if value_false.dtype != expr.dtype:
             value_false = cast_func(value_false)
 
         condition   = self._print(expr.condition)
@@ -1185,7 +1248,7 @@ class FCodePrinter(CodePrinter):
         start  = self._print(expr.start)
         step   = self._print(expr.step)
         shape  = PyccelMinus(expr.shape[0], LiteralInteger(1), simplify = True)
-        index  = self.scope.get_temporary_variable('int')
+        index  = self.scope.get_temporary_variable(PythonNativeInt())
 
         code = '[({start} + {step} * {index}, {index} = {0}, {shape}, {1})]'
         code = code.format(self._print(LiteralInteger(0)),
@@ -1224,7 +1287,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         value = self._print(expr.arg)
-        if (expr.arg.dtype is NativeBool()):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             code = 'MERGE(1_{0}, 0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
             code  = 'Int({0}, {1})'.format(value, self.print_kind(expr))
@@ -1232,7 +1295,7 @@ class FCodePrinter(CodePrinter):
 
     def _print_PythonFloat(self, expr):
         value = self._print(expr.arg)
-        if (expr.arg.dtype is NativeBool()):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             code = 'MERGE(1.0_{0}, 0.0_{1}, {2})'.format(self.print_kind(expr), self.print_kind(expr),value)
         else:
             code  = 'Real({0}, {1})'.format(value, self.print_kind(expr))
@@ -1244,10 +1307,9 @@ class FCodePrinter(CodePrinter):
 
         # math.floor on integer argument is identity,
         # but we need parentheses around expressions
-        if arg.dtype is NativeInteger():
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             return '({})'.format(arg_code)
 
-        prec = expr.precision
         prec_code = self.print_kind(expr)
         return 'floor({}, kind={})'.format(arg_code, prec_code)
 
@@ -1266,7 +1328,7 @@ class FCodePrinter(CodePrinter):
         return code
 
     def _print_PythonBool(self, expr):
-        if isinstance(expr.arg.dtype, NativeBool):
+        if isinstance(expr.arg.dtype.primitive_type, PrimitiveBooleanType):
             return 'logical({}, kind = {prec})'.format(self._print(expr.arg), prec = self.print_kind(expr))
         else:
             return '({} /= 0)'.format(self._print(expr.arg))
@@ -1279,7 +1341,7 @@ class FCodePrinter(CodePrinter):
         if (not self._additional_code):
             self._additional_code = ''
         var = self.scope.get_temporary_variable(expr.dtype, memory_handling = 'stack',
-                shape = expr.shape, precision = expr.precision,
+                shape = expr.shape,
                 order = expr.order, rank = expr.rank)
 
         self._additional_code = self._additional_code + self._print(Assign(var,expr)) + '\n'
@@ -1305,12 +1367,12 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmax(self, expr):
         array_arg = expr.arg
-        if array_arg.dtype is NativeBool():
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
             arg_code = self._print(NumpyInt32(array_arg))
         else:
             arg_code = self._print(array_arg)
 
-        if array_arg.dtype is NativeComplex():
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amax({array_arg})'
         else:
@@ -1318,12 +1380,12 @@ class FCodePrinter(CodePrinter):
     
     def _print_NumpyAmin(self, expr):
         array_arg = expr.arg
-        if array_arg.dtype is NativeBool():
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveBooleanType):
             arg_code = self._print(NumpyInt32(array_arg))
         else:
             arg_code = self._print(array_arg)
 
-        if array_arg.dtype is NativeComplex():
+        if isinstance(array_arg.dtype.primitive_type, PrimitiveComplexType):
             self._additional_imports.add(Import('pyc_math_f90', Module('pyc_math_f90',(),())))
             return f'amin({array_arg})'
         else:
@@ -1371,7 +1433,7 @@ class FCodePrinter(CodePrinter):
     # ...
     def _print_MacroType(self, expr):
         dtype = self._print(expr.argument.dtype)
-        prec  = expr.argument.precision
+        prec  = expr.argument.dtype.precision
 
         if dtype == 'integer':
             if prec==4:
@@ -1409,7 +1471,7 @@ class FCodePrinter(CodePrinter):
         # ... ignored declarations
         var = expr.variable
         expr_dtype      = var.dtype
-        if isinstance(expr_dtype, NativeSymbol):
+        if isinstance(expr_dtype, SymbolicType):
             return ''
 
         # meta-variables
@@ -1443,25 +1505,21 @@ class FCodePrinter(CodePrinter):
 
         # ... print datatype
         if isinstance(expr_dtype, CustomDataType):
-            name   = expr_dtype.__class__.__name__
-            prefix = expr_dtype.prefix
-            alias  = expr_dtype.alias
+            name   = expr_dtype.name
 
             if var.is_argument:
                 sig = 'class'
             else:
                 sig = 'type'
-
-            if alias is None:
-                name = name.replace(prefix, '')
-            else:
-                name = alias
             dtype = f'{sig}({name})'
+        elif isinstance(expr_dtype, FixedSizeNumericType):
+            dtype = self._print(expr_dtype.primitive_type)
+            dtype += f'({self.print_kind(var)})'
         else:
-            dtype = self._print(expr_dtype)
 
         # ...
-            if isinstance(expr_dtype, NativeString):
+            if isinstance(expr_dtype, StringType):
+                dtype = self._print(expr_dtype)
 
                 if intent_in:
                     dtype = dtype[:9] +'(len =*)'
@@ -1470,7 +1528,7 @@ class FCodePrinter(CodePrinter):
                 dtype = 'type(c_ptr)'
                 self._constantImports.setdefault('ISO_C_Binding', set()).add('c_ptr')
             else:
-                dtype += '({0})'.format(self.print_kind(expr.variable))
+                dtype = self._print(expr_dtype)
 
         code_value = ''
         if expr.value:
@@ -1552,7 +1610,7 @@ class FCodePrinter(CodePrinter):
 #                severity='fatal')
 
         mod_str = ''
-        if expr.module_variable and not is_private and (rank == 0) and expr_dtype in NativeNumeric:
+        if expr.module_variable and not is_private and isinstance(expr.variable.class_type, FixedSizeNumericType):
             mod_str = ', bind(c)'
 
         # Construct declaration
@@ -1671,7 +1729,7 @@ class FCodePrinter(CodePrinter):
             return 'call {0}({1})\n'.format(rhs_code, code_args)
 
         if (isinstance(expr.lhs, Variable) and
-              expr.lhs.dtype == NativeSymbol()):
+              isinstance(expr.lhs.dtype, SymbolicType)):
             return ''
 
         # Right-hand side code
@@ -1773,19 +1831,19 @@ class FCodePrinter(CodePrinter):
 
 #------------------------------------------------------------------------------
 
-    def _print_NativeBool(self, expr):
+    def _print_PrimitiveBooleanType(self, expr):
         return 'logical'
 
-    def _print_NativeInteger(self, expr):
+    def _print_PrimitiveIntegerType(self, expr):
         return 'integer'
 
-    def _print_NativeFloat(self, expr):
+    def _print_PrimitiveFloatingPointType(self, expr):
         return 'real'
 
-    def _print_NativeComplex(self, expr):
+    def _print_PrimitiveComplexType(self, expr):
         return 'complex'
 
-    def _print_NativeString(self, expr):
+    def _print_StringType(self, expr):
         return 'character(len=280)'
         #TODO fix improve later
 
@@ -1819,7 +1877,7 @@ class FCodePrinter(CodePrinter):
         else:
             funcs = [f for f in interface_funcs if f is \
                     expr.point([FunctionCallArgument(a.var.clone('arg_'+str(i))) \
-                        for i,a in enumerate(f.arguments)], use_final_precision = True)]
+                        for i,a in enumerate(f.arguments)])]
 
         if expr.is_argument:
             funcs_sigs = []
@@ -2413,7 +2471,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs_var, Nil):
             return '.not. '+ self._handle_not_none(lhs, lhs_var)
 
-        if (a.dtype is NativeBool() and b.dtype is NativeBool()):
+        if all(isinstance(var.dtype.primitive_type, PrimitiveBooleanType) for var in (a, b)):
             return f'{lhs} .eqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
@@ -2430,7 +2488,7 @@ class FCodePrinter(CodePrinter):
         if isinstance(rhs_var, Nil):
             return self._handle_not_none(lhs, lhs_var)
 
-        if a.dtype is NativeBool() and b.dtype is NativeBool():
+        if all(isinstance(var.dtype.primitive_type, PrimitiveBooleanType) for var in (a, b)):
             return f'{lhs} .neqv. {rhs}'
 
         errors.report(PYCCEL_RESTRICTION_IS_ISNOT,
@@ -2461,13 +2519,13 @@ class FCodePrinter(CodePrinter):
 
     def _print_IfTernaryOperator(self, expr):
 
-        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype, NativeBool) else expr.cond
+        cond = PythonBool(expr.cond) if not isinstance(expr.cond.dtype.primitive_type, PrimitiveBooleanType) else expr.cond
         value_true = expr.value_true
         value_false = expr.value_false
 
         if value_true.dtype != value_false.dtype :
             try :
-                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype]
             except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
             value_true = cast_func(value_true) if value_true.dtype != expr.dtype else value_true
@@ -2486,35 +2544,35 @@ class FCodePrinter(CodePrinter):
         return '{} ** {}'.format(base_c, e_c)
 
     def _print_PyccelAdd(self, expr):
-        if expr.dtype is NativeString():
+        if isinstance(expr.dtype, StringType):
             return '//'.join('trim('+self._print(a)+')' for a in expr.args)
         else:
-            args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+            args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
             return ' + '.join(self._print(a) for a in args)
 
     def _print_PyccelMinus(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
 
         return ' - '.join(args_code)
 
     def _print_PyccelMul(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         args_code = [self._print(a) for a in args]
         return ' * '.join(a for a in args_code)
 
     def _print_PyccelDiv(self, expr):
-        if all(a.dtype in (NativeBool(), NativeInteger()) for a in expr.args):
+        if all(isinstance(a.dtype.primitive_type, (PrimitiveBooleanType, PrimitiveIntegerType)) for a in expr.args):
             args = [NumpyFloat(a) for a in expr.args]
         else:
             args = expr.args
         return ' / '.join(self._print(a) for a in args)
 
     def _print_PyccelMod(self, expr):
-        is_float = expr.dtype is NativeFloat()
+        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
 
         def correct_type_arg(a):
-            if is_float and a.dtype is NativeInteger():
+            if is_float and isinstance(a.dtype.primitive_type, PrimitiveIntegerType):
                 return NumpyFloat(a)
             else:
                 return a
@@ -2529,11 +2587,11 @@ class FCodePrinter(CodePrinter):
     def _print_PyccelFloorDiv(self, expr):
 
         code     = self._print(expr.args[0])
-        adtype   = expr.args[0].dtype
-        is_float = expr.dtype is NativeFloat()
+        adtype   = expr.args[0].dtype.primitive_type
+        is_float = isinstance(expr.dtype.primitive_type, PrimitiveFloatingPointType)
         for b in expr.args[1:]:
-            bdtype    = b.dtype
-            if adtype is NativeInteger() and bdtype is NativeInteger():
+            bdtype    = b.dtype.primitive_type
+            if all(isinstance(dtype, PrimitiveIntegerType) for dtype in (adtype, bdtype)):
                 b = NumpyFloat(b)
             c = self._print(b)
             adtype = bdtype
@@ -2549,17 +2607,17 @@ class FCodePrinter(CodePrinter):
         return 'LSHIFT({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitXor(self, expr):
-        if expr.dtype is NativeBool():
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .neqv. '.join(self._print(a) for a in expr.args)
         return 'IEOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitOr(self, expr):
-        if expr.dtype is NativeBool():
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .or. '.join(self._print(a) for a in expr.args)
         return 'IOR({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
     def _print_PyccelBitAnd(self, expr):
-        if expr.dtype is NativeBool():
+        if isinstance(expr.dtype.primitive_type, PrimitiveBooleanType):
             return ' .and. '.join(self._print(a) for a in expr.args)
         return 'IAND({}, {})'.format(self._print(expr.args[0]), self._print(expr.args[1]))
 
@@ -2576,60 +2634,60 @@ class FCodePrinter(CodePrinter):
         return '-{}'.format(self._print(expr.args[0]))
 
     def _print_PyccelAnd(self, expr):
-        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else PythonBool(a) for a in expr.args]
         return ' .and. '.join(self._print(a) for a in args)
 
     def _print_PyccelOr(self, expr):
-        args = [a if a.dtype is NativeBool() else PythonBool(a) for a in expr.args]
+        args = [a if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else PythonBool(a) for a in expr.args]
         return ' .or. '.join(self._print(a) for a in args)
 
     def _print_PyccelEq(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype
-        b = expr.args[1].dtype
+        a = expr.args[0].dtype.primitive_type
+        b = expr.args[1].dtype.primitive_type
 
-        if a is NativeBool() and b is NativeBool():
+        if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
             return '{} .eqv. {}'.format(lhs, rhs)
         return '{0} == {1}'.format(lhs, rhs)
 
     def _print_PyccelNe(self, expr):
         lhs = self._print(expr.args[0])
         rhs = self._print(expr.args[1])
-        a = expr.args[0].dtype
-        b = expr.args[1].dtype
+        a = expr.args[0].dtype.primitive_type
+        b = expr.args[1].dtype.primitive_type
 
-        if a is NativeBool() and b is NativeBool():
+        if all(isinstance(var, PrimitiveBooleanType) for var in (a, b)):
             return '{} .neqv. {}'.format(lhs, rhs)
         return '{0} /= {1}'.format(lhs, rhs)
 
     def _print_PyccelLt(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} < {1}'.format(lhs, rhs)
 
     def _print_PyccelLe(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} <= {1}'.format(lhs, rhs)
 
     def _print_PyccelGt(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} > {1}'.format(lhs, rhs)
 
     def _print_PyccelGe(self, expr):
-        args = [PythonInt(a) if a.dtype is NativeBool() else a for a in expr.args]
+        args = [PythonInt(a) if isinstance(a.dtype.primitive_type, PrimitiveBooleanType) else a for a in expr.args]
         lhs = self._print(args[0])
         rhs = self._print(args[1])
         return '{0} >= {1}'.format(lhs, rhs)
 
     def _print_PyccelNot(self, expr):
         a = self._print(expr.args[0])
-        if (expr.args[0].dtype is not NativeBool()):
+        if not isinstance(expr.args[0].dtype.primitive_type, PrimitiveBooleanType):
             return '{} == 0'.format(a)
         return '.not. {}'.format(a)
 
@@ -2641,12 +2699,12 @@ class FCodePrinter(CodePrinter):
         exit_code = expr.status
         if isinstance(exit_code, LiteralInteger):
             arg = exit_code.python_value
-        elif exit_code.dtype is not NativeInteger() or exit_code.rank > 0:
+        elif not isinstance(getattr(exit_code.dtype, 'primitive_type'), PrimitiveIntegerType) or exit_code.rank > 0:
             print_arg = FunctionCallArgument(exit_code)
             code = self._print(PythonPrint((print_arg, ), file="stderr"))
             arg = "1"
         else:
-            if exit_code.precision != 4:
+            if exit_code.dtype.precision != 4:
                 exit_code = NumpyInt32(exit_code)
             arg = self._print(exit_code)
         return f'{code}stop {arg}\n'
@@ -2659,7 +2717,7 @@ class FCodePrinter(CodePrinter):
             self._print_not_supported(expr)
         if func_name.startswith('ieee_'):
             self._constantImports.setdefault('ieee_arithmetic', set()).add(func_name)
-        args = [self._print(NumpyFloat(a) if a.dtype is NativeInteger() else a)\
+        args = [self._print(NumpyFloat(a) if isinstance(a.dtype.primitive_type, PrimitiveIntegerType) else a)\
 				for a in expr.args]
         code_args = ', '.join(args)
         code = '{0}({1})'.format(func_name, code_args)
@@ -2694,13 +2752,13 @@ class FCodePrinter(CodePrinter):
         """
         arg = expr.args[0]
         arg_code = self._print(arg)
-        if isinstance(expr.dtype, NativeComplex):
+        if isinstance(expr.dtype.primitive_type, PrimitiveComplexType):
             func_name = 'csgn' if numpy_v1 else 'csign'
             func = PyccelFunctionDef(func_name, NumpySign)
             self._additional_imports.add(Import('pyc_math_f90', AsName(func, func_name)))
             return f'{func_name}({arg_code})'
         else:
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
             # The absolute value of the result (0 if the argument is 0, 1 otherwise)
             abs_result = self._print(cast_func(PythonBool(arg)))
             return f'sign({abs_result}, {arg_code})'
@@ -2749,7 +2807,7 @@ class FCodePrinter(CodePrinter):
         args = []
         for arg in expr.args:
             if arg.dtype != expr.dtype:
-                cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+                cast_func = DtypePrecisionToCastFunction[expr.dtype]
                 args.append(self._print(cast_func(arg)))
             else:
                 args.append(self._print(arg))
@@ -2761,7 +2819,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if arg.dtype is NativeInteger():
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2772,7 +2830,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if arg.dtype is NativeInteger():
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2783,7 +2841,7 @@ class FCodePrinter(CodePrinter):
         Fortran function call"""
         # add necessary include
         arg = expr.args[0]
-        if arg.dtype is NativeInteger():
+        if isinstance(arg.dtype.primitive_type, PrimitiveIntegerType):
             code_arg = self._print(NumpyFloat(arg))
         else:
             code_arg = self._print(arg)
@@ -2799,7 +2857,8 @@ class FCodePrinter(CodePrinter):
 
     def _print_NumpySqrt(self, expr):
         arg = expr.args[0]
-        if arg.dtype is NativeInteger() or arg.dtype is NativeBool():
+        dtype = arg.dtype.primitive_type
+        if isinstance(dtype, (PrimitiveIntegerType, PrimitiveBooleanType)):
             arg = NumpyFloat(arg)
         code_args = self._print(arg)
         code = 'sqrt({})'.format(code_args)

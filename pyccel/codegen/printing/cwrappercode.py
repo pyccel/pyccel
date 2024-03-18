@@ -49,10 +49,10 @@ class CWrapperCodePrinter(CCodePrinter):
             Any additional arguments which are necessary for CCodePrinter.
     """
     dtype_registry = {**CCodePrinter.dtype_registry,
-                      (PyccelPyObject() , 0) : 'PyObject',
-                      (PyccelPyArrayObject() , 0) : 'PyArrayObject',
-                      (PyccelPyTypeObject() , 0) : 'PyTypeObject',
-                      (BindCPointer()   , 0) : 'void'}
+                      PyccelPyObject() : 'PyObject',
+                      PyccelPyArrayObject() : 'PyArrayObject',
+                      PyccelPyTypeObject() : 'PyTypeObject',
+                      BindCPointer()  : 'void'}
 
     def __init__(self, filename, target_language, **settings):
         CCodePrinter.__init__(self, filename, **settings)

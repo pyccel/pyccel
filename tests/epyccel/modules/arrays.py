@@ -324,20 +324,20 @@ def array_float_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]'
 
 def array_float_nested_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float')
+    tmp      = array((x, (y, z, z), x), dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float')
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float')
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================
@@ -346,20 +346,20 @@ def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:
 
 def array_float_nested_F_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float', order="F")
+    tmp      = array((x, (y, z, z), x), dtype='float', order="F")
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float', order="F")
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================

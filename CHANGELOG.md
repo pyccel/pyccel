@@ -13,15 +13,29 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+-   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
+-   Fix some cases where a Python built-in type is returned in place of a NumPy type.
+-   Stop printing numbers with more decimal digits than their precision.
+-   Allow printing the result of a function returning multiple objects of different types.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
+-   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
+-   \[INTERNALS\] Rewrite datatyping system. See #1722.
+-   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
+-   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 
 
 ### Deprecated
+
+-   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
+-   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
+-   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
+-   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 
 ## \[1.12.1\] - 2024-10-01
 

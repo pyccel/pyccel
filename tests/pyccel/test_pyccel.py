@@ -50,12 +50,9 @@ def insert_pyccel_folder(abs_path):
 
 #------------------------------------------------------------------------------
 def get_python_output(abs_path, cwd = None):
-    if cwd is None:
-        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True)
-    else:
-        p = subprocess.Popen([sys.executable , "%s" % abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd)
-    out, _ = p.communicate()
-    assert(p.returncode==0)
+    with subprocess.Popen([sys.executable , abs_path], stdout=subprocess.PIPE, universal_newlines=True, cwd=cwd) as p:
+        out, _ = p.communicate()
+        assert(p.returncode==0)
     return out
 
 #------------------------------------------------------------------------------

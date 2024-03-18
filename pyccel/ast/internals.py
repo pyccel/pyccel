@@ -11,11 +11,10 @@ from packaging.version import Version
 
 import numpy as np
 
-from operator import attrgetter
 from pyccel.utilities.stage import PyccelStage
 
 from .basic     import PyccelAstNode, TypedAstNode, Immutable
-from .datatypes import NativeInteger, default_precision
+from .datatypes import PythonNativeInt, PrimitiveIntegerType
 from .literals  import LiteralInteger
 
 pyccel_stage = PyccelStage()
@@ -28,8 +27,6 @@ __all__ = (
     'PyccelInternalFunction',
     'PyccelSymbol',
     'Slice',
-    'get_final_precision',
-    'max_precision',
 )
 
 
@@ -89,12 +86,10 @@ class PyccelArraySize(PyccelInternalFunction):
     __slots__ = ()
     name = 'size'
 
-    _dtype = NativeInteger()
-    _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg):
         super().__init__(arg)
@@ -137,12 +132,10 @@ class PyccelArrayShapeElement(PyccelInternalFunction):
     __slots__ = ()
     name = 'shape'
 
-    _dtype = NativeInteger()
-    _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, arg, index):
         if not isinstance(arg, TypedAstNode):
@@ -240,12 +233,9 @@ class Slice(PyccelAstNode):
         super().__init__()
         if pyccel_stage == 'syntactic':
             return
-        if start is not None and not (hasattr(start, 'dtype') and isinstance(start.dtype, NativeInteger)):
-            raise TypeError('Slice start must be Integer or None')
-        if stop is not None and not (hasattr(stop, 'dtype') and isinstance(stop.dtype, NativeInteger)):
-            raise TypeError('Slice stop must be Integer or None')
-        if step is not None and not (hasattr(step, 'dtype') and isinstance(step.dtype, NativeInteger)):
-            raise TypeError('Slice step must be Integer or None')
+        assert start is None or isinstance(getattr(start.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert stop is None or isinstance(getattr(stop.dtype, 'primitive_type', None), PrimitiveIntegerType)
+        assert step is None or isinstance(getattr(step.dtype, 'primitive_type', None), PrimitiveIntegerType)
         if slice_type not in (Slice.Range, Slice.Element):
             raise TypeError('Slice type must be Range (1) or Element (0)')
 
@@ -387,59 +377,6 @@ def symbols(names):
     symbols = [PyccelSymbol(name.strip()) for name in names]
     return tuple(symbols)
 
-
-def max_precision(objs : list, allow_native : bool = True):
-    """
-    Return the largest precision amongst the objects in the list.
-
-    Return the largest precision amongst the objects in the list.
-
-    Parameters
-    ----------
-    objs : list
-       A list of TypedAstNodes.
-
-    allow_native : bool, default=True
-        Allow the final result to be a native precision (i.e. -1).
-
-    Returns
-    -------
-    int
-        The largest precision found.
-    """
-    if allow_native and all(o.precision == -1 for o in objs):
-        return -1
-    else:
-        ndarray_list = [o for o in objs if getattr(o, 'is_ndarray', False)]
-        if ndarray_list:
-            return get_final_precision(max(ndarray_list, key=attrgetter('precision')))
-        if numpy_v1:
-            return max(get_final_precision(o) for o in objs)
-        else:
-            return get_final_precision(max(objs, key = lambda o : o.precision))
-
-
-def get_final_precision(obj):
-    """
-    Get the usable precision of an object.
-
-    Get the usable precision of an object. I.e. the precision that you
-    can use to print, e.g. 8 instead of -1 for a default precision float.
-
-    If the precision is set to the default then the value of the default
-    precision is returned, otherwise the provided precision is returned.
-
-    Parameters
-    ----------
-    obj : TypedAstNode
-        The object whose precision we want to investigate.
-
-    Returns
-    -------
-    int
-        The precision of the object to be used in the code.
-    """
-    return default_precision[obj.dtype] if obj.precision == -1 else obj.precision
 
 def apply_pickle(class_type, args, kwargs):
     """

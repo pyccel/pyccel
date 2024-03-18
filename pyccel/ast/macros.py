@@ -10,7 +10,7 @@ This module contains all classes and functions used for handling macros.
 from pyccel.utilities.stage import PyccelStage
 
 from .basic          import TypedAstNode
-from .datatypes      import NativeInteger, NativeGeneric
+from .datatypes      import PythonNativeInt, GenericType
 from .internals      import PyccelSymbol
 from .variable       import Variable
 
@@ -71,10 +71,8 @@ class MacroShape(Macro):
     """
     __slots__ = ('_index','_rank','_shape')
     _name      = 'shape'
-    _dtype     = NativeInteger()
-    _precision = -1
     _order     = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __init__(self, argument, index=None):
         if index is not None:
@@ -113,12 +111,10 @@ class MacroType(Macro):
     """
     __slots__ = ()
     _name      = 'dtype'
-    _dtype     = NativeGeneric()
-    _precision = 0
     _rank      = 0
     _shape     = None
     _order     = None
-    _class_type = NativeGeneric()
+    _class_type = GenericType()
 
     def __str__(self):
         return f'MacroType({self.argument})'
@@ -138,12 +134,10 @@ class MacroCount(Macro):
     """
     __slots__ = ()
     _name      = 'count'
-    _dtype     = NativeInteger()
-    _precision = -1
     _rank      = 0
     _shape     = None
     _order     = None
-    _class_type = NativeInteger()
+    _class_type = PythonNativeInt()
 
     def __str__(self):
         return f'MacroCount({self.argument})'

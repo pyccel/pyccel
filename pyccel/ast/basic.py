@@ -500,7 +500,7 @@ class TypedAstNode(PyccelAstNode):
     The class from which all objects which can be described with type information
     must inherit. Objects with type information are objects which take up memory
     in a running program (e.g. a variable or the result of a function call).
-    Each typed object is described by an underlying datatype, a precision, a rank,
+    Each typed object is described by an underlying datatype, a rank,
     a shape, and a data layout ordering.
     """
     __slots__  = ()
@@ -535,20 +535,7 @@ class TypedAstNode(PyccelAstNode):
         containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
         of the container.
         """
-        return self._dtype # pylint: disable=no-member
-
-    @property
-    def precision(self):
-        """
-        Precision of the datatype of the object.
-
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
-        """
-        return self._precision # pylint: disable=no-member
+        return self.class_type.datatype
 
     @property
     def order(self):
@@ -586,37 +573,6 @@ class TypedAstNode(PyccelAstNode):
         return cls._rank # pylint: disable=no-member
 
     @classmethod
-    def static_dtype(cls):
-        """
-        Datatype of the object.
-
-        The underlying datatype of the object. In the case of scalars this is
-        equivalent to the type of the object in Python. For objects in (homogeneous)
-        containers (e.g. list/ndarray/tuple), this is the type of an arbitrary element
-        of the container.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined datatype.
-        """
-        return cls._dtype # pylint: disable=no-member
-
-    @classmethod
-    def static_precision(cls):
-        """
-        Precision of the datatype of the object.
-
-        The precision of the datatype of the object. This number is related to the
-        number of bytes that the datatype takes up in memory (e.g. `float64` has
-        precision = 8 as it takes up 8 bytes, `complex128` has precision = 8 as
-        it is comprised of two `float64` objects. The precision is equivalent to
-        the `kind` parameter in Fortran.
-
-        This function is static and will return an AttributeError if the
-        class does not have a predetermined precision.
-        """
-        return cls._precision # pylint: disable=no-member
-
-    @classmethod
     def static_order(cls):
         """
         The data layout ordering in memory.
@@ -631,7 +587,7 @@ class TypedAstNode(PyccelAstNode):
         return cls._order # pylint: disable=no-member
 
     @classmethod
-    def static_class_type(cls):
+    def static_type(cls):
         """
         The type of the object.
 
@@ -642,14 +598,14 @@ class TypedAstNode(PyccelAstNode):
         This function is static and will return an AttributeError if the
         class does not have a predetermined order.
         """
-        return cls._class_type # pylint: disable=no-member
+        return cls._static_type # pylint: disable=no-member
 
     def copy_attributes(self, x):
         """
         Copy the attributes describing a TypedAstNode into this node.
 
         Copy the attributes which describe the TypedAstNode passed as
-        argument (dtype, precision, shape, rank, order) into this node
+        argument (dtype, shape, rank, order) into this node
         so that the two nodes can be stored in the same object.
 
         Parameters
@@ -659,8 +615,6 @@ class TypedAstNode(PyccelAstNode):
         """
         self._shape      = x.shape
         self._rank       = x.rank
-        self._dtype      = x.dtype
-        self._precision  = x.precision
         self._order      = x.order
         self._class_type = x.class_type
 

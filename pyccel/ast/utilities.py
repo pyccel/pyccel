@@ -19,7 +19,7 @@ from .core          import (AsName, Import, FunctionDef, FunctionCall,
 from .builtins      import (builtin_functions_dict,
                             PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
-from .datatypes     import NativeHomogeneousTuple
+from .datatypes     import HomogeneousTupleType, PythonNativeInt
 from .internals     import PyccelInternalFunction, Slice
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
@@ -497,11 +497,11 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
             for index_depth in range(-rank, 0):
                 new_level += 1
                 # If an index exists at the same depth, reuse it if not create one
-                if rank+index_depth >= len(indices):
-                    indices.append(new_index('int', 'i'))
-                index = indices[rank+index_depth]
-                new_vars = [insert_index(v, index_depth, index) for v in new_vars]
-                handled_funcs = [insert_index(v, index_depth, index) for v in handled_funcs]
+                if rank+index >= len(indices):
+                    indices.append(new_index(PythonNativeInt(),'i'))
+                index_var = indices[rank+index]
+                new_vars = [insert_index(v, index, index_var) for v in new_vars]
+                handled_funcs = [insert_index(v, index, index_var) for v in handled_funcs]
                 if compatible_operation(*new_vars, *handled_funcs, language_has_vectors = language_has_vectors):
                     break
 
@@ -584,7 +584,7 @@ def collect_loops(block, indices, new_index, language_has_vectors = False, resul
 
             if not isinstance(rhs.length, LiteralInteger):
                 if len(indices) == 0:
-                    indices.append(new_index('int', 'i'))
+                    indices.append(new_index(PythonNativeInt(), 'i'))
                 idx = indices[0]
 
                 assign = Assign(lhs[Slice(PyccelMul(rhs.val.shape[0], idx, simplify=True),
@@ -674,12 +674,13 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     --------
     >>> from pyccel.ast.builtins  import PythonTuple
     >>> from pyccel.ast.core      import Assign, CodeBlock
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.literals  import LiteralInteger
     >>> from pyccel.ast.utilities import expand_to_loops
     >>> from pyccel.ast.variable  import Variable
-    >>> a = Variable('int', 'a', shape=(,), rank=0)
-    >>> b = Variable('int', 'b', shape=(,), rank=0)
-    >>> c = Variable('int', 'c', shape=(,), rank=0)
+    >>> a = Variable(PythonNativeInt(), 'a', shape=(,), rank=0)
+    >>> b = Variable(PythonNativeInt(), 'b', shape=(,), rank=0)
+    >>> c = Variable(PythonNativeInt(), 'c', shape=(,), rank=0)
     >>> expr = [Assign(PythonTuple(a,b,c),PythonTuple(LiteralInteger(0),LiteralInteger(1),LiteralInteger(2))]
     >>> expand_inhomog_tuple_assignments(CodeBlock(expr))
     [Assign(a, LiteralInteger(0)), Assign(b, LiteralInteger(1)), Assign(c, LiteralInteger(2))]
@@ -687,8 +688,8 @@ def expand_inhomog_tuple_assignments(block, language_has_vectors = False):
     if not language_has_vectors:
         allocs_to_unravel = [a for a in block.get_attribute_nodes(Assign) \
                     if isinstance(a.lhs, Variable) \
-                    and isinstance(a.lhs.class_type, NativeHomogeneousTuple) \
-                    and isinstance(a.rhs.class_type, NativeHomogeneousTuple)]
+                    and isinstance(a.lhs.class_type, HomogeneousTupleType) \
+                    and isinstance(a.rhs.class_type, HomogeneousTupleType)]
         new_allocs = [(Assign(a.lhs, NumpyEmpty(a.lhs.shape,
                                      dtype=a.lhs.dtype,
                                      order=a.lhs.order)

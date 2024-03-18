@@ -29,10 +29,9 @@ from pyccel.ast.cwrapper      import Py_INCREF, PyType_Ready, WrapperCustomDataT
 from pyccel.ast.cwrapper      import PyList_New, PyList_Append, PyList_GetItem, PyList_SetItem
 from pyccel.ast.cwrapper      import PyccelPyTypeObject, PyCapsule_New, PyCapsule_Import
 from pyccel.ast.cwrapper      import PySys_GetObject, PyUnicode_FromString, PyGetSetDefElement
-from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray
-from pyccel.ast.datatypes     import NativeVoid, NativeInteger, CustomDataType, DataTypeFactory
-from pyccel.ast.datatypes     import NativeNumeric
-from pyccel.ast.internals     import get_final_precision
+from pyccel.ast.c_concepts    import ObjectAddress, PointerCast, CStackArray, CNativeInt
+from pyccel.ast.datatypes     import VoidType, PythonNativeInt, CustomDataType, DataTypeFactory
+from pyccel.ast.datatypes     import FixedSizeNumericType
 from pyccel.ast.literals      import Nil, LiteralTrue, LiteralString, LiteralInteger
 from pyccel.ast.literals      import LiteralFalse
 from pyccel.ast.numpyext      import NumpyNDArrayType
@@ -105,16 +104,16 @@ class CToPythonWrapper(Wrapper):
             The new variable.
         """
         if isinstance(dtype, CustomDataType):
-            var = Variable(dtype=self._python_object_map[dtype],
-                            name=self.scope.get_new_name(name),
-                            memory_handling='alias',
-                            cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
-                            is_temp=is_temp)
+            var = Variable(self._python_object_map[dtype],
+                           self.scope.get_new_name(name),
+                           memory_handling='alias',
+                           cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True),
+                           is_temp=is_temp)
         else:
-            var = Variable(dtype=PyccelPyObject(),
-                            name=self.scope.get_new_name(name),
-                            memory_handling='alias',
-                            is_temp=is_temp)
+            var = Variable(PyccelPyObject(),
+                           self.scope.get_new_name(name),
+                           memory_handling='alias',
+                           is_temp=is_temp)
         self.scope.insert_variable(var)
         return var
 
@@ -272,25 +271,22 @@ class CToPythonWrapper(Wrapper):
             python_cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True)
             func_call = FunctionCall(PyObject_TypeCheck, [py_obj, python_cls_base.type_object])
         elif rank == 0:
-            prec  = arg.precision
             try :
-                cast_function = check_type_registry[(dtype, prec)]
+                cast_function = check_type_registry[dtype]
             except KeyError:
-                errors.report(f"Can't check the type of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of {dtype}\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
             func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
 
             func_call = FunctionCall(func, [py_obj])
         else:
-            np_dtype = str(dtype)
-            prec  = get_final_precision(arg)
             try :
-                type_ref = numpy_dtype_registry[(np_dtype, prec)]
+                type_ref = numpy_dtype_registry[dtype]
             except KeyError:
-                errors.report(f"Can't check the type of an array of {dtype.name}[kind = {prec}]\n"+PYCCEL_RESTRICTION_TODO,
+                errors.report(f"Can't check the type of an array of {dtype}\n"+PYCCEL_RESTRICTION_TODO,
                         symbol=arg, severity='fatal')
 
             # order flag
@@ -307,7 +303,7 @@ class CToPythonWrapper(Wrapper):
             func_call = FunctionCall(check_func, [py_obj, type_ref, LiteralInteger(rank), flag])
 
         if raise_error:
-            message = LiteralString(f"Expected an argument of type {dtype.name} for argument {arg.name}")
+            message = LiteralString(f"Expected an argument of type {dtype} for argument {arg.name}")
             python_error = FunctionCall(PyErr_SetString, [PyTypeError, message])
             error_code = (python_error,)
 
@@ -368,7 +364,7 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(name)
         self.scope = func_scope
         orig_funcs = [getattr(func, 'original_function', func) for func in funcs]
-        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+        type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
 
         # Initialise the argument_type_flags
         argument_type_flags = {func : 0 for func in funcs}
@@ -381,7 +377,7 @@ class CToPythonWrapper(Wrapper):
             # Get the relevant typed arguments from the original functions
             interface_args = [getattr(func.arguments[i], 'original_function_argument_variable', func.arguments[i].var) for func in orig_funcs]
             # Get the type key
-            interface_types = [(a.dtype, a.precision, a.rank, a.order) for a in interface_args]
+            interface_types = [(str(a.dtype), a.rank, a.order) for a in interface_args]
             # Get a dictionary mapping each unique type key to an example argument
             type_to_example_arg = dict(zip(interface_types, interface_args))
             # Get a list of unique keys
@@ -534,15 +530,15 @@ class CToPythonWrapper(Wrapper):
                                     (ObjectAddress(PointerCast(return_var, PyArray_SetBaseObject.arguments[0].var)),
                                      ObjectAddress(PointerCast(ref_obj, PyArray_SetBaseObject.arguments[1].var))))
             return [FunctionCall(Py_INCREF, (ref_obj,)),
-                    If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+                    If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, dtype=CNativeInt())),
                                       [Return([self._error_exit_code])]))]
         elif isinstance(orig_var.dtype, CustomDataType):
             ref_attribute = return_var.cls_base.scope.find('referenced_objects', 'variables', raise_if_missing = True)
             ref_list = ref_attribute.clone(ref_attribute.name, new_class = DottedVariable, lhs = return_var)
             save_ref_call = FunctionCall(PyList_Append, (ref_list, ObjectAddress(PointerCast(ref_obj, ref_list))))
-            return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, precision=-2)),
+            return [If(IfSection(PyccelLt(save_ref_call,LiteralInteger(0, dtype=CNativeInt())),
                                       [Return([self._error_exit_code])]))]
-        elif orig_var.class_type in NativeNumeric:
+        elif isinstance(orig_var.class_type, FixedSizeNumericType):
             return []
         else:
             raise NotImplementedError(f"Unsure how to preserve references for attribute of type {type(orig_var.class_type)}")
@@ -618,8 +614,8 @@ class CToPythonWrapper(Wrapper):
         # Create necessary variables
         module_var = self.get_new_PyObject("mod")
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (n_classes,),
-                                    class_type = CStackArray(), cls_base = StackArrayClass)
+        API_var = Variable(CStackArray(BindCPointer()), API_var_name, rank=1, shape = (n_classes,),
+                                    cls_base = StackArrayClass)
         self.scope.insert_variable(API_var)
         capsule_obj = self.get_new_PyObject(self.scope.get_new_name('c_api_object'))
 
@@ -715,32 +711,32 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(f'{mod_name}_import')
 
         API_var_name = self.scope.get_new_name(f'Py{mod_name}_API')
-        API_var = Variable(BindCPointer(), API_var_name, rank=1, shape = (None,),
-                                    class_type = CStackArray(), cls_base = StackArrayClass,
+        API_var = Variable(CStackArray(BindCPointer()), API_var_name, rank=1, shape = (None,),
+                                    cls_base = StackArrayClass,
                                     memory_handling = 'alias')
         self.scope.insert_variable(API_var)
 
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
-        ok_code = LiteralInteger(0, precision=-2)
-        error_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        ok_code = LiteralInteger(0, dtype=CNativeInt())
+        error_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
         # Create variables to temporarily modify the Python path so the file will be discovered
         current_path = func_scope.get_temporary_variable(PyccelPyObject(), 'current_path', memory_handling='alias')
         stash_path = func_scope.get_temporary_variable(PyccelPyObject(), 'stash_path', memory_handling='alias')
 
         body = [AliasAssign(current_path, FunctionCall(PySys_GetObject, [LiteralString("path")])),
-                AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, precision=-2)])),
+                AliasAssign(stash_path, FunctionCall(PyList_GetItem, [current_path, LiteralInteger(0, dtype=CNativeInt())])),
                 FunctionCall(Py_INCREF, [stash_path]),
                 FunctionCall(PyList_SetItem, [current_path,
-                                              LiteralInteger(0, precision=-2),
+                                              LiteralInteger(0, dtype=CNativeInt()),
                                               FunctionCall(PyUnicode_FromString, [LiteralString(self._file_location)])]),
                 AliasAssign(API_var, PyCapsule_Import(self.scope.get_python_name(mod_name))),
-                FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, precision=-2), stash_path]),
+                FunctionCall(PyList_SetItem, [current_path, LiteralInteger(0, dtype=CNativeInt()), stash_path]),
                 Return([IfTernaryOperator(PyccelIsNot(API_var, Nil()), ok_code, error_code)])]
 
-        result = func_scope.get_temporary_variable(NativeInteger(), precision=-2)
+        result = func_scope.get_temporary_variable(CNativeInt())
         self.exit_scope()
         import_func = FunctionDef(func_name, (), (FunctionDefResult(result),), body, is_static=True, scope = func_scope)
 
@@ -810,7 +806,7 @@ class CToPythonWrapper(Wrapper):
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
 
-        self_var = Variable(dtype=PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
+        self_var = Variable(PyccelPyTypeObject(), name=self.scope.get_new_name('self'),
                               memory_handling='alias')
         self.scope.insert_variable(self_var)
         func_args = [self_var] + [self.get_new_PyObject(n) for n in ("args", "kwargs")]
@@ -870,7 +866,7 @@ class CToPythonWrapper(Wrapper):
         func_name = self.scope.get_new_name(original_name+'_wrapper')
         func_scope = self.scope.new_child_scope(func_name)
         self.scope = func_scope
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
 
         is_bind_c_function_def = isinstance(init_function, BindCFunctionDef)
 
@@ -899,8 +895,7 @@ class CToPythonWrapper(Wrapper):
         func_args = [FunctionDefArgument(a) for a in func_args]
 
         # Get the results of the PyFunctionDef
-        python_result_variable = Variable(NativeInteger(), self.scope.get_new_name(),
-                                          precision = -2, is_temp = True)
+        python_result_variable = Variable(CNativeInt(), self.scope.get_new_name(), is_temp = True)
 
         # Get the code required to extract the C-compatible arguments from the Python arguments
         body += [l for a in python_args for l in self._wrap(a)]
@@ -928,7 +923,7 @@ class CToPythonWrapper(Wrapper):
 
         # Pack the Python compatible results of the function into one argument.
         func_results = [FunctionDefResult(python_result_variable)]
-        body.append(Return([LiteralInteger(0, precision=-2)]))
+        body.append(Return([LiteralInteger(0, dtype=CNativeInt())]))
 
         self.exit_scope()
         for a in python_args:
@@ -1168,7 +1163,7 @@ class CToPythonWrapper(Wrapper):
         # Get python arguments which will be passed to FunctionDefs
         python_arg_objs = [self._python_object_map[a] for a in python_args]
 
-        type_indicator = Variable('int', self.scope.get_new_name('type_indicator'))
+        type_indicator = Variable(PythonNativeInt(), self.scope.get_new_name('type_indicator'))
         self.scope.insert_variable(type_indicator)
 
         self.exit_scope()
@@ -1299,7 +1294,7 @@ class CToPythonWrapper(Wrapper):
         for r in original_c_results:
             if isinstance(r, BindCFunctionDefResult):
                 orig_var = r.original_function_result_variable
-                if orig_var.rank == 0 and orig_var.dtype in NativeNumeric:
+                if orig_var.rank == 0 and isinstance(orig_var.dtype, FixedSizeNumericType):
                     c_result_names.append(orig_var.name)
                     continue
             c_result_names.append(r.var.name)
@@ -1435,7 +1430,7 @@ class CToPythonWrapper(Wrapper):
             if isinstance(orig_var.dtype, CustomDataType):
                 kwargs['memory_handling']='alias'
                 if isinstance(expr, BindCFunctionDefArgument):
-                    kwargs['dtype'] = NativeVoid()
+                    kwargs['class_type'] = VoidType()
 
             arg_var = orig_var.clone(self.scope.get_expected_name(expr.var.name), new_class = Variable,
                                     **kwargs)
@@ -1461,8 +1456,8 @@ class CToPythonWrapper(Wrapper):
                 cast_type = collect_arg
                 cast = []
             else:
-                cast_type = Variable(dtype=self._python_object_map[dtype],
-                                    name=self.scope.get_new_name(collect_arg.name),
+                cast_type = Variable(self._python_object_map[dtype],
+                                    self.scope.get_new_name(collect_arg.name),
                                     memory_handling='alias',
                                     cls_base = self.scope.find(dtype.name, 'classes', raise_if_missing = True))
                 self.scope.insert_variable(cast_type)
@@ -1471,15 +1466,14 @@ class CToPythonWrapper(Wrapper):
             cast_c_res = PointerCast(c_res, orig_var)
             cast.append(AliasAssign(arg_var, cast_c_res))
         elif arg_var.rank == 0:
-            prec  = get_final_precision(orig_var)
             try :
-                cast_function = py_to_c_registry[(dtype, prec)]
+                cast_function = py_to_c_registry[(dtype.primitive_type, dtype.precision)]
             except KeyError:
                 errors.report(PYCCEL_RESTRICTION_TODO, symbol=dtype,severity='fatal')
             cast_func = FunctionDef(name = cast_function,
                                body      = [],
-                               arguments = [FunctionDefArgument(Variable(dtype=PyccelPyObject(), name = 'o', memory_handling='alias'))],
-                               results   = [FunctionDefResult(Variable(dtype=dtype, name = 'v', precision = prec))])
+                               arguments = [FunctionDefArgument(Variable(PyccelPyObject(), name = 'o', memory_handling='alias'))],
+                               results   = [FunctionDefResult(Variable(dtype, name = 'v'))])
             cast = [Assign(arg_var, FunctionCall(cast_func, [collect_arg]))]
         else:
             cast = [Assign(arg_var, FunctionCall(pyarray_to_ndarray, [collect_arg]))]
@@ -1665,7 +1659,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_variable(c_res, orig_var_name)
 
             body.append(Allocate(c_res, shape = shape_vars, order = orig_var.order, status='unallocated'))
-            body.append(AliasAssign(DottedVariable(NativeVoid(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
+            body.append(AliasAssign(DottedVariable(VoidType(), 'raw_data', memory_handling = 'alias', lhs=c_res), arg_var))
         elif isinstance(orig_var.dtype, CustomDataType):
             c_res = expr.var.clone(self.scope.get_expected_name(var_name), is_argument = False, memory_handling='alias')
             self.scope.insert_variable(c_res, var_name)
@@ -1748,10 +1742,10 @@ class CToPythonWrapper(Wrapper):
         v = expr.original_variable
 
         # Get pointer to store raw array data
-        var = self.scope.get_temporary_variable(dtype_or_var = NativeVoid(),
+        var = self.scope.get_temporary_variable(dtype_or_var = VoidType(),
                 name = v.name + '_data', memory_handling = 'alias')
         # Create variables to store the shape of the array
-        shape = [self.scope.get_temporary_variable(NativeInteger(),
+        shape = [self.scope.get_temporary_variable(PythonNativeInt(),
                 v.name+'_size') for _ in range(v.rank)]
         # Get the bind_c function which wraps a fortran array and returns c objects
         var_wrapper = expr.wrapper_function
@@ -1763,7 +1757,7 @@ class CToPythonWrapper(Wrapper):
                 name = v.name, memory_handling = 'alias')
         alloc = Allocate(nd_var, shape=shape, order=nd_var.order, status='unallocated')
         # Save raw_data into ndarray to obtain useable pointer
-        set_data = AliasAssign(DottedVariable(NativeVoid(), 'raw_data',
+        set_data = AliasAssign(DottedVariable(VoidType(), 'raw_data',
                 memory_handling = 'alias', lhs=nd_var), var)
 
         # Save the ndarray to vars_to_wrap to be handled as if it came from C
@@ -1809,7 +1803,7 @@ class CToPythonWrapper(Wrapper):
         getter_scope = self.scope.new_child_scope(getter_name)
         self.scope = getter_scope
         getter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
-                       getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         self.scope.insert_symbol(expr.name)
         getter_result = self.get_new_PyObject(expr.name, dtype = expr.dtype)
         get_val_result = FunctionDefResult(expr.clone(expr.name, new_class = Variable))
@@ -1850,19 +1844,19 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         #                        Create setter
         # ----------------------------------------------------------------------------------
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
         setter_name = self.scope.get_new_name(f'{class_type.name}_{expr.name}_setter')
         setter_scope = self.scope.new_child_scope(setter_name)
         self.scope = setter_scope
         setter_args = [self.get_new_PyObject('self_obj', dtype = lhs.dtype),
                        self.get_new_PyObject(f'{expr.name}_obj'),
-                       setter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(NativeInteger(), precision=-2))]
+                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
         self.scope.insert_symbol(expr.name)
         new_set_val_arg = FunctionDefArgument(expr.clone(expr.name, new_class = Variable))
         self._python_object_map[new_set_val_arg] = setter_args[1]
 
-        if (expr.rank == 0 and expr.dtype in NativeNumeric) or expr.is_alias:
+        if isinstance(expr.class_type, FixedSizeNumericType) or expr.is_alias:
             class_obj = Variable(lhs.dtype, self.scope.get_new_name('self'), memory_handling='alias')
             self.scope.insert_variable(class_obj)
 
@@ -1883,7 +1877,7 @@ class CToPythonWrapper(Wrapper):
                                                               cast_type = lhs)),
                            *self._incref_return_pointer(setter_args[1], setter_args[0], expr.lhs),
                            update,
-                           Return((LiteralInteger(0, precision=-2),))]
+                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
         else:
             setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
                                         LiteralString("Can't reallocate memory via Python interface.")]),
@@ -1940,7 +1934,7 @@ class CToPythonWrapper(Wrapper):
             self.scope.insert_symbol(r.var.name)
 
         getter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
-                       getter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
+                       getter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
         getter_result = self.get_new_PyObject(f'{name}_obj',
                                         dtype = getattr(get_val_result, 'original_function_result_variable', get_val_result.var).dtype)
 
@@ -1980,7 +1974,7 @@ class CToPythonWrapper(Wrapper):
         # ----------------------------------------------------------------------------------
         #                        Create setter
         # ----------------------------------------------------------------------------------
-        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, precision=-2))
+        self._error_exit_code = PyccelUnarySub(LiteralInteger(1, dtype=CNativeInt()))
         setter_name = self.scope.get_new_name(f'{class_type.name}_{name}_setter')
         setter_scope = self.scope.new_child_scope(setter_name)
         self.scope = setter_scope
@@ -1997,13 +1991,13 @@ class CToPythonWrapper(Wrapper):
 
         setter_args = [self.get_new_PyObject('self_obj', dtype = class_type),
                        self.get_new_PyObject(f'{name}_obj'),
-                       setter_scope.get_temporary_variable(NativeVoid(), memory_handling='alias')]
-        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(NativeInteger(), precision=-2))]
+                       setter_scope.get_temporary_variable(VoidType(), memory_handling='alias')]
+        setter_result = [FunctionDefResult(setter_scope.get_temporary_variable(CNativeInt()))]
 
         self._python_object_map[self_arg] = setter_args[0]
         self._python_object_map[set_val_arg] = setter_args[1]
 
-        if (wrapped_var.rank == 0 and wrapped_var.dtype in NativeNumeric) or wrapped_var.is_alias:
+        if isinstance(wrapped_var.class_type, FixedSizeNumericType) or wrapped_var.is_alias:
             arg_code = [l for a in original_args for l in self._wrap(a)]
 
             func_call_args = [self.scope.find(n.var.name, category='variables', raise_if_missing = True) for n in f_wrapped_args]
@@ -2011,7 +2005,7 @@ class CToPythonWrapper(Wrapper):
             setter_body = [*arg_code,
                            FunctionCall(expr.setter, func_call_args),
                            *self._save_referenced_objects(expr.setter, setter_args),
-                           Return((LiteralInteger(0, precision=-2),))]
+                           Return((LiteralInteger(0, dtype=CNativeInt()),))]
         else:
             setter_body = [FunctionCall(PyErr_SetString, [PyAttributeError,
                                         LiteralString("Can't reallocate memory via Python interface.")]),

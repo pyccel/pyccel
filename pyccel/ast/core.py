@@ -17,11 +17,11 @@ from .builtins  import (PythonEnumerate, PythonLen, PythonMap, PythonTuple,
 
 from .c_concepts import PointerCast
 
-from .datatypes import (datatype, DataType, NativeSymbol, NativeHomogeneousTuple,
-                        NativeBool, NativeTuple, str_dtype, NativeInhomogeneousTuple,
-                        NativeVoid)
+from .datatypes import (PyccelType, SymbolicType, HomogeneousTupleType,
+                        PythonNativeBool, InhomogeneousTupleType,
+                        VoidType)
 
-from .internals import PyccelSymbol, PyccelInternalFunction, get_final_precision, apply_pickle
+from .internals import PyccelSymbol, PyccelInternalFunction, apply_pickle
 
 from .literals  import Nil, LiteralFalse, LiteralInteger
 from .literals  import NilArgument, LiteralTrue
@@ -198,12 +198,10 @@ class Duplicate(TypedAstNode):
     length : TypedAstNode
         The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_val', '_length','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._dtype      = val.dtype
-        self._precision  = val.precision
         self._rank       = val.rank
         self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
         self._order      = val.order
@@ -240,12 +238,10 @@ class Concatenate(TypedAstNode):
     arg2 : TypedAstNodes
            The second tuple.
     """
-    __slots__ = ('_args','_dtype','_precision','_rank','_shape','_order','_class_type')
+    __slots__ = ('_args','_rank','_shape','_order','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
-        self._dtype      = arg1.dtype
-        self._precision  = arg1.precision
         self._rank       = arg1.rank
         shape_addition   = arg2.shape[0]
         self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
@@ -296,6 +292,7 @@ class Assign(PyccelAstNode):
 
     Examples
     --------
+    >>> from pyccel.ast.datatypes import PythonNativeInt
     >>> from pyccel.ast.internals import symbols
     >>> from pyccel.ast.variable import Variable
     >>> from pyccel.ast.core import Assign
@@ -304,7 +301,7 @@ class Assign(PyccelAstNode):
     x := y
     >>> Assign(x, 0)
     x := 0
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> Assign(x, A)
     x := A
     >>> Assign(A[0,1], x)
@@ -376,19 +373,24 @@ class Assign(PyccelAstNode):
 
     @property
     def is_symbolic_alias(self):
-        """Returns True if the assignment is a symbolic alias."""
+        """
+        Returns True if the assignment is a symbolic alias.
+
+        Returns True if the assignment is a symbolic alias.
+        """
 
         # TODO to be improved when handling classes
+        # TODO: Is this useful?
 
         lhs = self.lhs
         rhs = self.rhs
         if isinstance(lhs, Variable):
-            return isinstance(lhs.dtype, NativeSymbol)
+            return isinstance(lhs.class_type, SymbolicType)
         elif isinstance(lhs, PyccelSymbol):
             if isinstance(rhs, PythonRange):
                 return True
             elif isinstance(rhs, Variable):
-                return isinstance(rhs.dtype, NativeSymbol)
+                return isinstance(rhs.class_type, SymbolicType)
             elif isinstance(rhs, PyccelSymbol):
                 return True
 
@@ -706,8 +708,8 @@ class AliasAssign(PyccelAstNode):
     >>> from pyccel.ast.internals import PyccelSymbol
     >>> from pyccel.ast.core import AliasAssign
     >>> from pyccel.ast.core import Variable
-    >>> n = Variable('int', 'n')
-    >>> x = Variable('int', 'x', rank=1, shape=[n])
+    >>> n = Variable(PythonNativeInt(), 'n')
+    >>> x = Variable(PythonNativeInt(), 'x', rank=1, shape=[n])
     >>> y = PyccelSymbol('y')
     >>> AliasAssign(y, x)
     """
@@ -815,8 +817,8 @@ class AugAssign(Assign):
     --------
     >>> from pyccel.ast.core import Variable
     >>> from pyccel.ast.core import AugAssign
-    >>> s = Variable('int', 's')
-    >>> t = Variable('int', 't')
+    >>> s = Variable(PythonNativeInt(), 's')
+    >>> t = Variable(PythonNativeInt(), 't')
     >>> AugAssign(s, '+', 2 * t + 1)
     s += 1 + 2*t
     """
@@ -868,8 +870,8 @@ class AugAssign(Assign):
 
 
 class While(ScopedAstNode):
-
-    """Represents a 'while' statement in the code.
+    """
+    Represents a 'while' statement in the code.
 
     Expressions are of the form:
         "while test:
@@ -878,11 +880,11 @@ class While(ScopedAstNode):
     Parameters
     ----------
     test : TypedAstNode
-        test condition given as an expression
+        Test condition given as an expression.
     body : list of Pyccel objects
-        list of statements representing the body of the While statement.
+        List of statements representing the body of the While statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -898,7 +900,7 @@ class While(ScopedAstNode):
     def __init__(self, test, body, scope = None):
 
         if pyccel_stage == 'semantic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
 
         if iterable(body):
@@ -1022,12 +1024,12 @@ class Module(ScopedAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1265,12 +1267,12 @@ class ModuleHeader(PyccelAstNode):
     >>> from pyccel.ast.core import ClassDef, FunctionDef, Module
     >>> from pyccel.ast.operators import PyccelAdd, PyccelMinus
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(z,PyccelAdd(x,a))]
     >>> args = [FunctionDefArgument(arg) for arg in [x,y,a,b]]
     >>> results = [FunctionDefResult(res) for res in [z,t]]
@@ -1528,8 +1530,8 @@ class Iterable(PyccelAstNode):
 #==============================================================================
 
 class For(ScopedAstNode):
-
-    """Represents a 'for-loop' in the code.
+    """
+    Represents a 'for-loop' in the code.
 
     Expressions are of the form:
         "for target in iter:
@@ -1537,14 +1539,15 @@ class For(ScopedAstNode):
 
     Parameters
     ----------
-    target : symbol / Variable
-        symbol representing the iterator
-    iter : iterable
-        iterable object. for the moment only Range is used
-    body : list of pyccel objects
-        list of statements representing the body of the For statement.
+    target : Variable
+        Variable representing the iterator.
+    iter_obj : Iterable
+        Iterable object. Multiple iterators are supported but these are
+        translated to a range object in the Iterable class.
+    body : list[PyccelAstNode]
+        List of statements representing the body of the For statement.
     scope : Scope
-        The scope for the loop
+        The scope for the loop.
 
     Examples
     --------
@@ -1552,7 +1555,7 @@ class For(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, For
     >>> from pyccel.ast.internals import symbols
     >>> i,b,e,s,x = symbols('i,b,e,s,x')
-    >>> A = Variable('int', 'A', rank = 2)
+    >>> A = Variable(PythonNativeInt(), 'A', rank = 2)
     >>> For(i, (b,e,s), [Assign(x, i), Assign(A[0, 1], x)])
     For(i, (b, e, s), (x := i, IndexedElement(A, 0, 1) := x))
     """
@@ -1922,7 +1925,7 @@ class FunctionDefResult(TypedAstNode):
         The result annotation providing dtype information.
 
         The annotation which provides all information about the data
-        types, precision, etc, necessary to fully define the result.
+        types, rank, etc, necessary to fully define the result.
         """
         return self._annotation
 
@@ -1962,7 +1965,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_dtype','_precision','_shape','_rank','_order','_class_type')
+                 '_shape','_rank','_order','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2036,29 +2039,23 @@ class FunctionCall(TypedAstNode):
         self._func_name  = func.name
         n_results = len(func.results)
         if n_results == 1:
-            self._dtype      = func.results[0].var.dtype
             self._rank       = func.results[0].var.rank
             self._shape      = func.results[0].var.shape
-            self._precision  = func.results[0].var.precision
             self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._dtype      = NativeVoid()
             self._rank       = 0
             self._shape      = None
-            self._precision  = None
             self._order      = None
-            self._class_type = NativeVoid()
+            self._class_type = VoidType()
         else:
             dtypes = [r.var.dtype for r in func.results]
             if all(d is dtypes[0] for d in dtypes):
-                dtype = NativeHomogeneousTuple()
+                dtype = HomogeneousTupleType(dtypes[0])
             else:
-                dtype = NativeInhomogeneousTuple(*dtypes)
-            self._dtype      = dtype
+                dtype = InhomogeneousTupleType(*dtypes)
             self._rank       = 1
             self._shape      = (LiteralInteger(n_results),)
-            self._precision  = None
             self._order      = None
             self._class_type = dtype
 
@@ -2302,8 +2299,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import Assign, FunctionDef
     >>> from pyccel.ast.operators import PyccelAdd
     >>> from pyccel.ast.literals import LiteralInteger
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [FunctionDefArgument(x)]
     >>> results     = [FunctionDefResult(y)]
     >>> body        = [Assign(y,PyccelAdd(x,LiteralInteger(1)))]
@@ -2317,8 +2314,8 @@ class FunctionDef(ScopedAstNode):
     >>> from pyccel.ast.core import FunctionDef
     >>> from pyccel.ast.core import FunctionDefArgument
     >>> n = FunctionDefArgument('n', value=4)
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> args        = [x, n]
     >>> results     = [y]
     >>> body        = [Assign(y,x+n)]
@@ -3137,22 +3134,32 @@ class Interface(PyccelAstNode):
         'syntactic_node':self._syntactic_node}
         return args, kwargs
 
-    def point(self, args, use_final_precision = False):
-        """Returns the actual function that will be called, depending on the passed arguments."""
+    def point(self, args):
+        """
+        Return the actual function that will be called, depending on the passed arguments.
+
+        From the arguments passed in the function call, determine which of the FunctionDef
+        objects in the Interface is actually called.
+
+        Parameters
+        ----------
+        args : tuple[TypedAstNode]
+            The arguments passed in the function call.
+
+        Returns
+        -------
+        FunctionDef
+            The function definition which corresponds with the arguments.
+        """
         fs_args = [[j for j in i.arguments] for i in
                     self._functions]
 
-        if use_final_precision:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and get_final_precision(call_arg) == \
-                        get_final_precision(func_arg)
-        else:
-            type_match = lambda dtype1, dtype2, call_arg, func_arg: \
-                    (dtype1 in dtype2 or dtype2 in dtype1) \
-                    and (call_arg.rank == func_arg.rank) \
-                    and call_arg.precision == func_arg.precision
+        def type_match(call_arg, func_arg):
+            """
+            Check that the types of the arguments in the function and the call match.
+            """
+            return call_arg.class_type == func_arg.class_type \
+                    and (call_arg.rank == func_arg.rank)
 
 
         j = -1
@@ -3162,17 +3169,14 @@ class Interface(PyccelAstNode):
             for (x, y) in enumerate(args):
                 func_arg = i[x].var
                 call_arg = y.value
-                dtype1 = str_dtype(call_arg.dtype)
-                dtype2 = str_dtype(func_arg.dtype)
-                found = found and type_match(dtype1, dtype2, call_arg, func_arg)
+                found = found and type_match(call_arg, func_arg)
             if found:
                 break
 
-        if found:
-            return  self._functions[j]
-        else:
-            errors.report('Arguments types provided to {} are incompatible'.format(self.name),
+        if not found:
+            errors.report(f'Arguments types provided to {self.name} are incompatible',
                         severity='fatal')
+        return  self._functions[j]
 
 class FunctionAddress(FunctionDef):
     """
@@ -3214,8 +3218,8 @@ class FunctionAddress(FunctionDef):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> # a function definition can have a FunctionAddress as an argument
     >>> FunctionDef('g', [FunctionAddress('f', [x], [y])], [], [])
     >>> # we can also Declare a FunctionAddress
@@ -3346,19 +3350,19 @@ class ClassDef(ScopedAstNode):
     scope : Scope
         The scope for the class contents.
 
-    class_type : DataType
+    class_type : PyccelType
         The data type associated with this class.
 
     Examples
     --------
     >>> from pyccel.ast.core import Variable, Assign
     >>> from pyccel.ast.core import ClassDef, FunctionDef
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
-    >>> z = Variable('float', 'z')
-    >>> t = Variable('float', 't')
-    >>> a = Variable('float', 'a')
-    >>> b = Variable('float', 'b')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
+    >>> z = Variable(PythonNativeFloat(), 'z')
+    >>> t = Variable(PythonNativeFloat(), 't')
+    >>> a = Variable(PythonNativeFloat(), 'a')
+    >>> b = Variable(PythonNativeFloat(), 'b')
     >>> body = [Assign(y,x+a)]
     >>> translate = FunctionDef('translate', [x,y,a,b], [z,t], body)
     >>> attributes   = [x,y]
@@ -3414,13 +3418,13 @@ class ClassDef(ScopedAstNode):
 
         if not iterable(superclasses):
             raise TypeError('superclasses must be iterable')
-        if pyccel_stage != 'syntactic':
+        if pyccel_stage.current_stage and pyccel_stage != 'syntactic':
             for s in superclasses:
                 if not isinstance(s, ClassDef):
                     raise TypeError('superclass item must be a ClassDef')
 
-            if not isinstance(class_type, DataType):
-                raise TypeError("class_type must be a DataType")
+            if not isinstance(class_type, PyccelType):
+                raise TypeError("class_type must be a PyccelType")
 
         if not iterable(interfaces):
             raise TypeError('interfaces must be iterable')
@@ -3485,9 +3489,9 @@ class ClassDef(ScopedAstNode):
     @property
     def class_type(self):
         """
-        The DataType of an object of the described class.
+        The PyccelType of an object of the described class.
 
-        The DataType of an object of the described class.
+        The PyccelType of an object of the described class.
         """
         return self._class_type
 
@@ -3889,8 +3893,8 @@ class FuncAddressDeclare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Variable, FunctionAddress, FuncAddressDeclare
-    >>> x = Variable('float', 'x')
-    >>> y = Variable('float', 'y')
+    >>> x = Variable(PythonNativeFloat(), 'x')
+    >>> y = Variable(PythonNativeFloat(), 'y')
     >>> FuncAddressDeclare(FunctionAddress('f', [x], [y]))
     """
     __slots__ = ('_variable','_intent','_value','_static')
@@ -3973,9 +3977,9 @@ class Declare(PyccelAstNode):
     Examples
     --------
     >>> from pyccel.ast.core import Declare, Variable
-    >>> Declare(Variable('int', 'n'))
+    >>> Declare(Variable(PythonNativeInt(), 'n'))
     Declare(n, None)
-    >>> Declare(Variable('float', 'x'), intent='out')
+    >>> Declare(Variable(PythonNativeFloat(), 'x'), intent='out')
     Declare(x, out)
     """
     __slots__ = ('_variable','_intent','_value',
@@ -4107,18 +4111,20 @@ class SymbolicPrint(PyccelAstNode):
 
 
 class Del(PyccelAstNode):
+    """
+    Represents a memory deallocation in the code.
 
-    """Represents a memory deallocation in the code.
+    Represents a memory deallocation in the code.
 
     Parameters
     ----------
-    variables : list, tuple
-        a list of pyccel variables
+    expr : Variable
+        The variable being deallocated.
 
     Examples
     --------
     >>> from pyccel.ast.core import Del, Variable
-    >>> x = Variable('float', 'x', rank=2, shape=(10,2), memory_handling='heap')
+    >>> x = Variable(PythonNativeFloat(), 'x', rank=2, shape=(10,2), memory_handling='heap')
     >>> Del([x])
     Del([x])
     """
@@ -4320,17 +4326,19 @@ class Assert(PyccelAstNode):
     """
     Represents an assert statement in the code.
 
+    Represents an assert statement in the code.
+
     Parameters
     ----------
-    test: TypedAstNode
-        boolean expression to check
+    test : TypedAstNode
+        Boolean expression to check.
     """
     __slots__ = ('_test',)
     _attribute_nodes = ('_test',)
 
     def __init__(self, test):
         if pyccel_stage != 'syntactic':
-            if test.dtype is not NativeBool():
+            if test.dtype is not PythonNativeBool():
                 test = PythonBool(test)
         self._test = test
         super().__init__()
@@ -4359,16 +4367,19 @@ class ErrorExit(Exit):
     __slots__ = ()
 
 class IfSection(PyccelAstNode):
-    """Represents a condition and associated code block
+    """
+    Represents one condition and code block in an if statement.
+
+    Represents a condition and associated code block
     in an if statement in the code.
 
     Parameters
     ----------
     cond : TypedAstNode
            A boolean expression indicating whether or not the block
-           should be executed
+           should be executed.
     body : CodeBlock
-           The code to be executed in the condition is satisfied
+           The code to be executed if the condition is satisfied.
 
     Examples
     --------
@@ -4383,7 +4394,7 @@ class IfSection(PyccelAstNode):
 
     def __init__(self, cond, body):
 
-        if pyccel_stage == 'semantic' and cond.dtype is not NativeBool():
+        if pyccel_stage == 'semantic' and cond.dtype is not PythonNativeBool():
             cond = PythonBool(cond)
         if isinstance(body, (list, tuple)):
             body = CodeBlock(body)
@@ -4480,12 +4491,10 @@ class InProgram(TypedAstNode):
     other words, a class representing the boolean:
     `__name__ == '__main__'`
     """
-    _dtype = NativeBool()
-    _precision = -1
     _rank  = 0
     _shape = None
     _order = None
-    _class_type = NativeBool()
+    _class_type = PythonNativeBool()
     _attribute_nodes = ()
     __slots__ = ()
 

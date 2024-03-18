@@ -82,16 +82,6 @@ def test_pop_list_of_ndarrays(language) :
     assert isinstance(python_result, type(pyccel_result))
     assert np.array_equal(python_result, pyccel_result)
 
-def test_pop_list_of_tuples_and_lists(language) :
-    def pop_last_element():
-        a = [(True, False), [True, False]]
-        return a.pop()
-    epyc_last_element = epyccel(pop_last_element, language = language)
-    pyccel_result = epyc_last_element()
-    python_result = pop_last_element()
-    assert isinstance(python_result, type(pyccel_result))
-    assert python_result == pyccel_result
-
 def test_pop_specific_index(language) :
     def pop_specific_index():
         a = [1j,3j,45j]
@@ -168,16 +158,6 @@ def test_append_range_list(language):
         a = [[1, 2, 3]]
         for i in range(0, 1000):
             a.append([i, i + 1])
-        return a
-
-    epyc_f = epyccel(f, language=language)
-    assert f() == epyc_f()
-
-def test_append_range_tuple(language):
-    def f():
-        a = [[1, 2, 3]]
-        for i in range(0, 1000):
-            a.append((i, i + 1))
         return a
 
     epyc_f = epyccel(f, language=language)
@@ -354,16 +334,6 @@ def test_insert_range_list(language):
         a = [[1, 2, 3]]
         for i in range(4, 1000):
             a.insert(i, [i, i + 1])
-        return a
-
-    epyc_f = epyccel(f, language=language)
-    assert f() == epyc_f()
-
-def test_insert_range_tuple(language):
-    def f():
-        a = [[1, 2, 3]]
-        for i in range(4, 1000):
-            a.insert(i, (i, i + 1))
         return a
 
     epyc_f = epyccel(f, language=language)

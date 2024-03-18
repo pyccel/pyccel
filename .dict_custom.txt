@@ -113,3 +113,6 @@ subclasses
 oneAPI
 getter
 setter
+bitwise
+datatyping
+datatypes

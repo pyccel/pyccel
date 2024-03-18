@@ -8,16 +8,16 @@ import warnings
 from pyccel.decorators import __all__ as pyccel_decorators
 
 from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, PythonInt, PythonFloat
-from pyccel.ast.builtins   import PythonComplex
+from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import NativeHomogeneousTuple
+from pyccel.ast.datatypes  import HomogeneousTupleType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
 from pyccel.ast.numpyext   import numpy_target_swap
 from pyccel.ast.numpyext   import NumpyArray, NumpyNonZero, NumpyResultType
-from pyccel.ast.numpyext   import DtypePrecisionToCastFunction
+from pyccel.ast.numpytypes import NumpyNumericType
 from pyccel.ast.variable   import DottedName, Variable
 from pyccel.ast.utilities  import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities  import decorators_mod
@@ -37,7 +37,7 @@ errors = Errors()
 # The keys are modules from which the target is imported
 # The values are a dictionary whose keys are object aliases and whose values
 # are the names used in pyccel
-import_object_swap = { 'numpy': numpy_target_swap}
+import_object_swap = {'numpy': numpy_target_swap}
 import_target_swap = {
         'numpy' : {'double'     : 'float64',
                    'prod'       : 'product',
@@ -216,8 +216,8 @@ class PythonCodePrinter(CodePrinter):
             dtype = self._get_numpy_name(init_dtype.cls_name)
         else:
             dtype = self._print(expr.dtype)
-            if expr.precision != -1:
-                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[expr.dtype.name][expr.precision])
+            if isinstance(expr.dtype, NumpyNumericType):
+                dtype = self._get_numpy_name(DtypePrecisionToCastFunction[expr.dtype])
         return f"dtype = {dtype}"
 
     def _print_Header(self, expr):
@@ -227,17 +227,8 @@ class PythonCodePrinter(CodePrinter):
         fs = ', '.join(self._print(f) for f in expr)
         return '({0})'.format(fs)
 
-    def _print_NativeBool(self, expr):
-        return 'bool'
-
-    def _print_NativeInteger(self, expr):
-        return 'int'
-
-    def _print_NativeFloat(self, expr):
-        return 'float'
-
-    def _print_NativeComplex(self, expr):
-        return 'complex'
+    def _print_FixedSizeType(self, expr):
+        return str(expr)
 
     def _print_Variable(self, expr):
         return expr.name
@@ -257,7 +248,7 @@ class PythonCodePrinter(CodePrinter):
             var = expr.var
             def get_type_annotation(var):
                 if isinstance(var, Variable):
-                    type_annotation = str(var.dtype)
+                    type_annotation = str(var.class_type)
                     if var.rank:
                         type_annotation += '[' + ','.join(':' for _ in range(var.rank)) + ']'
                     return f"'{type_annotation}'"
@@ -293,7 +284,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, NativeHomogeneousTuple):
+            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, HomogeneousTupleType):
                 indices = ']['.join(i for i in indices)
             else:
                 indices = ','.join(i for i in indices)
@@ -460,13 +451,13 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_PythonInt(self, expr):
         name = 'int'
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
     def _print_PythonFloat(self, expr):
         name = 'float'
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         return '{}({})'.format(name, self._print(expr.arg))
 
@@ -478,7 +469,7 @@ class PythonCodePrinter(CodePrinter):
             return '{}({}, {})'.format(name, self._print(expr.real), self._print(expr.imag))
 
     def _print_NumpyComplex(self, expr):
-        if expr.precision != -1:
+        if isinstance(expr.dtype, NumpyNumericType):
             name = self._get_numpy_name(expr)
         else:
             name = 'complex'
@@ -930,13 +921,9 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Literal(self, expr):
         dtype = expr.dtype
-        precision = expr.precision
 
-        if not isinstance(expr, (LiteralInteger, LiteralFloat, LiteralComplex)) or \
-                precision == -1:
-            return repr(expr.python_value)
-        else:
-            cast_func = DtypePrecisionToCastFunction[dtype.name][precision]
+        if isinstance(dtype, NumpyNumericType):
+            cast_func = DtypePrecisionToCastFunction[dtype]
             type_name = cast_func.__name__.lower()
             is_numpy  = type_name.startswith('numpy')
             cast_name = cast_func.name
@@ -946,6 +933,8 @@ class PythonCodePrinter(CodePrinter):
                         source = 'numpy',
                         target = AsName(cast_func, cast_name))
             return '{}({})'.format(name, repr(expr.python_value))
+        else:
+            return repr(expr.python_value)
 
     def _print_Print(self, expr):
         args = []

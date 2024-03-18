@@ -10,7 +10,7 @@ always available.
 This module contains objects which describe these methods within Pyccel's AST.
 """
 
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric, NativeHomogeneousList
+from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('ListAppend',
@@ -76,24 +76,21 @@ class ListAppend(ListMethod):
         The argument passed to append() method.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
+    _dtype = VoidType()
     _shape = None
     _order = None
     _rank = 0
-    _precision = -1
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'append'
 
     def __init__(self, list_obj, new_elem) -> None:
+        expected_type = list_obj.class_type.element_type
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_obj.dtype is not NativeGeneric() and
-            list_obj.dtype == new_elem.dtype and
-            list_obj.precision == new_elem.precision and
+            new_elem.class_type == expected_type and
             list_obj.rank - 1 == new_elem.rank
-            )
+        )
         if not is_homogeneous:
-            raise TypeError("Expecting an argument of the same type as the elements of the list")
+            raise TypeError(f"Expecting an argument of the same type as the elements of the list ({expected_type}) but received {new_elem.class_type}")
         super().__init__(list_obj, new_elem)
 
 #==============================================================================
@@ -116,16 +113,14 @@ class ListPop(ListMethod) :
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_dtype','_precision', '_rank', '_shape', '_order')
-    _class_type = NativeHomogeneousList()
+    __slots__ = ('_class_type', '_rank', '_shape', '_order')
     name = 'pop'
 
     def __init__(self, list_obj, index_element=None) -> None:
         self._rank = list_obj.rank - 1
-        self._dtype = list_obj.dtype
-        self._precision = list_obj.precision
         self._shape = (None if len(list_obj.shape) == 1 else tuple(list_obj.shape[1:]))
         self._order = (None if self._shape is None or len(self._shape) == 1 else list_obj.order)
+        self._class_type = list_obj.class_type.element_type
         super().__init__(list_obj, index_element)
 
 #==============================================================================
@@ -148,12 +143,10 @@ class ListClear(ListMethod) :
         The list object which the method is called from.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
-    _precision = -1
     _rank = 0
     _order = None
     _shape = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, list_obj) -> None:
@@ -186,20 +179,16 @@ class ListInsert(ListMethod):
         The argument passed to insert() method.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = -1
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'insert'
 
     def __init__(self, list_obj, index, new_elem) -> None:
+        expected_type = list_obj.class_type.element_type
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            list_obj.dtype is not NativeGeneric() and
-            list_obj.dtype == new_elem.dtype and
-            list_obj.precision == new_elem.precision and
+            new_elem.class_type == expected_type and
             list_obj.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:

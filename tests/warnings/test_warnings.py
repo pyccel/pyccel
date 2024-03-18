@@ -77,7 +77,8 @@ def test_semantic_warnings(f):
 
 
 @pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
-def test_cwrapper_warnings(f, language):
+@pytest.mark.c
+def test_cwrapper_warnings(f):
     with pytest.warns(UserWarning):
         epyccel(f, language='c')
 
