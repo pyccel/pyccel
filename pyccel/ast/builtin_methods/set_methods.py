@@ -140,14 +140,12 @@ class SetPop(SetMethod):
     set_variable : TypedAstNode
         The name of the set.
     """
-    __slots__ = ('_dtype', '_precision', '_class_type')
+    __slots__ = ('_class_type',)
     _rank = 0
     _order = None
     _shape = None
     name = 'pop'
 
     def __init__(self, set_variable):
-        self._dtype = set_variable.dtype
-        self._precision = set_variable.precision
-        self._class_type = set_variable.dtype
+        self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
