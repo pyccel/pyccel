@@ -552,10 +552,10 @@ def test_remove_complex(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_remove_tuple_from_list(language):
+def test_remove_list_from_list(language):
     def f():
-        lst = [[True, False, True], (False, True)]
-        lst.remove((False, True))
+        lst = [[True, False, True], [False, True]]
+        lst.remove([False, True])
         return lst
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()

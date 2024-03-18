@@ -254,23 +254,19 @@ class ListRemove(ListMethod) :
         The object to be removed from the list.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
-    _precision = None
-    _rank = 0
-    _order = None
     _shape = None
-    _class_type = NativeVoid()
+    _order = None
+    _rank = 0
+    _class_type = VoidType()
     name = 'remove'
 
     def __init__(self, list_obj, removed_obj) -> None:
+        expected_type = list_obj.class_type.element_type
         is_homogeneous = (
-            removed_obj.dtype is not NativeGeneric() and
-            list_obj.dtype is not NativeGeneric() and
-            list_obj.dtype == removed_obj.dtype and
-            list_obj.precision == removed_obj.precision and
+            removed_obj.class_type == expected_type and
             list_obj.rank - 1 == removed_obj.rank
         )
         if not is_homogeneous:
-            raise TypeError(f"Can't remove an element of type {removed_obj.dtype} from a list of {list_obj.dtype}")
+            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
         super().__init__(list_obj, removed_obj)
 
