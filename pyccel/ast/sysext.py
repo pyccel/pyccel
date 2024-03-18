@@ -7,7 +7,7 @@
 """
 from .core import PyccelFunctionDef, Module
 from .internals import PyccelInternalFunction
-from .datatypes import NativeVoid
+from .datatypes import VoidType
 from .internals import LiteralInteger
 
 __all__ = (
@@ -18,19 +18,20 @@ __all__ = (
 )
 
 class SysExit(PyccelInternalFunction):
-    """Represents a call to  sys.exit
+    """
+    Represents a call to sys.exit.
+
+    Represents a call to sys.exit.
 
     Parameters
     ----------
-
-    arg : TypedAstNode (optional)
-        if arg.dtype is NativeInteger it will be used as the exit_code
-        else the arg will be printed to the stderror
+    status : TypedAstNode, optional
+        If status.dtype is NativeInteger it will be used as the exit_code,
+        else the status will be printed to the stderror.
     """
     __slots__ = ()
     name      = 'exit'
-    _dtype     = NativeVoid()
-    _precision = -1
+    _class_type     = VoidType()
     _rank      = 0
     _shape     = None
     _order     = None

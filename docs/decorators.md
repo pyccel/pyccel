@@ -364,6 +364,7 @@ end module boo
 ## Inline
 
 The `@inline` decorator indicates that the body of a function should be printed directly when it is called rather than passing through an additional function call. This can be useful for code optimisation.
+Any functions with the `@inline` decorator will not be exposed to the user in the shared library.
 
 ### Basic Example
 
@@ -596,6 +597,14 @@ end module boo
 
 The generated C code:
 ```c
+```
+
+### Import Error when imported from the shared library
+Using the previous example, if we import the function `get_val`, we get this error:
+```
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+ImportError: cannot import name 'get_val' from 'boo' (/home/__init__.py)
 ```
 
 ## Getting Help
