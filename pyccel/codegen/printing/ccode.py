@@ -2131,8 +2131,7 @@ class CCodePrinter(CodePrinter):
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if not self.is_c_pointer(lhs_var) and \
-                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+        if isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
             rhs = self._print(rhs_var)
 
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
