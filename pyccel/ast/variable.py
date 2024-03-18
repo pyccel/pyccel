@@ -181,8 +181,6 @@ class Variable(TypedAstNode):
 
         elif shape is None:
             shape = tuple(None for i in range(rank))
-        else:
-            assert len(shape) == rank
 
         self._alloc_shape = shape
         self._class_type = class_type
