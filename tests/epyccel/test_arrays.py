@@ -3983,7 +3983,7 @@ def test_iterate_slice(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
-            pytest.mark.fortran])
+            pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
