@@ -171,7 +171,6 @@ class Variable(TypedAstNode):
         self._allows_negative_indexes = allows_negative_indexes
 
         self._cls_base       = cls_base
-        self._order          = order
         self._is_argument    = is_argument
         self._is_temp        = is_temp
 

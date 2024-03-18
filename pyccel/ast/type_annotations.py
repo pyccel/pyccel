@@ -88,7 +88,7 @@ class VariableTypeAnnotation(PyccelAstNode):
         self._is_const = val
 
     def __hash__(self):
-        return hash((self.class_type, self.rank, self.order))
+        return hash(self.class_type)
 
     def __eq__(self, other):
         # Needed for set

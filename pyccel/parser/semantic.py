@@ -1974,17 +1974,18 @@ class SemanticParser(BasicParser):
             return annotation
 
         if all(isinstance(a, Slice) for a in args):
+            rank = len(args)
+            order = None
             if isinstance(base, VariableTypeAnnotation):
                 dtype = base.class_type
-                class_type = NumpyNDArrayType(numpy_process_dtype(dtype))
+                class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
                 if base.rank != 0:
                     raise errors.report("Can't index a vector type",
                             severity='fatal', symbol=expr)
             elif isinstance(base, PyccelFunctionDef):
                 dtype_cls = base.cls_name
                 dtype = numpy_process_dtype(dtype_cls.static_type())
-                class_type = NumpyNDArrayType(dtype)
-            rank = len(args)
+                class_type = NumpyNDArrayType(dtype, rank, order)
             return VariableTypeAnnotation(class_type, rank)
 
         if not any(isinstance(a, Slice) for a in args):
@@ -2585,13 +2586,12 @@ class SemanticParser(BasicParser):
                 address = FunctionAddress(name, args, results)
                 possible_args.append(address)
             elif isinstance(t, VariableTypeAnnotation):
-                rank  = t.rank
                 class_type = t.class_type
                 cls_base = get_cls_base(class_type) or self.scope.find(class_type.name, 'classes')
                 v = var_class(class_type, name, cls_base = cls_base,
-                        shape = None, rank = rank, order = t.order,
+                        shape = None,
                         is_const = t.is_const, is_optional = False,
-                        memory_handling = array_memory_handling if rank > 0 else 'stack',
+                        memory_handling = array_memory_handling if class_type.rank > 0 else 'stack',
                         **kwargs)
                 possible_args.append(v)
             else:
@@ -2616,8 +2616,6 @@ class SemanticParser(BasicParser):
             class_type = dtype_cls.static_type()
             return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
-            if visited_dtype.rank > 1:
-                visited_dtype.order = order or visited_dtype.order or 'C'
             return UnionTypeAnnotation(visited_dtype)
         elif isinstance(visited_dtype, UnionTypeAnnotation):
             return visited_dtype

@@ -1757,7 +1757,7 @@ class NumpyUfuncBinary(NumpyUfuncBase):
 
     def _get_shape_rank(self, x1, x2):
         shape = broadcast(x1.shape, x2.shape)
-        rank  = 0 if self._shape is None else len(self._shape)
+        rank  = 0 if shape is None else len(shape)
         return shape, rank
 
     def _get_dtype(self, x1, x2):
