@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+
 ### Deprecated
 
 ## \[1.11.2\] - 2024-03-05
