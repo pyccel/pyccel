@@ -261,7 +261,7 @@ class ListCopy(ListMethod) :
     name = 'copy'
 
     def __init__(self, list_obj) -> None:
-        self._rank = list_obj.rank 
+        self._rank = list_obj.rank
         self._shape = list_obj.shape
         self._order = list_obj.order
         self._class_type = list_obj.class_type
