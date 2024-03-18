@@ -47,6 +47,8 @@ class CStackArray(HomogeneousContainerType, metaclass=ArgumentSingleton):
     """
     __slots__ = ('_element_type',)
     _name = 'c_stackarray'
+    _rank = 1
+    _order = None
 
     def __init__(self, element_type):
         assert isinstance(element_type, FixedSizeType)

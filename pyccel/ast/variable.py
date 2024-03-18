@@ -834,6 +834,7 @@ class IndexedElement(TypedAstNode):
 
         shape = base.shape
         rank  = base.rank
+        assert len(indices) <= rank
 
         if any(not isinstance(a, (int, TypedAstNode, Slice, LiteralEllipsis)) for a in indices):
             errors.report("Index is not of valid type",
@@ -874,13 +875,10 @@ class IndexedElement(TypedAstNode):
         rank  = len(new_shape)
         self._shape = None if rank == 0 else tuple(new_shape)
 
-        base_type = base.class_type
-        base_rank = base_type.rank
-        for _ in range(base_rank-rank):
-            rank -= 1
-            if not (rank and isinstance(base_type, NumpyNDArrayType)):
-                base_type = base_type.element_type
-        self._class_type = base_type
+        if rank == 0:
+            self._class_type = base.class_type.element_type
+        else:
+            self._class_type = base.class_type.reduce_rank(rank)
 
         super().__init__()
 

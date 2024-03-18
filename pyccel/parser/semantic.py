@@ -733,8 +733,6 @@ class SemanticParser(BasicParser):
         """
         d_var = {
                 'shape'    : expr.shape,
-                'rank'     : expr.rank,
-                'order'    : expr.order,
                 'class_type' : expr.class_type,
             }
 
@@ -1452,7 +1450,7 @@ class SemanticParser(BasicParser):
             name = lhs
             if lhs == '_':
                 name = self.scope.get_new_name()
-            dtype = d_var.pop('class_type')
+            class_type = d_var.pop('class_type')
 
             d_lhs = d_var.copy()
             # ISSUES #177: lhs must be a pointer when rhs is heap array
@@ -1486,7 +1484,7 @@ class SemanticParser(BasicParser):
                         attribute_name = lhs.name[-1]
                         new_name = class_def.scope.get_expected_name(attribute_name)
                         # Create the attribute
-                        member = self._create_variable(new_name, dtype, rhs, d_lhs)
+                        member = self._create_variable(new_name, class_type, rhs, d_lhs)
 
                         # Insert the attribute to the class scope
                         # Passing the original name ensures that the attribute can be found under this name
@@ -1512,7 +1510,7 @@ class SemanticParser(BasicParser):
 
                 # We cannot allow the definition of a stack array from a shape which
                 # is unknown at the declaration
-                if d_lhs['rank'] > 0 and d_lhs.get('memory_handling', None) == 'stack':
+                if class_type.rank > 0 and d_lhs.get('memory_handling', None) == 'stack':
                     for a in d_lhs['shape']:
                         if (isinstance(a, FunctionCall) and not a.funcdef.is_pure) or \
                                 any(not f.funcdef.is_pure for f in a.get_attribute_nodes(FunctionCall)):
@@ -1530,7 +1528,7 @@ class SemanticParser(BasicParser):
                 if not isinstance(lhs, DottedVariable):
                     new_name = self.scope.get_expected_name(name)
                     # Create new variable
-                    lhs = self._create_variable(new_name, dtype, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
+                    lhs = self._create_variable(new_name, class_type, rhs, d_lhs, arr_in_multirets=arr_in_multirets)
 
                     # Add variable to scope
                     self.scope.insert_variable(lhs, name)
@@ -1604,9 +1602,9 @@ class SemanticParser(BasicParser):
             # Variable already exists
             else:
 
-                self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
+                self._ensure_inferred_type_matches_existing(class_type, d_var, var, is_augassign, new_expressions, rhs)
 
-                # in the case of elemental, lhs is not of the same dtype as
+                # in the case of elemental, lhs is not of the same class_type as
                 # var.
                 # TODO d_lhs must be consistent with var!
                 # the following is a small fix, since lhs must be already
