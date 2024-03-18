@@ -8,7 +8,6 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
-from abc import ABC
 from functools import lru_cache
 
 import numpy
@@ -135,7 +134,7 @@ class PrimitiveCharacterType(PrimitiveType):
 
 #==============================================================================
 
-class PyccelType(ABC):
+class PyccelType:
     """
     Base class representing the type of an object.
 
@@ -180,16 +179,6 @@ class PyccelType(ABC):
             The new type.
         """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
-
-    @property
-    @abstractmethod
-    def rank(self):
-        pass
-
-    @property
-    @abstractmethod
-    def order(self):
-        pass
 
 #==============================================================================
 
@@ -488,27 +477,8 @@ class TupleType:
     """
     __slots__ = ()
     _name = 'tuple'
-
-    @property
-    def rank(self):
-        """
-        Number of dimensions of the object.
-
-        Number of dimensions of the object. If the object is a scalar then
-        this is equal to 0.
-        """
-        return 1
-
-    @property
-    def order(self):
-        """
-        The data layout ordering in memory.
-
-        Indicates whether the data is stored in row-major ('C') or column-major
-        ('F') format. This is only relevant if rank > 1. When it is not relevant
-        this function returns None.
-        """
-        return None
+    _rank = 1
+    _order = None
 
 #==============================================================================
 
