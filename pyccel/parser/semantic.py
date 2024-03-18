@@ -1744,8 +1744,7 @@ class SemanticParser(BasicParser):
                         status = 'unallocated'
 
                     new_expressions.append(Allocate(var,
-                        shape=d_var['shape'], order=d_var['order'],
-                        status=status))
+                        shape=d_var['shape'], status=status))
 
                     if status != 'unallocated':
                         errors.report(ARRAY_REALLOCATION, symbol=var.name,
@@ -3698,7 +3697,9 @@ class SemanticParser(BasicParser):
         d_var['memory_handling'] = 'heap'
         class_type = HomogeneousListType(class_type)
         d_var['class_type'] = class_type
-        shape = [dim, *d_var['shape']]
+        shape = [dim]
+        if d_var['shape']:
+            shape.extend(*d_var['shape'])
         d_var['shape'] = shape
         d_var['cls_base'] = get_cls_base(class_type)
 

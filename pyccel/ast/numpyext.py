@@ -913,7 +913,7 @@ class NumpyMatmul(PyccelInternalFunction):
         else:
             order = None if rank < 2 else 'C'
 
-        self._class_type = NumpyNDArrayType(dtype) if self.rank else dtype
+        self._class_type = NumpyNDArrayType(dtype, rank, order) if rank else dtype
 
     @property
     def a(self):
