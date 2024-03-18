@@ -3272,25 +3272,3 @@ class FCodePrinter(CodePrinter):
                  *[a.getter for a in expr.attributes], *[a.setter for a in expr.attributes]]
         sep = f'\n{self._print(SeparatorComment(40))}\n'
         return '', sep.join(self._print(f) for f in funcs)
-
-
-def fcode(expr, filename, assign_to=None, **settings):
-    """Converts an expr to a string of Fortran code
-
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
-    """
-
-    return FCodePrinter(filename, **settings).doprint(expr, assign_to)
