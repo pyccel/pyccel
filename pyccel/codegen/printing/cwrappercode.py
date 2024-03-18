@@ -526,7 +526,7 @@ class CWrapperCodePrinter(CCodePrinter):
         lhs = self._print(lhs_address)
         rhs = self._print(rhs_address)
 
-        return '{} = {};\n'.format(lhs, rhs)
+        return f'{lhs} = {rhs};\n'
 
 def cwrappercode(expr, filename, target_language, assign_to=None, **settings):
     """Converts an expr to a string of c wrapper code
