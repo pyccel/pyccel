@@ -27,8 +27,8 @@ def test_symbolic(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name)
-    codegen.doprint()
+    codegen = Codegen(ast, name, 'fortran')
+    codegen.printer.doprint(codegen.ast)
 
     # reset Errors singleton
     errors = Errors()
