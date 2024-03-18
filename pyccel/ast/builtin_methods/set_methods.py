@@ -9,10 +9,11 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric
+from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
+
 
 class SetMethod(PyccelInternalFunction):
     """
@@ -26,7 +27,7 @@ class SetMethod(PyccelInternalFunction):
     set_variable : TypedAstNode
         The set on which the method will operate.
 
-    *args : iterable
+    *args : TypedAstNode
         The arguments passed to the function call.
     """
     __slots__ = ('_set_variable',)
@@ -43,6 +44,7 @@ class SetMethod(PyccelInternalFunction):
         Get the variable representing the set.
         """
         return self._set_variable
+
 
 class SetAdd(SetMethod) :
     """
@@ -61,25 +63,21 @@ class SetAdd(SetMethod) :
         The element that needs to be added to a set.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            set_variable.dtype is not NativeGeneric() and
-            set_variable.dtype == new_elem.dtype and
-            set_variable.precision == new_elem.precision and
+            set_variable.class_type.element_type == new_elem.class_type and
             set_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
             raise TypeError("Expecting an argument of the same type as the elements of the set")
         super().__init__(set_variable, new_elem)
+
 
 class SetClear(SetMethod):
     """
@@ -94,13 +92,34 @@ class SetClear(SetMethod):
         The set on which the method will operate.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, set_variable):
+        super().__init__(set_variable)
+
+
+class SetCopy(SetMethod):
+    """
+    Represents a call to the .copy() method.
+
+    The copy() method in set class creates a shallow 
+    copy of a set object and returns it. 
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set on which the method will operate.
+    """
+    __slots__ = ("_shape", "_order", "_rank", "_class_type",)
+    name = 'copy'
+
+    def __init__(self, set_variable):
+        self._shape = set_variable._shape
+        self._order = set_variable._order
+        self._rank = set_variable._rank
+        self._class_type = set_variable._class_type
         super().__init__(set_variable)
