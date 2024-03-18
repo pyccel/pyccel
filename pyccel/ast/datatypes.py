@@ -814,6 +814,27 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         else:
             return self
 
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return 1
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     Class representing the homogeneous dictionary type.
