@@ -3983,9 +3983,38 @@ def test_iterate_slice(language):
 def test_unpacking(language):
     f1 = arrays.unpack_array
     f2 = epyccel(f1, language = language)
+
+    arr = np.ones(3, dtype=int)
+    assert f1(arr) == f2(arr)
+
+    arr = np.ones((3,4), dtype=int)
+    x1, y1, z1 = f1(arr)
+    x2, y2, z2 = f1(arr)
+    check_array_equal(x1, x2)
+    check_array_equal(y1, y2)
+    check_array_equal(z1, z2)
+
+    arr = np.ones((3,4,2), dtype=int)
+    check_array_equal(x1, x2)
+    check_array_equal(y1, y2)
+    check_array_equal(z1, z2)
+
+    arr = np.ones((3,4), dtype=int, order='F')
+    check_array_equal(x1, x2)
+    check_array_equal(y1, y2)
+    check_array_equal(z1, z2)
+
+    arr = np.ones((3,4,2), dtype=int, order='F')
+    check_array_equal(x1, x2)
+    check_array_equal(y1, y2)
+    check_array_equal(z1, z2)
+
+def test_unpacking_of_known_size(language):
+    f1 = arrays.unpack_array_of_known_size
+    f2 = epyccel(f1, language = language)
     assert f1() == f2()
 
-def test_unpacking_2D(language):
-    f1 = arrays.unpack_array_2D
+def test_unpacking_2D_of_known_size(language):
+    f1 = arrays.unpack_array_2D_of_known_size
     f2 = epyccel(f1, language = language)
     assert f1() == f2()

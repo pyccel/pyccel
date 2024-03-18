@@ -1758,13 +1758,18 @@ def iterate_slice(i : int):
         res += ai
     return res
 
-def unpack_array():
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def unpack_array(arr : 'T'):
+    x, y, z = arr[:]
+    return x, y, z
+
+def unpack_array_of_known_size():
     from numpy import zeros
     arr = zeros(3, dtype='float64')
     x, y, z = arr[:]
     return x, y, z
 
-def unpack_array_2D():
+def unpack_array_2D_of_known_size():
     from numpy import zeros
     arr = zeros((3,4), dtype='float64')
     x, y, z = arr[:]
