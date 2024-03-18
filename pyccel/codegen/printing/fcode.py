@@ -1194,10 +1194,10 @@ class FCodePrinter(CodePrinter):
         order = expr.order
 
         try :
-            cast_func = DtypePrecisionToCastFunction[expr.dtype.name][expr.precision]
+            cast_func = DtypePrecisionToCastFunction[expr.dtype]
         except KeyError:
             errors.report(PYCCEL_RESTRICTION_TODO, severity='fatal')
-        arg = expr.arg if (expr.arg.dtype == expr.dtype and expr.arg.precision == expr.precision) else cast_func(expr.arg)
+        arg = expr.arg if expr.arg.dtype == expr.dtype else cast_func(expr.arg)
         # If Numpy array is stored with column-major ordering, transpose values
         # use reshape with order for rank > 2
         if expr.rank <= 2:
