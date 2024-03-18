@@ -1751,8 +1751,8 @@ def multiple_np_linspace():
 #==============================================================================
 
 def iterate_slice(i : int):
-    import numpy as np
-    a = np.arange(15)
+    from numpy import arange
+    a = arange(15)
     res = 0
     for ai in a[:i]:
         res += ai
