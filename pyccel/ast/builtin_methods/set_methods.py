@@ -145,14 +145,15 @@ class SetRemove(SetMethod):
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
+    _class_type = VoidType()
     name = 'remove'
 
     def __init__(self, set_variable, item) -> None:
         if not isinstance(item, TypedAstNode):
             raise TypeError(f"KeyError : It is not possible to look for a {item} in a set of {set_variable.dtype}")
+        expected_type = set_variable.class_type.element_type
         is_homogeneous = (
-            set_variable.class_type.element_type == item.class_type and
+            expected_type == item.class_type and
             set_variable.rank - 1 == item.rank
         )
         if not is_homogeneous:
