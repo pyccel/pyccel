@@ -1763,3 +1763,9 @@ def unpack_array():
     arr = zeros(3, dtype='float64')
     x, y, z = arr[:]
     return x, y, z
+
+def unpack_array_2D():
+    from numpy import zeros
+    arr = zeros((3,4), dtype='float64')
+    x, y, z = arr[:]
+    return x[0], y[1], z[2]

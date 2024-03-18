@@ -3984,3 +3984,8 @@ def test_unpacking(language):
     f1 = arrays.unpack_array
     f2 = epyccel(f1, language = language)
     assert f1() == f2()
+
+def test_unpacking_2D(language):
+    f1 = arrays.unpack_array_2D
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()
