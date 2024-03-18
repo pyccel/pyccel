@@ -3995,16 +3995,22 @@ def test_unpacking(language):
     check_array_equal(z1, z2)
 
     arr = np.arange(24, dtype=int).reshape((3,4,2))
+    x1, y1, z1 = f1(arr)
+    x2, y2, z2 = f1(arr)
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
 
     arr = np.arange(12, dtype=int).reshape((3,4), order='F')
+    x1, y1, z1 = f1(arr)
+    x2, y2, z2 = f1(arr)
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
 
     arr = np.arange(24, dtype=int).reshape((3,4,2), order='F')
+    x1, y1, z1 = f1(arr)
+    x2, y2, z2 = f1(arr)
     check_array_equal(x1, x2)
     check_array_equal(y1, y2)
     check_array_equal(z1, z2)
