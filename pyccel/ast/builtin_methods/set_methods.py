@@ -12,7 +12,7 @@ This module contains objects which describe these methods within Pyccel's AST.
 from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop')
 
 
 class SetMethod(PyccelInternalFunction):
@@ -122,4 +122,30 @@ class SetCopy(SetMethod):
         self._order = set_variable._order
         self._rank = set_variable._rank
         self._class_type = set_variable._class_type
+        super().__init__(set_variable)
+
+
+class SetPop(SetMethod):
+    """
+    Represents a call to the .pop() method.
+
+    The pop() method pops an element from the set. 
+    It does not take any arguments but returns the popped 
+    element. It raises an error if the set is empty.
+    The class does not raise an error as it assumes that the
+    user code is valid.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+    """
+    __slots__ = ('_class_type',)
+    _rank = 0
+    _order = None
+    _shape = None
+    name = 'pop'
+
+    def __init__(self, set_variable):
+        self._class_type = set_variable.class_type.element_type
         super().__init__(set_variable)
