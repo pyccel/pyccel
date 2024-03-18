@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
+
 ### Changed
 
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
