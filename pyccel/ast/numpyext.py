@@ -2229,7 +2229,7 @@ class NumpyNonZeroElement(NumpyNewArray):
         self._dim = dim
 
         self._shape = (NumpyCountNonZero(a),)
-        super().__init__(a, class_type = NumpyNDArray(NumpyInt64Type(), 1, None))
+        super().__init__(a, class_type = NumpyNDArrayType(NumpyInt64Type(), 1, None))
 
     @property
     def array(self):

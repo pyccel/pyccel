@@ -730,8 +730,6 @@ class CustomDataType(ContainerType, metaclass=Singleton):
     base class when a user defines their own type using classes.
     """
     __slots__ = ()
-    _rank = 0
-    _order = None
 
     @property
     def datatype(self):
@@ -757,6 +755,27 @@ class CustomDataType(ContainerType, metaclass=Singleton):
             A tuple containing any arguments to be passed to the callable.
         """
         return (self.__class__, ())
+
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return 0
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
 
 class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingleton):
     """

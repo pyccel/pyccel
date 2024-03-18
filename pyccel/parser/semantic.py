@@ -712,10 +712,8 @@ class SemanticParser(BasicParser):
 
         Create a dictionary describing all the type information that can be
         inferred about the expression `expr`. This includes information about:
-        - `datatype`
-        - `rank`
+        - `class_type`
         - `shape`
-        - `order`
         - `memory_handling`
         - `cls_base`
         - `is_target`
@@ -1697,8 +1695,6 @@ class SemanticParser(BasicParser):
 
         elif not is_augassign:
 
-            rank  = getattr(var, 'rank' , 'None')
-            order = getattr(var, 'order', 'None')
             shape = getattr(var, 'shape', 'None')
 
             # Get previous allocation calls
@@ -3053,7 +3049,6 @@ class SemanticParser(BasicParser):
             d_var = {'class_type' : dtype,
                     'memory_handling':'stack',
                     'shape' : None,
-                    'rank' : 0,
                     'is_target' : False,
                     'cls_base' : cls_def,
                     }
@@ -3245,9 +3240,7 @@ class SemanticParser(BasicParser):
                     assert(len(c_ranks) == 1)
                     arg = call_args[0].value
                     d_var['shape'          ] = arg.shape
-                    d_var['rank'           ] = arg.rank
                     d_var['memory_handling'] = arg.memory_handling
-                    d_var['order'          ] = arg.order
                     d_var['class_type'     ] = arg.class_type
                     d_var['cls_base'       ] = arg.cls_base
 
@@ -3584,24 +3577,21 @@ class SemanticParser(BasicParser):
             elif isinstance(a, (PythonZip, PythonEnumerate)):
                 dvar  = self._infer_type(a.element)
                 class_type = dvar.pop('class_type')
-                if dvar['rank'] > 0:
-                    dvar['rank' ] -= 1
+                if class_type.rank > 0:
+                    class_type = class_type.element_type
                     dvar['shape'] = (dvar['shape'])[1:]
-                if dvar['rank'] == 0:
+                if class_type.rank == 0:
                     dvar['memory_handling'] = 'stack'
                 var  = Variable(class_type, var, **dvar)
                 stop = a.element.shape[0]
             elif isinstance(a, Variable):
                 dvar  = self._infer_type(a)
                 class_type = dvar.pop('class_type').element_type
-                if dvar['rank'] == 1:
-                    dvar['rank']  = 0
+                if class_type.rank == 0:
                     dvar['shape'] = None
-                if dvar['rank'] > 1:
-                    dvar['rank'] -= 1
-                    dvar['shape'] = (dvar['shape'])[1:]
-                if dvar['rank'] == 0:
                     dvar['memory_handling'] = 'stack'
+                elif class_type.rank:
+                    dvar['shape'] = (dvar['shape'])[1:]
 
                 var  = Variable(class_type, var, **dvar)
                 stop = a.shape[0]
@@ -3706,16 +3696,10 @@ class SemanticParser(BasicParser):
                           severity='fatal')
 
         d_var['memory_handling'] = 'heap'
-        d_var['rank'] += 1
-        shape = [dim]
-        if d_var['rank'] != 1:
-            d_var['order'] = 'C'
-            shape += list(d_var['shape'])
-        else:
-            d_var['order'] = None
-        d_var['shape'] = shape
         class_type = HomogeneousListType(class_type)
         d_var['class_type'] = class_type
+        shape = [dim, *d_var['shape']]
+        d_var['shape'] = shape
         d_var['cls_base'] = get_cls_base(class_type)
 
         # ...
