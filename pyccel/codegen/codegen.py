@@ -34,7 +34,8 @@ class Codegen:
     Parameters
     ----------
     parser : SemanticParser
-        The Pyccel Semantic parser node.
+        The Pyccel semantic parser for a Python program or module. This contains the
+        annotated AST and additional information about the variables scope.
     name : str
         Name of the generated module or program.
     language : str
