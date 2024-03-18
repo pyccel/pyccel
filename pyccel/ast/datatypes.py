@@ -639,7 +639,7 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     __slots__ = ()
     _name = 'str'
     _element_type = PrimitiveCharacterType()
-    _rank = 0
+    _rank = 1
     _order = None
 
     @property
