@@ -3409,7 +3409,7 @@ class SemanticParser(BasicParser):
                     new_rhs.append(r)
 
                 lhs = PythonTuple(*new_lhs)
-                rhs = new_rhs
+                rhs = PythonTuple(*new_rhs)
             else:
                 errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr, severity='error')
                 return None
