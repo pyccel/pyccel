@@ -162,8 +162,6 @@ class PyccelOperator(TypedAstNode):
             return
         self._set_type()
         self._set_shape()
-        # rank is None for lambda functions
-        self._set_order()
         super().__init__()
 
     def _set_type(self):
@@ -245,24 +243,6 @@ class PyccelOperator(TypedAstNode):
 
     def __str__(self):
         return repr(self)
-
-    def _set_order(self):
-        """
-        Set the order of the result.
-
-        Set the order of the result of the operator.
-        This is chosen to match the arguments if they are in agreement.
-        Otherwise it defaults to 'C'.
-        """
-        if self.rank is not None and self.rank > 1:
-            orders = [a.order for a in self._args if a.order is not None]
-            my_order = orders[0]
-            if all(o == my_order for o in orders):
-                self._order = my_order
-            else:
-                self._order = 'C'
-        else:
-            self._order = None
 
     @property
     def args(self):
@@ -1138,14 +1118,6 @@ class PyccelBooleanOperator(PyccelOperator):
     _class_type = PythonNativeBool()
 
     __slots__ = ()
-
-    def _set_order(self):
-        """
-        Set the order of the result.
-
-        Set the order of the result of the operator. Nothing needs to
-        be done here as the order is a class variable.
-        """
 
     def _set_type(self):
         """
