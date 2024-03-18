@@ -6,7 +6,7 @@
 This module contains all types which define a python class which is automatically recognised by pyccel
 """
 
-from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy
+from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy, SetPop
 from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
 
 
@@ -154,6 +154,7 @@ SetClass = ClassDef('set',
             PyccelFunctionDef('add', func_class = SetAdd ),
             PyccelFunctionDef('clear', func_class = SetClear),
             PyccelFunctionDef('copy', func_class = SetCopy),
+            PyccelFunctionDef('pop', func_class = SetPop),
         ])
 
 #=======================================================================================
