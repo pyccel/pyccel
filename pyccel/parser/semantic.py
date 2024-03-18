@@ -1150,8 +1150,9 @@ class SemanticParser(BasicParser):
                 if not message:
                     message = UNRECOGNISED_FUNCTION_CALL
                 errors.report(message,
-                                symbol = expr,
-                                severity = 'fatal')
+                              symbol = expr,
+                              traceback = e.__traceback__,
+                              severity = 'fatal')
 
             return new_expr
         else:
@@ -1683,16 +1684,13 @@ class SemanticParser(BasicParser):
                 tmp_result = PyccelAdd(var, rhs)
                 result_type = tmp_result.class_type
                 raise_error = var.class_type != result_type
-            elif class_type == var.class_type and var.rank == 0:
-                # Don't complain about non-numpy and numpy scalars
-                raise_error = False
             else:
                 raise_error = True
 
             if raise_error:
                 name = var.name
                 rhs_str = str(rhs)
-                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(var.class_type, class_type),
+                errors.report(INCOMPATIBLE_TYPES_IN_ASSIGNMENT.format(repr(var.class_type), repr(class_type)),
                     symbol=f'{name}={rhs_str}',
                     bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                     severity='error')
@@ -1709,18 +1707,7 @@ class SemanticParser(BasicParser):
             if len(previous_allocations) == 0:
                 var.set_init_shape(d_var['shape'])
 
-            if (d_var['rank'] != rank) or (rank > 1 and d_var['order'] != order):
-
-                txt = '|{name}| {dtype}{old} <-> {dtype}{new}'
-                def format_shape(s):
-                    return "" if s is None else s
-                txt = txt.format(name=var.name, dtype=dtype, old=format_shape(var.shape),
-                    new=format_shape(d_var['shape']))
-                errors.report(INCOMPATIBLE_REDEFINITION, symbol=txt,
-                    bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
-                    severity='error')
-
-            elif d_var['shape'] != shape:
+            if d_var['shape'] != shape:
 
                 if var.is_argument:
                     errors.report(ARRAY_IS_ARG, symbol=var,
