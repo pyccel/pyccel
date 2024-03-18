@@ -2044,6 +2044,7 @@ class NumpyAmin(PyccelInternalFunction):
     """
     __slots__ = ('_class_type',)
     name = 'amin'
+    _shape = None
 
     def __init__(self, arg):
         super().__init__(arg)
