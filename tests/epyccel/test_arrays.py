@@ -3647,11 +3647,6 @@ def test_numpy_arange_into_slice(language):
     f2(x)
     np.testing.assert_allclose(x, x_expected, rtol=RTOL, atol=ATOL)
 
-def test_iterate_slice(language):
-    f1 = arrays.iterate_slice
-    f2 = epyccel(f1, language = language)
-    i = randint(2, 10)
-    assert f1(i) == f2(i)
 ##==============================================================================
 ## TEST NESTED ARRAYS INITIALIZATION WITH ORDER C
 ##==============================================================================
@@ -3975,11 +3970,17 @@ def test_array_ndmin_2_order(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+##==============================================================================
+## TEST ITERATION
+##==============================================================================
 
-#def teardown_module():
-#    import os, glob
-#    dirname  = os.path.dirname( arrays.__file__ )
-#    pattern  = os.path.join( dirname, '__epyccel__*' )
-#    filelist = glob.glob( pattern )
-#    for f in filelist:
-#        os.remove( f )
+def test_iterate_slice(language):
+    f1 = arrays.iterate_slice
+    f2 = epyccel(f1, language = language)
+    i = randint(2, 10)
+    assert f1(i) == f2(i)
+
+def test_unpacking(language):
+    f1 = arrays.unpack_array
+    f2 = epyccel(f1, language = language)
+    assert f1() == f2()

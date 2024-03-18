@@ -1718,14 +1718,6 @@ def arr_arange_7(arr : 'int[:,:]'):
     for i in range(n):
         arr[i] = np.arange(i, i+m)
 
-def iterate_slice(i : int):
-    import numpy as np
-    a = np.arange(15)
-    res = 0
-    for ai in a[:i]:
-        res += ai
-    return res
-
 #==============================================================================
 # NUMPY SUM
 #==============================================================================
@@ -1753,3 +1745,21 @@ def multiple_np_linspace():
     y = np.linspace(0, 4, 128)
     z = np.linspace(0, 8, 128)
     return x[0] + y[1] + z[2] + linspace_index
+
+#==============================================================================
+# Iteration
+#==============================================================================
+
+def iterate_slice(i : int):
+    import numpy as np
+    a = np.arange(15)
+    res = 0
+    for ai in a[:i]:
+        res += ai
+    return res
+
+def unpack_array():
+    from numpy import zeros
+    arr = zeros(3, dtype='float64')
+    x, y, z = arr[:]
+    return x, y, z
