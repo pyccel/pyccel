@@ -240,8 +240,8 @@ class ListRemove(ListMethod) :
     of a given element from the list.
     Note that the .remove() method doesn't return any value.
 
-    >>> a = [(1, 2), [3, 4]]
-    >>> a.remove((1, 2))
+    >>> a = [[1, 2], [3, 4]]
+    >>> a.remove([1, 2])
     >>> print(a)
     [[3, 4]]
 
