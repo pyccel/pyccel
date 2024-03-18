@@ -200,13 +200,11 @@ class Duplicate(TypedAstNode):
     length : TypedAstNode
         The number of times the val should appear in the final object.
     """
-    __slots__ = ('_val', '_length','_rank','_shape','_order','_class_type')
+    __slots__ = ('_val', '_length','_shape','_class_type')
     _attribute_nodes = ('_val', '_length')
 
     def __init__(self, val, length):
-        self._rank       = val.rank
         self._shape      = tuple(s if i!= 0 else PyccelMul(s, length, simplify=True) for i,s in enumerate(val.shape))
-        self._order      = val.order
         self._class_type = val.class_type
 
         self._val       = val
@@ -240,14 +238,12 @@ class Concatenate(TypedAstNode):
     arg2 : TypedAstNodes
            The second tuple.
     """
-    __slots__ = ('_args','_rank','_shape','_order','_class_type')
+    __slots__ = ('_args','_shape','_class_type')
     _attribute_nodes = ('_args',)
 
     def __init__(self, arg1, arg2):
-        self._rank       = arg1.rank
         shape_addition   = arg2.shape[0]
         self._shape      = tuple(s if i!= 0 else PyccelAdd(s, shape_addition) for i,s in enumerate(arg1.shape))
-        self._order      = arg1.order
         self._class_type = arg1.class_type
 
         self._args = (arg1, arg2)
@@ -1979,7 +1975,7 @@ class FunctionCall(TypedAstNode):
         The function where the call takes place.
     """
     __slots__ = ('_arguments','_funcdef','_interface','_func_name','_interface_name',
-                 '_shape','_rank','_order','_class_type')
+                 '_shape','_class_type')
     _attribute_nodes = ('_arguments','_funcdef','_interface')
 
     def __init__(self, func, args, current_function=None):
@@ -2053,14 +2049,10 @@ class FunctionCall(TypedAstNode):
         self._func_name  = func.name
         n_results = len(func.results)
         if n_results == 1:
-            self._rank       = func.results[0].var.rank
             self._shape      = func.results[0].var.shape
-            self._order      = func.results[0].var.order
             self._class_type = func.results[0].var.class_type
         elif n_results == 0:
-            self._rank       = 0
             self._shape      = None
-            self._order      = None
             self._class_type = VoidType()
         else:
             dtypes = [r.var.dtype for r in func.results]
@@ -2068,9 +2060,7 @@ class FunctionCall(TypedAstNode):
                 dtype = HomogeneousTupleType(dtypes[0])
             else:
                 dtype = InhomogeneousTupleType(*dtypes)
-            self._rank       = 1
             self._shape      = (LiteralInteger(n_results),)
-            self._order      = None
             self._class_type = dtype
 
         super().__init__()
@@ -4471,9 +4461,7 @@ class InProgram(TypedAstNode):
     other words, a class representing the boolean:
     `__name__ == '__main__'`
     """
-    _rank  = 0
     _shape = None
-    _order = None
     _class_type = PythonNativeBool()
     _attribute_nodes = ()
     __slots__ = ()

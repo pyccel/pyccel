@@ -51,14 +51,11 @@ class VariableTypeAnnotation(PyccelAstNode):
     is_const : bool, default=False
         True if the variable cannot be modified, false otherwise.
     """
-    __slots__ = ('_class_type', '_rank',
-                 '_order', '_is_const')
+    __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
     def __init__(self, class_type : 'DataType',
             rank : int = 0, order : str = None, is_const : bool = False):
         self._class_type = class_type
-        self._rank = rank
-        self._order = order
         self._is_const = is_const
 
         super().__init__()
@@ -73,32 +70,6 @@ class VariableTypeAnnotation(PyccelAstNode):
         this is the type of the container.
         """
         return self._class_type
-
-    @property
-    def rank(self):
-        """
-        Get the rank of the object.
-
-        Get the rank of the object that should be created. The rank indicates the
-        number of dimensions.
-        """
-        return self._rank
-
-    @property
-    def order(self):
-        """
-        Get the order of the object.
-
-        Get the order in which the memory will be laid out in the object. For objects
-        with rank > 1 this is either 'C' or 'F'. 
-        """
-        return self._order
-
-    @order.setter
-    def order(self, order):
-        if order not in ('C', 'F', None):
-            raise ValueError("Order must be C, F, or None")
-        self._order = order
 
     @property
     def is_const(self):
@@ -129,12 +100,7 @@ class VariableTypeAnnotation(PyccelAstNode):
             return False
 
     def __repr__(self):
-        dtype = str(self._class_type)
-        if self._rank:
-            dtype += '['+','.join(':'*self._rank)+']'
-        if self._order:
-            dtype += '(order = {self._order})'
-        return dtype
+        return repr(self._class_type)
 
 #==============================================================================
 

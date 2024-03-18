@@ -107,7 +107,7 @@ class Variable(TypedAstNode):
     __slots__ = ('_name', '_alloc_shape', '_memory_handling', '_is_const',
             '_is_target', '_is_optional', '_allows_negative_indexes',
             '_cls_base', '_is_argument', '_is_temp',
-            '_rank','_shape','_order','_is_private','_class_type')
+            '_shape','_is_private','_class_type')
     _attribute_nodes = ()
 
     def __init__(
@@ -195,10 +195,7 @@ class Variable(TypedAstNode):
 
         self._alloc_shape = shape
         self._class_type = class_type
-        self._rank  = rank
         self._shape = self.process_shape(shape)
-        if self._rank < 2:
-            self._order = None
 
     def process_shape(self, shape):
         """
@@ -829,7 +826,7 @@ class IndexedElement(TypedAstNode):
     >>> IndexedElement(A, i, j) == A[i, j]
     True
     """
-    __slots__ = ('_label', '_indices','_shape','_rank','_order','_class_type')
+    __slots__ = ('_label', '_indices','_shape','_class_type')
     _attribute_nodes = ('_label', '_indices', '_shape')
 
     def __init__(self, base, *indices):
@@ -883,17 +880,16 @@ class IndexedElement(TypedAstNode):
 
                     _shape = MathCeil(PyccelDiv(_shape, step, simplify=True))
                 new_shape.append(_shape)
-        self._rank  = len(new_shape)
-        self._shape = None if self._rank == 0 else tuple(new_shape)
+        rank  = len(new_shape)
+        self._shape = None if rank == 0 else tuple(new_shape)
 
         base_type = base.class_type
-        rank = base.rank
-        for _ in range(base.rank-self._rank):
+        base_rank = base_type.rank
+        for _ in range(base_rank.rank-rank):
             rank -= 1
             if not (rank and isinstance(base_type, NumpyNDArrayType)):
                 base_type = base_type.element_type
         self._class_type = base_type
-        self._order = None if self.rank < 2 else base.order
 
         super().__init__()
 

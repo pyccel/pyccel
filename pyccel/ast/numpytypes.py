@@ -267,14 +267,31 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     dtype : NumpyNumericType | PythonNativeBool | GenericType
         The internal datatype of the object (GenericType is allowed for external
         libraries, e.g. MPI).
+    rank : int
+        The rank of the new NumPy array.
+    order : str
+        The order of the memory layout for the new NumPy array.
     """
-    __slots__ = ('_element_type',)
+    __slots__ = ('_element_type', '_rank', '_order')
     _name = 'numpy.ndarray'
 
-    def __init__(self, dtype):
+    def __new__(cls, dtype, rank, order):
+        if rank == 0:
+            return dtype
+        else:
+            return super().__new__(cls)
+
+    def __init__(self, dtype, rank, order):
+        assert isinstance(rank, int)
+        assert order in (None, 'C', 'F')
         if pyccel_stage == 'semantic':
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
+        if rank < 2:
+            order = None
+        
         self._element_type = dtype
+        self._rank = rank
+        self._order = order
         super().__init__()
 
     @lru_cache
@@ -330,6 +347,11 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
+
+    def __repr__(self):
+        dims = ':'*self._rank
+        order_str = f'(order={self._order})' if order else ''
+        return f'{self.element_type}[{dims}]{order}'
 
 #==============================================================================
 

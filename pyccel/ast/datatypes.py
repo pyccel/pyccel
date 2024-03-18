@@ -209,6 +209,27 @@ class FixedSizeType(PyccelType, metaclass=Singleton):
         """
         return self._primitive_type # pylint: disable=no-member
 
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return 0
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
     def __reduce__(self):
         """
         Function called during pickling.
@@ -457,6 +478,27 @@ class TupleType:
     __slots__ = ()
     _name = 'tuple'
 
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return 1
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return None
+
 #==============================================================================
 
 class HomogeneousContainerType(ContainerType):
@@ -556,6 +598,27 @@ class HomogeneousContainerType(ContainerType):
         cls = type(self)
         return cls(self.element_type.switch_basic_type(new_type))
 
+    @property
+    def rank(self):
+        """
+        Number of dimensions of the object.
+
+        Number of dimensions of the object. If the object is a scalar then
+        this is equal to 0.
+        """
+        return self._rank # pylint: disable=no-member
+
+    @property
+    def order(self):
+        """
+        The data layout ordering in memory.
+
+        Indicates whether the data is stored in row-major ('C') or column-major
+        ('F') format. This is only relevant if rank > 1. When it is not relevant
+        this function returns None.
+        """
+        return self._order # pylint: disable=no-member
+
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -565,6 +628,8 @@ class StringType(HomogeneousContainerType, metaclass = Singleton):
     __slots__ = ()
     _name = 'str'
     _element_type = PrimitiveCharacterType()
+    _rank = 0
+    _order = None
 
     @property
     def datatype(self):
@@ -639,6 +704,8 @@ class HomogeneousListType(HomogeneousContainerType, metaclass = ArgumentSingleto
     """
     __slots__ = ('_element_type',)
     _name = 'list'
+    _rank = 1
+    _order = None
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -659,6 +726,8 @@ class HomogeneousSetType(HomogeneousContainerType, metaclass = ArgumentSingleton
     """
     __slots__ = ('_element_type',)
     _name = 'set'
+    _rank = 1
+    _order = None
 
     def __init__(self, element_type):
         assert isinstance(element_type, PyccelType)
@@ -675,6 +744,8 @@ class CustomDataType(ContainerType, metaclass=Singleton):
     base class when a user defines their own type using classes.
     """
     __slots__ = ()
+    _rank = 0
+    _order = None
 
     @property
     def datatype(self):
@@ -778,6 +849,8 @@ class DictType(ContainerType, metaclass = ArgumentSingleton):
     """
     __slots__ = ('_index_type', '_value_type')
     _name = 'map'
+    _rank = 1
+    _order = None
 
     def __init__(self, index_type, value_type):
         self._index_type = index_type

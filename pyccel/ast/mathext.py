@@ -89,8 +89,6 @@ class MathFunctionBase(PyccelInternalFunction):
     """
     __slots__ = ()
     _shape = None
-    _rank  = 0
-    _order = None
 
 
 class MathFunctionFloat(MathFunctionBase):

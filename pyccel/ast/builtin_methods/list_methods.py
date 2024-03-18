@@ -78,8 +78,6 @@ class ListAppend(ListMethod):
     __slots__ = ()
     _dtype = VoidType()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'append'
 
@@ -113,13 +111,11 @@ class ListPop(ListMethod) :
     index_element : TypedAstNode
         The current index value for the element to be popped.
     """
-    __slots__ = ('_class_type', '_rank', '_shape', '_order')
+    __slots__ = ('_class_type', '_shape')
     name = 'pop'
 
     def __init__(self, list_obj, index_element=None) -> None:
-        self._rank = list_obj.rank - 1
         self._shape = (None if len(list_obj.shape) == 1 else tuple(list_obj.shape[1:]))
-        self._order = (None if self._shape is None or len(self._shape) == 1 else list_obj.order)
         self._class_type = list_obj.class_type.element_type
         super().__init__(list_obj, index_element)
 
@@ -143,8 +139,6 @@ class ListClear(ListMethod) :
         The list object which the method is called from.
     """
     __slots__ = ()
-    _rank = 0
-    _order = None
     _shape = None
     _class_type = VoidType()
     name = 'clear'
@@ -180,8 +174,6 @@ class ListInsert(ListMethod):
     """
     __slots__ = ()
     _shape = None
-    _order = None
-    _rank = 0
     _class_type = VoidType()
     name = 'insert'
 
