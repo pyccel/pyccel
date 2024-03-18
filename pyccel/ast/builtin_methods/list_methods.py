@@ -229,3 +229,33 @@ class ListExtend(ListMethod):
 
     def __init__(self, list_obj, iterable) -> None:
         super().__init__(list_obj, iterable)
+
+#==============================================================================
+class ListSort(ListMethod) :
+    """
+    Represents a call to the .sort() method.
+
+    Represents a call to the `.sort()` method, which sorts the elements of the
+    list in ascending order and modifies the original list in place. This means
+    that the elements of the original list are rearranged to be in sorted order.
+    Note that the .sort() method doesn't return any value.
+
+    >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
+    >>> a.sort()
+    >>> print(a)
+    [1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ()
+    _rank = 0
+    _order = None
+    _shape = None
+    _class_type = VoidType()
+    name = 'sort'
+
+    def __init__(self, list_obj) -> None:
+        super().__init__(list_obj)
