@@ -142,22 +142,17 @@ class SetRemove(SetMethod):
         The item to search for, and remove.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
     _precision = None
-    _class_type = NativeVoid()
     name = 'remove'
 
     def __init__(self, set_variable, item) -> None:
         if not isinstance(item, TypedAstNode):
             raise TypeError(f"KeyError : It is not possible to look for a {item} in a set of {set_variable.dtype}")
         is_homogeneous = (
-            item.dtype is not NativeGeneric() and
-            set_variable.dtype is not NativeGeneric() and
-            set_variable.dtype == item.dtype and
-            set_variable.precision == item.precision and
+            set_variable.class_type.element_type == item.class_type and
             set_variable.rank - 1 == item.rank
         )
         if not is_homogeneous:
