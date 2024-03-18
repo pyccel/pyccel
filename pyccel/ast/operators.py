@@ -941,12 +941,13 @@ class PyccelComparisonOperator(PyccelBinaryOperator):
         dtype = PythonNativeBool()
         possible_class_types = set(a.class_type for a in (arg1, arg2) \
                         if isinstance(a.class_type, ContainerType))
+        print(possible_class_types)
         if len(possible_class_types) == 0:
             class_type = dtype
         elif len(possible_class_types) == 1:
             class_type = possible_class_types.pop().switch_basic_type(dtype)
         else:
-            description = f"({arg1} {cls.op} {arg2})" # pylint: disable=no-member
+            description = f"({arg1} {cls.op} {repr(arg2)})" # pylint: disable=no-member
             raise NotImplementedError("Can't deduce type for comparison operator"
                                       f" with multiple containers {description}")
         return class_type

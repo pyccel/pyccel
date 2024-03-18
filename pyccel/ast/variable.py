@@ -423,7 +423,7 @@ class Variable(TypedAstNode):
         return str(self.name)
 
     def __repr__(self):
-        return f'{type(self).__name__}({self.name}, type={self.class_type})'
+        return f'{type(self).__name__}({self.name}, type={repr(self.class_type)})'
 
     def __eq__(self, other):
         if type(self) is type(other):

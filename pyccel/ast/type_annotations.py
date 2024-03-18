@@ -92,9 +92,7 @@ class VariableTypeAnnotation(PyccelAstNode):
     def __eq__(self, other):
         # Needed for set
         if isinstance(other, VariableTypeAnnotation):
-            return self.class_type == other.class_type and \
-                   self.rank == other.rank and \
-                   self.order == other.order
+            return self.class_type == other.class_type
         else:
             return False
 

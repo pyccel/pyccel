@@ -1960,11 +1960,11 @@ class SemanticParser(BasicParser):
 
         if all(isinstance(a, Slice) for a in args):
             rank = len(args)
-            order = None
+            order = None if rank < 2 else 'C'
             if isinstance(base, VariableTypeAnnotation):
                 dtype = base.class_type
                 class_type = NumpyNDArrayType(numpy_process_dtype(dtype), rank, order)
-                if base.rank != 0:
+                if dtype.rank != 0:
                     raise errors.report("Can't index a vector type",
                             severity='fatal', symbol=expr)
             elif isinstance(base, PyccelFunctionDef):
@@ -2601,6 +2601,8 @@ class SemanticParser(BasicParser):
             class_type = dtype_cls.static_type()
             return UnionTypeAnnotation(VariableTypeAnnotation(class_type))
         elif isinstance(visited_dtype, VariableTypeAnnotation):
+            if order and order != visited_dtype.class_type.order:
+                visited_dtype = VariableTypeAnnotation(visited_dtype.class_type.swap_order())
             return UnionTypeAnnotation(visited_dtype)
         elif isinstance(visited_dtype, UnionTypeAnnotation):
             return visited_dtype

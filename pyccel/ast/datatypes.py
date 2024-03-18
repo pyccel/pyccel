@@ -600,6 +600,11 @@ class HomogeneousContainerType(ContainerType):
         """
         return self._order # pylint: disable=no-member
 
+    @property
+    def deep_rank(self):
+        elem = self.element_type
+        return self.rank + getattr(elem, 'deep_rank', elem.rank)
+
 class StringType(HomogeneousContainerType, metaclass = Singleton):
     """
     Class representing Python's native string type.
@@ -834,6 +839,14 @@ class InhomogeneousTupleType(ContainerType, TupleType, metaclass = ArgumentSingl
         this function returns None.
         """
         return None
+
+    @property
+    def deep_rank(self):
+        elem_ranks = set(getattr(elem, 'deep_rank', elem.rank) for elem in self._element_types)
+        if len(elem_ranks) == 1:
+            return elem_ranks.pop() + self.rank
+        else:
+            return self.rank
 
 class DictType(ContainerType, metaclass = ArgumentSingleton):
     """

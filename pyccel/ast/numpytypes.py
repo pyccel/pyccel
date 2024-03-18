@@ -284,6 +284,8 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
     def __init__(self, dtype, rank, order):
         assert isinstance(rank, int)
         assert order in (None, 'C', 'F')
+        assert rank < 2 or order is not None
+
         if pyccel_stage == 'semantic':
             assert isinstance(dtype, (NumpyNumericType, PythonNativeBool, GenericType))
         if rank < 2:
@@ -304,7 +306,15 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         else:
             return NotImplemented
         result_type = original_type_to_pyccel_type[np.result_type(test_type, comparison_type).type]
-        return NumpyNDArrayType(result_type)
+        rank = max(other.rank, self.rank)
+        if rank < 2:
+            order = None
+        else:
+            other_f_contiguous = other.order in (None, 'F')
+            self_f_contiguous = self.order in (None, 'F')
+            order = 'F' if other_f_contiguous and self_f_contiguous else 'C'
+            print(self.order, other.order, order, other_f_contiguous, self_f_contiguous)
+        return NumpyNDArrayType(result_type, rank, order)
 
     @lru_cache
     def __radd__(self, other):
@@ -346,11 +356,15 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         assert isinstance(new_type, FixedSizeNumericType)
         new_type = numpy_precision_map[(new_type.primitive_type, new_type.precision)]
         cls = type(self)
-        return cls(self.element_type.switch_basic_type(new_type))
+        return cls(self.element_type.switch_basic_type(new_type), self._rank, self._order)
 
     def reduce_rank(self, new_rank):
-        new_order = order if new_rank > 1 else None
+        new_order = self._order if new_rank > 1 else None
         return NumpyNDArrayType(self.element_type, new_rank, new_order)
+
+    def swap_order(self):
+        order = None if self._order is None else ('C' if self._order == 'F' else 'F')
+        return NumpyNDArrayType(self.element_type, self._rank, order)
 
     def __repr__(self):
         dims = ','.join(':'*self._rank)

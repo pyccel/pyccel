@@ -772,7 +772,7 @@ class NumpyArange(NumpyNewArray):
         self._shape = (MathCeil(PyccelDiv(PyccelMinus(self._stop, self._start), self._step)))
         self._shape = process_shape(False, self._shape)
         dtype = process_dtype(dtype)
-        super().__init__(class_type = NumpyNDArrayType(dtype, 1), init_dtype = init_dtype)
+        super().__init__(class_type = NumpyNDArrayType(dtype, 1, None), init_dtype = init_dtype)
 
     @property
     def arg(self):
@@ -1042,7 +1042,7 @@ class NumpyLinspace(NumpyNewArray):
 
         class_type = NumpyNDArrayType(final_dtype, rank, order)
 
-        super().__init__(class_type = class_dtype, init_dtype = init_dtype)
+        super().__init__(class_type = class_type, init_dtype = init_dtype)
 
     @property
     def endpoint(self):
