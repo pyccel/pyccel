@@ -115,7 +115,6 @@ class Variable(TypedAstNode):
         class_type,
         name,
         *,
-        rank=0,
         memory_handling='stack',
         is_const=False,
         is_target=False,
@@ -123,7 +122,6 @@ class Variable(TypedAstNode):
         is_private=False,
         shape=None,
         cls_base=None,
-        order=None,
         is_argument=False,
         is_temp =False,
         allows_negative_indexes=False
@@ -176,21 +174,15 @@ class Variable(TypedAstNode):
 
         # ------------ TypedAstNode Properties ---------------
         assert isinstance(class_type, PyccelType)
-        assert isinstance(rank, int)
+        rank = class_type.rank
 
         if rank == 0:
             assert shape is None
-            assert order is None
 
         elif shape is None:
             shape = tuple(None for i in range(rank))
         else:
             assert len(shape) == rank
-
-        if rank == 1:
-            assert order is None
-        elif rank > 1:
-            assert order in ('C', 'F')
 
         self._alloc_shape = shape
         self._class_type = class_type
@@ -884,7 +876,7 @@ class IndexedElement(TypedAstNode):
 
         base_type = base.class_type
         base_rank = base_type.rank
-        for _ in range(base_rank.rank-rank):
+        for _ in range(base_rank-rank):
             rank -= 1
             if not (rank and isinstance(base_type, NumpyNDArrayType)):
                 base_type = base_type.element_type

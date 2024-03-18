@@ -53,8 +53,7 @@ class VariableTypeAnnotation(PyccelAstNode):
     """
     __slots__ = ('_class_type', '_is_const')
     _attribute_nodes = ()
-    def __init__(self, class_type : 'DataType',
-            rank : int = 0, order : str = None, is_const : bool = False):
+    def __init__(self, class_type : 'DataType', is_const : bool = False):
         self._class_type = class_type
         self._is_const = is_const
 

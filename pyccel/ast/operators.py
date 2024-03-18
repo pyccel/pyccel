@@ -160,8 +160,8 @@ class PyccelOperator(TypedAstNode):
         if pyccel_stage == 'syntactic':
             super().__init__()
             return
-        self._set_type()
         self._set_shape()
+        self._set_type()
         super().__init__()
 
     def _set_type(self):

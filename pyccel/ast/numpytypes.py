@@ -349,9 +349,9 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
         return cls(self.element_type.switch_basic_type(new_type))
 
     def __repr__(self):
-        dims = ':'*self._rank
-        order_str = f'(order={self._order})' if order else ''
-        return f'{self.element_type}[{dims}]{order}'
+        dims = ','.join(':'*self._rank)
+        order_str = f'(order={self._order})' if self._order else ''
+        return f'{self.element_type}[{dims}]{order_str}'
 
 #==============================================================================
 

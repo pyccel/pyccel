@@ -1986,7 +1986,7 @@ class SemanticParser(BasicParser):
                 dtype_cls = base.cls_name
                 dtype = numpy_process_dtype(dtype_cls.static_type())
                 class_type = NumpyNDArrayType(dtype, rank, order)
-            return VariableTypeAnnotation(class_type, rank)
+            return VariableTypeAnnotation(class_type)
 
         if not any(isinstance(a, Slice) for a in args):
             if isinstance(base, PyccelFunctionDef):
