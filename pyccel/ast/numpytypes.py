@@ -350,7 +350,7 @@ class NumpyNDArrayType(HomogeneousContainerType, metaclass = ArgumentSingleton):
 
     def reduce_rank(self, new_rank):
         new_order = order if new_rank > 1 else None
-        return NumpyNDArray(self.element_type, new_rank, new_order)
+        return NumpyNDArrayType(self.element_type, new_rank, new_order)
 
     def __repr__(self):
         dims = ','.join(':'*self._rank)
