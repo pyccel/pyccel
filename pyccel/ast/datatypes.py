@@ -8,6 +8,7 @@
 """
 Classes and methods that handle supported datatypes in C/Fortran.
 """
+from abc import ABC
 from functools import lru_cache
 
 import numpy
@@ -134,7 +135,7 @@ class PrimitiveCharacterType(PrimitiveType):
 
 #==============================================================================
 
-class PyccelType:
+class PyccelType(ABC):
     """
     Base class representing the type of an object.
 
@@ -179,6 +180,16 @@ class PyccelType:
             The new type.
         """
         raise NotImplementedError(f"switch_basic_type not implemented for {type(self)}")
+
+    @property
+    @abstractmethod
+    def rank(self):
+        pass
+
+    @property
+    @abstractmethod
+    def order(self):
+        pass
 
 #==============================================================================
 

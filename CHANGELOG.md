@@ -26,6 +26,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
 -   \[INTERNALS\] Rewrite datatyping system. See #1722.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Moved rank from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
+-   \[INTERNALS\] Moved order from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.PyccelType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 
