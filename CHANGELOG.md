@@ -13,6 +13,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+-   #1792 : Fix array unpacking.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
