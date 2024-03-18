@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
