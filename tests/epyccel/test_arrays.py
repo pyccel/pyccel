@@ -3980,6 +3980,14 @@ def test_iterate_slice(language):
     i = randint(2, 10)
     assert f1(i) == f2(i)
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
+            pytest.mark.fortran])
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
 def test_unpacking(language):
     f1 = arrays.unpack_array
     f2 = epyccel(f1, language = language)
