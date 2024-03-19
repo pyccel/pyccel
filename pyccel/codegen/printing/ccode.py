@@ -2131,8 +2131,7 @@ class CCodePrinter(CodePrinter):
 
         # the below condition handles the case of reassinging a pointer to an array view.
         # setting the pointer's is_view attribute to false so it can be ignored by the free_pointer function.
-        if not self.is_c_pointer(lhs_var) and \
-                isinstance(lhs_var, Variable) and lhs_var.is_ndarray:
+        if isinstance(lhs_var, Variable) and lhs_var.is_ndarray and not lhs_var.is_optional:
             rhs = self._print(rhs_var)
 
             if isinstance(rhs_var, Variable) and rhs_var.is_ndarray:
@@ -2143,12 +2142,12 @@ class CCodePrinter(CodePrinter):
                     return 'transpose_alias_assign({}, {});\n'.format(lhs, rhs)
             else:
                 lhs = self._print(lhs_var)
-                return '{} = {};\n'.format(lhs, rhs)
+                return f'{lhs} = {rhs};\n'
         else:
             lhs = self._print(lhs_address)
             rhs = self._print(rhs_address)
 
-            return '{} = {};\n'.format(lhs, rhs)
+            return f'{lhs} = {rhs};\n'
 
     def _print_For(self, expr):
         self.set_scope(expr.scope)
@@ -2515,27 +2514,3 @@ class CCodePrinter(CodePrinter):
             level += increase[n]
         return pretty
 
-def ccode(expr, filename, assign_to=None, **settings):
-    """Converts an expr to a string of c code
-
-    expr : Expr
-        A pyccel expression to be converted.
-    filename : str
-        The name of the file being translated. Used in error printing
-    assign_to : optional
-        When given, the argument is used as the name of the variable to which
-        the expression is assigned. Can be a string, ``Symbol``,
-        ``MatrixSymbol``, or ``Indexed`` type. This is helpful in case of
-        line-wrapping, or for expressions that generate multi-line statements.
-    user_functions : dict, optional
-        A dictionary where keys are ``FunctionClass`` instances and values are
-        their string representations. Alternatively, the dictionary value can
-        be a list of tuples i.e. [(argument_test, cfunction_string)]. See below
-        for examples.
-    dereference : iterable, optional
-        An iterable of symbols that should be dereferenced in the printed code
-        expression. These would be values passed by address to the function.
-        For example, if ``dereference=[a]``, the resulting code would print
-        ``(*a)`` instead of ``a``.
-    """
-    return CCodePrinter(filename, **settings).doprint(expr, assign_to)

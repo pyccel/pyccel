@@ -17,6 +17,8 @@ All notable changes to this project will be documented in this file.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
@@ -28,6 +30,8 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
 -   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 
 ### Deprecated
 
@@ -48,6 +52,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
+-   #1749 : Add Python support for set method `pop()`
 
 ### Fixed
 
