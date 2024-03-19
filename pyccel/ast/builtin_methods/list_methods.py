@@ -236,8 +236,8 @@ class ListRemove(ListMethod) :
     """
     Represents a call to the .remove() method.
     
-    Represents a call to the .remove() method which removes the first occurence
-    of a given element from the list.
+    Represents a call to the .remove() method which removes the first
+    occurrence of a given element from the list.
     Note that the .remove() method doesn't return any value.
 
     >>> a = [[1, 2], [3, 4]]
