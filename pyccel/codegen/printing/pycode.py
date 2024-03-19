@@ -26,6 +26,7 @@ from pyccel.codegen.printing.codeprinter import CodePrinter
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import PYCCEL_RESTRICTION_TODO
+from pyccel.parser.extend_tree import unparse
 
 errors = Errors()
 
@@ -305,7 +306,6 @@ class PythonCodePrinter(CodePrinter):
 
     def _print_Interface(self, expr):
         # TODO: Improve. See #885
-
         # Print each function in the interface
         func_def_code = []
         for func in expr.functions:
@@ -322,6 +322,10 @@ class PythonCodePrinter(CodePrinter):
         return func_def_code[0]
 
     def _print_FunctionDef(self, expr):
+        if expr.is_inline and not expr.is_semantic:
+            code = unparse(expr.python_ast) + '\n'
+            return code
+
         self.set_scope(expr.scope)
         name       = self._print(expr.name)
         imports    = ''.join(self._print(i) for i in expr.imports)
@@ -851,29 +855,15 @@ class PythonCodePrinter(CodePrinter):
 
         return "{}({})".format(name, arg)
 
-    def _print_ListAppend(self, expr):
+    def _print_ListMethod(self, expr):
         method_name = expr.name
-        list_var = self._print(expr.list_variable)
-        append_arg = self._print(expr.append_argument)
+        list_obj = self._print(expr.list_obj)
+        if len(expr.args) == 0 or all(arg is None for arg in expr.args):
+            method_args = ''
+        else:
+            method_args = ', '.join(self._print(a) for a in expr.args)
 
-        return f"{list_var}.{method_name}({append_arg})\n"
-
-    def _print_ListInsert(self, expr):
-        method_name = expr.name
-        index = self._print(expr.index)
-        list_var = self._print(expr.list_variable)
-        insert_arg = self._print(expr.insert_argument)
-
-        return f"{list_var}.{method_name}({index}, {insert_arg})\n"
-
-    def _print_ListPop(self, expr):
-        args = self._print(expr.pop_index) if expr.pop_index else ""
-        name = self._print(expr.list_variable)
-        return f"{name}.pop({args})"
-
-    def _print_ListClear(self, expr):
-        name = self._print(expr.list_variable)
-        return f"{name}.clear()\n"
+        return f"{list_obj}.{method_name}({method_args})\n"
 
     def _print_Slice(self, expr):
         start = self._print(expr.start) if expr.start else ''
@@ -883,6 +873,9 @@ class PythonCodePrinter(CodePrinter):
                 start = start,
                 stop  = stop,
                 step  = step)
+
+    def _print_LiteralEllipsis(self, expr):
+        return '...'
 
     def _print_SetMethod(self, expr):
         set_var = self._print(expr.set_variable)
