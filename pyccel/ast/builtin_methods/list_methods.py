@@ -19,6 +19,7 @@ __all__ = ('ListAppend',
            'ListInsert',
            'ListMethod',
            'ListPop',
+           'ListRemove',
            )
 
 #==============================================================================
@@ -229,3 +230,43 @@ class ListExtend(ListMethod):
 
     def __init__(self, list_obj, iterable) -> None:
         super().__init__(list_obj, iterable)
+
+#==============================================================================
+class ListRemove(ListMethod) :
+    """
+    Represents a call to the .remove() method.
+    
+    Represents a call to the .remove() method which removes the first
+    occurrence of a given element from the list.
+    Note that the .remove() method doesn't return any value.
+
+    >>> a = [[1, 2], [3, 4]]
+    >>> a.remove([1, 2])
+    >>> print(a)
+    [[3, 4]]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    removed_obj : TypedAstNode
+        The object to be removed from the list.
+    """
+    __slots__ = ()
+    _shape = None
+    _order = None
+    _rank = 0
+    _class_type = VoidType()
+    name = 'remove'
+
+    def __init__(self, list_obj, removed_obj) -> None:
+        expected_type = list_obj.class_type.element_type
+        is_homogeneous = (
+            removed_obj.class_type == expected_type and
+            list_obj.rank - 1 == removed_obj.rank
+        )
+        if not is_homogeneous:
+            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
+        super().__init__(list_obj, removed_obj)
+
