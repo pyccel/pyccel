@@ -150,7 +150,7 @@ class SetRemove(SetMethod):
 
     def __init__(self, set_variable, item) -> None:
         if not isinstance(item, TypedAstNode):
-            raise TypeError(f"KeyError : It is not possible to look for a {item} in a set of {set_variable.dtype}")
+            raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
         expected_type = set_variable.class_type.element_type
         is_homogeneous = (
             expected_type == item.class_type and
