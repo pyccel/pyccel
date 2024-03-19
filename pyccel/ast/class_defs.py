@@ -7,7 +7,8 @@ This module contains all types which define a python class which is automaticall
 """
 
 from pyccel.ast.builtin_methods.set_methods  import SetAdd, SetClear, SetCopy, SetPop
-from pyccel.ast.builtin_methods.list_methods import ListAppend, ListInsert, ListPop, ListClear, ListExtend
+from pyccel.ast.builtin_methods.list_methods import (ListAppend, ListInsert, ListPop,
+                                                     ListClear, ListExtend, ListRemove)
 
 
 from .builtins   import PythonImag, PythonReal, PythonConjugate
@@ -145,6 +146,7 @@ ListClass = ClassDef('list',
             PyccelFunctionDef('extend', func_class = ListExtend),
             PyccelFunctionDef('insert', func_class = ListInsert),
             PyccelFunctionDef('pop', func_class = ListPop),
+            PyccelFunctionDef('remove', func_class = ListRemove),
         ])
 
 #=======================================================================================
