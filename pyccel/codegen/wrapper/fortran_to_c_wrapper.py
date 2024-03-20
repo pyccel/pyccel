@@ -17,7 +17,7 @@ from pyccel.ast.core import Assign, FunctionCall, FunctionCallArgument
 from pyccel.ast.core import Allocate, EmptyNode, FunctionAddress
 from pyccel.ast.core import If, IfSection, Import, Interface, FunctionDefArgument
 from pyccel.ast.core import AsName, Module, AliasAssign, FunctionDefResult
-from pyccel.ast.datatypes import NativeNumeric, CustomDataType
+from pyccel.ast.datatypes import CustomDataType, FixedSizeNumericType
 from pyccel.ast.internals import Slice
 from pyccel.ast.literals import LiteralInteger, Nil, LiteralTrue
 from pyccel.ast.operators import PyccelIsNot, PyccelMul
@@ -397,8 +397,8 @@ class FortranToCWrapper(Wrapper):
             scope.insert_variable(local_var, name)
 
             # Create the C-compatible data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+name),
+            bind_var = Variable(BindCPointer(),
+                                scope.get_new_name('bound_'+name),
                                 is_const=False, memory_handling='alias')
             scope.insert_variable(bind_var)
 
@@ -450,7 +450,7 @@ class FortranToCWrapper(Wrapper):
             The AST object describing the code which must be printed in
             the wrapping module to expose the variable.
         """
-        if expr.rank == 0 and expr.dtype in NativeNumeric:
+        if isinstance(expr.class_type, FixedSizeNumericType):
             return expr.clone(expr.name, new_class = BindCVariable)
         else:
             scope = self.scope
@@ -461,8 +461,8 @@ class FortranToCWrapper(Wrapper):
             func_scope.imports['variables'][expr.name] = expr
 
             # Create the data pointer
-            bind_var = Variable(dtype=BindCPointer(),
-                                name=scope.get_new_name('bound_'+expr.name),
+            bind_var = Variable(BindCPointer(),
+                                scope.get_new_name('bound_'+expr.name),
                                 is_const=True, memory_handling='alias')
             func_scope.insert_variable(bind_var)
 
@@ -600,8 +600,8 @@ class FortranToCWrapper(Wrapper):
         func_scope.insert_variable(local_var)
 
         # Create the C-compatible data pointer
-        bind_var = Variable(dtype=BindCPointer(),
-                            name=func_scope.get_new_name('bound_'+name),
+        bind_var = Variable(BindCPointer(),
+                            func_scope.get_new_name('bound_'+name),
                             is_const=False, memory_handling='alias')
         func_scope.insert_variable(bind_var)
 
