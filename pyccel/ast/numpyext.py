@@ -184,7 +184,9 @@ class NumpyFloat(PythonFloat):
         The argument passed to the function.
     """
     __slots__ = ('_rank','_shape','_order','_class_type')
+    _static_type = NumpyFloat64Type()
     name = 'float'
+
     def __init__(self, arg):
         self._shape = arg.shape
         self._rank  = arg.rank
@@ -277,7 +279,9 @@ class NumpyInt(PythonInt):
         The argument passed to the function.
     """
     __slots__ = ('_shape','_rank','_order','_class_type')
+    _static_type = numpy_precision_map[(PrimitiveIntegerType(), PythonInt._static_type.precision)]
     name = 'int'
+
     def __init__(self, arg=None, base=10):
         self._shape = arg.shape
         self._rank  = arg.rank
@@ -452,7 +456,9 @@ class NumpyComplex(PythonComplex):
     _real_cast = NumpyReal
     _imag_cast = NumpyImag
     __slots__ = ('_rank','_shape','_order','_class_type')
+    _static_type = NumpyComplex128Type()
     name = 'complex'
+
     def __init__(self, arg0, arg1 = None):
         if arg1 is not None:
             raise NotImplementedError("Use builtin complex function not deprecated np.complex")
