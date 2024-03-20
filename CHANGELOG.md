@@ -6,10 +6,12 @@ All notable changes to this project will be documented in this file.
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
--   #1693 : Add Python support for list method `copy()`.
--   #1739 : Add Python support for set method `clear()`.
+-   #1696 : Add Python support for list method `copy()`.
+-   #1693 : Add Python support for list method `remove()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
+-   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
+-   #1750 : Add Python support for set method `remove()`.
 
 ### Fixed
 
