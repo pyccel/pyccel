@@ -324,20 +324,20 @@ def array_float_4d_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:,:]'
 
 def array_float_nested_C_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float')
+    tmp      = array((x, (y, z, z), x), dtype='float')
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float')
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:]'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float')
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float')
     x[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================
@@ -346,20 +346,20 @@ def array_float_nested_C_array_initialization_3(a : 'float[:,:,:]', e : 'float[:
 
 def array_float_nested_F_array_initialization(x : 'float[:,:,:]', y : 'float[:,:]', z : 'float[:,:]', a : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([x, [y, z, z], x], dtype='float', order="F")
+    tmp      = array((x, (y, z, z), x), dtype='float', order="F")
     a[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_2(a : 'float[:,:,:]', e : 'float[:,:]', f : 'float[:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [f, f]], a, [[f, f], [f, f]]], dtype='float', order="F")
+    tmp      = array(((e, (f, f)), a, ((f, f), (f, f))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
 def array_float_nested_F_array_initialization_3(a : 'float[:,:,:]', e : 'float[:,:]', x : 'float[:,:,:,:](order=F)'):
     from numpy import array
-    tmp      = array([[e, [[1., 2., 3.], [1., 2., 3.]]],
+    tmp      = array(((e, ((1., 2., 3.), (1., 2., 3.))),
                        a,
-                       [[[1., 2., 3.], [1., 2., 3.]],
-                        [[1., 2., 3.], [1., 2., 3.]]]], dtype='float', order="F")
+                       (((1., 2., 3.), (1., 2., 3.)),
+                        ((1., 2., 3.), (1., 2., 3.)))), dtype='float', order="F")
     x[:,:,:,:] = tmp[:,:,:,:]
 
 ##==============================================================================
@@ -1718,14 +1718,6 @@ def arr_arange_7(arr : 'int[:,:]'):
     for i in range(n):
         arr[i] = np.arange(i, i+m)
 
-def iterate_slice(i : int):
-    import numpy as np
-    a = np.arange(15)
-    res = 0
-    for ai in a[:i]:
-        res += ai
-    return res
-
 #==============================================================================
 # NUMPY SUM
 #==============================================================================
@@ -2054,3 +2046,31 @@ def src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(arr1 : 'T1', arr2 : 'T1'
     d = array([a, c, b], dtype=float, order="F")
     s = shape(d)
     return s[0], s[1], s[2], d[0,0,0], d[0,0,1], d[1,0,0], d[1,0,1], d[2,0,0], d[2,0,1]
+=======
+# Iteration
+#==============================================================================
+
+def iterate_slice(i : int):
+    from numpy import arange
+    a = arange(15)
+    res = 0
+    for ai in a[:i]:
+        res += ai
+    return res
+
+@template('T', ['int[:]', 'int[:,:]', 'int[:,:,:]', 'int[:,:](order=F)', 'int[:,:,:](order=F)'])
+def unpack_array(arr : 'T'):
+    x, y, z = arr[:]
+    return x, y, z
+
+def unpack_array_of_known_size():
+    from numpy import array
+    arr = array([1,2,3], dtype='float64')
+    x, y, z = arr[:]
+    return x, y, z
+
+def unpack_array_2D_of_known_size():
+    from numpy import array
+    arr = array([[1,2,3], [4,5,6], [7,8,9]], dtype='float64')
+    x, y, z = arr[:]
+    return x.sum(), y.sum(), z.sum()

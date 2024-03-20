@@ -1,8 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-import numpy as np
-
-a = [1,2,3]
-b = np.int16(4)
-a.insert(3, b)
-
+a = {6, 5, 2}
+b = 5j
+a.remove(b)

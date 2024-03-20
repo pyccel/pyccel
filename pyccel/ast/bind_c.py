@@ -12,7 +12,7 @@ from pyccel.ast.basic import PyccelAstNode
 from pyccel.ast.core import Module, Deallocate
 from pyccel.ast.core import FunctionDef, ClassDef
 from pyccel.ast.core import FunctionDefArgument, FunctionDefResult
-from pyccel.ast.datatypes import DataType, NativeInteger
+from pyccel.ast.datatypes import FixedSizeType, PythonNativeInt
 from pyccel.ast.variable import Variable
 from pyccel.utilities.metaclasses import Singleton
 
@@ -35,7 +35,7 @@ __all__ = (
 #                                    Datatypes
 # =======================================================================================
 
-class BindCPointer(DataType, metaclass = Singleton):
+class BindCPointer(FixedSizeType, metaclass = Singleton):
     """
     Datatype representing a C pointer in Fortran.
 
@@ -200,10 +200,10 @@ class BindCFunctionDefArgument(FunctionDefArgument):
     def __init__(self, var, scope, original_arg_var, wrapping_bound_argument, **kwargs):
         name = var.name
         self._rank = original_arg_var.rank
-        shape   = [scope.get_temporary_variable(NativeInteger(),
+        shape   = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_shape_{i+1}')
                    for i in range(self._rank)]
-        strides = [scope.get_temporary_variable(NativeInteger(),
+        strides = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_stride_{i+1}')
                    for i in range(self._rank)]
         self._shape = shape
@@ -339,7 +339,7 @@ class BindCFunctionDefResult(FunctionDefResult):
 
     def __init__(self, var, original_res_var, scope, **kwargs):
         name = original_res_var.name
-        self._shape   = [scope.get_temporary_variable(NativeInteger(),
+        self._shape   = [scope.get_temporary_variable(PythonNativeInt(),
                             name=f'{name}_shape_{i+1}')
                          for i in range(original_res_var._rank)]
         self._original_res_var = original_res_var

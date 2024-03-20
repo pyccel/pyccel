@@ -9,10 +9,11 @@ always available.
 
 This module contains objects which describe these methods within Pyccel's AST.
 """
-from pyccel.ast.datatypes import NativeVoid, NativeGeneric
+from pyccel.ast.datatypes import VoidType
 from pyccel.ast.internals import PyccelInternalFunction
+from pyccel.ast.basic import TypedAstNode
 
-__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy')
+__all__ = ('SetAdd', 'SetClear', 'SetMethod', 'SetCopy', 'SetPop', 'SetRemove')
 
 
 class SetMethod(PyccelInternalFunction):
@@ -63,20 +64,15 @@ class SetAdd(SetMethod) :
         The element that needs to be added to a set.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'add'
 
     def __init__(self, set_variable, new_elem) -> None:
         is_homogeneous = (
-            new_elem.dtype is not NativeGeneric() and
-            set_variable.dtype is not NativeGeneric() and
-            set_variable.dtype == new_elem.dtype and
-            set_variable.precision == new_elem.precision and
+            set_variable.class_type.element_type == new_elem.class_type and
             set_variable.rank - 1 == new_elem.rank
         )
         if not is_homogeneous:
@@ -97,12 +93,10 @@ class SetClear(SetMethod):
         The set on which the method will operate.
     """
     __slots__ = ()
-    _dtype = NativeVoid()
     _shape = None
     _order = None
     _rank = 0
-    _precision = None
-    _class_type = NativeVoid()
+    _class_type = VoidType()
     name = 'clear'
 
     def __init__(self, set_variable):
@@ -121,14 +115,71 @@ class SetCopy(SetMethod):
     set_variable : TypedAstNode
         The set on which the method will operate.
     """
-    __slots__ = ("_dtype","_shape", "_order", "_rank", "_precision", "_class_type",)
+    __slots__ = ("_shape", "_order", "_rank", "_class_type",)
     name = 'copy'
 
     def __init__(self, set_variable):
-        self._dtype = set_variable._dtype
         self._shape = set_variable._shape
         self._order = set_variable._order
         self._rank = set_variable._rank
-        self._precision = set_variable._precision
         self._class_type = set_variable._class_type
         super().__init__(set_variable)
+
+class SetPop(SetMethod):
+    """
+    Represents a call to the .pop() method.
+
+    The pop() method pops an element from the set. 
+    It does not take any arguments but returns the popped 
+    element. It raises an error if the set is empty.
+    The class does not raise an error as it assumes that the
+    user code is valid.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The name of the set.
+    """
+    __slots__ = ('_class_type',)
+    _rank = 0
+    _order = None
+    _shape = None
+    name = 'pop'
+
+    def __init__(self, set_variable):
+        self._class_type = set_variable.class_type.element_type
+        super().__init__(set_variable)
+
+class SetRemove(SetMethod):
+    """
+    Represents a call to the .remove() method.
+
+    The remove() method removes the specified item from 
+    the set and updates the set. It doesn't return any value.
+
+    Parameters
+    ----------
+    set_variable : TypedAstNode
+        The set on which the method will operate.
+
+    item : TypedAstNode
+        The item to search for, and remove.
+    """
+    __slots__ = ()
+    _shape = None
+    _order = None
+    _rank = 0
+    _class_type = VoidType()
+    name = 'remove'
+
+    def __init__(self, set_variable, item) -> None:
+        if not isinstance(item, TypedAstNode):
+            raise TypeError(f"It is not possible to look for a {type(item).__name__} object in a set of {set_variable.dtype}")
+        expected_type = set_variable.class_type.element_type
+        is_homogeneous = (
+            expected_type == item.class_type and
+            set_variable.rank - 1 == item.rank
+        )
+        if not is_homogeneous:
+            raise TypeError(f"Can't remove an element of type {item.dtype} from a set of {set_variable.dtype}")
+        super().__init__(set_variable, item)

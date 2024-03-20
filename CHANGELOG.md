@@ -6,22 +6,42 @@ All notable changes to this project will be documented in this file.
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
--   #1739 : Add Python support for set method `clear()`.
+-   #1693 : Add Python support for list method `remove()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
+-   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
+-   #1750 : Add Python support for set method `remove()`.
 
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
 -   #1762 : Fix array copy between different data types.
+-   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
+-   Fix some cases where a Python built-in type is returned in place of a NumPy type.
+-   Stop printing numbers with more decimal digits than their precision.
+-   Allow printing the result of a function returning multiple objects of different types.
+-   #1792 : Fix array unpacking.
+-   #1795 : Fix bug when returning slices in C.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
 -   #1720 : Error raised when incompatible arguments are passed to an `inlined` function is now fatal.
 -   \[INTERNALS\] `FunctionDef` is annotated when it is called, or at the end of the `CodeBlock` if it is never called.
 -   \[INTERNALS\] `InlinedFunctionDef` is only annotated if it is called.
+-   \[INTERNALS\] Build `utilities.metaclasses.ArgumentSingleton` on the fly to ensure correct docstrings.
+-   \[INTERNALS\] Rewrite datatyping system. See #1722.
+-   \[INTERNALS\] Moved precision from `ast.basic.TypedAstNode` to an internal property of `ast.datatypes.FixedSizeNumericType` objects.
+-   \[INTERNALS\] Use cached `__add__` method to determine result type of arithmetic operations.
+-   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
+-   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
+-   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
 
 ### Deprecated
+
+-   \[INTERNALS\] Remove property `ast.basic.TypedAstNode.precision`.
+-   \[INTERNALS\] Remove class `ast.datatypes.DataType` (replaced by `ast.datatypes.PrimitiveType` and `ast.datatypes.PyccelType`).
+-   \[INTERNALS\] Remove unused properties `prefix` and `alias` from `CustomDataType`.
+-   \[INTERNALS\] Remove `ast.basic.TypedAstNode._dtype`. The datatype can still be accessed as it is contained within the class type.
 
 ## \[1.11.2\] - 2024-03-05
 
@@ -35,6 +55,7 @@ All notable changes to this project will be documented in this file.
 -   #1425 : Add support for `numpy.isnan`, `numpy.isinf` and `numpy.isfinite`.
 -   #1738 : Add Python support for creating scalar sets with `{}`.
 -   #1738 : Add Python support for set method `add`.
+-   #1749 : Add Python support for set method `pop()`
 
 ### Fixed
 
