@@ -284,10 +284,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, HomogeneousTupleType):
-                indices = ']['.join(i for i in indices)
-            else:
-                indices = ','.join(i for i in indices)
+            indices = ','.join(i for i in indices)
         else:
             errors.report(PYCCEL_RESTRICTION_TODO, symbol=expr,
                 severity='fatal')
