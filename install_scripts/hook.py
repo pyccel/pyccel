@@ -49,7 +49,6 @@ class CustomBuildHook(BuildHookInterface):
         build_data : dict
             See hatch documentation.
         """
-        init_submodules()
         folder = os.path.abspath(os.path.join(os.path.dirname(__file__),'..','pyccel','stdlib','internal'))
         files_stubs = ['blas', 'dfftpack', 'fitpack',
                 'lapack', 'mpi', 'openacc', 'openmp']
@@ -61,3 +60,4 @@ class CustomBuildHook(BuildHookInterface):
         subprocess.run([sys.executable, "-c", "from pyccel.commands.pyccel_init import pyccel_init; pyccel_init()"],
                 cwd = self.root, check=True)
         build_data['artifacts'].extend(output_files)
+        init_submodules()
