@@ -528,6 +528,38 @@ def test_extend_user_defined_objects(language):
     for python_elem, accelerated_elem in zip(python_list, accelerated_list):
         assert python_elem.x == accelerated_elem.x
 
+def test_remove_basic(language):
+    def f():
+        lst = [1, 2, 3, 4]
+        lst.remove(3)
+        return lst
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_remove_float(language):
+    def f():
+        lst = [1.4, 2.3, 3.2, 4.4]
+        lst.remove(3.2)
+        return lst
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_remove_complex(language):
+    def f():
+        lst = [1j, 3j, 8j]
+        lst.remove(3j)
+        return lst
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
+def test_remove_list_from_list(language):
+    def f():
+        lst = [[True, False, True], [False, True]]
+        lst.remove([False, True])
+        return lst
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
 def test_extend_list_class_attribute(language):
     import modules.list_class_attr as mod
 
