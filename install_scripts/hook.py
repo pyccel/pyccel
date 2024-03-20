@@ -52,4 +52,3 @@ class CustomBuildHook(BuildHookInterface):
         subprocess.run([sys.executable, "-c", "from pyccel.commands.pyccel_init import pyccel_init; pyccel_init()"],
                 cwd = self.root, check=True)
         build_data['artifacts'].extend(output_files)
-        init_submodules()
