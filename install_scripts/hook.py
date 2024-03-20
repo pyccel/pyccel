@@ -12,7 +12,8 @@ def init_submodules():
 
     This function initializes Git submodules using the 'git submodule update --init --recursive' command.
     """
-    if not os.path.exists('.git'):
+    print("===++++_+_+_+_+_+_+_+_+_+_+_+_+_+_+_++_+_+_+_+_+_+=-+-+__+=-=- : Current working directory:", os.getcwd())
+    if not os.path.exists('.git'): 
         print("Error: Not inside a Git repository.")
         return
     try:
