@@ -586,12 +586,12 @@ def test_copy_nested(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
-def test_copy_modify_values(language):
+def test_copy_modify_nested_values(language):
     def f():
-        a = [1, 2, 3, 4]
+        a = [[1, 2], [3, 4]]
         b = a.copy()
-        a[0] = 0
-        a[1] = 0
+        a[0][0] = 0
+        a[0][1] = 0
         return b
 
     epyc_f = epyccel(f, language=language)
