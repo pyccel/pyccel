@@ -1189,3 +1189,12 @@ def test_time_execution_flag():
     assert 'Total' in result_lines[-2]
     for l in result_lines[1:-1]:
         assert ' : ' in l
+
+#------------------------------------------------------------------------------
+def test_char:
+    if __name__ == '__main__':
+        string = np.empty((2, 5), dtype='c')
+        string[0] = "HELLO"
+        string[1] = "WORLD"
+        for i in range(5):
+            print(string[0,i], end='')

@@ -348,4 +348,5 @@ typenames_to_dtypes = { 'float'   : PythonNativeFloat(),
                         'void'    : VoidType(),
                         '*'       : GenericType(),
                         'str'     : StringType(),
+                        'char'    : CharType(),
                         }
