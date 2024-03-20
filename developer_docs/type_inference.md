@@ -43,3 +43,50 @@ These objects contain all the information necessary to create a Variable from a 
 ### Inferring types from assignments
 
 When assignments occur in the code types must also be inferred. This allows new variables to be declared implicitly, and also enables us to verify that the types of existing variables do not change. In this case the type inference is done via the AST nodes. Each node contains the logic necessary to deduce its type information from the arguments passed to it. The resulting object, which is found on the right hand side of an assignment can be used to verify or define the type of the object on the left hand side of the assignment.
+
+### Data types in Pyccel
+
+The data types in Pyccel are designed around two super classes:
+-   `PrimitiveType` : Representing the category of datatype (integer/floating point/etc)
+-   `PyccelType` : Representing the actual type of the object in Python
+
+Subclasses of `PyccelType` generally fall into one of two categories:
+-   `FixedSizeType`
+-   `ContainerType`
+
+The types can be compared using either the `is` operator or the `==` operator. These operators have slightly different behaviour. All instances of `PyccelType` are singletons so the `is` operator tests if the types are identical. However the `==` operator tests if the types are compatible. For example `PythonNativeFloat() == NumpyFloat64Type()` will return true. This operator should therefore be used when permissive behaviour is required (e.g. when adding elements to a list of `PythonNativeFloat()` we are capable of adding an instance with the type `NumpyFloat64Type()` even if this would not be strictly homogeneous in Python).
+
+#### Fixed Size Type
+A `FixedSizeType` is an object whose size in memory is known and cannot change from one instance to another (e.g. `float64`, `int32`, `void`). In most cases the developer will need the sub-class `FixedSizeNumericType` which refers to the subset of fixed size types which contain numeric values. These objects are characterised by a `primitive_type` describing the category of datatype (integer/floating point/etc) and a `precision`. They additionally implement two magic methods:
+-   `__add__` (+)
+-   `__and__` (&)
+
+The add operator describes what happens when two numeric types are combined in an arithmetic operator. In almost all cases this is sufficient to describe all resulting datatypes. Special cases (e.g. float for integer division) are handled in the associated operator in `ast.operators` or `ast.bitwise_operators`.
+
+The and operator describes what happens when two numeric types are combined in a bitwise comparison operator. This only applies to integers and booleans.
+
+When using these operators on an unknown number of arguments it can be useful to use `NativeGeneric()` as a starting point for the sum.
+
+#### Container Type
+A `ContainerType` is an object which is comprised of `FixedSizeType` objects (e.g. `ndarray`,`list`,`tuple`, custom class). The sub-class `HomogeneousContainerType` describes containers which contain homogeneous data. These objects are characterised by an `element_type`. The elements of a `HomogeneousContainerType` are instances of `PyccelType`, but they can be either `FixedSizeType`s or `ContainerType`s.
+
+`HomogeneousContainerType`s also contain some utility functions. They implement `primitive_type` and `precision` to get the properties of the internal `FixedSizeType` (even if that type is inside another `HomogeneousContainerType`). They also implement `switch_basic_type` which creates a new `HomogeneousContainerType` which is similar to the current `HomogeneousContainerType`. The only difference is that the `FixedSizeType` is exchanged. This is useful when we want to preserve information about the container but need to change the type. For example, when we divide an integer by another we get a floating point type. When we divide a NumPy array or a CuPy array of integers by an integer (or array of integers) we get a NumPy/CuPy array of floating point numbers (with default Python precision). In order to preserve the container type we therefore call `switch_basic_type`. So for the division in the case of NumPy arrays, we want to change the type from `np.ndarray[int]` to `np.ndarray[float]`. This is done in one line:
+```python
+new_class_type = class_type.switch_basic_type(NativePythonFloat())
+```
+instead of the multiple lines that would be needed without this function. The advantage of this is seen most clearly when we consider a function acting on a more complex type e.g. `list[np.ndarray[float]]` in this case without the `switch_basic_type` function, the equivalent code would be much longer:
+```python
+new_container_types = []
+old_type = class_type
+while isinstance(old_type, ContainerType):
+    new_container_types.append(type(old_type))
+    old_type = old_type.element_type
+
+new_type = old_type
+for container in new_container_types:
+    new_type = container(new_type)
+```
+
+The `switch_basic_type` cannot be implemented generally in `PyccelType` as there is no logical interpretation for an inhomogeneous `ContainerType`, however the function is also implemented (as the identity function) for `FixedSizeType`s so `switch_basic_type` can be used without the need for type checks (generally inhomogeneous containers will not be valid arguments to classes which may need to use the `switch_basic_type` function).
+
+In order to access the internal `FixedSizeType`, `PyccelType` also implements a `datatype` property. This makes more sense in the case of a `HomogeneousContainerType` however it is also implemented (as the identity function) for `FixedSizeType`s so the low-level type can be obtained without the need for type checks.
