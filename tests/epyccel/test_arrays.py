@@ -6033,7 +6033,7 @@ def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
     assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(fl32_1, fl32_2, fl32_3)
     assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(fl64_1, fl64_2, fl64_3)
     assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
-    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
 
 ##==============================================================================
 ## TEST ITERATION
@@ -6048,6 +6048,10 @@ def test_iterate_slice(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
+                      pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
 )
 def test_unpacking(language):
     f1 = arrays.unpack_array
