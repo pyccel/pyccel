@@ -281,16 +281,16 @@ class ListCopy(ListMethod) :
     reflected in the original list.
     The method returns a list.
 
-    >>> a = [[1, 2], [3, 4]]
+    >>> a = [1, 2, 3, 4]
     >>> b = a.copy()
     >>> print(a, b)
-    [[1, 2], [3, 4]]
-    [[1, 2], [3, 4]]
-    >>> a[0][0] = 0
-    >>> a[0][1] = 0
+    [1, 2, 3, 4]
+    [1, 2, 3, 4]
+    >>> a[0] = 0
+    >>> a[1] = 0
     >>> print(a, b)
-    [[0, 0], [3, 4]]
-    [[0, 0], [3, 4]]
+    [0, 0, 3, 4]
+    [0, 0, 3, 4]
 
     Parameters
     ----------

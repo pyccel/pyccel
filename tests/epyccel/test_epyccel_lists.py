@@ -586,6 +586,17 @@ def test_copy_nested(language):
     epyc_f = epyccel(f, language=language)
     assert f() == epyc_f()
 
+def test_copy_modify_values(language):
+    def f():
+        a = [1, 2, 3, 4]
+        b = a.copy()
+        a[0] = 0
+        a[1] = 0
+        return b
+
+    epyc_f = epyccel(f, language=language)
+    assert f() == epyc_f()
+
 def test_mixed_list_methods(language):
     def f():
         a = [(1, 4, 5), (33, 12, 5), (3, 5)]
