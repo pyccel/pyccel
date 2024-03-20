@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 
+-   #1762 : Fix array copy between different data types.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
 
