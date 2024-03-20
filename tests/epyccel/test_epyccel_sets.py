@@ -144,3 +144,33 @@ def test_Pop_complex(language):
     python_result = Pop_complex()
     assert python_result == pyccel_result
 
+def test_remove_complex(language):
+    def remove_complex():
+        se = {1j, 3j, 8j}
+        se.remove(3j)
+        return se
+    epyccel_remove = epyccel(remove_complex, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_complex()
+    assert python_result == pyccel_result
+
+def test_remove_int(language):
+    def remove_int():
+        se = {2, 4, 9}
+        se.remove(4)
+        return se
+    epyccel_remove = epyccel(remove_int, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_int()
+    assert python_result == pyccel_result
+
+def test_remove_float(language):
+    def remove_float():
+        se = {5.7, 2.4, 8.1}
+        se.remove(8.1)
+        return se
+    epyccel_remove = epyccel(remove_float, language = language)
+    pyccel_result = epyccel_remove()
+    python_result = remove_float()
+    assert python_result == pyccel_result
+
