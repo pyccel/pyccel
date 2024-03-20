@@ -6,18 +6,6 @@ import sys
 
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
-def init_submodules():
-    """
-        Initialize Git submodules recursively.
-
-    This function initializes Git submodules using the 'git submodule update --init --recursive' command.
-    """
-    try:
-        subprocess.run(['git', 'submodule', 'update', '--init', '--recursive'], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error: Failed to initialize submodules: {e}")
-        raise
-
 class CustomBuildHook(BuildHookInterface):
     """
     A class which allows code to be run while building the package.
