@@ -14,7 +14,7 @@ runs:
         for file in files:
             print(file)
         print("=-=-++_++=> ", stc_check)
-        contents = os.listdir('pyccel')
+        contents = os.listdir('extensions/STC')
         for item in contents:
             print("=-=-=-=-=====> ",item)
         path = os.path.join(base_dir, stc_check)        

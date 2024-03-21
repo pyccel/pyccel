@@ -57,4 +57,4 @@ path = "install_scripts/hook.py"
 require-runtime-dependencies = true
 
 [tool.hatch.build.targets.wheel.force-include]
-"./extensions/STC" = "./pyccel/stc"
+"./extensions/STC/include/stc" = "./pyccel/stc"
