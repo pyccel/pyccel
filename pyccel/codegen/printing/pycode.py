@@ -11,7 +11,7 @@ from pyccel.ast.builtins   import PythonMin, PythonMax, PythonType, PythonBool, 
 from pyccel.ast.builtins   import PythonComplex, DtypePrecisionToCastFunction
 from pyccel.ast.core       import CodeBlock, Import, Assign, FunctionCall, For, AsName, FunctionAddress
 from pyccel.ast.core       import IfSection, FunctionDef, Module, PyccelFunctionDef
-from pyccel.ast.datatypes  import HomogeneousTupleType
+from pyccel.ast.datatypes  import HomogeneousTupleType, HomogeneousListType
 from pyccel.ast.functionalexpr import FunctionalFor
 from pyccel.ast.literals   import LiteralTrue, LiteralString
 from pyccel.ast.literals   import LiteralInteger, LiteralFloat, LiteralComplex
@@ -284,7 +284,7 @@ class PythonCodePrinter(CodePrinter):
                 indices = indices[0]
 
             indices = [self._print(i) for i in indices]
-            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, HomogeneousTupleType):
+            if expr.pyccel_staging != 'syntactic' and isinstance(expr.base.class_type, (HomogeneousTupleType, HomogeneousListType)):
                 indices = ']['.join(i for i in indices)
             else:
                 indices = ','.join(i for i in indices)
