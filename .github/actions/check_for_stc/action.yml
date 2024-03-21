@@ -10,6 +10,9 @@ runs:
         base_dir = os.getcwd()
         print("-=-=-=-=>", base_dir)
         stc_check = 'pyccel/stc'
+        files = os.listdir('.')
+        for file in files:
+            print(file)
         print("=-=-++_++=> ", stc_check)
         contents = os.listdir('pyccel')
         for item in contents:
