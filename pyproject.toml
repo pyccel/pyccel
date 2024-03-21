@@ -23,8 +23,6 @@ dependencies = [
     "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
 ]
 
-[hatch.extras.specific_directory]
-install = ["pyccel"]
 
 [project.optional-dependencies]
 test = [
