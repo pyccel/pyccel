@@ -23,6 +23,7 @@ All notable changes to this project will be documented in this file.
 -   Allow printing the result of a function returning multiple objects of different types.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
+-   #1732 : Fix multidimensional list indexing.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
