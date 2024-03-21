@@ -23,7 +23,6 @@ dependencies = [
     "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
 ]
 
-
 [project.optional-dependencies]
 test = [
     "coverage >= 3.1",
