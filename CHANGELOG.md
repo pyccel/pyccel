@@ -6,6 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
+-   #1696 : Add Python support for list method `copy()`.
 -   #1693 : Add Python support for list method `remove()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
 -   #1739 : Add Python support for set method `clear()`.
@@ -22,6 +23,7 @@ All notable changes to this project will be documented in this file.
 -   Allow printing the result of a function returning multiple objects of different types.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
+-   #1732 : Fix multidimensional list indexing in Python.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
