@@ -23,9 +23,6 @@ dependencies = [
     "astunparse >= 1.6.0", # astunparse is only needed for Python3.8, we should use ast.unparse when we drop Python3.8.
 ]
 
-[hatch.dependencies]
-stc = {git = " https://github.com/Stclib/STC/", extras = ["extensions/STC/include/stc"]}
-
 [hatch.extras.specific_directory]
 install = ["pyccel"]
 
@@ -59,3 +56,6 @@ artifacts = [
 path = "install_scripts/hook.py"
 require-runtime-dependencies = true
 
+
+[tool.hatch.build.targets.wheel.force-include]
+"./extensions/STC/include/stc" = "./pyccel/stc"
