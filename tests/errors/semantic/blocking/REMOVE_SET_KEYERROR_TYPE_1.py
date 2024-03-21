@@ -1,8 +1,5 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 
-import numpy as np
+se = {1, 2, 3}
 
-a = [1,2,3]
-b = np.int16(4)
-a.insert(3, b)
-
+se.remove(range(3,4))

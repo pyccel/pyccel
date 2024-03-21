@@ -69,15 +69,16 @@ def test_semantic_warnings(f):
 #    name = os.path.basename(f)
 #    name = os.path.splitext(name)[0]
 #
-#    codegen = Codegen(ast, name)
-#    code = codegen.doprint()
+#    codegen = Codegen(ast, name, 'fortran')
+#    code = codegen.printer.doprint(codegen.ast)
 #
 #    assert(errors.has_warnings())
 #    assert(not errors.has_errors())
 
 
 @pytest.mark.parametrize("f", [HIGH_ORDER_FUNCTIONS_IN_CLASS_FUNCS])
-def test_cwrapper_warnings(f, language):
+@pytest.mark.c
+def test_cwrapper_warnings(f):
     with pytest.warns(UserWarning):
         epyccel(f, language='c')
 

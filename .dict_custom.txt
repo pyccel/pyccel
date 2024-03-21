@@ -3,6 +3,8 @@ Pythran
 numba
 NumPy
 NumPy's
+CuPy
+CuPy's
 BLAS
 LAPACK
 MPI
@@ -108,3 +110,6 @@ subclasses
 oneAPI
 getter
 setter
+bitwise
+datatyping
+datatypes

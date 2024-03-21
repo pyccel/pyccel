@@ -148,9 +148,9 @@ def test_codegen_errors(f):
     name = os.path.basename(f)
     name = os.path.splitext(name)[0]
 
-    codegen = Codegen(ast, name)
+    codegen = Codegen(ast, name, 'fortran')
     with pytest.raises(PyccelCodegenError):
-        codegen.doprint()
+        codegen.printer.doprint(codegen.ast)
 
     assert(errors.has_errors())
 
