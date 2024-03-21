@@ -203,6 +203,7 @@ for a system-wide installation.
     ```sh
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
+    git submodule update --init --recursive
     pip3 install --user .
     ```
 
@@ -211,6 +212,7 @@ for a system-wide installation.
     ```sh
     git clone git@github.com:pyccel/pyccel.git
     cd pyccel
+    git submodule update --init --recursive
     pip3 install --user -e ".[test]"
     ```
 
