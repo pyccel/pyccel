@@ -1,8 +1,8 @@
 # pylint: disable=missing-function-docstring, missing-module-docstring
 import pytest
 import numpy as np
-from numpy import iinfo
-from numpy.random import randint
+from numpy import iinfo, finfo
+from numpy.random import randint, uniform
 
 from pyccel.epyccel import epyccel
 from modules        import arrays
@@ -3970,6 +3970,2071 @@ def test_array_ndmin_2_order(language):
     check_array_equal(f1(d), f2(d))
     check_array_equal(f1(e), f2(e))
 
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_bool_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_bool, language=language)
+
+    assert epyccel_func(bl) == arrays.dtype_convert_to_bool(bl)
+    assert epyccel_func(integer) == arrays.dtype_convert_to_bool(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_bool(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_bool(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_bool(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_bool(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_bool(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_bool(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_bool(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_bool(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_bool(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_int8_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8   = randint(low = iinfo('int8').min,   high = iinfo('int8').max, size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int8, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_int8(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int8(integer8)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int8(bl)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int8(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int8(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int8(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_int8(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int8(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int8(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int8(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int8(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_int16_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int16, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_int16(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int16(integer8)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int16(bl)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int16(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int16(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int16(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_int16(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int16(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int16(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int16(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int16(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_int32_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int32, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_int32(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int32(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int32(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int32(integer32)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int32(bl)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int32(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_int32(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int32(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int32(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int32(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int32(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_int64_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_int64, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_int64(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_int64(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_int64(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_int64(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_int64(integer64)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_int64(bl)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_int64(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_int64(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_int64(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_int64(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_int64(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_float32_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float32, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_float32(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_float32(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_float32(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_float32(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_float32(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_float32(fl)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_float32(bl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_float32(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_float32(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float32(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float32(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_float64_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_float64, language=language)
+
+    assert epyccel_func(integer) == arrays.dtype_convert_to_float64(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_float64(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_float64(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_float64(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_float64(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_float64(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_float64(fl32)
+    assert epyccel_func(bl) == arrays.dtype_convert_to_float64(bl)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_float64(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_float64(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_float64(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_complex64_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cfloat, language=language)
+
+    assert epyccel_func(bl) == arrays.dtype_convert_to_cfloat(bl)
+    assert epyccel_func(integer) == arrays.dtype_convert_to_cfloat(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_cfloat(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_cfloat(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_cfloat(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_cfloat(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_cfloat(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_cfloat(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_cfloat(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cfloat(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cfloat(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_complex128_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_cdouble, language=language)
+
+    assert epyccel_func(bl) == arrays.dtype_convert_to_cdouble(bl)
+    assert epyccel_func(integer) == arrays.dtype_convert_to_cdouble(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_cdouble(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_cdouble(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_cdouble(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_cdouble(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_cdouble(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_cdouble(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_cdouble(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_cdouble(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_cdouble(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = pytest.mark.fortran),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_pyint_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyint, language=language)
+
+    assert epyccel_func(bl) == arrays.dtype_convert_to_pyint(bl)
+    assert epyccel_func(integer) == arrays.dtype_convert_to_pyint(integer)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_pyint(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_pyint(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_pyint(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_pyint(integer64)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_pyint(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_pyint(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_pyint(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyint(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyint(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_dtype_conversion_to_pyfloat_from_other_types(language):
+    size = (2, 2)
+
+    bl = randint(0, 2, size = size, dtype= bool)
+
+    integer   = randint(low = iinfo('int').min,   high = iinfo('int').max, size = size, dtype=int)
+    integer8 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer16 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer32 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer64 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl32 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32 = np.float32(fl32)
+    fl64 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    cmplx128_from_float32 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx64 = np.complex64(cmplx128_from_float32)
+    cmplx128 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.dtype_convert_to_pyfloat, language=language)
+
+    assert epyccel_func(bl) == arrays.dtype_convert_to_pyfloat(bl)
+    assert epyccel_func(integer8) == arrays.dtype_convert_to_pyfloat(integer8)
+    assert epyccel_func(integer16) == arrays.dtype_convert_to_pyfloat(integer16)
+    assert epyccel_func(integer32) == arrays.dtype_convert_to_pyfloat(integer32)
+    assert epyccel_func(integer64) == arrays.dtype_convert_to_pyfloat(integer64)
+    assert epyccel_func(integer) == arrays.dtype_convert_to_pyfloat(integer)
+    assert epyccel_func(fl) == arrays.dtype_convert_to_pyfloat(fl)
+    assert epyccel_func(fl32) == arrays.dtype_convert_to_pyfloat(fl32)
+    assert epyccel_func(fl64) == arrays.dtype_convert_to_pyfloat(fl64)
+    assert epyccel_func(cmplx64) == arrays.dtype_convert_to_pyfloat(cmplx64)
+    assert epyccel_func(cmplx128) == arrays.dtype_convert_to_pyfloat(cmplx128)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_bool(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int8(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8, language=language)
+
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer_1, integer_2, integer_3)
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(b1, b2, b3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int16(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int32(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int64(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float32(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float64(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_bool_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_bool_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int8_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF, language=language)
+
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(b1, b2, b3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int8_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int16_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int16_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int32_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int32_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_int64_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_int64_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float32_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float32_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_float64_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_float64_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cfloat_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+            pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_cdouble_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_cdouble_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyint_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyint_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
+@pytest.mark.parametrize( 'language', (
+        pytest.param("fortran", marks = [
+            pytest.mark.skip(reason=("Missing boolean cast in Fortran code, see #1785")),
+                      pytest.mark.fortran]),
+        pytest.param("c", marks = pytest.mark.c),
+        pytest.param("python", marks = pytest.mark.python)
+    )
+)
+def test_src_dest_array_diff_sizes_dtype_conversion_to_pyfloat_orderF(language):
+    size = (1,2)
+
+    integer_1 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_2 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+    integer_3 = randint(low = iinfo('int').min, high = iinfo('int').max , size = size, dtype=int)
+
+    integer8_1 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_2 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+    integer8_3 = randint(low = iinfo('int8').min, high = iinfo('int8').max , size = size, dtype=np.int8)
+
+    integer16_1 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_2 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+    integer16_3 = randint(low = iinfo('int16').min, high = iinfo('int16').max , size = size, dtype=np.int16)
+
+    integer32_1 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_2 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+    integer32_3 = randint(low = iinfo('int32').min, high = iinfo('int32').max , size = size, dtype=np.int32)
+
+    integer64_1 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_2 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+    integer64_3 = randint(low = iinfo('int64').min, high = iinfo('int64').max , size = size, dtype=np.int64)
+
+    fl_1 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_2 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+    fl_3 = uniform(finfo('float').min / 2, finfo('float').max / 2, size = size)
+
+    fl32_1 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_2 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_3 = uniform(finfo('float32').min / 2, finfo('float32').max / 2, size = size)
+    fl32_1 = np.float32(fl32_1)
+    fl32_2 = np.float32(fl32_2)
+    fl32_3 = np.float32(fl32_3)
+
+    fl64_1 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_2 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+    fl64_3 = uniform(finfo('float64').min / 2, finfo('float64').max / 2, size = size)
+
+    b1 = randint(0, 2, size = size, dtype= bool)
+    b2 = randint(0, 2, size = size, dtype= bool)
+    b3 = randint(0, 2, size = size, dtype= bool)
+
+    cmplx128_from_float32_1 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_2 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+    cmplx128_from_float32_3 = uniform(low= finfo('float32').min / 2, high= finfo('float32').max / 2, size = size) + uniform(low=finfo('float32').min / 2, high=finfo('float32').max / 2, size = size) * 1j
+
+    cmplx64_1 = np.complex64(cmplx128_from_float32_1)
+    cmplx128_1 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_2 = np.complex64(cmplx128_from_float32_2)
+    cmplx128_2 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    cmplx64_3 = np.complex64(cmplx128_from_float32_3)
+    cmplx128_3 = uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) + uniform(low=finfo('float64').min / 2, high=finfo('float64').max / 2, size = size) * 1j
+
+    epyccel_func = epyccel(arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF, language=language)
+
+    assert epyccel_func(b1, b2, b3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(b1, b2, b3)
+    assert epyccel_func(integer_1, integer_2, integer_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer_1, integer_2, integer_3)
+    assert epyccel_func(integer8_1, integer8_2, integer8_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer8_1, integer8_2, integer8_3)
+    assert epyccel_func(integer16_1, integer16_2, integer16_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer16_1, integer16_2, integer16_3)
+    assert epyccel_func(integer32_1, integer32_2, integer32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer32_1, integer32_2, integer32_3)
+    assert epyccel_func(integer64_1, integer64_2, integer64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(integer64_1, integer64_2, integer64_3)
+    assert epyccel_func(fl_1, fl_2, fl_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(fl_1, fl_2, fl_3)
+    assert epyccel_func(fl32_1, fl32_2, fl32_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(fl32_1, fl32_2, fl32_3)
+    assert epyccel_func(fl64_1, fl64_2, fl64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(fl64_1, fl64_2, fl64_3)
+    assert epyccel_func(cmplx64_1, cmplx64_2, cmplx64_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(cmplx64_1, cmplx64_2, cmplx64_3)
+    assert epyccel_func(cmplx128_1, cmplx128_2, cmplx128_3) == arrays.src_dest_diff_sizes_dtype_convert_to_pyfloat_orderF(cmplx128_1, cmplx128_2, cmplx128_3)
+
 ##==============================================================================
 ## TEST ITERATION
 ##==============================================================================
@@ -3983,7 +6048,7 @@ def test_iterate_slice(language):
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = [
             pytest.mark.xfail(reason=("Cannot return a non-contiguous slice. See #1796")),
-            pytest.mark.fortran]),
+                      pytest.mark.fortran]),
         pytest.param("c", marks = pytest.mark.c),
         pytest.param("python", marks = pytest.mark.python)
     )
