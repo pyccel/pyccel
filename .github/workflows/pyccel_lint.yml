@@ -37,6 +37,10 @@ jobs:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           fetch-depth: 0
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:

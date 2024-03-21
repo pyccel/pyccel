@@ -61,6 +61,10 @@ jobs:
         with:
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          submodules: true
       - name: Set up Python ${{ matrix.python_version }}
         uses: actions/setup-python@v4
         with:
