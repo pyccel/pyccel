@@ -7,12 +7,13 @@ runs:
       shell: python
       run: |
         import os
-        print("-=-=-=-=-==- ___++++++==-= > ",os.getcwd())
-        files = os.listdir('.')
-        for file in files:
-            print("------====+_+_+_+_+ = > ",file)
-        import stc
-        from os.path import exists, join
-        pyccel_loc = stc.__path__[0]
-        print(pyccel_loc)
-        assert(exists(join(pyccel_loc,'include')))
+        base_dir = os.getcwd()
+        print("-=-=-=-=>", base_dir)
+        stc_check = 'pyccel/stc'
+        print("=-=-++_++=> ", stc_check)
+        contents = os.listdir('pyccel')
+        for item in contents:
+            print("=-=-=-=-=====> ",item)
+        path = os.path.join(base_dir, stc_check)        
+        print(path)
+        assert(os.path.exists(path))
