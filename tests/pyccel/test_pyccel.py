@@ -1191,10 +1191,6 @@ def test_time_execution_flag():
         assert ' : ' in l
 
 #------------------------------------------------------------------------------
-def test_char:
-    if __name__ == '__main__':
-        string = np.empty((2, 5), dtype='c')
-        string[0] = "HELLO"
-        string[1] = "WORLD"
-        for i in range(5):
-            print(string[0,i], end='')
+def test_char(language):
+    types = str
+    pyccel_test("scripts/c_arrays.py", language = language, output_dtype = types)
