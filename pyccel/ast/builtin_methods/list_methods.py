@@ -15,6 +15,7 @@ from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('ListAppend',
            'ListClear',
+           'ListCopy',
            'ListExtend',
            'ListInsert',
            'ListMethod',
@@ -270,3 +271,38 @@ class ListRemove(ListMethod) :
             raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
         super().__init__(list_obj, removed_obj)
 
+#==============================================================================
+class ListCopy(ListMethod) :
+    """
+    Represents a call to the .copy() method.
+    
+    Represents a call to the .copy() method which is used to create a shallow
+    copy of a list, meaning that any modification in the new list will be
+    reflected in the original list.
+    The method returns a list.
+
+    >>> a = [1, 2, 3, 4]
+    >>> b = a.copy()
+    >>> print(a, b)
+    [1, 2, 3, 4]
+    [1, 2, 3, 4]
+    >>> a[0] = 0
+    >>> a[1] = 0
+    >>> print(a, b)
+    [0, 0, 3, 4]
+    [0, 0, 3, 4]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ('_class_type', '_rank', '_shape', '_order')
+    name = 'copy'
+
+    def __init__(self, list_obj) -> None:
+        self._rank = list_obj.rank
+        self._shape = list_obj.shape
+        self._order = list_obj.order
+        self._class_type = list_obj.class_type
+        super().__init__(list_obj)
