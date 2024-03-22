@@ -6,11 +6,8 @@ runs:
     - name: check stc installation
       shell: python
       run: |
-        import pyccel, os
+        import pyccel
         from os.path import exists, join
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
-        files = os.listdir(".")
-        for file in files:
-          print("---> ",file)
         assert(exists(join(pyccel_loc,'stc')))
