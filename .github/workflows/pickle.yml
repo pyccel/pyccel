@@ -88,6 +88,9 @@ jobs:
       - name: Check for existence of pickled files
         id: pickle_check
         uses: ./.github/actions/check_for_pickled
+      - name: Check for STC installation
+        id: stc_check
+        uses: ./.github/actions/check_for_stc
       - name: "Post completed"
         if: always()
         run: |
