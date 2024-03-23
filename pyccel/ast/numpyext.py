@@ -378,7 +378,10 @@ class NumpyReal(PythonReal):
     name = 'real'
     def __new__(cls, arg):
         if isinstance(arg.dtype, PythonNativeBool):
-            return NumpyInt(arg)
+            if arg.rank:
+                return NumpyInt(arg)
+            else:
+                return PythonInt(arg)
         else:
             return super().__new__(cls, arg)
 
