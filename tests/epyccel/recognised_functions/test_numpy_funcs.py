@@ -2175,9 +2175,19 @@ def test_array_new_dtype(language):
         b = (a[0,:], a[1,:])
         c = array(b, dtype=float)
         return c
+    def create_bool_array_tuple_ref(a : 'int[:,:]'):
+        from numpy import array
+        b = (a[0,:], a[1,:])
+        c = array(b, dtype=float)
+        return c
+
     array_float_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
     tmp_arr = np.ones((3,4), dtype=int)
     assert np.allclose(array_float_tuple_ref(tmp_arr), create_float_array_tuple_ref(tmp_arr))
+
+    array_bool_tuple_ref = epyccel(create_float_array_tuple_ref, language = language)
+    tmp_arr = np.ones((3,4), dtype=int)
+    assert np.allclose(array_bool_tuple_ref(tmp_arr), create_bool_array_tuple_ref(tmp_arr))
 
 @pytest.mark.parametrize( 'language', (
         pytest.param("fortran", marks = pytest.mark.fortran),
