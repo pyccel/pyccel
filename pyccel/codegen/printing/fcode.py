@@ -1190,7 +1190,6 @@ class FCodePrinter(CodePrinter):
         return stmt
 
     def _print_NumpyArray(self, expr):
-        expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
         order = expr.order
 
         try :
@@ -1211,6 +1210,8 @@ class FCodePrinter(CodePrinter):
                     shape_code = ', '.join(self._print(i) for i in expr.shape[::-1])
                 rhs_code = f"reshape({rhs_code}, [{shape_code}])"
         else:
+            expr_args = (expr.arg,) if isinstance(expr.arg, Variable) else expr.arg
+            expr_args = tuple(a if a.dtype == expr.dtype else cast_func(a) for a in expr_args)
             new_args = []
             inv_order = 'C' if order == 'F' else 'F'
             for a in expr_args:
