@@ -62,6 +62,12 @@ require-runtime-dependencies = true
 
 [tool.hatch.build.targets.sdist]
 include = [
-  "./extensions/STC/include/stc",
+  "./pyccel/extensions/STC/include/stc",
+]
+exclude = [
+  "./pyccel/extensions/STC/.github",
+  "./pyccel/extensions/STC/docs",
+  "./pyccel/extensions/STC/misc",
+  "./pyccel/extensions/STC/src",
 ]
 only-include = ["stc", "./extensions/STC/include/stc"]
