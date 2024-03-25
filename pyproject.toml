@@ -55,3 +55,6 @@ require-runtime-dependencies = true
 
 [tool.hatch.build.targets.wheel.force-include]
 "./pyccel/extensions/STC/include/stc" = "./pyccel/extensions/stc"
+
+[tool.hatch.build.targets.wheel.force_include_editable]
+"./pyccel/extensions/STC/include/stc" = "./pyccel/extensions/stc"
