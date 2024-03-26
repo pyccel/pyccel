@@ -48,19 +48,6 @@ path = "pyccel/version.py"
 artifacts = [
   "*.pyccel",
 ]
-
-[tool.hatch.build.targets.wheel.hooks.custom]
-path = "install_scripts/hook.py"
-require-runtime-dependencies = true
-
-[tool.hatch.build.targets.wheel.force-include]
-"./pyccel/extensions/STC/include/stc" = "./pyccel/stc"
-
-[tool.hatch.build.targets.sdist.force_include_editable]
-"./pyccel/extensions/STC/include/stc" = "./pyccel/stc"
-
-
-[tool.hatch.build.targets.sdist]
 include = [
   "./pyccel/extensions/STC/include/stc",
 ]
@@ -71,3 +58,13 @@ exclude = [
   "./pyccel/extensions/STC/src",
 ]
 only-include = ["stc", "./extensions/STC/include/stc"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "install_scripts/hook.py"
+require-runtime-dependencies = true
+
+[tool.hatch.build.targets.wheel.force-include]
+"./pyccel/extensions/STC/include/stc" = "./pyccel/stc"
+
+[tool.hatch.build.targets.wheel.force_include_editable]
+"./pyccel/extensions/STC/include/stc" = "./pyccel/stc"
