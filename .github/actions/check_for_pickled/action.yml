@@ -8,14 +8,14 @@ runs:
       run: |
         import pyccel, os
         from os.path import exists, join
-        os.chdir('pyccel')
+        os.chdir('.')
         contents = os.listdir()
         for item in contents:
           print("===---------===> ", item)
-        os.chdir('pyccel/extensions/STC')
+        os.chdir('extensions/STC')
         contents = os.listdir()
         for item in contents:
-          print("===-----2----===> ", item)
+          print("===---------===> ", item)
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'stdlib','internal','openmp.pyccel')))
