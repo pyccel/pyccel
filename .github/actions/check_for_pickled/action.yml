@@ -12,7 +12,7 @@ runs:
         contents = os.listdir()
         for item in contents:
           print("===---------===> ", item)
-        os.chdir('pyccel/extensions/STC')
+        os.chdir('extensions/STC')
         contents = os.listdir()
         for item in contents:
           print("===---------===> ", item)
