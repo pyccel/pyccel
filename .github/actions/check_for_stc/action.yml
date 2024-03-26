@@ -12,10 +12,10 @@ runs:
         contents = os.listdir()
         for item in contents:
           print("===---------===> ", item)
-        os.chdir('pyccel/extensions/STC')
+        os.chdir('extensions/STC')
         contents = os.listdir()
         for item in contents:
-          print("===---------===> ", item)
+          print("===----2-----===> ", item)
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'stc')))
