@@ -57,7 +57,7 @@ exclude = [
   "./pyccel/extensions/STC/misc",
   "./pyccel/extensions/STC/src",
 ]
-only-include = ["stc", "./extensions/STC/include/stc"]
+only-include = ["stc", "./pyccel/extensions/STC/include/stc"]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "install_scripts/hook.py"
