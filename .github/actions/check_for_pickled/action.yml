@@ -6,16 +6,8 @@ runs:
     - name: Update pip
       shell: python
       run: |
-        import pyccel, os
+        import pyccel
         from os.path import exists, join
-        os.chdir('pyccel')
-        contents = os.listdir()
-        for item in contents:
-          print("===---------===> ", item)
-        os.chdir('extensions/STC')
-        contents = os.listdir()
-        for item in contents:
-          print("===---------===> ", item)
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'stdlib','internal','openmp.pyccel')))
