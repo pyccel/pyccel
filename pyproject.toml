@@ -49,15 +49,15 @@ artifacts = [
   "*.pyccel",
 ]
 include = [
-  "extensions/STC/include/stc",
+  "./pyccel/extensions/STC/include/stc",
 ]
 exclude = [
-  "extensions/STC/.github",
-  "extensions/STC/docs",
-  "extensions/STC/misc",
-  "extensions/STC/src",
+  "./pyccel/extensions/STC/.github",
+  "./pyccel/extensions/STC/docs",
+  "./pyccel/extensions/STC/misc",
+  "./pyccel/extensions/STC/src",
 ]
-only-include = ["stc", "extensions/STC/include/stc"]
+only-include = ["stc", "./pyccel/extensions/STC/include/stc"]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "install_scripts/hook.py"
