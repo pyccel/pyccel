@@ -8,7 +8,7 @@ runs:
       run: |
         import pyccel, os
         from os.path import exists, join
-        os.chdir('p')
+        os.chdir('pyccel')
         contents = os.listdir()
         for item in contents:
           print("===---------===> ", item)
