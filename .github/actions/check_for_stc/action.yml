@@ -11,3 +11,4 @@ runs:
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'extensions/STC/include/stc')))
+        assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
