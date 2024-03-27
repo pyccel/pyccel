@@ -21,6 +21,7 @@ __all__ = ('ListAppend',
            'ListMethod',
            'ListPop',
            'ListRemove',
+           'ListSort',
            )
 
 #==============================================================================
@@ -323,6 +324,12 @@ class ListSort(ListMethod) :
     ----------
     list_obj : TypedAstNode
         The list object which the method is called from.
+    
+    reverse : TypedAstNode
+        Optional, reverse=True will sort the list descending. Default is reverse=False.
+    
+    key : TypedAstNode
+        Optional, a function to specify the sorting criteria(s)
     """
     __slots__ = ()
     _rank = 0
