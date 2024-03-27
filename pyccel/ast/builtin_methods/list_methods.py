@@ -15,10 +15,12 @@ from pyccel.ast.internals import PyccelInternalFunction
 
 __all__ = ('ListAppend',
            'ListClear',
+           'ListCopy',
            'ListExtend',
            'ListInsert',
            'ListMethod',
            'ListPop',
+           'ListRemove',
            )
 
 #==============================================================================
@@ -231,20 +233,92 @@ class ListExtend(ListMethod):
         super().__init__(list_obj, iterable)
 
 #==============================================================================
+class ListRemove(ListMethod) :
+    """
+    Represents a call to the .remove() method.
+    
+    Represents a call to the .remove() method which removes the first
+    occurrence of a given element from the list.
+    Note that the .remove() method doesn't return any value.
+
+    >>> a = [[1, 2], [3, 4]]
+    >>> a.remove([1, 2])
+    >>> print(a)
+    [[3, 4]]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+
+    removed_obj : TypedAstNode
+        The object to be removed from the list.
+    """
+    __slots__ = ()
+    _shape = None
+    _order = None
+    _rank = 0
+    _class_type = VoidType()
+    name = 'remove'
+
+    def __init__(self, list_obj, removed_obj) -> None:
+        expected_type = list_obj.class_type.element_type
+        is_homogeneous = (
+            removed_obj.class_type == expected_type and
+            list_obj.rank - 1 == removed_obj.rank
+        )
+        if not is_homogeneous:
+            raise TypeError(f"Can't remove an element of type {removed_obj.class_type} from {list_obj.class_type}")
+        super().__init__(list_obj, removed_obj)
+
+#==============================================================================
+class ListCopy(ListMethod) :
+    """
+    Represents a call to the .copy() method.
+    
+    Represents a call to the .copy() method which is used to create a shallow
+    copy of a list, meaning that any modification in the new list will be
+    reflected in the original list.
+    The method returns a list.
+
+    >>> a = [1, 2, 3, 4]
+    >>> b = a.copy()
+    >>> print(a, b)
+    [1, 2, 3, 4]
+    [1, 2, 3, 4]
+    >>> a[0] = 0
+    >>> a[1] = 0
+    >>> print(a, b)
+    [0, 0, 3, 4]
+    [0, 0, 3, 4]
+
+    Parameters
+    ----------
+    list_obj : TypedAstNode
+        The list object which the method is called from.
+    """
+    __slots__ = ('_class_type', '_rank', '_shape', '_order')
+    name = 'copy'
+
+    def __init__(self, list_obj) -> None:
+        self._rank = list_obj.rank
+        self._shape = list_obj.shape
+        self._order = list_obj.order
+        self._class_type = list_obj.class_type
+        super().__init__(list_obj)
+
+#==============================================================================
 class ListSort(ListMethod) :
     """
     Represents a call to the .sort() method.
-
     Represents a call to the `.sort()` method, which sorts the elements of the
     list in ascending order and modifies the original list in place. This means
     that the elements of the original list are rearranged to be in sorted order.
     Note that the .sort() method doesn't return any value.
-
     >>> a = [3, 1, 4, 1, 5, 9, 2, 6, 5, 3, 5]
     >>> a.sort()
     >>> print(a)
     [1, 1, 2, 3, 3, 4, 5, 5, 5, 6, 9]
-
     Parameters
     ----------
     list_obj : TypedAstNode
