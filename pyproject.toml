@@ -48,12 +48,17 @@ path = "pyccel/version.py"
 artifacts = [
   "*.pyccel",
 ]
+include = [
+  "include",
+   "*.py",
+  "*.pyh",
+  "*.pyccel",
+  "pyccel/stdlib/*/*.h",
+  "pyccel/stdlib/*/*.f90",
+]
 exclude = [
-  "docs",
-  "src",
-  "misc",
-  "README.md",
-  "CMakeLists.txt",
+    "misc",
+    "src"
 ]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
