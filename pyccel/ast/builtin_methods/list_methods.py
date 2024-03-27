@@ -331,5 +331,7 @@ class ListSort(ListMethod) :
     _class_type = VoidType()
     name = 'sort'
 
-    def __init__(self, list_obj) -> None:
-        super().__init__(list_obj)
+    def __init__(self, list_obj, reverse=None, key=None) -> None:
+        if reverse is not None or key is not None:
+            raise TypeError("Optional Parameters are not supported for sort() method.")
+        super().__init__(list_obj, reverse, key)
