@@ -6,19 +6,24 @@ All notable changes to this project will be documented in this file.
 ### Added
 -   #1720 : Add support for `Ellipsis` as the only index for an array.
 -   #1694 : Add Python support for list method `extend()`.
--   #1739 : Add Python support for set method `clear()`.
+-   #1696 : Add Python support for list method `copy()`.
+-   #1693 : Add Python support for list method `remove()`.
 -   #1739 : Add abstract class `SetMethod` to handle calls to various set methods.
+-   #1739 : Add Python support for set method `clear()`.
 -   #1740 : Add Python support for set method `copy()`.
+-   #1750 : Add Python support for set method `remove()`.
 
 ### Fixed
 
 -   #1720 : Fix Undefined Variable error when the function definition is after the variable declaration.
+-   #1762 : Fix array copy between different data types.
 -   #1763 Use `np.result_type` to avoid mistakes in non-trivial NumPy type promotion rules.
 -   Fix some cases where a Python built-in type is returned in place of a NumPy type.
 -   Stop printing numbers with more decimal digits than their precision.
 -   Allow printing the result of a function returning multiple objects of different types.
 -   #1792 : Fix array unpacking.
 -   #1795 : Fix bug when returning slices in C.
+-   #1732 : Fix multidimensional list indexing in Python.
 
 ### Changed
 -   #1720 : functions with the `@inline` decorator are no longer exposed to Python in the shared library.
