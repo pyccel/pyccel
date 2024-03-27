@@ -201,18 +201,16 @@ for a system-wide installation.
 -   **Standard mode**:
 
     ```sh
-    git clone git@github.com:pyccel/pyccel.git
+    git clone --recurse-submodules git@github.com:pyccel/pyccel.git
     cd pyccel
-    git submodule update --init --recursive
     pip3 install --user .
     ```
 
 -   **Development mode**:
 
     ```sh
-    git clone git@github.com:pyccel/pyccel.git
+    git clone --recurse-submodules git@github.com:pyccel/pyccel.git
     cd pyccel
-    git submodule update --init --recursive
     pip3 install --user -e ".[test]"
     ```
 
