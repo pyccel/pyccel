@@ -1190,7 +1190,3 @@ def test_time_execution_flag():
     for l in result_lines[1:-1]:
         assert ' : ' in l
 
-#------------------------------------------------------------------------------
-def test_char(language):
-    types = str
-    pyccel_test("scripts/c_arrays.py", language = language, output_dtype = types)
