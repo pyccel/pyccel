@@ -48,7 +48,23 @@ path = "pyccel/version.py"
 artifacts = [
   "*.pyccel",
 ]
+include = [
+  "include",
+   "*.py",
+  "*.pyh",
+  "*.pyccel",
+  "pyccel/stdlib/*/*.h",
+  "pyccel/stdlib/*/*.f90",
+  "*.tx",
+  "*.c"
+]
+exclude = [
+    "misc",
+    "src"
+]
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "install_scripts/hook.py"
 require-runtime-dependencies = true
+
+
