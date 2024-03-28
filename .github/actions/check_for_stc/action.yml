@@ -6,9 +6,10 @@ runs:
     - name: check stc installation
       shell: python
       run: |
-        import pyccel
+        import pyccel, os
         from os.path import exists, join
         pyccel_loc = pyccel.__path__[0]
         print(pyccel_loc)
         assert(exists(join(pyccel_loc,'extensions/STC/include/stc')))
-        assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
+        if not os.access(pyccel_loc, os.W_OK):
+          assert(not exists(join(pyccel_loc,'extensions/STC/docs')))
