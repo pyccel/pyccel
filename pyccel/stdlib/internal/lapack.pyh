@@ -286,12 +286,12 @@
 #$ header function sgetrf(int32, int32, float32[:,:](order=F), int32, int32 [:], int32)
 #$ header function dgetrf(int32, int32, float64 [:,:](order=F), int32, int32 [:], int32)
 
-#$ header function sgetrs(str, int32, int32, float32 [:,:](order=F), int32, float32 [:], float32 [:,:](order=F), int32, int32)
-#$ header function dgetrs(str, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
+#$ header function sgetrs(char, int32, int32, float32 [:,:](order=F), int32, float32 [:], float32 [:,:](order=F), int32, int32)
+#$ header function dgetrs(char, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
 
 
-#$ header function sgecon(str, int32, float32 [:,:](order=F), int32, float32, float32, float32 [:], int32 [:], int32)
-#$ header function dgecon(str, int32, float64 [:,:](order=F), int32, float64, float64, float64 [:], int32 [:], int32)
+#$ header function sgecon(char, int32, float32 [:,:](order=F), int32, float32, float32, float32 [:], int32 [:], int32)
+#$ header function dgecon(char, int32, float64 [:,:](order=F), int32, float64, float64, float64 [:], int32 [:], int32)
 
 #$ header function sgerfs(str, int32, int32, float32 [:,:](order=F), int32, float32 [:,:](order=F), int32, int32 [:], float32 [:,:](order=F), int32, float32 [:,:](order=F), int32, float32 [:], float32 [:], float32 [:], int32 [:], int32)
 #$ header function dgerfs(str, int32, int32, float64 [:,:](order=F), int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, float64 [:,:](order=F), int32, float64 [:], float64 [:], float64 [:], int32 [:], int32)
@@ -309,8 +309,8 @@
 #$ header function dgbtrf(int32, int32, int32, int32, float64 [:,:](order=F), int32, int32 [:], int32)
 
 
-#$ header function sgbtrs(str, int32, int32, int32, int32, float32 [:,:](order=F), int32, int32 [:], float32 [:,:](order=F), int32, int32)
-#$ header function dgbtrs(str, int32, int32, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
+#$ header function sgbtrs(char, int32, int32, int32, int32, float32 [:,:](order=F), int32, int32 [:], float32 [:,:](order=F), int32, int32)
+#$ header function dgbtrs(char, int32, int32, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64 [:,:](order=F), int32, int32)
 
 #$ header function sgbcon(str, int32, int32, int32, float32 [:,:](order=F), int32, int32 [:], float32, float32, float32 [:], int32 [:], int32)
 #$ header function dgbcon(str, int32, int32, int32, float64 [:,:](order=F), int32, int32 [:], float64, float64, float64 [:], int32 [:], int32)
