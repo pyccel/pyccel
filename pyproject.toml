@@ -55,7 +55,8 @@ include = [
   "*.pyccel",
   "pyccel/stdlib/*/*.h",
   "pyccel/stdlib/*/*.f90",
-  "*.tx"
+  "*.tx",
+  "*.c"
 ]
 exclude = [
     "misc",
