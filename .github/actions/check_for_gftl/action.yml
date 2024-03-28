@@ -1,0 +1,14 @@
+name: 'Ensure gFTL is installed with Pyccel'
+
+runs:
+  using: "composite"
+  steps:
+    - name: check gFTL installation
+      shell: python
+      run: |
+        import pyccel
+        from os.path import exists, join
+        pyccel_loc = pyccel.__path__[0]
+        print(pyccel_loc)
+        assert(exists(join(pyccel_loc,'extensions/gFTL/include/v2')))
+        assert(not exists(join(pyccel_loc,'extensions/gFTL/doc')))

@@ -38,12 +38,14 @@ jobs:
         with:
           ref: ${{ inputs.base }}
           path: base
+          submodules: true
       - uses: actions/checkout@v3
         with:
           path: compare
           ref: ${{ env.COMMIT }}
           repository: ${{ env.PR_REPO }}
           fetch-depth: 0
+          submodules: true
       - name: Set up Python ${{ inputs.python_version }}
         uses: actions/setup-python@v4
         with:
