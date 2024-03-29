@@ -2573,7 +2573,7 @@ numpy_random_mod = Module('random', (),
      PyccelFunctionDef('randint', NumpyRandint)])
 
 numpy_constants = {
-        'pi': Constant(PythonNativeFloat(), 'pi', value=numpy.pi),
+        'pi': Constant(PythonNativeFloat(), 'pi', value=LiteralFloat(numpy.pi)),
     }
 
 numpy_funcs = {

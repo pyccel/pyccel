@@ -3300,7 +3300,7 @@ class SemanticParser(BasicParser):
             self._ensure_inferred_type_matches_existing(d_var.pop('class_type'), d_var, semantic_lhs_var, False, new_expressions, rhs)
 
             if semantic_lhs_var.is_const and isinstance(rhs, Literal):
-                lhs = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=rhs.python_value)
+                lhs = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=rhs)
 
             if isinstance(lhs, DottedVariable):
                 cls_def = lhs.lhs.cls_base
@@ -3312,6 +3312,9 @@ class SemanticParser(BasicParser):
                 insert_scope.insert_variable(lhs)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
+
+            if isinstance(lhs, Constant):
+                return EmptyNode()
 
         elif isinstance(lhs, (PyccelSymbol, DottedName)):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))

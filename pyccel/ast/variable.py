@@ -16,7 +16,7 @@ from .basic     import PyccelAstNode, TypedAstNode
 from .datatypes import PyccelType
 from .internals import PyccelArrayShapeElement, Slice, PyccelSymbol
 from .internals import apply_pickle
-from .literals  import LiteralInteger, Nil, LiteralEllipsis
+from .literals  import LiteralInteger, LiteralEllipsis, Literal
 from .operators import (PyccelMinus, PyccelDiv, PyccelMul,
                         PyccelUnarySub, PyccelAdd)
 from .numpytypes import NumpyNDArrayType
@@ -758,7 +758,7 @@ class Constant(Variable):
     *args : tuple
         See pyccel.ast.variable.Variable.
 
-    value : bool|int|float|complex
+    value : Literal
         The value that the constant represents.
 
     **kwargs : dict
@@ -777,6 +777,7 @@ class Constant(Variable):
     _attribute_nodes = ()
 
     def __init__(self, *args, value, **kwargs):
+        assert isinstance(value, Literal)
         self._value = value
         super().__init__(*args, **kwargs)
 
