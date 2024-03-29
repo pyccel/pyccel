@@ -12,25 +12,23 @@ from collections import namedtuple
 import pyccel.decorators as pyccel_decorators
 from pyccel.errors.errors import Errors, PyccelError
 
+from .builtins      import (builtin_functions_dict, PythonLen, PythonAbs,
+                            PythonRange, PythonList, PythonTuple)
 from .core          import (AsName, Import, FunctionDef, FunctionCall,
                             Allocate, Duplicate, Assign, For, CodeBlock,
                             Concatenate, Module, PyccelFunctionDef)
-
-from .builtins      import (builtin_functions_dict, PythonLen, PythonAbs,
-                            PythonRange, PythonList, PythonTuple)
 from .cmathext      import cmath_mod
 from .datatypes     import HomogeneousTupleType, PythonNativeInt, PrimitiveIntegerType
 from .internals     import PyccelInternalFunction, Slice, PyccelArrayShapeElement
 from .itertoolsext  import itertools_mod
 from .literals      import LiteralInteger, LiteralEllipsis, Nil
-from .operators     import PyccelUnarySub
 from .mathext       import math_mod
-from .sysext        import sys_mod
-
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod, NumpyAbs,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
+from .operators     import PyccelUnarySub, PyccelMinus
 from .scipyext      import scipy_mod
+from .sysext        import sys_mod
 from .typingext     import typing_mod
 from .variable      import Variable, IndexedElement, InhomogeneousTupleVariable, Constant
 
@@ -791,12 +789,13 @@ def get_expression_sign(expr):
     is 1. If the expression is known to be negative then the return value is -1.
     If nothing is known about the sign of the expression the return value is None.
     """
+    positive_types = (PyccelArrayShapeElement, PythonLen, NumpyAbs, PythonAbs)
     try:
         sign = int(expr)
     except TypeError:
-        if isinstance(expr, (PyccelArrayShapeElement, PythonLen, NumpyAbs, PythonAbs)):
+        if isinstance(expr, positive_types):
             sign = 1
-        elif isinstance(expr, UnarySub) and isinstance(expr.args[0], positive_types):
+        elif isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], positive_types):
             sign = -1
         else:
             sign = None
