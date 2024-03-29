@@ -26,7 +26,7 @@ from .mathext       import math_mod
 from .numpyext      import (NumpyEmpty, NumpyArray, numpy_mod, NumpyAbs,
                             NumpyTranspose, NumpyLinspace)
 from .operators     import PyccelAdd, PyccelMul, PyccelIs, PyccelArithmeticOperator
-from .operators     import PyccelUnarySub, PyccelMinus
+from .operators     import PyccelUnarySub, PyccelMinus, IfTernaryOperator
 from .scipyext      import scipy_mod
 from .sysext        import sys_mod
 from .typingext     import typing_mod
@@ -774,9 +774,9 @@ def is_literal_integer(expr):
     bool
         True if the object represents a literal integer, false otherwise.
     """
-    return isinstance(a, (int, LiteralInteger)) or \
-        (isinstance(a, PyccelUnarySub) and isinstance(a.args[0], (int, LiteralInteger))) or \
-        (isinstance(a, Constant) and isinstance(a.dtype.primitive_type, PrimitiveIntegerType))
+    return isinstance(expr, (int, LiteralInteger)) or \
+        (isinstance(expr, PyccelUnarySub) and isinstance(expr.args[0], (int, LiteralInteger))) or \
+        (isinstance(expr, Constant) and isinstance(expr.dtype.primitive_type, PrimitiveIntegerType))
 
 #==============================================================================
 def get_expression_sign(expr):
