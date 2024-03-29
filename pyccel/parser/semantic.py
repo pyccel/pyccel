@@ -1273,7 +1273,7 @@ class SemanticParser(BasicParser):
 
         # Set the Scope to the FunctionDef's parent Scope and annotate the old_func
         self._scope = sc
-        self._visit_FunctionDef(old_func, annotate=True, function_call_args=function_call_args)
+        self._visit_FunctionDef(old_func, function_call_args=function_call_args)
         # Retreive the annotated function
         func = self.scope.find(old_func.name, 'functions')
         # Add the Module of the imported function to the new function
@@ -2071,6 +2071,15 @@ class SemanticParser(BasicParser):
             severity='fatal')
 
     def _visit_Module(self, expr):
+        for f in expr.funcs:
+            self.insert_function(f)
+
+        for i in expr.imports:
+            self._visit(i)
+
+        for c in expr.classes:
+            self._visit(c)
+
         body = self._visit(expr.program).body
         program_body      = []
         init_func_body    = []
@@ -2106,7 +2115,7 @@ class SemanticParser(BasicParser):
             f = self.scope.functions[f]
             if not f.is_semantic and not isinstance(f, InlineFunctionDef):
                 assert isinstance(f, FunctionDef)
-                self._visit_FunctionDef(f, annotate=True)
+                self._visit(f)
 
         variables = self.get_variables(self.scope)
         init_func = None
@@ -3912,7 +3921,7 @@ class SemanticParser(BasicParser):
             expr  = Return(results)
         return expr
 
-    def _visit_FunctionDef(self, expr, annotate=False, function_call_args=None):
+    def _visit_FunctionDef(self, expr, function_call_args=None):
         """
         Annotate the FunctionDef if necessary.
 
@@ -3930,16 +3939,9 @@ class SemanticParser(BasicParser):
            If we provide an Interface, this means that the function has been annotated partially,
            and we need to continue annotating the needed ones.
 
-        annotate : bool, default: False
-           Annotate expr if the flag is set to True.
-
         function_call_args : list[FunctionCallArgument], optional
             The list of call arguments, needed only in the case of an inlined function.
         """
-        if not annotate:
-            self.insert_function(expr)
-            return EmptyNode()
-
         existing_semantic_funcs = []
         if not expr.is_semantic:
             self.scope.functions.pop(expr.name, None)
@@ -4090,6 +4092,12 @@ class SemanticParser(BasicParser):
             self._allocs.append(set())
             self._pointer_targets.append({})
 
+            for i in expr.imports:
+                self._visit(i)
+
+            for f in expr.functions:
+                self.insert_function(f)
+
             # we annotate the body
             body = self._visit(expr.body)
 
@@ -4098,7 +4106,7 @@ class SemanticParser(BasicParser):
                         not isinstance(i, (InlineFunctionDef, FunctionAddress)) and \
                         not i.is_semantic]
             for i in sub_funcs:
-                self._visit_FunctionDef(i, annotate=True)
+                self._visit(i)
 
             # Calling the Garbage collecting,
             # it will add the necessary Deallocate nodes
@@ -4322,7 +4330,7 @@ class SemanticParser(BasicParser):
             m_name = method.name
             if m_name == '__init__':
                 if init_func is None:
-                    self._visit_FunctionDef(method, annotate=True)
+                    self._visit(method)
                     init_func = self.scope.functions.pop(m_name)
 
                 if isinstance(init_func, Interface):
@@ -4345,7 +4353,7 @@ class SemanticParser(BasicParser):
                    severity='error')
 
         for i in methods:
-            self._visit_FunctionDef(i, annotate=True)
+            self._visit(i)
 
         if not any(method.name == '__del__' for method in methods):
             argument = FunctionDefArgument(Variable(dtype, 'self', cls_base = cls), bound_argument = True)
