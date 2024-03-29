@@ -111,7 +111,7 @@ from pyccel.ast.utilities import builtin_function as pyccel_builtin_function
 from pyccel.ast.utilities import builtin_import as pyccel_builtin_import
 from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_import_registry
 from pyccel.ast.utilities import split_positional_keyword_arguments
-from pyccel.ast.utilities import recognised_source
+from pyccel.ast.utilities import recognised_source, is_literal_integer
 
 from pyccel.ast.variable import Constant
 from pyccel.ast.variable import Variable
@@ -824,14 +824,10 @@ class SemanticParser(BasicParser):
 
         if isinstance(var, PythonTuple):
             def is_literal_index(a):
-                def is_int(a):
-                    return isinstance(a, (int, LiteralInteger)) or \
-                        (isinstance(a, PyccelUnarySub) and \
-                         isinstance(a.args[0], (int, LiteralInteger)))
                 if isinstance(a, Slice):
-                    return all(is_int(s) or s is None for s in (a.start, a.step, a.stop))
+                    return all(is_literal_integer(s) or s is None for s in (a.start, a.step, a.stop))
                 else:
-                    return is_int(a)
+                    return is_literal_integer(a)
             if all(is_literal_index(a) for a in indices):
                 if len(indices)==1:
                     return var[indices[0]]
@@ -863,8 +859,8 @@ class SemanticParser(BasicParser):
             arg = indices[0]
 
             if isinstance(arg, Slice):
-                if ((arg.start is not None and not isinstance(arg.start, LiteralInteger)) or
-                        (arg.stop is not None and not isinstance(arg.stop, LiteralInteger))):
+                if ((arg.start is not None and not is_literal_integer(arg.start)) or
+                        (arg.stop is not None and not is_literal_integer(arg.stop))):
                     errors.report(INDEXED_TUPLE, symbol=var,
                         bounding_box=(self.current_ast_node.lineno, self.current_ast_node.col_offset),
                         severity='fatal')
@@ -884,7 +880,7 @@ class SemanticParser(BasicParser):
                 else:
                     return PythonTuple(*[self._extract_indexed_from_var(var, indices[1:], expr) for var in selected_vars])
 
-            elif isinstance(arg, LiteralInteger):
+            elif is_literal_integer(arg):
 
                 if len(indices)==1:
                     return var[arg]
@@ -970,8 +966,8 @@ class SemanticParser(BasicParser):
         if isinstance(val.class_type, HomogeneousTupleType):
             return Duplicate(val, length)
         else:
-            if isinstance(length, LiteralInteger):
-                length = length.python_value
+            if is_literal_integer(length):
+                length = int(length)
             else:
                 symbol_map = {}
                 used_symbols = {}
@@ -1408,7 +1404,7 @@ class SemanticParser(BasicParser):
     def _assign_lhs_variable(self, lhs, d_var, rhs, new_expressions, is_augassign,arr_in_multirets=False):
         """
         Create a variable from the left-hand side (lhs) of an assignment.
-        
+
         Create a lhs based on the information in d_var, if the lhs already exists
         then check that it has the expected properties.
 
@@ -2034,12 +2030,12 @@ class SemanticParser(BasicParser):
         does not exist then the method resolution order is used to search for
         other compatible _visit_X functions. If none are found then an error is
         raised.
-        
+
         Parameters
         ----------
         expr : pyccel.ast.basic.PyccelAstNode
             Object to visit of type X.
-        
+
         Returns
         -------
         pyccel.ast.basic.PyccelAstNode
@@ -2485,8 +2481,8 @@ class SemanticParser(BasicParser):
         elif any(isinstance(getattr(a, 'class_type', None), TupleType) for a in args):
             n_exprs = None
             for a in args:
-                if getattr(a, 'shape', None) and isinstance(a.shape[0], LiteralInteger):
-                    a_len = a.shape[0]
+                if getattr(a, 'shape', None) and is_literal_integer(a.shape[0]):
+                    a_len = int(a.shape[0])
                     if n_exprs:
                         assert n_exprs == a_len
                     else:
@@ -2761,12 +2757,12 @@ class SemanticParser(BasicParser):
         """
         Method to navigate the syntactic DottedName node of an `extend()` call.
 
-        The purpose of this `_visit` method is to construct new nodes from a syntactic 
+        The purpose of this `_visit` method is to construct new nodes from a syntactic
         DottedName node. It checks the type of the iterable passed to `extend()`.
-        If the iterable is an instance of `PythonList` or `PythonTuple`, it constructs 
-        a CodeBlock node where its body consists of `ListAppend` objects with the 
-        elements of the iterable. If not, it attempts to construct a syntactic `For` 
-        loop to iterate over the iterable object and append its elements to the list 
+        If the iterable is an instance of `PythonList` or `PythonTuple`, it constructs
+        a CodeBlock node where its body consists of `ListAppend` objects with the
+        elements of the iterable. If not, it attempts to construct a syntactic `For`
+        loop to iterate over the iterable object and append its elements to the list
         object. Finally, it passes to a `_visit()` call for semantic parsing.
 
         Parameters
@@ -3299,7 +3295,8 @@ class SemanticParser(BasicParser):
             # Check that types match
             self._ensure_inferred_type_matches_existing(d_var.pop('class_type'), d_var, semantic_lhs_var, False, new_expressions, rhs)
 
-            if semantic_lhs_var.is_const and isinstance(rhs, Literal):
+            if semantic_lhs_var.is_const and (isinstance(rhs, Literal) or
+                    (isinstance(rhs, UnarySub) and isinstance(rhs.args[0], Literal))):
                 lhs = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=rhs)
 
             if isinstance(lhs, DottedVariable):
