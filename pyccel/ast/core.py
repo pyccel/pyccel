@@ -30,7 +30,7 @@ from .literals  import NilArgument, LiteralTrue
 from .operators import PyccelAdd, PyccelMinus, PyccelMul, PyccelDiv, PyccelMod
 from .operators import PyccelOperator, PyccelAssociativeParenthesis, PyccelIs
 
-from .variable import DottedName, IndexedElement
+from .variable import DottedName, IndexedElement, Constant
 from .variable import Variable, AnnotatedPyccelSymbol
 
 errors = Errors()
@@ -4001,6 +4001,8 @@ class Declare(PyccelAstNode):
         self._static = static
         self._external = external
         self._module_variable = module_variable
+        if isinstance(variable, Constant):
+            self._value = variable.value
         super().__init__()
 
     @property
