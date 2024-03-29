@@ -1603,7 +1603,6 @@ class SemanticParser(BasicParser):
 
             # Variable already exists
             else:
-
                 self._ensure_inferred_type_matches_existing(dtype, d_var, var, is_augassign, new_expressions, rhs)
 
                 # in the case of elemental, lhs is not of the same dtype as
@@ -3278,27 +3277,16 @@ class SemanticParser(BasicParser):
 
         else:
             d_var  = self._infer_type(rhs)
-            d_list = d_var if isinstance(d_var, list) else [d_var]
 
-            for d in d_list:
-                name = d['class_type'].__class__.__name__
+            name = d_var['class_type'].__class__.__name__
 
-                if name.startswith('Pyccel'):
-                    name = name[6:]
-                    d['cls_base'] = self.scope.find(name, 'classes')
-                    #TODO: Avoid writing the default variables here
-                    if d_var.get('is_target', False) or d_var.get('memory_handling', False) == 'alias':
-                        d['memory_handling'] = 'alias'
-                    else:
-                        d['memory_handling'] = d_var.get('memory_handling', False) or 'heap'
+            if name.startswith('Pyccel'):
+                name = name[6:]
+                d_var['cls_base'] = self.scope.find(name, 'classes')
 
-                    # TODO if we want to use pointers then we set target to true
-                    # in the ConsturcterCall
-
-                if isinstance(rhs, Variable) and rhs.is_target:
-                    # case of rhs is a target variable the lhs must be a pointer
-                    d['is_target' ] = False
-                    d['memory_handling'] = 'alias'
+            if isinstance(rhs, Variable) and rhs.is_target:
+                # case of rhs is a target variable the lhs must be a pointer
+                d_var['memory_handling'] = 'alias'
 
         lhs = expr.lhs
         if isinstance(lhs, AnnotatedPyccelSymbol):
@@ -3307,26 +3295,25 @@ class SemanticParser(BasicParser):
                 errors.report("Cannot declare variable with multiple types",
                         symbol=expr, severity='error')
             semantic_lhs_var = semantic_lhs[0]
-            if isinstance(semantic_lhs_var, DottedVariable):
-                cls_def = semantic_lhs_var.lhs.cls_base
+
+            # Check that types match
+            self._ensure_inferred_type_matches_existing(d_var.pop('class_type'), d_var, semantic_lhs_var, False, new_expressions, rhs)
+
+            if semantic_lhs_var.is_const and isinstance(rhs, Literal):
+                lhs = semantic_lhs_var.clone(lhs.name, new_class = Constant, value=rhs.python_value)
+
+            if isinstance(lhs, DottedVariable):
+                cls_def = lhs.lhs.cls_base
                 insert_scope = cls_def.scope
-                cls_def.add_new_attribute(semantic_lhs_var)
+                cls_def.add_new_attribute(lhs)
             else:
                 insert_scope = self.scope
             try:
-                insert_scope.insert_variable(semantic_lhs_var)
+                insert_scope.insert_variable(lhs)
             except RuntimeError as e:
                 errors.report(e, symbol=expr, severity='error')
-            lhs = lhs.name
 
-        if isinstance(lhs, (PyccelSymbol, DottedName)):
-            if isinstance(d_var, list):
-                if len(d_var) == 1:
-                    d_var = d_var[0]
-                else:
-                    errors.report(WRONG_NUMBER_OUTPUT_ARGS, symbol=expr,
-                        severity='error')
-                    return None
+        elif isinstance(lhs, (PyccelSymbol, DottedName)):
             lhs = self._assign_lhs_variable(lhs, d_var, rhs, new_expressions, isinstance(expr, AugAssign))
         elif isinstance(lhs, PythonTuple):
             n = len(lhs)
@@ -3350,17 +3337,6 @@ class SemanticParser(BasicParser):
                         rhs[i], new_expressions, isinstance(expr, AugAssign)) )
                     new_rhs.append(rhs[i])
                 rhs = PythonTuple(*new_rhs)
-                d_var = [d_var]
-                lhs = PythonTuple(*new_lhs)
-
-            elif isinstance(d_var, list) and len(d_var)== n:
-                new_lhs = []
-                if hasattr(rhs,'__getitem__'):
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs[i], new_expressions, isinstance(expr, AugAssign)) )
-                else:
-                    for i,l in enumerate(lhs):
-                        new_lhs.append( self._assign_lhs_variable(l, d_var[i].copy(), rhs, new_expressions, isinstance(expr, AugAssign)) )
                 lhs = PythonTuple(*new_lhs)
 
             elif d_var['shape'][0]==n or isinstance(d_var['shape'][0], PyccelArrayShapeElement):
@@ -3381,8 +3357,6 @@ class SemanticParser(BasicParser):
 
         if not isinstance(lhs, (list, tuple)):
             lhs = [lhs]
-            if isinstance(d_var,dict):
-                d_var = [d_var]
 
         if len(lhs) == 1:
             lhs = lhs[0]
