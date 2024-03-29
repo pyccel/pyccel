@@ -92,7 +92,7 @@ jobs:
         id: stc_check
         uses: ./.github/actions/check_for_stc
         with:
-          editable: 'false'
+          editable: 'False'
       - name: "Post completed"
         if: always()
         run: |

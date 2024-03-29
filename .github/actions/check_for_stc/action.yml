@@ -2,7 +2,7 @@ name: 'Ensure STC is installed with Pyccel'
 inputs:
   editable:
     description: 'editable installation'
-    default: 'true'
+    default: 'True'
 runs:
   using: "composite"
   steps:
