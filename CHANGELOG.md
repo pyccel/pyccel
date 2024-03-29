@@ -37,6 +37,7 @@ All notable changes to this project will be documented in this file.
 -   \[INTERNALS\] Use cached `__and__` method to determine result type of bitwise comparison operations.
 -   \[INTERNALS\] Removed unused `fcode`, `ccode`, `cwrappercode`, `luacode`, and `pycode` functions from printers.
 -   \[INTERNALS\] Removed unused arguments from methods in `pyccel.codegen.codegen.Codegen`.
+-   \[INTERNALS\] Stop storing `FunctionDef`, `ClassDef`, and `Import` objects inside `CodeBlock`s.
 
 ### Deprecated
 
