@@ -339,7 +339,12 @@ class SyntaxParser(BasicParser):
 
     def _visit_Module(self, stmt):
         """ Visits the ast and splits the result into elements relevant for the module or the program"""
-        body          = [self._visit(v) for v in stmt.body]
+        body = [self._visit(v) for v in stmt.body]
+
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
 
         # Define the name of the module
         # The module name allows it to be correctly referenced from an import command
@@ -347,7 +352,8 @@ class SyntaxParser(BasicParser):
         name = AsName(mod_name, self.scope.get_new_name(mod_name))
 
         body = [b for i in body for b in (i.body if isinstance(i, CodeBlock) else [i])]
-        return Module(name, [], [], program = CodeBlock(body), scope=self.scope)
+        return Module(name, [], functions, program = CodeBlock(body), scope = self.scope,
+                classes = classes, imports = imports)
 
     def _visit_Expr(self, stmt):
         val = self._visit(stmt.value)
@@ -732,7 +738,6 @@ class SyntaxParser(BasicParser):
         is_elemental = False
         is_private   = False
         is_inline    = False
-        imports      = []
         docstring   = None
 
         decorators = {}
@@ -936,6 +941,15 @@ class SyntaxParser(BasicParser):
             docstring.header = ''
             body = body[1:]
 
+        functions = [f for f in body if isinstance(f, FunctionDef)]
+        classes   = [c for c in body if isinstance(c, ClassDef)]
+        imports   = [i for i in body if isinstance(i, Import)]
+        body      = [l for l in body if not isinstance(l, (FunctionDef, ClassDef, Import))]
+
+        if classes:
+            errors.report("Classes in functions are not supported.",
+                    symbol=classes[0], severity='error')
+
         body = CodeBlock(body)
 
         returns = [i.expr for i in body.get_attribute_nodes(Return,
@@ -983,6 +997,7 @@ class SyntaxParser(BasicParser):
                is_elemental=is_elemental,
                is_private=is_private,
                imports=imports,
+               functions=functions,
                decorators=decorators,
                docstring=docstring,
                scope=scope)
