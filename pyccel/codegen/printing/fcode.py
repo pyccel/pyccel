@@ -66,6 +66,7 @@ from pyccel.ast.utilities import builtin_import_registry as pyccel_builtin_impor
 from pyccel.ast.utilities import expand_to_loops
 
 from pyccel.ast.variable import Variable, IndexedElement, InhomogeneousTupleVariable, DottedName
+from pyccel.ast.variable import Constant
 
 from pyccel.errors.errors import Errors
 from pyccel.errors.messages import *
@@ -961,10 +962,6 @@ class FCodePrinter(CodePrinter):
         else:
             return '{}'.format(self._print(expr.value))
 
-    def _print_Constant(self, expr):
-        val = LiteralFloat(expr.value)
-        return self._print(val)
-
     def _print_DottedVariable(self, expr):
         if isinstance(expr.lhs, FunctionCall):
             base = expr.lhs.funcdef.results[0].var
@@ -1541,6 +1538,7 @@ class FCodePrinter(CodePrinter):
         privatestr     = ''
         rankstr        = ''
         externalstr    = ''
+        parameterstr   = ''
 
         # Compute intent string
         if intent:
@@ -1576,6 +1574,9 @@ class FCodePrinter(CodePrinter):
         if is_external:
             externalstr = ', external'
 
+        if isinstance(var, Constant):
+            parameterstr = ', parameter'
+
         # Compute rank string
         # TODO: improve
         if ((rank == 1) and (isinstance(shape, (int, TypedAstNode))) and (is_static or on_stack)):
@@ -1607,7 +1608,7 @@ class FCodePrinter(CodePrinter):
             mod_str = ', bind(c)'
 
         # Construct declaration
-        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr
+        left  = dtype + allocatablestr + optionalstr + privatestr + externalstr + mod_str + intentstr + parameterstr
         right = vstr + rankstr + code_value
         return '{} :: {}\n'.format(left, right)
 
